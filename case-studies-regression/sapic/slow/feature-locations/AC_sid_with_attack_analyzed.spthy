@@ -44,7 +44,7 @@ solve( State_112111111111111( init, ip, ipo, o, r_sid, sid, signedios,
                    ∧
                     (#vr.4 < #t2) ∧
                     (#t2 < #vr.42) ∧
-                    (∀ #t0 pp. (Unlock( pp, ~n.5, ~n.4 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp #t0. (Unlock( pp, ~n.5, ~n.4 ) @ #t0) ⇒ #t0 = #t2) ∧
                     (∀ pp lpp #t0.
                       (Lock( pp, lpp, ~n.4 ) @ #t0)
                      ⇒
@@ -78,7 +78,7 @@ solve( State_112111111111111( init, ip, ipo, o, r_sid, sid, signedios,
                                    ∧
                                     (#vr.25 < #t2) ∧
                                     (#t2 < #vr.68) ∧
-                                    (∀ #t0 pp. (Unlock( pp, ~n.13, ~n.12 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                    (∀ pp #t0. (Unlock( pp, ~n.13, ~n.12 ) @ #t0) ⇒ #t0 = #t2) ∧
                                     (∀ pp lpp #t0.
                                       (Lock( pp, lpp, ~n.12 ) @ #t0)
                                      ⇒
@@ -782,7 +782,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -798,7 +798,7 @@ restriction locking_1:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -813,7 +813,7 @@ restriction locking_1:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 
@@ -823,7 +823,7 @@ analyzing: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 88.425156522s
+  processing time: 86.07398s
   attested_comput (exists-trace): verified (31 steps)
 
 ------------------------------------------------------------------------------
@@ -834,7 +834,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 88.425156522s
+  processing time: 86.07398s
   attested_comput (exists-trace): verified (31 steps)
 
 ==============================================================================

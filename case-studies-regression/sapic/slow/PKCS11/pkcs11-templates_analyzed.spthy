@@ -271,7 +271,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -304,7 +304,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -337,7 +337,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -370,7 +370,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -403,7 +403,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -436,7 +436,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -1027,7 +1027,7 @@ next
                                                    ∧
                                                     (#vr.33 < #t2) ∧
                                                     (#t2 < #vr.51) ∧
-                                                    (∀ #t0 pp.
+                                                    (∀ pp #t0.
                                                       (Unlock( pp, ~n.6, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                                     (∀ pp lpp #t0.
                                                       (Lock( pp, lpp, 'device' ) @ #t0)
@@ -1708,7 +1708,7 @@ next
                                                        ∧
                                                         (#vr.34 < #t2) ∧
                                                         (#t2 < #vr.51) ∧
-                                                        (∀ #t0 pp.
+                                                        (∀ pp #t0.
                                                           (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, 'device' ) @ #t0)
@@ -3534,7 +3534,7 @@ next
                                                      ∧
                                                       (#vr.35 < #t2) ∧
                                                       (#t2 < #vr.52) ∧
-                                                      (∀ #t0 pp.
+                                                      (∀ pp #t0.
                                                         (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4115,7 +4115,7 @@ next
                 (#t2 < #t1.1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4143,7 +4143,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4199,7 +4199,7 @@ next
                 (#t2 < #t1.1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4227,7 +4227,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4283,7 +4283,7 @@ next
                 (#t2 < #t1.1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4311,7 +4311,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4367,7 +4367,7 @@ next
                 (#t2 < #t1.1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4395,7 +4395,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4451,7 +4451,7 @@ next
                 (#t2 < #t1.1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4479,7 +4479,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4535,7 +4535,7 @@ next
                 (#t2 < #t1.1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4563,7 +4563,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4698,7 +4698,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -4731,7 +4731,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -4764,7 +4764,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -4797,7 +4797,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -4830,7 +4830,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -4863,7 +4863,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -4938,7 +4938,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -4966,7 +4966,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0)
                   ∧
                    (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -5024,7 +5024,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5052,7 +5052,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0)
                   ∧
                    (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -5110,7 +5110,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5138,7 +5138,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0)
                   ∧
                    (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -5196,7 +5196,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5224,7 +5224,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0)
                   ∧
                    (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -5282,7 +5282,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5310,7 +5310,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0)
                   ∧
                    (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -5368,7 +5368,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5396,7 +5396,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0)
                   ∧
                    (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -5533,7 +5533,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -5566,7 +5566,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -5599,7 +5599,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -5632,7 +5632,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -5665,7 +5665,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -5698,7 +5698,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -5762,7 +5762,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5790,7 +5790,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5846,7 +5846,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5874,7 +5874,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5930,7 +5930,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -5958,7 +5958,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6014,7 +6014,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6042,7 +6042,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6098,7 +6098,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6126,7 +6126,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6182,7 +6182,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6210,7 +6210,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6345,7 +6345,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6378,7 +6378,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6411,7 +6411,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6444,7 +6444,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6477,7 +6477,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6510,7 +6510,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6574,7 +6574,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6602,7 +6602,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6658,7 +6658,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6686,7 +6686,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6742,7 +6742,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6770,7 +6770,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6826,7 +6826,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6854,7 +6854,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6910,7 +6910,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6938,7 +6938,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -6994,7 +6994,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7022,7 +7022,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7157,7 +7157,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -7190,7 +7190,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -7223,7 +7223,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -7256,7 +7256,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -7289,7 +7289,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -7322,7 +7322,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -7386,7 +7386,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7414,7 +7414,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7470,7 +7470,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7498,7 +7498,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7554,7 +7554,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7582,7 +7582,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7638,7 +7638,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7666,7 +7666,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7722,7 +7722,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7750,7 +7750,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7806,7 +7806,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7834,7 +7834,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -7969,7 +7969,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -8002,7 +8002,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -8035,7 +8035,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -8068,7 +8068,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -8101,7 +8101,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -8134,7 +8134,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ #t0 pp.1.
+                  (∃ pp.1 #t0.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -8198,7 +8198,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8226,7 +8226,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8282,7 +8282,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8310,7 +8310,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8366,7 +8366,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8394,7 +8394,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8450,7 +8450,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8478,7 +8478,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8534,7 +8534,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8562,7 +8562,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8618,7 +8618,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.
+                (∃ pp #t0.
                   (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8646,7 +8646,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ #t0 pp.
+          solve( (∃ pp #t0.
                    (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, 'device' ) @ #t0)
@@ -8787,7 +8787,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -8820,7 +8820,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -8853,7 +8853,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -8886,7 +8886,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -8919,7 +8919,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -8952,7 +8952,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10001,7 +10001,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -10029,7 +10029,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0)
                 ∧
                  (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -10087,7 +10087,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -10115,7 +10115,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0)
                 ∧
                  (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -10173,7 +10173,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -10201,7 +10201,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0)
                 ∧
                  (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -10259,7 +10259,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -10287,7 +10287,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0)
                 ∧
                  (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -10345,7 +10345,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -10373,7 +10373,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0)
                 ∧
                  (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -10431,7 +10431,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -10459,7 +10459,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0)
                 ∧
                  (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
@@ -10592,7 +10592,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10625,7 +10625,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10658,7 +10658,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10691,7 +10691,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10724,7 +10724,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10757,7 +10757,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -11170,7 +11170,7 @@ next
                                          ∧
                                           (#vr.9 < #t2) ∧
                                           (#t2 < #vr.44) ∧
-                                          (∀ #t0 pp. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                                          (∀ pp #t0. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                           (∀ pp lpp #t0.
                                             (Lock( pp, lpp, 'device' ) @ #t0)
                                            ⇒
@@ -11207,7 +11207,7 @@ next
                                          ∧
                                           (#vr.9 < #t2) ∧
                                           (#t2 < #vr.44) ∧
-                                          (∀ #t0 pp. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                                          (∀ pp #t0. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                           (∀ pp lpp #t0.
                                             (Lock( pp, lpp, 'device' ) @ #t0)
                                            ⇒
@@ -11937,7 +11937,7 @@ next
                                                                ∧
                                                                 (#vr.21 < #t2) ∧
                                                                 (#t2 < #vr.52) ∧
-                                                                (∀ #t0 pp.
+                                                                (∀ pp #t0.
                                                                   (Unlock( pp, ~n.2, 'device' ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -12389,7 +12389,7 @@ next
                                                              ∧
                                                               (#vr.21 < #t2) ∧
                                                               (#t2 < #vr.53) ∧
-                                                              (∀ #t0 pp.
+                                                              (∀ pp #t0.
                                                                 (Unlock( pp, ~n.2, 'device' ) @ #t0)
                                                                ⇒
                                                                 #t0 = #t2) ∧
@@ -13519,7 +13519,7 @@ next
                                                              ∧
                                                               (#vr.21 < #t2) ∧
                                                               (#t2 < #vr.53) ∧
-                                                              (∀ #t0 pp.
+                                                              (∀ pp #t0.
                                                                 (Unlock( pp, ~n.2, 'device' ) @ #t0)
                                                                ⇒
                                                                 #t0 = #t2) ∧
@@ -15470,7 +15470,7 @@ next
                                          ∧
                                           (#vr.9 < #t2) ∧
                                           (#t2 < #vr.43) ∧
-                                          (∀ #t0 pp. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                                          (∀ pp #t0. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                           (∀ pp lpp #t0.
                                             (Lock( pp, lpp, 'device' ) @ #t0)
                                            ⇒
@@ -15507,7 +15507,7 @@ next
                                          ∧
                                           (#vr.9 < #t2) ∧
                                           (#t2 < #vr.43) ∧
-                                          (∀ #t0 pp. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                                          (∀ pp #t0. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                           (∀ pp lpp #t0.
                                             (Lock( pp, lpp, 'device' ) @ #t0)
                                            ⇒
@@ -15691,7 +15691,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -15719,7 +15719,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -15775,7 +15775,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -15803,7 +15803,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -15859,7 +15859,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -15887,7 +15887,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -15943,7 +15943,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -15971,7 +15971,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -16027,7 +16027,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -16055,7 +16055,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -16111,7 +16111,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -16139,7 +16139,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -16254,7 +16254,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -16287,7 +16287,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -16320,7 +16320,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -16353,7 +16353,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -16386,7 +16386,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -16419,7 +16419,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -16881,7 +16881,7 @@ next
                                          ∧
                                           (#vr.10 < #t2) ∧
                                           (#t2 < #vr.48) ∧
-                                          (∀ #t0 pp. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                                          (∀ pp #t0. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                           (∀ pp lpp #t0.
                                             (Lock( pp, lpp, 'device' ) @ #t0)
                                            ⇒
@@ -16918,7 +16918,7 @@ next
                                          ∧
                                           (#vr.10 < #t2) ∧
                                           (#t2 < #vr.48) ∧
-                                          (∀ #t0 pp. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                                          (∀ pp #t0. (Unlock( pp, ~n.4, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                                           (∀ pp lpp #t0.
                                             (Lock( pp, lpp, 'device' ) @ #t0)
                                            ⇒
@@ -17476,7 +17476,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17504,7 +17504,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17560,7 +17560,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17588,7 +17588,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17644,7 +17644,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17672,7 +17672,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17728,7 +17728,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17756,7 +17756,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17812,7 +17812,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17840,7 +17840,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17896,7 +17896,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -17924,7 +17924,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -18021,7 +18021,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -18054,7 +18054,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -18087,7 +18087,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -18120,7 +18120,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -18153,7 +18153,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -18186,7 +18186,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -18231,7 +18231,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.20) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -18291,7 +18291,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -18321,7 +18321,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -18419,7 +18419,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -18470,7 +18470,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.24) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -18504,7 +18504,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.24) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -18965,7 +18965,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.20) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -19025,7 +19025,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -19055,7 +19055,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -19153,7 +19153,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -19204,7 +19204,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.24) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -19238,7 +19238,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.24) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -19857,7 +19857,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.20) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -19917,7 +19917,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -19947,7 +19947,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -20115,7 +20115,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -20220,7 +20220,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.24) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -20254,7 +20254,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.24) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -20538,7 +20538,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.20) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -20598,7 +20598,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -20628,7 +20628,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -20796,7 +20796,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.21) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, 'device' ) @ #t0)
                            ⇒
@@ -20901,7 +20901,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.24) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -20935,7 +20935,7 @@ next
                        ∧
                         (#vr.4 < #t2) ∧
                         (#t2 < #vr.24) ∧
-                        (∀ #t0 pp. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ pp #t0. (Unlock( pp, ~n.2, 'device' ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, 'device' ) @ #t0)
                          ⇒
@@ -21206,7 +21206,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21234,7 +21234,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21290,7 +21290,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21318,7 +21318,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21374,7 +21374,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21402,7 +21402,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21458,7 +21458,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21486,7 +21486,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21542,7 +21542,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21570,7 +21570,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21626,7 +21626,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, 'device' ) @ #t0)
@@ -21654,7 +21654,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, 'device' ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, 'device' ) @ #t0)
@@ -24877,7 +24877,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -24893,7 +24893,7 @@ restriction locking_1:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -24909,7 +24909,7 @@ restriction locking_2:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_2( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -24925,7 +24925,7 @@ restriction locking_3:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_3( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -24941,7 +24941,7 @@ restriction locking_4:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_4( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -24957,7 +24957,7 @@ restriction locking_5:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_5( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -24972,7 +24972,7 @@ restriction locking_5:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 
@@ -24982,7 +24982,7 @@ analyzing: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 384.485083718s
+  processing time: 439.954759s
   dec_limits (all-traces): verified (1417 steps)
   bad_keys (all-traces): verified (319 steps)
   no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (910 steps)
@@ -24998,7 +24998,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 384.485083718s
+  processing time: 439.954759s
   dec_limits (all-traces): verified (1417 steps)
   bad_keys (all-traces): verified (319 steps)
   no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (910 steps)

@@ -94,7 +94,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                          ∧
                                           (#t.2 < #t2) ∧
                                           (#t2 < #vr.23) ∧
-                                          (∀ #t0 pp. (Unlock( pp, ~n.5, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
+                                          (∀ pp #t0. (Unlock( pp, ~n.5, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
                                           (∀ pp lpp #t0.
                                             (Lock( pp, lpp, <~n.1, ~n> ) @ #t0)
                                            ⇒
@@ -331,7 +331,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                            ∧
                                             (#t.2 < #t2) ∧
                                             (#t2 < #vr.23) ∧
-                                            (∀ #t0 pp. (Unlock( pp, ~n.5, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
+                                            (∀ pp #t0. (Unlock( pp, ~n.5, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
                                             (∀ pp lpp #t0.
                                               (Lock( pp, lpp, <~n.1, ~n> ) @ #t0)
                                              ⇒
@@ -777,7 +777,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                            ∧
                                             (#t.2 < #t2) ∧
                                             (#t2 < #vr.23) ∧
-                                            (∀ #t0 pp. (Unlock( pp, ~n.5, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
+                                            (∀ pp #t0. (Unlock( pp, ~n.5, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
                                             (∀ pp lpp #t0.
                                               (Lock( pp, lpp, <~n.1, ~n> ) @ #t0)
                                              ⇒
@@ -1263,7 +1263,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                  ∧
                   (#vr.3 < #t2) ∧
                   (#t2 < #vr.17) ∧
-                  (∀ #t0 pp. (Unlock( pp, ~n.4, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp #t0. (Unlock( pp, ~n.4, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
                   (∀ pp lpp #t0.
                     (Lock( pp, lpp, <~n.1, ~n> ) @ #t0)
                    ⇒
@@ -1302,7 +1302,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                  ∧
                   (#vr.3 < #t2) ∧
                   (#t2 < #vr.17) ∧
-                  (∀ #t0 pp. (Unlock( pp, ~n.4, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp #t0. (Unlock( pp, ~n.4, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
                   (∀ pp lpp #t0.
                     (Lock( pp, lpp, <~n.1, ~n> ) @ #t0)
                    ⇒
@@ -1390,7 +1390,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                  ∧
                   (#vr.3 < #t2) ∧
                   (#t2 < #vr.17) ∧
-                  (∀ #t0 pp. (Unlock( pp, ~n.4, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp #t0. (Unlock( pp, ~n.4, <~n.1, ~n> ) @ #t0) ⇒ #t0 = #t2) ∧
                   (∀ pp lpp #t0.
                     (Lock( pp, lpp, <~n.1, ~n> ) @ #t0)
                    ⇒
@@ -1533,7 +1533,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.2 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.4,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -1568,7 +1568,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                          ∧
                                                                                           (#t.3 < #t2) ∧
                                                                                           (#t2 < #vr.28) ∧
-                                                                                          (∀ #t0 pp.
+                                                                                          (∀ pp #t0.
                                                                                             (Unlock( pp, ~n.6,
                                                                                                      <~n.1, ~n
                                                                                                      >
@@ -2128,7 +2128,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                      ∧
                                                                                       (#t.2 < #t2) ∧
                                                                                       (#t2 < #vr.28) ∧
-                                                                                      (∀ #t0 pp.
+                                                                                      (∀ pp #t0.
                                                                                         (Unlock( pp, ~n.5,
                                                                                                  <~n.1, ~n>
                                                                                          ) @ #t0)
@@ -2161,7 +2161,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.3 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.6,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -2730,8 +2730,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                ∧
                                                                                                                                 (#t.5 < #t2) ∧
                                                                                                                                 (#t2 < #vr.33) ∧
-                                                                                                                                (∀ #t0
-                                                                                                                                   pp.
+                                                                                                                                (∀ pp
+                                                                                                                                   #t0.
                                                                                                                                   (Unlock( pp,
                                                                                                                                            ~n.8,
                                                                                                                                            <
@@ -2806,8 +2806,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                      ∧
                                                                                                                                       (#t.2 < #t2) ∧
                                                                                                                                       (#t2 < #vr.35) ∧
-                                                                                                                                      (∀ #t0
-                                                                                                                                         pp.
+                                                                                                                                      (∀ pp
+                                                                                                                                         #t0.
                                                                                                                                         (Unlock( pp,
                                                                                                                                                  ~n.5,
                                                                                                                                                  <
@@ -2864,8 +2864,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                        ∧
                                                                                                                                         (#t.3 < #t2) ∧
                                                                                                                                         (#t2 < #vr.35) ∧
-                                                                                                                                        (∀ #t0
-                                                                                                                                           pp.
+                                                                                                                                        (∀ pp
+                                                                                                                                           #t0.
                                                                                                                                           (Unlock( pp,
                                                                                                                                                    ~n.7,
                                                                                                                                                    <
@@ -3279,7 +3279,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.2 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.4,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -3314,7 +3314,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                          ∧
                                                                                           (#t.3 < #t2) ∧
                                                                                           (#t2 < #vr.28) ∧
-                                                                                          (∀ #t0 pp.
+                                                                                          (∀ pp #t0.
                                                                                             (Unlock( pp, ~n.6,
                                                                                                      <~n.1, ~n
                                                                                                      >
@@ -3874,7 +3874,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                      ∧
                                                                                       (#t.2 < #t2) ∧
                                                                                       (#t2 < #vr.28) ∧
-                                                                                      (∀ #t0 pp.
+                                                                                      (∀ pp #t0.
                                                                                         (Unlock( pp, ~n.5,
                                                                                                  <~n.1, ~n>
                                                                                          ) @ #t0)
@@ -3907,7 +3907,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.3 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.6,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -4476,8 +4476,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                ∧
                                                                                                                                 (#t.5 < #t2) ∧
                                                                                                                                 (#t2 < #vr.33) ∧
-                                                                                                                                (∀ #t0
-                                                                                                                                   pp.
+                                                                                                                                (∀ pp
+                                                                                                                                   #t0.
                                                                                                                                   (Unlock( pp,
                                                                                                                                            ~n.8,
                                                                                                                                            <
@@ -4552,8 +4552,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                      ∧
                                                                                                                                       (#t.2 < #t2) ∧
                                                                                                                                       (#t2 < #vr.35) ∧
-                                                                                                                                      (∀ #t0
-                                                                                                                                         pp.
+                                                                                                                                      (∀ pp
+                                                                                                                                         #t0.
                                                                                                                                         (Unlock( pp,
                                                                                                                                                  ~n.5,
                                                                                                                                                  <
@@ -4610,8 +4610,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                        ∧
                                                                                                                                         (#t.3 < #t2) ∧
                                                                                                                                         (#t2 < #vr.35) ∧
-                                                                                                                                        (∀ #t0
-                                                                                                                                           pp.
+                                                                                                                                        (∀ pp
+                                                                                                                                           #t0.
                                                                                                                                           (Unlock( pp,
                                                                                                                                                    ~n.7,
                                                                                                                                                    <
@@ -5025,7 +5025,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.2 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.4,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -5060,7 +5060,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                          ∧
                                                                                           (#t.3 < #t2) ∧
                                                                                           (#t2 < #vr.28) ∧
-                                                                                          (∀ #t0 pp.
+                                                                                          (∀ pp #t0.
                                                                                             (Unlock( pp, ~n.6,
                                                                                                      <~n.1, ~n
                                                                                                      >
@@ -5620,7 +5620,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                      ∧
                                                                                       (#t.2 < #t2) ∧
                                                                                       (#t2 < #vr.28) ∧
-                                                                                      (∀ #t0 pp.
+                                                                                      (∀ pp #t0.
                                                                                         (Unlock( pp, ~n.5,
                                                                                                  <~n.1, ~n>
                                                                                          ) @ #t0)
@@ -5653,7 +5653,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.3 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.6,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -6230,8 +6230,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                ∧
                                                                                                                                 (#t.5 < #t2) ∧
                                                                                                                                 (#t2 < #vr.33) ∧
-                                                                                                                                (∀ #t0
-                                                                                                                                   pp.
+                                                                                                                                (∀ pp
+                                                                                                                                   #t0.
                                                                                                                                   (Unlock( pp,
                                                                                                                                            ~n.8,
                                                                                                                                            <
@@ -6306,8 +6306,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                      ∧
                                                                                                                                       (#t.2 < #t2) ∧
                                                                                                                                       (#t2 < #vr.35) ∧
-                                                                                                                                      (∀ #t0
-                                                                                                                                         pp.
+                                                                                                                                      (∀ pp
+                                                                                                                                         #t0.
                                                                                                                                         (Unlock( pp,
                                                                                                                                                  ~n.5,
                                                                                                                                                  <
@@ -6364,8 +6364,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                        ∧
                                                                                                                                         (#t.3 < #t2) ∧
                                                                                                                                         (#t2 < #vr.35) ∧
-                                                                                                                                        (∀ #t0
-                                                                                                                                           pp.
+                                                                                                                                        (∀ pp
+                                                                                                                                           #t0.
                                                                                                                                           (Unlock( pp,
                                                                                                                                                    ~n.7,
                                                                                                                                                    <
@@ -6779,7 +6779,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.2 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.4,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -6814,7 +6814,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                          ∧
                                                                                           (#t.3 < #t2) ∧
                                                                                           (#t2 < #vr.28) ∧
-                                                                                          (∀ #t0 pp.
+                                                                                          (∀ pp #t0.
                                                                                             (Unlock( pp, ~n.6,
                                                                                                      <~n.1, ~n
                                                                                                      >
@@ -7374,7 +7374,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                      ∧
                                                                                       (#t.2 < #t2) ∧
                                                                                       (#t2 < #vr.28) ∧
-                                                                                      (∀ #t0 pp.
+                                                                                      (∀ pp #t0.
                                                                                         (Unlock( pp, ~n.5,
                                                                                                  <~n.1, ~n>
                                                                                          ) @ #t0)
@@ -7407,7 +7407,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.3 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.6,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -7980,8 +7980,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                ∧
                                                                                                                                 (#t.5 < #t2) ∧
                                                                                                                                 (#t2 < #vr.33) ∧
-                                                                                                                                (∀ #t0
-                                                                                                                                   pp.
+                                                                                                                                (∀ pp
+                                                                                                                                   #t0.
                                                                                                                                   (Unlock( pp,
                                                                                                                                            ~n.8,
                                                                                                                                            <
@@ -8056,8 +8056,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                      ∧
                                                                                                                                       (#t.2 < #t2) ∧
                                                                                                                                       (#t2 < #vr.35) ∧
-                                                                                                                                      (∀ #t0
-                                                                                                                                         pp.
+                                                                                                                                      (∀ pp
+                                                                                                                                         #t0.
                                                                                                                                         (Unlock( pp,
                                                                                                                                                  ~n.5,
                                                                                                                                                  <
@@ -8114,8 +8114,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                        ∧
                                                                                                                                         (#t.3 < #t2) ∧
                                                                                                                                         (#t2 < #vr.35) ∧
-                                                                                                                                        (∀ #t0
-                                                                                                                                           pp.
+                                                                                                                                        (∀ pp
+                                                                                                                                           #t0.
                                                                                                                                           (Unlock( pp,
                                                                                                                                                    ~n.7,
                                                                                                                                                    <
@@ -8530,7 +8530,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.2 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.4,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -8565,7 +8565,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                          ∧
                                                                                           (#t.3 < #t2) ∧
                                                                                           (#t2 < #vr.28) ∧
-                                                                                          (∀ #t0 pp.
+                                                                                          (∀ pp #t0.
                                                                                             (Unlock( pp, ~n.6,
                                                                                                      <~n.1, ~n
                                                                                                      >
@@ -9125,7 +9125,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                      ∧
                                                                                       (#t.2 < #t2) ∧
                                                                                       (#t2 < #vr.28) ∧
-                                                                                      (∀ #t0 pp.
+                                                                                      (∀ pp #t0.
                                                                                         (Unlock( pp, ~n.5,
                                                                                                  <~n.1, ~n>
                                                                                          ) @ #t0)
@@ -9158,7 +9158,7 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                        ∧
                                                                                         (#t.3 < #t2) ∧
                                                                                         (#t2 < #vr.28) ∧
-                                                                                        (∀ #t0 pp.
+                                                                                        (∀ pp #t0.
                                                                                           (Unlock( pp, ~n.6,
                                                                                                    <~n.1, ~n>
                                                                                            ) @ #t0)
@@ -9739,8 +9739,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                ∧
                                                                                                                                 (#t.5 < #t2) ∧
                                                                                                                                 (#t2 < #vr.33) ∧
-                                                                                                                                (∀ #t0
-                                                                                                                                   pp.
+                                                                                                                                (∀ pp
+                                                                                                                                   #t0.
                                                                                                                                   (Unlock( pp,
                                                                                                                                            ~n.8,
                                                                                                                                            <
@@ -9815,8 +9815,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                      ∧
                                                                                                                                       (#t.2 < #t2) ∧
                                                                                                                                       (#t2 < #vr.35) ∧
-                                                                                                                                      (∀ #t0
-                                                                                                                                         pp.
+                                                                                                                                      (∀ pp
+                                                                                                                                         #t0.
                                                                                                                                         (Unlock( pp,
                                                                                                                                                  ~n.5,
                                                                                                                                                  <
@@ -9873,8 +9873,8 @@ solve( State_11111211111( ~prog_1, ~prog_1111121, ~prog_111112111, MH,
                                                                                                                                        ∧
                                                                                                                                         (#t.3 < #t2) ∧
                                                                                                                                         (#t2 < #vr.35) ∧
-                                                                                                                                        (∀ #t0
-                                                                                                                                           pp.
+                                                                                                                                        (∀ pp
+                                                                                                                                           #t0.
                                                                                                                                           (Unlock( pp,
                                                                                                                                                    ~n.7,
                                                                                                                                                    <
@@ -10341,7 +10341,7 @@ solve( State_11111111111( ~prog_1, ~prog_1111111, ~prog_111111111, A, B,
                  ∧
                   (#vr.3 < #t2) ∧
                   (#t2 < #vr.16) ∧
-                  (∀ #t0 pp. (Unlock( pp, ~n.4, <~n, ~n.1> ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp #t0. (Unlock( pp, ~n.4, <~n, ~n.1> ) @ #t0) ⇒ #t0 = #t2) ∧
                   (∀ pp lpp #t0.
                     (Lock( pp, lpp, <~n, ~n.1> ) @ #t0)
                    ⇒
@@ -10380,7 +10380,7 @@ solve( State_11111111111( ~prog_1, ~prog_1111111, ~prog_111111111, A, B,
                  ∧
                   (#vr.3 < #t2) ∧
                   (#t2 < #vr.16) ∧
-                  (∀ #t0 pp. (Unlock( pp, ~n.4, <~n, ~n.1> ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp #t0. (Unlock( pp, ~n.4, <~n, ~n.1> ) @ #t0) ⇒ #t0 = #t2) ∧
                   (∀ pp lpp #t0.
                     (Lock( pp, lpp, <~n, ~n.1> ) @ #t0)
                    ⇒
@@ -10459,7 +10459,7 @@ solve( State_11111111111( ~prog_1, ~prog_1111111, ~prog_111111111, A, B,
                  ∧
                   (#vr.3 < #t2) ∧
                   (#t2 < #vr.16) ∧
-                  (∀ #t0 pp. (Unlock( pp, ~n.4, <~n, ~n.1> ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp #t0. (Unlock( pp, ~n.4, <~n, ~n.1> ) @ #t0) ⇒ #t0 = #t2) ∧
                   (∀ pp lpp #t0.
                     (Lock( pp, lpp, <~n, ~n.1> ) @ #t0)
                    ⇒
@@ -10527,7 +10527,7 @@ solve( State_11111111111( ~prog_1, ~prog_1111111, ~prog_111111111, A, B,
                                                          ∧
                                                           (#vr.19 < #t2) ∧
                                                           (#t2 < #vr.22) ∧
-                                                          (∀ #t0 pp.
+                                                          (∀ pp #t0.
                                                             (Unlock( pp, ~n.8, <~n.1, ~n> ) @ #t0)
                                                            ⇒
                                                             #t0 = #t2) ∧
@@ -11569,7 +11569,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -11585,7 +11585,7 @@ restriction locking_1:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -11638,7 +11638,7 @@ restriction reliable:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 
@@ -11648,7 +11648,7 @@ analyzing: examples/sapic/fast/SCADA/opc_ua_secure_conversation_variant.spthy
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation_variant.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation_variant.spthy.tmp
-  processing time: 205.747211133s
+  processing time: 202.981601s
   Executable (exists-trace): verified (36 steps)
   all_received_were_sent (all-traces): verified (18 steps)
   all_received_were_sent_injective (all-traces): verified (168 steps)
@@ -11664,7 +11664,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation_variant.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation_variant.spthy.tmp
-  processing time: 205.747211133s
+  processing time: 202.981601s
   Executable (exists-trace): verified (36 steps)
   all_received_were_sent (all-traces): verified (18 steps)
   all_received_were_sent_injective (all-traces): verified (168 steps)

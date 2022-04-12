@@ -731,7 +731,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 
@@ -741,7 +741,7 @@ analyzing: examples/sapic/fast/feature-let-bindings/let-blocks.spthy
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks.spthy.tmp
-  processing time: 2.008544488s
+  processing time: 5.036532s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (47 steps)
@@ -756,7 +756,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-let-bindings/let-blocks.spthy
 
   output:          examples/sapic/fast/feature-let-bindings/let-blocks.spthy.tmp
-  processing time: 2.008544488s
+  processing time: 5.036532s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (47 steps)

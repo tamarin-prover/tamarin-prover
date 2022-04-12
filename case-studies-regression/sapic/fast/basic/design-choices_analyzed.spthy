@@ -27,7 +27,7 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
                ∧
                 (#vr.1 < #t2) ∧
                 (#t2 < #vr.6) ∧
-                (∀ #t0 pp. (Unlock( pp, ~n, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
+                (∀ pp #t0. (Unlock( pp, ~n, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
                 (∀ pp lpp #t0.
                   (Lock( pp, lpp, 's' ) @ #t0)
                  ⇒
@@ -78,7 +78,7 @@ next
                ∧
                 (#vr.1 < #t2) ∧
                 (#t2 < #vr.6) ∧
-                (∀ #t0 pp. (Unlock( pp, ~n, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
+                (∀ pp #t0. (Unlock( pp, ~n, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
                 (∀ pp lpp #t0.
                   (Lock( pp, lpp, 's' ) @ #t0)
                  ⇒
@@ -216,7 +216,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -231,7 +231,7 @@ restriction locking_0:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 
@@ -241,7 +241,7 @@ analyzing: examples/sapic/fast/basic/design-choices.spthy
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.338865872s
+  processing time: 0.935509s
   visit_once (all-traces): verified (26 steps)
 
 ------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.338865872s
+  processing time: 0.935509s
   visit_once (all-traces): verified (26 steps)
 
 ==============================================================================

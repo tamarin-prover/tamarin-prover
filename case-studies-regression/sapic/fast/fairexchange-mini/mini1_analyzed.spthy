@@ -123,7 +123,7 @@ restriction reliable:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 
@@ -133,7 +133,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/mini1.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/mini1.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini1.spthy.tmp
-  processing time: 0.122350749s
+  processing time: 0.185159s
   A_possible (exists-trace): verified (5 steps)
   B_impossible (all-traces): verified (4 steps)
 
@@ -145,7 +145,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/mini1.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/mini1.spthy.tmp
-  processing time: 0.122350749s
+  processing time: 0.185159s
   A_possible (exists-trace): verified (5 steps)
   B_impossible (all-traces): verified (4 steps)
 

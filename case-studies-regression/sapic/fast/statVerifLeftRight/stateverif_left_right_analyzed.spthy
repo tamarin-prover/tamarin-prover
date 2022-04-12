@@ -71,7 +71,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -104,7 +104,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ #t0 pp.1.
+                (∃ pp.1 #t0.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -144,7 +144,7 @@ next
                          ∧
                           (#vr.3 < #t2) ∧
                           (#t2 < #vr.22) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, ~n ) @ #t0)
                            ⇒
@@ -367,7 +367,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.24) ∧
-                          (∀ #t0 pp. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ pp #t0. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, ~n ) @ #t0)
                            ⇒
@@ -599,7 +599,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -627,7 +627,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -683,7 +683,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ #t0 pp.
+              (∃ pp #t0.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -711,7 +711,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ #t0 pp.
+        solve( (∃ pp #t0.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -782,7 +782,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                    ∧
                     (#vr.16 < #t2) ∧
                     (#t2 < #vr.33) ∧
-                    (∀ #t0 pp. (Unlock( pp, ~n.7, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp #t0. (Unlock( pp, ~n.7, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
                     (∀ pp lpp #t0.
                       (Lock( pp, lpp, ~n.5 ) @ #t0)
                      ⇒
@@ -842,7 +842,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                    ∧
                     (#vr.17 < #t2) ∧
                     (#t2 < #vr.35) ∧
-                    (∀ #t0 pp. (Unlock( pp, ~n.7, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp #t0. (Unlock( pp, ~n.7, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
                     (∀ pp lpp #t0.
                       (Lock( pp, lpp, ~n.5 ) @ #t0)
                      ⇒
@@ -908,7 +908,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                    ∧
                     (#vr.16 < #t2) ∧
                     (#t2 < #vr.33) ∧
-                    (∀ #t0 pp. (Unlock( pp, ~n.7, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp #t0. (Unlock( pp, ~n.7, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
                     (∀ pp lpp #t0.
                       (Lock( pp, lpp, ~n.5 ) @ #t0)
                      ⇒
@@ -1011,7 +1011,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                                        ∧
                                         (#vr.40 < #t2) ∧
                                         (#t2 < #vr.57) ∧
-                                        (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ pp #t0. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, ~n.8 ) @ #t0)
                                          ⇒
@@ -1142,7 +1142,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                                        ∧
                                         (#vr.41 < #t2) ∧
                                         (#t2 < #vr.59) ∧
-                                        (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ pp #t0. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, ~n.8 ) @ #t0)
                                          ⇒
@@ -1292,7 +1292,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                    ∧
                     (#vr.17 < #t2) ∧
                     (#t2 < #vr.35) ∧
-                    (∀ #t0 pp. (Unlock( pp, ~n.7, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp #t0. (Unlock( pp, ~n.7, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
                     (∀ pp lpp #t0.
                       (Lock( pp, lpp, ~n.5 ) @ #t0)
                      ⇒
@@ -1395,7 +1395,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                                        ∧
                                         (#vr.42 < #t2) ∧
                                         (#t2 < #vr.59) ∧
-                                        (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ pp #t0. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, ~n.8 ) @ #t0)
                                          ⇒
@@ -1520,7 +1520,7 @@ solve( State_11112111( x, y, s, sk ) ▶₀ #i )
                                        ∧
                                         (#vr.43 < #t2) ∧
                                         (#t2 < #vr.61) ∧
-                                        (∀ #t0 pp. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ pp #t0. (Unlock( pp, ~n.11, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, ~n.8 ) @ #t0)
                                          ⇒
@@ -2184,7 +2184,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -2200,7 +2200,7 @@ restriction locking_1:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -2215,7 +2215,7 @@ restriction locking_1:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 
@@ -2225,7 +2225,7 @@ analyzing: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 15.00160648s
+  processing time: 25.091718s
   source (all-traces): verified (174 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)
@@ -2239,7 +2239,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 15.00160648s
+  processing time: 25.091718s
   source (all-traces): verified (174 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)
