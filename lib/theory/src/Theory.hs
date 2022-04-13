@@ -242,25 +242,13 @@ module Theory (
 
   ) where
 
--- import           Debug.Trace
-
-import           Prelude                             hiding (id, (.))
-
-
--- import           Data.Typeable
-
-
--- import qualified Data.Label.Total
-
-
-import           Theory.Model
-import           Theory.Proof
-import           Theory.Syntactic.Predicate
-import           TheoryObject
-
-import OpenTheory
 import ClosedTheory
-import Prover
-import Pretty
 import Items.ExportInfo
-
+import OpenTheory
+import Pretty
+import Prover
+import Theory.Model
+import Theory.Proof
+import Theory.Syntactic.Predicate
+import TheoryObject
+import Prelude hiding (id, (.))

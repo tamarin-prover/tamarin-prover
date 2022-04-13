@@ -80,7 +80,23 @@ module TheoryObject (
   , lookupLemma
   , lookupProcessDef
   , filterSide
-  , mapMProcesses, mapMProcessesDef, theoryFunctionTypingInfos, theoryBuiltins, theoryExportInfos, theoryEquivLemmas, theoryDiffEquivLemmas, addFunctionTypingInfo, clearFunctionTypingInfos, addExportInfo, setforcedInjectiveFacts, filterLemma, lookupFunctionTypingInfo, prettyTheory, prettySapicElement, prettyProcessDef, prettyEitherRestriction
+  , mapMProcesses
+  , mapMProcessesDef
+  , theoryFunctionTypingInfos
+  , theoryBuiltins
+  , theoryExportInfos
+  , theoryEquivLemmas
+  , theoryDiffEquivLemmas
+  , addFunctionTypingInfo
+  , clearFunctionTypingInfos
+  , addExportInfo
+  , setforcedInjectiveFacts
+  , filterLemma
+  , lookupFunctionTypingInfo
+  , prettyTheory
+  , prettySapicElement
+  , prettyProcessDef
+  , prettyEitherRestriction
   , lookupExportInfo
   , prettyRestriction
   , prettyProcess
