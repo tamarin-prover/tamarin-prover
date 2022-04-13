@@ -55,4 +55,4 @@ install:
 script:
   - tamarin-prover test
   # - make sapic-case-studies
-  - python3 regressionTests.py --except-dir=system.info -notime -nofn -f
+  - python3 regressionTests.py -noi

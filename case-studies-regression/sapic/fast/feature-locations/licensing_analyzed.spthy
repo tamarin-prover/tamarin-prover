@@ -932,7 +932,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -942,7 +942,7 @@ analyzing: examples/sapic/fast/feature-locations/licensing.spthy
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 5.500441012s
+  processing time: 7.421431559s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (84 steps)
   final (all-traces): verified (44 steps)
@@ -955,7 +955,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 5.500441012s
+  processing time: 7.421431559s
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (84 steps)
   final (all-traces): verified (44 steps)

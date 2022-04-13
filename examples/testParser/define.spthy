@@ -1,0 +1,89 @@
+theory define
+
+begin
+
+#ifdef A
+
+rule testA:
+[]--[A()]->[]
+
+#endif
+
+#ifdef not A
+
+rule testnoA:
+[]--[NoA()]->[]
+
+#endif
+
+
+#ifdef B
+
+rule testB:
+[]--[B()]->[]
+
+#else
+
+rule testnoB:
+[]--[NoB()]->[]
+
+#endif
+
+
+lemma reachA:
+ exists-trace
+ "Ex #i. A()@i"
+
+lemma reachnoA:
+ exists-trace
+ "Ex #i. NoA()@i"
+
+
+lemma reachB:
+ exists-trace
+ "Ex #i. B()@i"
+
+lemma reachnotB:
+ exists-trace
+ "Ex #i. NoB()@i"
+
+
+#ifdef C
+
+#define D
+rule testC:
+[]--[C()]->[]
+
+
+#endif
+
+#ifdef D
+
+rule testD:
+[]--[D()]->[]
+
+#endif
+
+
+#ifdef D & C
+
+rule testDC:
+[]--[DC()]->[]
+
+#endif
+
+
+lemma reachC:
+ exists-trace
+ "Ex #i. C()@i"
+
+lemma reachDorC:
+ exists-trace
+ "Ex #i. D()@i"
+
+lemma reachDandC:
+ exists-trace
+ "Ex #i. DC()@i"
+
+
+end

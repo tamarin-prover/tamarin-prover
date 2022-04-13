@@ -68,7 +68,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -78,7 +78,7 @@ analyzing: examples/sapic/fast/basic/replication.spthy
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.070310397s
+  processing time: 0.090627586s
   onlyOneSecret (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.070310397s
+  processing time: 0.090627586s
   onlyOneSecret (exists-trace): verified (4 steps)
 
 ==============================================================================

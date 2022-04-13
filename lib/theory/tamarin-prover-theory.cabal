@@ -10,7 +10,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
                     Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
+maintainer:         Cas Cremers <cremers@cispa.de>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
 copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2018
@@ -70,6 +70,7 @@ library
     exposed-modules:
       Theory
       Theory.Proof
+      Theory.ProofSkeleton
 
       Theory.Constraint.Solver
       Theory.Constraint.Solver.Sources
@@ -109,6 +110,20 @@ library
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
+      TheoryObject
+      Lemma
+      OpenTheory
+      ClosedTheory
+      Rule
+      Prover
+      Items.LemmaItem
+      Items.OpenTheoryItem
+      Items.OptionItem
+      Items.RuleItem
+      Items.ProcessItem
+      Items.PredicateItem
+      Items.TheoryItem
+      Pretty
 
     other-modules:
       Theory.Text.Parser.Exceptions

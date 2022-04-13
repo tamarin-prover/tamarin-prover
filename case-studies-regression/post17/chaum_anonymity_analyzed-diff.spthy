@@ -2283,7 +2283,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -2293,7 +2293,7 @@ analyzing: examples/post17/chaum_anonymity.spthy
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          examples/post17/chaum_anonymity.spthy.tmp
-  processing time: 7.360299296s
+  processing time: 10.759491857s
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)
   DiffLemma:  Observational_equivalence : verified (739 steps)
@@ -2306,7 +2306,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          examples/post17/chaum_anonymity.spthy.tmp
-  processing time: 7.360299296s
+  processing time: 10.759491857s
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)
   DiffLemma:  Observational_equivalence : verified (739 steps)

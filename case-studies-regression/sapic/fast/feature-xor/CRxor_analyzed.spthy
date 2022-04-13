@@ -33,7 +33,7 @@ solve( State_11111111( ~k, ~na, m, nb ) ▶₀ #i )
       by solve( !KU( ~k ) @ #vk.3 )
     next
       case outhknbnanb_0_11211211
-      by contradiction /* from formulas */
+      by contradiction /* cyclic */
     qed
   next
     case split_case_3
@@ -738,7 +738,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -748,7 +748,7 @@ analyzing: examples/sapic/fast/feature-xor/CRxor.spthy
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 2.252370951s
+  processing time: 2.448601532s
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)
   executable (exists-trace): verified (9 steps)
@@ -761,7 +761,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 2.252370951s
+  processing time: 2.448601532s
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)
   executable (exists-trace): verified (9 steps)

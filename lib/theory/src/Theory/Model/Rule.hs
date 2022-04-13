@@ -150,7 +150,7 @@ module Theory.Model.Rule (
   , prettyProtoRuleACInstInfo
   , prettyInstLoopBreakers
 
-  )  where
+  , prettyIntruderVariants)  where
 
 import           Prelude              hiding (id, (.))
 
@@ -1219,3 +1219,15 @@ prettyProtoRuleAC = prettyNamedRule (kwRuleModulo "AC") prettyProtoRuleACInfo
 
 prettyRuleACInst :: HighlightDocument d => RuleACInst -> d
 prettyRuleACInst = prettyNamedRule (kwInstanceModulo "AC") (const emptyDoc)
+
+-- | Pretty-print a non-empty bunch of intruder rules.
+prettyIntruderVariants :: HighlightDocument d => [IntrRuleAC] -> d
+prettyIntruderVariants vs = vcat . intersperse (text "") $ map prettyIntrRuleAC vs
+
+{-
+-- | Pretty-print the intruder variants section.
+prettyIntrVariantsSection :: HighlightDocument d => [IntrRuleAC] -> d
+prettyIntrVariantsSection rules =
+    prettyFormalComment "section" " Finite Variants of the Intruder Rules " $--$
+    nest 1 (prettyIntruderVariants rules)
+-}

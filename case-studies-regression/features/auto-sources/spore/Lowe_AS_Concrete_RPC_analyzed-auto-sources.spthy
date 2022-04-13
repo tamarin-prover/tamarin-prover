@@ -5011,7 +5011,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -5021,7 +5021,7 @@ analyzing: examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy
 analyzed: examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy.tmp
-  processing time: 30.132522613s
+  processing time: 59.833228623s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): verified (348 steps)
   injectiveagreement_B (all-traces): verified (968 steps)
@@ -5037,7 +5037,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy.tmp
-  processing time: 30.132522613s
+  processing time: 59.833228623s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): verified (348 steps)
   injectiveagreement_B (all-traces): verified (968 steps)

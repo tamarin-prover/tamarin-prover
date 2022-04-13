@@ -212,7 +212,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -222,7 +222,7 @@ analyzing: examples/csf12/JKL_TS1_2008_KI.spthy
 analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2008_KI.spthy.tmp
-  processing time: 0.190205663s
+  processing time: 0.262164037s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 
@@ -234,7 +234,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS1_2008_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2008_KI.spthy.tmp
-  processing time: 0.190205663s
+  processing time: 0.262164037s
   JKL2008_1_initiator_key (all-traces): verified (15 steps)
   JKL2008_1_responder_key (all-traces): verified (15 steps)
 
