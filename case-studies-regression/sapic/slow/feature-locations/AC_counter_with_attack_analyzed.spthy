@@ -46,7 +46,7 @@ solve( State_12111111111( i2, o2, signedios, <<o, list(i, 'init')>, x>,
                    ∧
                     (#vr.4 < #t2) ∧
                     (#t2 < #vr.33) ∧
-                    (∀ pp #t0. (Unlock( pp, ~n.3, ~n.2 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ #t0 pp. (Unlock( pp, ~n.3, ~n.2 ) @ #t0) ⇒ #t0 = #t2) ∧
                     (∀ pp lpp #t0.
                       (Lock( pp, lpp, ~n.2 ) @ #t0)
                      ⇒
@@ -77,7 +77,7 @@ solve( State_12111111111( i2, o2, signedios, <<o, list(i, 'init')>, x>,
                                    ∧
                                     (#vr.20 < #t2) ∧
                                     (#t2 < #vr.51) ∧
-                                    (∀ pp #t0. (Unlock( pp, ~n.9, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                    (∀ #t0 pp. (Unlock( pp, ~n.9, ~n.8 ) @ #t0) ⇒ #t0 = #t2) ∧
                                     (∀ pp lpp #t0.
                                       (Lock( pp, lpp, ~n.8 ) @ #t0)
                                      ⇒
@@ -625,7 +625,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -641,7 +641,7 @@ restriction locking_1:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -656,7 +656,7 @@ restriction locking_1:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -666,7 +666,7 @@ analyzing: examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy
 analyzed: examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 105.958603s
+  processing time: 57.643638829s
   attested_comput_second_step (exists-trace): verified (27 steps)
 
 ------------------------------------------------------------------------------
@@ -677,7 +677,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 105.958603s
+  processing time: 57.643638829s
   attested_comput_second_step (exists-trace): verified (27 steps)
 
 ==============================================================================

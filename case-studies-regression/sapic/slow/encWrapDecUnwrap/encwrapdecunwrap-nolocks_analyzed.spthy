@@ -783,7 +783,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -793,7 +793,7 @@ analyzing: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 707.403334s
+  processing time: 291.638676862s
   can_obtain_key (exists-trace): verified (24 steps)
 
 ------------------------------------------------------------------------------
@@ -804,7 +804,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 707.403334s
+  processing time: 291.638676862s
   can_obtain_key (exists-trace): verified (24 steps)
 
 ==============================================================================

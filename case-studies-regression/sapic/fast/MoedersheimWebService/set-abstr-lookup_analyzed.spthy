@@ -638,7 +638,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -654,7 +654,7 @@ restriction locking_1:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -670,7 +670,7 @@ restriction locking_2:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_2( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -685,7 +685,7 @@ restriction locking_2:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -695,7 +695,7 @@ analyzing: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 5.762746s
+  processing time: 1.805381116s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 
 ------------------------------------------------------------------------------
@@ -706,7 +706,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 5.762746s
+  processing time: 1.805381116s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)
 
 ==============================================================================

@@ -244,7 +244,7 @@ restriction progressInit:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -254,7 +254,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/ndc-nested.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/ndc-nested.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/ndc-nested.spthy.tmp
-  processing time: 0.305222s
+  processing time: 0.083198148s
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)
@@ -272,7 +272,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/ndc-nested.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/ndc-nested.spthy.tmp
-  processing time: 0.305222s
+  processing time: 0.083198148s
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)

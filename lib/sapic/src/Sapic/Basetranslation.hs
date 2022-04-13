@@ -252,7 +252,7 @@ resLockingPOS :: String
 resLockingPOS  = [QQ.r|restriction locking:
 "All p pp l x lp #t1 #t3. LockPOS(p, l, x)@t1 & Lock(pp, lp, x)@t3 ==>
         (#t1<#t3 & (Ex #t2. UnlockPOS(p, l, x)@t2 & #t1 < #t2 & #t2 < #t3
-                   & (All pp #t0. Unlock(pp, l, x)@t0 ==> #t0 = #t2)
+                   & (All #t0 pp. Unlock(pp, l, x)@t0 ==> #t0 = #t2)
                    & (All pp lpp #t0. Lock(pp, lpp, x)@t0 ==> #t0 < #t1 | #t0 = #t1 | #t2 < #t0)
                    & (All pp lpp #t0. Unlock(pp, lpp, x)@t0 ==> #t0 < #t1 | #t2 < #t0 | #t2 = #t0 )))
       | #t3<#t1 | #t1=#t3"

@@ -62,7 +62,7 @@ restriction locking_1:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -83,7 +83,7 @@ restriction locking_0:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -93,7 +93,7 @@ analyzing: examples/sapic/fast/feature-locking-restriction/locking-restriction.s
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.083803s
+  processing time: 0.062385388s
   ANotReachable (all-traces): verified (2 steps)
 
 ------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.083803s
+  processing time: 0.062385388s
   ANotReachable (all-traces): verified (2 steps)
 
 ==============================================================================

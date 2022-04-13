@@ -114,7 +114,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -147,7 +147,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -180,7 +180,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -213,7 +213,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -246,7 +246,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -279,7 +279,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -312,7 +312,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -364,7 +364,7 @@ next
                        ∧
                         (#vr.3 < #t2) ∧
                         (#t2 < #vr.15) ∧
-                        (∀ pp #t0. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ #t0 pp. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, L_h ) @ #t0)
                          ⇒
@@ -449,7 +449,7 @@ next
                        ∧
                         (#vr.3 < #t2) ∧
                         (#t2 < #vr.26) ∧
-                        (∀ pp #t0. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ #t0 pp. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, L_h ) @ #t0)
                          ⇒
@@ -527,7 +527,7 @@ next
                        ∧
                         (#vr.3 < #t2) ∧
                         (#t2 < #vr.27) ∧
-                        (∀ pp #t0. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ #t0 pp. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, L_h ) @ #t0)
                          ⇒
@@ -565,7 +565,7 @@ next
                                      ∧
                                       (#vr.19 < #t2) ∧
                                       (#t2 < #vr.50) ∧
-                                      (∀ pp #t0. (Unlock( pp, ~n.3, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                      (∀ #t0 pp. (Unlock( pp, ~n.3, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                       (∀ pp lpp #t0.
                                         (Lock( pp, lpp, L_h1 ) @ #t0)
                                        ⇒
@@ -631,7 +631,7 @@ next
                                      ∧
                                       (#vr.19 < #t2) ∧
                                       (#t2 < #vr.47) ∧
-                                      (∀ pp #t0. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                      (∀ #t0 pp. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                       (∀ pp lpp #t0.
                                         (Lock( pp, lpp, L_h1 ) @ #t0)
                                        ⇒
@@ -735,7 +735,7 @@ next
                                                            ∧
                                                             (#vr.40 < #t2) ∧
                                                             (#t2 < #vr.85) ∧
-                                                            (∀ pp #t0.
+                                                            (∀ #t0 pp.
                                                               (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                             (∀ pp lpp #t0.
                                                               (Lock( pp, lpp, L_h ) @ #t0)
@@ -856,7 +856,7 @@ next
                                                          ∧
                                                           (#vr.40 < #t2) ∧
                                                           (#t2 < #vr.96) ∧
-                                                          (∀ pp #t0.
+                                                          (∀ #t0 pp.
                                                             (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                           (∀ pp lpp #t0.
                                                             (Lock( pp, lpp, L_h ) @ #t0)
@@ -927,7 +927,7 @@ next
                                                            ∧
                                                             (#vr.40 < #t2) ∧
                                                             (#t2 < #vr.86) ∧
-                                                            (∀ pp #t0.
+                                                            (∀ #t0 pp.
                                                               (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                             (∀ pp lpp #t0.
                                                               (Lock( pp, lpp, L_h ) @ #t0)
@@ -1048,7 +1048,7 @@ next
                                                          ∧
                                                           (#vr.40 < #t2) ∧
                                                           (#t2 < #vr.97) ∧
-                                                          (∀ pp #t0.
+                                                          (∀ #t0 pp.
                                                             (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                           (∀ pp lpp #t0.
                                                             (Lock( pp, lpp, L_h ) @ #t0)
@@ -1166,7 +1166,7 @@ next
               (#t2 < #t1.1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -1194,7 +1194,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -1250,7 +1250,7 @@ next
               (#t2 < #t1.1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -1278,7 +1278,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -1334,7 +1334,7 @@ next
               (#t2 < #t1.1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -1362,7 +1362,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -1418,7 +1418,7 @@ next
               (#t2 < #t1.1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -1446,7 +1446,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -1502,7 +1502,7 @@ next
               (#t2 < #t1.1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -1530,7 +1530,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -1586,7 +1586,7 @@ next
               (#t2 < #t1.1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -1614,7 +1614,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -1670,7 +1670,7 @@ next
               (#t2 < #t1.1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -1698,7 +1698,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -1858,7 +1858,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -1891,7 +1891,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -1924,7 +1924,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -1957,7 +1957,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -1990,7 +1990,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -2023,7 +2023,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -2056,7 +2056,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -2111,7 +2111,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.13) ∧
-                          (∀ pp #t0. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ #t0 pp. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, L_h ) @ #t0)
                            ⇒
@@ -2241,7 +2241,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.24) ∧
-                          (∀ pp #t0. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ #t0 pp. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, L_h ) @ #t0)
                            ⇒
@@ -2279,7 +2279,7 @@ next
                                        ∧
                                         (#vr.16 < #t2) ∧
                                         (#t2 < #vr.49) ∧
-                                        (∀ pp #t0. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ #t0 pp. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, L_h1 ) @ #t0)
                                          ⇒
@@ -2471,7 +2471,7 @@ next
                                        ∧
                                         (#vr.16 < #t2) ∧
                                         (#t2 < #vr.67) ∧
-                                        (∀ pp #t0. (Unlock( pp, ~n.10, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ #t0 pp. (Unlock( pp, ~n.10, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, L_h1 ) @ #t0)
                                          ⇒
@@ -2572,7 +2572,7 @@ next
                                                        ∧
                                                         (#vr.26 < #t2) ∧
                                                         (#t2 < #vr.92) ∧
-                                                        (∀ pp #t0.
+                                                        (∀ #t0 pp.
                                                           (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, L_h ) @ #t0)
@@ -2608,7 +2608,7 @@ next
                                                                  ∧
                                                                   (#vr.43 < #t2) ∧
                                                                   (#t2 < #vr.31) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -2705,7 +2705,7 @@ next
                                                                  ∧
                                                                   (#vr.43 < #t2) ∧
                                                                   (#t2 < #vr.31) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -2827,7 +2827,7 @@ next
                                                      ∧
                                                       (#vr.26 < #t2) ∧
                                                       (#t2 < #vr.103) ∧
-                                                      (∀ pp #t0.
+                                                      (∀ #t0 pp.
                                                         (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, L_h ) @ #t0)
@@ -2863,7 +2863,7 @@ next
                                                                ∧
                                                                 (#vr.43 < #t2) ∧
                                                                 (#t2 < #vr.31) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -2959,7 +2959,7 @@ next
                                                                ∧
                                                                 (#vr.43 < #t2) ∧
                                                                 (#t2 < #vr.31) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -3032,7 +3032,7 @@ next
                                                        ∧
                                                         (#vr.26 < #t2) ∧
                                                         (#t2 < #vr.93) ∧
-                                                        (∀ pp #t0.
+                                                        (∀ #t0 pp.
                                                           (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, L_h ) @ #t0)
@@ -3068,7 +3068,7 @@ next
                                                                  ∧
                                                                   (#vr.43 < #t2) ∧
                                                                   (#t2 < #vr.31) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -3165,7 +3165,7 @@ next
                                                                  ∧
                                                                   (#vr.43 < #t2) ∧
                                                                   (#t2 < #vr.31) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -3287,7 +3287,7 @@ next
                                                      ∧
                                                       (#vr.26 < #t2) ∧
                                                       (#t2 < #vr.104) ∧
-                                                      (∀ pp #t0.
+                                                      (∀ #t0 pp.
                                                         (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, L_h ) @ #t0)
@@ -3323,7 +3323,7 @@ next
                                                                ∧
                                                                 (#vr.43 < #t2) ∧
                                                                 (#t2 < #vr.31) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -3419,7 +3419,7 @@ next
                                                                ∧
                                                                 (#vr.43 < #t2) ∧
                                                                 (#t2 < #vr.31) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -3588,7 +3588,7 @@ next
                                                        ∧
                                                         (#vr.26 < #t2) ∧
                                                         (#t2 < #vr.99) ∧
-                                                        (∀ pp #t0.
+                                                        (∀ #t0 pp.
                                                           (Unlock( pp, ~n.8, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, L_h ) @ #t0)
@@ -3624,7 +3624,7 @@ next
                                                                  ∧
                                                                   (#vr.43 < #t2) ∧
                                                                   (#t2 < #vr.31) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -3721,7 +3721,7 @@ next
                                                                  ∧
                                                                   (#vr.43 < #t2) ∧
                                                                   (#t2 < #vr.31) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -3843,7 +3843,7 @@ next
                                                      ∧
                                                       (#vr.26 < #t2) ∧
                                                       (#t2 < #vr.110) ∧
-                                                      (∀ pp #t0.
+                                                      (∀ #t0 pp.
                                                         (Unlock( pp, ~n.8, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, L_h ) @ #t0)
@@ -3879,7 +3879,7 @@ next
                                                                ∧
                                                                 (#vr.43 < #t2) ∧
                                                                 (#t2 < #vr.31) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -3975,7 +3975,7 @@ next
                                                                ∧
                                                                 (#vr.43 < #t2) ∧
                                                                 (#t2 < #vr.31) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -4048,7 +4048,7 @@ next
                                                        ∧
                                                         (#vr.26 < #t2) ∧
                                                         (#t2 < #vr.100) ∧
-                                                        (∀ pp #t0.
+                                                        (∀ #t0 pp.
                                                           (Unlock( pp, ~n.8, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, L_h ) @ #t0)
@@ -4084,7 +4084,7 @@ next
                                                                  ∧
                                                                   (#vr.43 < #t2) ∧
                                                                   (#t2 < #vr.31) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -4181,7 +4181,7 @@ next
                                                                  ∧
                                                                   (#vr.43 < #t2) ∧
                                                                   (#t2 < #vr.31) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -4303,7 +4303,7 @@ next
                                                      ∧
                                                       (#vr.26 < #t2) ∧
                                                       (#t2 < #vr.111) ∧
-                                                      (∀ pp #t0.
+                                                      (∀ #t0 pp.
                                                         (Unlock( pp, ~n.8, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, L_h ) @ #t0)
@@ -4339,7 +4339,7 @@ next
                                                                ∧
                                                                 (#vr.43 < #t2) ∧
                                                                 (#t2 < #vr.31) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -4435,7 +4435,7 @@ next
                                                                ∧
                                                                 (#vr.43 < #t2) ∧
                                                                 (#t2 < #vr.31) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -4573,7 +4573,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.25) ∧
-                          (∀ pp #t0. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ #t0 pp. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, L_h ) @ #t0)
                            ⇒
@@ -4611,7 +4611,7 @@ next
                                        ∧
                                         (#vr.17 < #t2) ∧
                                         (#t2 < #vr.50) ∧
-                                        (∀ pp #t0. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ #t0 pp. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, L_h1 ) @ #t0)
                                          ⇒
@@ -4785,7 +4785,7 @@ next
                                        ∧
                                         (#vr.17 < #t2) ∧
                                         (#t2 < #vr.68) ∧
-                                        (∀ pp #t0. (Unlock( pp, ~n.10, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ #t0 pp. (Unlock( pp, ~n.10, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, L_h1 ) @ #t0)
                                          ⇒
@@ -4886,7 +4886,7 @@ next
                                                        ∧
                                                         (#vr.27 < #t2) ∧
                                                         (#t2 < #vr.93) ∧
-                                                        (∀ pp #t0.
+                                                        (∀ #t0 pp.
                                                           (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, L_h ) @ #t0)
@@ -4922,7 +4922,7 @@ next
                                                                  ∧
                                                                   (#vr.44 < #t2) ∧
                                                                   (#t2 < #vr.32) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -5019,7 +5019,7 @@ next
                                                                  ∧
                                                                   (#vr.44 < #t2) ∧
                                                                   (#t2 < #vr.32) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -5141,7 +5141,7 @@ next
                                                      ∧
                                                       (#vr.27 < #t2) ∧
                                                       (#t2 < #vr.104) ∧
-                                                      (∀ pp #t0.
+                                                      (∀ #t0 pp.
                                                         (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, L_h ) @ #t0)
@@ -5177,7 +5177,7 @@ next
                                                                ∧
                                                                 (#vr.44 < #t2) ∧
                                                                 (#t2 < #vr.32) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -5273,7 +5273,7 @@ next
                                                                ∧
                                                                 (#vr.44 < #t2) ∧
                                                                 (#t2 < #vr.32) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -5346,7 +5346,7 @@ next
                                                        ∧
                                                         (#vr.27 < #t2) ∧
                                                         (#t2 < #vr.94) ∧
-                                                        (∀ pp #t0.
+                                                        (∀ #t0 pp.
                                                           (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, L_h ) @ #t0)
@@ -5382,7 +5382,7 @@ next
                                                                  ∧
                                                                   (#vr.44 < #t2) ∧
                                                                   (#t2 < #vr.32) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -5479,7 +5479,7 @@ next
                                                                  ∧
                                                                   (#vr.44 < #t2) ∧
                                                                   (#t2 < #vr.32) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -5601,7 +5601,7 @@ next
                                                      ∧
                                                       (#vr.27 < #t2) ∧
                                                       (#t2 < #vr.105) ∧
-                                                      (∀ pp #t0.
+                                                      (∀ #t0 pp.
                                                         (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, L_h ) @ #t0)
@@ -5637,7 +5637,7 @@ next
                                                                ∧
                                                                 (#vr.44 < #t2) ∧
                                                                 (#t2 < #vr.32) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -5733,7 +5733,7 @@ next
                                                                ∧
                                                                 (#vr.44 < #t2) ∧
                                                                 (#t2 < #vr.32) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -5903,7 +5903,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.23) ∧
-                          (∀ pp #t0. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ #t0 pp. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, L_h ) @ #t0)
                            ⇒
@@ -6024,7 +6024,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -6052,7 +6052,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -6108,7 +6108,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -6136,7 +6136,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -6192,7 +6192,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -6220,7 +6220,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -6276,7 +6276,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -6304,7 +6304,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -6360,7 +6360,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -6388,7 +6388,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -6444,7 +6444,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -6472,7 +6472,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -6528,7 +6528,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -6556,7 +6556,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -6660,7 +6660,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6693,7 +6693,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6726,7 +6726,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6759,7 +6759,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6792,7 +6792,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6825,7 +6825,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6858,7 +6858,7 @@ next
                   (#t2 < #t1) ∨
                   (#t2 = #t3) ∨
                   (#t3 < #t2) ∨
-                  (∃ pp.1 #t0.
+                  (∃ #t0 pp.1.
                     (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                   (∃ pp.1 lpp #t0.
                     (Lock( pp.1, lpp, x ) @ #t0)
@@ -6913,7 +6913,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.13) ∧
-                          (∀ pp #t0. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ #t0 pp. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, L_h ) @ #t0)
                            ⇒
@@ -7043,7 +7043,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.24) ∧
-                          (∀ pp #t0. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ #t0 pp. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, L_h ) @ #t0)
                            ⇒
@@ -7281,7 +7281,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.25) ∧
-                          (∀ pp #t0. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ #t0 pp. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, L_h ) @ #t0)
                            ⇒
@@ -7319,7 +7319,7 @@ next
                                        ∧
                                         (#vr.17 < #t2) ∧
                                         (#t2 < #vr.50) ∧
-                                        (∀ pp #t0. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ #t0 pp. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, L_h1 ) @ #t0)
                                          ⇒
@@ -7493,7 +7493,7 @@ next
                                        ∧
                                         (#vr.17 < #t2) ∧
                                         (#t2 < #vr.68) ∧
-                                        (∀ pp #t0. (Unlock( pp, ~n.10, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ #t0 pp. (Unlock( pp, ~n.10, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, L_h1 ) @ #t0)
                                          ⇒
@@ -7594,7 +7594,7 @@ next
                                                        ∧
                                                         (#vr.27 < #t2) ∧
                                                         (#t2 < #vr.93) ∧
-                                                        (∀ pp #t0.
+                                                        (∀ #t0 pp.
                                                           (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, L_h ) @ #t0)
@@ -7630,7 +7630,7 @@ next
                                                                  ∧
                                                                   (#vr.44 < #t2) ∧
                                                                   (#t2 < #vr.32) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -7727,7 +7727,7 @@ next
                                                                  ∧
                                                                   (#vr.44 < #t2) ∧
                                                                   (#t2 < #vr.32) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -7849,7 +7849,7 @@ next
                                                      ∧
                                                       (#vr.27 < #t2) ∧
                                                       (#t2 < #vr.104) ∧
-                                                      (∀ pp #t0.
+                                                      (∀ #t0 pp.
                                                         (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, L_h ) @ #t0)
@@ -7885,7 +7885,7 @@ next
                                                                ∧
                                                                 (#vr.44 < #t2) ∧
                                                                 (#t2 < #vr.32) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -7981,7 +7981,7 @@ next
                                                                ∧
                                                                 (#vr.44 < #t2) ∧
                                                                 (#t2 < #vr.32) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -8054,7 +8054,7 @@ next
                                                        ∧
                                                         (#vr.27 < #t2) ∧
                                                         (#t2 < #vr.94) ∧
-                                                        (∀ pp #t0.
+                                                        (∀ #t0 pp.
                                                           (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                         (∀ pp lpp #t0.
                                                           (Lock( pp, lpp, L_h ) @ #t0)
@@ -8090,7 +8090,7 @@ next
                                                                  ∧
                                                                   (#vr.44 < #t2) ∧
                                                                   (#t2 < #vr.32) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -8187,7 +8187,7 @@ next
                                                                  ∧
                                                                   (#vr.44 < #t2) ∧
                                                                   (#t2 < #vr.32) ∧
-                                                                  (∀ pp #t0.
+                                                                  (∀ #t0 pp.
                                                                     (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                    ⇒
                                                                     #t0 = #t2) ∧
@@ -8309,7 +8309,7 @@ next
                                                      ∧
                                                       (#vr.27 < #t2) ∧
                                                       (#t2 < #vr.105) ∧
-                                                      (∀ pp #t0.
+                                                      (∀ #t0 pp.
                                                         (Unlock( pp, ~n.7, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                       (∀ pp lpp #t0.
                                                         (Lock( pp, lpp, L_h ) @ #t0)
@@ -8345,7 +8345,7 @@ next
                                                                ∧
                                                                 (#vr.44 < #t2) ∧
                                                                 (#t2 < #vr.32) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -8441,7 +8441,7 @@ next
                                                                ∧
                                                                 (#vr.44 < #t2) ∧
                                                                 (#t2 < #vr.32) ∧
-                                                                (∀ pp #t0.
+                                                                (∀ #t0 pp.
                                                                   (Unlock( pp, ~n.2, ~n ) @ #t0)
                                                                  ⇒
                                                                   #t0 = #t2) ∧
@@ -8611,7 +8611,7 @@ next
                          ∧
                           (#vr.4 < #t2) ∧
                           (#t2 < #vr.23) ∧
-                          (∀ pp #t0. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                          (∀ #t0 pp. (Unlock( pp, ~n.1, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                           (∀ pp lpp #t0.
                             (Lock( pp, lpp, L_h ) @ #t0)
                            ⇒
@@ -8732,7 +8732,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -8760,7 +8760,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -8816,7 +8816,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -8844,7 +8844,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -8900,7 +8900,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -8928,7 +8928,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -8984,7 +8984,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -9012,7 +9012,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -9068,7 +9068,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -9096,7 +9096,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -9152,7 +9152,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -9180,7 +9180,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -9236,7 +9236,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -9264,7 +9264,7 @@ next
           by contradiction /* from formulas */
         next
           case case_2
-          solve( (∃ pp #t0.
+          solve( (∃ #t0 pp.
                    (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                  (∃ pp lpp #t0.
                    (Lock( pp, lpp, x ) @ #t0)
@@ -9380,7 +9380,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -9413,7 +9413,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -9446,7 +9446,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -9479,7 +9479,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -9512,7 +9512,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -9545,7 +9545,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -9578,7 +9578,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -9619,7 +9619,7 @@ next
                        ∧
                         (#vr.2 < #t2) ∧
                         (#t2 < #vr.25) ∧
-                        (∀ pp #t0. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ #t0 pp. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, ~n ) @ #t0)
                          ⇒
@@ -9648,7 +9648,7 @@ next
                                ∧
                                 (#vr.14 < #t2) ∧
                                 (#t2 < #vr.25) ∧
-                                (∀ pp #t0. (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                                (∀ #t0 pp. (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                 (∀ pp lpp #t0.
                                   (Lock( pp, lpp, ~n ) @ #t0)
                                  ⇒
@@ -9671,7 +9671,7 @@ next
                                  ∧
                                   (#vr.2 < #t2) ∧
                                   (#t2 < #vr.14) ∧
-                                  (∀ pp #t0. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                                  (∀ #t0 pp. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, ~n ) @ #t0)
                                    ⇒
@@ -9718,7 +9718,7 @@ next
                        ∧
                         (#vr.2 < #t2) ∧
                         (#t2 < #vr.25) ∧
-                        (∀ pp #t0. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                        (∀ #t0 pp. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, ~n ) @ #t0)
                          ⇒
@@ -9747,7 +9747,7 @@ next
                                ∧
                                 (#vr.14 < #t2) ∧
                                 (#t2 < #vr.25) ∧
-                                (∀ pp #t0. (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                                (∀ #t0 pp. (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                 (∀ pp lpp #t0.
                                   (Lock( pp, lpp, ~n ) @ #t0)
                                  ⇒
@@ -9770,7 +9770,7 @@ next
                                  ∧
                                   (#vr.2 < #t2) ∧
                                   (#t2 < #vr.14) ∧
-                                  (∀ pp #t0. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                                  (∀ #t0 pp. (Unlock( pp, ~n.2, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, ~n ) @ #t0)
                                    ⇒
@@ -9831,7 +9831,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3.1) ∨
               (#t3.1 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -9859,7 +9859,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -9915,7 +9915,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3.1) ∨
               (#t3.1 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -9943,7 +9943,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -9999,7 +9999,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3.1) ∨
               (#t3.1 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -10027,7 +10027,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -10083,7 +10083,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3.1) ∨
               (#t3.1 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -10111,7 +10111,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -10167,7 +10167,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3.1) ∨
               (#t3.1 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -10195,7 +10195,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -10251,7 +10251,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3.1) ∨
               (#t3.1 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -10279,7 +10279,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -10335,7 +10335,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3.1) ∨
               (#t3.1 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -10363,7 +10363,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -10478,7 +10478,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10511,7 +10511,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10544,7 +10544,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10577,7 +10577,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10610,7 +10610,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10643,7 +10643,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10676,7 +10676,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -10914,7 +10914,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -10966,7 +10966,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -11015,7 +11015,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -11062,7 +11062,7 @@ next
                   ∧
                    (#t0.1 < #t0) ∧ (#t1 < #t0)) )
             case case_1
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -11106,7 +11106,7 @@ next
             by contradiction /* from formulas */
           next
             case case_3
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -11147,7 +11147,7 @@ next
             qed
           next
             case case_4
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -11318,7 +11318,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -11370,7 +11370,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -11419,7 +11419,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -11466,7 +11466,7 @@ next
                   ∧
                    (#t0.1 < #t0) ∧ (#t1 < #t0)) )
             case case_1
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -11510,7 +11510,7 @@ next
             by contradiction /* from formulas */
           next
             case case_3
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -11551,7 +11551,7 @@ next
             qed
           next
             case case_4
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -11722,7 +11722,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -11774,7 +11774,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -11823,7 +11823,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -11870,7 +11870,7 @@ next
                   ∧
                    (#t0.1 < #t0) ∧ (#t1 < #t0)) )
             case case_1
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -11914,7 +11914,7 @@ next
             by contradiction /* from formulas */
           next
             case case_3
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -11955,7 +11955,7 @@ next
             qed
           next
             case case_4
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -12126,7 +12126,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -12178,7 +12178,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -12227,7 +12227,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -12274,7 +12274,7 @@ next
                   ∧
                    (#t0.1 < #t0) ∧ (#t1 < #t0)) )
             case case_1
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -12318,7 +12318,7 @@ next
             by contradiction /* from formulas */
           next
             case case_3
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -12359,7 +12359,7 @@ next
             qed
           next
             case case_4
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -12530,7 +12530,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -12582,7 +12582,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -12631,7 +12631,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -12678,7 +12678,7 @@ next
                   ∧
                    (#t0.1 < #t0) ∧ (#t1 < #t0)) )
             case case_1
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -12722,7 +12722,7 @@ next
             by contradiction /* from formulas */
           next
             case case_3
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -12763,7 +12763,7 @@ next
             qed
           next
             case case_4
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -12934,7 +12934,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -12986,7 +12986,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -13035,7 +13035,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -13082,7 +13082,7 @@ next
                   ∧
                    (#t0.1 < #t0) ∧ (#t1 < #t0)) )
             case case_1
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -13126,7 +13126,7 @@ next
             by contradiction /* from formulas */
           next
             case case_3
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -13167,7 +13167,7 @@ next
             qed
           next
             case case_4
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -13338,7 +13338,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -13390,7 +13390,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -13439,7 +13439,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3.1) ∨
                 (#t3.1 < #t2) ∨
-                (∃ pp #t0.
+                (∃ #t0 pp.
                   (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp lpp #t0.
                   (Lock( pp, lpp, x ) @ #t0)
@@ -13486,7 +13486,7 @@ next
                   ∧
                    (#t0.1 < #t0) ∧ (#t1 < #t0)) )
             case case_1
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -13530,7 +13530,7 @@ next
             by contradiction /* from formulas */
           next
             case case_3
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -13571,7 +13571,7 @@ next
             qed
           next
             case case_4
-            solve( (∃ pp #t0.
+            solve( (∃ #t0 pp.
                      (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2.1)))  ∥
                    (∃ pp lpp #t0.
                      (Lock( pp, lpp, x ) @ #t0)
@@ -13761,7 +13761,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -13794,7 +13794,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -13827,7 +13827,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -13860,7 +13860,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -13893,7 +13893,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -13926,7 +13926,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -13959,7 +13959,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -14039,7 +14039,7 @@ next
                            ∧
                             (#vr.20 < #t2) ∧
                             (#t2 < #vr.40) ∧
-                            (∀ pp #t0. (Unlock( pp, ~n.5, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                            (∀ #t0 pp. (Unlock( pp, ~n.5, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                             (∀ pp lpp #t0.
                               (Lock( pp, lpp, L_h1 ) @ #t0)
                              ⇒
@@ -14075,7 +14075,7 @@ next
                                        ∧
                                         (#vr.28 < #t2) ∧
                                         (#t2 < #vr.1) ∧
-                                        (∀ pp #t0. (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
+                                        (∀ #t0 pp. (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                         (∀ pp lpp #t0.
                                           (Lock( pp, lpp, ~n ) @ #t0)
                                          ⇒
@@ -14186,7 +14186,7 @@ next
                                    ∧
                                     (#vr.20 < #t2) ∧
                                     (#t2 < #vr.48) ∧
-                                    (∀ pp #t0. (Unlock( pp, ~n.7, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                    (∀ #t0 pp. (Unlock( pp, ~n.7, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                     (∀ pp lpp #t0.
                                       (Lock( pp, lpp, L_h1 ) @ #t0)
                                      ⇒
@@ -14273,7 +14273,7 @@ next
                                                    ∧
                                                     (#vr.30 < #t2) ∧
                                                     (#t2 < #vr.73) ∧
-                                                    (∀ pp #t0. (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                                                    (∀ #t0 pp. (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                     (∀ pp lpp #t0.
                                                       (Lock( pp, lpp, L_h ) @ #t0)
                                                      ⇒
@@ -14308,7 +14308,7 @@ next
                                                              ∧
                                                               (#vr.36 < #t2) ∧
                                                               (#t2 < #vr.1) ∧
-                                                              (∀ pp #t0.
+                                                              (∀ #t0 pp.
                                                                 (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                                               (∀ pp lpp #t0.
                                                                 (Lock( pp, lpp, ~n ) @ #t0)
@@ -14385,7 +14385,7 @@ next
                                                              ∧
                                                               (#vr.36 < #t2) ∧
                                                               (#t2 < #vr.1) ∧
-                                                              (∀ pp #t0.
+                                                              (∀ #t0 pp.
                                                                 (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                                               (∀ pp lpp #t0.
                                                                 (Lock( pp, lpp, ~n ) @ #t0)
@@ -14489,7 +14489,7 @@ next
                                                  ∧
                                                   (#vr.30 < #t2) ∧
                                                   (#t2 < #vr.84) ∧
-                                                  (∀ pp #t0. (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                                                  (∀ #t0 pp. (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                   (∀ pp lpp #t0.
                                                     (Lock( pp, lpp, L_h ) @ #t0)
                                                    ⇒
@@ -14523,7 +14523,7 @@ next
                                                            ∧
                                                             (#vr.36 < #t2) ∧
                                                             (#t2 < #vr.1) ∧
-                                                            (∀ pp #t0.
+                                                            (∀ #t0 pp.
                                                               (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                                             (∀ pp lpp #t0.
                                                               (Lock( pp, lpp, ~n ) @ #t0)
@@ -14599,7 +14599,7 @@ next
                                                            ∧
                                                             (#vr.36 < #t2) ∧
                                                             (#t2 < #vr.1) ∧
-                                                            (∀ pp #t0.
+                                                            (∀ #t0 pp.
                                                               (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                                             (∀ pp lpp #t0.
                                                               (Lock( pp, lpp, ~n ) @ #t0)
@@ -14668,7 +14668,7 @@ next
                                                    ∧
                                                     (#vr.30 < #t2) ∧
                                                     (#t2 < #vr.74) ∧
-                                                    (∀ pp #t0. (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                                                    (∀ #t0 pp. (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                     (∀ pp lpp #t0.
                                                       (Lock( pp, lpp, L_h ) @ #t0)
                                                      ⇒
@@ -14703,7 +14703,7 @@ next
                                                              ∧
                                                               (#vr.36 < #t2) ∧
                                                               (#t2 < #vr.1) ∧
-                                                              (∀ pp #t0.
+                                                              (∀ #t0 pp.
                                                                 (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                                               (∀ pp lpp #t0.
                                                                 (Lock( pp, lpp, ~n ) @ #t0)
@@ -14780,7 +14780,7 @@ next
                                                              ∧
                                                               (#vr.36 < #t2) ∧
                                                               (#t2 < #vr.1) ∧
-                                                              (∀ pp #t0.
+                                                              (∀ #t0 pp.
                                                                 (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                                               (∀ pp lpp #t0.
                                                                 (Lock( pp, lpp, ~n ) @ #t0)
@@ -14884,7 +14884,7 @@ next
                                                  ∧
                                                   (#vr.30 < #t2) ∧
                                                   (#t2 < #vr.85) ∧
-                                                  (∀ pp #t0. (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                                                  (∀ #t0 pp. (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                   (∀ pp lpp #t0.
                                                     (Lock( pp, lpp, L_h ) @ #t0)
                                                    ⇒
@@ -14918,7 +14918,7 @@ next
                                                            ∧
                                                             (#vr.36 < #t2) ∧
                                                             (#t2 < #vr.1) ∧
-                                                            (∀ pp #t0.
+                                                            (∀ #t0 pp.
                                                               (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                                             (∀ pp lpp #t0.
                                                               (Lock( pp, lpp, ~n ) @ #t0)
@@ -14994,7 +14994,7 @@ next
                                                            ∧
                                                             (#vr.36 < #t2) ∧
                                                             (#t2 < #vr.1) ∧
-                                                            (∀ pp #t0.
+                                                            (∀ #t0 pp.
                                                               (Unlock( pp, ~n.3, ~n ) @ #t0) ⇒ #t0 = #t2) ∧
                                                             (∀ pp lpp #t0.
                                                               (Lock( pp, lpp, ~n ) @ #t0)
@@ -15276,7 +15276,7 @@ next
                            ∧
                             (#vr.20 < #t2) ∧
                             (#t2 < #vr.40) ∧
-                            (∀ pp #t0. (Unlock( pp, ~n.5, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
+                            (∀ #t0 pp. (Unlock( pp, ~n.5, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                             (∀ pp lpp #t0.
                               (Lock( pp, lpp, L_h1 ) @ #t0)
                              ⇒
@@ -15530,7 +15530,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -15558,7 +15558,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -15614,7 +15614,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -15642,7 +15642,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -15698,7 +15698,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -15726,7 +15726,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -15782,7 +15782,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -15810,7 +15810,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -15866,7 +15866,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -15894,7 +15894,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -15950,7 +15950,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -15978,7 +15978,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -16034,7 +16034,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -16062,7 +16062,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -17517,7 +17517,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -17533,7 +17533,7 @@ restriction locking_1:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -17549,7 +17549,7 @@ restriction locking_2:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_2( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -17565,7 +17565,7 @@ restriction locking_3:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_3( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -17581,7 +17581,7 @@ restriction locking_4:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_4( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -17597,7 +17597,7 @@ restriction locking_5:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_5( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -17613,7 +17613,7 @@ restriction locking_6:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_6( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -17628,7 +17628,7 @@ restriction locking_6:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -17638,7 +17638,7 @@ analyzing: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 282.183804s
+  processing time: 131.279208378s
   dec_limits (all-traces): verified (290 steps)
   wrap_key_origins (all-traces): verified (1236 steps)
   no_key_is_wrap_and_dec_ind (all-traces): verified (152 steps)
@@ -17654,7 +17654,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 282.183804s
+  processing time: 131.279208378s
   dec_limits (all-traces): verified (290 steps)
   wrap_key_origins (all-traces): verified (1236 steps)
   no_key_is_wrap_and_dec_ind (all-traces): verified (152 steps)

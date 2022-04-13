@@ -1875,7 +1875,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -1885,7 +1885,7 @@ analyzing: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 25.320494s
+  processing time: 24.697543152s
   source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (483 steps)
 
@@ -1897,7 +1897,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 25.320494s
+  processing time: 24.697543152s
   source (all-traces): verified (34 steps)
   secrecy (all-traces): verified (483 steps)
 

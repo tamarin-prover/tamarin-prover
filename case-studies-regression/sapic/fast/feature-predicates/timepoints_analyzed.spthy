@@ -28,7 +28,7 @@ SOLVED // trace found
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -38,7 +38,7 @@ analyzing: examples/sapic/fast/feature-predicates/timepoints.spthy
 analyzed: examples/sapic/fast/feature-predicates/timepoints.spthy
 
   output:          examples/sapic/fast/feature-predicates/timepoints.spthy.tmp
-  processing time: 0.056575s
+  processing time: 0.068770351s
   hi (exists-trace): verified (2 steps)
 
 ------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/timepoints.spthy
 
   output:          examples/sapic/fast/feature-predicates/timepoints.spthy.tmp
-  processing time: 0.056575s
+  processing time: 0.068770351s
   hi (exists-trace): verified (2 steps)
 
 ==============================================================================

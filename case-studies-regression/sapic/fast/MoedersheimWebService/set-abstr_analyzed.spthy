@@ -290,7 +290,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -300,7 +300,7 @@ analyzing: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
-  processing time: 2.665273s
+  processing time: 0.685982294s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (8 steps)
 
 ------------------------------------------------------------------------------
@@ -311,7 +311,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
-  processing time: 2.665273s
+  processing time: 0.685982294s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (8 steps)
 
 ==============================================================================

@@ -155,7 +155,7 @@ restriction progressInit:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -165,7 +165,7 @@ analyzing: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
 analyzed: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy.tmp
-  processing time: 0.127575s
+  processing time: 0.079804826s
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)
   no_progress_possible (exists-trace): verified (2 steps)
@@ -180,7 +180,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy
 
   output:          examples/sapic/fast/fairexchange-mini/ndc-two-replications.spthy.tmp
-  processing time: 0.127575s
+  processing time: 0.079804826s
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)
   no_progress_possible (exists-trace): verified (2 steps)

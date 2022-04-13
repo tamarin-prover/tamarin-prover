@@ -126,7 +126,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -284,7 +284,7 @@ next
               (#t2 < #t1.1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -312,7 +312,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n.1, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -400,7 +400,7 @@ next
                 (#t2 < #t1) ∨
                 (#t2 = #t3) ∨
                 (#t3 < #t2) ∨
-                (∃ pp.1 #t0.
+                (∃ #t0 pp.1.
                   (Unlock( pp.1, l, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
                 (∃ pp.1 lpp #t0.
                   (Lock( pp.1, lpp, x ) @ #t0)
@@ -488,7 +488,7 @@ next
               (#t2 < #t1) ∨
               (#t2 = #t3) ∨
               (#t3 < #t2) ∨
-              (∃ pp #t0.
+              (∃ #t0 pp.
                 (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2))) ∨
               (∃ pp lpp #t0.
                 (Lock( pp, lpp, x ) @ #t0)
@@ -516,7 +516,7 @@ next
         by contradiction /* from formulas */
       next
         case case_2
-        solve( (∃ pp #t0.
+        solve( (∃ #t0 pp.
                  (Unlock( pp, ~n, x ) @ #t0) ∧ (¬(last(#t0))) ∧ (¬(#t0 = #t2)))  ∥
                (∃ pp lpp #t0.
                  (Lock( pp, lpp, x ) @ #t0)
@@ -947,7 +947,7 @@ restriction locking_0:
     ((((#t1 < #t3) ∧
        (∃ #t2.
          (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
-           (∀ pp.1 #t0. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
           (∀ pp.1 lpp #t0.
             (Lock( pp.1, lpp, x ) @ #t0) ⇒
             (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
@@ -962,7 +962,7 @@ restriction locking_0:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -972,7 +972,7 @@ analyzing: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 5.768109s
+  processing time: 2.778045421s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (59 steps)
@@ -987,7 +987,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 5.768109s
+  processing time: 2.778045421s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (59 steps)

@@ -46,7 +46,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -56,7 +56,7 @@ analyzing: examples/sapic/fast/feature-boundonce/boundonce.spthy
 analyzed: examples/sapic/fast/feature-boundonce/boundonce.spthy
 
   output:          examples/sapic/fast/feature-boundonce/boundonce.spthy.tmp
-  processing time: 0.064681s
+  processing time: 0.054533185s
 
 
 ------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-boundonce/boundonce.spthy
 
   output:          examples/sapic/fast/feature-boundonce/boundonce.spthy.tmp
-  processing time: 0.064681s
+  processing time: 0.054533185s
 
 
 ==============================================================================
