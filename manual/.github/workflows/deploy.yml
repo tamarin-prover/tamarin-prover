@@ -2,7 +2,7 @@ name: Deploy to Github pages
 
 on:
  push:
-    branches: 
+    branches:
       - 'master'
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
       - name: Installation of dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install texlive-xetex texlive-latex-extra texlive-fonts-recommended latex-xcolor lmodern
+          sudo apt-get install texlive-xetex texlive-latex-extra texlive-fonts-recommended lmodern
 
       - name: Pre-install Pandoc
         run: |
