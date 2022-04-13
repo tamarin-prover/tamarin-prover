@@ -21,7 +21,7 @@ jobs:
           sudo dpkg -i pandoc-2.18-1-amd64.deb
 
       - uses: actions/checkout@v3
-      - name: Decrypt large secret
+      - name: Compile and push to GitHub pages
         run: ./deploy.sh
         env:
           ENCRYPTED_IV: ${{ secrets. ENCRYPTED_IV }}
