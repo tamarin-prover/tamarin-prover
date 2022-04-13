@@ -70,6 +70,7 @@ library
     exposed-modules:
       Theory
       Theory.Proof
+      Theory.ProofSkeleton
 
       Theory.Constraint.Solver
       Theory.Constraint.Solver.Sources
@@ -116,6 +117,20 @@ library
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
+      TheoryObject
+      Lemma
+      OpenTheory
+      ClosedTheory
+      Rule
+      Prover
+      Items.LemmaItem
+      Items.OpenTheoryItem
+      Items.OptionItem
+      Items.RuleItem
+      Items.ProcessItem
+      Items.TheoryItem
+      Items.ExportInfo
+      Pretty
 
 
     other-modules:
