@@ -3,20 +3,8 @@ module Pretty (
 ) where
 
 import           Prelude                             hiding (id, (.))
-
-
--- import           Data.Typeable
-import           Data.List
-
-import           Control.Category
-
--- import qualified Data.Label.Total
-
-
-import           Theory.Model
 import           Theory.Proof
 import           Theory.Text.Pretty
-
 
 ------------------------------------------------------------------------------
 -- Pretty printing
@@ -34,7 +22,4 @@ prettyFormalComment header body = text $ header ++ "{*" ++ body ++ "*}"
 
 
 emptyString :: HighlightDocument d => () -> d
-emptyString _ = text ("")
-
-
-
+emptyString _ = text ""

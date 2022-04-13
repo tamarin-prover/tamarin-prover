@@ -6,13 +6,26 @@ module TheoryObject (
   , module Items.OptionItem
   , module Items.ProcessItem
   , module Items.TheoryItem
-  , LemmaAttribute(..)
   , TraceQuantifier(..)
   , ProtoLemma(..)
   , Theory(..)
   , DiffTheory(..)
   , TheoryItem(..)
   , DiffTheoryItem(..)
+  , thyName
+  , thySignature
+  , thyCache
+  , thyItems
+  , thyOptions
+  , diffThyName
+  , diffThyItems
+  , diffThySignature
+  , diffThyCacheLeft
+  , diffThyCacheRight
+  , diffThyDiffCacheLeft
+  , diffThyDiffCacheRight
+  , thyHeuristic
+  , diffThyHeuristic
   , DiffLemma(..)
   , ProcessDef(..)
   , Predicate(..)
@@ -67,7 +80,10 @@ module TheoryObject (
   , lookupLemma
   , lookupProcessDef
   , filterSide
-  , module TheoryObject
+  , mapMProcesses, mapMProcessesDef, theoryFunctionTypingInfos, theoryBuiltins, theoryExportInfos, theoryEquivLemmas, theoryDiffEquivLemmas, addFunctionTypingInfo, clearFunctionTypingInfos, addExportInfo, setforcedInjectiveFacts, filterLemma, lookupFunctionTypingInfo, prettyTheory, prettySapicElement, prettyProcessDef, prettyEitherRestriction
+  , lookupExportInfo
+  , prettyRestriction
+  , prettyProcess
   ) where
 
 import Theory.Constraint.Solver.Heuristics
@@ -108,7 +124,6 @@ import Data.Binary
 import Theory.Sapic
 import Items.ExportInfo
 import qualified Data.Set as S
-import qualified Data.ByteString as BC
 import Theory.Syntactic.Predicate
 import Data.ByteString.Char8 (unpack)
 

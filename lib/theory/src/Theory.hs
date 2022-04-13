@@ -214,7 +214,6 @@ module Theory (
 
   -- * Pretty printing
   , prettyTheory
-  , prettyFormalComment
   , prettyLemmaName
   , prettyRestriction
   , prettyLemma
@@ -231,7 +230,6 @@ module Theory (
   , prettyClosedSummary
   , prettyClosedDiffSummary
 
-  , prettyIntruderVariants
   , prettyTraceQuantifier
 
   , prettyProcess
@@ -258,13 +256,6 @@ import           Prelude                             hiding (id, (.))
 import           Theory.Model
 import           Theory.Proof
 import           Theory.Syntactic.Predicate
-import           Theory.Sapic
-import           Theory.Sapic.Print
-import           Theory.Text.Pretty
-import           Theory.Tools.AbstractInterpretation
-import           Theory.Tools.InjectiveFactInstances
-import           Theory.Tools.IntruderRules
-import           Theory.Tools.LoopBreakers
 import           TheoryObject
 
 import OpenTheory
