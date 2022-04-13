@@ -7,14 +7,17 @@ jobs:
     steps:
       - run: echo "Tamarin compilation and regression test triggered by a ${{ github.event_name }} event."
       - run: echo "Branch ${{ github.ref }}, repository ${{ github.repository }}."
+
       - name: Check out repository code
         uses: actions/checkout@v3
-      - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
+
       - name: Installation of dependencies
         run: |
           sudo apt-get update
           sudo apt-get install graphviz
-      - uses: actions/cache@v2
+          
+      - name: Caching
+        uses: actions/cache@v2
         with:
           path: |
             ~/.stack
@@ -26,6 +29,7 @@ jobs:
           key: ${{ runner.os }}-stack-${{ hashFiles('stack.yaml.lock', 'package.yaml') }}
           restore-keys: |
             ${{ runner.os }}-stack
+
       - name: Pre-install
         run: |
           mkdir -p ~/.local/bin
@@ -61,11 +65,13 @@ jobs:
           mkdir -p case-studies/csf18-xor case-studies/csf18-xor/diff-models case-studies/regression case-studies/regression/trace
           mkdir -p case-studies/regression/diff case-studies/cav13 case-studies/post17 case-studies/csf12 case-studies/csf19-wrapping
           mkdir -p case-studies/loops case-studies/ccs15 case-studies/classic case-studies/fast-tests/ake case-studies/fast-tests/ake/bilinear
+
       - name: Compilation
         run: |
           stack --no-terminal build mwc-random SHA -j 1
           stack --no-terminal install
           stack install
+
       - name: Regression tests
         run: |
           tamarin-prover test
