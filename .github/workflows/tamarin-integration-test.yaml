@@ -13,7 +13,7 @@ jobs:
       - name: Installation of dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install camlp4 graphviz libgmp-dev ocaml opam
+          sudo apt-get install graphviz
       - uses: actions/cache@v2
         with:
           path: |
