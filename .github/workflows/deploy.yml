@@ -1,0 +1,28 @@
+name: Deploy to Github pages
+
+on:
+ push:
+    branches: 
+      - 'master'
+
+jobs:
+  deploy:
+    name: Deploy to GitHub pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Installation of dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install texlive-xetex texlive-latex-extra texlive-fonts-recommended latex-xcolor lmodern
+
+      - name: Pre-install Pandoc
+        run: |
+          wget https://github.com/jgm/pandoc/releases/download/2.10.1/pandoc-2.10.1-1-amd64.deb
+          sudo dpkg -i pandoc-2.10.1-1-amd64.deb
+
+      - uses: actions/checkout@v3
+      - name: Decrypt large secret
+        run: ./deploy.sh
+        env:
+          ENCRYPTED_IV: ${{ secrets. ENCRYPTED_IV }}
+          ENCRYPTED_KEY: ${{ secrets. ENCRYPTED_KEY }}
