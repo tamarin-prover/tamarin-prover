@@ -208,7 +208,7 @@ export thy = do
                     _          <- colon
                     text       <- doubleQuoted $ many bodyChar -- TODO Gotta use some kind of text.
                     let ei = ExportInfo tag text
-                    liftMaybeToEx (DuplicateItem (TranslationItem (ExportInfoItem ei))) (addExportInfo ei thy)
+                    return (addExportInfo ei thy)
                     <?> "export block"
               where
                 bodyChar = try $ do

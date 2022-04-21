@@ -414,10 +414,9 @@ addAccLemma aLem thy = do
 
 
 -- | Add a new process expression.
-addExportInfo :: ExportInfo -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
+addExportInfo :: ExportInfo -> Theory sig c r p TranslationElement -> (Theory sig c r p TranslationElement)
 addExportInfo eInfo thy = do
-    guard (isNothing $ lookupExportInfo (L.get eTag eInfo) thy)
-    return $ modify thyItems (++ [TranslationItem (ExportInfoItem eInfo)]) thy
+  modify thyItems (++ [TranslationItem (ExportInfoItem eInfo)]) thy
 
 -- search process
 findProcess :: String -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
@@ -552,8 +551,8 @@ lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p TranslationElement -> Ma
 lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.
-lookupExportInfo :: String -> Theory sig c r p TranslationElement -> Maybe ExportInfo
-lookupExportInfo tag = find ((tag ==) . L.get eTag) . theoryExportInfos
+lookupExportInfo :: String -> Theory sig c r p TranslationElement -> [ExportInfo]
+lookupExportInfo tag = filter ((tag ==) . L.get eTag) . theoryExportInfos
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
