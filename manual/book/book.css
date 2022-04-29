@@ -522,3 +522,7 @@ pre {
 .right {
     float: right;
 }
+
+.csl-entry {
+    margin-bottom: 1rem;
+}
