@@ -27,7 +27,7 @@ import           Theory.Text.Parser.Token
 import           Theory.Text.Parser.Signature
 
 import           Text.Parsec                hiding ((<|>))
-import           Text.Regex.Posix
+import           Text.Regex.PCRE
 
 
 -- import           Debug.Trace
@@ -65,7 +65,7 @@ functionValue :: Parser String
 functionValue = many $ noneOf "\"" --interdit de mettre des " dans les regex, dommage
 
 
---Fonction
+--Fonction (fonction, pretty printing)
 function :: Parser (AnnotatedGoal -> Bool, String)
 function = do
     f <- identifier
