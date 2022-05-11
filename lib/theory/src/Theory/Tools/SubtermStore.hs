@@ -134,8 +134,16 @@ simpSubtermStore reducible sst = do
     let (sst3, newNegEqs) = negativeSubtermVars sst2  -- CR-rule S_neg
     let sst4 = modify isContradictory (|| hasSubtermCycle reducible sst3) sst3  -- CR-rule S_chain
     let (sst5, newNatEqs) = simpNatCycles sst4
+
+    let allSubterms = S.toList (L.get posSubterms sst5 `S.union` L.get negSubterms sst5 `S.union` L.get solvedSubterms sst5)
+    let topIsNotReducible term = case viewTerm term of
+                                      FApp f _ -> f `S.notMember` reducible
+                                      _        -> True
+    let allSound = all (topIsNotReducible . snd) allSubterms
     
-    return (sst5, newFormulas ++ arity1Equations ++ newNegEqs ++ newNatEqs, goals)
+    if allSound
+      then return (sst5, newFormulas ++ arity1Equations ++ newNegEqs ++ newNatEqs, goals)
+      else error "there are some reducible operators on the right side of a subterm"
 
     -- NOT resolve constants (already done by splitting)
     -- split negSubterms (returning equations - and ∀x.x+a=b formulas?)
