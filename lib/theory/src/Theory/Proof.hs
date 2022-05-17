@@ -742,26 +742,26 @@ data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing
     deriving( Eq, Ord, Show, Read, Generic, NFData, Binary )
 
 data AutoProver = AutoProver
-    { apDefaultHeuristic :: Maybe Heuristic
-    , apDefaultTacticI   :: Maybe [TacticI]
+    { apDefaultHeuristic :: Maybe (Heuristic ProofContext)
+    , apDefaultTacticI   :: Maybe [TacticI ProofContext]
     , apBound            :: Maybe Int
     , apCut              :: SolutionExtractor
     }
     deriving ( Generic, NFData, Binary )
 
-selectHeuristic :: AutoProver -> ProofContext -> Heuristic
+selectHeuristic :: AutoProver -> ProofContext -> Heuristic ProofContext
 selectHeuristic prover ctx = fromMaybe (defaultHeuristic False)
                              (apDefaultHeuristic prover <|> L.get pcHeuristic ctx)
 
-selectDiffHeuristic :: AutoProver -> DiffProofContext -> Heuristic
+selectDiffHeuristic :: AutoProver -> DiffProofContext -> Heuristic ProofContext
 selectDiffHeuristic prover ctx = fromMaybe (defaultHeuristic True)
                                  (apDefaultHeuristic prover <|> L.get pcHeuristic (L.get dpcPCLeft ctx))
 
-selectTacticI :: AutoProver -> ProofContext -> [TacticI]
+selectTacticI :: AutoProver -> ProofContext -> [TacticI ProofContext]
 selectTacticI prover ctx = fromMaybe [defaultTacticI]
                              (apDefaultTacticI prover <|> L.get pcTacticI ctx)
 
-selectDiffTacticI :: AutoProver -> DiffProofContext -> [TacticI]
+selectDiffTacticI :: AutoProver -> DiffProofContext -> [TacticI ProofContext]
 selectDiffTacticI prover ctx = fromMaybe [defaultTacticI]
                                  (apDefaultTacticI prover <|> L.get pcTacticI (L.get dpcPCLeft ctx))
 
@@ -1029,7 +1029,7 @@ cutOnSolvedBFSDiff =
 --
 -- Use 'annotateWithSystems' to annotate the proof tree with the constraint
 -- systems.
-proveSystemDFS :: Heuristic -> [TacticI] -> ProofContext -> Int -> System -> Proof ()
+proveSystemDFS :: Heuristic ProofContext -> [TacticI ProofContext] -> ProofContext -> Int -> System -> Proof ()
 proveSystemDFS heuristic tactics ctxt d0 sys0 =
     prove d0 sys0
   where
@@ -1048,7 +1048,7 @@ proveSystemDFS heuristic tactics ctxt d0 sys0 =
 --
 -- Use 'annotateWithSystems' to annotate the proof tree with the constraint
 -- systems.
-proveDiffSystemDFS :: Heuristic -> [TacticI] -> DiffProofContext -> Int -> DiffSystem -> DiffProof ()
+proveDiffSystemDFS :: Heuristic ProofContext -> [TacticI ProofContext] -> DiffProofContext -> Int -> DiffSystem -> DiffProof ()
 proveDiffSystemDFS heuristic tactics ctxt d0 sys0 =
     prove d0 sys0
   where

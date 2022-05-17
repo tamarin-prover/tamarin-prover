@@ -177,10 +177,10 @@ preddeclaration thy = do
                     <?> "predicates"
 
 
-heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking]
+heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
 heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* lexeme spaces
 
-goalRanking :: Bool -> Maybe FilePath -> Parser GoalRanking
+goalRanking :: Bool -> Maybe FilePath -> Parser (GoalRanking ProofContext)
 goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "goal ranking"
    where
        regularRanking = toGoalRanking <$> many1 letter <* skipMany (char ' ')

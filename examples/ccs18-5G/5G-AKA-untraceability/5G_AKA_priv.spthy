@@ -25,6 +25,41 @@ functions:
 	KDF/2,	 // KDF		 --> K_ausf, K_seaf, XRES*
 	SHA256/2 // KDF		 --> HXRES*
 
+tactic: sqn_ue_invariance
+presort: C
+prio:
+    regex ".*SUPI\(.*"
+    regex ".*Sqn_UE\(.*"
+
+tactic: sqn_ue_nodecrease
+presort: C
+prio:
+    regex ".*last\(.*"
+prio:
+    regex ".*Sqn_UE_Change\(.*"
+prio:
+    regex ".*SUPI\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+
+tactic: sqn_hss_invariance
+presort: C
+prio:
+    regex ".*last\(.*"
+prio:
+    regex ".*Sqn_UE_Change\(.*"
+prio:
+    regex ".*SUPI\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+    regex ".*Sqn_HSS\(.*"
+
+tactic: sqn_ue_unique
+presort: C
+prio:
+    regex ".*SUPI\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
 
 /************************************/
 /*    Channel: SEAF .<->. HSS       */
@@ -486,14 +521,14 @@ lemma rand_autn_src [sources]:
 
 // holds (autoproof with oracle)
 // 1 sec
-lemma sqn_ue_invariance [use_induction, sources]:
+lemma sqn_ue_invariance [heuristic={sqn_ue_invariance}, use_induction, sources]:
 	" All supi HN Sqn sqn_root count #i.
 		Sqn_UE_Invariance(supi, HN, Sqn, sqn_root, count)@i
 			==> sqn_root + count = Sqn"
 
 // holds (autoproof with oracle)
 // 1 sec
-lemma sqn_hss_invariance [use_induction, sources]:
+lemma sqn_hss_invariance [heuristic={sqn_hss_invariance}, use_induction, sources]:
 	" All HN supi Sqn sqn_root count #i.
 		Sqn_HSS_Invariance(HN, supi, Sqn, sqn_root, count)@i
 			==> sqn_root + count = Sqn "
@@ -518,7 +553,7 @@ lemma sqn_hss_src [reuse]:
 
 // holds (autoproof with oracle)
 // 2 min
-lemma sqn_ue_nodecrease [use_induction, reuse]:
+lemma sqn_ue_nodecrease [heuristic={sqn_ue_nodecrease}, use_induction, reuse]:
 	" (All supi HN Sqni Sqnj #i #j.
 		(Sqn_UE_Change(supi, HN, Sqnj)@j &
 		 Sqn_UE_Change(supi, HN, Sqni)@i &
@@ -538,7 +573,7 @@ lemma sqn_ue_nodecrease [use_induction, reuse]:
 
 // holds (autoproof with oracle)
 // 1 sec
-lemma sqn_ue_unique [reuse, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma sqn_ue_unique [heuristic={sqn_ue_unique}, reuse, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi HN Sqn #i #j.
 		Sqn_UE_Use(supi, HN, Sqn)@i & Sqn_UE_Use(supi, HN, Sqn)@j
 			==> #i = #j "

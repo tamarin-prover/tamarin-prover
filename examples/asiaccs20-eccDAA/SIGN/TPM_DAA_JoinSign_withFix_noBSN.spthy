@@ -206,10 +206,10 @@ equations:
 tactic: oracle_corr
 presort: C
 prio:
-    regex "Host_"
+    regex ".*Host_.*"
     regex "!SignatureVerified"
 prio:
-    regex "Issuer_"
+    regex ".*Issuer_*"
 prio:
     regex "!TPM_" | regex "TPM_tkt" | regex "TPM_CV_E" | regex "TPM_Commit_RCV1"
 prio:
@@ -261,7 +261,7 @@ prio:
     regex "!KU\( KDF_EK\(~TPM_EK_Seed\)"
 
 tactic: oracle_SP3_Unfo
-presort: c
+presort: C
 prio:
     regex "!Pk\("
     regex "!TPM_"
@@ -358,21 +358,21 @@ prio:
     regex "!KU\( KDF_AES\(~TPM"
 
 tactic: oracle_auth_alive
-presort: c
+presort: C
 prio:
     regex "Host_"
 prio:
-    regex "Issuer_"
+    regex "Issuer_*"
 prio:
     regex "In_S\("
 
 tactic: oracle_auth_many
-presort: c
+presort: C
 prio:
-    regex "In_S\( $B"
-    regex "In_S\( $A"
-    regex "In_S\( $AS"
-    regex "In_S\( $PS"
+    regex "In_S\( \$B,"
+    regex "In_S\( \$A,"
+    regex "In_S\( \$AS,"
+    regex "In_S\( \$PS,"
     regex "_State_"
     regex "!Pk\("
 prio:
@@ -410,7 +410,7 @@ prio:
     regex "splitEqs\(0\)" | regex "KU\( Nonce\(~n_J\)"
 
 tactic: oracle_auth_secrecy
-presort: c
+presort: C
 prio:
     regex "In_S\( \$B,"
     regex "In_S\( \$A,"
@@ -419,10 +419,10 @@ prio:
     regex "_State_"
     regex "!Pk\("
 prio:
-    regex "createDAAKey\'>"
-    regex "createPrimary\'\)"
-    regex "returnEK\'>"
-    regex "returnDAAKey\'>"
+    regex "createDAAKey'>"
+    regex "createPrimary'\)"
+    regex "returnEK'>"
+    regex "returnDAAKey'>"
 prio:
     regex "In_S\("
 prio:

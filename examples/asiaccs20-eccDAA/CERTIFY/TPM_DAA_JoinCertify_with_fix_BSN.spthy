@@ -199,6 +199,7 @@ equations:
         P2)=accept
 
 tactic: oracle_corr
+presort: C
 prio:
     regex "Host_"
     regex "!SignatureVerified"
@@ -255,6 +256,7 @@ prio:
     regex "!KU\( KDF_EK\(~TPM_EK_Seed\)"
 
 tactic: oracle_SP3_Unfo
+presort: C
 prio:
     regex "!Pk\("
     regex "!TPM_"
@@ -332,20 +334,21 @@ prio:
     regex "!KU\( KDF_AES\(~TPM"
 
 tactic: oracle_auth_alive
-
+presort: C
 prio:
-    regex "Host_"
+    regex ".*Host_.*"
 prio:
-    regex "Issuer_"
+    regex ".*Issuer_*"
 prio:
-    regex "In_S\("
+    regex ".*In_S\(.*"
 
 tactic: oracle_auth_many
+presort: C
 prio:
-    regex "In_S\( $B"
-    regex "In_S\( $A"
-    regex "In_S\( $AS"
-    regex "In_S\( $PS"
+    regex "In_S\( \$B,"
+    regex "In_S\( \$A,"
+    regex "In_S\( \$AS,"
+    regex "In_S\( \$PS,"
     regex "_State_"
     regex "!Pk\("
 prio:
@@ -383,18 +386,19 @@ prio:
     regex "splitEqs\(0\)" | regex "KU\( Nonce\(~n_J\)"
 
 tactic: oracle_auth_secrecy
+presort: C
 prio:
-    regex "In_S\( \$B,"
-    regex "In_S\( \$A,"
-    regex "In_S\( \$AS,"
-    regex "In_S\( \$PS,"
+    regex ".*In_S\( \$B,.*"
+    regex ".*In_S\( \$A,.*"
+    regex ".*In_S\( \$AS,.*"
+    regex ".*In_S\( \$PS,.*"
     regex "_State_"
     regex "!Pk\("
 prio:
     regex "createDAAKey'>"
     regex "createPrimary'\)"
     regex "returnEK'>"
-    regex "returnDAAKey\'>"
+    regex "returnDAAKey'>"
 prio:
     regex "In_S\("
 prio:
@@ -430,6 +434,7 @@ prio:
 
 
 tactic: oracle_SP4_Non
+presort: C
 prio:
     regex "!SignatureVerified"
 prio:
@@ -437,7 +442,7 @@ prio:
 prio:
     regex "_State_"
 prio:
-    regex "\'ret_TPM2_Sign_2\'>"
+    regex "'ret_TPM2_Sign_2'>"
 prio:
     regex "!KU\( ~y \)"
     regex "!KU\( ~x \)"
@@ -463,49 +468,49 @@ prio:
 prio:
     regex "createPrimary"
 prio:
-    regex "returnEK\'>"
+    regex ".*returnEK'>"
 prio:
     regex "createDAAKey"
 prio:
-    regex "returnDAAKey\'>"
+    regex "returnDAAKey'>"
 prio:
     regex "\!KU\( E_S.*"
-    regex "\!KU\(.*<\'1\'"
+    regex "\!KU\(.*<'1'"
 prio:
     regex "\!KU\( plus\(r_cv"
     regex "\!KU\( multp\(H_n_2\(Nonce"
 prio:
-    regex "In_S\( \$AS,"
-    regex "In_S\( \$PS,"
+    regex ".*In_S\( \$AS, .*"
+    regex ".*In_S\( \$PS, .*"
 prio:
     regex "\!KU\(.*genP"
-    regex "TPM2_ActivateCredentials\'>"
+    regex "TPM2_ActivateCredentials'>"
 prio:
-    regex "ret_TPM2_ActivateCredentials\'>"
+    regex "ret_TPM2_ActivateCredentials'>"
 prio:
-    regex "TPM2_Commit\'>"
+    regex "TPM2_Commit'>"
 prio:
-    regex "retTPM2_commit\'>"
+    regex "retTPM2_commit'>"
 prio:
-    regex "TPM2_Hash\'>"
+    regex "TPM2_Hash'>"
 prio:
-    regex "ret_TPM2_Hash\'>"
+    regex "ret_TPM2_Hash'>"
 prio:
-    regex "\'TPM2_Sign\'>"
+    regex "'TPM2_Sign'>"
 prio:
-    regex "ret_TPM2_Sign\'>"
+    regex "ret_TPM2_Sign'>"
 prio:
-    regex "\'TPM2_ActivateCredentials_2\'"
+    regex "'TPM2_ActivateCredentials_2'"
 prio:
-    regex "ret_TPM2_ActivateCredentials_2\'>"
+    regex "ret_TPM2_ActivateCredentials_2'>"
 prio:
-    regex "TPM2_Commit_rand\'>"
+    regex "TPM2_Commit_rand'>"
 prio:
-    regex "ret_TPM2_Commit_rand\'>"
+    regex "ret_TPM2_Commit_rand'>"
 prio:
-    regex "TPM2_Quote\'>"
+    regex "TPM2_Quote'>"
 prio:
-    regex "ret_TPM2_Quote\'>"
+    regex "ret_TPM2_Quote'>"
 prio:
     regex "\!KU\(.*H_n_2\(Nonce\(rnd"
     regex "\!KU\( multp\(~y"

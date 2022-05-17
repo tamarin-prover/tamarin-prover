@@ -71,6 +71,7 @@ import           Text.Show.Functions()
 
 import           Theory.Text.Pretty
 import           Theory.Constraint.Solver.AnnotatedGoals
+--import           Theory.Constraint.SystemLight
 import           Debug.Trace
 
 ------------------------------------------------------------------------------
@@ -87,8 +88,8 @@ data Oracle = Oracle {
 -- Tactics internal
 ------------------------------------------------------------------------------
 
-data Prio = Prio {
-       functionsPrio :: [AnnotatedGoal -> Bool]  
+data Prio a = Prio {
+       functionsPrio :: [AnnotatedGoal -> a -> System -> Bool]  
      , stringsPrio :: [String]
     }
     --deriving Show
@@ -111,8 +112,8 @@ instance Binary Prio where
     put p = put $ show p
     get = return Prio{..}
 
-data Deprio = Deprio {
-       functionsDeprio :: [AnnotatedGoal -> Bool]
+data Deprio a = Deprio {
+       functionsDeprio :: [AnnotatedGoal -> a -> System -> Bool]
      , stringsDeprio :: [String]
     }
     deriving ( Generic )
@@ -216,14 +217,14 @@ tacticiPrio TacticI{..} = _prios
 prioString :: Prio -> [String]
 prioString Prio{..} = stringsPrio
 
-prioFunctions :: Prio -> [AnnotatedGoal -> Bool] 
+prioFunctions :: Prio -> [AnnotatedGoal -> a -> System -> Bool] 
 prioFunctions Prio{..} = functionsPrio
 
 
 tacticiDeprio :: TacticI -> [Deprio]
 tacticiDeprio TacticI{..} = _deprios
 
-deprioFunctions :: Deprio -> [AnnotatedGoal -> Bool] 
+deprioFunctions :: Deprio -> [AnnotatedGoal -> a -> System -> Bool] 
 deprioFunctions Deprio{..} = functionsDeprio
 
 deprioString :: Deprio -> [String]

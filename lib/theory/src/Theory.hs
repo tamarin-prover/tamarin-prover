@@ -570,7 +570,7 @@ data LemmaAttribute =
        | HideLemma String
        | LHSLemma
        | RHSLemma
-       | LemmaHeuristic [GoalRanking]
+       | LemmaHeuristic [GoalRanking ProofContext]
        | LemmaTacticI String
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
@@ -777,8 +777,8 @@ data DiffTheoryItem r r2 p p2 =
 -- and the lemmas that
 data Theory sig c r p s = Theory {
          _thyName      :: String
-       , _thyHeuristic :: [GoalRanking]
-       , _thyTacticI   :: [TacticI]
+       , _thyHeuristic :: [GoalRanking ProofContext]
+       , _thyTacticI   :: [TacticI ProofContext]
        , _thySignature :: sig
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p s]
@@ -792,8 +792,8 @@ $(mkLabels [''Theory])
 -- | A diff theory contains a set of rewriting rules with diff modeling two instances
 data DiffTheory sig c r r2 p p2 = DiffTheory {
          _diffThyName           :: String
-       , _diffThyHeuristic      :: [GoalRanking]
-       , _diffThyTacticI        :: [TacticI]
+       , _diffThyHeuristic      :: [GoalRanking ProofContext]
+       , _diffThyTacticI        :: [TacticI ProofContext]
        , _diffThySignature      :: sig
        , _diffThyCacheLeft      :: c
        , _diffThyCacheRight     :: c
@@ -1424,20 +1424,20 @@ addDiffLemma l thy = do
     return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
 
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
-addHeuristic :: [GoalRanking] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addHeuristic :: [GoalRanking ProofContext] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addHeuristic h (Theory n [] t sig c i o) = Just (Theory n h t sig c i o)
 addHeuristic _ _ = Nothing
 
-addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffHeuristic :: [GoalRanking ProofContext] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addDiffHeuristic h (DiffTheory n [] t sig cl cr dcl dcr i) = Just (DiffTheory n h t sig cl cr dcl dcr i)
 addDiffHeuristic _ _ = Nothing
 
-addTacticI :: TacticI -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addTacticI :: TacticI ProofContext -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addTacticI t (Theory n h [] sig c i o) = Just (Theory n h [t] sig c i o)
 addTacticI t (Theory n h l sig c i o) = Just (Theory n h (l++[t]) sig c i o)
 -- addTacticI _ _ = Nothing
 
-addDiffTacticI :: TacticI -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffTacticI :: TacticI ProofContext -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addDiffTacticI t (DiffTheory n h [] sig cl cr dcl dcr i) = Just (DiffTheory n h [t] sig cl cr dcl dcr i)
 addDiffTacticI t (DiffTheory n h l sig cl cr dcl dcr i) = Just (DiffTheory n h (l++[t]) sig cl cr dcl dcr i)
 
@@ -2675,11 +2675,11 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     thyT = L.get diffThyTacticI thy
 
 -- | Pretty print the tactics.
-prettyTactic :: HighlightDocument d => TacticI -> d
-prettyTactic tactic = kwTactic <> colon <> space <> (text $ tacticiName tactic) 
-    $-$ kwPresort <> colon <> space <> (char $ goalRankingToChar $ tacticiPresort tactic) $-$ sep
-        [ ppTabTab  "prio"  (map prioString $ tacticiPrio tactic)
-        , ppTabTab "deprio" (map deprioString $ tacticiDeprio tactic)
+prettyTactic :: HighlightDocument d => TacticI ProofContext -> d
+prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic) 
+    $-$ kwPresort <> colon <> space <> (char $ goalRankingToChar $ _presort tactic) $-$ sep
+        [ ppTabTab  "prio"  (map stringsPrio $ _prios tactic)
+        , ppTabTab "deprio" (map stringsDeprio $ _deprios tactic)
         , char '\n'
         ]
    where 

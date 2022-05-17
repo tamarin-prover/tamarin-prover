@@ -145,12 +145,14 @@ functions:
 
 
 tactic: sqn
+presort: C
 prio:
     regex "St_1_UE\(" | regex "St_1_HSS\("
 prio:
     regex "Sqn_UE\(" | regex "Sqn_HSS\("
     
 tactic: sqn_ue_nodecrease
+presort: C
 prio:
     regex "\(last\(#j"
 prio:
@@ -161,6 +163,7 @@ prio:
     regex "Sqn_UE\(.*count.1"
 
 tactic: injectiveagreement_ue_seaf_kseaf_keyConf_noKeyRev_noChanRev
+presort: C
 prio:
 	regex "!KU\( ~k"
 prio:
@@ -169,7 +172,7 @@ prio:
     regex "!HSS\("
 prio:
     regex "!KU\( f3\(~k,"
-    regex "RcvS\( ~k,.*\'air\'"
+    regex "RcvS\( ~k,.*'air'"
 prio:
     regex "St_2_UE\("
     regex "CommitConf\("
@@ -180,11 +183,12 @@ prio:
 prio:
     regex "!KU\( KDF\(<f3\(" | regex "!KU\( KDF\(KDF\(<f3\(" | regex "!KU\( f1\(KDF\(KDF\(<f3\(~k" | regex "!KU\( f3\(~k,"
 prio:
-    regex "RcvS\(.*\'ac\'"
+    regex "RcvS\(.*'ac'"
 prio:
-    regex "RcvS\(.*\'aia\'"
+    regex "RcvS\(.*'aia'"
 
 tactic: weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev
+presort: C
 prio:
 	regex "!KU\( ~k"
 prio:
@@ -241,6 +245,7 @@ prio:
     regex "!KU\( ~sk"
 
 tactic: weakagreement_ue_seaf_keyConf
+presort: C
 prio:
 	regex "!KU\( ~k"
 prio:
@@ -293,6 +298,7 @@ prio:
     regex "!KU\( ~sk"
 
 tactic: weakagreement_ue_seaf_noRev
+presort: C
 prio: 
     regex "!KU\( ~k"
 prio:
@@ -336,6 +342,7 @@ prio:
     regex "!KU\( ~sk"
 
 tactic: injectiveagreement
+presort: C
 prio:
 	 regex "!KU\( ~k"
 prio:
@@ -346,7 +353,7 @@ prio:
     regex "!HSS\("
 prio:
     regex "!KU\( f3\(~k,"
-    regex "RcvS\( ~k,.*\'air\'"
+    regex "RcvS\( ~k,.*'air'"
     regex "RcvS\( ~sqn_root"
     regex "RcvS\( ~sk_HN"
     regex "RcvS\( ~supi"
@@ -361,19 +368,20 @@ prio:
     regex "!KU\( KDF\(KDF\(<"
     regex "!KU\( f3\("
 prio:
-    regex "RcvS\(.*<\'aia\'.*SHA"
+    regex "RcvS\(.*<'aia'.*SHA"
 prio:
-    regex "RcvS\(.*<\'aca\'"
+    regex "RcvS\(.*<'aca'"
 prio:
-    regex "RcvS\(.*<\'ac\'"
+    regex "RcvS\(.*<'ac'"
 prio:
-    regex "RcvS\(.*<\'aia\'"
+    regex "RcvS\(.*<'aia'"
 prio:
     regex "!KU\( f1\("
 
 tactic: many
+presort: C
 prio:
-	 regex "!KU\( ~k"
+	regex "!KU\( ~k"
 prio:
     regex "!KU\( ~sk_HN"
     regex "Sqn_HSS\(.*~sqn_root, ~sqn_root"
@@ -398,24 +406,24 @@ prio:
     regex "St_3_SEAF\("
     regex "St_4_SEAF\("
 prio:
-    regex "RcvS\(.*<\'aca\'"
+    regex "RcvS\(.*<'aca'"
 prio:
-    regex "RcvS\(.*<\'ac\'"
+    regex "RcvS\(.*<'ac'"
 prio:
     regex "!KU\( KDF\(<f3\("
     regex "!KU\( KDF\(KDF\(<"
 prio:
     regex "!KU\( f3\("
 prio:
-    regex "RcvS\(.*<\'aia\'"
+    regex "RcvS\(.*<'aia'"
 prio:
-    regex "RcvS\(.*<\'air\'"
+    regex "RcvS\(.*<'air'"
 prio:
     regex "!KU\( \(f5\(~k"
     regex "!KD\( \(f5\(~k"
 prio:
     regex "Sqn_HSS\("
-    regex "Sqn_UE\(".
+    regex "Sqn_UE\("
 prio:
     regex "!KU\( aenc\("
 prio:
@@ -428,6 +436,7 @@ prio:
     regex "!KU\( f1\(K"
 
 tactic: executability_honest
+presort: C
 prio: 
     regex "!KU\( ~k"
 prio:
@@ -455,6 +464,7 @@ prio:
     regex "!KD\( \(f5\("
 
 tactic: executability_sync
+presort: C
 prio:
    regex "!KU\( ~k"
 prio:
@@ -467,7 +477,7 @@ prio:
    regex "HSS_Resync_End\("
 prio:
    regex "!KU\( f5\("
- re.match('.*!KU\( f5_star\("
+   regex ".*!KU\( f5_star\("
    regex "!KU\( ~sqn_root"
 prio:
    regex "St_1_UE\("
@@ -1091,7 +1101,7 @@ lemma sqn_ue_unique [reuse, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 
 // This lemma shows a normal execution without resync.
 // proof (automatic) (~30 sec)
-lemma executability_honest[heurictic={executability_honest}]:
+lemma executability_honest[heuristic={executability_honest}]:
 	exists-trace
 	" Ex #i. SEAF_End()@i
 		& not (Ex X data #r. Rev(X,data)@r)
@@ -1128,7 +1138,7 @@ lemma executability_keyConf_honest:
 				      Start_HSS_Session(HN2)@k ==> #j = #k)"
 
 // proof (automatic) (~4 min)
-lemma executability_desync[heurictic={executability_sync}]:
+lemma executability_desync[heuristic={executability_sync}]:
 	exists-trace
 	" Ex dif #i.
                   HSS_Resync_End(dif)@i
@@ -1148,7 +1158,7 @@ lemma executability_desync[heurictic={executability_sync}]:
 				      Start_HSS_Session(HN2)@k ==> #j = #k)"
 
 // proof (automatic) (~6 min)
-lemma executability_resync[heurictic={executability_sync}]:
+lemma executability_resync[ heuristic={executability_sync}]:
 	exists-trace
 	" Ex #i1 #i2 #i3 #i4 X.
 		  Start_HSS_Session(X)@i1

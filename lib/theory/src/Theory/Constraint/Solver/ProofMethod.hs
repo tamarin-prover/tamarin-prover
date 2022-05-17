@@ -63,7 +63,7 @@ import           Theory.Constraint.Solver.Goals
 import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
-import           Theory.Constraint.Solver.Heuristics
+--import           Theory.Constraint.Solver.Heuristics
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -422,7 +422,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 
 -- | Use a 'GoalRanking' to sort a list of 'AnnotatedGoal's stemming from the
 -- given constraint 'System'.
-rankGoals :: ProofContext -> GoalRanking -> [TacticI] -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+rankGoals :: ProofContext -> GoalRanking ProofContext -> [TacticI ProofContext] -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking tacticsList = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
     OracleRanking oracleName -> oracleRanking oracleName ctxt
@@ -437,24 +437,24 @@ rankGoals ctxt ranking tacticsList = case ranking of
     InternalTacticRanking tactic-> internalTacticRanking (chosenTactic tacticsList tactic) ctxt
 
     where 
-      chosenTactic :: [TacticI] -> TacticI -> TacticI
+      chosenTactic :: [TacticI ProofContext] -> TacticI ProofContext-> TacticI ProofContext
       chosenTactic   []  t = chooseError tacticsList t
       chosenTactic (h:q) t = case (checkName h t) of 
         True  -> h
         False -> chosenTactic q t 
 
-      definedHeuristic = intercalate [','] (foldl (\acc x -> (tacticiName x):acc ) [] tacticsList)
+      definedHeuristic = intercalate [','] (foldl (\acc x -> (_name x):acc ) [] tacticsList)
 
-      checkName t1 t2 = (tacticiName t1) == (tacticiName t2)
+      checkName t1 t2 = (_name t1) == (_name t2)
 
       chooseError [] t = error $ "No tactic has been written in the theory file"
-      chooseError l  t = error $ "The tactic specified ( "++(show $ tacticiName t)++" ) is not written in the theory file, please chose among the following: "++(show definedHeuristic)
+      chooseError l  t = error $ "The tactic specified ( "++(show $ _name t)++" ) is not written in the theory file, please chose among the following: "++(show definedHeuristic)
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
 -- for this 'System'. If the resulting list is empty, then the constraint
 -- system is solved.
-rankProofMethods :: GoalRanking -> [TacticI] -> ProofContext -> System
+rankProofMethods :: GoalRanking ProofContext -> [TacticI ProofContext] -> ProofContext -> System
                  -> [(ProofMethod, (M.Map CaseName System, String))]
 rankProofMethods ranking tactics ctxt sys = do
     (m, expl) <-
@@ -487,7 +487,7 @@ rankProofMethods ranking tactics ctxt sys = do
 -- 'ProofMethod's and their corresponding results in this 'DiffProofContext' and
 -- for this 'DiffSystem'. If the resulting list is empty, then the constraint
 -- system is solved.
-rankDiffProofMethods :: GoalRanking -> [TacticI] -> DiffProofContext -> DiffSystem
+rankDiffProofMethods :: GoalRanking ProofContext -> [TacticI ProofContext] -> DiffProofContext -> DiffSystem
                  -> [(DiffProofMethod, (M.Map CaseName DiffSystem, String))]
 rankDiffProofMethods ranking tactics ctxt sys = do
     (m, expl) <-
@@ -506,12 +506,12 @@ rankDiffProofMethods ranking tactics ctxt sys = do
 
 -- | Smart constructor for heuristics. Schedules the goal rankings in a
 -- round-robin fashion dependent on the proof depth.
-roundRobinHeuristic :: [GoalRanking] -> Heuristic
+roundRobinHeuristic :: [GoalRanking ProofContext] -> Heuristic ProofContext
 roundRobinHeuristic = Heuristic
 
 -- | Use a heuristic to schedule a 'GoalRanking' according to the given
 -- proof-depth.
-useHeuristic :: Heuristic -> Int -> GoalRanking
+useHeuristic :: Heuristic ProofContext -> Int -> GoalRanking ProofContext
 useHeuristic (Heuristic []      ) = error "useHeuristic: empty list of rankings"
 useHeuristic (Heuristic rankings) =
     ranking
@@ -619,34 +619,33 @@ oracleSmartRanking oracle ctxt _sys ags0
 
 
 -- Check whether a goal match a prio
-isPrio :: [AnnotatedGoal -> Bool] -> AnnotatedGoal -> Bool
-isPrio list agoal = or $ (sequenceA list) agoal
+isPrio :: [(AnnotatedGoal, ProofContext, System) -> Bool] -> ProofContext -> System -> AnnotatedGoal -> Bool
+isPrio list agoal ctxt sys = or $ (sequenceA list) (sys,agoal,ctxt)
 
 -- Try to match all prio with all goals
-applyIsPrio :: [[AnnotatedGoal -> Bool]] -> AnnotatedGoal -> [Bool]
-applyIsPrio [] _ = []
-applyIsPrio [xs] agoal = isPrio xs agoal:[]
-applyIsPrio (h:t) agoal = (isPrio h agoal):applyIsPrio t agoal
+applyIsPrio :: [[(AnnotatedGoal, ProofContext, System) -> Bool]] -> ProofContext -> System -> AnnotatedGoal -> [Bool]
+applyIsPrio [] _ _ _ = []
+applyIsPrio [xs] agoal ctxt sys = isPrio xs agoal ctxt sys:[]
+applyIsPrio (h:t) agoal ctxt sys = isPrio h agoal ctxt sys:applyIsPrio t agoal ctxt sys
 
 
-itRanking :: TacticI -> [AnnotatedGoal] -> [AnnotatedGoal]
-itRanking _ [] = []
-itRanking tactic ags = result
+itRanking :: TacticI ProofContext -> [AnnotatedGoal] -> ProofContext -> System -> [AnnotatedGoal]
+itRanking tactic ags ctxt _sys = result
     where
       -- Getting the functions from priorities
       --prioName = tacticiPrio tactic
       --prioTab = map prioFunctions prioName
-      prioToFunctions = map prioFunctions (tacticiPrio tactic)
-      indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions) ags -- find the first prio that match every goal
-      indexedPrio = sortOn fst $ zip indexPrio ags                                 -- ordening of goals given the fisrt prio they meet 
-      groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio  -- grouping goals by prio
+      prioToFunctions = map functionsPrio (_prios tactic)
+      indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions ctxt _sys) ags    -- find the first prio that match every goal
+      indexedPrio = sortOn fst $ zip indexPrio ags                                              -- ordening of goals given the fisrt prio they meet 
+      groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio        -- grouping goals by prio
       rankedPrioGoals = if (Nothing `elem` indexPrio) then snd $ unzip $ concat $ (tail groupedPrio) else snd $ unzip $ (concat groupedPrio)    -- recovering ranked goals only (no prio = Nothing = fst)
       
       -- Getting the functions from depriorities
       -- deprioName = tacticiDeprio tactic
       -- deprioTab = map deprioFunctions deprioName
-      deprioToFunctions = map deprioFunctions (tacticiDeprio tactic)
-      indexDeprio = map (findIndex (==True)) $ map (applyIsPrio deprioToFunctions) ags
+      deprioToFunctions = map functionsDeprio (_deprios tactic)
+      indexDeprio = map (findIndex (==True)) $ map (applyIsPrio deprioToFunctions ctxt _sys) ags
       indexedDeprio = sortOn fst $ zip indexDeprio ags 
       groupedDeprio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedDeprio
       rankedDeprioGoals = if (Nothing `elem` indexDeprio) then snd $ unzip $ concat (tail groupedDeprio) else snd $ unzip $ (concat groupedDeprio)
@@ -657,15 +656,17 @@ itRanking tactic ags = result
 
 
 
-internalTacticRanking :: TacticI -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+internalTacticRanking :: TacticI ProofContext -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 internalTacticRanking tactic ctxt _sys ags0 = 
   unsafePerformIO $ do
-      let defaultMethod =  tacticiPresort tactic
+      let defaultMethod =  _presort tactic
       let ags = rankGoals ctxt defaultMethod [tactic] _sys ags0
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      let res = itRanking tactic ags
+      --let ctxtl = ctxt2light
+      --let _sysl = 
+      let res = itRanking tactic ags ctxt _sys
       -- let orderIndex = map fst (orderList (zip [(0::Int)..] res) (reverse $ (zip [(0::Int)..] ags)) [])
           -- index = map fst (zip [(0::Int)..] ags)
           -- out = map (show . snd) (sortOn fst (zip orderIndex index))
@@ -677,7 +678,11 @@ internalTacticRanking tactic ctxt _sys ags0 =
       let prettyOut = unlines (map show outp)
       --          (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
       --              (zip outp res))
-      let logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+      let logMsg = ">>>>>>>>>>>>>>>>>>>>>>>> Context\n"
+                   ++ show ctxt
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> System\n"
+                   ++ show _sys
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
                    ++ prettyOut 
@@ -692,7 +697,8 @@ internalTacticRanking tactic ctxt _sys ags0 =
     orderList _ [] res        = res
     orderList (h1:l) (h2:ref) res = if (snd h1 == snd h2) then orderList l ref (h1:res) else orderList (l++[h1]) (h2:ref) res
 
-    
+    --ctxt2light ctxt = ProofContextLight
+    --sys2light sys   = SystemLight
 
 
 -- | Utilities for SAPiC translations specifically 

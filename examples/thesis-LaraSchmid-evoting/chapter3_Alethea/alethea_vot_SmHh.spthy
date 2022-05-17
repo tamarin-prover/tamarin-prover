@@ -64,6 +64,457 @@ decp(encp(x,r,pk(sk)),sk)=x,
 ver(sg(m, sk), pk(sk)) = m 
 
 
+tactic: indivVerif_v
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+prio:
+  regex "splitEqs\(8\)"
+prio:
+  regex "splitEqs\(10\)"
+
+tactic: indivVerif_b
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+prio:
+  regex "splitEqs\(8\)"
+prio:
+  regex "splitEqs\(10\)"
+
+tactic: vsFromBB
+prio:
+  regex "'v'"
+
+tactic: bsFromBB
+prio:
+  regex "'b'"
+
+tactic: fromBB
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+prio:
+  regex "splitEqs\(8\)"
+prio:
+  regex "splitEqs\(10\)"
+
+tactic: vsFromAdversary
+prio:
+  regex "In_S"
+prio:
+  regex "skS"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_A"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+prio:
+  regex "splitEqs\(8\)"
+prio:
+  regex "splitEqs\(10\)"
+
+tactic: secretRandomness
+prio:
+  regex "D0"
+prio:
+  regex "In_S"
+prio:
+  regex "skS"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_A"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+prio:
+  regex "splitEqs\(8\)"
+prio:
+  regex "splitEqs\(10\)"
+
+tactic: Tall_As_Rec_1
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "splitEqs\(7\)"
+prio:
+  regex "splitEqs\(9\)"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+
+tactic: Tall_As_Rec_2
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "splitEqs\(7\)"
+prio:
+  regex "splitEqs\(9\)"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+
+tactic: Tall_As_Rec_3
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "splitEqs\(7\)"
+prio:
+  regex "splitEqs\(9\)"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+
+tactic: Tall_As_Rec_4
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "splitEqs\(7\)"
+prio:
+  regex "splitEqs\(9\)"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+
+tactic: Tall_As_Rec_5
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "splitEqs\(7\)"
+prio:
+  regex "splitEqs\(9\)"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+
+tactic: Tall_As_Rec_6
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "splitEqs\(7\)"
+prio:
+  regex "splitEqs\(9\)"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+
+tactic: Tall_As_Rec_7
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "splitEqs\(7\)"
+prio:
+  regex "splitEqs\(9\)"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
+
+tactic: Tall_As_Rec_8
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_A"
+prio:
+  regex "splitEqs\(7\)"
+prio:
+  regex "splitEqs\(9\)"
+prio:
+  regex "'bPrime'"
+prio:
+  regex "AgSt_BB"
+prio:
+  regex "AgSt_A"
+prio:
+  regex "'b'"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'spkDSG'"
+prio:
+  regex "'v'"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "zkp\("
 
 
 /* ==========
@@ -229,7 +680,7 @@ lemma functional: exists-trace
 Individual verifiability properties
 =================================*/
 
-lemma indivVerif_v: 
+lemma indivVerif_v[heuristic={indivVerif_v}]: 
 	"All H v #i b #j bOther .
 		Vote(H,v) @i 			
 		& Verify(H,b,b + bOther) @j	
@@ -238,7 +689,7 @@ lemma indivVerif_v:
 		& b = sg(encp(v,r,pkS),sskD) " 	
 
 
-lemma indivVerif_b: 
+lemma indivVerif_b[heuristic={indivVerif_b}]: 
 	"All H b #j bOther .
 		Verify(H,b,b + bOther) @j
 	==> Ex BB b2 #l . 
@@ -252,7 +703,7 @@ Universal verifiability properties
 ================================*/
 
 // vsFromBB states that all votes learned by the auditor were previously recorded on BB
-lemma vsFromBB [reuse]:
+lemma vsFromBB [heuristic={vsFromBB},reuse]:
 	"All A v1 v2 #i.
 		Learn_A_Vs(A,<'v', v1 + v2>) @i
 	==> Ex BB #j.
@@ -260,7 +711,7 @@ lemma vsFromBB [reuse]:
 		& j<i " 
 
 // bsFromBB states that all ballots learned by the auditor were previously recorded on BB
-lemma bsFromBB [reuse]:
+lemma bsFromBB [heuristic={bsFromBB},reuse]:
 	"All A b1 b2 #i.
 		Learn_A_Bs(A,<'b', b1 + b2>) @i
 	==> Ex BB #j.
@@ -268,7 +719,7 @@ lemma bsFromBB [reuse]:
 		& j<i " 
 
 // vsFromAdversary states that all ballots on BB were either sent by a voter, or the adversary learned parts of the ballot from the voter (the encrpytion) and added a new signature, or the adversary constructed the whole ballot, including the encryption
-lemma vsFromAdversary [reuse]:
+lemma vsFromAdversary [heuristic={vsFromAdversary},reuse]:
 	"All xa ra pkS skDa #i.
 		BB_ballot(sg(encp(xa,ra,pkS),skDa) ) @i
 	==> 
@@ -278,13 +729,13 @@ lemma vsFromAdversary [reuse]:
 	| ( Ex H skD2 #j1 #j4 . Ballot(H,sg(encp(xa,ra,pkS),skD2)) @j1 & KU(skDa) @j4 )" 
 
 //secret randomness
-lemma secretRandomness [reuse]:
+lemma secretRandomness [heuristic={secretRandomness}, reuse]:
 	"All r #i.
 		Randomness(r) @i
 	==> not (Ex #j. K(r) @j )" 
 
 
-lemma Tall_As_Rec_1:  
+lemma Tall_As_Rec_1[heuristic={Tall_As_Rec_1}]:  
 "All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
 	. 
 	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
@@ -305,7 +756,7 @@ lemma Tall_As_Rec_1:
 	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
      )"
 
-lemma Tall_As_Rec_2:  
+lemma Tall_As_Rec_2[heuristic={Tall_As_Rec_2}]:  
 "All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
 	. 
 	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
@@ -324,7 +775,7 @@ lemma Tall_As_Rec_2:
 	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
      )"
 
-lemma Tall_As_Rec_3:  
+lemma Tall_As_Rec_3[heuristic={Tall_As_Rec_3}]:  
 "All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
 	. 
 	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
@@ -343,7 +794,7 @@ lemma Tall_As_Rec_3:
 	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
      )"	
 
-lemma Tall_As_Rec_4:  
+lemma Tall_As_Rec_4[heuristic={Tall_As_Rec_4}]:  
 "All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
 	. 
 	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
@@ -362,7 +813,7 @@ lemma Tall_As_Rec_4:
 	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
      )"	
 
-lemma Tall_As_Rec_5:  
+lemma Tall_As_Rec_5[heuristic={Tall_As_Rec_5}]:  
 "All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
 	. 
 	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
@@ -381,7 +832,7 @@ lemma Tall_As_Rec_5:
 	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
      )"	
 
-lemma Tall_As_Rec_6:  
+lemma Tall_As_Rec_6[heuristic={Tall_As_Rec_6}]:  
 "All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
 	. 
 	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
@@ -400,7 +851,7 @@ lemma Tall_As_Rec_6:
 	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
      )"
 
-lemma Tall_As_Rec_7:  
+lemma Tall_As_Rec_7[heuristic={Tall_As_Rec_7}]:  
 "All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
 	. 
 	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a
@@ -419,7 +870,7 @@ lemma Tall_As_Rec_7:
 	& ballots = sg(encp(v1,r1,pk(sk)),sskD1) + sg(encp(v2,r2,pk(sk)),sskD2)
      )"	
 
-lemma Tall_As_Rec_8:  
+lemma Tall_As_Rec_8[heuristic={Tall_As_Rec_8}]:  
 "All A #a  spkDSG p votes ballots bPrimes sk xa ra xb rb 
 	. 
 	Learn_A_spkDSG(A, <'spkDSG', spkDSG >) @a

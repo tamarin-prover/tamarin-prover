@@ -95,6 +95,512 @@ functions: cp/2,  PeqPVote/3, PeqPY/3, dcp/2
 equations: 
 dcp(cp(x,pk(sk)),sk)=x   //we abstract away the randomness r as we do not need it 
 
+
+tactic: functional
+prio:
+  regex "'proofV'"
+prio:
+  regex "'proofY'"
+prio:
+  regex "PeqP"
+prio:
+	regex "'BB', <'codes"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "BB_C"
+prio:
+  regex "codeBBOther"
+prio:
+  regex "In_S\( 'H"
+prio:
+  regex "In_S\( $D"
+prio:
+  regex "AgSt"
+prio:
+  regex "BB_"
+prio:
+  regex "In_A\( 'BB"
+prio:
+  regex "!KU\( ~r"
+prio:
+  regex "cp\("
+prio:
+	regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+
+tactic: indivVerif
+prio:
+  regex "AgSt_H"
+prio:
+  regex "In_A\( 'S', <'codes'"
+prio:
+  regex "In_A\( 'BB', <'codes'"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofV_v1
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofV'"
+prio:
+  regex "PeqPVote"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofV_v2
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofV'"
+prio:
+  regex "PeqPVote"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofV_v3
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofV'"
+prio:
+  regex "PeqPVote"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofV_v4
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofV'"
+prio:
+  regex "PeqPVote"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofV_v5
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofV'"
+prio:
+  regex "PeqPVote"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+ prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofV_v6
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofV'"
+prio:
+  regex "PeqPVote"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofV_v7
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofV'"
+prio:
+  regex "PeqPVote"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofV_v8
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+ prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio: 
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofV'"
+prio:
+  regex "PeqPVote"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofY_v1
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio: 
+	regex "'codes'"
+prio:
+  regex "proofY'"
+prio:
+  regex "PeqPY"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofY_v2
+prio:
+  regex "!KU\( ~skS"
+ prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofY'"
+prio:
+  regex "PeqPY"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofY_v3
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofY'"
+prio:
+  regex "PeqPY"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofY_v4
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofY'"
+prio:
+  regex "PeqPY"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofY_v5
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofY'"
+prio:
+  regex "PeqPY"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofY_v6
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofY'"
+prio:
+  regex "PeqPY"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofY_v7
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofY'"
+prio:
+  regex "PeqPY"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: Universal_VerProofY_v8
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S\( 'H1', 'D1', vote"
+prio:
+  regex "In_S\( 'H2', 'D2', vote"
+prio:
+	regex "PeqPVote"
+prio:
+  regex "AgSt_Au\("
+prio:
+	regex "'codes'"
+prio:
+  regex "proofY'"
+prio:
+  regex "PeqPY"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
 /* ==========
 Channel rules
 ============= */
@@ -241,7 +747,7 @@ LEMMAS
 functionality lemmas
 ==================== */
 
-lemma functional: exists-trace
+lemma functional[heuristic={functional}]: exists-trace
 	" Ex #i #j #k H1 H2 S BB vote1 vote2 fstcode1 sndcode1 fstcode2 sndcode2 skS
 				hV1 hV2 y1 y2 hY1 hY2 A  #a #l #m #s
 		.
@@ -281,7 +787,7 @@ lemma functional: exists-trace
 individual verifiability
 ======================== */
 
-lemma indivVerif: //If voter finds his code on BB => his code (representing his vote) is on BB, that is vote is registered
+lemma indivVerif[heuristic={indivVerif}]: //If voter finds his code on BB => his code (representing his vote) is on BB, that is vote is registered
 	"All H S vote fstcode sndcode #i2 #i #j .
 		Vote(H,vote) @i2 					// this is voter's vote
 		//verify(H,<fstcode,sndcode> in [code], true)
@@ -300,7 +806,7 @@ universal verifiability of tally
 //equal to A or B -> C (which we want: either evaluation of VerProofV=true => must be decrypted correctly)
 
 
-lemma Universal_VerProofV_v1:  
+lemma Universal_VerProofV_v1[heuristic={Universal_VerProofV_v1}]:  
 "All S A x1 x2 skS #a #i BB v1 v2 codes
 .       Learn_A_Vs(S,A,<'votes',v1+v2>)@a						   //list [v] in A 
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   //list [code] in A 
@@ -314,7 +820,7 @@ lemma Universal_VerProofV_v1:
 		)"		   	     			   
 
 
-lemma Universal_VerProofV_v2:  
+lemma Universal_VerProofV_v2[heuristic={Universal_VerProofV_v2}]:  
 "All S A x1 x2 skS #a #i BB v1 v2 codes
 .       Learn_A_Vs(S,A,<'votes',v1+v2>)@a						   
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   
@@ -327,7 +833,7 @@ lemma Universal_VerProofV_v2:
 		& codes = <cp(<v1,hV1>,pk(skS)),sndcode1>+<cp(<v2,hV2>,pk(skS)),sndcode2>  
 		)"	   	     			   
 
-lemma Universal_VerProofV_v3:  
+lemma Universal_VerProofV_v3[heuristic={Universal_VerProofV_v3}]:  
 "All S A x1 x2 skS #a #i BB v1 v2 codes
 .       Learn_A_Vs(S,A,<'votes',v1+v2>)@a						   
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   
@@ -340,7 +846,7 @@ lemma Universal_VerProofV_v3:
 		& codes = <cp(<v1,hV1>,pk(skS)),sndcode1>+<cp(<v2,hV2>,pk(skS)),sndcode2>  
 		)"		   	     			    
 
-lemma Universal_VerProofV_v4:  
+lemma Universal_VerProofV_v4[heuristic={Universal_VerProofV_v4}]:  
 "All S A x1 x2 skS #a #i BB v1 v2 codes
 .       Learn_A_Vs(S,A,<'votes',v1+v2>)@a						   
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   
@@ -353,7 +859,7 @@ lemma Universal_VerProofV_v4:
 		& codes = <cp(<v1,hV1>,pk(skS)),sndcode1>+<cp(<v2,hV2>,pk(skS)),sndcode2>  
 		)"
 		   	     			    
-lemma Universal_VerProofV_v5:  
+lemma Universal_VerProofV_v5[heuristic={Universal_VerProofV_v5}]:  
 "All S A x1 x2 skS #a #i BB v1 v2 codes
 .       Learn_A_Vs(S,A,<'votes',v1+v2>)@a						   
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   
@@ -366,7 +872,7 @@ lemma Universal_VerProofV_v5:
 		& codes = <cp(<v1,hV1>,pk(skS)),sndcode1>+<cp(<v2,hV2>,pk(skS)),sndcode2>  
 		)"		   	     			   
 
-lemma Universal_VerProofV_v6:  
+lemma Universal_VerProofV_v6[heuristic={Universal_VerProofV_v6}]:  
 "All S A x1 x2 skS #a #i BB v1 v2 codes
 .       Learn_A_Vs(S,A,<'votes',v1+v2>)@a						   
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   
@@ -379,7 +885,7 @@ lemma Universal_VerProofV_v6:
 		& codes = <cp(<v1,hV1>,pk(skS)),sndcode1>+<cp(<v2,hV2>,pk(skS)),sndcode2>  
 		)"		   	     			   
 
-lemma Universal_VerProofV_v7:  
+lemma Universal_VerProofV_v7[heuristic={Universal_VerProofV_v7}]:  
 "All S A x1 x2 skS #a #i BB v1 v2 codes
 .       Learn_A_Vs(S,A,<'votes',v1+v2>)@a						   
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   
@@ -392,7 +898,7 @@ lemma Universal_VerProofV_v7:
 		& codes = <cp(<v1,hV1>,pk(skS)),sndcode1>+<cp(<v2,hV2>,pk(skS)),sndcode2>  
 		)"		   	     			    
 
-lemma Universal_VerProofV_v8:  
+lemma Universal_VerProofV_v8[heuristic={Universal_VerProofV_v8}]:  
 "All S A x1 x2 skS #a #i BB v1 v2 codes
 .       Learn_A_Vs(S,A,<'votes',v1+v2>)@a						   
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   
@@ -408,7 +914,7 @@ lemma Universal_VerProofV_v8:
 /* ===================================
 unviersal verifiability of voter codes
 ====================================== */
-lemma Universal_VerProofY_v1: 
+lemma Universal_VerProofY_v1[heuristic={Universal_VerProofY_v1}]: 
 "All A x1 x2 skS #i BB codes #a S y1 y2
 .	Learn_A_YSGs(S,A,<'ySG',y1+y2>) @a						   //list [y'] in A
 	& Learn_A_Cs(S,A,<'codes',codes>) @a  						   //list [code] in A			
@@ -421,7 +927,7 @@ lemma Universal_VerProofY_v1:
 		& codes = <fstcode1,cp(<y1,hY1>,pk(skS))>+<fstcode2,cp(<y2,hY2>,pk(skS))>  //codes correspond to encryptions of voter codes
 		)"
 
-lemma Universal_VerProofY_v2:  
+lemma Universal_VerProofY_v2[heuristic={Universal_VerProofY_v2}]:  
 "All A x1 x2 skS #i BB codes #a S y1 y2
 .	Learn_A_YSGs(S,A,<'ySG',y1+y2>) @a
 	& Learn_A_Cs(S,A,<'codes',codes>) @a 
@@ -434,7 +940,7 @@ lemma Universal_VerProofY_v2:
 		& codes = <fstcode1,cp(<y1,hY1>,pk(skS))>+<fstcode2,cp(<y2,hY2>,pk(skS))>  
 		)"
 
-lemma Universal_VerProofY_v3:  
+lemma Universal_VerProofY_v3[heuristic={Universal_VerProofY_v3}]:  
 "All A x1 x2 skS #i BB codes #a S y1 y2
 .	Learn_A_YSGs(S,A,<'ySG',y1+y2>) @a
 	& Learn_A_Cs(S,A,<'codes',codes>) @a 
@@ -448,7 +954,7 @@ lemma Universal_VerProofY_v3:
 		)"
 
 
-lemma Universal_VerProofY_v4:  
+lemma Universal_VerProofY_v4[heuristic={Universal_VerProofY_v4}]:  
 "All A x1 x2 skS #i BB codes #a S y1 y2
 .	Learn_A_YSGs(S,A,<'ySG',y1+y2>) @a
 	& Learn_A_Cs(S,A,<'codes',codes>) @a 
@@ -462,7 +968,7 @@ lemma Universal_VerProofY_v4:
 		)"
 
 
-lemma Universal_VerProofY_v5:  
+lemma Universal_VerProofY_v5[heuristic={Universal_VerProofY_v5}]:  
 "All A x1 x2 skS #i BB codes #a S y1 y2
 .	Learn_A_YSGs(S,A,<'ySG',y1+y2>) @a
 	& Learn_A_Cs(S,A,<'codes',codes>) @a 
@@ -475,7 +981,7 @@ lemma Universal_VerProofY_v5:
 		& codes = <fstcode1,cp(<y1,hY1>,pk(skS))>+<fstcode2,cp(<y2,hY2>,pk(skS))>  
 		)"
 
-lemma Universal_VerProofY_v6:  
+lemma Universal_VerProofY_v6[heuristic={Universal_VerProofY_v6}]:  
 "All A x1 x2 skS #i BB codes #a S y1 y2
 .	Learn_A_YSGs(S,A,<'ySG',y1+y2>) @a
 	& Learn_A_Cs(S,A,<'codes',codes>) @a 
@@ -488,7 +994,7 @@ lemma Universal_VerProofY_v6:
 		& codes = <fstcode1,cp(<y1,hY1>,pk(skS))>+<fstcode2,cp(<y2,hY2>,pk(skS))>  
 		)"
 
-lemma Universal_VerProofY_v7:  
+lemma Universal_VerProofY_v7[heuristic={Universal_VerProofY_v7}]:  
 "All A x1 x2 skS #i BB codes #a S y1 y2
 .	Learn_A_YSGs(S,A,<'ySG',y1+y2>) @a
 	& Learn_A_Cs(S,A,<'codes',codes>) @a 
@@ -502,7 +1008,7 @@ lemma Universal_VerProofY_v7:
 		)"
 
 
-lemma Universal_VerProofY_v8:  
+lemma Universal_VerProofY_v8[heuristic={Universal_VerProofY_v8}]:  
 "All A x1 x2 skS #i BB codes #a S y1 y2
 .	Learn_A_YSGs(S,A,<'ySG',y1+y2>) @a
 	& Learn_A_Cs(S,A,<'codes',codes>) @a 
