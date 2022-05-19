@@ -115,7 +115,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -125,7 +125,7 @@ analyzing: examples/sapic/fast/basic/channels1.spthy
 analyzed: examples/sapic/fast/basic/channels1.spthy
 
   output:          examples/sapic/fast/basic/channels1.spthy.tmp
-  processing time: 0.266339451s
+  processing time: 0.168360637s
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
 
@@ -137,7 +137,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels1.spthy
 
   output:          examples/sapic/fast/basic/channels1.spthy.tmp
-  processing time: 0.266339451s
+  processing time: 0.168360637s
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
 

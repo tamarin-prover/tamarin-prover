@@ -24972,7 +24972,7 @@ restriction locking_5:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -24982,7 +24982,7 @@ analyzing: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 384.485083718s
+  processing time: 197.404530788s
   dec_limits (all-traces): verified (1417 steps)
   bad_keys (all-traces): verified (319 steps)
   no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (910 steps)
@@ -24998,7 +24998,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 384.485083718s
+  processing time: 197.404530788s
   dec_limits (all-traces): verified (1417 steps)
   bad_keys (all-traces): verified (319 steps)
   no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (910 steps)

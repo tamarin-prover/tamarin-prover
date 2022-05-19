@@ -738,7 +738,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -748,7 +748,7 @@ analyzing: examples/sapic/fast/feature-xor/CRxor.spthy
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 2.448601532s
+  processing time: 3.008278777s
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)
   executable (exists-trace): verified (9 steps)
@@ -761,7 +761,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 2.448601532s
+  processing time: 3.008278777s
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)
   executable (exists-trace): verified (9 steps)

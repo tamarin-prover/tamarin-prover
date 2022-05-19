@@ -3638,7 +3638,7 @@ restriction reliable:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -3648,7 +3648,7 @@ analyzing: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 29.554310137s
+  processing time: 33.663950056s
   Executable (exists-trace): verified (47 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (138 steps)
@@ -3664,7 +3664,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 29.554310137s
+  processing time: 33.663950056s
   Executable (exists-trace): verified (47 steps)
   all_received_were_sent (all-traces): verified (16 steps)
   all_received_were_sent_injective (all-traces): verified (138 steps)
