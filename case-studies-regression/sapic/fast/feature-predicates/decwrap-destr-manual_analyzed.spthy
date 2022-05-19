@@ -962,7 +962,7 @@ restriction locking_0:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -972,7 +972,7 @@ analyzing: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 2.78140646s
+  processing time: 2.778045421s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (59 steps)
@@ -987,7 +987,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 2.78140646s
+  processing time: 2.778045421s
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
   dec_limits (all-traces): verified (59 steps)

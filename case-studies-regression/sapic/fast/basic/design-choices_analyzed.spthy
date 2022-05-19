@@ -231,7 +231,7 @@ restriction locking_0:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -241,7 +241,7 @@ analyzing: examples/sapic/fast/basic/design-choices.spthy
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.338865872s
+  processing time: 0.300474877s
   visit_once (all-traces): verified (26 steps)
 
 ------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.338865872s
+  processing time: 0.300474877s
   visit_once (all-traces): verified (26 steps)
 
 ==============================================================================

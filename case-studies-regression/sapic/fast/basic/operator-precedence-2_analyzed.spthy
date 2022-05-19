@@ -61,7 +61,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -71,7 +71,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-2.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.068797149s
+  processing time: 0.072330264s
   semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.068797149s
+  processing time: 0.072330264s
   semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
 
 ==============================================================================
