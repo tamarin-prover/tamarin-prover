@@ -17,7 +17,7 @@ module Theory (
 
   -- * Processes
   , ProcessDef(..)
-  , SapicElement(..)
+  , TranslationElement(..)
   -- Datastructure added to Theory Items
   , addProcess
   , findProcess
@@ -39,12 +39,21 @@ module Theory (
   , pFact
   , addPredicate
 
+  -- * Case Tests
+  , CaseTest(..)
+  , cName
+  , cFormula
+  , caseTestToPredicate
+  , defineCaseTests
+
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
+  , CaseIdentifier
   , Lemma
   , SyntacticLemma
   , ProtoLemma(..)
+  , AccLemma(..)
   , lName
   , DiffLemma
   , lDiffName
@@ -54,6 +63,11 @@ module Theory (
   , lFormula
   , lAttributes
   , lProof
+  , aName
+  , aAttributes
+  , aCaseIdentifiers
+  , aCaseTests
+  , aFormula
   , unprovenLemma
   , skeletonLemma
   , skeletonDiffLemma
@@ -86,12 +100,16 @@ module Theory (
   , diffTheoryDiffLemmas
   , theoryRules
   , theoryLemmas
+  , theoryCaseTests
   , theoryRestrictions
   , theoryProcesses
+  , theoryAccLemmas
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction
   , addLemma
+  , addAccLemma
+  , addCaseTest
   , addRestrictionDiff
   , addLemmaDiff
   , addDiffLemma
@@ -102,6 +120,8 @@ module Theory (
   , removeDiffLemma
   , lookupLemma
   , lookupDiffLemma
+  , lookupAccLemma
+  , lookupCaseTest
   , lookupLemmaDiff
   , addComment
   , addDiffComment
@@ -118,7 +138,7 @@ module Theory (
   , OpenTheoryItem
   , OpenTranslatedTheory
   , OpenDiffTheory
-  , removeSapicItems
+  , removeTranslationItems
 --  , EitherTheory
   , EitherOpenTheory
   , EitherClosedTheory
@@ -246,4 +266,3 @@ import OpenTheory
 import ClosedTheory
 import Prover
 import Pretty
-

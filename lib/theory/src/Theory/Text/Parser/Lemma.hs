@@ -1,6 +1,6 @@
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
---               contributing in 2019: Robert Künnemann, Johannes Wocker
+--               contributing in 2019: Robert Künnemann, Johannes Wocker, Kevin Morio
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
@@ -10,6 +10,7 @@
 
 module Theory.Text.Parser.Lemma(
       lemma
+      , lemmaAttribute
       , plainLemma
       , diffLemma
 )

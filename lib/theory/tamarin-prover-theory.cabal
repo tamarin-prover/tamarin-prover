@@ -123,9 +123,12 @@ library
       Items.ProcessItem
       Items.PredicateItem
       Items.TheoryItem
+      Items.CaseTestItem
+      Items.AccLemmaItem
       Pretty
 
     other-modules:
+      Theory.Text.Parser.Accountability
       Theory.Text.Parser.Exceptions
       Theory.Text.Parser.Fact
       Theory.Text.Parser.Formula

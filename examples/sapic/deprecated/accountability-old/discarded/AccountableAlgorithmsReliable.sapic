@@ -1,0 +1,210 @@
+/*
+ * Protocol:    Accountable Algorithms protocol
+ * Modeler: 	Robert Künnemann, Hizbullah Abdul Aziz Jabbar
+ * Date: 	Nov 2017
+ * Source:	Kroll's Ph.D. thesis, modified according to "Accountability in protocols"
+ * Status: 	abandoned
+ * Notes: Modelling that uses reliable channels for explicit communication with
+ * a party that is both the public ledger and the judge. Pre-computation is
+ * pretty slow, and the model a bit awkward, so it was abandoned in favour of
+ * AccountableAlgorithmsStore.sapic.
+ */
+
+theory AccountableAlgorithmsReliable
+
+begin
+
+options: progress
+builtins: signing
+functions: 
+  ZK/7, verZK/1, Pub/1, f/2,
+  commit/2, open/2,
+  extract/1, sk/1[private]  
+
+equations: 
+  /*
+  verify(sign(m,sk),m,pk(sk)) = true
+  */
+  Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
+  verZK(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = true,
+  extract(sign(x,y)) = x
+
+let A =
+(
+  let z   = f(x,y) in
+  let Cx  = commit(x,rx) in
+  let Cy  = commit(y,ry) in
+  let Cz  = commit(z,rz) in
+
+  let Z   = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz) in
+  let log = <Cx,Cz,Z> in
+
+  let res = <z,rz,rx> in
+  let sig_res = sign(res,sk('A')) in
+
+  new y; new ry; 
+  out ('r',<'A','J','Initialize',Cy>); 
+  event Initialize(Cy);
+  
+  in ('r',<'S','A','Val',x,sig_x>);
+  if verify(sig_x,x,pk(sk('S'))) = true() then
+    (
+      new rx; new rz;
+      out ('r',<'A','S','Res',res,sig_res>);  // send result to S
+      out ('r',<'A','J','Res',res,sig_res>);  // send result to J
+      out ('r',<'A','J','Log',sig_x,log>);    // send log to J
+
+      event Final()             
+    )
+)
+
+let S =
+(
+  let z   = fst(res) in
+  let rz  = fst(snd(res)) in
+  let rx  = snd(snd(res)) in
+  
+  let Cx  = fst(log) in
+  let Cz  = fst(snd(log)) in
+  let Z   = snd(snd(log)) in
+
+  in ('r',<'J','S','Initialize',Cy>); 
+  
+  new x; out ('r',<'S','A','Val',x,sign(x,sk('S'))>);
+
+  in ('r',<'A','S','Res',res,sig_res>); 
+  in ('r',<'J','S','Log',sig_x,log>);
+  if verify(sig_res,res,pk(sk('A'))) = true() then
+    if Cx = commit(x,rx) then
+      if Cz = commit(z,rz) then
+        if <Cx,Cy,Cz> = Pub(Z) then 
+          //out (<'S','J','Accept',x,z,sig_res>);
+          event Accept(<x,z,sig_res>)
+)
+
+let J =
+(
+  let Cx  = fst(log) in
+  let Cz  = fst(snd(log)) in
+  let Z   = snd(snd(log)) in
+
+  let z   = fst(res) in
+  let rz  = fst(snd(res)) in
+  let rx  = snd(snd(res)) in
+
+  in ('r',<'A','J','Initialize',Cy>); out ('r',<'J','S','Initialize',Cy>);
+  in ('r',<'A','J','Res',res,sig_res>);
+  in ('r',<'A','J','Log',sig_x,log>); out ('r',<'J','S','Log',sig_x,log>);
+  //in (<'S','J','Accept',x,z,sig_res>);
+  if verZK(Z) = true() then 
+    (
+      if <Cx,Cy,Cz> = Pub(Z) then 
+        (
+          if verify(sig_x,open(Cx,rx),pk(sk('S'))) = true() then 
+            (
+              event HonestA();
+              if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true() 
+                then event HonestS()
+                else event NotHonestS()
+            )
+          else 
+            (
+              event NotHonestA(); event NotHonestS()
+            )
+        )
+      else
+        (
+          event NotHonestA();
+          if verify(sig_x,open(Cx,rx),pk(sk('S'))) = true() then 
+            (
+              if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
+                then event HonestS()
+                else event NotHonestS()
+            )
+          else event NotHonestS()
+        )
+    )
+  else 
+    (
+      event NotHonestA();
+      if verify(sig_x,open(Cx,rx),pk(sk('S'))) = true() then 
+        (
+          if verify(sig_res,<open(Cz,rz),rz,rx>,pk(sk('A'))) = true()
+            then event HonestS()
+            else event NotHonestS()
+        )
+      else event NotHonestS()
+    )
+)
+
+A || S || J || !(in ('c',<'corrupt',$x>); event Corrupted($x); out ('c',sk($x)))
+
+lemma sanity_exists_accepted:
+  exists-trace
+    "Ex #i a. Accept(a)@i"
+
+lemma sanity_exists_final:
+  exists-trace
+    "Ex #j. Final()@j"
+
+lemma honest_run:
+  "
+    ( All x z r #i. Accept(<x,z,r>)@#i
+      ==>
+      ( Ex #j #k Cy ry. Initialize(Cy)@#j & Final()@#k 
+        & #j < #i & #i < #k
+        & z = f(x,open(Cy,ry))
+      )
+    )
+  "
+
+lemma honest_run_1:
+  exists-trace
+  "
+    ( Ex x z r #i #j #k Cy ry. Accept(<x,z,r>)@#i 
+      & Initialize(Cy)@#j & Final()@#k 
+      & z = f(x,open(Cy,ry))
+    )
+  "
+
+verdictfunction v1: 
+  " Ex #i #j. NotHonestS()@#i & NotHonestA()@#j
+  " -> <'A','S'>,
+
+  " Ex #j. NotHonestA()@#j
+  & (not Ex #i. NotHonestS()@#i) 
+  /* & (Ex #i. HonestS()@#i) */ 
+  " -> <'A'>,
+
+  " Ex #i. NotHonestS()@#i
+  & (not Ex #j. NotHonestA()@#j)
+  " -> <'S'>,
+
+  otherwise -> <>
+
+verdictfunction v2: 
+  "Ex #i #j. NotHonestS()@#i & NotHonestA()@#j"
+  -> <'A','S'>,
+
+  "Ex #i #j. NotHonestA()@#i & HonestS()@#j"
+  -> <'A'>,
+
+  "Ex #i #j . HonestA()@#i & NotHonestS()@#j "
+  -> <'S'>,
+
+  otherwise -> <>
+
+lemma acc: 
+  v2 accounts  [cases]
+  for "
+      ( All x z r #i. Accept(<x,z,r>)@#i
+        ==> 
+        ( Ex #j #k Cy ry. Initialize(Cy)@#j & Final()@#k
+        //& #j < #i & #i < #k
+        & z = f(x,open(Cy,ry))
+        )
+      ) 
+      "
+  for parties <'A','S'> 
+
+end

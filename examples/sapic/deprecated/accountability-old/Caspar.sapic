@@ -1,0 +1,156 @@
+/*
+ * Protocol:    casper consensus mechanism
+ * Modeler:   Robert Künnemann
+ * Date:  Jun 2018
+ * Source: Buterin and Griffith. Casper the Friendly Finality Gadget
+ * 
+ * Status: not working
+ * Note:  execute with --heuristic=p 
+ * */
+
+theory Casper
+begin
+
+builtins: multiset
+
+functions: 
+    pk/1,
+    skca/1[private], 
+    /* aenc/2, adec/2, */
+    sign/2, verify/3,
+    read/1,
+    true/0,
+    h/2
+
+equations: 
+    /* adec(aenc(m,pk(i)),sk(i))=m, */
+    // only accept signatures from corresponding public keys
+    verify(sign(sk,m ),m, pk(sk)) = true,
+    read(sign(sk,m))=m
+
+// Simplification:
+// just one attacker, always 1/3 deposit
+// just one honest voter, with 2/3 deposit
+// attacker controls, what honest voter votes for
+// honest voter always has majrity`
+//
+// wait: for one vote, attacker can support, so 
+//
+//
+// accountability: if conflicting checkpoints are finialized, party behaving
+// dishonestly can be identified because commandment was violated?
+// no need to talk about state
+
+let Tree = 
+    in(bi,bip);
+    lookup <'height',bi> as h in
+        insert <'height',bip>, h+'1';
+        insert <'parent',bip>, bi;
+
+
+let HonestVote = // One or more honest voters establishing a super-majority
+                // assumption is that adversary never votes with them
+    in(<vk,s,t>);
+         event Honest(vk);
+         event Ancestor(s,t); // s needs to be ancestor of t
+         lookup <'height',s> as hs in
+             lookup <'height',t> as ht in
+                event CommandmentI(ht);
+                event CommandmentII(hs,ht);
+                event SuperMajority(s,t); // no necessarily the case
+                insert <'Supermaj',s,t>;
+        
+
+restriction comm1:
+    "All ht1 ht2 #i1 #i2.
+    CommandmentI(ht1)@i1 &
+    CommandmentI(ht2)@i2
+    ==>
+        not(ht1=ht2)"
+
+restriction comm2:
+    "All hs1 hs2 ht1 ht2 #i1 #i2.
+    CommandmentII(hs1,ht1)@i1
+    CommandmentII(hs2,ht2)@i2
+    ==>
+        not (hs1 < hs2 & ht2 < ht1) //TODO need to express using multisets
+        "
+
+let DishonestVote =
+    in(<$V,vk(sk),<s,t,hs,ht>,sign(sk,<s,t,hs,ht>)); // TODO use deconstructor instead of pattern matching..
+    /* pkv .. public key of validator
+     * s   .. hash of source
+     * t   .. hash of target
+     * hs  .. height of source
+     * ht  .. height of target
+     */
+    lookup <'Registered',$V> as vk in
+        if vk = vk(sk) then
+            event Ancestor(s,t); // s needs to be ancestor of t
+            event Votes(vk(sk),<s,t,hs,ht>);
+
+let Justify =
+    in(b);
+    lookup 'Root' as r in
+        if b=r then insert <'Justified',b>,'1';
+        else
+            in(ba);
+            lookup <'Justified',bp> as j in
+                lookup <'Supermaj',bp,ba> as k in
+                    insert <'Justified',bp>,'1';
+
+let Finalize= 
+    in(bp,b);
+    lookup <'Justified',bp> as j in
+        lookup <'Supermaj',bp,b> as k in
+            insert <'Finalized',bp>,'1';
+
+let Conflict =
+    in(a,b);
+    if a=b then 0
+    else 
+        lookup <'parent',a> as ap in
+            lookup <'parent',b> as bp in
+                if ab=bp then 
+                    insert <'conflict',a,b>,'1';
+                else
+                    lookup <'conflict',a,bp> as bla in
+                        insert <'conflict',a,b>,'1';
+                        
+
+if Test =
+    in(b);
+    lookup <'height',b> as h in //see if node exists
+        lookup <'parent',b> as bp in
+            event NeedtoTest(bp);
+
+
+let Proto =
+    in(root);
+    event Root(root);
+    insert <'height',root>,'1';
+    Tree || Vote
+
+
+
+/* lemma sanity_logA_not_misbehaving: */
+/*     exists-trace */
+/*     "Ex a #i #j. (a = NormalAct()) & LogA(a)@i & Execute(a)@j" */
+
+
+restriction terminate:
+    "Ex #t. Terminate()@t"
+
+/* verdictfunction v1: */
+/*     "Ex #i . DishonestCA()@i" -> let verdict1 = <'CA'>, */
+/*     otherwise -> empty */ 
+
+/* lemma acc_ca: */
+/*     v1 accounts [coarse] */ 
+/*     for "All S pk #i.  TestCA(S,pk)@i ==> */ 
+/*                 Ex #j. HonestRegister(S,'CA',pk)@j */
+/*                 " */ 
+/*     for parties <'CA','LA'> */
+
+
+end

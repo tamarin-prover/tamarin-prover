@@ -17,7 +17,7 @@ module Sapic.Exceptions (
 ) where
 import Control.Exception
 import Data.Typeable
-import Data.Set
+import Data.Set as S
 import qualified Data.List as List
 import Theory
 import Theory.Sapic
@@ -32,8 +32,8 @@ prettyWFLockTag WFPar = "a parallel"
 
 -- | Wellformedness errors, see instance of show below for explanation.
 data WFerrror a = WFLock WFLockTag (AnProcess a)
-                | WFUnboundProto (Set LVar)
-                | WFUnbound (Set LVar) (AnProcess a)
+                | WFUnboundProto (S.Set LVar)
+                | WFUnbound (S.Set LVar) (AnProcess a)
                 | WFReliable
                 | WFBoundTwice LVar
     deriving (Typeable)
@@ -49,19 +49,22 @@ data SapicException p = NotImplementedError String
                     | ImplementationError String
                     | MoreThanOneProcess
                     | RuleNameExists String
+                    | LemmaNameExists String
                     | RestrictionNameExists String
                     | ReliableTransmissionButNoProcess
                     | CannotExpandPredicate FactTag SyntacticRestriction
     -- deriving (Typeable, Show)
     deriving (Typeable)
 
-prettyVarSet :: Set LVar -> String
+prettyVarSet :: S.Set LVar -> String
 prettyVarSet = List.intercalate ", "  . List.map show . toList
 
 instance (Show p) => Show (SapicException p) where
     -- show SomethingBad = "Something bad happened"
+
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
+    show (LemmaNameExists s) = "Lemma name already exists:" ++ s
     show (RestrictionNameExists s) = "Restriction already exists:" ++ s
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
     show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s

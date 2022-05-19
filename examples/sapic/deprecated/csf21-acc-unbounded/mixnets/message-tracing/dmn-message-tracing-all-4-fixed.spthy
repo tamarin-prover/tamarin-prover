@@ -1,0 +1,799 @@
+/*
+ * Protocol: DMN + message tracing (fixed identities)
+ * Modeler:  Kevin Morio and Robert Künnemann
+ * Date:     Sep 2020
+ * Source:   "SoK: Techniques for Verifiable Mix Nets", Thomas Haines and Johannes Müller, CSF20
+ * Status:   working (deprecated)
+ * Notes:    Run with: tamarin-prover +RTS -N4 -RTS --stop-on-trace=seqdfs --prove --heuristic=o \
+ *                     --oraclename=oracle-dmn-message-tracing dmn-message-tracing-all-4-fixed.spthy
+ *
+ * In this version, the audit continues after detecting the first unexpected message on the bulletin board.
+ */
+
+theory DMNMessageTracingAll4Fixed
+begin
+
+functions:
+    pk/1
+  , sk/1[private]
+  , aenc/3
+  , adec/2
+  , S/1
+  , adec_suc/2
+  , true/0
+
+equations:
+    adec(sk(x), aenc(pk(x), r, m)) = m
+  , adec_suc(sk(x), aenc(pk(x), r, m)) = true
+
+
+rule DistinctParty:
+    [ ]
+  --[ Once($p) ]->
+    [ Party($p) ]
+
+rule AInit:
+    let
+        m1 = 'M1'
+        m2 = 'M2'
+        m3 = 'M3'
+        m4 = 'M4'
+    in
+    [ Fr(~sid)
+    , Party($s1)
+    , Party($s2) ]
+  --[ Init(~sid)
+    , Once('init')
+    , IsMixer(<~sid, m4>, '0')
+    , IsMixer(<~sid, m3>, S('0'))
+    , IsMixer(<~sid, m2>, S(S('0')))
+    , IsMixer(<~sid, m1>, S(S(S('0')))) ]->
+    [ Sender(<~sid, $s1>)
+    , Sender(<~sid, $s2>)
+    , PostCount(<~sid, m1>, S(S('0')))
+    , PostCount(<~sid, m2>, S(S('0')))
+    , PostCount(<~sid, m3>, S(S('0')))
+    , PostCount(<~sid, m4>, S(S('0')))
+    , !IMixer(<~sid, m4>, '0')
+    , !IMixer(<~sid, m3>, S('0'))
+    , !IMixer(<~sid, m2>, S(S('0')))
+    , !IMixer(<~sid, m1>, S(S(S('0'))))
+    , Out(~sid) ]
+
+rule BSender:
+    let
+        c3 = aenc(pk(<~sid, $m4>), ~r4, ~m)
+        c2 = aenc(pk(<~sid, $m3>), ~r3, c3)
+        c1 = aenc(pk(<~sid, $m2>), ~r2, c2)
+        c0 = aenc(pk(<~sid, $m1>), ~r1, c1)
+    in
+    [ Sender(<~sid, $s>)
+    , !IMixer(<~sid, $m4>, '0')
+    , !IMixer(<~sid, $m3>, S('0'))
+    , !IMixer(<~sid, $m2>, S(S('0')))
+    , !IMixer(<~sid, $m1>, S(S(S('0'))))
+    , Fr(~r1)
+    , Fr(~r2)
+    , Fr(~r3)
+    , Fr(~r4)
+    , Fr(~r5)
+    , Fr(~m) ]
+  --[ Sender(<~sid, $s>)
+    , Send(<~sid, $s>, ~m)
+    , Post(<~sid, $s>, S(S(S(S('0')))), c0) ]->
+    [ IntCipher(<~sid, $s>, '0', ~r5, ~m, $m4)
+    , IntCipher(<~sid, $s>, S('0'), ~r4, c3, $m3)
+    , IntCipher(<~sid, $s>, S(S('0')), ~r3, c2, $m2)
+    , IntCipher(<~sid, $s>, S(S(S('0'))), ~r2, c1, $m1)
+    , Mixer(<~sid, $m4>, '0')
+    , Mixer(<~sid, $m3>, S('0'))
+    , Mixer(<~sid, $m2>, S(S('0')))
+    , Mixer(<~sid, $m1>, S(S(S('0'))))
+    , Verify(<~sid, $s>, S(S(S(S('0')))))
+    , BBPost(~sid, S(S(S(S('0')))), c0) ]
+
+rule AMixStep:
+    [ BBPost(~sid, S(n), aenc(pk(<~sid, $m>), r, e))
+    , Mixer(<~sid, $m>, n)
+    , PostCount(<~sid, $m>, S(pc)) ]
+  --[ Post(<~sid, $m>, n, e)
+    , PostCount(<~sid, $m>, pc) ]->
+    [ BBPost(~sid, n, e)
+    , PostCount(<~sid, $m>, pc) ]
+
+rule BMixStepCorrupted:
+    [ BBPost(~sid, S(n), c)
+    , Mixer(<~sid, $m>, n)
+    , PostCount(<~sid, $m>, S(pc))
+    , In(a) ]
+  --[ Post(<~sid, $m>, n, a)
+    , Corrupted($m)
+    , PostCount(<~sid, $m>, pc)
+    , _restrict( All mp np #i. IsMixer(<~sid, mp>, np)@i & n = S(np)
+                     ==> Ex r e. a = aenc(pk(<~sid, mp>), r, e) ) ]->
+    [ BBPost(~sid, n, a)
+    , PostCount(<~sid, $m>, pc) ]
+
+rule BAVerify:
+    [ IntCipher(<~sid, $s>, n, r, c, $m)
+    , Verify(<~sid, $s>, S(n)) ]
+  --[ Valid(<~sid, $s>, n, c)
+    , Verified(<~sid, $s>, n)
+    , _restrict( Ex #i. Post(<~sid, $m>, n, c)@i ) ]->
+    [ Verify(<~sid, $s>, n) ]
+
+rule AAVerifyBlame:
+    [ IntCipher(<~sid, $s>, n, r, c, $m)
+    , Verify(<~sid, $s>, S(n)) ]
+  --[ Blame(<~sid, $m>)
+    , Verified(<~sid, $s>, n)
+    , _restrict( not Ex #i. Post(<~sid, $m>, n, c)@i ) ]->
+    [ Verify(<~sid, $s>, n) ]
+
+
+
+/*********************************************
+Sanity lemmas
+*********************************************/
+
+lemma finished:
+   exists-trace
+   "Ex sid m e #i. Post(<sid, m>, '0', e)@i"
+
+lemma valid:
+   exists-trace
+   "Ex #i s m. Valid(s, '0', m)@i"
+
+lemma blame:
+   exists-trace
+   "Ex #i m. Blame(m)@i"
+
+
+
+/*********************************************
+Restrictions
+*********************************************/
+
+restriction verify_sender:
+   "All s #i. Sender(s)@i ==> Ex #j. Verified(s, '0')@j
+                            & not Ex #k. Verified(s, '0')@k
+                            & not(#j = #k)"
+
+restriction finish:
+   "All sid m n #i. IsMixer(<sid, m>, n)@i ==> Ex #j. PostCount(<sid, m>, '0')@j
+                                             & not Ex #k. PostCount(<sid, m>, '0')@k
+                                             & not(#j = #k)"
+
+restriction once:
+   "All x #i #j. Once(x)@i & Once(x)@j ==> #i = #j"
+
+
+
+/*********************************************
+Accountability lemmas
+*********************************************/
+
+/*
+verdictfunction mixer_evidence:
+    "Ex sid #M1. Blame(<sid, 'M1'>)@M1 & (not Ex #M2. Blame(<sid, 'M2'>)@M2) & (not Ex #M3. Blame(<sid, 'M3'>)@M3) & (not Ex #M4. Blame(<sid, 'M4'>)@M4) & T" -> let m1 = <'M1'>,
+    "Ex sid #M2. Blame(<sid, 'M2'>)@M2 & (not Ex #M1. Blame(<sid, 'M1'>)@M1) & (not Ex #M3. Blame(<sid, 'M3'>)@M3) & (not Ex #M4. Blame(<sid, 'M4'>)@M4) & T" -> let m2 = <'M2'>,
+    "Ex sid #M3. Blame(<sid, 'M3'>)@M3 & (not Ex #M1. Blame(<sid, 'M1'>)@M1) & (not Ex #M2. Blame(<sid, 'M2'>)@M2) & (not Ex #M4. Blame(<sid, 'M4'>)@M4) & T" -> let m3 = <'M3'>,
+    "Ex sid #M4. Blame(<sid, 'M4'>)@M4 & (not Ex #M1. Blame(<sid, 'M1'>)@M1) & (not Ex #M2. Blame(<sid, 'M2'>)@M2) & (not Ex #M3. Blame(<sid, 'M3'>)@M3) & T" -> let m4 = <'M4'>,
+    "Ex sid #M1 #M2. Blame(<sid, 'M1'>)@M1 & Blame(<sid, 'M2'>)@M2 & (not Ex #M3. Blame(<sid, 'M3'>)@M3) & (not Ex #M4. Blame(<sid, 'M4'>)@M4) & T" -> <m1> | <m2>,
+    "Ex sid #M1 #M3. Blame(<sid, 'M1'>)@M1 & Blame(<sid, 'M3'>)@M3 & (not Ex #M2. Blame(<sid, 'M2'>)@M2) & (not Ex #M4. Blame(<sid, 'M4'>)@M4) & T" -> <m1> | <m3>,
+    "Ex sid #M1 #M4. Blame(<sid, 'M1'>)@M1 & Blame(<sid, 'M4'>)@M4 & (not Ex #M2. Blame(<sid, 'M2'>)@M2) & (not Ex #M3. Blame(<sid, 'M3'>)@M3) & T" -> <m1> | <m4>,
+    "Ex sid #M2 #M3. Blame(<sid, 'M2'>)@M2 & Blame(<sid, 'M3'>)@M3 & (not Ex #M1. Blame(<sid, 'M1'>)@M1) & (not Ex #M4. Blame(<sid, 'M4'>)@M4) & T" -> <m2> | <m3>,
+    "Ex sid #M2 #M4. Blame(<sid, 'M2'>)@M2 & Blame(<sid, 'M4'>)@M4 & (not Ex #M1. Blame(<sid, 'M1'>)@M1) & (not Ex #M3. Blame(<sid, 'M3'>)@M3) & T" -> <m2> | <m4>,
+    "Ex sid #M3 #M4. Blame(<sid, 'M3'>)@M3 & Blame(<sid, 'M4'>)@M4 & (not Ex #M1. Blame(<sid, 'M1'>)@M1) & (not Ex #M2. Blame(<sid, 'M2'>)@M2) & T" -> <m3> | <m4>,
+    "Ex sid #M1 #M2 #M3. Blame(<sid, 'M1'>)@M1 & Blame(<sid, 'M2'>)@M2 & Blame(<sid, 'M3'>)@M3 & (not Ex #M4. Blame(<sid, 'M4'>)@M4) & T" -> <m1> | <m2> | <m3>,
+    "Ex sid #M1 #M2 #M4. Blame(<sid, 'M1'>)@M1 & Blame(<sid, 'M2'>)@M2 & Blame(<sid, 'M4'>)@M4 & (not Ex #M3. Blame(<sid, 'M3'>)@M3) & T" -> <m1> | <m2> | <m4>,
+    "Ex sid #M1 #M3 #M4. Blame(<sid, 'M1'>)@M1 & Blame(<sid, 'M3'>)@M3 & Blame(<sid, 'M4'>)@M4 & (not Ex #M2. Blame(<sid, 'M2'>)@M2) & T" -> <m1> | <m3> | <m4>,
+    "Ex sid #M2 #M3 #M4. Blame(<sid, 'M2'>)@M2 & Blame(<sid, 'M3'>)@M3 & Blame(<sid, 'M4'>)@M4 & (not Ex #M1. Blame(<sid, 'M1'>)@M1) & T" -> <m2> | <m3> | <m4>,
+    "Ex sid #M1 #M2 #M3 #M4. Blame(<sid, 'M1'>)@M1 & Blame(<sid, 'M2'>)@M2 & Blame(<sid, 'M3'>)@M3 & Blame(<sid, 'M4'>)@M4 & T" -> <m1> | <m2> | <m3> | <m4>,
+    otherwise -> empty
+
+lemma missing:
+    mixer_evidence accounts [cases] for
+    "All sid s ms #i. Send(<sid, s>, ms)@i ==> Ex m #j. Post(<sid, m>, '0', ms)@j"
+    for parties <'M1', 'M2', 'M3', 'M4'>
+*/
+
+lemma missing_excl_0_1 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_0_2 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_0_3 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_0_4 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_0_5 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_0_6 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_0_7 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_0_8 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_0_9 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_0_10 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_0_11 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_0_12 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_0_13 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_0_14 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_0_15 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_1_2 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_1_3 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_1_4 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_1_5 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_1_6 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_1_7 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_1_8 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_1_9 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_1_10 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_1_11 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_1_12 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_1_13 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_1_14 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_1_15 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_2_3 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_2_4 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_2_5 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_2_6 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_2_7 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_2_8 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_2_9 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_2_10 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_2_11 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_2_12 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_2_13 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_2_14 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_2_15 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_3_4 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_3_5 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_3_6 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_3_7 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_3_8 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_3_9 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_3_10 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_3_11 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_3_12 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_3_13 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_3_14 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_3_15 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_4_5 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_4_6 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_4_7 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_4_8 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_4_9 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_4_10 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_4_11 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_4_12 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_4_13 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_4_14 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_4_15 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_5_6 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_5_7 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_5_8 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_5_9 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_5_10 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_5_11 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_5_12 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_5_13 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_5_14 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_5_15 :
+ all-traces
+"not(((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_6_7 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_6_8 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_6_9 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_6_10 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_6_11 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_6_12 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_6_13 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_6_14 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_6_15 :
+ all-traces
+"not(((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_7_8 :
+ all-traces
+"not(((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_7_9 :
+ all-traces
+"not(((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_7_10 :
+ all-traces
+"not(((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_7_11 :
+ all-traces
+"not(((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_7_12 :
+ all-traces
+"not(((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_7_13 :
+ all-traces
+"not(((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_7_14 :
+ all-traces
+"not(((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_7_15 :
+ all-traces
+"not(((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_8_9 :
+ all-traces
+"not(((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_8_10 :
+ all-traces
+"not(((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_8_11 :
+ all-traces
+"not(((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_8_12 :
+ all-traces
+"not(((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_8_13 :
+ all-traces
+"not(((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_8_14 :
+ all-traces
+"not(((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_8_15 :
+ all-traces
+"not(((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_9_10 :
+ all-traces
+"not(((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & (Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))"
+
+lemma missing_excl_9_11 :
+ all-traces
+"not(((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_9_12 :
+ all-traces
+"not(((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_9_13 :
+ all-traces
+"not(((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_9_14 :
+ all-traces
+"not(((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_9_15 :
+ all-traces
+"not(((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_10_11 :
+ all-traces
+"not(((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T))))))))"
+
+lemma missing_excl_10_12 :
+ all-traces
+"not(((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_10_13 :
+ all-traces
+"not(((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_10_14 :
+ all-traces
+"not(((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_10_15 :
+ all-traces
+"not(((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_11_12 :
+ all-traces
+"not(((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))"
+
+lemma missing_excl_11_13 :
+ all-traces
+"not(((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_11_14 :
+ all-traces
+"not(((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_11_15 :
+ all-traces
+"not(((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_12_13 :
+ all-traces
+"not(((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & (Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))))"
+
+lemma missing_excl_12_14 :
+ all-traces
+"not(((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_12_15 :
+ all-traces
+"not(((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_13_14 :
+ all-traces
+"not(((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) & (Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T))))))))"
+
+lemma missing_excl_13_15 :
+ all-traces
+"not(((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_excl_14_15 :
+ all-traces
+"not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) & not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))))))))))))))))))))"
+
+lemma missing_exh :
+ all-traces
+"((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))))))))))))))))))))))))))))))"
+
+lemma missing_suf_0 :
+ exists-trace
+"((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (((All #c3 . ((Corrupted('M4')@#c3 ==> F))) & ((All #c2 . ((Corrupted('M3')@#c2 ==> F))) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((Ex #c0 . (Corrupted('M1')@#c0)) & T)))) & not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j))))))))"
+
+lemma missing_suf_1 :
+ exists-trace
+"((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (((All #c3 . ((Corrupted('M4')@#c3 ==> F))) & ((All #c2 . ((Corrupted('M3')@#c2 ==> F))) & ((Ex #c1 . (Corrupted('M2')@#c1)) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T)))) & not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j))))))))"
+
+lemma missing_suf_2 :
+ exists-trace
+"((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & (((All #c3 . ((Corrupted('M4')@#c3 ==> F))) & ((Ex #c2 . (Corrupted('M3')@#c2)) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T)))) & not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j))))))))"
+
+lemma missing_suf_3 :
+ exists-trace
+"((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & (((Ex #c3 . (Corrupted('M4')@#c3)) & ((All #c2 . ((Corrupted('M3')@#c2 ==> F))) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T)))) & not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j))))))))"
+
+lemma missing_ver_empty_15 :
+ all-traces
+"(not(((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) | ((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) | ((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) | ((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) | ((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T))))))))))))))))))))) ==> (All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j))))))"
+
+lemma missing_ver_nonempty_0 :
+ all-traces
+"((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_1 :
+ all-traces
+"((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_2 :
+ all-traces
+"((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_3 :
+ all-traces
+"((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_4 :
+ all-traces
+"((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_5 :
+ all-traces
+"((Ex #M1 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_6 :
+ all-traces
+"((Ex #M1 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_7 :
+ all-traces
+"((Ex #M2 #M3 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_8 :
+ all-traces
+"((Ex #M2 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_9 :
+ all-traces
+"((Ex #M3 #M4 sid . ((Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_10 :
+ all-traces
+"((Ex #M1 #M2 #M3 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_11 :
+ all-traces
+"((Ex #M1 #M2 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_12 :
+ all-traces
+"((Ex #M1 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_13 :
+ all-traces
+"((Ex #M2 #M3 #M4 sid . ((Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_14 :
+ all-traces
+"((Ex #M1 #M2 #M3 #M4 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & (Blame(<sid, 'M3'>)@#M3 & (Blame(<sid, 'M4'>)@#M4 & T)))))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_min_0_0 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & ((All #c3 . ((Corrupted('M4')@#c3 ==> F))) & ((All #c2 . ((Corrupted('M3')@#c2 ==> F))) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T))))))"
+
+lemma missing_min_1_0 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & ((All #c3 . ((Corrupted('M4')@#c3 ==> F))) & ((All #c2 . ((Corrupted('M3')@#c2 ==> F))) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T))))))"
+
+lemma missing_min_2_0 :
+ all-traces
+"not(((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) & ((All #c3 . ((Corrupted('M4')@#c3 ==> F))) & ((All #c2 . ((Corrupted('M3')@#c2 ==> F))) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T))))))"
+
+lemma missing_min_3_0 :
+ all-traces
+"not(((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) & ((All #c3 . ((Corrupted('M4')@#c3 ==> F))) & ((All #c2 . ((Corrupted('M3')@#c2 ==> F))) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T))))))"
+
+lemma missing_uniq_sing_0 :
+ all-traces
+"((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> (Ex #c0 . ((Corrupted('M1')@#c0 & T))))"
+
+lemma missing_uniq_sing_1 :
+ all-traces
+"((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> (Ex #c0 . ((Corrupted('M2')@#c0 & T))))"
+
+lemma missing_uniq_sing_2 :
+ all-traces
+"((Ex #M3 sid . ((Blame(<sid, 'M3'>)@#M3 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M4 . (Blame(<sid, 'M4'>)@#M4))) & T)))))) ==> (Ex #c0 . ((Corrupted('M3')@#c0 & T))))"
+
+lemma missing_uniq_sing_3 :
+ all-traces
+"((Ex #M4 sid . ((Blame(<sid, 'M4'>)@#M4 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & (not((Ex #M3 . (Blame(<sid, 'M3'>)@#M3))) & T)))))) ==> (Ex #c0 . ((Corrupted('M4')@#c0 & T))))"
+
+
+
+end

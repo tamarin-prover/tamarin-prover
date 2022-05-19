@@ -41,12 +41,12 @@ import Theory.Text.Parser
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory
-             -> m OpenTranslatedTheory
+             -> m OpenTheory
 translate th = case theoryProcesses th of
       []  -> if L.get transReliable ops then
-                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+               throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
              else
-                    return (removeSapicItems th)
+               return th
       [p] -> if all allUnique (bindings p) then do
                 -- annotate
                 an_proc <- evalFreshT (annotateLocks $ translateReport $ annotateSecretChannels (propagateNames $ toAnProcess p)) 0
@@ -60,8 +60,8 @@ translate th = case theoryProcesses th of
                 rest<- restrictions an_proc
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
-                let th3 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
-                return (removeSapicItems th3)
+                let th4 = fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
+                return th4
              else
                 throw ( ProcessNotWellformed ( WFBoundTwice $ head $ map repeater $ bindings p)
                             :: SapicException AnnotatedProcess)

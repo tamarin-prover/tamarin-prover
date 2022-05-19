@@ -1,6 +1,7 @@
 {-# LANGUAGE BangPatterns         #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -50,6 +51,14 @@ module Theory.Model.Formula (
   , mapAtoms
   , foldFormula
   , traverseFormulaAtom
+
+  -- ** Normal forms / simplification
+  , simplifyFormula
+  , nnf
+  , pullquants
+  , prenex
+  , pnf
+  , shiftFreeIndices
 
   -- ** Pretty-Printing
   , prettyLNFormula
@@ -326,6 +335,100 @@ toLNFormula = traverseFormulaAtom (liftA Ato . f)
   where
         f x |  (Syntactic _) <- x = Nothing
             | otherwise           = Just (toAtom x)
+
+------------------------------------------------------------------------------
+-- Normal forms / simplification (adopted from FOL.hs)
+------------------------------------------------------------------------------
+
+-- | First-order simplification
+simplifyFormula :: (Eq c, Eq v) => ProtoFormula sync s c v -> ProtoFormula sync s c v
+simplifyFormula fm0 = case fm0 of
+    Ato a        -> simplifyFormula1 $ Ato a
+    Not p        -> simplifyFormula1 $ Not (simplifyFormula p)
+    Conn And p q -> simplifyFormula1 $ simplifyFormula p .&&.  simplifyFormula q
+    Conn Or  p q -> simplifyFormula1 $ simplifyFormula p .||.  simplifyFormula q
+    Conn Imp p q -> simplifyFormula1 $ simplifyFormula p .==>. simplifyFormula q
+    Conn Iff p q -> simplifyFormula1 $ simplifyFormula p .<=>. simplifyFormula q
+    Qua qua x p  -> simplifyFormula1 $ Qua qua x (simplifyFormula p)
+    _            -> fm0
+  where
+    simplifyFormula1 fm = case fm of
+        a@(Ato (EqE l r))               -> if l == r then TF True else a
+        Not (TF b)                      -> TF (not b)
+        Conn And (TF False) _           -> TF False
+        Conn And _          (TF False)  -> TF False
+        Conn And (TF True)  q           -> q
+        Conn And p          (TF True)   -> p
+        Conn Or  (TF False) q           -> q
+        Conn Or  p          (TF False)  -> p
+        Conn Or  (TF True)  _           -> TF True
+        Conn Or  _          (TF True)   -> TF True
+        Conn Imp (TF False) _           -> TF True
+        Conn Imp (TF True)  q           -> q
+        Conn Imp _          (TF True)   -> TF True
+        Conn Imp p          (TF False)  -> Not p
+        Conn Iff (TF True)  q           -> q
+        Conn Iff p          (TF True)   -> p
+        Conn Iff (TF False) (TF False)  -> TF True
+        Conn Iff (TF False) q           -> Not q
+        Conn Iff p          (TF False)  -> Not p
+        Qua  _   _          (TF b)      -> TF b
+        _                               -> fm
+
+-- | Negation normal form.
+nnf :: ProtoFormula sync s c v -> ProtoFormula sync s c v
+nnf fm = case fm of 
+    Conn And p q        -> nnf p       .&&. nnf q
+    Conn Or  p q        -> nnf p       .||. nnf q
+    Conn Imp p q        -> nnf (Not p) .||. nnf q
+    Conn Iff p q        -> (nnf p .&&. nnf q) .||. (nnf (Not p) .&&. nnf (Not q))
+    Not (Not p)         -> nnf p
+    Not (Conn And p q ) -> nnf (Not p) .||. nnf (Not q)
+    Not (Conn Or  p q ) -> nnf (Not p) .&&. nnf (Not q)
+    Not (Conn Imp p q ) -> nnf p       .&&. nnf (Not q)
+    Not (Conn Iff p q ) -> (nnf p .&&. nnf (Not q)) .||. (nnf(Not p) .&&. nnf q)
+    Qua qua x p         -> Qua qua     x $ nnf p
+    Not (Qua All x p)   -> Qua Ex  x $ nnf (Not p)
+    Not (Qua Ex  x p)   -> Qua All x $ nnf (Not p)
+    _                   -> fm
+
+-- | Pulling out quantifiers.
+pullquants :: (Functor sync, Ord c, Ord v, Eq s) => ProtoFormula sync s c v -> ProtoFormula sync s c v
+pullquants fm = case fm of
+    Conn And (Qua All x p) (Qua All x' q) | x == x' -> pull_2 All (.&&.) x p q
+    Conn Or  (Qua Ex  x p) (Qua Ex  x' q) | x == x' -> pull_2 Ex  (.||.) x p q
+    Conn And (Qua qua x p) q             -> pull_l qua (.&&.) x p q
+    Conn And p             (Qua qua x q) -> pull_r qua (.&&.) x p q
+    Conn Or  (Qua qua x p) q             -> pull_l qua (.||.) x p q
+    Conn Or  p             (Qua qua x q) -> pull_r qua (.||.) x p q
+    _                                    -> fm
+  where
+    pull_l qua op x p q = Qua qua x (pullquants (p `op` shiftFreeIndices 1 q))
+    pull_r qua op x p q = Qua qua x (pullquants (shiftFreeIndices 1 p `op` q))
+    pull_2 qua op x p q = Qua qua x (pullquants (p `op` q))
+
+-- | Conversion to prenex normal form under the assumption that the formula is already in NNF.
+prenex :: (Functor sync, Ord c, Ord v, Eq s) => ProtoFormula sync s c v -> ProtoFormula sync s c v
+prenex fm = case fm of
+    Qua qua x p  -> Qua qua x (prenex p)
+    Conn And p q -> pullquants $ prenex p .&&. prenex q
+    Conn Or  p q -> pullquants $ prenex p .||. prenex q
+    _            -> fm
+
+-- | Conversion to prenex normal form.
+pnf :: (Functor sync, Ord c, Ord v, Eq s) => ProtoFormula sync s c v -> ProtoFormula sync s c v
+pnf = simplifyFormula . prenex . nnf . simplifyFormula
+
+-- | Increase the bound variables by the given amount. This has to be used when
+-- moving a sub-formula inside an abstraction.
+shiftFreeIndices :: (Functor sync, Ord c, Ord v) => Integer -> ProtoFormula sync s c v -> ProtoFormula sync s c v
+shiftFreeIndices n =
+    mapAtoms (\i a -> fmap (mapLits (fmap (foldBVar (Bound . shift i) Free))) a)
+  where
+     shift i j | j < i     = j
+               | otherwise = j + n
+
+
 
 ------------------------------------------------------------------------------
 -- Pretty printing

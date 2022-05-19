@@ -186,7 +186,7 @@ closeTheoryWithMaude sig thy0 autoSources =
        (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
        PredicateItem
-       SapicItem
+       TranslationItem
 
     unfoldClosedRules :: [TheoryItem [ClosedProtoRule] IncrementalProof s] -> [TheoryItem ClosedProtoRule IncrementalProof s]
     unfoldClosedRules        (RuleItem r:is) = map RuleItem r ++ unfoldClosedRules is
@@ -194,7 +194,7 @@ closeTheoryWithMaude sig thy0 autoSources =
     unfoldClosedRules       (LemmaItem i:is) = LemmaItem i:unfoldClosedRules is
     unfoldClosedRules        (TextItem i:is) = TextItem i:unfoldClosedRules is
     unfoldClosedRules   (PredicateItem i:is) = PredicateItem i:unfoldClosedRules is
-    unfoldClosedRules       (SapicItem i:is) = SapicItem i:unfoldClosedRules is
+    unfoldClosedRules       (TranslationItem i:is) = TranslationItem i:unfoldClosedRules is
     unfoldClosedRules                     [] = []
 
     -- Name of the auto-generated lemma
@@ -357,7 +357,7 @@ mkDiffSystem _ _ _ = emptyDiffSystem
 applyPartialEvaluation :: EvaluationStyle -> Bool -> ClosedTheory -> ClosedTheory
 applyPartialEvaluation evalStyle autosources thy0 =
     closeTheoryWithMaude sig
-      (removeSapicItems (L.modify thyItems replaceProtoRules (openTheory thy0)))
+      (removeTranslationItems (L.modify thyItems replaceProtoRules (openTheory thy0)))
       autosources
   where
     sig          = L.get thySignature thy0

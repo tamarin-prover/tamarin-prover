@@ -64,6 +64,8 @@ module Theory.Tools.Wellformedness (
   , noteWellformednessDiff
 
   , prettyWfErrorReport
+
+  , formulaTerms
   ) where
 
 -- import           Debug.Trace
