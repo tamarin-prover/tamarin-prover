@@ -105,6 +105,12 @@ module TheoryObject (
   , lookupExportInfo
   , prettyRestriction
   , prettyProcess
+  , theoryCaseTests
+  , theoryAccLemmas
+  , addAccLemma
+  , addCaseTest
+  , lookupAccLemma
+  , lookupCaseTest
   ) where
 
 import Theory.Constraint.Solver.Heuristics
@@ -203,7 +209,7 @@ foldTheoryItem fRule fRestriction fLemma fText fPredicate fTranslationItem i = c
 
 -- Fold a translation item.
 foldTranslationItem
-    :: (Process -> a) -> (ProcessDef -> a) -> (AccLemma -> a) -> (CaseTest -> a)
+    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (AccLemma -> a) -> (CaseTest -> a)
     -> TranslationElement -> a
 foldTranslationItem fProcess fProcessDef fAccLemma fCaseTest i = case i of
     ProcessItem     proc    -> fProcess proc
@@ -304,7 +310,7 @@ theoryCaseTests t = [ i | CaseTestItem i <- translationElements t]
 
 -- | All AccLemmas definitions of a theory.
 theoryAccLemmas :: Theory sig c r p TranslationElement -> [AccLemma]
-theoryAccLemmas =  [ i | AccLemmaItem i <- translationElements t]
+theoryAccLemmas t =  [ i | AccLemmaItem i <- translationElements t]
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
 theoryProcesses :: Theory sig c r p TranslationElement -> [PlainProcess]

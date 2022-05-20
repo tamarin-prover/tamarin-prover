@@ -358,7 +358,7 @@ instance {-# OVERLAPPABLE #-} (Ord v, Apply s v, Apply s ann) => Apply s (Proces
 
 -- | Get all variables for a process
 varsProc :: (Ord v, Show v) => Process ann v -> Set v
-varsProc = foldMap singleton -- foldProcess fNull fAct fComb gAct gComb empty p
+varsProc = foldMap Data.Set.singleton -- foldProcess fNull fAct fComb gAct gComb empty p
 
 -------------------------
 -- Applying substitutions ( with error messages )

@@ -175,7 +175,7 @@ ppPubName (NameId "one") = text "1"
 ppPubName (NameId t) = text t
 -- Loader of the export functions
 ------------------------------------------------------------------------------
-loadQueries :: Theory sig c b p SapicElement -> [Doc]
+loadQueries :: Theory sig c b p TranslationElement -> [Doc]
 loadQueries thy = [text $ get_text (lookupExportInfo "queries" thy)]
   where
     get_text Nothing = ""
@@ -245,7 +245,7 @@ prettyDeepSecTheory thy = do
 
 -- Loader of the export functions
 ------------------------------------------------------------------------------
-loadRequests :: Theory sig c b p SapicElement -> [Doc]
+loadRequests :: Theory sig c b p TranslationElement -> [Doc]
 loadRequests thy =
   [text $ get_text (lookupExportInfo "requests" thy)]
   where

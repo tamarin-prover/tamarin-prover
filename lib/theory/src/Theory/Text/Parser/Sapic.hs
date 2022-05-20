@@ -201,7 +201,7 @@ process thy=
                          <|> do { _ <- opParallel; return (ProcessComb Parallel mempty)}
                   )
 
-equivLemma :: OpenTheory -> Parser SapicElement
+equivLemma :: OpenTheory -> Parser TranslationElement
 equivLemma thy = do
                _ <- try $ symbol "equivLemma"
                _ <- colon
@@ -209,7 +209,7 @@ equivLemma thy = do
                p2 <- process thy
                return $ EquivLemma p1 p2
 
-diffEquivLemma :: OpenTheory -> Parser SapicElement
+diffEquivLemma :: OpenTheory -> Parser TranslationElement
 diffEquivLemma thy = do
                _ <- try $ symbol "diffEquivLemma"
                _ <- colon

@@ -45,7 +45,11 @@ removeTranslationItems thy =
       newThyItems = map removeTranslationElement (L.get thyItems thy)
       removeTranslationElement :: TheoryItem r p TranslationElement -> TheoryItem r p ()
       removeTranslationElement (TranslationItem _) = TranslationItem ()
-      removeTranslationElement i = i
+      removeTranslationElement (RuleItem r) = RuleItem r
+      removeTranslationElement (LemmaItem l) = LemmaItem l
+      removeTranslationElement (RestrictionItem rl) = RestrictionItem rl
+      removeTranslationElement (TextItem t) = TextItem t
+      removeTranslationElement (PredicateItem predi) = PredicateItem predi
 
 --open translated theory again
 openTranslatedTheory :: OpenTranslatedTheory -> OpenTheory

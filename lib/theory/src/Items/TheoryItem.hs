@@ -18,7 +18,6 @@ import Theory.Constraint.Solver
 
 import Items.ProcessItem
 import Theory.Syntactic.Predicate
-import Items.PredicateItem
 import Items.CaseTestItem
 import Items.AccLemmaItem
 import Lemma

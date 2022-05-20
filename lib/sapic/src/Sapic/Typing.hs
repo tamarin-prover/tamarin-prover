@@ -160,8 +160,8 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
                 Nothing ->
                   modify' (\s -> s { vars = Map.insert (slvar v) (stype v) (vars te)})
 
-typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement, TypingEnvironment)
--- typeTheory :: Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement, TypingEnvironment)
+-- typeTheory :: Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement)
 typeTheoryEnv th = do
     (thaux, fteaux) <- runStateT (mapMProcesses typeAndRenameProcess th) initTE
     (th', fte) <- runStateT (mapMProcessesDef typeAndRenameProcessDef thaux) fteaux
@@ -190,7 +190,7 @@ typeTheoryEnv th = do
         addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)
 
 -- | Type the Sapic processes in a theory
-typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement)
 typeTheory th = fst <$> typeTheoryEnv th
 
 -- | Rename a process so that all its names are unique. Returns renamed process
