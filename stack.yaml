@@ -6,6 +6,7 @@ packages:
 - lib/utils/
 - lib/sapic/
 - lib/export/
-resolver: lts-18.13
+- lib/accountability/
+resolver: lts-19.2
 nix:
   packages: [ zlib ]

@@ -1,0 +1,273 @@
+/*
+ * Protocol:    Accountable Algorithms protocol
+ * Modeler: 	Robert Künnemann, Ilkan Esiyok, Hizbullah Abdul Aziz Jabbar
+ * Date: 	Dec 2017
+ * Source:	Kroll's Ph.D. thesis, modified according to "Accountability in protocols"
+ * Status: 	wip
+ * Notes: Protocol modified in the lines proposed in "Accountability in
+ * security protocols" paper, however, instead of x, a comittment to x is
+ * signed, to preserve condidentiality. 
+ *        1. This requires S_i to chose the randomness of the comittment.
+ *        2. In turn, as accountability implies verifiability, the (mostly
+ *           public) accountability mechanism sometimes needs to ask a notary,
+ *           modelled as a "magic" function oracle, to determine whether an
+ *           actual violation happened.
+ *        3. The public ledger is modelled using the explicit store, and
+ *           a requirement that values are never overwritten. In an actual
+ *           ledger, the public could e.g. consider to only regard the first entry.
+ * */
+theory AccountableAlgorithmsStore
+begin
+
+builtins: signing
+
+functions: 
+  extract/1, 
+  sk/1[private],
+  ZK/7, verZK/1, Pub/1, f/2,
+  commit/2, open/2, verCom/2,
+  eq/2,
+  oracle/3
+
+equations: 
+  Pub(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = <commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,
+  verZK(ZK(<commit(x,rx),commit(y,ry),commit(f(x,y),rz)>,x,y,f(x,y),rx,ry,rz)) = true(),
+  open(commit(m,r),r)=m,
+  verCom(commit(m,r),r)=true,
+  extract(sign(x,y)) = x,
+  eq(x,x)=true(),
+  oracle(x,commit(y,ry),f(x,y))=true()
+
+predicates:
+  and3(x,y,z) <=> (x=true() & y=true() & z=true()),
+  and4(x,y,z,k) <=> (x=true() & y=true() & z=true() & k=true())
+
+let S =
+(
+  let res 	  = <'2', z, rz, rx> 
+      claim   = <'3', x, z, res, sig_res, rxp>
+      Cxp 	  = commit(x, rxp)
+      m1 	  = <'1', x, rxp, sign(Cxp, sk('S'))>
+      sig_cxp = fst(log)
+      zkp 	  = fst(snd(log))
+      CxpL 	  = snd(snd(log))
+      Cy 	  = fst(snd(Pub(zkp)))
+  in 
+  lookup <'A', 'Initialize'> as CyL in 
+  new x; 
+  new rxp;
+  out (<m1, sign(m1,sk('S'))>); 
+  lookup <'A','Log','S'> as log in
+  if and4( verZK(zkp),
+           eq(sig_cxp,sign(Cxp, sk('S'))),
+           eq(CxpL,Cxp),
+           eq(Cy, CyL)
+           ) then 
+	    (
+                in (<res, sig_res>); 
+                if verify(sig_res, res, pk(sk('A')))=true() then
+                  out (<claim, sign(claim, sk('S'))>)
+            )
+)
+
+let A =
+(
+  let m1      = <'1', x, rxp, sig_cxp>
+   	  z   	  = f(x, y)
+  	  res 	  = <'2', z, rz, rx>
+      Cx      = commit(x, rx)
+      Cy      = commit(y, ry)
+      Cz      = commit(z, rz)
+      Cxp     = commit(x, rxp)
+      zkp     = ZK(<Cx,Cy,Cz>,x,y,z,rx,ry,rz)
+      sig_res = sign(res, sk('A'))
+      
+  in
+  new y; new ry;
+  insert <'A', 'Initialize'>, Cy;
+
+  in (<m1, sig_m1>);
+  new rx; new rz;
+  if and3( 
+  		verify(sig_m1,m1,pk(sk('S'))), 
+  		eq(x, open(Cxp,rxp)), 
+  		verify(sig_cxp,Cxp,pk(sk('S')))) then 
+    (
+      out (<res, sig_res>);  // send result to S
+      insert <'A','Log','S'>, <sig_cxp, zkp, Cxp>;
+      insert <'A','Final'>, true()
+    )
+)
+
+let J =
+( let res     = <'2', z, rz, rx>
+      claim   = <'3', x, z, res, sig_res, rxp>
+      sig_cxp = fst(log)  // log is <sig_cxp, zkp, Cxp>;
+      zkp     = fst(snd(log))
+      CxpL    = snd(snd(log))
+      Cx      = fst(Pub(zkp))
+      Cy      = fst(snd(Pub(zkp)))
+      Cz      = snd(snd(Pub(zkp)))
+  in
+  in (<claim, sig_claim>);
+  if verify(sig_claim, claim, pk(sk('S'))) = true() then
+    (
+        lookup <'A','Final'> as y in //y is unbound
+        event Final();
+
+        lookup <'A','Initialize'> as CyL in
+        event Initialize(CyL);
+        
+        lookup <'A','Log','S'> as log in
+
+        // first check validity of the log by itself --> else branch means A dishonest
+        if and3( verZK(zkp), //produced by A
+                 eq(CyL, Cy), // produced by A
+                 verify(sig_cxp,CxpL,pk(sk('S'))) // honest A checks this
+                 )
+        then 
+            ( if and3( verify(sig_res,res,pk(sk('A'))), // honest S verifies this
+                       verCom(CxpL,rxp),
+                       eq(x, open(CxpL,rxp)) // honest S signed both messages, so this should hold
+                       )
+              then ( // We now believe S is honest and its claim is valid
+                  event HonestS();
+                  if and4(
+                       verCom(Cx,rx),
+                       verCom(Cz,rz),
+                       eq(x, open(Cx, rx)),  // honest A comits to x send by S, we've used CxpL to verify its the same that is claimed
+                       eq(z, open(Cz, rz))  // z from signed res should match zkp
+                       ) 
+                  then 
+                            event HonestA(); 
+                            event Verified(claim)
+                  else 
+                       if oracle(x,Cy,z)=true() then // see below.
+                       ( event HonestA(); event Verified(claim))
+                       else 
+                       ( event DisHonestA(); event Verified(claim))
+                  )
+              else ( 
+                  // A's log is alright, but S is definitely cheating
+                  // But, need to blame only if there is indeed a violation!
+                  // violation iff Cy in log does not match x and z in claim
+                  // Cy is correct w.r.t. Cx by validity of A's log,
+                  // but Cx can be different from x claimed
+                  // how do we check whether x and z claimed have z=f(x,y)
+                  // this maybe the case even if x is different from content of Cx.
+                  if oracle(x,Cy,z)=true() then // trying this out for suf_nonempty_2 //Continue here...
+                    (event HonestS();
+                     event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
+                     event Verified(claim))
+                  else 
+                    (event DisHonestS();  
+                     event HonestA(); // Not sure if this is right, but at this point I think S alone can provoke violation.
+                     event Verified(claim)))
+            )
+        else (// A is dishonest and produced bad log
+            if oracle(x,CyL,z)=true() then // see above
+                    (event HonestS(); event HonestA(); event Verified(claim))
+            else (
+                event DisHonestA();
+                event DisHonestS();  // S checks the log itself before submitting claim -> must be dishonest herself! 
+                event Verified(claim))
+        )
+    )
+)
+
+( 
+A || S || J ||
+ !(in ('c',<'corrupt',$x>); event Corrupted($x); 
+     out ('c',sk($x));
+     !(
+       (if $x='A' then in(y); insert <'A','Initialize'>,y)//Adversary write access to logs
+     ||
+       (if $x='A' then in(y); insert <'A','Log','S'>, y)
+     ||
+       (if $x='A' then in(y); insert <'A','Final'>, y)
+     ||
+       (if $x='A' then lookup <'A','Log','S'> as y in out(y))//Adversary read access to Log
+     ||
+       (if $x='S' then lookup <'A','Log','S'> as y in out(y))
+
+     )
+
+     )
+)
+
+
+restriction no_overwrite:
+    "All #i #j x y x yp. Insert(x,y)@i & Insert(x,yp)@j ==> #i = #j"
+
+lemma no_overwrite_lookup [reuse]:
+    "All #i #j x y x yp. IsIn(x,y)@i & IsIn(x,yp)@j ==> y = yp"
+
+
+lemma sanity:
+  exists-trace
+  "
+    ( Ex three rxp x z r sig_r #i #j #k y ry. 
+        Final()@#i
+      & Initialize(commit(y,ry))@#j 
+      & Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      & #i < #j & #j < #k
+      & z = f(x,y) 
+    )
+  "
+
+verdictfunction v: 
+  "Ex #i #j #k
+      three x z r sig_r rxp. 
+      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      &
+      DisHonestS()@#i & DisHonestA()@#j
+      "
+  -> <'A','S'>,
+
+  "Ex #i #j #k
+      three x z r sig_r rxp. 
+      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      &
+      DisHonestA()@#i & HonestS()@#j
+      "
+  -> <'A'>,
+
+  "Ex #i #j  #k
+      three x z r sig_r rxp. 
+      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      &
+      HonestA()@#i & DisHonestS()@#j
+      "
+  -> <'S'>,
+
+  /* "All c #k . Verified(c)@k ==> Ex #i #j . HonestA()@#i & DisHonestS()@#j  & Verified(c)@k" */
+
+  otherwise -> empty
+
+// sanity ~10min colossus05 
+// excl auto
+// exh auto
+// suf auto
+// compl_empty auto 
+// compl_nonempty auto 
+// min auto
+// uniq_1 ~5min colossus05
+// uniq_2 auto
+
+lemma acc: 
+  v accounts  [cases]
+  for "
+      All three rxp x z r sig_r #k.
+      Verified(<three,x,z,r,sig_r,rxp>)@#k // claim = <'3',x,z,res,sig_res,rxp>
+      ==>
+      ( Ex #j #i y ry. 
+        Final()@#i
+      & Initialize(commit(y,ry))@#j //we are presupposing that this is a valid commitment .. TODO later: can we lift this assumption?
+      & #i < #j & #j < #k
+      & z = f(x,y) 
+      )
+      "
+  for parties <'A','S'> 
+ 
+      
+end

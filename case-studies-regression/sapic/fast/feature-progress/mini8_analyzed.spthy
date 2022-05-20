@@ -2,8 +2,7 @@ theory mini8 begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], h/1, pair/2, pk/1, sign/2,
-           snd/1[destructor], true/0, verify/3[destructor]
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
@@ -12,14 +11,6 @@ equations:
 heuristic: p
 
 section{* small example for progression function *}
-
-
-
-
-
-
-
-
 
 lemma A_enforced:
   all-traces "∃ #t. A( ) @ #t"
@@ -67,37 +58,24 @@ rule (modulo E) eventA_0_[color=#ffffff, process="event A( );"]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) incm_0_1[color=#ffffff, process="in('c',m.1);"]:
-   [ Fr( ~prog_11 ), State_1( ~prog_ ), In( <'c', m.1> ) ]
-  --[ ProgressFrom_11( ~prog_11 ), ChannelIn( <'c', m.1> ) ]->
-   [ State_11( ~prog_, ~prog_11, m.1 ) ]
+rule (modulo E) incm_0_1[color=#ffffff, process="in('c',m);"]:
+   [ Fr( ~prog_11 ), State_1( ~prog_ ), In( <'c', m> ) ]
+  --[ ProgressFrom_11( ~prog_11 ), ChannelIn( <'c', m> ) ]->
+   [ State_11( ~prog_, ~prog_11, m ) ]
 
-  /*
-  rule (modulo AC) incm_0_1[color=#ffffff, process="in('c',m.1);"]:
-     [ Fr( ~prog_11 ), State_1( ~prog_ ), In( <'c', m> ) ]
-    --[ ProgressFrom_11( ~prog_11 ), ChannelIn( <'c', m> ) ]->
-     [ State_11( ~prog_, ~prog_11, m ) ]
-  */
+  /* has exactly the trivial AC variant */
 
 rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );"]:
-   [ State_11( ~prog_, ~prog_11, m.1 ) ]
+   [ State_11( ~prog_, ~prog_11, m ) ]
   --[ ProgressTo_111( ~prog_11 ), B( ) ]->
-   [ State_111( ~prog_, ~prog_11, m.1 ) ]
+   [ State_111( ~prog_, ~prog_11, m ) ]
 
-  /*
-  rule (modulo AC) eventB_0_11[color=#ffffff, process="event B( );"]:
-     [ State_11( ~prog_, ~prog_11, m ) ]
-    --[ ProgressTo_111( ~prog_11 ), B( ) ]->
-     [ State_111( ~prog_, ~prog_11, m ) ]
-  */
+  /* has exactly the trivial AC variant */
 
 rule (modulo E) p_0_111[color=#ffffff, process="0"]:
-   [ State_111( ~prog_, ~prog_11, m.1 ) ] --> [ ]
+   [ State_111( ~prog_, ~prog_11, m ) ] --> [ ]
 
-  /*
-  rule (modulo AC) p_0_111[color=#ffffff, process="0"]:
-     [ State_111( ~prog_, ~prog_11, m ) ] --> [ ]
-  */
+  /* has exactly the trivial AC variant */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
@@ -120,17 +98,17 @@ restriction progressInit:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
-analyzing: examples/sapic/fast/feature-progress/mini8.spthy
+analyzing: examples/sapic/fast/fairexchange-mini/mini8.spthy
 
 ------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-progress/mini8.spthy
+analyzed: examples/sapic/fast/fairexchange-mini/mini8.spthy
 
-  output:          examples/sapic/fast/feature-progress/mini8.spthy.tmp
-  processing time: 0.031905895s
+  output:          examples/sapic/fast/fairexchange-mini/mini8.spthy.tmp
+  processing time: 0.058462667s
   A_enforced (all-traces): verified (2 steps)
   B_not_enforced (exists-trace): verified (5 steps)
 
@@ -139,10 +117,10 @@ analyzed: examples/sapic/fast/feature-progress/mini8.spthy
 ==============================================================================
 summary of summaries:
 
-analyzed: examples/sapic/fast/feature-progress/mini8.spthy
+analyzed: examples/sapic/fast/fairexchange-mini/mini8.spthy
 
-  output:          examples/sapic/fast/feature-progress/mini8.spthy.tmp
-  processing time: 0.031905895s
+  output:          examples/sapic/fast/fairexchange-mini/mini8.spthy.tmp
+  processing time: 0.058462667s
   A_enforced (all-traces): verified (2 steps)
   B_not_enforced (exists-trace): verified (5 steps)
 

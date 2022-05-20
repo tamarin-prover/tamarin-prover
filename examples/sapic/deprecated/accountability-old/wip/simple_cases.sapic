@@ -1,0 +1,33 @@
+theory SimpleCases
+begin
+
+/* builtins: signing */
+functions: 
+    pk/1,sk/1[private],
+    sign/2, verify/3,
+    true/0,
+    extract/1
+
+equations: 
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    extract(sign(m,sk(i)))=m
+
+
+/* TODO write simple example protocol. */
+
+
+lemma sanity_logAB:
+    exists-trace
+    "Ex a #i #j. LogAB(a)@i & Execute(a)@j" 
+
+verdictfunction v1:
+    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())"   -> let verdict1 = <'A'>,
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> let verdict2 = <'A','B'> ,
+    otherwise -> empty 
+
+lemma acc:
+    v1 accounts [cases]
+    for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
+    for parties <'A','B'>
+
+end

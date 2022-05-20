@@ -1,6 +1,6 @@
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
---               contributing in 2019: Robert Künnemann, Johannes Wocker
+--               contributing in 2019: Robert Künnemann, Johannes Wocker, Kevin Morio
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
@@ -10,6 +10,7 @@
 
 module Theory.Text.Parser.Lemma(
       lemma
+      , lemmaAttribute
       , plainLemma
       , diffLemma
 )
@@ -79,5 +80,5 @@ plainLemma = protoLemma plainFormula
 -- | Parse a diff lemma.
 diffLemma :: Maybe FilePath -> Parser (DiffLemma DiffProofSkeleton)
 diffLemma workDir = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
-                              <*> option [] (list (lemmaAttribute True workDir))
+                              <*> (option [] $ list (lemmaAttribute True workDir))
                               <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))

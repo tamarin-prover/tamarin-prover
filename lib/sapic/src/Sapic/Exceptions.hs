@@ -14,7 +14,7 @@ module Sapic.Exceptions (
     SapicException(..)
 ) where
 import Data.Typeable
-import Data.Set
+import Data.Set as S
 import qualified Data.List as List
 import Control.Exception
 import Theory
@@ -53,18 +53,21 @@ data SapicException p = NotImplementedError String
                     | ImplementationError String
                     | MoreThanOneProcess
                     | RuleNameExists String
+                    | LemmaNameExists String
                     | RestrictionNameExists String
                     | ReliableTransmissionButNoProcess
                     | CannotExpandPredicate FactTag SyntacticRestriction
     deriving (Typeable)
 
-prettyVarSet :: Set LVar -> String
+prettyVarSet :: S.Set LVar -> String
 prettyVarSet = List.intercalate ", "  . List.map show . toList
 
 instance (Show p) => Show (SapicException p) where
     -- show SomethingBad = "Something bad happened"
+
     show MoreThanOneProcess = "More than one top-level process is defined. This is not supported by the translation."
     show (RuleNameExists s) = "Rule name already exists:" ++ s
+    show (LemmaNameExists s) = "Lemma name already exists:" ++ s
     show (RestrictionNameExists s) = "Restriction already exists:" ++ s
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
     show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s

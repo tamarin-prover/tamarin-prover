@@ -46,12 +46,12 @@ import Sapic.Warnings
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory
-             -> m OpenTranslatedTheory
+             -> m OpenTheory
 translate th = case theoryProcesses th of
       []  -> if L.get transReliable ops then
-                    throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+               throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
              else
-                    return (removeSapicItems th)
+               return th
       [p] -> do
                 -- annotate
                 an_proc_pre <- translateLetDestr sigRules
@@ -74,7 +74,7 @@ translate th = case theoryProcesses th of
                 th2 <- foldM liftedAddRestriction th1 rest
                 -- add heuristic, if not already defined:
                 let th3 = setPureStateInjective $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
-                return (removeSapicItems th3)
+                return th3
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
     ops = L.get thyOptions th

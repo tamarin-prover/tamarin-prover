@@ -42,6 +42,8 @@ instance Show (ParsingException) where
     show (DuplicateItem (TextItem _)) =  undefined
     show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
     show (DuplicateItem (SapicItem (ProcessDefItem pDef))) =
+    show (DuplicateItem (TranslationItem (ProcessItem _))) =  undefined
+    show (DuplicateItem (TranslationItem (ProcessDefItem pDef))) =
         "duplicate process: " ++ get pName pDef
     show (DuplicateItem (SapicItem (ProcessItem _))) = "duplicate process item"
     show (DuplicateItem (SapicItem (FunctionTypingInfo _)))   = "duplicate function typing info item"

@@ -2,7 +2,7 @@ theory TestPredicate begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -14,8 +14,6 @@ rule (modulo E) ActionRule:
 
 predicate: Exists( #time )<=>∃ val. Action( val ) @ #time
 
-predicate: ExistsVal( val )<=>∃ #time. Action( val ) @ #time
-
 lemma hi:
   exists-trace "∃ #t val. Action( val ) @ #t"
 /*
@@ -25,21 +23,12 @@ guarded formula characterizing all satisfying traces:
 simplify
 SOLVED // trace found
 
-lemma ho:
-  exists-trace "∃ a #time. Action( a ) @ #time"
-/*
-guarded formula characterizing all satisfying traces:
-"∃ a #time. (Action( a ) @ #time)"
-*/
-simplify
-SOLVED // trace found
-
 /* All well-formedness checks were successful. */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -49,9 +38,8 @@ analyzing: examples/sapic/fast/feature-predicates/timepoints.spthy
 analyzed: examples/sapic/fast/feature-predicates/timepoints.spthy
 
   output:          examples/sapic/fast/feature-predicates/timepoints.spthy.tmp
-  processing time: 0.004399464s
+  processing time: 0.068770351s
   hi (exists-trace): verified (2 steps)
-  ho (exists-trace): verified (2 steps)
 
 ------------------------------------------------------------------------------
 
@@ -61,9 +49,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/timepoints.spthy
 
   output:          examples/sapic/fast/feature-predicates/timepoints.spthy.tmp
-  processing time: 0.004399464s
+  processing time: 0.068770351s
   hi (exists-trace): verified (2 steps)
-  ho (exists-trace): verified (2 steps)
 
 ==============================================================================
 */

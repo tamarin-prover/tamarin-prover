@@ -1,0 +1,99 @@
+theory DelegationSimple
+begin
+
+/* builtins: signing */
+functions: 
+    pk/1,sk/1[private],
+    /* aenc/2, adec/2, */
+    sign/2, verify/3,
+    true/0,
+    NormalAct/0, SpecialAct/0, UnusualAct/0, isAct/1
+
+equations: 
+    /* adec(aenc(m,pk(i)),sk(i))=m, */
+    // only accept signatures from corresponding public keys
+    verify(sign(m, sk(i)),m, pk(sk(i))) = true,
+    isAct(NormalAct) = true,
+    isAct(SpecialAct) = true,
+    isAct(UnusualAct) = true
+
+predicates:
+isSpecial(a) <=> a=SpecialAct(),
+isNormal(a) <=> a=NormalAct()
+
+let A = 
+     let m1 = <'Do',a>
+         m2 = <'Permit',a>
+     in
+  (  in(a);
+     if isNormal(a)
+       then out(<m1,sign(m1,sk('A'))>)
+       else if isSpecial(a)
+              then out(<m2,sign(m2,sk('A'))>)) 
+
+let B = 
+    let m2x = <'Permit',a>
+        m3 = <m2x,m2xsign>
+    in
+  ( in(<m2x,m2xsign>);
+     if verify( m2xsign, m2x, pk(sk('A'))) = true() then
+        if isSpecial(a) then
+          out(<m3,sign(m3,sk('B'))>)
+  )
+
+let C = 
+    let m1 = <'Do',a>
+        m2 = <'Permit',a>
+        m3 = <m2,m2sign>
+    in
+  ( in(<m1,m1sign>); 
+     if verify(m1sign, m1, pk(sk('A'))) = true() then
+       event LogA(a); event Execute(a) )
+ + 
+  ( in(<m3,m3sign>); 
+    if verify(m3sign, m3, pk(sk('B'))) = true() then
+        if verify(m2sign, m2, pk(sk('A'))) = true() then
+            event LogAB(a); event Execute(a)
+  )
+
+// let I = 
+//   ( out(SpecialAct()); out(<pk(sk('A')), pk(sk('B'))>)
+//   )
+
+// The trusted party can only run once during each run of the protocol
+(! (A || B )) || C
+||
+    out(<pk(sk('A')), pk(sk('B'))>)
+|| !(   in('c',<'corrupt',$x>); 
+        event Corrupted($x);
+        out('c',sk($x))
+        /* (  !(in('r',<$x,sid,m>);0) ) */
+   )
+
+lemma sanity_logA_not_misbehaving:
+    exists-trace
+    "Ex a #i #j. (a = NormalAct()) & LogA(a)@i & Execute(a)@j"
+
+lemma sanity_logAB_not_misbehaving:
+    exists-trace
+    "Ex a #i #j. (a = SpecialAct()) & LogAB(a)@i & Execute(a)@j"
+
+lemma sanity_logA:
+    exists-trace
+    "Ex a #i #j. LogA(a)@i & Execute(a)@j" 
+
+lemma sanity_logAB:
+    exists-trace
+    "Ex a #i #j. LogAB(a)@i & Execute(a)@j" 
+
+verdictfunction v1:
+    "Ex a #i #j. Execute(a)@i & LogA(a)@j & not(a=NormalAct())"   -> let verdict1 = <'A'>,
+    "Ex a #i #j. Execute(a)@i & LogAB(a)@j & not(a=SpecialAct())" -> let verdict2 = <'A','B'> ,
+    otherwise -> empty 
+
+lemma acc:
+    v1 accounts [cases] 
+    for "All a #i.  Execute(a)@i ==> (a=SpecialAct()) | (a=NormalAct())" 
+    for parties <'A','B'>
+
+end

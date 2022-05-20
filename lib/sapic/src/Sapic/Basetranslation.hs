@@ -370,32 +370,23 @@ resSingleSession = [QQ.r|restrictionsingle_session: // for a single session
 
 -- | Restriction for Locking. Note that LockPOS hardcodes positions that
 -- should be modified below.
-resLockingL :: String
-resLockingL  = [QQ.r|restriction locking:
-"All p pp l x lp #t1 #t3 . LockPOS(p,l,x)@t1 & Lock(pp,lp,x)@t3
-        ==>
-        ( #t1<#t3
-                 & (Ex #t2. UnlockPOS(p,l,x)@t2 & #t1<#t2 & #t2<#t3
-                 & (All #t0 pp  . Unlock(pp,l,x)@t0 ==> #t0=#t2)
-                 & (All pp lpp #t0 . Lock(pp,lpp,x)@t0 ==> #t0<#t1 | #t0=#t1 | #t2<#t0)
-                 & (All pp lpp #t0 . Unlock(pp,lpp,x)@t0 ==> #t0<#t1 | #t2<#t0 | #t2=#t0 )
-                ))
-        | #t3<#t1 | #t1=#t3"
+resLockingPOS :: String
+resLockingPOS  = [QQ.r|restriction locking:
+"All p pp l x lp #t1 #t3. LockPOS(p, l, x)@t1 & Lock(pp, lp, x)@t3 ==>
+        (#t1<#t3 & (Ex #t2. UnlockPOS(p, l, x)@t2 & #t1 < #t2 & #t2 < #t3
+                   & (All #t0 pp. Unlock(pp, l, x)@t0 ==> #t0 = #t2)
+                   & (All pp lpp #t0. Lock(pp, lpp, x)@t0 ==> #t0 < #t1 | #t0 = #t1 | #t2 < #t0)
+                   & (All pp lpp #t0. Unlock(pp, lpp, x)@t0 ==> #t0 < #t1 | #t2 < #t0 | #t2 = #t0 )))
+      | #t3<#t1 | #t1=#t3"
 |]
 
 -- | Restriction for Locking where no Unlock is necessary.
-resLockingLNoUnlockPOS :: String
-resLockingLNoUnlockPOS  = [QQ.r|restriction locking:
-"All p l x #t1 . LockPOS(p,l,x)@t1
-                   ==> (All pp lp #t2. LockPOS(pp,lp,x)@t2 ==> #t1=#t2)"
+resLockingPOSNoUnlock :: String
+resLockingPOSNoUnlock = [QQ.r|restriction locking:
+"All p pp l x lp #t1 #t3. LockPOS(p, l, x)@t1 & Lock(pp, lp, x)@t3 ==>
+        #t3<#t1 | #t1=#t3"
 |]
 
--- | Restriction for Locking where no Unlock is necessary.
-resLockingNoUnlock :: String
-resLockingNoUnlock  = [QQ.r|restriction locking:
-"All p l x #t1 . Lock(p,l,x)@t1
-                   ==> (All pp lp #t2. Lock(pp,lp,x)@t2 ==> #t1=#t2)"
-|]
 
 
 -- | Restrictions for Locking and Unlocking in the pureState case.
@@ -420,9 +411,9 @@ resLockingPure prev = do
 resLocking :: MonadThrow m => Bool -> LVar -> m SyntacticRestriction
 resLocking hasUnlock v =  do
     rest <- if hasUnlock then
-              toEx resLockingL
+              toEx resLockingPOS
             else
-              toEx resLockingLNoUnlockPOS
+              toEx resLockingPOSNoUnlock
     return $ mapName hardcode $ mapFormula (mapAtoms subst) rest
     where
         subst _ a
@@ -469,14 +460,10 @@ baseRestr anP needsAssImmediate hasAccountabilityLemmaWithControl prevRestr =
               else
             [resSetInNoDelete, resSetNotInNoDelete]
          else [])
-        ++
-        addIf (contains isEq) [resEq, resNotEq]
-        ++
-        addIf hasAccountabilityLemmaWithControl [resSingleSession]
-        ++
-        addIf needsAssImmediate [resImmediate]
-    in
-    do
+        ++ addIf (contains isEq) [resEq, resNotEq]
+        ++ addIf hasAccountabilityLemmaWithControl [resSingleSession]
+        ++ addIf needsInEvRes [resInEv]
+    in do
         hardcoded <- mapM toEx hardcoded_l
         lockingWithUnlock <- mapM (resLocking True) (List.nub $ getUnlockPositions anP)
         lockingOnlyLock   <- mapM (resLocking False) (getLockPositions anP List.\\ getUnlockPositions anP)

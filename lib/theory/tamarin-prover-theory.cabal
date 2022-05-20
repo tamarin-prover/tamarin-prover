@@ -130,11 +130,14 @@ library
       Items.ProcessItem
       Items.TheoryItem
       Items.ExportInfo
+      Items.CaseTestItem
+      Items.AccLemmaItem
       Pretty
 
 
     other-modules:
       Theory.Syntactic.Predicate
+      Theory.Text.Parser.Accountability
       Theory.Text.Parser.Exceptions
       Theory.Text.Parser.Fact
       Theory.Text.Parser.Formula

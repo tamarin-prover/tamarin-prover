@@ -1,0 +1,241 @@
+/*
+ * Protocol: DMN + message tracing (fixed identities)
+ * Modeler:  Kevin Morio and Robert Künnemann
+ * Date:     Sep 2020
+ * Source:   "SoK: Techniques for Verifiable Mix Nets", Thomas Haines and Johannes Müller, CSF20
+ * Status:   working (deprecated)
+ * Notes:    Run with: tamarin-prover +RTS -N4 -RTS --stop-on-trace=seqdfs --prove --heuristic=o \
+ *                     --oraclename=oracle-dmn-message-tracing dmn-message-tracing-all-2-fixed.spthy
+ *
+ * In this version, the audit continues after detecting the first unexpected message on the bulletin board.
+ */
+
+theory DMNMessageTracingAll2Fixed
+begin
+
+functions:
+    pk/1
+  , sk/1[private]
+  , aenc/3
+  , adec/2
+  , S/1
+  , adec_suc/2
+  , true/0
+
+equations:
+    adec(sk(x), aenc(pk(x), r, m)) = m
+  , adec_suc(sk(x), aenc(pk(x), r, m)) = true
+
+
+rule DistinctParty:
+    [ ]
+  --[ Once($p) ]->
+    [ Party($p) ]
+
+rule AInit:
+    let
+        m1 = 'M1'
+        m2 = 'M2'
+    in
+    [ Fr(~sid)
+    , Party($s1)
+    , Party($s2) ]
+  --[ Init(~sid)
+    , Once('init')
+    , IsMixer(<~sid, m2>, '0')
+    , IsMixer(<~sid, m1>, S('0')) ]->
+    [ Sender(<~sid, $s1>)
+    , Sender(<~sid, $s2>)
+    , PostCount(<~sid, m1>, S(S('0')))
+    , PostCount(<~sid, m2>, S(S('0')))
+    , !IMixer(<~sid, m2>, '0')
+    , !IMixer(<~sid, m1>, S('0'))
+    , Out(~sid) ]
+
+rule BSender:
+    let
+        c1 = aenc(pk(<~sid, $m2>), ~r2, ~m)
+        c0 = aenc(pk(<~sid, $m1>), ~r1, c1)
+    in
+    [ Sender(<~sid, $s>)
+    , !IMixer(<~sid, $m2>, '0')
+    , !IMixer(<~sid, $m1>, S('0'))
+    , Fr(~r1)
+    , Fr(~r2)
+    , Fr(~r3)
+    , Fr(~m) ]
+  --[ Sender(<~sid, $s>)
+    , Send(<~sid, $s>, ~m)
+    , Post(<~sid, $s>, S(S('0')), c0) ]->
+    [ IntCipher(<~sid, $s>, '0', ~r3, ~m, $m2)
+    , IntCipher(<~sid, $s>, S('0'), ~r2, c1, $m1)
+    , Mixer(<~sid, $m2>, '0')
+    , Mixer(<~sid, $m1>, S('0'))
+    , Verify(<~sid, $s>, S(S('0')))
+    , BBPost(~sid, S(S('0')), c0) ]
+
+rule AMixStep:
+    [ BBPost(~sid, S(n), aenc(pk(<~sid, $m>), r, e))
+    , Mixer(<~sid, $m>, n)
+    , PostCount(<~sid, $m>, S(pc)) ]
+  --[ Post(<~sid, $m>, n, e)
+    , PostCount(<~sid, $m>, pc) ]->
+    [ BBPost(~sid, n, e)
+    , PostCount(<~sid, $m>, pc) ]
+
+rule BMixStepCorrupted:
+    [ BBPost(~sid, S(n), c)
+    , Mixer(<~sid, $m>, n)
+    , PostCount(<~sid, $m>, S(pc))
+    , In(a) ]
+  --[ Post(<~sid, $m>, n, a)
+    , Corrupted($m)
+    , PostCount(<~sid, $m>, pc)
+    , _restrict( All mp np #i. IsMixer(<~sid, mp>, np)@i & n = S(np)
+                     ==> Ex r e. a = aenc(pk(<~sid, mp>), r, e) ) ]->
+    [ BBPost(~sid, n, a)
+    , PostCount(<~sid, $m>, pc) ]
+
+rule BAVerify:
+    [ IntCipher(<~sid, $s>, n, r, c, $m)
+    , Verify(<~sid, $s>, S(n)) ]
+  --[ Valid(<~sid, $s>, n, c)
+    , Verified(<~sid, $s>, n)
+    , _restrict( Ex #i. Post(<~sid, $m>, n, c)@i ) ]->
+    [ Verify(<~sid, $s>, n) ]
+
+rule AAVerifyBlame:
+    [ IntCipher(<~sid, $s>, n, r, c, $m)
+    , Verify(<~sid, $s>, S(n)) ]
+  --[ Blame(<~sid, $m>)
+    , Verified(<~sid, $s>, n)
+    , _restrict( not Ex #i. Post(<~sid, $m>, n, c)@i ) ]->
+    [ Verify(<~sid, $s>, n) ]
+
+
+
+/*********************************************
+Sanity lemmas
+*********************************************/
+
+lemma finished:
+   exists-trace
+   "Ex sid m e #i. Post(<sid, m>, '0', e)@i"
+
+lemma valid:
+   exists-trace
+   "Ex #i s m. Valid(s, '0', m)@i"
+
+lemma blame:
+   exists-trace
+   "Ex #i m. Blame(m)@i"
+
+
+
+/*********************************************
+Restrictions
+*********************************************/
+
+restriction verify_sender:
+   "All s #i. Sender(s)@i ==> Ex #j. Verified(s, '0')@j
+                            & not Ex #k. Verified(s, '0')@k
+                            & not(#j = #k)"
+
+restriction finish:
+   "All sid m n #i. IsMixer(<sid, m>, n)@i ==> Ex #j. PostCount(<sid, m>, '0')@j
+                                             & not Ex #k. PostCount(<sid, m>, '0')@k
+                                             & not(#j = #k)"
+
+restriction once:
+   "All x #i #j. Once(x)@i & Once(x)@j ==> #i = #j"
+
+
+
+/*********************************************
+Accountability lemmas
+*********************************************/
+
+/*
+verdictfunction mixer_evidence:
+    "Ex sid #M1. Blame(<sid, 'M1'>)@M1 & (not Ex #M2. Blame(<sid, 'M2'>)@M2) & T" -> let m1 = <'M1'>,
+    "Ex sid #M2. Blame(<sid, 'M2'>)@M2 & (not Ex #M1. Blame(<sid, 'M1'>)@M1) & T" -> let m2 = <'M2'>,
+    "Ex sid #M1 #M2. Blame(<sid, 'M1'>)@M1 & Blame(<sid, 'M2'>)@M2 & T" -> <m1> | <m2>,
+    otherwise -> empty
+
+lemma missing:
+    mixer_evidence accounts [cases] for
+    "All sid s ms #i. Send(<sid, s>, ms)@i ==> Ex m #j. Post(<sid, m>, '0', ms)@j"
+    for parties <'M1', 'M2'>
+*/
+
+lemma missing_excl_0_1 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))) & (Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T))))))"
+
+lemma missing_excl_0_2 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))) & (Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T))))))"
+
+lemma missing_excl_0_3 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))) & not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T)))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))))))"
+
+lemma missing_excl_1_2 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) & (Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T))))))"
+
+lemma missing_excl_1_3 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) & not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T)))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))))))"
+
+lemma missing_excl_2_3 :
+ all-traces
+"not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T)))) & not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T)))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))))))))"
+
+lemma missing_exh :
+ all-traces
+"((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) | ((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T)))) | not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T)))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))))))"
+
+lemma missing_suf_0 :
+ exists-trace
+"((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))) & (((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((Ex #c0 . (Corrupted('M1')@#c0)) & T)) & not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j))))))))"
+
+lemma missing_suf_1 :
+ exists-trace
+"((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) & (((Ex #c1 . (Corrupted('M2')@#c1)) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T)) & not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j))))))))"
+
+lemma missing_ver_empty_3 :
+ all-traces
+"(not(((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T)))) | ((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) | (Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T))))))) ==> (All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j))))))"
+
+lemma missing_ver_nonempty_0 :
+ all-traces
+"((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_1 :
+ all-traces
+"((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_ver_nonempty_2 :
+ all-traces
+"((Ex #M1 #M2 sid . ((Blame(<sid, 'M1'>)@#M1 & (Blame(<sid, 'M2'>)@#M2 & T)))) ==> not((All #i ms s sid . ((Send(<sid, s>, ms)@#i ==> (Ex #j m . (Post(<sid, m>, '0', ms)@#j)))))))"
+
+lemma missing_min_0_0 :
+ all-traces
+"not(((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T))))"
+
+lemma missing_min_1_0 :
+ all-traces
+"not(((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) & ((All #c1 . ((Corrupted('M2')@#c1 ==> F))) & ((All #c0 . ((Corrupted('M1')@#c0 ==> F))) & T))))"
+
+lemma missing_uniq_sing_0 :
+ all-traces
+"((Ex #M1 sid . ((Blame(<sid, 'M1'>)@#M1 & (not((Ex #M2 . (Blame(<sid, 'M2'>)@#M2))) & T)))) ==> (Ex #c0 . ((Corrupted('M1')@#c0 & T))))"
+
+lemma missing_uniq_sing_1 :
+ all-traces
+"((Ex #M2 sid . ((Blame(<sid, 'M2'>)@#M2 & (not((Ex #M1 . (Blame(<sid, 'M1'>)@#M1))) & T)))) ==> (Ex #c0 . ((Corrupted('M2')@#c0 & T))))"
+
+
+
+end

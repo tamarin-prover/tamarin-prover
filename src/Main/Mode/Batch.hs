@@ -10,6 +10,8 @@ module Main.Mode.Batch (
     batchMode
   ) where
 
+import           Accountability.Generation       (checkPreTransWellformedness)
+
 import           Control.Basics
 import           Control.DeepSeq                 (force)
 import           Control.Exception               (evaluate)

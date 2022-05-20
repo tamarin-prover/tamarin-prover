@@ -6,6 +6,9 @@ module TheoryObject (
   , module Items.OptionItem
   , module Items.ProcessItem
   , module Items.TheoryItem
+  , module Items.CaseTestItem
+  , module Items.AccLemmaItem
+  , LemmaAttribute(..)
   , TraceQuantifier(..)
   , ProtoLemma(..)
   , Theory(..)
@@ -30,7 +33,9 @@ module TheoryObject (
   , ProcessDef(..)
   , Predicate(..)
   , Option(..)
-  , SapicElement (..)
+  , TranslationElement (..)
+  , TranslationElement (..)
+  , foldTranslationItem
   , foldDiffTheoryItem
   , mapTheoryItem
   , mapDiffTheoryItem
@@ -94,7 +99,7 @@ module TheoryObject (
   , filterLemma
   , lookupFunctionTypingInfo
   , prettyTheory
-  , prettySapicElement
+  , prettyTranslationElement
   , prettyProcessDef
   , prettyEitherRestriction
   , lookupExportInfo
@@ -112,6 +117,8 @@ import Theory.Constraint.Solver
 import Items.OptionItem
 import Items.ProcessItem
 import Items.TheoryItem
+import Items.CaseTestItem
+import Items.AccLemmaItem
 import Lemma
 import qualified Data.Label.Poly
 import qualified Data.Label.Total as Data.Label.Point
@@ -186,13 +193,23 @@ filterSide s l = case l of
 foldTheoryItem
     :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a) -> (Predicate -> a) -> (s -> a)
     -> TheoryItem r p s -> a
-foldTheoryItem fRule fRestriction fLemma fText fPredicate fSapicItem i = case i of
+foldTheoryItem fRule fRestriction fLemma fText fPredicate fTranslationItem i = case i of
     RuleItem ru   -> fRule ru
     LemmaItem lem -> fLemma lem
     TextItem txt  -> fText txt
     RestrictionItem rstr  -> fRestriction rstr
     PredicateItem     p  -> fPredicate p
-    SapicItem s -> fSapicItem s
+    TranslationItem s -> fTranslationItem s
+
+-- Fold a translation item.
+foldTranslationItem
+    :: (Process -> a) -> (ProcessDef -> a) -> (AccLemma -> a) -> (CaseTest -> a)
+    -> TranslationElement -> a
+foldTranslationItem fProcess fProcessDef fAccLemma fCaseTest i = case i of
+    ProcessItem     proc    -> fProcess proc
+    ProcessDefItem  pDef    -> fProcessDef pDef
+    AccLemmaItem    aLem    -> fAccLemma aLem
+    CaseTestItem    cTest   -> fCaseTest cTest
 
 -- | Fold a theory item.
 foldDiffTheoryItem
@@ -209,7 +226,7 @@ foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fT
 -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p s -> TheoryItem r' p' s
 mapTheoryItem f g =
-    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem PredicateItem SapicItem
+    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem PredicateItem TranslationItem
 
 -- | Map a diff theory item.
 mapDiffTheoryItem :: (r -> r') -> ((Side, r2) -> (Side, r2')) -> (DiffLemma p -> DiffLemma p') -> ((Side, Lemma p2) -> (Side, Lemma p2')) -> DiffTheoryItem r r2 p p2 -> DiffTheoryItem r' r2' p' p2'
@@ -217,29 +234,29 @@ mapDiffTheoryItem f g h i =
     foldDiffTheoryItem (DiffRuleItem . f) (EitherRuleItem . g) (DiffLemmaItem . h) (EitherLemmaItem . i) EitherRestrictionItem DiffTextItem
 
 -- | Map a process
-mapMProcesses :: Monad m => (PlainProcess -> m(PlainProcess)) -> Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+mapMProcesses :: Monad m => (PlainProcess -> m(PlainProcess)) -> Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement)
 mapMProcesses f thy = do
         itms' <- mapM f' itms
         return $ L.set thyItems itms' thy
     where
         itms =  L.get thyItems thy
-        f' (SapicItem (ProcessItem p)) = SapicItem . ProcessItem <$> f p
-        f' (SapicItem (DiffEquivLemma p)) = SapicItem . DiffEquivLemma <$> f p
-        f' (SapicItem (EquivLemma p1 p2)) = do
+        f' (TranslationItem (ProcessItem p)) = TranslationItem . ProcessItem <$> f p
+        f' (TranslationItem (DiffEquivLemma p)) = TranslationItem . DiffEquivLemma <$> f p
+        f' (TranslationItem (EquivLemma p1 p2)) = do
           fp1 <- f p1
           fp2 <- f p2
-          return $ SapicItem (EquivLemma fp1 fp2)
+          return $ TranslationItem (EquivLemma fp1 fp2)
         f' other                       = return other
 
 
 -- | Map a process definition
-mapMProcessesDef :: Monad m => (ProcessDef -> m(ProcessDef)) -> Theory sig c r p SapicElement -> m (Theory sig c r p SapicElement)
+mapMProcessesDef :: Monad m => (ProcessDef -> m(ProcessDef)) -> Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement)
 mapMProcessesDef f thy = do
         itms' <- mapM f' itms
         return $ L.set thyItems itms' thy
     where
         itms =  L.get thyItems thy
-        f' (SapicItem (ProcessDefItem p)) = SapicItem . ProcessDefItem <$> f p
+        f' (TranslationItem (ProcessDefItem p)) = TranslationItem . ProcessDefItem <$> f p
         f' other                       = return other
 
 -- | All rules of a theory.
@@ -278,40 +295,48 @@ theoryLemmas :: Theory sig c r p s -> [Lemma p]
 theoryLemmas =
     foldTheoryItem (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
 
-sapicElements :: Theory sig c1 b p c2 -> [c2]
-sapicElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
+translationElements :: Theory sig c1 b p c2 -> [c2]
+translationElements = foldTheoryItem (const []) (const []) (const []) (const []) (const []) return <=< L.get thyItems
+
+-- | All CaseTest definitions of a theory.
+theoryCaseTests :: Theory sig c r p TranslationElement -> [CaseTest]
+theoryCaseTests t = [ i | CaseTestItem i <- translationElements t]
+
+-- | All AccLemmas definitions of a theory.
+theoryAccLemmas :: Theory sig c r p TranslationElement -> [AccLemma]
+theoryAccLemmas =  [ i | AccLemmaItem i <- translationElements t]
 
 -- | All processes of a theory (TODO give warning if there is more than one...)
-theoryProcesses :: Theory sig c r p SapicElement -> [PlainProcess]
-theoryProcesses t = [ i | ProcessItem i <- sapicElements t]
+theoryProcesses :: Theory sig c r p TranslationElement -> [PlainProcess]
+theoryProcesses t = [ i | ProcessItem i <- translationElements t]
 
 -- | All process definitions of a theory.
-theoryProcessDefs :: Theory sig c r p SapicElement -> [ProcessDef]
-theoryProcessDefs t = [ i | ProcessDefItem i <- sapicElements t]
+theoryProcessDefs :: Theory sig c r p TranslationElement -> [ProcessDef]
+theoryProcessDefs t = [ i | ProcessDefItem i <- translationElements t]
 
 -- | All function typing information in a theory.
-theoryFunctionTypingInfos :: Theory sig c r p SapicElement -> [SapicFunSym]
-theoryFunctionTypingInfos t = [ i | FunctionTypingInfo i <- sapicElements t]
+theoryFunctionTypingInfos :: Theory sig c r p TranslationElement -> [SapicFunSym]
+theoryFunctionTypingInfos t = [ i | FunctionTypingInfo i <- translationElements t]
 
 -- | All process definitions of a theory.
 theoryPredicates :: Theory sig c r p s -> [Predicate]
 theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) return (const []) <=< L.get thyItems
 
 -- | All export info definitions of a theory.
-theoryExportInfos :: Theory sig c b p SapicElement -> [ExportInfo]
-theoryExportInfos t = [ i | ExportInfoItem i <- sapicElements t]
+theoryExportInfos :: Theory sig c b p TranslationElement -> [ExportInfo]
+theoryExportInfos t = [ i | ExportInfoItem i <- translationElements t]
 
 -- | All Builtins of a theory
-theoryBuiltins :: Theory sig c r p SapicElement -> [String]
-theoryBuiltins t = [ i | SignatureBuiltin i <- sapicElements t]
+theoryBuiltins :: Theory sig c r p TranslationElement -> [String]
+theoryBuiltins t = [ i | SignatureBuiltin i <- translationElements t]
 
 -- | All Equivalence queries of a theory
-theoryEquivLemmas :: Theory sig c r p SapicElement -> [(PlainProcess, PlainProcess)]
-theoryEquivLemmas t =  [ (p1,p2) | EquivLemma p1 p2 <- sapicElements t]
+theoryEquivLemmas :: Theory sig c r p TranslationElement -> [(PlainProcess, PlainProcess)]
+theoryEquivLemmas t =  [ (p1,p2) | EquivLemma p1 p2 <- translationElements t]
 
 -- | All Equivalence queries of a theory
-theoryDiffEquivLemmas :: Theory sig c r p SapicElement -> [PlainProcess]
-theoryDiffEquivLemmas t =  [ p | DiffEquivLemma p <- sapicElements t]
+theoryDiffEquivLemmas :: Theory sig c r p TranslationElement -> [PlainProcess]
+theoryDiffEquivLemmas t =  [ p | DiffEquivLemma p <- translationElements t]
 
 -- | All restrictions of a theory.
 diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
@@ -362,41 +387,53 @@ addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem l]) thy
 
-addProcess :: PlainProcess -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
-addProcess l = modify thyItems (++ [SapicItem (ProcessItem l)])
+addProcess :: PlainProcess -> Theory sig c r p TranslationElement -> Theory sig c r p TranslationElement
+addProcess l = modify thyItems (++ [TranslationItem (ProcessItem l)])
 
 -- | Add a new process expression.  Since expression (and not definitions)
 -- could appear several times, checking for doubled occurrence isn't necessary
-addFunctionTypingInfo :: SapicFunSym -> Theory sig c r p SapicElement -> Theory sig c r p SapicElement
-addFunctionTypingInfo l = modify thyItems (++ [SapicItem $ FunctionTypingInfo l])
+addFunctionTypingInfo :: SapicFunSym -> Theory sig c r p TranslationElement -> Theory sig c r p TranslationElement
+addFunctionTypingInfo l = modify thyItems (++ [TranslationItem $ FunctionTypingInfo l])
 
 -- | Remove all Function Typing information in Theory
-clearFunctionTypingInfos :: Theory sig c r p SapicElement -> Theory sig c r p SapicElement
+clearFunctionTypingInfos :: Theory sig c r p TranslationElement -> Theory sig c r p TranslationElement
 clearFunctionTypingInfos = modify thyItems (filter f)
   where
-    f (SapicItem (FunctionTypingInfo _)) = False
+    f (TranslationItem (FunctionTypingInfo _)) = False
     f _                                  = True
+-- | Add a new case test. Fails if CaseTest with the same name already exists.
+addCaseTest :: CaseTest -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
+addCaseTest cTest thy = do
+    guard (isNothing  $ lookupCaseTest (L.get cName cTest) thy)
+    return $ modify thyItems (++ [TranslationItem (CaseTestItem cTest)]) thy
+
+-- | Add a new AccLemma  fails if AccLemma with the same name already exists
+addAccLemma :: AccLemma -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
+addAccLemma aLem thy = do
+    guard (isNothing $ lookupAccLemma (L.get aName aLem) thy)
+    return $ modify thyItems (++ [TranslationItem (AccLemmaItem aLem)]) thy
+
 
 -- | Add a new process expression.
-addExportInfo :: ExportInfo -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addExportInfo :: ExportInfo -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
 addExportInfo eInfo thy = do
     guard (isNothing $ lookupExportInfo (L.get eTag eInfo) thy)
-    return $ modify thyItems (++ [SapicItem (ExportInfoItem eInfo)]) thy
+    return $ modify thyItems (++ [TranslationItem (ExportInfoItem eInfo)]) thy
 
 -- search process
-findProcess :: String -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+findProcess :: String -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
 findProcess s thy =  do
                 guard (isJust $ lookupProcessDef s thy)
                 return thy
 
 -- | Add a new process definition. fails if process with the same name already exists
-addProcessDef :: ProcessDef -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addProcessDef :: ProcessDef -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
 addProcessDef pDef thy = do
     guard (isNothing $ lookupProcessDef (L.get pName pDef) thy)
-    return $ modify thyItems (++ [SapicItem (ProcessDefItem pDef)]) thy
+    return $ modify thyItems (++ [TranslationItem (ProcessDefItem pDef)]) thy
 
 -- | Add a new process definition. fails if process with the same name already exists
-addPredicate :: Predicate -> Theory sig c r p SapicElement -> Maybe (Theory sig c r p SapicElement)
+addPredicate :: Predicate -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
 addPredicate pDef thy = do
     guard (isNothing $ lookupPredicate (L.get pFact pDef) (theoryPredicates thy))
     return $ modify thyItems (++ [PredicateItem pDef]) thy
@@ -425,7 +462,7 @@ filterLemma lemmaSelector = modify thyItems (concatMap fItem)
                              check
                              (return . TextItem)
                              (return . PredicateItem)
-                             (return . SapicItem)
+                             (return . TranslationItem)
     check l = do guard (lemmaSelector l); return (LemmaItem l)
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
@@ -460,7 +497,7 @@ removeLemma lemmaName thy = do
                              check
                              (return . TextItem)
                              (return . PredicateItem)
-                             (return . SapicItem)
+                             (return . TranslationItem)
     check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
@@ -499,16 +536,24 @@ lookupRestriction name = find ((name ==) . L.get rstrName) . theoryRestrictions
 lookupLemma :: String -> Theory sig c r p s -> Maybe (Lemma p)
 lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
 
+-- | Find the case test with the given name.
+lookupCaseTest :: CaseIdentifier -> Theory sig c r p TranslationElement -> Maybe CaseTest
+lookupCaseTest name = find ((name ==) . L.get cName) . theoryCaseTests
+
+-- | Find the acc lemma with the given name.
+lookupAccLemma :: String -> Theory sig c r p TranslationElement -> Maybe (AccLemma)
+lookupAccLemma name = find ((name ==) . L.get aName) . theoryAccLemmas
+
 -- | Find the process with the given name.
-lookupProcessDef :: String -> Theory sig c r p SapicElement -> Maybe (ProcessDef)
+lookupProcessDef :: String -> Theory sig c r p TranslationElement -> Maybe (ProcessDef)
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the function typing info for a given function symbol.
-lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p SapicElement -> Maybe SapicFunSym
+lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
 lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.
-lookupExportInfo :: String -> Theory sig c r p SapicElement -> Maybe ExportInfo
+lookupExportInfo :: String -> Theory sig c r p TranslationElement -> Maybe ExportInfo
 lookupExportInfo tag = find ((tag ==) . L.get eTag) . theoryExportInfos
 
 -- | Find the restriction with the given name.
@@ -568,11 +613,11 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     thyH = L.get thyHeuristic thy
 
 
-prettySapicElement :: HighlightDocument d => SapicElement -> d
-prettySapicElement (ProcessItem p) = text "process" <> colon $-$ (nest 2 $ prettyProcess p)
-prettySapicElement (DiffEquivLemma p) = text "diffEquivLemma" <> colon $-$ (nest 2 $ prettyProcess p)
-prettySapicElement (EquivLemma p1 p2) = text "equivLemma" <> colon $-$ (nest 2 $ prettyProcess p1) $$ (nest 2 $ prettyProcess p2)
-prettySapicElement (ProcessDefItem p) =
+prettyTranslationElement :: HighlightDocument d => TranslationElement -> d
+prettyTranslationElement (ProcessItem p) = text "process" <> colon $-$ (nest 2 $ prettyProcess p)
+prettyTranslationElement (DiffEquivLemma p) = text "diffEquivLemma" <> colon $-$ (nest 2 $ prettyProcess p)
+prettyTranslationElement (EquivLemma p1 p2) = text "equivLemma" <> colon $-$ (nest 2 $ prettyProcess p1) $$ (nest 2 $ prettyProcess p2)
+prettyTranslationElement (ProcessDefItem p) =
     (text "let ")
     <->
     (text (L.get pName p))
@@ -583,7 +628,7 @@ prettySapicElement (ProcessDefItem p) =
     <->
     (nest 2 $ prettyProcess $ L.get pBody p)
 
-prettySapicElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype)) =
+prettyTranslationElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype)) =
     (text "function:")
     <->
     text (unpack fsn)
@@ -599,14 +644,14 @@ prettySapicElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype)) =
         printType = maybe (text defaultSapicTypeS) text
         showPriv Private = " [private]"
         showPriv Public  = ""
-prettySapicElement (ExportInfoItem eInfo) =
+prettyTranslationElement (ExportInfoItem eInfo) =
     (text "export: ")
     <->
     (text $ L.get eTag eInfo)
     <->
     (nest 2 $ doubleQuotes $ text $ L.get eText eInfo)
 
-prettySapicElement (SignatureBuiltin s) = (text "builtin ")<->(text s)
+prettyTranslationElement (SignatureBuiltin s) = (text "builtin ")<->(text s)
 
 
 prettyPredicate :: HighlightDocument d => Predicate -> d

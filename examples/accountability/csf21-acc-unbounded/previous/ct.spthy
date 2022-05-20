@@ -1,0 +1,204 @@
+/*
+ * Protocol: Certificate Transparency
+ * Modeler:  Robert Künnemann and Kevin Morio
+ * Date:     Sep 2020
+ * Source:   "Automated Analysis of Accountability", Alessandro Bruni, Rosario Giustolisi, and Carsten Schuermann, ISC17
+ * Status:   working
+ */
+
+theory CertificateTransparencyExt
+begin
+
+heuristic: p
+
+functions:
+    pk/1
+  , skca/1[private]
+  , sign/2
+  , verify/3
+  , read/1
+  , true/0
+
+equations:
+    verify(sign(sk, m), m, pk(sk)) = true
+  , read(sign(sk, m)) = m
+
+
+
+/*********************************************
+Specification
+*********************************************/
+
+let CA =
+    let sk = skca($ca) in
+    out(pk(sk));
+    // Request to register S at CA
+    !(  in(<$s, $ca>);
+        new skS;
+        event HonestRegister($s, $ca, pk(skS));
+        // Dishonest CAs cannot register proofs, because they don't have them.
+        insert <$ca, 'proofOfID', $s, pk(skS)>, 'yes';
+        out(pk(skS));
+        out(sign(sk, <pk(skS), $s>))
+    )
+
+let LogCert =
+    in(sign(skca($ca), <pk, $s>));
+    !(
+        lock 'log';
+        insert <$la, 'log', $s, pk, 'c1'>, 'yes';
+        insert <$la, 'log', $s, pk, 's1'>, 'yes';
+        insert <$la, 'log', $s, pk, 'i'>, 'yes';
+        unlock 'log'
+    )
+
+let TestCA =
+    lock 'testCA';
+    in(sign(skca($ca), <pk, $s>));
+    lookup <$ca, 'proofOfID', $s, pk> as ignored in
+        event HonestCA($ca);
+        event TestCA($ca, $s, pk);
+        unlock 'testCA'
+    else
+        event DishonestCA($ca);
+        event TestCA($ca, $s, pk);
+        unlock 'testCA'
+
+let TestLA =
+    let u1 = 'c1' in
+    let u2 = 's1' in
+    // This is the test that the AIFom file compiles to, modulo symmetry.
+    lock 'log';
+    in(<$la, u1, u2, $s, pk>);
+    lookup <$la, 'log', $s, pk, u1> as x1 in
+    (
+        lookup <$la, 'log', $s, pk, u2> as x2 in
+            event HonestLA();
+            event TestLA($la, $s, pk);
+            unlock 'log'
+        else
+            event DishonestLA($la);
+            event TestLA($la, $s, pk);
+            unlock 'log'
+    )
+    else (
+        lookup <$la, 'log', $s, pk, u2> as x2 in
+            event DishonestLA($la);
+            event TestLA($la, $s, pk);
+            unlock 'log'
+        else
+            0 // No statement if S pk is in no view.
+    )
+
+let Terminate = lock 'testCA'; lock 'log'; event Terminate()
+
+// The trusted party can only run once during each run of the protocol.
+let Proto =
+    ! in($ca); CA || in($la); LogCert || TestCA || TestLA || Terminate
+
+// General form for accountabilty processes.
+Proto
+|| !( in('c', <'CAcorrupt', $ca>); // corrupt CAs
+      event Corrupted($ca);
+      out('c', skca($ca))
+    )
+    ||
+    !(
+        in('c', <$la, 'LAcorrupt', $id>); // corrupt LA
+        event Corrupted($la);
+        !( // can now selectively insert
+        in('c', <S, pk, entity>);
+        lock 'log';
+        insert <$la, 'log', S, pk, entity>, 'yes';
+        unlock 'log'
+        )
+    )
+
+
+
+/**********************************************
+Restrictions
+**********************************************/
+
+restriction terminate:
+    "Ex #t. Terminate()@t"
+
+
+
+/**********************************************
+Accountability lemmas
+**********************************************/
+
+test tCA:
+    "Ex #i. DishonestCA(ca)@i"
+
+test tLA:
+    "Ex #i. DishonestLA(la)@i"
+
+lemma accCA:
+    tCA accounts for
+    "All ca s pk #i. TestCA(ca, s, pk)@i ==> Ex #j. HonestRegister(s, ca, pk)@j"
+
+lemma accLA:
+    tLA accounts for
+    "All la s pk #i. TestLA(la, s, pk)@i ==>
+                     (Ex #j. Insert(<la, 'log', s, pk, 'c1'>, 'yes')@j & j<i)
+                   & (Ex #j. Insert(<la, 'log', s, pk, 's1'>, 'yes')@j & j<i)"
+                  // We need this condition, otherwise, non-empty verdict does
+                  // not imply violation if honest log entry can be produced
+                  // afterwards.
+
+// Composed statement
+lemma acc:
+    tCA, tLA accounts for
+    "not (Ex la s pk #i.  TestLA(la, s, pk)@i
+         & not (Ex #j #k. Insert(<la, 'log', s, pk, 'c1'>, 'yes')@j & j<i
+                        & Insert(<la, 'log', s, pk, 's1'>, 'yes')@k & k<i))
+   & not (Ex ca s pk #i. TestCA(ca, s, pk)@i & not Ex #j. HonestRegister(s, ca, pk)@j)"
+
+
+
+/*********************************************
+Results
+*********************************************/
+
+/*
+==============================================================================
+summary of summaries:
+
+analyzed: ct.spthy
+
+  accCA_tCA_suff (exists-trace): verified (9 steps)
+  accCA_verif_empty (all-traces): verified (19 steps)
+  accCA_tCA_verif_nonempty (all-traces): verified (16 steps)
+  accCA_tCA_min (all-traces): verified (2 steps)
+  accCA_tCA_uniq (all-traces): verified (12 steps)
+  accCA_tCA_inj (all-traces): verified (1 steps)
+  accCA_tCA_single (exists-trace): verified (9 steps)
+  accLA_tLA_suff (exists-trace): verified (12 steps)
+  accLA_verif_empty (all-traces): verified (47 steps)
+  accLA_tLA_verif_nonempty (all-traces): verified (170 steps)
+  accLA_tLA_min (all-traces): verified (2 steps)
+  accLA_tLA_uniq (all-traces): verified (33 steps)
+  accLA_tLA_inj (all-traces): verified (1 steps)
+  accLA_tLA_single (exists-trace): verified (12 steps)
+  acc_tCA_suff (exists-trace): verified (9 steps)
+  acc_tLA_suff (exists-trace): verified (12 steps)
+  acc_verif_empty (all-traces): verified (45 steps)
+  acc_tCA_verif_nonempty (all-traces): verified (16 steps)
+  acc_tLA_verif_nonempty (all-traces): verified (170 steps)
+  acc_tCA_min (all-traces): verified (4 steps)
+  acc_tLA_min (all-traces): verified (4 steps)
+  acc_tCA_uniq (all-traces): verified (12 steps)
+  acc_tLA_uniq (all-traces): verified (33 steps)
+  acc_tCA_inj (all-traces): verified (1 steps)
+  acc_tLA_inj (all-traces): verified (1 steps)
+  acc_tCA_single (exists-trace): verified (9 steps)
+  acc_tLA_single (exists-trace): verified (12 steps)
+
+==============================================================================
+*/
+
+
+
+end
