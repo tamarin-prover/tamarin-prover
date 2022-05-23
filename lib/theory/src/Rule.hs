@@ -8,10 +8,6 @@ module Rule (
 
 import Items.RuleItem
 
-import GHC.Generics
-import Control.DeepSeq
-import Data.Binary
-
 import           Prelude                             hiding (id, (.))
 
 import           Data.List
@@ -22,7 +18,6 @@ import           Control.Basics
 import           Control.Category
 import           Control.Monad.Reader
 
-import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
 
 import           Theory.Model

@@ -35,7 +35,6 @@ module TheoryObject (
   , Option(..)
   , TranslationElement (..)
   , TranslationElement (..)
-  , foldTranslationItem
   , foldDiffTheoryItem
   , mapTheoryItem
   , mapDiffTheoryItem
@@ -206,16 +205,6 @@ foldTheoryItem fRule fRestriction fLemma fText fPredicate fTranslationItem i = c
     RestrictionItem rstr  -> fRestriction rstr
     PredicateItem     p  -> fPredicate p
     TranslationItem s -> fTranslationItem s
-
--- Fold a translation item.
-foldTranslationItem
-    :: (PlainProcess -> a) -> (ProcessDef -> a) -> (AccLemma -> a) -> (CaseTest -> a)
-    -> TranslationElement -> a
-foldTranslationItem fProcess fProcessDef fAccLemma fCaseTest i = case i of
-    ProcessItem     proc    -> fProcess proc
-    ProcessDefItem  pDef    -> fProcessDef pDef
-    AccLemmaItem    aLem    -> fAccLemma aLem
-    CaseTestItem    cTest   -> fCaseTest cTest
 
 -- | Fold a theory item.
 foldDiffTheoryItem
@@ -658,7 +647,6 @@ prettyTranslationElement (ExportInfoItem eInfo) =
     (nest 2 $ doubleQuotes $ text $ L.get eText eInfo)
 
 prettyTranslationElement (SignatureBuiltin s) = (text "builtin ")<->(text s)
-
 
 prettyPredicate :: HighlightDocument d => Predicate -> d
 prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulastr)
