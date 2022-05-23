@@ -82,7 +82,7 @@ builtins thy0 =do
                                          -- builtinTheory modifies signature in state.
             return $ foldl setOption' thy0 l
   where
-    setName thy name = modify thyItems (++ [SapicItem (SignatureBuiltin name)]) thy
+    setName thy name = modify thyItems (++ [TranslationItem (SignatureBuiltin name)]) thy
     setOption' thy (Nothing, name)  = setName thy name
     setOption' thy (Just l, name) = setOption l (setName thy name)
     extendSig (name, Just msig, opt) = do
@@ -205,7 +205,7 @@ export thy = do
                     _          <- colon
                     text       <- doubleQuoted $ many bodyChar -- TODO Gotta use some kind of text.
                     let ei = ExportInfo tag text
-                    liftMaybeToEx (DuplicateItem (SapicItem (ExportInfoItem ei))) (addExportInfo ei thy)
+                    liftMaybeToEx (DuplicateItem (TranslationItem (ExportInfoItem ei))) (addExportInfo ei thy)
                     <?> "export block"
               where
                 bodyChar = try $ do

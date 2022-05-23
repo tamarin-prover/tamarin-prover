@@ -258,10 +258,10 @@ theory inFile = do
            addItems inFile0 thy'
       , do
            lem <- equivLemma thy
-           addItems inFile0 (modify thyItems (++ [SapicItem lem]) thy)
+           addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
       , do
            lem <- diffEquivLemma thy
-           addItems inFile0 (modify thyItems (++ [SapicItem lem]) thy)
+           addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
       , do thy' <- preddeclaration thy
            addItems inFile0 (thy')
       , do thy'  <- export thy

@@ -76,7 +76,7 @@ import           Theory.Tools.IntruderRules          (specialIntruderRules, subt
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 import           Sapic
-import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments)
+import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments, getOutputModule)
 
 import           Main.Environment
 
@@ -202,8 +202,8 @@ loadOpenAndTranslatedThy as inFile =  do
     transThy <- 
       Sapic.typeTheory thy
       >>= Sapic.translate
-      >>= Acc.translate thy'
-    return (thy, transThy)
+      >>= Acc.translate
+    return (thy, removeTranslationItems transThy)
 
 -- | Load a closed theory from a file.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
@@ -261,7 +261,7 @@ loadClosedThyWf as inFile = do
     let errors = checkWellformedness transThy sig ++ Sapic.checkWellformednessSapic openThy
     let report = reportWellformednessDoc errors
     -- return closed theory
-    closedTheory <- closeThyWithMaude sig as transThy
+    closedTheory <- closeThyWithMaude sig as openThy transThy
     return (closedTheory, report)
 
 -- | Load a closed theory and report on well-formedness errors.
@@ -272,7 +272,7 @@ loadClosedThyWfReport as inFile = do
     transSig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
     -- report
     let prefix = printFileName inFile
-    let errors = checkWellformedness thy' sig ++ Sapic.checkWellformednessSapic thy
+    let errors = checkWellformedness transThy transSig ++ Sapic.checkWellformednessSapic openThy
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
     closeThyWithMaude transSig as openThy transThy
@@ -298,7 +298,7 @@ loadClosedThyString as input =
             thy' <-  Sapic.typeTheory thy
                   >>= Sapic.translate
                   >>= Acc.translate
-            Right <$> closeThy as thy thy' -- No "return" because closeThy gives IO (ClosedTheory)
+            Right <$> closeThy as thy (removeTranslationItems thy') -- No "return" because closeThy gives IO (ClosedTheory)
 
 
 loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTheory)
@@ -322,13 +322,15 @@ reportOnClosedThyStringWellformedness :: Arguments -> String -> IO String
 reportOnClosedThyStringWellformedness as input =
     case loadOpenThyString as input of
       Left  err   -> return $ "parse error: " ++ show err
-      Right thy -> do
-            thy' <- Sapic.typeTheory thy
+      Right openThy -> do
+            transThy <- Sapic.typeTheory openThy
                   >>= Sapic.translate
                   >>= Acc.translate
-            sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy'
+            transSig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
             -- report
-            let errors = checkWellformedness thy' sig ++ Sapic.checkWellformednessSapic thy ++ checkPreTransWellformedness thy
+            let errors = checkWellformedness (removeTranslationItems transThy) transSig 
+                      ++ Sapic.checkWellformednessSapic openThy
+                      ++ checkPreTransWellformedness openThy
             case errors of 
                   []     -> return ""
                   report -> do

@@ -73,8 +73,8 @@ baseTrans :: MonadThrow m => Bool -> Bool ->
                           (TransFNull (m TranslationResultNull),
                            TransFAct (m TranslationResultAct),
                            TransFComb (m TranslationResultComb))
-baseTrans asyncChannels needsAssImmediate = (\ a p tx ->  return $ baseTransNull a p tx,
-             \ ac an p tx -> return $ baseTransAction asyncChannels needsAssImmediate ac an p tx,
+baseTrans asyncChannels needsInEvRes = (\ a p tx ->  return $ baseTransNull a p tx,
+             \ ac an p tx -> return $ baseTransAction asyncChannels needsInEvRes ac an p tx,
              \ comb an p tx -> return $ baseTransComb comb an p tx) -- I am sure there is nice notation for that.
 
 --  | Each part of the translation outputs a set of multiset rewrite rules,
@@ -303,7 +303,7 @@ baseTransComb c an p tildex
        ([ ([def_state], [], [def_state1 tildex ], [])],
         tildex,tildex)
 
-    | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
+    -- | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
     where
         def_state = State LState p tildex
         def_state1 tx = State LState (p++[1]) tx
@@ -332,7 +332,7 @@ toEx s
     | (Left  err) <- parseRestriction s =
         throwM ( ImplementationError ( "Error parsing hard-coded restriction: " ++ s ++ show err )::SapicException AnnotatedProcess)
     | (Right res) <- parseRestriction s = return res
-    | otherwise = throwM ( ImplementationError "toEx, otherwise case to satisfy compiler"::SapicException AnnotatedProcess)
+    -- | otherwise = throwM ( ImplementationError "toEx, otherwise case to satisfy compiler"::SapicException AnnotatedProcess)
 
 resSetIn :: String
 resSetIn = [QQ.r|restriction set_in:
@@ -441,8 +441,8 @@ resNotEq = [QQ.r|restriction predicate_not_eq:
 |]
 
 
-resImmediate :: String
-resImmediate = [QQ.r|restriction ass_immedeate:
+resInEv :: String
+resInEv = [QQ.r|restriction in_event:
 "All x #t3. ChannelIn(x)@t3 ==> (Ex #t2. K(x)@t2 & #t2 < #t3
                                 & (All #t1. Event()@t1  ==> #t1 < #t2 | #t3 < #t1)
                                 & (All #t1 xp. K(xp)@t1 ==> #t1 < #t2 | #t1 = #t2 | #t3 < #t1))"
@@ -452,7 +452,7 @@ resImmediate = [QQ.r|restriction ass_immedeate:
 -- | generate restrictions depending on options set (op) and the structure
 -- of the process (anP)
 baseRestr :: MonadThrow m => Process (ProcessAnnotation LVar) v -> Bool -> Bool -> [SyntacticRestriction] -> m [SyntacticRestriction]
-baseRestr anP needsAssImmediate hasAccountabilityLemmaWithControl prevRestr =
+baseRestr anP needsInEvRes hasAccountabilityLemmaWithControl prevRestr =
   let hardcoded_l =
        (if contains isLookup then
         if contains isDelete then
@@ -467,12 +467,10 @@ baseRestr anP needsAssImmediate hasAccountabilityLemmaWithControl prevRestr =
         hardcoded <- mapM toEx hardcoded_l
         lockingWithUnlock <- mapM (resLocking True) (List.nub $ getUnlockPositions anP)
         lockingOnlyLock   <- mapM (resLocking False) (getLockPositions anP List.\\ getUnlockPositions anP)
-        singleLocking <- toEx resLockingNoUnlock
         return $ prevRestr
               ++ hardcoded
               ++ lockingWithUnlock
               ++ lockingOnlyLock
-              ++ addIf (not (contains isUnlock) && contains isLock) [singleLocking]
     where
         addIf phi list = if phi then list else []
         contains = processContains anP

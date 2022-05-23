@@ -149,12 +149,14 @@ run thisMode as
         choosePretty = case getOutputModule as of
           ModuleSpthy      -> return . prettyOpenTheory  <=< Sapic.warnings -- output as is, including SAPIC elements
           ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory <=< Sapic.warnings  -- additionally type
-          ModuleMsr        -> return . prettyOpenTranslatedTheory <=< filterLemmas'  <=< Sapic.translate  <=< Sapic.typeTheory <=< Sapic.warnings
+          ModuleMsr        -> return . prettyOpenTranslatedTheory
+            <=< (return . (filterLemma $ lemmaSelector as))
+            <=< (return . removeTranslationItems)
+            <=< Sapic.typeTheory
+            <=< Sapic.warnings
           ModuleProVerif              -> Export.prettyProVerifTheory (lemmaSelector as) <=< Sapic.typeTheoryEnv <=< Sapic.warnings
           ModuleProVerifEquivalence   -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv <=< Sapic.warnings
           ModuleDeepSec               -> Export.prettyDeepSecTheory <=< Sapic.typeTheory <=< Sapic.warnings
-
-        filterLemmas' thy = return $ filterLemma (lemmaSelector as) thy
 
         out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load
