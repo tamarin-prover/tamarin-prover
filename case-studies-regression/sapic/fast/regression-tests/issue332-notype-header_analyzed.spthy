@@ -35,7 +35,7 @@ analyzing: examples/sapic/fast/regression-tests/issue332-notype-header.spthy
 analyzed: examples/sapic/fast/regression-tests/issue332-notype-header.spthy
 
   output:          examples/sapic/fast/regression-tests/issue332-notype-header.spthy.tmp
-  processing time: 0.002547641s
+  processing time: 0.003534898s
 
 
 ------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issue332-notype-header.spthy
 
   output:          examples/sapic/fast/regression-tests/issue332-notype-header.spthy.tmp
-  processing time: 0.002547641s
+  processing time: 0.003534898s
 
 
 ==============================================================================

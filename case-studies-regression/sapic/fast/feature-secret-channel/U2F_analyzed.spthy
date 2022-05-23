@@ -8425,7 +8425,7 @@ analyzing: examples/sapic/fast/feature-secret-channel/U2F.spthy
 analyzed: examples/sapic/fast/feature-secret-channel/U2F.spthy
 
   output:          examples/sapic/fast/feature-secret-channel/U2F.spthy.tmp
-  processing time: 165.247985273s
+  processing time: 254.126516093s
   auth (all-traces): verified (2302 steps)
 
 ------------------------------------------------------------------------------
@@ -8436,7 +8436,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-secret-channel/U2F.spthy
 
   output:          examples/sapic/fast/feature-secret-channel/U2F.spthy.tmp
-  processing time: 165.247985273s
+  processing time: 254.126516093s
   auth (all-traces): verified (2302 steps)
 
 ==============================================================================

@@ -157,7 +157,7 @@ analyzing: examples/sapic/fast/basic/destructors.spthy
 analyzed: examples/sapic/fast/basic/destructors.spthy
 
   output:          examples/sapic/fast/basic/destructors.spthy.tmp
-  processing time: 0.052548256s
+  processing time: 0.070352302s
   else (exists-trace): verified (3 steps)
   main (exists-trace): verified (4 steps)
   main2 (all-traces): verified (7 steps)
@@ -170,7 +170,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/destructors.spthy
 
   output:          examples/sapic/fast/basic/destructors.spthy.tmp
-  processing time: 0.052548256s
+  processing time: 0.070352302s
   else (exists-trace): verified (3 steps)
   main (exists-trace): verified (4 steps)
   main2 (all-traces): verified (7 steps)

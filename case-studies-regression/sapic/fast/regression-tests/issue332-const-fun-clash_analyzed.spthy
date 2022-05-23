@@ -35,7 +35,7 @@ analyzing: examples/sapic/fast/regression-tests/issue332-const-fun-clash.spthy
 analyzed: examples/sapic/fast/regression-tests/issue332-const-fun-clash.spthy
 
   output:          examples/sapic/fast/regression-tests/issue332-const-fun-clash.spthy.tmp
-  processing time: 0.002894621s
+  processing time: 0.003987281s
 
 
 ------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issue332-const-fun-clash.spthy
 
   output:          examples/sapic/fast/regression-tests/issue332-const-fun-clash.spthy.tmp
-  processing time: 0.002894621s
+  processing time: 0.003987281s
 
 
 ==============================================================================

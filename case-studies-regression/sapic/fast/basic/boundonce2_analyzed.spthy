@@ -36,7 +36,7 @@ analyzing: examples/sapic/fast/basic/boundonce2.spthy
 analyzed: examples/sapic/fast/basic/boundonce2.spthy
 
   output:          examples/sapic/fast/basic/boundonce2.spthy.tmp
-  processing time: 0.003773948s
+  processing time: 0.004218385s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   Wellformedness-error in Process:
@@ -50,7 +50,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/boundonce2.spthy
 
   output:          examples/sapic/fast/basic/boundonce2.spthy.tmp
-  processing time: 0.003773948s
+  processing time: 0.004218385s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   Wellformedness-error in Process:

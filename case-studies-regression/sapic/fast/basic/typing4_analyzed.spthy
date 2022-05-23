@@ -74,7 +74,7 @@ analyzing: examples/sapic/fast/basic/typing4.spthy
 analyzed: examples/sapic/fast/basic/typing4.spthy
 
   output:          examples/sapic/fast/basic/typing4.spthy.tmp
-  processing time: 0.015863237s
+  processing time: 0.021697052s
   sanity (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing4.spthy
 
   output:          examples/sapic/fast/basic/typing4.spthy.tmp
-  processing time: 0.015863237s
+  processing time: 0.021697052s
   sanity (exists-trace): verified (3 steps)
 
 ==============================================================================

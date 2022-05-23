@@ -3,8 +3,10 @@ theory Scott begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing
-functions: fst/1, hp/1, kdf/1, pair/2, snd/1
+functions: fst/1[destructor], hp/1, kdf/1, pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -1799,6 +1801,10 @@ next
   qed
 qed
 
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -1814,7 +1820,7 @@ analyzing: examples/ake/bilinear/Scott.spthy
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 21.595820781s
+  processing time: 18.944845174s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 
@@ -1826,7 +1832,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 21.595820781s
+  processing time: 18.944845174s
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 

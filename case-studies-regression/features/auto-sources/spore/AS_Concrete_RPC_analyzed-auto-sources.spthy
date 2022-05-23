@@ -473,7 +473,7 @@ analyzing: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 17.564300103s
+  processing time: 27.543285445s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)
@@ -489,7 +489,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 17.564300103s
+  processing time: 27.543285445s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

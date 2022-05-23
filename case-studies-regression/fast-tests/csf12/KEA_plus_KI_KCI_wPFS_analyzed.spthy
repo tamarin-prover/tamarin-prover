@@ -288,7 +288,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 0.97899811s
+  processing time: 1.378937856s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 
@@ -300,7 +300,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI_wPFS.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI_wPFS.spthy.tmp
-  processing time: 0.97899811s
+  processing time: 1.378937856s
   keaplus_initiator_key (all-traces): falsified - found trace (11 steps)
   keaplus_responder_key (all-traces): falsified - found trace (11 steps)
 

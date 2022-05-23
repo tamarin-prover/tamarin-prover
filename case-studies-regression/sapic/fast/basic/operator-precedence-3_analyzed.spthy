@@ -2,7 +2,7 @@ theory OperatorPrecedenceLookup begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
@@ -10,6 +10,8 @@ heuristic: p
 section{* A few test cases for operator precedence *}
 
 predicate: True( )<=>⊤
+
+
 
 lemma elseIsResolvedInnerFirst:
   exists-trace
@@ -21,8 +23,8 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( State_112( ) ▶₀ #l )
   case lookupxasx_1_11
-  solve( State_1( ) ▶₀ #p )
-    case ifTrue_0_
+  solve( State_( ) ▶₀ #p )
+    case Init
     SOLVED // trace found
   qed
 qed
@@ -37,39 +39,25 @@ restriction Restr_ifTrue_0__1:
   // safety formula
 
 rule (modulo E) ifTrue_0_[color=#ffffff, process="if True( )"]:
-   [ State_( ) ] --[ Restr_ifTrue_0__1( ) ]-> [ State_1( ) ]
-
-  /* has exactly the trivial AC variant */
-
-restriction Restr_ifTrue_1__1:
-  "∀ #NOW. (Restr_ifTrue_1__1( ) @ #NOW) ⇒ (¬(⊤))"
-  // safety formula
-
-rule (modulo E) ifTrue_1_[color=#ffffff, process="if True( )"]:
-   [ State_( ) ] --[ Restr_ifTrue_1__1( ) ]-> [ State_2( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventPositiveBranch_0_1[color=#ffffff,
-                                        process="event PositiveBranch( );"]:
-   [ State_1( ) ] --[ PositiveBranch( ) ]-> [ State_11( ) ]
+   [ State_( ) ]
+  --[ PositiveBranch( ), Restr_ifTrue_0__1( ) ]->
+   [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) lookupxasx_0_11[color=#ffffff,
-                                process="lookup 'x' as x"]:
-   [ State_11( ) ] --[ IsIn( 'x', x ) ]-> [ State_111( x ) ]
+                                process="lookup 'x' as x.1"]:
+   [ State_11( ) ] --[ IsIn( 'x', x.1 ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupxasx_0_11[color=#ffffff,
+                                   process="lookup 'x' as x.1"]:
+     [ State_11( ) ] --[ IsIn( 'x', x ) ]-> [ ]
+  */
 
 rule (modulo E) lookupxasx_1_11[color=#ffffff,
-                                process="lookup 'x' as x"]:
+                                process="lookup 'x' as x.1"]:
    [ State_11( ) ] --[ IsNotSet( 'x' ) ]-> [ State_112( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111[color=#ffffff, process="0"]:
-   [ State_111( x ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -81,17 +69,7 @@ rule (modulo E) eventLookupElse_0_112[color=#ffffff,
 
 rule (modulo E) insertyy_0_1121[color=#ffffff,
                                 process="insert 'y','y';"]:
-   [ State_1121( ) ] --[ Insert( 'y', 'y' ) ]-> [ State_11211( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_11211[color=#ffffff, process="0"]:
-   [ State_11211( ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_2[color=#ffffff, process="0"]:
-   [ State_2( ) ] --> [ ]
+   [ State_1121( ) ] --[ Insert( 'y', 'y' ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -117,7 +95,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -127,7 +105,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-3.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.067967751s
+  processing time: 0.016481791s
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -138,7 +116,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.067967751s
+  processing time: 0.016481791s
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 
 ==============================================================================

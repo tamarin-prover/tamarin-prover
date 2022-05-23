@@ -35,7 +35,7 @@ analyzing: examples/sapic/fast/regression-tests/issue332-capturing-processdefini
 analyzed: examples/sapic/fast/regression-tests/issue332-capturing-processdefinition.spthy
 
   output:          examples/sapic/fast/regression-tests/issue332-capturing-processdefinition.spthy.tmp
-  processing time: 0.00291108s
+  processing time: 0.008781434s
 
 
 ------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issue332-capturing-processdefinition.spthy
 
   output:          examples/sapic/fast/regression-tests/issue332-capturing-processdefinition.spthy.tmp
-  processing time: 0.00291108s
+  processing time: 0.008781434s
 
 
 ==============================================================================

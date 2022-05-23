@@ -2597,7 +2597,7 @@ analyzing: examples/ake/bilinear/Chen_Kudla.spthy
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla.spthy.tmp
-  processing time: 52.36436138s
+  processing time: 52.982135687s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 
@@ -2609,7 +2609,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla.spthy.tmp
-  processing time: 52.36436138s
+  processing time: 52.982135687s
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)
 

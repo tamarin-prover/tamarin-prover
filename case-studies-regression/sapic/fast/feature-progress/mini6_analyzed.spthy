@@ -235,7 +235,7 @@ analyzing: examples/sapic/fast/feature-progress/mini6.spthy
 analyzed: examples/sapic/fast/feature-progress/mini6.spthy
 
   output:          examples/sapic/fast/feature-progress/mini6.spthy.tmp
-  processing time: 0.154584398s
+  processing time: 0.164903898s
   A_possible (exists-trace): verified (10 steps)
   B_impossible (all-traces): verified (2 steps)
 
@@ -247,7 +247,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini6.spthy
 
   output:          examples/sapic/fast/feature-progress/mini6.spthy.tmp
-  processing time: 0.154584398s
+  processing time: 0.164903898s
   A_possible (exists-trace): verified (10 steps)
   B_impossible (all-traces): verified (2 steps)
 

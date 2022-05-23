@@ -67,7 +67,7 @@ analyzing: examples/sapic/fast/feature-export/smaller.spthy
 analyzed: examples/sapic/fast/feature-export/smaller.spthy
 
   output:          examples/sapic/fast/feature-export/smaller.spthy.tmp
-  processing time: 0.009735823s
+  processing time: 0.016248479s
   Ahappens (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-export/smaller.spthy
 
   output:          examples/sapic/fast/feature-export/smaller.spthy.tmp
-  processing time: 0.009735823s
+  processing time: 0.016248479s
   Ahappens (exists-trace): verified (3 steps)
 
 ==============================================================================

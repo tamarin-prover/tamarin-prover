@@ -537,7 +537,7 @@ analyzing: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
 analyzed: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy.tmp
-  processing time: 10.128473203s
+  processing time: 11.189523286s
   Secrecy (all-traces): verified (24 steps)
   injectiveagreement_B (all-traces): falsified - found trace (13 steps)
   agreement_B (all-traces): verified (7 steps)
@@ -553,7 +553,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy.tmp
-  processing time: 10.128473203s
+  processing time: 11.189523286s
   Secrecy (all-traces): verified (24 steps)
   injectiveagreement_B (all-traces): falsified - found trace (13 steps)
   agreement_B (all-traces): verified (7 steps)

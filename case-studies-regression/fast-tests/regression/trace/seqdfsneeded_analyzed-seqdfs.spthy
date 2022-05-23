@@ -149,7 +149,7 @@ analyzing: examples/regression/trace/seqdfsneeded.spthy
 analyzed: examples/regression/trace/seqdfsneeded.spthy
 
   output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.126501046s
+  processing time: 0.241769075s
   slow (exists-trace): verified (24 steps)
 
 ------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ summary of summaries:
 analyzed: examples/regression/trace/seqdfsneeded.spthy
 
   output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.126501046s
+  processing time: 0.241769075s
   slow (exists-trace): verified (24 steps)
 
 ==============================================================================

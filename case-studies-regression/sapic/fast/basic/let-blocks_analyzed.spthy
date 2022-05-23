@@ -608,7 +608,7 @@ analyzing: examples/sapic/fast/basic/let-blocks.spthy
 analyzed: examples/sapic/fast/basic/let-blocks.spthy
 
   output:          examples/sapic/fast/basic/let-blocks.spthy.tmp
-  processing time: 4.439462261s
+  processing time: 5.951264692s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   unbound:
@@ -629,7 +629,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let-blocks.spthy
 
   output:          examples/sapic/fast/basic/let-blocks.spthy.tmp
-  processing time: 4.439462261s
+  processing time: 5.951264692s
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   unbound:

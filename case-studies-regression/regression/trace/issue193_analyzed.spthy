@@ -82,7 +82,7 @@ analyzing: examples/regression/trace/issue193.spthy
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.031280647s
+  processing time: 0.071221552s
   debug (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.031280647s
+  processing time: 0.071221552s
   debug (exists-trace): verified (4 steps)
 
 ==============================================================================

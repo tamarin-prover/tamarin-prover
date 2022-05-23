@@ -388,7 +388,7 @@ analyzing: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 1.949590244s
+  processing time: 3.30881322s
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (10 steps)
@@ -403,7 +403,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 1.949590244s
+  processing time: 3.30881322s
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (10 steps)

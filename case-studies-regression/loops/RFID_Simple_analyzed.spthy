@@ -522,7 +522,7 @@ analyzing: examples/loops/RFID_Simple.spthy
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          examples/loops/RFID_Simple.spthy.tmp
-  processing time: 0.513127504s
+  processing time: 0.617392087s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)
@@ -536,7 +536,7 @@ summary of summaries:
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          examples/loops/RFID_Simple.spthy.tmp
-  processing time: 0.513127504s
+  processing time: 0.617392087s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)

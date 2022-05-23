@@ -159,7 +159,7 @@ analyzing: examples/loops/Minimal_Typing_Example.spthy
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          examples/loops/Minimal_Typing_Example.spthy.tmp
-  processing time: 0.083279189s
+  processing time: 0.099804827s
   sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
@@ -172,7 +172,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          examples/loops/Minimal_Typing_Example.spthy.tmp
-  processing time: 0.083279189s
+  processing time: 0.099804827s
   sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)

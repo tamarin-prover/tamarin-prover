@@ -265,7 +265,7 @@ analyzing: examples/csf18-xor/diff-models/CH07-UK3.spthy
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 231.300633589s
+  processing time: 221.187728865s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
@@ -282,7 +282,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 231.300633589s
+  processing time: 221.187728865s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)

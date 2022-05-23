@@ -389,7 +389,7 @@ analyzing: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK.spthy.tmp
-  processing time: 1.504033417s
+  processing time: 3.474958853s
   executability (exists-trace): verified (7 steps)
   secrecy (all-traces): verified (27 steps)
   noninjectiveagreement_B (all-traces): verified (8 steps)
@@ -404,7 +404,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK.spthy.tmp
-  processing time: 1.504033417s
+  processing time: 3.474958853s
   executability (exists-trace): verified (7 steps)
   secrecy (all-traces): verified (27 steps)
   noninjectiveagreement_B (all-traces): verified (8 steps)

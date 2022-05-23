@@ -449,7 +449,7 @@ analyzing: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 1.209084363s
+  processing time: 1.817345967s
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)
   injectiveagreement_B (all-traces): falsified - found trace (9 steps)
@@ -466,7 +466,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 1.209084363s
+  processing time: 1.817345967s
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)
   injectiveagreement_B (all-traces): falsified - found trace (9 steps)

@@ -421,7 +421,7 @@ analyzing: examples/csf12/UM_wPFS.spthy
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          examples/csf12/UM_wPFS.spthy.tmp
-  processing time: 0.839248811s
+  processing time: 1.122311948s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 
@@ -433,7 +433,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          examples/csf12/UM_wPFS.spthy.tmp
-  processing time: 0.839248811s
+  processing time: 1.122311948s
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
 

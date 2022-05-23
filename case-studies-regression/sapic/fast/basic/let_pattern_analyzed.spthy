@@ -93,7 +93,7 @@ analyzing: examples/sapic/fast/basic/let_pattern.spthy
 analyzed: examples/sapic/fast/basic/let_pattern.spthy
 
   output:          examples/sapic/fast/basic/let_pattern.spthy.tmp
-  processing time: 0.009578948s
+  processing time: 0.018444306s
   first (all-traces): verified (3 steps)
   first2 (all-traces): verified (2 steps)
 
@@ -105,7 +105,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let_pattern.spthy
 
   output:          examples/sapic/fast/basic/let_pattern.spthy.tmp
-  processing time: 0.009578948s
+  processing time: 0.018444306s
   first (all-traces): verified (3 steps)
   first2 (all-traces): verified (2 steps)
 

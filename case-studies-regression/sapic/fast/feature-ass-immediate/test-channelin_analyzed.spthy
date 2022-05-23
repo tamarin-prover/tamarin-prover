@@ -61,7 +61,7 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-restriction ass_immedeate:
+restriction in_event:
   "∀ x #t3.
     (ChannelIn( x ) @ #t3) ⇒
     (∃ #t2.
@@ -85,7 +85,7 @@ analyzing: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
 analyzed: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
 
   output:          examples/sapic/fast/feature-ass-immediate/test-channelin.spthy.tmp
-  processing time: 0.019080024s
+  processing time: 0.027968544s
   intuitiveTest (all-traces): verified (3 steps)
 
 ------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
 
   output:          examples/sapic/fast/feature-ass-immediate/test-channelin.spthy.tmp
-  processing time: 0.019080024s
+  processing time: 0.027968544s
   intuitiveTest (all-traces): verified (3 steps)
 
 ==============================================================================

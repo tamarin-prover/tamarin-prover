@@ -38,7 +38,7 @@ analyzing: examples/sapic/fast/basic/patterns.spthy
 analyzed: examples/sapic/fast/basic/patterns.spthy
 
   output:          examples/sapic/fast/basic/patterns.spthy.tmp
-  processing time: 0.003888467s
+  processing time: 0.00839677s
 
 
 ------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/patterns.spthy
 
   output:          examples/sapic/fast/basic/patterns.spthy.tmp
-  processing time: 0.003888467s
+  processing time: 0.00839677s
 
 
 ==============================================================================
