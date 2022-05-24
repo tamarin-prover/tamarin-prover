@@ -68,7 +68,7 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 
--- import           Text.Regex.Posix
+import           Text.Regex.PCRE
 
 
 ------------------------------------------------------------------------------
@@ -678,11 +678,11 @@ internalTacticRanking tactic ctxt _sys ags0 =
       let prettyOut = unlines (map show outp)
       --          (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
       --              (zip outp res))
-      let logMsg = ">>>>>>>>>>>>>>>>>>>>>>>> Context\n"
-                   ++ show ctxt
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> System\n"
-                   ++ show _sys
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+      let logMsg = -- ">>>>>>>>>>>>>>>>>>>>>>>> Context\n"
+                   -- ++ show (map getFormulaTerms (S.toList $ L.get sFormulas _sys))
+                   -- ">>>>>>>>>>>>>>>>>>>>>>>> System\n"
+                   -- ++ show (map decomposeGoal ags)
+                   ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
                    ++ prettyOut 
@@ -697,9 +697,60 @@ internalTacticRanking tactic ctxt _sys ags0 =
     orderList _ [] res        = res
     orderList (h1:l) (h2:ref) res = if (snd h1 == snd h2) then orderList l ref (h1:res) else orderList (l++[h1]) (h2:ref) res
 
-    --ctxt2light ctxt = ProofContextLight
-    --sys2light sys   = SystemLight
+    decomposeGoal :: AnnotatedGoal -> Maybe LNFact-- [Maybe [LVar]]
+    decomposeGoal (ActionG _ lnfact,(_,_)) = Just lnfact -- map getMsgVar (getFactTerms lnfact)
+    decomposeGoal _ = Nothing
 
+
+    checkFormula :: LNGuarded -> [LVar]
+    checkFormula f = if rev && expG then concat $ getFormulaTermsCore f else []
+
+        where
+          rev = (getFormulaTag f) == "RevealEk"
+          expG = show (getFormulaTerms f) =~ "exp\\('g'"
+
+          getFormulaTerms :: LNGuarded -> [VTerm Name (BVar LVar)]
+          getFormulaTerms (GGuarded _ _ [Action t fa] _ ) = getFactTerms fa
+
+          getFormulaTermsCore :: LNGuarded -> [[LVar]]
+          getFormulaTermsCore (GGuarded _ _ [Action t fa] _ ) = map (map getCore) (map varsVTerm (getFactTerms fa))
+
+              where 
+                getCore (Free v) = v
+
+          getFormulaTag :: LNGuarded -> String
+          getFormulaTag (GGuarded _ _ [Action t fa] _ ) = getName $ getFactTag fa
+
+              where 
+                getName (ProtoFact _ s _) = s
+                getName _ = ""
+
+    dhreNoise :: ProofContext -> System -> AnnotatedGoal -> Bool
+    dhreNoise _ sys goal =  trace goalPattern (pg =~ goalPattern)
+    --dhreNoise _ _ = False
+        where 
+            pgoal (g,(_nr,_usefulness)) = prettyGoal g
+            pg = concat . lines . render $ pgoal goal
+
+            sysPattern = intercalate "|" (map show (concat (map checkFormula (S.toList $ L.get sFormulas sys))))
+            goalPattern = ".*(\\(("++sysPattern++"*)+"++sysPattern++"\\)|inv\\("++sysPattern++"\\))"
+
+    defaultNoise :: ProofContext -> System -> AnnotatedGoal -> Bool
+    defaultNoise _ sys goal = or $ map ((flip elem) sysPattern) goalMatches
+        where 
+            pgoal (g,(_nr,_usefulness)) = prettyGoal g
+            pg = concat . lines . render $ pgoal goal
+            goalMatches = getAllTextMatches $ pg =~ "\\(?<!'g'^\\)~[a-zA-Z.0-9]*"
+
+            sysPattern = map show (concat (map checkFormula (S.toList $ L.get sFormulas sys)))
+
+    reasonableNoncesNoise :: ProofContext -> System -> AnnotatedGoal -> Bool
+    reasonableNoncesNoise _ sys goal = pg =~ sysPattern
+        where
+            pgoal (g,(_nr,_usefulness)) = prettyGoal g
+            pg = concat . lines . render $ pgoal goal
+
+            sysPattern = "^"++(intercalate "|" (map show (concat (map checkFormula (S.toList $ L.get sFormulas sys)))))++"$"
 
 -- | Utilities for SAPiC translations specifically 
 

@@ -19,7 +19,8 @@ import           Prelude                    hiding (id)
 import           Control.Applicative        hiding (empty, many, optional)
 import qualified Data.Map                   as M
 import qualified Extension.Data.Label       as L
-import qualified Data.Set                             as S
+import qualified Data.Set                   as S
+import           Data.List
 
 import           Theory
 import           Theory.Constraint.Solver.AnnotatedGoals
@@ -33,7 +34,7 @@ import           Text.Parsec                hiding ((<|>))
 import           Text.Regex.PCRE
 
 
--- import           Debug.Trace
+import           Debug.Trace
 
 
 --Tactic
@@ -59,6 +60,14 @@ selectedPreSort diff = do
     presort <- goalRankingPresort diff <* lexeme spaces 
     return $ presort
 
+-- Default ranking
+selectedRanking :: Parser (Maybe Ranking)
+selectedRanking = do
+    _ <- symbol "ranking"
+    _ <- colon
+    ranking <- identifier
+    return $ Just (Ranking (nameToRanking ranking) ranking)
+
 --Function name (remplaced by identifier)
 --functionName :: Parser String
 --functionName = many space *> many (alphaNum <|> oneOf "[]_-@")
@@ -72,11 +81,11 @@ functionValue = many $ noneOf "\"" --interdit de mettre des " dans les regex, do
 function :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
 function = do
     f <- identifier
-    paramGoal <- doubleQuoted functionValue
+    param <- many1 $ doubleQuoted functionValue
     --Need to add something for the space?
-    paramCtxt <- doubleQuoted functionValue
-    paramSys <- doubleQuoted functionValue
-    return $ (nameToFunction (f,paramGoal,paramCtxt,paramSys),f++" \""++paramGoal++"\""++" \""++paramCtxt++"\""++" \""++paramSys++"\"")
+    --paramCtxt <- doubleQuoted functionValue
+    --paramSys <- doubleQuoted functionValue
+    return $ (nameToFunction (f,param),f++" \""++intercalate "\" \"" param++"\"")
 
 functionNot :: ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String)
 functionNot (f,s) = (not . f, "not "++s)
@@ -120,54 +129,92 @@ tactic :: Bool -> Parser (TacticI ProofContext)
 tactic diff = do
     tName <- tacticName
     presort <- option (SmartRanking False) (selectedPreSort diff)
+    ranking <- option (Ranking Nothing Nothing) selectedRanking
     prios <- option [] $ many1 prio
     deprios <- option [] $ many1 deprio
-    return $ TacticI tName presort prios deprios
+    return $ TacticI tName presort ranking prios deprios
 
-tacticFunctions :: M.Map String (String -> String -> String -> (AnnotatedGoal, ProofContext, System) -> Bool)
+tacticFunctions :: M.Map String ([String] -> (AnnotatedGoal, ProofContext, System) -> Bool)
 tacticFunctions = M.fromList
                       [ ("regex", regex')
-                      , ("sysParamRegex", sysParamRegex)
                       , ("isFactName", isFactName)
                       , ("isInFactTerms", isInFactTerms)
+                      , ("dhreNoise", dhreNoise)
+                      , ("defaultNoise", defaultNoise)
+                      , ("reasonableNoncesNoise",reasonableNoncesNoise)
                       ]
   where
-    regex' :: String -> String -> String -> (AnnotatedGoal, ProofContext,  System) -> Bool
-    regex' regex _ _ (agoal,_,_) = pg =~ regex
+    regex' :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
+    regex' (regex:_) (agoal,_,_) = pg =~ regex
+    --regex' _ _ = False
         where
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
             pg = concat . lines . render $ pgoal agoal
 
-    sysParamRegex :: String -> String -> String -> (AnnotatedGoal, ProofContext,  System) -> Bool
-    sysParamRegex pGoal pSys pSys2 (goal,_,sys) =  or $ map (applyRegexBool pg) patterns
+    dhreNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
+    dhreNoise _ (goal,_,sys) =  pg =~ goalPattern
+    --dhreNoise _ _ = False
         where 
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
             pg = concat . lines . render $ pgoal goal
 
-            pformulas = map prettyGuarded $ S.toList $ L.get sFormulas sys
-            formulas = render $ pformulas
-            testFormula = map ((flip applyRegexBool) pSys2) formulas --tab of Bool
-            conformingFormulas = snd $ unzip $ filter (\(x,y) -> x==True) $ zip testFormula formulas
+            sysPattern = "~n|" ++ intercalate "|" (map show (concat (map checkFormula (S.toList $ L.get sFormulas sys))))
+            goalPattern = ".*(\\(("++sysPattern++"*)+"++sysPattern++"\\)|inv\\("++sysPattern++"\\))"
 
-            patterns = map (=~ pSys2) conformingFormulas :: [String] --si ne passe pas, fonction aux
-            --surtout que je vais avoir besoin d'ajouter ~n à la liste pour les safenonces
+    defaultNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
+    defaultNoise (paramGoal:_) (goal,_,sys) = or $ map ((flip elem) sysPattern) goalMatches
+    --defaultNoise _ _ = False
+        where 
+            pgoal (g,(_nr,_usefulness)) = prettyGoal g
+            pg = concat . lines . render $ pgoal goal
+            goalMatches = getAllTextMatches $ pg =~ paramGoal -- "\\(?<!'g'^\\)~[a-zA-Z.0-9]*"
 
-            applyRegexBool :: String -> String -> Bool
-            applyRegexBool s reg = s =~ reg
+            sysPattern = map show (concat (map checkFormula (S.toList $ L.get sFormulas sys)))
 
-    isFactName :: String -> String -> String -> (AnnotatedGoal, ProofContext,  System) -> Bool
-    isFactName s _ _ (((PremiseG _ Fact {factTag = ProtoFact Linear test _, factAnnotations = _ , factTerms = _ }), (_,_)), _, _ ) = test == s
+    reasonableNoncesNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
+    reasonableNoncesNoise _ (goal,_,sys) = pg =~ sysPattern
+        where
+            pgoal (g,(_nr,_usefulness)) = prettyGoal g
+            pg = concat . lines . render $ pgoal goal
+
+            sysPattern = "^~n$|"++(intercalate "$|^" (map show (concat (map checkFormula (S.toList $ L.get sFormulas sys)))))++"$"
+
+    checkFormula :: LNGuarded -> [LVar]
+    checkFormula f = if rev && expG then concat $ getFormulaTermsCore f else []
+
+        where
+          rev = (getFormulaTag f) == "RevealEk"
+          expG = show (getFormulaTerms f) =~ "exp\\('g'"
+
+          getFormulaTerms :: LNGuarded -> [VTerm Name (BVar LVar)]
+          getFormulaTerms (GGuarded _ _ [Action t fa] _ ) = getFactTerms fa
+
+          getFormulaTermsCore :: LNGuarded -> [[LVar]]
+          getFormulaTermsCore (GGuarded _ _ [Action t fa] _ ) = map (map getCore) (map varsVTerm (getFactTerms fa))
+
+              where 
+                getCore (Free v) = v
+
+          getFormulaTag :: LNGuarded -> String
+          getFormulaTag (GGuarded _ _ [Action t fa] _ ) = getName $ getFactTag fa
+
+              where 
+                getName (ProtoFact _ s _) = s
+                getName _ = ""
+
+    isFactName :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
+    isFactName (s:_) (((PremiseG _ Fact {factTag = ProtoFact Linear test _, factAnnotations = _ , factTerms = _ }), (_,_)), _, _ ) = test == s
     -- Not necessarily usefull line
-    isFactName s _ _ ((ActionG _ (Fact { factTag = test ,factAnnotations =  _ , factTerms = _ }), _ ), _, _ ) = show test == s
-    isFactName _ _ _ (_,_,_) = False
+    isFactName (s:_) ((ActionG _ (Fact { factTag = test ,factAnnotations =  _ , factTerms = _ }), _ ), _, _ ) = show test == s
+    isFactName _ (_,_,_) = False
 
-    isInFactTerms :: String -> String -> String -> (AnnotatedGoal, ProofContext,  System) -> Bool
-    isInFactTerms s _ _ ((ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = [test]}), _ ), _, _ ) = show test =~ s
-    isInFactTerms _ _ _ (_, _, _) = False
+    isInFactTerms :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
+    isInFactTerms (s:_) ((ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = [test]}), _ ), _, _ ) = show test =~ s
+    isInFactTerms _ (_, _, _) = False
 
-nameToFunction :: (String, String, String, String) -> (AnnotatedGoal, ProofContext, System) -> Bool
-nameToFunction (s,paramGoal,paramCtxt,paramSys) = case M.lookup s tacticFunctions of
-  Just f  -> f paramGoal paramCtxt paramSys
+nameToFunction :: (String,[String]) -> (AnnotatedGoal, ProofContext, System) -> Bool
+nameToFunction (s,param) = case M.lookup s tacticFunctions of
+  Just f  -> f param
   Nothing ->  error $ "\nThe function "++ s
             ++" is not defined.\nUse one of the following:\n"++listTacticFunction
 
@@ -177,8 +224,36 @@ nameToFunction (s,paramGoal,paramCtxt,paramSys) = case M.lookup s tacticFunction
             "regex"            -> "match between the pretty goal and the given regex"
             "isFactName"       -> "match against the fact name"
             "isInFactTerms"    -> "match against the fact terms"
+            -- to be completed with the new ones
             _                  -> ""
 
     listTacticFunction:: String
     listTacticFunction = M.foldMapWithKey
         (\k _ -> "'"++k++"': " ++ tacticFunctionName k ++ "\n") tacticFunctions
+
+rankingFunctions :: M.Map String ([AnnotatedGoal] -> [AnnotatedGoal])
+rankingFunctions = M.fromList
+                      [ ("smallest", smallest)
+                      ]
+  where
+    smallest :: [AnnotatedGoal] -> [AnnotatedGoal]
+    smallest agoal = agoal
+        where
+            pgoal (g,(_nr,_usefulness)) = prettyGoal g
+            pg = concat . lines . render $ pgoal agoal
+
+nameToRanking :: String -> ([AnnotatedGoal] -> [AnnotatedGoal])
+nameToRanking s = case M.lookup s rankingFunctions of
+  Just f  -> f
+  Nothing ->  error $ "\nThe function "++ s
+            ++" is not defined.\nUse one of the following:\n"++listRankingFunction
+
+  where
+    rankingFunctionName :: String -> String
+    rankingFunctionName funct = case funct of
+            "smallest"         -> "return the smallest string first (pretty printing)"
+            _                  -> ""
+
+    listRankingFunction:: String
+    listRankingFunction = M.foldMapWithKey
+        (\k _ -> "'"++k++"': " ++ rankingFunctionName k ++ "\n") rankingFunctions

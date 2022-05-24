@@ -33,6 +33,7 @@ module Theory.Constraint.System (
   , TacticI(..)
   , Prio(..)
   , Deprio(..)
+  , Ranking(..)
   , defaultTacticI
   , mapInternalTacticRanking
   , maybeSetInternalTacticName
@@ -456,10 +457,32 @@ instance Binary (Deprio a) where
     put d = put $ show d
     get = return (Deprio [] [])
 
+data Ranking = Ranking {
+          functionsRanking :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
+        , stringsRanking :: Maybe String
+    }
+    deriving (Show, Generic) 
+
+instance Eq Ranking where
+    (==) _ _ = True
+
+instance Ord Ranking where
+    compare _ _ = EQ
+    (<=) _ _ = True
+
+instance Binary Ranking where
+    put d = put $ show d
+    get = return (Ranking Nothing Nothing)
+
+instance NFData Ranking where
+    rnf _ = ()
+
+
 -- | New type for Tactis inside the theory file
 data TacticI a = TacticI{
       _name :: String,
       _presort :: GoalRanking a,
+      _ranking :: Ranking, 
       _prios :: [Prio a],
       _deprios :: [Deprio a]
     }
@@ -497,7 +520,7 @@ defaultHeuristic :: Bool -> (Heuristic ProofContext)
 defaultHeuristic = Heuristic . defaultRankings
 
 defaultTacticI :: TacticI ProofContext
-defaultTacticI = TacticI "default" (SmartRanking False) [] []
+defaultTacticI = TacticI "default" (SmartRanking False) (Ranking Nothing Nothing) [] []
 
 
 -- Default to "./oracle" in the current working directory.
@@ -646,7 +669,7 @@ listGoalRankingsDiff noOracle = M.foldMapWithKey
 
 
 filterHeuristic :: String -> [GoalRanking ProofContext]
-filterHeuristic ('{':t) = InternalTacticRanking (TacticI (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
+filterHeuristic ('{':t) = InternalTacticRanking (TacticI (takeWhile (/= '}') t) (SmartRanking False) (Ranking Nothing Nothing) [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
 filterHeuristic (c:t)   = (stringToGoalRanking False [c]):(filterHeuristic t)
 filterHeuristic ("")    = []
 
