@@ -61,12 +61,12 @@ selectedPreSort diff = do
     return $ presort
 
 -- Default ranking
-selectedRanking :: Parser (Maybe Ranking)
-selectedRanking = do
-    _ <- symbol "ranking"
-    _ <- colon
-    ranking <- identifier
-    return $ Just (Ranking (nameToRanking ranking) ranking)
+--selectedRanking :: Parser Ranking
+--selectedRanking = do
+--    _ <- symbol "ranking"
+--    _ <- colon
+--    ranking <- identifier
+--    return $ Ranking (Just $ nameToRanking ranking) (Just ranking)
 
 --Function name (remplaced by identifier)
 --functionName :: Parser String
@@ -106,33 +106,35 @@ conjuncts = chainl1 negation (functionAnd <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
 disjuncts :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
-disjuncts = try $ (chainl1 conjuncts (functionOr <$ opLOr)) -- error here is not triggered when empty prio (appends higher -> function parsing)
+disjuncts = try $ (chainl1 conjuncts (functionOr <$ opLOr)) -- error here is not triggered when empty prio (appends higher -> function parsing) 
 
 --Parsing prio
 prio :: Parser (Prio ProofContext)
 prio = do
     _ <- symbol "prio"
     _ <- colon
+    ranking <- option "" identifier -- do not tolerate no info
     fs <- many1 disjuncts
-    return $ Prio (map fst fs) (map snd fs)
+    return $ Prio (nameToRanking ranking) ranking (map fst fs) (map snd fs)
 
 --Parsing deprio
 deprio :: Parser (Deprio ProofContext)
 deprio = do
     _ <- symbol "deprio"
     _ <- colon
+    ranking <- option "" identifier
     fs <- many1 disjuncts
-    return $ Deprio (map fst fs) (map snd fs)
+    return $ Deprio (nameToRanking ranking) ranking (map fst fs) (map snd fs)
 
 
 tactic :: Bool -> Parser (TacticI ProofContext)
 tactic diff = do
     tName <- tacticName
     presort <- option (SmartRanking False) (selectedPreSort diff)
-    ranking <- option (Ranking Nothing Nothing) selectedRanking
+    -- ranking <- option (Ranking Nothing Nothing) selectedRanking
     prios <- option [] $ many1 prio
     deprios <- option [] $ many1 deprio
-    return $ TacticI tName presort ranking prios deprios
+    return $ TacticI tName presort prios deprios
 
 tacticFunctions :: M.Map String ([String] -> (AnnotatedGoal, ProofContext, System) -> Bool)
 tacticFunctions = M.fromList
@@ -158,8 +160,8 @@ tacticFunctions = M.fromList
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
             pg = concat . lines . render $ pgoal goal
 
-            sysPattern = "~n|" ++ intercalate "|" (map show (concat (map checkFormula (S.toList $ L.get sFormulas sys))))
-            goalPattern = ".*(\\(("++sysPattern++"*)+"++sysPattern++"\\)|inv\\("++sysPattern++"\\))"
+            sysPattern = "(~n|" ++ intercalate "|" (map show $ concat (map checkFormula (S.toList $ L.get sFormulas sys)))++")"
+            goalPattern = ".*(\\(("++sysPattern++"\\*)+"++sysPattern++"\\)|inv\\("++sysPattern++"\\))"
 
     defaultNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
     defaultNoise (paramGoal:_) (goal,_,sys) = or $ map ((flip elem) sysPattern) goalMatches
@@ -169,15 +171,21 @@ tacticFunctions = M.fromList
             pg = concat . lines . render $ pgoal goal
             goalMatches = getAllTextMatches $ pg =~ paramGoal -- "\\(?<!'g'^\\)~[a-zA-Z.0-9]*"
 
-            sysPattern = map show (concat (map checkFormula (S.toList $ L.get sFormulas sys)))
+            sysPattern = map show $ concat (map checkFormula (S.toList $ L.get sFormulas sys))
 
     reasonableNoncesNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
-    reasonableNoncesNoise _ (goal,_,sys) = pg =~ sysPattern
+    reasonableNoncesNoise _ (goal,_,sys) = or $ map ((flip elem) sysPattern) nonces
         where
-            pgoal (g,(_nr,_usefulness)) = prettyGoal g
-            pg = concat . lines . render $ pgoal goal
 
-            sysPattern = "^~n$|"++(intercalate "$|^" (map show (concat (map checkFormula (S.toList $ L.get sFormulas sys)))))++"$"
+            nonces = map show (getFactTerms goal)
+
+            -- reasonableNonces is designed to mimic reasonable_nonces from oracle.py of Vacarme,
+            -- therefore it is meant to be used with regex "!KU\( *~.*\)", limiting the type of possible goals
+            getFactTerms :: AnnotatedGoal -> [LNTerm]
+            getFactTerms (ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = ft }), _ ) = ft
+            getFactTerms _ = []
+
+            sysPattern = "~n":(map show $ concat (map checkFormula (S.toList $ L.get sFormulas sys)))
 
     checkFormula :: LNGuarded -> [LVar]
     checkFormula f = if rev && expG then concat $ getFormulaTermsCore f else []
@@ -188,6 +196,7 @@ tacticFunctions = M.fromList
 
           getFormulaTerms :: LNGuarded -> [VTerm Name (BVar LVar)]
           getFormulaTerms (GGuarded _ _ [Action t fa] _ ) = getFactTerms fa
+          getFormulaTerms _ = []
 
           getFormulaTermsCore :: LNGuarded -> [[LVar]]
           getFormulaTermsCore (GGuarded _ _ [Action t fa] _ ) = map (map getCore) (map varsVTerm (getFactTerms fa))
@@ -233,18 +242,31 @@ nameToFunction (s,param) = case M.lookup s tacticFunctions of
 
 rankingFunctions :: M.Map String ([AnnotatedGoal] -> [AnnotatedGoal])
 rankingFunctions = M.fromList
-                      [ ("smallest", smallest)
+                      [   ("smallest", smallest)
+                        , ("id", idRanking)
                       ]
   where
+
+    idRanking :: [AnnotatedGoal] -> [AnnotatedGoal]
+    idRanking l = l
+
     smallest :: [AnnotatedGoal] -> [AnnotatedGoal]
-    smallest agoal = agoal
+    smallest agoalList = res
         where
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
-            pg = concat . lines . render $ pgoal agoal
+            pgList = map (concat . lines . render . pgoal) agoalList
+            dblList = zip pgList agoalList
 
-nameToRanking :: String -> ([AnnotatedGoal] -> [AnnotatedGoal])
+            tplList = map (\(x,y) -> (length x,(x,y))) dblList
+            sortedTps = sortOn fst tplList
+            res = snd $ unzip (snd $ unzip sortedTps)
+
+
+
+
+nameToRanking :: String -> Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
 nameToRanking s = case M.lookup s rankingFunctions of
-  Just f  -> f
+  Just f  -> Just f
   Nothing ->  error $ "\nThe function "++ s
             ++" is not defined.\nUse one of the following:\n"++listRankingFunction
 

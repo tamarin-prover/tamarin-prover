@@ -279,7 +279,7 @@ import           Theory.Tools.IntruderRules
 import           Term.Positions
 
 import           Utils.Misc
---import           Debug.Trace
+import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -2678,18 +2678,20 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
 prettyTactic :: HighlightDocument d => TacticI ProofContext -> d
 prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic) 
     $-$ kwPresort <> colon <> space <> (char $ goalRankingToChar $ _presort tactic) $-$ sep
-        [ ppTabTab  "prio"  (map stringsPrio $ _prios tactic)
-        , ppTabTab "deprio" (map stringsDeprio $ _deprios tactic)
+        [ ppTabTab  "prio"  (map stringRankingPrio $ _prios tactic) (map stringsPrio $ _prios tactic)
+        , ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic)
         , char '\n'
         ]
    where 
-        ppTab "prio" xs = kwPrio <> colon $-$ (nest 2 $ vcat $ map text xs) -- pretty print for a prio block
-        ppTab "deprio" xs = kwDeprio <> colon $-$ (nest 2 $ vcat $ map text xs)
 
-        ppTabTab _  [] = emptyDoc
-        ppTabTab param  xs = vcat (map (ppTab param) xs)
-        ppTabTab _ [] = emptyDoc
-        ppTabTab param xs = vcat (map (ppTab param) xs)
+        -- pretty print for a prio block
+        ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs) 
+        ppTab "deprio" (rankingName,xs) = kwDeprio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs)
+        --ppTab "prio" _ xs =  kwPrio <> colon $-$ (nest 2 $ vcat $ map text xs)
+        --ppTab "deprio" _ xs = kwDeprio <> colon $-$ (nest 2 $ vcat $ map text xs)
+
+        ppTabTab _ _ [] = emptyDoc
+        ppTabTab param rankingName listFunctions = vcat (map (ppTab param) (zip rankingName listFunctions))
 
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d

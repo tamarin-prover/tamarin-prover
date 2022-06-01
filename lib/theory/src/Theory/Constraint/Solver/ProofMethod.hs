@@ -618,17 +618,6 @@ oracleSmartRanking oracle ctxt _sys ags0
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
 
--- Check whether a goal match a prio
-isPrio :: [(AnnotatedGoal, ProofContext, System) -> Bool] -> ProofContext -> System -> AnnotatedGoal -> Bool
-isPrio list agoal ctxt sys = or $ (sequenceA list) (sys,agoal,ctxt)
-
--- Try to match all prio with all goals
-applyIsPrio :: [[(AnnotatedGoal, ProofContext, System) -> Bool]] -> ProofContext -> System -> AnnotatedGoal -> [Bool]
-applyIsPrio [] _ _ _ = []
-applyIsPrio [xs] agoal ctxt sys = isPrio xs agoal ctxt sys:[]
-applyIsPrio (h:t) agoal ctxt sys = isPrio h agoal ctxt sys:applyIsPrio t agoal ctxt sys
-
-
 itRanking :: TacticI ProofContext -> [AnnotatedGoal] -> ProofContext -> System -> [AnnotatedGoal]
 itRanking tactic ags ctxt _sys = result
     where
@@ -639,7 +628,13 @@ itRanking tactic ags ctxt _sys = result
       indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions ctxt _sys) ags    -- find the first prio that match every goal
       indexedPrio = sortOn fst $ zip indexPrio ags                                              -- ordening of goals given the fisrt prio they meet 
       groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio        -- grouping goals by prio
-      rankedPrioGoals = if (Nothing `elem` indexPrio) then snd $ unzip $ concat $ (tail groupedPrio) else snd $ unzip $ (concat groupedPrio)    -- recovering ranked goals only (no prio = Nothing = fst)
+      preorderedPrio = if (Nothing `elem` indexPrio) then map (snd . unzip) (tail groupedPrio) else map (snd . unzip) groupedPrio -- recovering ranked goals only (no prio = Nothing = fst)
+
+      prioRankingFunctions = map rankingPrio (_prios tactic)
+      rankingFunToBeAppliedPrio = chooseRankingFunctionByPrio prioRankingFunctions (map head groupedPrio) -- only the functions for prios that are relevant
+      prioReorderedGoals = applyRankingFunctions rankingFunToBeAppliedPrio preorderedPrio
+
+      rankedPrioGoals = concat prioReorderedGoals
       
       -- Getting the functions from depriorities
       -- deprioName = tacticiDeprio tactic
@@ -648,11 +643,46 @@ itRanking tactic ags ctxt _sys = result
       indexDeprio = map (findIndex (==True)) $ map (applyIsPrio deprioToFunctions ctxt _sys) ags
       indexedDeprio = sortOn fst $ zip indexDeprio ags 
       groupedDeprio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedDeprio
-      rankedDeprioGoals = if (Nothing `elem` indexDeprio) then snd $ unzip $ concat (tail groupedDeprio) else snd $ unzip $ (concat groupedDeprio)
+      preorderedDeprio = if (Nothing `elem` indexDeprio) then map (snd . unzip) (tail groupedDeprio) else map (snd . unzip) groupedDeprio -- recovering ranked goals only (no prio = Nothing = fst)
+
+      deprioRankingFunctions = map rankingDeprio (_deprios tactic)
+      rankingFunToBeAppliedDeprio = chooseRankingFunctionByPrio prioRankingFunctions (map head groupedPrio)
+      deprioReorderedGoals = applyRankingFunctions rankingFunToBeAppliedDeprio preorderedDeprio
+
+      rankedDeprioGoals = concat deprioReorderedGoals
 
       --Concatenation of results
       nonRanked = filter (`notElem` rankedPrioGoals++rankedDeprioGoals) ags
       result = rankedPrioGoals ++ nonRanked ++ rankedDeprioGoals
+      -- result = rankedDeprioGoals
+
+      -- Check whether a goal match a prio
+      isPrio :: [(AnnotatedGoal, ProofContext, System) -> Bool] -> ProofContext -> System -> AnnotatedGoal -> Bool
+      isPrio list agoal ctxt sys = or $ (sequenceA list) (sys,agoal,ctxt)
+
+      -- Try to match all prio with all goals
+      applyIsPrio :: [[(AnnotatedGoal, ProofContext, System) -> Bool]] -> ProofContext -> System -> AnnotatedGoal -> [Bool]
+      applyIsPrio [] _ _ _ = []
+      applyIsPrio [xs] agoal ctxt sys = isPrio xs agoal ctxt sys:[]
+      applyIsPrio (h:t) agoal ctxt sys = isPrio h agoal ctxt sys:applyIsPrio t agoal ctxt sys
+
+      chooseRankingFunctionByPrio :: [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])] -> [(Maybe Int,AnnotatedGoal)] -> [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])]
+      chooseRankingFunctionByPrio [] _ = []
+      chooseRankingFunctionByPrio _ [] = []
+      chooseRankingFunctionByPrio rf [(Nothing,_)] = []
+      chooseRankingFunctionByPrio rf [(Just n,_)] = [rf !! n]
+      chooseRankingFunctionByPrio rf ((Nothing,_):t) = (chooseRankingFunctionByPrio rf t)
+      chooseRankingFunctionByPrio rf ((Just n,_):t) = (rf !! n):(chooseRankingFunctionByPrio rf t)
+
+      applyRankingFunctions :: [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])] -> [[AnnotatedGoal]] -> [[AnnotatedGoal]]
+      applyRankingFunctions [] _ = []
+      applyRankingFunctions _ [] = []
+      applyRankingFunctions (hf:tf) (hg:tg) = (apply hf hg):(applyRankingFunctions tf tg)
+        where
+            apply :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -> [AnnotatedGoal] -> [AnnotatedGoal]
+            apply Nothing l = l
+            apply (Just f) l = f l
+
 
 
 
@@ -680,9 +710,9 @@ internalTacticRanking tactic ctxt _sys ags0 =
       --              (zip outp res))
       let logMsg = -- ">>>>>>>>>>>>>>>>>>>>>>>> Context\n"
                    -- ++ show (map getFormulaTerms (S.toList $ L.get sFormulas _sys))
-                   -- ">>>>>>>>>>>>>>>>>>>>>>>> System\n"
-                   -- ++ show (map decomposeGoal ags)
-                   ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+                   ">>>>>>>>>>>>>>>>>>>>>>>> AnnotatedGoal\n"
+                   ++ show ags
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
                    ++ prettyOut 

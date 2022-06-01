@@ -33,7 +33,7 @@ module Theory.Constraint.System (
   , TacticI(..)
   , Prio(..)
   , Deprio(..)
-  , Ranking(..)
+  -- , Ranking(..)
   , defaultTacticI
   , mapInternalTacticRanking
   , maybeSetInternalTacticName
@@ -411,14 +411,16 @@ data Oracle = Oracle {
 ------------------------------------------------------------------------------
 
 data Prio a = Prio {
-       functionsPrio :: [(AnnotatedGoal, a, System) -> Bool]  
+       rankingPrio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
+     , stringRankingPrio :: String
+     , functionsPrio :: [(AnnotatedGoal, a, System) -> Bool]  
      , stringsPrio :: [String]
     }
     --deriving Show
     deriving( Generic )
 
 instance Show (Prio a) where
-    show p = intercalate ", " $ stringsPrio p
+    show p = (stringRankingPrio p) ++ " _ " ++ intercalate ", " (stringsPrio p)
 
 instance Eq (Prio a) where
     (==) _ _ = True
@@ -432,16 +434,18 @@ instance NFData (Prio a) where
 
 instance Binary (Prio a) where
     put p = put $ show p
-    get = return (Prio [] []) --Prio{..}
+    get = return (Prio Nothing "" [] []) --Prio{..}
 
 data Deprio a = Deprio {
-       functionsDeprio :: [(AnnotatedGoal, a, System) -> Bool]
+       rankingDeprio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
+     , stringRankingDeprio :: String
+     , functionsDeprio :: [(AnnotatedGoal, a, System) -> Bool]
      , stringsDeprio :: [String]
     }
     deriving ( Generic )
 
 instance Show (Deprio a) where
-    show d = intercalate ", " $ stringsDeprio d
+    show d = (stringRankingDeprio d) ++ " _ " ++ intercalate ", " (stringsDeprio d)
 
 instance Eq (Deprio a) where
     (==) _ _ = True
@@ -455,34 +459,34 @@ instance NFData (Deprio a) where
 
 instance Binary (Deprio a) where
     put d = put $ show d
-    get = return (Deprio [] [])
+    get = return (Deprio Nothing "" [] [])
 
-data Ranking = Ranking {
-          functionsRanking :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
-        , stringsRanking :: Maybe String
-    }
-    deriving (Show, Generic) 
+--data Ranking = Ranking {
+--          functionsRanking :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
+--        , stringsRanking :: Maybe String
+--    }
+---    deriving (Show, Generic) 
 
-instance Eq Ranking where
-    (==) _ _ = True
+--instance Eq Ranking where
+--    (==) _ _ = True
 
-instance Ord Ranking where
-    compare _ _ = EQ
-    (<=) _ _ = True
+--instance Ord Ranking where
+-- -   compare _ _ = EQ
+--    (<=) _ _ = True
 
-instance Binary Ranking where
-    put d = put $ show d
-    get = return (Ranking Nothing Nothing)
+--instance Binary Ranking where
+--    put d = put $ show d
+--    get = return (Ranking Nothing Nothing)
 
-instance NFData Ranking where
-    rnf _ = ()
+--instance NFData Ranking where
+--    rnf _ = ()
 
 
 -- | New type for Tactis inside the theory file
 data TacticI a = TacticI{
       _name :: String,
       _presort :: GoalRanking a,
-      _ranking :: Ranking, 
+    --  _ranking :: Ranking, 
       _prios :: [Prio a],
       _deprios :: [Deprio a]
     }
@@ -520,7 +524,7 @@ defaultHeuristic :: Bool -> (Heuristic ProofContext)
 defaultHeuristic = Heuristic . defaultRankings
 
 defaultTacticI :: TacticI ProofContext
-defaultTacticI = TacticI "default" (SmartRanking False) (Ranking Nothing Nothing) [] []
+defaultTacticI = TacticI "default" (SmartRanking False) [] []
 
 
 -- Default to "./oracle" in the current working directory.
@@ -669,7 +673,7 @@ listGoalRankingsDiff noOracle = M.foldMapWithKey
 
 
 filterHeuristic :: String -> [GoalRanking ProofContext]
-filterHeuristic ('{':t) = InternalTacticRanking (TacticI (takeWhile (/= '}') t) (SmartRanking False) (Ranking Nothing Nothing) [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
+filterHeuristic ('{':t) = InternalTacticRanking (TacticI (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
 filterHeuristic (c:t)   = (stringToGoalRanking False [c]):(filterHeuristic t)
 filterHeuristic ("")    = []
 

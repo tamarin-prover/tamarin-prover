@@ -45,3 +45,4 @@ stack.yaml.lock
 out/
 
 **/benchmark
+**/input
