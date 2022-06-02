@@ -23,14 +23,14 @@ etc/docker/Dockerfile-benchmark -> performs some benchmarks for the tamarin-plat
 (For Dockerfile-platform)
 
 ```
-docker pull protocolplatform/protocolplatform:latest
+docker pull robertkuennemann/sapicplusplatform:latest
 ```
 
 ## Run instructions
 
 1. Execute
 ```
-docker run protocolplatform/protocolplatform:latest
+docker run robertkuennemann/sapicplusplatform:latest
 ```
 
 2. Follow instructions.
