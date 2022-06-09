@@ -1,3 +1,10 @@
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts   #-}
 {-# LANGUAGE DeriveGeneric        #-}
@@ -181,7 +188,7 @@ instance HasFrees t => HasFrees (Fact t) where
     foldFreesOcc f c fa = foldFreesOcc f (show (factTag fa):c) (factTerms fa)
     mapFrees   f = traverse (mapFrees f)
 
-instance Apply t => Apply (Fact t) where
+instance Apply s t => Apply s (Fact t) where
     apply subst = fmap (apply subst)
 
 

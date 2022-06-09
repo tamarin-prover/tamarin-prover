@@ -1,0 +1,72 @@
+/*
+A small model of a multifactor authentication, with all the agents.
+Its U2F, with the following roles :
+ - Server S
+ - Platform (user's computer) P
+ - User U
+ - Yubikey token T
+
+<!> Single user scenario.
+*/
+
+theory U2F
+
+begin
+
+functions: pk/1, sign/2, getmess/1, checksign/2, succ/1
+
+equations:  getmess( sign(m, k )) = m,  checksign( sign(m, k ) ,pk(k)) = m
+
+let S =
+   in(~tls, <=log,=pass>);
+   new chall:bitstring;
+   out(~tls, chall);
+   in(~tls, signed:bitstring);
+   if checksign( signed, pk(u2fkey)) = <log,pass,chall> then
+      lock 'EvServer';
+      lookup 'EvServer' as cnt in
+      event ServerAccept(cnt);
+      insert 'EvServer', succ(cnt);
+      unlock 'EvServer'
+
+let P =
+  in(~kb, <lg:bitstring,pss:bitstring>);
+  out(~tls, <lg,pss>);
+  in(~tls, chall:bitstring);
+  out(~u2f, <lg,pss,chall>);
+  in(~u2f, signed:bitstring);
+  out(~tls, signed)
+
+let T =
+ in(~u2f, payload:bitstring);
+ out(~btn,'askpress');
+ in(~btn, 'pressed');
+ out(~u2f, sign( payload, u2fkey))
+
+
+let U =
+  lock 'EvToken';
+  lookup 'EvToken' as cnt in
+  event UserInit(cnt);
+  insert 'EvToken', succ(cnt);
+  unlock 'EvToken';
+  out(~kb, <log,pass>);
+  in(~btn, 'askpress');
+  out(~btn, 'pressed')
+
+process:
+new ~tls:channel; new ~u2f:channel; new ~kb:channel; new ~btn:channel; new log; new pass; new u2fkey;
+insert 'EvToken', 'zero';
+insert 'EvServer', 'zero';
+! ( S || U || T || P)
+
+
+lemma auth[reuse,use_induction]:
+ "All #i cnt. ServerAccept(cnt)@i ==> Ex #j cntb.
+      UserInit(cntb)@j                      "
+
+// lemma reach:
+//  exists-trace
+//  "Ex #i cnt. ServerAccept(cnt)@i"
+
+end

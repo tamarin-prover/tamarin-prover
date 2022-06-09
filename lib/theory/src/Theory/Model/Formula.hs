@@ -8,6 +8,7 @@
 {-# LANGUAGE ViewPatterns         #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE MultiParamTypeClasses#-}
 {-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
@@ -17,6 +18,8 @@
 -- Portability : GHC only
 --
 -- Types and operations for handling sorted first-order logic
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Theory.Model.Formula (
 
    -- * Formulas
@@ -28,7 +31,11 @@ module Theory.Model.Formula (
   , LNFormula
   , ProtoLNFormula
   , SyntacticLNFormula
+  , SyntacticNFormula
   , LFormula
+
+  -- * class
+  , Hinted(..)
 
   , quantify
   , openFormula
@@ -108,13 +115,20 @@ data ProtoFormula syn s c v = Ato (ProtoAtom syn (VTerm c (BVar v)))
                    | Not (ProtoFormula syn s c v)
                    | Conn !Connective (ProtoFormula syn  s c v) (ProtoFormula syn  s c v)
                    | Qua !Quantifier s (ProtoFormula syn  s c v)
-                   deriving ( Generic)
+                   deriving ( Generic )
 
 -- | First-order formulas in locally nameless representation with hints for the
 -- names/sorts of quantified variables.
 type Formula s c v = ProtoFormula Unit2 s c v
-
 type SyntacticFormula s c v = ProtoFormula SyntacticSugar s c v
+
+-- Classes
+----------
+
+-- | Types that provide hints of type (String,LSort) to recover the type and
+-- name of a bound variable.
+class Hinted v where
+    hint :: v -> (String,LSort)
 
 -- Folding
 ----------
@@ -126,7 +140,7 @@ foldFormula :: (ProtoAtom syn (VTerm c (BVar v)) -> b)
             -> (b -> b)
             -> (Connective -> b -> b -> b)
             -> (Quantifier -> s -> b -> b)
-            -> (ProtoFormula syn s c v)
+            -> ProtoFormula syn s c v
             -> b
 foldFormula fAto fTF fNot fConn fQua =
     go
@@ -158,19 +172,31 @@ foldFormulaScope fAto fTF fNot fConn fQua =
 -- Instances
 ------------
 
-{-
-instance Functor (Formula s c) where
-    fmap f = foldFormula (Ato . fmap (fmap (fmap (fmap f)))) TF Not Conn Qua
--}
+deriving instance (Show c, Show v, Show s) => Show (ProtoFormula SyntacticSugar s c v)
+deriving instance (Show c, Show v, Show s) => Show (ProtoFormula Unit2 s c v)
+
+deriving instance (Eq c, Eq v, Eq s) => Eq (ProtoFormula SyntacticSugar s c v)
+deriving instance (Eq c, Eq v, Eq s) => Eq (ProtoFormula Unit2 s c v)
+
+deriving instance (Ord c, Ord v, Ord s) => Ord (ProtoFormula SyntacticSugar s c v)
+deriving instance (Ord c, Ord v, Ord s) => Ord (ProtoFormula Unit2 s c v)
 
 deriving instance (NFData c, NFData v, NFData s) => NFData (ProtoFormula SyntacticSugar s c v)
-deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula SyntacticSugar s c v)
 deriving instance (NFData c, NFData v, NFData s) => NFData (ProtoFormula Unit2 s c v)
+
+deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula SyntacticSugar s c v)
 deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula Unit2 s c v)
+
+deriving instance (Data c, Data v, Data s) => Data (ProtoFormula SyntacticSugar s c v)
+deriving instance (Data c, Data v, Data s) => Data (ProtoFormula Unit2 s c v)
 
 instance (Foldable syn) => Foldable (ProtoFormula syn s c) where
     foldMap f = foldFormula (foldMap (foldMap (foldMap (foldMap f)))) mempty id
                             (const mappend) (const $ const id)
+
+instance (Functor syn) => Functor (ProtoFormula syn s c) where
+    fmap f = foldFormula (Ato . fmap (fmap (fmap (fmap f)))) TF Not Conn Qua
+
 
 -- | traverse formula down to the term level
 traverseFormula :: (Ord v, Ord c, Ord v', Applicative f, Traversable syn)
@@ -193,6 +219,9 @@ instance Traversable (Formula a s) where
                              (pure . TF) (liftA Not)
                              (liftA2 . Conn) ((liftA .) . Qua)
 -}
+
+instance Hinted LVar where
+    hint (LVar n s _) = (n,s)
 
 -- Abbreviations
 ----------------
@@ -228,7 +257,7 @@ type ProtoLFormula syn c = ProtoFormula syn (String, LSort) c LVar
 type LNFormula = Formula (String, LSort) Name LVar
 type ProtoLNFormula syn = ProtoLFormula syn Name
 type SyntacticLNFormula = ProtoLNFormula SyntacticSugar
-
+type SyntacticNFormula v = ProtoFormula SyntacticSugar (String, LSort) Name v
 
 -- | Change the representation of atoms.
 mapAtoms :: (Integer -> ProtoAtom syn (VTerm c (BVar v))
@@ -279,15 +308,6 @@ openFormulaPrefix f0 = case openFormula f0 of
 -- Instances
 ------------
 
-deriving instance Eq       LNFormula
-deriving instance Show     LNFormula
-deriving instance Ord      LNFormula
-
-deriving instance Eq       SyntacticLNFormula
-deriving instance Show     SyntacticLNFormula
-deriving instance Ord      SyntacticLNFormula
-deriving instance Data     SyntacticLNFormula
-
 instance HasFrees LNFormula where
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
@@ -298,11 +318,12 @@ instance HasFrees SyntacticLNFormula where
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
     mapFrees   f = traverseFormula (mapFrees   f)
 
-instance Apply LNFormula where
+instance Apply LNSubst LNFormula where
     apply subst = mapAtoms (const $ apply subst)
 
-instance Apply SyntacticLNFormula where
-    apply subst = mapAtoms (const $ apply subst )
+instance {-# OVERLAPPABLE #-} (Apply s (VTerm c v), Apply s (VTerm c (BVar v)), Apply s (syn (Term (Lit c (BVar v))))) => Apply s (ProtoFormula syn h c v)
+  where
+    apply subst = mapAtoms (const $ apply subst)
 
 ------------------------------------------------------------------------------
 -- Formulas modulo E and modulo AC
@@ -318,15 +339,16 @@ quantify x =
 
 -- | Create a universal quantification with a sort hint for the bound variable.
 forall :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
-forall hint x = Qua All hint . quantify x
+forall hint' x = Qua All hint' . quantify x
 
 -- | Create a existential quantification with a sort hint for the bound variable.
 exists :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
-exists hint x = Qua Ex hint . quantify x
+exists hint' x = Qua Ex hint' . quantify x
 
--- | Transform @forall@ and @exists@ into functions that operate on logical variables
-hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
-hinted f v@(LVar n s _) = f (n,s) v
+-- | Transform @forall@ and @exists@ into functions that operate on logical variables or other variables
+--   that have hasHint
+hinted :: Hinted v => ((String, LSort) -> v -> a) -> v -> a
+hinted f v = f (hint v) v
 
 -- | Convert to LNFormula, if possible.
 -- toLNFormula :: Formula s c0 (ProtoAtom s0 t0) -> Maybe (Formula s c0 (Atom t0))

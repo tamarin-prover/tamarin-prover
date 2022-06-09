@@ -2,35 +2,43 @@ theory SOC
 
 begin
 
-heuristic:p
+// Works wihtout the reuse in a minute
+
+//heuristic:S
 
 builtins: symmetric-encryption,asymmetric-encryption, locations-report
 
-functions: prog/2,list/2
+functions: prog/2
+//,list/2
 
-predicates: Report(x,y) <=> not(Ex z. y = <'loc',z>)
+predicates: Report(x,y) <=>  not(fst(y) = 'loc')
+// predicates: Report(x,y) <=> not(Ex z. y = <'loc',z>)
+
 
 let r=
-        in(pk(skV));                   // we begin by a Key Exchange
+        in(pkV);                   // we begin by a Key Exchange
         !(
 
         new shared_k;
-	event SessionP(pk(skV),shared_k);
-        let signed = report(aenc(shared_k,pk(skV))) in
-        event Poutput(<aenc(shared_k,pk(skV)),signed>);
-        out(<aenc(shared_k,pk(skV)),signed>);       // The secure channel is established
+	event SessionP(pkV,shared_k);
+        let signed = report(aenc(shared_k,pkV)) in
+        event Poutput(<aenc(shared_k,pkV),signed>);
+        out(<aenc(shared_k,pkV),signed>);       // The secure channel is established
 
          new storeP;
          insert storeP,init;
             !(lock storeP; lookup storeP as old_i in   // And we start the program sequential execution
-            in( senc(<ip,'input'>,shared_k) );
+
+            // in( senc(<ip,'input'>,=shared_k) );
+	    in(cypher);
+	    let <ip,'input'> = sdec(cypher, shared_k) in
             event Poutput(senc(<prog(ip,old_i),'output'>, shared_k));
             out(senc(<prog(ip,old_i),'output'>, shared_k));
-            insert storeP, list(ip,old_i); unlock storeP
+            insert storeP, <ip,old_i>; unlock storeP
             )
 
 
-        )@<'loc',pk(skV)>
+        )@<'loc',pkV>
 
 
 // Run part of the NSL on the verifier side.
@@ -38,8 +46,9 @@ let v =
     new skV;
     event HonestP(pk(skV));
     out(pk(skV));
-
-    in(<aenc(shared_k,pk(skV)),signed>);
+    // in(<aenc(shared_k,pk(=skV)),signed>);
+    in(<cypher,signed>);
+    let shared_k = adec(cypher,skV) in
     if  aenc(shared_k,pk(skV)) = check_rep(signed,<'loc',pk(skV)>) then
        (event Voutput(<aenc(shared_k,pk(skV)),signed>);
         event SessionV(pk(skV),shared_k);                  // Secure channel established
@@ -49,15 +58,19 @@ let v =
             new ip;
             event Input(senc(ip,shared_k));
             out(senc(<ip,'input'>,shared_k));
-            in(senc(<prog(ip,old_i),'output'>, shared_k));
+	    in(cypher2);
+	    let mess = sdec(cypher2,shared_k) in
+	    let <pr, 'output'> = mess in
+	    if pr = prog(ip,old_i) then
+//            in(senc(<prog(=ip,=old_i),'output'>, =shared_k));
             event Voutput(senc(<prog(ip,old_i),'output'>, shared_k));
-            insert storeV,list(ip,old_i); unlock storeV
+            insert storeV,<ip,old_i>; unlock storeV
         )
         )
 
 
 
-
+process:
 new init; ( (!r) || (!v))
 
 /* First some auxilliary lemmas, for sanity or to help in other proofs */
@@ -71,8 +84,16 @@ lemma secrecy[reuse]:
 
         )"
 
+lemma Reach:
+  exists-trace
+  "Ex #t1 h . Voutput(h)@t1"
+
+/*
 lemma Input[use_induction,reuse]:
 	"All #t1 ip shared_key . Input(senc(ip, shared_key))@t1 ==> (Ex #t2 pk . SessionV(pk,shared_key)@t2 & t2<t1)"
+
+*/
+/*
 
 lemma secrecy_computes2[reuse]:
         "not (
@@ -92,6 +113,7 @@ lemma secrecy_computes3[reuse]:
 
         )"
 
+*/
 lemma attested_computation:
 	"All #t1 h . Voutput(h)@t1 ==> (Ex #t2 . Poutput(h)@t2 & t2<t1)"
 

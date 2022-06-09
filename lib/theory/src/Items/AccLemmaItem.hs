@@ -14,11 +14,10 @@ import Data.Binary (Binary)
 import Data.Label as L
 import Text.PrettyPrint.Highlight
 import Theory.Text.Pretty
-import Theory.Constraint.Solver
 import Theory.Model
+import Lemma
 
 import Items.CaseTestItem
-import Items.LemmaItem
 
 ------------------------------------------------------------------------------
 -- Accountability Lemmas
@@ -44,14 +43,6 @@ prettyAccLemmaName l = case L.get aAttributes l of
       [] -> text (L.get aName l)
       as -> text (L.get aName l) <->
             (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
-  where
-    prettyLemmaAttribute SourceLemma        = text "sources"
-    prettyLemmaAttribute ReuseLemma         = text "reuse"
-    prettyLemmaAttribute InvariantLemma     = text "use_induction"
-    prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
-    prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
-    prettyLemmaAttribute LHSLemma           = text "left"
-    prettyLemmaAttribute RHSLemma           = text "right"
 
 prettyAccLemma :: HighlightDocument d => AccLemma -> d
 prettyAccLemma alem =

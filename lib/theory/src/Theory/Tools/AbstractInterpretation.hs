@@ -43,7 +43,7 @@ import           Theory.Text.Pretty
 
 -- | Higher-order combinator to construct abstract interpreters.
 interpretAbstractly
-    :: (Eq s, HasFrees i, Apply i, Show i)
+    :: (Eq s, HasFrees i, Apply LNSubst i, Show i)
     => ([Equal LNFact] -> [LNSubstVFresh])
     -- ^ Unification  of equalities over facts. We assume that facts with
     -- different tags are never unified.

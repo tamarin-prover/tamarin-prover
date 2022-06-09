@@ -9,17 +9,28 @@ These instructions define how to run the docker image.
   a [package](https://docs.docker.com/docker-for-mac/),
   or, if you have homebrew, via `brew cask install docker`.
 
+
+## Docker images
+
+There are three docker images:
+
+etc/docker/Dockerfile -> builds a docker with tamarin in it
+etc/docker/Dockerfile-platform -> builds a docker with tamarin, proverif, gsverif and deepsec in it
+etc/docker/Dockerfile-benchmark -> performs some benchmarks for the tamarin-platform docker
+
 ## Pull instructions
 
+(For Dockerfile-platform)
+
 ```
-TBD
+docker pull protocolplatform/protocolplatform:latest
 ```
 
 ## Run instructions
 
 1. Execute
 ```
-docker run tamarin
+docker run protocolplatform/protocolplatform:latest
 ```
 
 2. Follow instructions.

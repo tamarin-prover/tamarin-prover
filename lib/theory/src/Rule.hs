@@ -8,10 +8,6 @@ module Rule (
 
 import Items.RuleItem
 
-import GHC.Generics
-import Control.DeepSeq
-import Data.Binary
-
 import           Prelude                             hiding (id, (.))
 
 import           Data.List
@@ -22,7 +18,6 @@ import           Control.Basics
 import           Control.Category
 import           Control.Monad.Reader
 
-import           Extension.Data.Label                hiding (get)
 import qualified Extension.Data.Label                as L
 
 import           Theory.Model
@@ -120,12 +115,13 @@ closeIntrRule _   ir                                        = [ir]
 -- requires case distinctions are not computed here.
 closeRuleCache :: [LNGuarded]        -- ^ Restrictions to use.
                -> [LNGuarded]        -- ^ Source lemmas to use.
+               -> S.Set FactTag      -- ^ Fact tags forced to be injective
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> Bool               -- ^ Diff or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
@@ -136,8 +132,8 @@ closeRuleCache restrictions typAsms sig protoRules intrRules isdiff = -- trace (
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
 
     -- inj fact instances
-    injFactInstances =
-        simpleInjectiveFactInstances $ L.get cprRuleE <$> protoRules
+    injFactInstances = forcedInjFacts `S.union`
+        simpleInjectiveFactInstances (L.get cprRuleE <$> protoRules)
 
     -- precomputing the case distinctions: we make sure to only add safety
     -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case

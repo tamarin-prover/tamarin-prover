@@ -73,10 +73,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
         (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items)
   where
     h              = L.get diffThyHeuristic thy0
-    diffCacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
-    diffCacheRight its = closeRuleCache restrictionsRight (typAsms its) sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
-    cacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
-    cacheRight its = closeRuleCache restrictionsRight (typAsms its) sig (rightClosedRules its) (L.get diffThyCacheRight thy0) False
+    diffCacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
+    diffCacheRight its = closeRuleCache restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
+    cacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
+    cacheRight its = closeRuleCache restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) False
 
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
@@ -168,7 +168,8 @@ closeTheoryWithMaude sig thy0 autoSources =
       $ Theory (L.get thyName thy0) h sig (cache items) items (L.get thyOptions thy0)
   where
     h          = L.get thyHeuristic thy0
-    cache its  = closeRuleCache restrictions (typAsms its) sig (rules its) (L.get thyCache thy0) False
+    forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
+    cache its = closeRuleCache restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle

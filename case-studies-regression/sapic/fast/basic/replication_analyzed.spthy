@@ -2,10 +2,12 @@ theory Replication begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
+
+
 
 lemma onlyOneSecret:
   exists-trace
@@ -15,49 +17,26 @@ guarded formula characterizing all satisfying traces:
 "∃ #i #j x y. (Secret( x ) @ #i) ∧ (Secret( y ) @ #j) ∧ ¬(x = y)"
 */
 simplify
-solve( State_11( x ) ▶₀ #i )
-  case news_0_1
-  solve( State_11( y ) ▶₀ #j )
-    case news_0_1
+solve( !Semistate_1( ) ▶₀ #i )
+  case Init
+  solve( !Semistate_1( ) ▶₀ #j )
+    case Init
     SOLVED // trace found
   qed
 qed
 
 rule (modulo E) Init[color=#ffffff, process="!"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_[color=#ffffff, process="!"]:
-   [ State_( ) ] --> [ !Semistate_1( ) ]
+   [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) p_1_[color=#ffffff, process="!"]:
-   [ !Semistate_1( ) ] --> [ State_1( ) ]
+   [ !Semistate_1( ), Fr( s.1 ) ] --[ Secret( s.1 ) ]-> [ Out( s.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) news_0_1[color=#ffffff, process="new s;"]:
-   [ State_1( ), Fr( s ) ] --> [ State_11( s ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventSecrets_0_11[color=#ffffff,
-                                  process="event Secret( s );"]:
-   [ State_11( s ) ] --[ Secret( s ) ]-> [ State_111( s ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) outs_0_111[color=#ffffff, process="out(s);"]:
-   [ State_111( s ) ] --> [ State_1111( s ), Out( s ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1111[color=#ffffff, process="0"]:
-   [ State_1111( s ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) p_1_[color=#ffffff, process="!"]:
+     [ !Semistate_1( ), Fr( s ) ] --[ Secret( s ) ]-> [ Out( s ) ]
+  */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
@@ -68,7 +47,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -78,7 +57,7 @@ analyzing: examples/sapic/fast/basic/replication.spthy
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.055508216s
+  processing time: 0.01550528s
   onlyOneSecret (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -89,7 +68,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.055508216s
+  processing time: 0.01550528s
   onlyOneSecret (exists-trace): verified (4 steps)
 
 ==============================================================================

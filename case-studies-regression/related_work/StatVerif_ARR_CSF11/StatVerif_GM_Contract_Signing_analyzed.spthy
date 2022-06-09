@@ -2,8 +2,8 @@ theory StatVerif_GM_Contract_Signing begin
 
 // Function signature and definition of the equational theory E
 
-functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1, pair/2,
-           pcs/3, pk/1, sign/2, snd/1, true/0
+functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1[destructor],
+           pair/2, pcs/3, pk/1, sign/2, snd/1[destructor], true/0
 equations:
     check_getmsg(pk(xsk), sign(xsk, xm)) = xm,
     checkpcs(xc, pk(xsk), ypk, zpk, pcs(sign(xsk, xc), ypk, zpk)) = true,
@@ -376,6 +376,20 @@ solve( !TTP( skT ) ▶₁ #i )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -391,7 +405,7 @@ analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signi
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.556832061s
+  processing time: 0.566912329s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)
@@ -405,7 +419,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.556832061s
+  processing time: 0.566912329s
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

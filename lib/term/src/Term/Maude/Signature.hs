@@ -47,12 +47,12 @@ module Term.Maude.Signature (
 
   -- * pretty printing
   , prettyMaudeSig
+  , prettyMaudeSigExcept
   ) where
 
-import Term.Term
-import Term.LTerm
-import Term.Builtin.Rules
-import Term.SubtermRule
+import           Term.Builtin.Rules
+import           Term.LTerm
+import           Term.SubtermRule
 
 import Control.Monad.Fresh
 -- import Control.Applicative
@@ -183,10 +183,10 @@ enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
 -- Pretty Printing
 ------------------------------------------------------------------------------
 
-prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
-prettyMaudeSig sig = P.vcat
+prettyMaudeSigExcept :: P.HighlightDocument d => MaudeSig -> S.Set NoEqSym -> d
+prettyMaudeSigExcept sig excl = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
-    , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig)
+    , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig S.\\ excl)
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyCtxtStRule $ S.toList (stRules sig)
@@ -203,6 +203,13 @@ prettyMaudeSig sig = P.vcat
       , (enableXor,  "xor")
       ]
 
-    ppFunSymb (f,(k,priv)) = P.text $ BC.unpack f ++ "/" ++ show k ++ showPriv priv
-      where showPriv Private = " [private]"
-            showPriv Public  = ""
+    ppFunSymb (f,(k,priv,constr)) = P.text $ BC.unpack f ++ "/" ++ show k
+                                             ++ showAttr (priv,constr)
+      where
+            showAttr (Public,Destructor) = "[destructor]"
+            showAttr (Private,Destructor) = "[private,destructor]"
+            showAttr (Private,Constructor) = "[private,destructor]"
+            showAttr (Public,Constructor) = ""
+
+prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
+prettyMaudeSig sig  = prettyMaudeSigExcept sig S.empty

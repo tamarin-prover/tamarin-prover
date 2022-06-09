@@ -23,7 +23,7 @@ import Data.Either (lefts)
 -- | Parse a case test which is used in an accountability lemma.
 caseTest :: Parser CaseTest
 caseTest =  CaseTest <$> (symbol "test" *> identifier)
-                     <*> (colon *> doubleQuoted standardFormula)
+                     <*> (colon *> doubleQuoted (standardFormula msgvar nodevar))
 
 -- | Parse an accountability lemma.
 lemmaAcc :: Maybe FilePath -> Parser AccLemma
@@ -34,5 +34,5 @@ lemmaAcc workDir = try $ do
                _ <-  colon
                identifiers <- commaSep1 $ identifier
                _ <-  try (symbol "accounts for") <|> symbol "account for"
-               formula <-  doubleQuoted standardFormula
+               formula <-  doubleQuoted $ standardFormula msgvar nodevar
                return $ AccLemma name (lefts attributes) identifiers [] formula

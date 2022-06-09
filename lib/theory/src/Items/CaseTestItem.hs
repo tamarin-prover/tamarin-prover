@@ -12,10 +12,8 @@ import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
 import Data.Label as L
-import Theory.Constraint.Solver (GoalRanking)
 import Theory.Model
-
-import Items.PredicateItem
+import Theory.Syntactic.Predicate
 
 ------------------------------------------------------------------------------
 -- Case Tests

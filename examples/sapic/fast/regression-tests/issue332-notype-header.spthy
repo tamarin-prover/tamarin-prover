@@ -1,0 +1,13 @@
+theory test
+
+// Even when unused, the type newtype should be declared in the proverif output, as the macro process is always declared
+
+begin
+
+let P(x:newtype)=out(x)
+
+
+process:
+   0
+
+end

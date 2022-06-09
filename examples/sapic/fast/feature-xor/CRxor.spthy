@@ -38,6 +38,7 @@ let Responder =
        out(<h(na ⊕ ~k ⊕ ~nb), ~nb>)
        )
 
+process:
 new ~k; ! (Initiator || Responder)
 
 

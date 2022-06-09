@@ -163,9 +163,9 @@ quote cs = '`' : cs ++ "'"
 sortsClashCheck :: HasFrees t => String -> t -> WfErrorReport
 sortsClashCheck info t = case clashesOn removeSort id $ frees t of
     [] -> []
-    cs -> return $
+    cs -> return
             ( "sorts"
-            , text info $-$ (nest 2 $ numbered' $ map prettyVarList cs)
+            , text info $-$ nest 2 (numbered' $ map prettyVarList cs)
             )
   where
     removeSort lv = (lowerCase (lvarName lv), lvarIdx lv)
@@ -331,7 +331,7 @@ unboundCheck info ru
   where
     boundVars   = S.fromList $ frees (get rPrems ru)
     originatesFromLookup v = any (match v) $ get preAttributes $ get rInfo ru
-    match v (Process (ProcessComb (Lookup _ v') _ _ _))  = v == v'
+    match v (Process (ProcessComb (Lookup _ v') _ _ _))  = v == slvar v'
     match _ _ = False
     unboundVars = do
         v <- frees (get rConcs ru, get rActs ru, get rInfo ru)

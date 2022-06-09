@@ -3,11 +3,18 @@ theory UM_three_pass_combined begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, multiset
-functions: MAC/2, concat/2, first/1, fst/1, h/1, pair/2, second/1, snd/1
+functions: MAC/2, concat/2, first/1, fst/1[destructor], h/1, pair/2,
+           second/1, snd/1[destructor]
 equations:
     concat(first(x), second(x)) = x,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
 
 
 
@@ -826,6 +833,14 @@ solve( (∃ #l matchingComm.
   qed
 qed
 
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -841,7 +856,7 @@ analyzing: examples/ake/dh/UM_three_pass_combined.spthy
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 27.69925124s
+  processing time: 33.41183278s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 
@@ -853,7 +868,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 27.69925124s
+  processing time: 33.41183278s
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 

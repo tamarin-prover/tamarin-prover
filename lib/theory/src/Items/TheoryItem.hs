@@ -17,13 +17,14 @@ import Theory.Model.Restriction
 import Theory.Constraint.Solver
 
 import Items.ProcessItem
-import Items.PredicateItem
+import Theory.Syntactic.Predicate
 import Items.CaseTestItem
 import Items.AccLemmaItem
 import Lemma
 import           Prelude                             hiding (id, (.))
 import           Control.DeepSeq
 import           Prelude                             hiding (id, (.))
+import Items.ExportInfo
 
 ------------------------------------------------------------------------------
 -- Theories
@@ -35,8 +36,13 @@ type FormalComment = (String, String)
 
 -- | TranslationItems can be processes, accountability lemmas, and case tests
 data TranslationElement =
-        ProcessItem Process
+        ProcessItem PlainProcess
       | ProcessDefItem ProcessDef
+      | SignatureBuiltin String
+      | FunctionTypingInfo SapicFunSym
+      | ExportInfoItem ExportInfo
+      | DiffEquivLemma PlainProcess
+      | EquivLemma PlainProcess PlainProcess
       | AccLemmaItem AccLemma
       | CaseTestItem CaseTest
       deriving( Show, Eq, Ord, Generic, NFData, Binary )

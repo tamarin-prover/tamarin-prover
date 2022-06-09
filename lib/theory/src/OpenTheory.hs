@@ -42,7 +42,7 @@ removeTranslationItems thy =
           ,_thyItems = newThyItems
           ,_thyOptions =(L.get thyOptions thy)}
     where
-      newThyItems = map removeTranslationElement (filter isNoTranslationItem (L.get thyItems thy))
+      newThyItems = map removeTranslationElement (L.get thyItems thy)
       removeTranslationElement :: TheoryItem r p TranslationElement -> TheoryItem r p ()
       removeTranslationElement (TranslationItem _) = TranslationItem ()
       removeTranslationElement (RuleItem r) = RuleItem r
@@ -50,9 +50,6 @@ removeTranslationItems thy =
       removeTranslationElement (RestrictionItem rl) = RestrictionItem rl
       removeTranslationElement (TextItem t) = TextItem t
       removeTranslationElement (PredicateItem predi) = PredicateItem predi
-      isNoTranslationItem (TranslationItem _) = False
-      isNoTranslationItem _             = True
-
 
 --open translated theory again
 openTranslatedTheory :: OpenTranslatedTheory -> OpenTheory
@@ -386,7 +383,8 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False False
+defaultOption = Option False False False False False False False S.empty
+
 
 -- | Default theory
 defaultOpenTheory :: Bool -> OpenTheory
@@ -702,10 +700,14 @@ prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
 
 -- | Pretty print an open theory.
 prettyOpenTheory :: HighlightDocument d => OpenTheory -> d
-prettyOpenTheory =
-    prettyTheoryWithSapic prettySignaturePure
-                 (const emptyDoc) prettyOpenProtoRule prettyProof prettyTranslationElement
+prettyOpenTheory thy =
+    prettyTheory (prettySignaturePureExcept funsyms)
+                 (const emptyDoc) prettyOpenProtoRule prettyProof prettyTranslationElement thy
                  -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
+                 where
+                    funsyms = S.fromList $ map fst' $ theoryFunctionTypingInfos thy
+                        -- function symbols that are printed by sapic printer already
+                    fst' (a,_,_) = a
 
 -- | Pretty print an open theory.
 prettyOpenDiffTheory :: HighlightDocument d => OpenDiffTheory -> d

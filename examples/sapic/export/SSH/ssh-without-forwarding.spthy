@@ -1,0 +1,98 @@
+
+/*
+ * Protocol: SSH
+
+   Proverif : everything in a second.
+
+   Tamarin : everything in 1 minute
+*/
+
+
+
+theory temp
+
+begin
+
+builtins: diffie-hellman, symmetric-encryption, signing
+
+functions: hash/1, kdfPtoS(bitstring):skey, kdfStoP(bitstring):skey
+
+let P(pkS,~skP,pkP) =
+    new ~a;
+    let gA='g'^~a in
+    out(gA);
+    in(<sig,opks,B>);
+    if pkS=opks then
+        (
+	let h=hash(<pkS,gA,B>) in
+	let k=B^~a in
+	if verify(sig,<'server_sign',h>,pkS)=true then
+	   (
+	   event AcceptP(gA,B,pkS,pkP);
+	   event KeyP(k);
+	   let kPS:skey=kdfPtoS(<k,h>) in
+	   let kSP:skey=kdfStoP(<k,h>) in
+	   out(senc(<'user_auth',pkP>,kPS));
+	   in(userauth_answer);
+	   if sdec(userauth_answer,kSP)='userauth_pk_ok' then
+	        (
+	   	event AcceptP2(gA,B,pkS,pkP);
+		out(senc(<'user_answer',h,sign(h,~skP)>,kPS))
+		    )
+	    )
+	 )
+
+let S(~skS,pkS,pkP) =
+    in(gA);
+    new ~b;
+    let gB='g'^~b in
+    let h=hash(<pkS,gA,gB>) in
+    let k=gA^~b in
+    event AcceptS(gA,gB,pkS,pkP);
+    let sig=sign(<'server_sign',h>,~skS) in
+    out(<sig,pkS,gB>);
+    let kPS:skey=kdfPtoS(<k,h>) in
+    let kSP:skey=kdfStoP(<k,h>) in
+    in(userauth);
+    let mess=sdec(userauth,kPS) in
+    let <'user_auth',=pkP> = mess in
+	  out(senc('userauth_pk_ok',kSP));
+	  in(signans);
+	  let mess2=sdec(signans,kPS) in
+	  let <'user_answer',=h,sig2> = mess2 in
+	  if verify(sig2,h,pkP)=true then
+	      (
+	      event AcceptS2(gA,gB,pkS,pkP);
+	      event KeyS2(k)
+	      )
+
+process:
+ !(new ~skS; out(pk(~skS));
+       !(new ~skP; out(pk(~skP));
+           !(
+	    P(pk(~skS),~skP,pk(~skP))  | S(~skS,pk(~skS),pk(~skP))
+	    )
+	)
+  )
+
+
+lemma secretP[reuse]: //secrecy of the key
+  "(not (Ex k #i #j. (KeyP(k)@i & KU(k)@j)))"
+
+
+lemma injPS[reuse]: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)
+ "All a b skS skP #i. AcceptP(a,b,skS,skP)@i ==>
+    (Ex skP2 #j. #j<#i & AcceptS(a,b,skS,skP2)@j)"
+
+lemma injSP[reuse,use_induction]: // injectivity of final acceptance
+ "All a b skS skP #i. AcceptS2(a,b,skS,skP)@i ==>
+    (Ex #j. j<i & (AcceptP2(a,b,skS,skP)@j))
+"
+lemma secretS[reuse]: //secrecy of the key
+  "(not (Ex k #i #j. (KeyS2(k)@i & KU(k)@j)))"
+
+
+lemma executableS2: // sanity check
+ "not(Ex skS skP k h #i. AcceptS2(k,h,skS,skP)@i)"
+
+end

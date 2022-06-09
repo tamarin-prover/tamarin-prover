@@ -29,6 +29,14 @@ import Theory.Text.Parser.Rule
 import Theory.Text.Parser.Proof
 import Theory.Text.Parser.Signature
 
+import Data.Functor (($>))
+
+-- | Parse an arbitrary type consisting of simple constructors
+constructorp :: (Show a, Enum a, Bounded a) => Parser a
+constructorp = asum $ map (\x -> symbol_ (show x) $> x) constructorList
+  where
+    constructorList = enumFrom minBound
+
 -- | Parse a 'LemmaAttribute'.
 lemmaAttribute :: Bool -> Maybe FilePath -> Parser LemmaAttribute
 lemmaAttribute diff workDir = asum
@@ -38,8 +46,9 @@ lemmaAttribute diff workDir = asum
   , symbol "reuse"         *> pure ReuseLemma
   , symbol "diff_reuse"    *> pure ReuseDiffLemma
   , symbol "use_induction" *> pure InvariantLemma
-  , symbol "hide_lemma="   *> (HideLemma <$> identifier)
-  , symbol "heuristic="    *> (LemmaHeuristic <$> many1 (goalRanking diff workDir))
+  , symbol "hide_lemma" *> opEqual *> (HideLemma <$> identifier)
+  , symbol "heuristic"  *> opEqual *> (LemmaHeuristic <$> many1 (goalRanking diff workDir))
+  , symbol "output"  *> opEqual *> (LemmaModule <$> list constructorp)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
 --   , symbol "both"          *> pure BothLemma
@@ -59,9 +68,10 @@ protoLemma parseFormula workDir = skeletonLemma <$> (symbol "lemma" *> optional 
                       <*> doubleQuoted parseFormula
                       <*> (startProofSkeleton <|> pure (unproven ()))
 
+
 -- | Parse a lemma.
 lemma :: Maybe FilePath -> Parser (SyntacticLemma ProofSkeleton)
-lemma = protoLemma standardFormula
+lemma = protoLemma $ standardFormula msgvar nodevar
 
 -- | Parse a lemma w/o syntactic sugar
 plainLemma :: Maybe FilePath -> Parser (Lemma ProofSkeleton)

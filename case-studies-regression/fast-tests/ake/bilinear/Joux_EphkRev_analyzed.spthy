@@ -3,7 +3,8 @@ theory Joux_EphkRev begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing, multiset
-functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+functions: fst/1[destructor], pair/2, pk/1, sign/2, snd/1[destructor],
+           true/0, verify/3[destructor]
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
@@ -12,6 +13,12 @@ equations:
 
 
 section{* The Joux Protocol using Signatures*}
+
+
+
+
+
+
 
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ]
@@ -1040,7 +1047,7 @@ analyzing: examples/ake/bilinear/Joux_EphkRev.spthy
 analyzed: examples/ake/bilinear/Joux_EphkRev.spthy
 
   output:          examples/ake/bilinear/Joux_EphkRev.spthy.tmp
-  processing time: 22.293137574s
+  processing time: 26.269805134s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): falsified - found trace (14 steps)
 
@@ -1052,7 +1059,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux_EphkRev.spthy
 
   output:          examples/ake/bilinear/Joux_EphkRev.spthy.tmp
-  processing time: 22.293137574s
+  processing time: 26.269805134s
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): falsified - found trace (14 steps)
 

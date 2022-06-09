@@ -23,7 +23,8 @@ import           Prelude                             hiding (id, (.))
 
 data ProcessDef = ProcessDef
         { _pName            :: String
-        , _pBody            :: Process
+        , _pBody            :: PlainProcess
+        , _pVars            :: [SapicLVar]
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''ProcessDef])

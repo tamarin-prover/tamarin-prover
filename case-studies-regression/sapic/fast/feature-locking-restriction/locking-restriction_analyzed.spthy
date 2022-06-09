@@ -2,10 +2,14 @@ theory LockingRestriction begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
+
+
+
+
 
 lemma ANotReachable:
   all-traces "¬(∃ #t. A( ) @ #t)"
@@ -14,7 +18,7 @@ guarded formula characterizing all counter-examples:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-by solve( State_11( lock, lock.1 ) ▶₀ #t )
+by solve( State_111( lock, lock.1 ) ▶₀ #t )
 
 rule (modulo E) Init[color=#ffffff, process="lock 'P';"]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
@@ -24,31 +28,26 @@ rule (modulo E) Init[color=#ffffff, process="lock 'P';"]:
 rule (modulo E) lockP_0_[color=#ffffff, process="lock 'P';"]:
    [ State_( ), Fr( lock ) ]
   --[ Lock_0( '0', lock, 'P' ), Lock( '0', lock, 'P' ) ]->
-   [ State_1( lock ) ]
+   [ State_11( lock ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockP_0_1[color=#6c8040, process="lock 'P';"]:
-   [ State_1( lock ), Fr( lock.1 ) ]
+rule (modulo E) lockP_0_11[color=#6c8040, process="lock 'P';"]:
+   [ State_11( lock ), Fr( lock.1 ) ]
   --[ Lock_1( '1', lock.1, 'P' ), Lock( '1', lock.1, 'P' ) ]->
-   [ State_11( lock, lock.1 ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventA_0_11[color=#6c8040, process="event A( );"]:
-   [ State_11( lock, lock.1 ) ] --[ A( ) ]-> [ State_111( lock, lock.1 ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) unlockP_0_111[color=#6c8040, process="unlock 'P';"]:
    [ State_111( lock, lock.1 ) ]
-  --[ Unlock_1( '1', lock.1, 'P' ), Unlock( '1', lock.1, 'P' ) ]->
-   [ State_1111( lock, lock.1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1111[color=#6c8040, process="0"]:
-   [ State_1111( lock, lock.1 ) ] --> [ ]
+rule (modulo E) eventA_0_111[color=#6c8040, process="event A( );"]:
+   [ State_111( lock, lock.1 ) ] --[ A( ) ]-> [ State_1111( lock, lock.1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) unlockP_0_1111[color=#6c8040, process="unlock 'P';"]:
+   [ State_1111( lock, lock.1 ) ]
+  --[ Unlock_1( '1', lock.1, 'P' ), Unlock( '1', lock.1, 'P' ) ]->
+   [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -83,7 +82,7 @@ restriction locking_0:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -93,7 +92,7 @@ analyzing: examples/sapic/fast/feature-locking-restriction/locking-restriction.s
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.062385388s
+  processing time: 0.018212607s
   ANotReachable (all-traces): verified (2 steps)
 
 ------------------------------------------------------------------------------
@@ -104,7 +103,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.062385388s
+  processing time: 0.018212607s
   ANotReachable (all-traces): verified (2 steps)
 
 ==============================================================================
