@@ -37,7 +37,8 @@ let A = (
 let B = (
     let id = <b,a> in
     !( lock id;
-       in('r', <MH, SH, senc(<seq, m, pad, mac(<MH, SH, seq, m, pad>, kSign)>, kEnc)>);
+       in('r', <MH, SH, senc(<seq, m, pad, xmac>, =kEnc)>);
+       if xmac = mac(<MH, SH, seq, m, pad>, kSign) then
            event Seq_Recv(a, b, seq);
            event Recv(a, b, m);
            unlock id
@@ -45,7 +46,7 @@ let B = (
 )
 
 /* Main process */
-
+process:
 !(
 new a; new b;
 new kSign; new kEnc;
@@ -88,9 +89,9 @@ lemma all_received_were_sent:
 
 // All received messages were sent, and are not received twice (auto)
 lemma all_received_were_sent_injective:
-    "All A B t #i. 
+    "All A B t #i.
     Recv(A,B,t) @#i
-    ==> (Ex #j. Sent(A,B,t) @#j 
+    ==> (Ex #j. Sent(A,B,t) @#j
         & #j < #i
         & not (Ex A2 B2 #i2. Recv(A2,B2,t) @i2
                            & not (#i2 = #i)))"

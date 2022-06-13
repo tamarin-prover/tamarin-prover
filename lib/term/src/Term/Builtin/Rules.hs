@@ -89,7 +89,7 @@ xorRules = S.fromList
     zero  = fAppZero
 
 -- | The rewriting rules for standard subterm operators that are builtin.
-pairRules, symEncRules, asymEncRules, signatureRules, revealSignatureRules :: Set (CtxtStRule)
+pairRules, symEncRules, asymEncRules, signatureRules, revealSignatureRules, locationReportRules :: Set (CtxtStRule)
 pairRules = S.fromList
     [ fAppFst (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
     , fAppSnd (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,1]] x2) ]
@@ -98,8 +98,6 @@ asymEncRules   = S.fromList [ adec (aenc (x1, pk x2), x2) `CtxtStRule` (StRhs [[
 signatureRules = S.fromList [ verify (sign (x1,x2), x1, pk x2) `CtxtStRule` (StRhs [[0,0]] trueC) ]
 revealSignatureRules = S.fromList [ revealVerify (revealSign (x1,x2), x1, pk x2) `CtxtStRule` (StRhs [[0,0]] trueC),
                                     extractMessage (revealSign (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)]
-
-locationReportRules :: Set (CtxtStRule)
 locationReportRules = S.fromList [ check_rep (rep (x1,x2), x2) `CtxtStRule` (StRhs [[0,0]] x1),
                                    get_rep (rep (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
                                  ]

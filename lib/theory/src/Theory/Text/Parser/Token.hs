@@ -36,10 +36,15 @@ module Theory.Text.Parser.Token (
   , pubName
   , natName
 
+
+  , typep
   , sortedLVar
   , lvar
   , msgvar
   , nodevar
+  , sapicvar
+  , sapicpatternvar
+  , sapicnodevar
 
   , letIdentifier
 
@@ -111,7 +116,7 @@ module Theory.Text.Parser.Token (
   , parseFile
   , parseFileWState
   , parseString
-  ) where
+  ,opLessTerm) where
 
 import           Prelude             hiding (id, (.))
 
@@ -136,6 +141,8 @@ import qualified Text.Parsec.Token   as T
 import           Theory
 import qualified Control.Monad.Catch as Catch
 import Data.Functor.Identity
+import Theory.Sapic.Pattern
+import Theory.Sapic
 
 
 ------------------------------------------------------------------------------
@@ -387,6 +394,41 @@ pubName = singleQuoted identifier
 natName :: Parser String
 natName = try (symbol "%" *> singleQuoted identifier)
 
+-- | Parse a Sapic Type
+typep :: Parser SapicType
+typep = ( try (symbol defaultSapicTypeS) *> return Nothing)
+            <|> Just <$> identifier
+
+-- | Parse a variable in sapic that is typed:
+--   first parse for lvar, then parse for one more type
+--   so:
+--   ~x: foo
+--   $x: bar
+--   x: foo
+--   are all valid, but
+--   x: pub: foo
+--   is not
+sapicvar :: Parser SapicLVar
+sapicvar = do
+        v <- lvar
+        t <- option Nothing $ colon *> typep
+        return (SapicLVar v t)
+
+sapicpatternvar :: Parser PatternSapicLVar
+sapicpatternvar = do
+        eq <- option False parseq
+        v  <- sapicvar
+        return (if eq then PatternMatch v else PatternBind v)
+        where parseq = do
+                _ <- opEqual
+                return True
+
+
+sapicnodevar :: Parser SapicLVar
+sapicnodevar = do
+    v <- nodevar
+    return (SapicLVar v defaultSapicNodeType)
+
 
 -- Term Operators
 -----------------
@@ -421,6 +463,10 @@ opXor = symbol_ "XOR" <|> symbol_ "⊕"
 -- | The timepoint comparison operator @<@.
 opLess :: Parser ()
 opLess = symbol_ "<"
+
+-- | The multiset comparison operator @(<)@. 
+opLessTerm :: Parser ()
+opLessTerm = symbol_ "(<)"
 
 -- | The action-at-timepoint operator \@.
 opAt :: Parser ()

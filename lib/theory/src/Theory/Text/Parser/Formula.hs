@@ -27,70 +27,93 @@ import           Theory.Text.Parser.Token
 
 import           Theory.Text.Parser.Fact
 import           Theory.Text.Parser.Term
+import Control.Basics
 
+smallerp :: Ord v => Parser v -> Parser (ProtoAtom SyntacticSugar (Term (Lit Name v)))
+smallerp varp = do
+    mset <- enableMSet . sig <$> getState
+    unless mset (fail "Need builtins: multiset to use multiset comparisson operator.")
+    a <- try (termp <* opLessTerm)
+    b <- termp
+    return $ (Syntactic . Pred) $ protoFact Linear "Smaller" [a,b]
+  where
+    termp =  msetterm False (vlit varp)
+
+------------------------------------------------------------------------------
+-- Parsing Standard and Guarded Formulas
+------------------------------------------------------------------------------
 -- | Parse an atom with possibly bound logical variables.
-blatom :: Parser (SyntacticAtom BLTerm)
-blatom = fmap (fmapTerm (fmap Free)) <$> asum
+blatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticAtom (VTerm Name (BVar v)))
+blatom varp nodep = fmap (fmapTerm (fmap Free)) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
-  , flip Action <$> try (fact llit <* opAt)        <*> nodevarTerm   <?> "action atom"
-  , Syntactic . Pred <$> try (fact llit)                             <?> "predicate atom"
-  , Subterm     <$> try (msetterm False llit <* opSubterm) <*> msetterm False llit <?> "subterm predicate"
+  , flip Action <$> try (fact (vlit varp) <* opAt)        <*> nodevarTerm   <?> "action atom"
+  , Syntactic . Pred <$> try (fact (vlit (try varp <|> nodep) ))                    <?> "predicate atom"
+      -- Predicates can be called for timepoints in addition to other logical vars.
+      -- Note that lexemes that are ambigous (e.g., a variable without a sort)
+      -- will be interpreted by varp.
+  , Subterm     <$> try (msetterm False (vlit varp) <* opSubterm) <*> msetterm False (vlit varp) <?> "subterm predicate"    
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
-  , EqE         <$> try (msetterm False llit <* opEqual) <*> msetterm False llit <?> "term equality"
+  , smallerp varp <?> "multiset comparisson"
+  , EqE         <$> try (termp <* opEqual) <*> termp <?> "term equality"
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where
-    nodevarTerm = lit . Var <$> nodevar
+    nodevarTerm = lit . Var <$> nodep
+    termp =  msetterm False (vlit varp)
+
 
 -- | Parse an atom of a formula.
-fatom :: Parser  SyntacticLNFormula
-fatom = asum
-  [ pure lfalse <* opLFalse
-  , pure ltrue  <* opLTrue
-  , Ato <$> try blatom
+fatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
+fatom varp nodep = asum
+  [ lfalse <$ opLFalse
+  , ltrue <$ opLTrue
+  , Ato <$> try (blatom varp nodep)
   , quantification
-  , parens iff
+  , parens (iff varp nodep)
   ]
   where
     quantification = do
-        q <- (pure forall <* opForall) <|> (pure exists <* opExists)
-        vs <- many1 lvar <* dot
-        f  <- iff
+        q <- (forall <$ opForall) <|> (exists <$ opExists)
+        vs <- many1 (try varp <|> nodep)  <* dot
+        f  <- iff varp nodep
         return $ foldr (hinted q) f vs
 
 -- | Parse a negation.
-negation :: Parser SyntacticLNFormula
-negation = opLNot *> (Not <$> fatom) <|> fatom
+negation :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
+negation varp nodep = opLNot *> (Not <$> fatom varp nodep) <|> fatom varp nodep
 
 -- | Parse a left-associative sequence of conjunctions.
-conjuncts :: Parser SyntacticLNFormula
-conjuncts = chainl1 negation ((.&&.) <$ opLAnd)
+conjuncts :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
+conjuncts varp nodep = chainl1 (negation varp nodep) ((.&&.) <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
-disjuncts :: Parser SyntacticLNFormula
-disjuncts = chainl1 conjuncts ((.||.) <$ opLOr)
+disjuncts :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
+disjuncts varp nodep = chainl1 (conjuncts varp nodep) ((.||.) <$ opLOr)
 
 -- | An implication.
-imp :: Parser SyntacticLNFormula
-imp = do
-  lhs <- disjuncts
-  asum [ opImplies *> ((lhs .==>.) <$> imp)
+imp :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticNFormula v)
+imp varp nodep = do
+  lhs <- disjuncts varp nodep
+  asum [ opImplies *> ((lhs .==>.) <$> imp varp nodep)
        , pure lhs ]
 
 -- | An logical equivalence.
-iff :: Parser SyntacticLNFormula
-iff = do
-  lhs <- imp
-  asum [opLEquiv *> ((lhs .<=>.) <$> imp), pure lhs ]
+-- iff :: Parser SyntacticLNFormula
+-- iff :: Parser (VTerm n v) -> Parser (SyntacticFormula (String, LSort) n v)
+iff :: (Hinted v, Ord v) => Parser v  -> Parser v -> Parser (SyntacticNFormula v)
+iff varp nodep = do
+  lhs <- imp varp nodep
+  asum [opLEquiv *> ((lhs .<=>.) <$> imp varp nodep), pure lhs ]
 
 -- | Parse a standard formula.
-standardFormula :: Parser (SyntacticLNFormula)
+-- standardFormula :: Parser (SyntacticLNFormula)
+standardFormula :: (Hinted v, Ord v) => Parser v  -> Parser v -> Parser (SyntacticNFormula v)
 standardFormula = iff
 
 
 plainFormula :: Parser LNFormula
 plainFormula = try $ do
-    lnf <- toLNFormula <$> standardFormula
+    lnf <- toLNFormula <$> standardFormula msgvar nodevar
     case lnf of
         Nothing -> fail "Syntactic sugar is not allowed, guarded formula expected."
         Just lnf' -> return lnf'

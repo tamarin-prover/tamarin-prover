@@ -2,6 +2,9 @@
 {-# LANGUAGE TemplateHaskell    #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE DeriveAnyClass     #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -77,7 +80,7 @@ type Less = (NodeId, NodeId)
 -- Instances
 ------------
 
-instance Apply Edge where
+instance Apply LNSubst Edge where
     apply subst (Edge from to) = Edge (apply subst from) (apply subst to)
 
 instance HasFrees Edge where
@@ -166,7 +169,7 @@ instance HasFrees Goal where
         DisjG x       -> DisjG    <$> mapFrees f x
         SubtermG p    -> SubtermG <$> mapFrees f p
 
-instance Apply Goal where
+instance Apply LNSubst Goal where
     apply subst goal = case goal of
         ActionG i fa  -> ActionG  (apply subst i) (apply subst fa)
         PremiseG p fa -> PremiseG (apply subst p) (apply subst fa)

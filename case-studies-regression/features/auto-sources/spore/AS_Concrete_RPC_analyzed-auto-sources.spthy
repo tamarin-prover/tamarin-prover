@@ -2,12 +2,15 @@ theory BanConcreteAndrewSecureRPC begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, pred/1, sdec/2, senc/2, snd/1, succ/1
+functions: fst/1[destructor], pair/2, pred/1, sdec/2[destructor], senc/2,
+           snd/1[destructor], succ/1
 equations:
     fst(<x.1, x.2>) = x.1,
     pred(succ(x)) = x,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -451,6 +454,10 @@ solve( StateB( $A, $B, ~sk, na, ~kabp ) ▶₀ #i )
   qed
 qed
 
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -466,7 +473,7 @@ analyzing: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 23.589006094s
+  processing time: 27.543285445s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)
@@ -482,7 +489,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 23.589006094s
+  processing time: 27.543285445s
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

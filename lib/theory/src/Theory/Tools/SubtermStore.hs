@@ -7,6 +7,9 @@
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt, Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -551,7 +554,7 @@ instance HasFrees SubtermStore where
                 <*> pure oldNegSt
 
 
-instance Apply SubtermStore where
+instance Apply LNSubst SubtermStore where
     apply subst (SubtermStore a b c d e) = SubtermStore (apply subst a) (apply subst b) (apply subst c) d e
 
 

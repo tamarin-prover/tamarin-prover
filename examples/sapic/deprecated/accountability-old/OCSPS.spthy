@@ -1,0 +1,339 @@
+theory OCSPS
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+
+functions: pk/1, sk/1[private], sign/2, verify/3, tlssign/2, tlsverify/3, true/0, S/1, NormalAct/0, UnusualAct/0
+
+equations: verify(sign(m, sk(i)), m, pk(sk(i)))=true,tlsverify(tlssign(m, sk), m, pk(sk))=true
+
+heuristic: p /* heuristic for SAPIC */
+
+rule Init_: // [process=top-level] Init 
+ [] --[Init()]-> [State_()]
+
+rule Par_: // [process=top-level] Par 
+ [State_()] --[]-> [State_1(), State_2()]
+
+rule Par_1 [color=#569DC0]: // [process=Proto] Par 
+ [State_1()] --[]-> [State_11(), State_12()]
+
+rule Par_11 [color=#569DC0]: // [process=Proto] Par 
+ [State_11()] --[]-> [State_111(), State_112()]
+
+rule Par_111 [color=#569DC0]: // [process=Proto] Par 
+ [State_111()] --[]-> [State_1111(), State_1112()]
+
+rule new_sk_1111 [color=#2CD719]: // [process=S] new sk 
+ [State_1111(), Fr(sk)] --[]-> [State_11111(sk)]
+
+rule insert_ocspstatus_signpksk_sk_CA__good__11111 [color=#2CD719]: // [process=S] insert <'ocspstatus', sign(pk(sk), sk('CA'))>,'good' 
+ [State_11111(sk)] --[Insert(<'ocspstatus', sign(pk(sk), sk('CA'))>, 'good')]-> [State_111111(sk)]
+
+rule event_Secretsignpksk_sk_CA__sk_111111 [color=#2CD719]: // [process=S] event Secret(sign(pk(sk), sk('CA')), sk) 
+ [State_111111(sk)] --[Secret(sign(pk(sk), sk('CA')), sk)]-> [State_1111111(sk)]
+
+rule out_pksk_1111111 [color=#2CD719]: // [process=S] out pk(sk) 
+ [State_1111111(sk)] --[]-> [State_11111111(sk), Out(pk(sk))]
+
+rule Par_11111111 [color=#2CD719]: // [process=S] Par 
+ [State_11111111(sk)] --[]-> [State_111111111(sk), State_111111112(sk)]
+
+rule Rep_0_111111111 [color=#2CD719]: // [process=S] Rep, 0 
+ [State_111111111(sk)] --[]-> [!Semistate_1111111111(sk)]
+
+rule Rep_1_111111111 [color=#2CD719]: // [process=S] Rep, 1 
+ [!Semistate_1111111111(sk)] --[]-> [State_1111111111(sk)]
+
+rule lock_unhacked__1111111111 [color=#2CD719]: // [process=S] lock 'unhacked' 
+ [State_1111111111(sk), Fr(~lock7)] --[Lock($7, ~lock7, 'unhacked'), Lock_7($7, ~lock7, 'unhacked')]-> [State_11111111111(~lock7, sk)]
+
+rule out_signpksk_sk_CA__11111111111 [color=#2CD719]: // [process=S] out sign(pk(sk), sk('CA')) 
+ [State_11111111111(~lock7, sk)] --[]-> [State_111111111111(~lock7, sk), Out(sign(pk(sk), sk('CA')))]
+
+rule new_content_111111111111 [color=#2CD719]: // [process=S] new content 
+ [State_111111111111(~lock7, sk), Fr(content)] --[]-> [State_1111111111111(~lock7, content, sk)]
+
+rule in_m2_1111111111111 [color=#2CD719]: // [process=S] in m2 
+ [State_1111111111111(~lock7, content, sk), In(m2)] --[]-> [State_11111111111111(~lock7, content, m2, sk)]
+
+rule out_m2_11111111111111 [color=#2CD719]: // [process=S] out m2 
+ [State_11111111111111(~lock7, content, m2, sk)] --[]-> [State_111111111111111(~lock7, content, m2, sk), Out(m2)]
+
+rule unlock_unhacked__111111111111111 [color=#2CD719]: // [process=S] unlock 'unhacked' 
+ [State_111111111111111(~lock7, content, m2, sk)] --[Unlock($7, ~lock7, 'unhacked'), Unlock_7($7, ~lock7, 'unhacked')]-> [State_1111111111111111(~lock7, content, m2, sk)]
+
+rule Zero_1111111111111111 [color=#2CD719]: // [process=S] Zero 
+ [State_1111111111111111(~lock7, content, m2, sk)] --[]-> []
+
+rule lock_unhacked__111111112 [color=#2CD719]: // [process=S] lock 'unhacked' 
+ [State_111111112(sk), Fr(~lock15)] --[Lock($15, ~lock15, 'unhacked'), Lock_15($15, ~lock15, 'unhacked')]-> [State_1111111121(~lock15, sk)]
+
+rule lock_ocspstatus__1111111121 [color=#2CD719]: // [process=S] lock 'ocspstatus' 
+ [State_1111111121(~lock15, sk), Fr(~lock14)] --[Lock($14, ~lock14, 'ocspstatus'), Lock_14($14, ~lock14, 'ocspstatus')]-> [State_11111111211(~lock14, ~lock15, sk)]
+
+rule lock_time__11111111211 [color=#2CD719]: // [process=S] lock 'time' 
+ [State_11111111211(~lock14, ~lock15, sk), Fr(~lock13)] --[Lock($13, ~lock13, 'time'), Lock_13($13, ~lock13, 'time')]-> [State_111111112111(~lock13, ~lock14, ~lock15, sk)]
+
+rule lookup_time_as_t_0_111111112111 [color=#2CD719]: // [process=S] lookup 'time' as ~t, 0 
+ [State_111111112111(~lock13, ~lock14, ~lock15, sk)] --[IsIn('time', ~t)]-> [State_1111111121111(~lock13, ~lock14, ~lock15, ~t, sk)]
+
+rule lookup_time_as_t_1_111111112111 [color=#2CD719]: // [process=S] lookup 'time' as ~t, 1 
+ [State_111111112111(~lock13, ~lock14, ~lock15, sk)] --[IsNotSet('time')]-> [State_1111111121112(~lock13, ~lock14, ~lock15, sk)]
+
+rule event_Corrupted_S__1111111121111 [color=#2CD719]: // [process=S] event Corrupted('S') 
+ [State_1111111121111(~lock13, ~lock14, ~lock15, ~t, sk)] --[Corrupted('S')]-> [State_11111111211111(~lock13, ~lock14, ~lock15, ~t, sk)]
+
+rule insert_ocspstatus_signpksk_sk_CA__revoked__11111111211111 [color=#2CD719]: // [process=S] insert <'ocspstatus', sign(pk(sk), sk('CA'))>,'revoked' 
+ [State_11111111211111(~lock13, ~lock14, ~lock15, ~t, sk)] --[Insert(<'ocspstatus', sign(pk(sk), sk('CA'))>, 'revoked')]-> [State_111111112111111(~lock13, ~lock14, ~lock15, ~t, sk)]
+
+rule event_Learnsk_111111112111111 [color=#2CD719]: // [process=S] event Learn(sk) 
+ [State_111111112111111(~lock13, ~lock14, ~lock15, ~t, sk)] --[Learn(sk)]-> [State_1111111121111111(~lock13, ~lock14, ~lock15, ~t, sk)]
+
+rule out_sk_1111111121111111 [color=#2CD719]: // [process=S] out sk 
+ [State_1111111121111111(~lock13, ~lock14, ~lock15, ~t, sk)] --[]-> [State_11111111211111111(~lock13, ~lock14, ~lock15, ~t, sk), Out(sk)]
+
+rule new_tn_11111111211111111 [color=#2CD719]: // [process=S] new ~tn 
+ [State_11111111211111111(~lock13, ~lock14, ~lock15, ~t, sk), Fr(~tn)] --[]-> [State_111111112111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)]
+
+rule out_tn_111111112111111111 [color=#2CD719]: // [process=S] out ~tn 
+ [State_111111112111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)] --[]-> [State_1111111121111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk), Out(~tn)]
+
+rule event_Timetn_1111111121111111111 [color=#2CD719]: // [process=S] event Time(~tn) 
+ [State_1111111121111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)] --[Time(~tn)]-> [State_11111111211111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)]
+
+rule insert_time_tn_11111111211111111111 [color=#2CD719]: // [process=S] insert 'time',~tn 
+ [State_11111111211111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)] --[Insert('time', ~tn)]-> [State_111111112111111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)]
+
+rule unlock_time__111111112111111111111 [color=#2CD719]: // [process=S] unlock 'time' 
+ [State_111111112111111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)] --[Unlock($13, ~lock13, 'time'), Unlock_13($13, ~lock13, 'time')]-> [State_1111111121111111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)]
+
+rule unlock_ocspstatus__1111111121111111111111 [color=#2CD719]: // [process=S] unlock 'ocspstatus' 
+ [State_1111111121111111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)] --[Unlock($14, ~lock14, 'ocspstatus'), Unlock_14($14, ~lock14, 'ocspstatus')]-> [State_11111111211111111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)]
+
+rule Zero_11111111211111111111111 [color=#2CD719]: // [process=S] Zero 
+ [State_11111111211111111111111(~lock13, ~lock14, ~lock15, ~t, ~tn, sk)] --[]-> []
+
+rule Zero_1111111121112 [color=#2CD719]: // [process=S] Zero 
+ [State_1111111121112(~lock13, ~lock14, ~lock15, sk)] --[]-> []
+
+rule Rep_0_1112 [color=#11EC28]: // [process=OCSP] Rep, 0 
+ [State_1112()] --[]-> [!Semistate_11121()]
+
+rule Rep_1_1112 [color=#11EC28]: // [process=OCSP] Rep, 1 
+ [!Semistate_11121()] --[]-> [State_11121()]
+
+rule in_signpksk_sk_CA__11121 [color=#11EC28]: // [process=OCSP] in sign(pk(sk), sk('CA')) 
+ [State_11121(), In(sign(pk(sk), sk('CA')))] --[]-> [State_111211(sk)]
+
+rule lock_time__111211 [color=#11EC28]: // [process=OCSP] lock 'time' 
+ [State_111211(sk), Fr(~lock9)] --[Lock($9, ~lock9, 'time'), Lock_9($9, ~lock9, 'time')]-> [State_1112111(~lock9, sk)]
+
+rule lock_ocspstatus__1112111 [color=#11EC28]: // [process=OCSP] lock 'ocspstatus' 
+ [State_1112111(~lock9, sk), Fr(~lock8)] --[Lock($8, ~lock8, 'ocspstatus'), Lock_8($8, ~lock8, 'ocspstatus')]-> [State_11121111(~lock8, ~lock9, sk)]
+
+rule lookup_time_as_t_0_11121111 [color=#11EC28]: // [process=OCSP] lookup 'time' as ~t, 0 
+ [State_11121111(~lock8, ~lock9, sk)] --[IsIn('time', ~t)]-> [State_111211111(~lock8, ~lock9, ~t, sk)]
+
+rule lookup_time_as_t_1_11121111 [color=#11EC28]: // [process=OCSP] lookup 'time' as ~t, 1 
+ [State_11121111(~lock8, ~lock9, sk)] --[IsNotSet('time')]-> [State_111211112(~lock8, ~lock9, sk)]
+
+rule lookup_ocspstatus_signpksk_sk_CA__as_status_0_111211111 [color=#11EC28]: // [process=OCSP] lookup <'ocspstatus', sign(pk(sk), sk('CA'))> as status, 0 
+ [State_111211111(~lock8, ~lock9, ~t, sk)] --[IsIn(<'ocspstatus', sign(pk(sk), sk('CA'))>, status)]-> [State_1112111111(~lock8, ~lock9, ~t, sk, status)]
+
+rule lookup_ocspstatus_signpksk_sk_CA__as_status_1_111211111 [color=#11EC28]: // [process=OCSP] lookup <'ocspstatus', sign(pk(sk), sk('CA'))> as status, 1 
+ [State_111211111(~lock8, ~lock9, ~t, sk)] --[IsNotSet(<'ocspstatus', sign(pk(sk), sk('CA'))>)]-> [State_1112111112(~lock8, ~lock9, ~t, sk)]
+
+rule if_eqstatus_good__0_1112111111 [color=#11EC28]: // [process=OCSP] if eq(status, 'good'), 0 
+ [State_1112111111(~lock8, ~lock9, ~t, sk, status)] --[Pred_eq(status, 'good')]-> [State_11121111111(~lock8, ~lock9, ~t, sk, status)]
+
+rule if_eqstatus_good__1_1112111111 [color=#11EC28]: // [process=OCSP] if eq(status, 'good'), 1 
+ [State_1112111111(~lock8, ~lock9, ~t, sk, status)] --[Pred_not_eq(status, 'good')]-> [State_11121111112(~lock8, ~lock9, ~t, sk, status)]
+
+rule out_signpksk_sk_CA__t_good_sign_signpksk_sk_CA__t_good_sk_OCSP___11121111111 [color=#11EC28]: // [process=OCSP] out <<sign(pk(sk), sk('CA')), ~t, 'good'>, sign(<sign(pk(sk), sk('CA')), ~t, 'good'>, sk('OCSP'))> 
+ [State_11121111111(~lock8, ~lock9, ~t, sk, status)] --[]-> [State_111211111111(~lock8, ~lock9, ~t, sk, status), Out(<<sign(pk(sk), sk('CA')), ~t, 'good'>, sign(<sign(pk(sk), sk('CA')), ~t, 'good'>, sk('OCSP'))>)]
+
+rule unlock_time__111211111111 [color=#11EC28]: // [process=OCSP] unlock 'time' 
+ [State_111211111111(~lock8, ~lock9, ~t, sk, status)] --[Unlock($9, ~lock9, 'time'), Unlock_9($9, ~lock9, 'time')]-> [State_1112111111111(~lock8, ~lock9, ~t, sk, status)]
+
+rule unlock_ocspstatus__1112111111111 [color=#11EC28]: // [process=OCSP] unlock 'ocspstatus' 
+ [State_1112111111111(~lock8, ~lock9, ~t, sk, status)] --[Unlock($8, ~lock8, 'ocspstatus'), Unlock_8($8, ~lock8, 'ocspstatus')]-> [State_11121111111111(~lock8, ~lock9, ~t, sk, status)]
+
+rule Zero_11121111111111 [color=#11EC28]: // [process=OCSP] Zero 
+ [State_11121111111111(~lock8, ~lock9, ~t, sk, status)] --[]-> []
+
+rule out_signpksk_sk_CA__t_revoked_sign_signpksk_sk_CA__t_revoked_sk_OCSP___11121111112 [color=#11EC28]: // [process=OCSP] out <<sign(pk(sk), sk('CA')), ~t, 'revoked'>, sign(<sign(pk(sk), sk('CA')), ~t, 'revoked'>, sk('OCSP'))> 
+ [State_11121111112(~lock8, ~lock9, ~t, sk, status)] --[]-> [State_111211111121(~lock8, ~lock9, ~t, sk, status), Out(<<sign(pk(sk), sk('CA')), ~t, 'revoked'>, sign(<sign(pk(sk), sk('CA')), ~t, 'revoked'>, sk('OCSP'))>)]
+
+rule unlock_time__111211111121 [color=#11EC28]: // [process=OCSP] unlock 'time' 
+ [State_111211111121(~lock8, ~lock9, ~t, sk, status)] --[Unlock($9, ~lock9, 'time'), Unlock_9($9, ~lock9, 'time')]-> [State_1112111111211(~lock8, ~lock9, ~t, sk, status)]
+
+rule unlock_ocspstatus__1112111111211 [color=#11EC28]: // [process=OCSP] unlock 'ocspstatus' 
+ [State_1112111111211(~lock8, ~lock9, ~t, sk, status)] --[Unlock($8, ~lock8, 'ocspstatus'), Unlock_8($8, ~lock8, 'ocspstatus')]-> [State_11121111112111(~lock8, ~lock9, ~t, sk, status)]
+
+rule Zero_11121111112111 [color=#11EC28]: // [process=OCSP] Zero 
+ [State_11121111112111(~lock8, ~lock9, ~t, sk, status)] --[]-> []
+
+rule out_signpksk_sk_CA__t_unknown_sign_signpksk_sk_CA__t_unknown_sk_OCSP___1112111112 [color=#11EC28]: // [process=OCSP] out <<sign(pk(sk), sk('CA')), ~t, 'unknown'>, sign(<sign(pk(sk), sk('CA')), ~t, 'unknown'>, sk('OCSP'))> 
+ [State_1112111112(~lock8, ~lock9, ~t, sk)] --[]-> [State_11121111121(~lock8, ~lock9, ~t, sk), Out(<<sign(pk(sk), sk('CA')), ~t, 'unknown'>, sign(<sign(pk(sk), sk('CA')), ~t, 'unknown'>, sk('OCSP'))>)]
+
+rule Zero_11121111121 [color=#11EC28]: // [process=OCSP] Zero 
+ [State_11121111121(~lock8, ~lock9, ~t, sk)] --[]-> []
+
+rule Zero_111211112 [color=#11EC28]: // [process=OCSP] Zero 
+ [State_111211112(~lock8, ~lock9, sk)] --[]-> []
+
+rule in_signpksk_sk_CA__L_t_status_sign_signpksk_sk_CA__L_t_status_sk_OCSP___112 [color=#45D1E2]: // [process=Judge] in <<sign(pk(sk), sk('CA')), ~L_t, status>, sign(<sign(pk(sk), sk('CA')), ~L_t, status>, sk('OCSP'))> 
+ [State_112(), In(<<sign(pk(sk), sk('CA')), ~L_t, status>, sign(<sign(pk(sk), sk('CA')), ~L_t, status>, sk('OCSP'))>)] --[]-> [State_1121(~L_t, sk, status)]
+
+rule lock_time__1121 [color=#45D1E2]: // [process=Judge] lock 'time' 
+ [State_1121(~L_t, sk, status), Fr(~lock7)] --[Lock($7, ~lock7, 'time'), Lock_7($7, ~lock7, 'time')]-> [State_11211(~L_t, ~lock7, sk, status)]
+
+rule lookup_time_as_L_tc_0_11211 [color=#45D1E2]: // [process=Judge] lookup 'time' as ~L_tc, 0 
+ [State_11211(~L_t, ~lock7, sk, status)] --[IsIn('time', ~L_tc)]-> [State_112111(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule lookup_time_as_L_tc_1_11211 [color=#45D1E2]: // [process=Judge] lookup 'time' as ~L_tc, 1 
+ [State_11211(~L_t, ~lock7, sk, status)] --[IsNotSet('time')]-> [State_112112(~L_t, ~lock7, sk, status)]
+
+rule if_eqstatus_good__0_112111 [color=#45D1E2]: // [process=Judge] if eq(status, 'good'), 0 
+ [State_112111(~L_t, ~L_tc, ~lock7, sk, status)] --[Pred_eq(status, 'good')]-> [State_1121111(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule if_eqstatus_good__1_112111 [color=#45D1E2]: // [process=Judge] if eq(status, 'good'), 1 
+ [State_112111(~L_t, ~L_tc, ~lock7, sk, status)] --[Pred_not_eq(status, 'good')]-> [State_1121112(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule event_BlameEmpty_1121111 [color=#45D1E2]: // [process=Judge] event BlameEmpty() 
+ [State_1121111(~L_t, ~L_tc, ~lock7, sk, status)] --[BlameEmpty()]-> [State_11211111(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule event_JudgedL_t_signpksk_sk_CA__11211111 [color=#45D1E2]: // [process=Judge] event Judged(~L_t, sign(pk(sk), sk('CA'))) 
+ [State_11211111(~L_t, ~L_tc, ~lock7, sk, status)] --[Judged(~L_t, sign(pk(sk), sk('CA')))]-> [State_112111111(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule Zero_112111111 [color=#45D1E2]: // [process=Judge] Zero 
+ [State_112111111(~L_t, ~L_tc, ~lock7, sk, status)] --[]-> []
+
+rule if_eqstatus_revoked__0_1121112 [color=#45D1E2]: // [process=Judge] if eq(status, 'revoked'), 0 
+ [State_1121112(~L_t, ~L_tc, ~lock7, sk, status)] --[Pred_eq(status, 'revoked')]-> [State_11211121(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule if_eqstatus_revoked__1_1121112 [color=#45D1E2]: // [process=Judge] if eq(status, 'revoked'), 1 
+ [State_1121112(~L_t, ~L_tc, ~lock7, sk, status)] --[Pred_not_eq(status, 'revoked')]-> [State_11211122(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule event_BlameS_11211121 [color=#45D1E2]: // [process=Judge] event BlameS() 
+ [State_11211121(~L_t, ~L_tc, ~lock7, sk, status)] --[BlameS()]-> [State_112111211(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule event_JudgedL_t_signpksk_sk_CA__112111211 [color=#45D1E2]: // [process=Judge] event Judged(~L_t, sign(pk(sk), sk('CA'))) 
+ [State_112111211(~L_t, ~L_tc, ~lock7, sk, status)] --[Judged(~L_t, sign(pk(sk), sk('CA')))]-> [State_1121112111(~L_t, ~L_tc, ~lock7, sk, status)]
+
+rule Zero_1121112111 [color=#45D1E2]: // [process=Judge] Zero 
+ [State_1121112111(~L_t, ~L_tc, ~lock7, sk, status)] --[]-> []
+
+rule Zero_11211122 [color=#45D1E2]: // [process=Judge] Zero 
+ [State_11211122(~L_t, ~L_tc, ~lock7, sk, status)] --[]-> []
+
+rule Zero_112112 [color=#45D1E2]: // [process=Judge] Zero 
+ [State_112112(~L_t, ~lock7, sk, status)] --[]-> []
+
+rule Rep_0_12 [color=#9F76CD]: // [process=Clock] Rep, 0 
+ [State_12()] --[]-> [!Semistate_121()]
+
+rule Rep_1_12 [color=#9F76CD]: // [process=Clock] Rep, 1 
+ [!Semistate_121()] --[]-> [State_121()]
+
+rule lock_time__121 [color=#9F76CD]: // [process=Clock] lock 'time' 
+ [State_121(), Fr(~lock7)] --[Lock($7, ~lock7, 'time'), Lock_7($7, ~lock7, 'time')]-> [State_1211(~lock7)]
+
+rule new_tn_1211 [color=#9F76CD]: // [process=Clock] new ~tn 
+ [State_1211(~lock7), Fr(~tn)] --[]-> [State_12111(~lock7, ~tn)]
+
+rule out_tn_12111 [color=#9F76CD]: // [process=Clock] out ~tn 
+ [State_12111(~lock7, ~tn)] --[]-> [State_121111(~lock7, ~tn), Out(~tn)]
+
+rule event_Timetn_121111 [color=#9F76CD]: // [process=Clock] event Time(~tn) 
+ [State_121111(~lock7, ~tn)] --[Time(~tn)]-> [State_1211111(~lock7, ~tn)]
+
+rule insert_time_tn_1211111 [color=#9F76CD]: // [process=Clock] insert 'time',~tn 
+ [State_1211111(~lock7, ~tn)] --[Insert('time', ~tn)]-> [State_12111111(~lock7, ~tn)]
+
+rule unlock_time__12111111 [color=#9F76CD]: // [process=Clock] unlock 'time' 
+ [State_12111111(~lock7, ~tn)] --[Unlock($7, ~lock7, 'time'), Unlock_7($7, ~lock7, 'time')]-> [State_121111111(~lock7, ~tn)]
+
+rule Zero_121111111 [color=#9F76CD]: // [process=Clock] Zero 
+ [State_121111111(~lock7, ~tn)] --[]-> []
+
+rule event_Corrupted_OCSP__2: // [process=top-level] event Corrupted('OCSP') 
+ [State_2()] --[Corrupted('OCSP')]-> [State_21()]
+
+rule out_c_sk_OCSP__0_21: // [process=top-level] out 'c',sk('OCSP'), 0 
+ [State_21(), In('c')] --[ChannelInEvent('c')]-> [Out(sk('OCSP')), State_211()]
+
+rule out_c_sk_OCSP__1_21: // [process=top-level] out 'c',sk('OCSP'), 1 
+ [State_21()] --[]-> [Semistate_21(), Message('c',sk('OCSP'))]
+
+rule out_c_sk_OCSP__2_21: // [process=top-level] out 'c',sk('OCSP'), 2 
+ [Semistate_21(), Ack('c',sk('OCSP'))] --[]-> [State_211()]
+
+rule Zero_211: // [process=top-level] Zero 
+ [State_211()] --[]-> []
+
+restriction set_in:
+ "(All #t3 x y . ((IsIn(x, y)@#t3 ==> (Ex #t2 . ((Insert(x, y)@#t2 & (#t2 < #t3 & (All #t1 yp . ((Insert(x, yp)@#t1 ==> (#t1 < #t2 | (#t1 = #t2 | #t3 < #t1))))))))))))"
+
+restriction set_notin:
+ "(All #t3 x . ((IsNotSet(x)@#t3 ==> (All #t1 y . ((Insert(x, y)@#t1 ==> #t3 < #t1))))))"
+
+restriction locking_7:
+ "(All #t1 #t3 l lp p pp x . (((Lock_7(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_7(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_15:
+ "(All #t1 #t3 l lp p pp x . (((Lock_15(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_15(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_14:
+ "(All #t1 #t3 l lp p pp x . (((Lock_14(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_14(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_13:
+ "(All #t1 #t3 l lp p pp x . (((Lock_13(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_13(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_9:
+ "(All #t1 #t3 l lp p pp x . (((Lock_9(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_9(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction locking_8:
+ "(All #t1 #t3 l lp p pp x . (((Lock_8(p, l, x)@#t1 & Lock(pp, lp, x)@#t3) ==> ((#t1 < #t3 & (Ex #t2 . ((Unlock_8(p, l, x)@#t2 & (#t1 < #t2 & (#t2 < #t3 & ((All #t0 pp . ((Unlock(pp, l, x)@#t0 ==> #t0 = #t2))) & ((All #t0 lpp pp . ((Lock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t0 = #t1 | #t2 < #t0))))) & (All #t0 lpp pp . ((Unlock(pp, lpp, x)@#t0 ==> (#t0 < #t1 | (#t2 < #t0 | #t2 = #t0))))))))))))) | (#t3 < #t1 | #t1 = #t3)))))"
+
+restriction immeadiate_in:
+ "(All #i a b . ((Pred_eq(a, b)@#i ==> a = b)))"
+
+restriction predicate_not_eq:
+ "(All #i a b . ((Pred_not_eq(a, b)@#i ==> not(a = b))))"
+
+restriction single_session:
+ "(All #i #j . (((Init()@#i & Init()@#j) ==> #i = #j)))"
+restriction no_corrupt_ca:
+ "not((Ex #i . (Corrupted('CA')@#i)))"
+
+lemma acc_S_excl_0_1 :
+ all-traces
+"not(((Ex #i #j cert t . ((Judged(t, cert)@#i & BlameS()@#j))) & not((Ex #i #j cert t . ((Judged(t, cert)@#i & BlameS()@#j))))))"
+
+lemma acc_S_exh :
+ all-traces
+"((Ex #i #j cert t . ((Judged(t, cert)@#i & BlameS()@#j))) | not((Ex #i #j cert t . ((Judged(t, cert)@#i & BlameS()@#j)))))"
+
+lemma acc_S_suf_0_0 :
+ exists-trace
+"(((Ex #c0 . (Corrupted('S')@#c0)) & T) & not(not((Ex #i #j #k #l cert sk t . ((Judged(t, cert)@#i & (Secret(cert, sk)@#j & (Learn(sk)@#k & (Time(t)@#l & #k < #l)))))))))"
+
+lemma acc_S_ver_empty_1 :
+ all-traces
+"(not((Ex #i #j cert t . ((Judged(t, cert)@#i & BlameS()@#j)))) ==> not((Ex #i #j #k #l cert sk t . ((Judged(t, cert)@#i & (Secret(cert, sk)@#j & (Learn(sk)@#k & (Time(t)@#l & #k < #l))))))))"
+
+lemma acc_S_ver_nonempty_0 :
+ all-traces
+"((Ex #i #j cert t . ((Judged(t, cert)@#i & BlameS()@#j))) ==> not(not((Ex #i #j #k #l cert sk t . ((Judged(t, cert)@#i & (Secret(cert, sk)@#j & (Learn(sk)@#k & (Time(t)@#l & #k < #l)))))))))"
+
+lemma acc_S_min_0_0_0 :
+ all-traces
+"not((not(not((Ex #i #j #k #l cert sk t . ((Judged(t, cert)@#i & (Secret(cert, sk)@#j & (Learn(sk)@#k & (Time(t)@#l & #k < #l)))))))) & ((All #c0 . ((Corrupted('S')@#c0 ==> F))) & T)))"
+
+lemma acc_S_uniq_0 :
+ all-traces
+"((Ex #i #j cert t . ((Judged(t, cert)@#i & BlameS()@#j))) ==> (Ex #c0 . ((Corrupted('S')@#c0 & T))))"
+end

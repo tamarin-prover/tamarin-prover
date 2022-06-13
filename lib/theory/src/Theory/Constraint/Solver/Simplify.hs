@@ -45,6 +45,7 @@ import           Control.Monad.Disj
 import           Control.Monad.Reader
 import           Control.Monad.State                (gets)
 
+import           Safe                           (headMay)
 
 import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
@@ -71,8 +72,10 @@ simplifySystem = do
        else do
         -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
-        -- Remove equation split goals that do not exist anymore
-        removeSolvedSplitGoals    
+        -- Remove equation split goals that do not exist anymore        
+        removeSolvedSplitGoals
+        -- Add ordering constraint from injective facts
+        addNonInjectiveFactInstances        
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -487,8 +490,7 @@ freshOrdering = do
       connectNodeToFreshes el ((nid, containing):xs) r@(get rPrems -> prems) =
         case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (filter notFresh prems), t `el` t'] of
           Just nid1 -> nid1 : connectNodeToFreshes el xs r
-          _         ->        connectNodeToFreshes el xs r
-      
+          _         ->        connectNodeToFreshes el xs r      
       notFresh (factTag -> FreshFact) = False
       notFresh _                      = True
 
@@ -628,11 +630,67 @@ simpInjectiveFactEqMon = do
             ((b, s),(_,t)) <- zip ss tt  -- the b and _ are automatically the same
             ]
 
+-- | Compute all less relations implied by injective fact instances.
+--
+-- Formally, they are computed as follows. Let 'f' be a fact symbol with
+-- injective instances. Let i and k be temporal variables ordered
+-- according to
+--
+--   i < k
+--
+-- and let there be an edge from (i,u) to (k,w) for some indices u and w
+-- corresponding to fact f(t,...).
+-- If:
+--    -  j<k & f(t,...) occurs at j in prems, then j<i (j<>i as in i f occurs in concs).
+--    -  i<j & f(t,...) occurs at j concs, then k<j.
+nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId)]
+nonInjectiveFactInstances ctxt se = do
+    Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
+    let kFaPrem            = nodeConcFact c se
+        kTag               = factTag kFaPrem
+        kTerm              = firstTerm kFaPrem
+        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
+        injFacts           = get pcInjectiveFactInsts ctxt
+    guard (kTag `S.member` S.map fst injFacts)
+--    j <- S.toList $ D.reachableSet [i] less
+    (j, _) <- M.toList $ get sNodes se
+    -- check that j<k
+    guard  (k `S.member` D.reachableSet [j] less)
+    let isCounterExample checkRule = (j /= i) && (j /= k) &&
+                           maybe False checkRule (M.lookup j $ get sNodes se)
+        checkRuleJK jRu    = (
+                           -- check that f(t,...) occurs at j in prems and j<k
+                           any conflictingFact (get rPrems jRu ++ get rConcs jRu) &&
+                           (k `S.member` D.reachableSet [j] less) &&
+                            nonUnifiableNodes j i
+                           )
+        checkRuleIJ jRu    = (
+                           -- check that f(t,...) occurs at j in concs and i<j
+                           any conflictingFact (get rPrems jRu ++  get rConcs jRu) &&
+                           (j `S.member` D.reachableSet [i] less) &&
+                            nonUnifiableNodes k j
+                           )
+    if (isCounterExample checkRuleJK) then return (j,i)
+      else do
+         guard (isCounterExample checkRuleIJ)
+         return (k,j)
+    -- (guard (isCounterExample checkRuleConcs)
+    --  return (k,j))
+--    insertLess k i
+--    return (i, j, k) -- counter-example to unique fact instances
+  where
+    less      = rawLessRel se
+    firstTerm = headMay . factTerms
+    runMaude   = (`runReader` get pcMaudeHandle ctxt)
+    nonUnifiableNodes :: NodeId -> NodeId -> Bool
+    nonUnifiableNodes i j = maybe False (not . runMaude) $
+        (unifiableRuleACInsts) <$> M.lookup i (get sNodes se)
+                               <*> M.lookup j (get sNodes se)
 
-
-
-
-
-
-
+addNonInjectiveFactInstances :: Reduction ()
+addNonInjectiveFactInstances = do
+  se <- gets id
+  ctxt <- ask
+  let list = nonInjectiveFactInstances ctxt se
+  mapM_ (uncurry insertLess) list
 

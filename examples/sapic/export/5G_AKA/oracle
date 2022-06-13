@@ -1,0 +1,468 @@
+#!/usr/bin/python3
+
+import re
+import os
+import sys
+debug = True
+
+lines = sys.stdin.readlines()
+lemma = sys.argv[1]
+
+# INPUT:
+# - lines contain a list of "%i:goal" where "%i" is the index of the goal
+# - lemma contain the name of the lemma under scrutiny
+# OUTPUT:
+# - (on stdout) a list of ordered index separated by EOL
+
+
+rank = []             # list of list of goals, main list is ordered by priority
+maxPrio = 111
+for i in range(0,maxPrio):
+  rank.append([])
+
+# SOURCES AND REUSE LEMMAS
+
+# if lemma == "sqn_ue_invariance" or \
+#      lemma == "sqn_hss_invariance" or \
+#      lemma == "sqn_ue_src" or \
+#      lemma == "sqn_hss_src":
+#   for line in lines:
+#     num = line.split(':')[0]
+#     if re.match('.*L_PureState\(.*', line): rank[90].append(num)
+#     elif re.match('.*State_1211111111111111112111\(.*', line): rank[95].append(num)
+#     elif re.match('.*State_12111111111111111121\(.*', line): rank[95].append(num)
+#     elif re.match('.*St_1_HSS\(.*', line): rank[95].append(num)
+
+     # pri 2. solve( State_12111111111111111121 @last  over L_Pure
+
+
+# Prio order:
+# vr <i
+# exists dif
+# State_
+# L_CellLocked
+
+# In case 2, it is always the snd one, count, that needs to be solved
+if lemma == "true_sqn_ue_nodecrease":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*\(last\(#j.*', line): rank[110].append(num)
+    elif re.match('.*Sqn_UE_Change\(.*', line): rank[109].append(num)
+    elif re.match('.*\(#vr.* < #i\).*', line): rank[108].append(num)
+#    elif re.match('.*\(#i < #vr.*', line): rank[80].append(num)
+    elif re.match('.*∃ dif..*', line): rank[107].append(num)
+    elif re.match('.*State.*_.*', line): rank[105].append(num)
+    elif re.match('.*L_CellLocked.*', line): rank[101].append(num)
+    elif re.match('.*L_PureState\(.*Sqnj.*', line): rank[95].append(num)
+    elif re.match('.*L_PureState\(.*count.1.*', line): rank[90].append(num)
+    elif re.match('.*L_PureState\(.*count.*', line): rank[80].append(num)
+#    elif re.match('.*L_PureState\(.*count.1.*#vr.', line): rank[0].append(num)
+    # elif re.match('.*L_PureState\(.*count.1.*#vr', line): rank[70].append(num)
+    # elif re.match('.*L_PureState\(.*count.*#vr.11', line): rank[71].append(num)
+    # elif re.match('.*L_PureState\(.*count.1.*#j', line): rank[70].append(num)
+    # elif re.match('.*L_PureState\(.*Sqni.*#vr.6', line): rank[70].append(num) # added for the proverif version
+    # elif re.match('.*L_PureState\(.*Sqni.*#vr.11', line): rank[70].append(num) # added for the proverif version
+    # elif re.match('.*State_121111111111111111211\(.*', line): rank[101].append(num)
+    # elif re.match('.*L_PureState\(.*count.*#vr', line): rank[50].append(num)
+    # elif re.match('.* State_121111111111111111211111111111111111\(.*#j.1', line): rank[101].append(num)
+    # elif re.match('.* State_12111111111111111211111111111111111\(.*#i', line): rank[101].append(num)
+
+
+elif lemma == "gsverif_sqn_hss_nodecrease":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*\(last\(#j.*', line): rank[110].append(num)
+    elif re.match('.*Sqn_HSS_Change\(.*', line): rank[109].append(num)
+    elif re.match('.*∃ dif..*', line): rank[107].append(num)
+    elif re.match('.*State_.*_.*', line): rank[105].append(num)
+
+    elif re.match('.*L_CellLocked.*', line): rank[106 ].append(num)
+    elif re.match('.*L_PureState\(.*\+.*\+.*\+', line): rank[0].append(num)
+    elif re.match('.*L_PureState\(.*\+.*\+.*', line): rank[90].append(num)
+    elif re.match('.*L_PureState\(.*', line): rank[80].append(num)
+
+elif lemma == "gsverif_lemma":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*\(last\(#j.*', line): rank[110].append(num)
+    elif re.match('.*CounterGS\(.*', line): rank[109].append(num)
+    elif re.match('.*=.*', line): rank[108].append(num)
+    elif re.match('.*L_PureState\( ~sqn_root, y \).*', line): rank[106].append(num)
+    elif re.match('.*L_PureState\( ~supi, count \).*', line): rank[80].append(num)
+    elif re.match('.*L_PureState\( .*, \'one\' \).*', line): rank[80].append(num)
+    elif re.match('.*∃ dif..*', line): rank[107].append(num)
+    elif re.match('.*State_.*\( StateChannel,.*', line): rank[106].append(num)
+    elif re.match('.*State_.*_.*', line): rank[105].append(num)
+    elif re.match('.*L_CellLocked.*', line): rank[107].append(num)
+    elif re.match('.*L_PureState\(.*\+.*\+.*\+', line): rank[0].append(num)
+    elif re.match('.*L_PureState\(.*\+.*\+.*', line): rank[90].append(num)
+    elif re.match('.*L_PureState\(.*\+.*', line): rank[85].append(num)
+
+
+
+# AGREEMENTS LEMMAS
+
+elif lemma == "true_injectiveagreement_ue_seaf_kseaf_keyConf_noKeyRev_noChanRev":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+#    elif re.match('.*L_CellLocked.*', line): rank[99].append(num)
+#    elif re.match('.*L_PureState\(.*~sqn_root.*', line): rank[99].append(num)
+#    elif re.match('.*Sqn_HSS\(.*,.*,.*,.*,.* ~.*', line): rank[99].append(num)
+    elif re.match('.*!HSS\(.*', line): rank[98].append(num)
+    elif re.match('.*!KU\( f3\(~k,.*', line) : rank[95].append(num)
+    elif re.match('.*Message\( ~secureChan,.*<~k, .*\'air\'.*', line): rank[95].append(num)
+#    elif re.match('.*St_2_UE\(.*', line): rank[92].append(num)
+    elif re.match('.*CommitConf\(.*', line): rank[92].append(num)
+    elif re.match('.*!KU\( f5\(.*', line) or \
+	 re.match('.*!KU\( f5_star\(.*', line): rank[90].append(num)
+    elif re.match('.*!KU\( ~sqn_root.*', line): rank[89].append(num)
+    elif re.match('.*!KU\( KDF\(<f3\(.*', line): rank[70].append(num)
+    elif re.match('.*!KU\( KDF\(KDF\(<f3\(.*', line): rank[87].append(num)
+    elif re.match('.*!KU\( f1\(KDF\(KDF\(<f3\(~k.*', line): rank[87].append(num)
+    elif re.match('.*!KU\( f3\(~k,.*', line) : rank[87].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*secureChan,.*~cid\).*vr.20.*', line): rank[75].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*secureChan,.*~cid\).*vr.24.*', line): rank[75].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*secureChan,.*~cid.1\)', line): rank[75].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*secureChan,.*~cid.2\)', line): rank[75].append(num)
+    elif re.match('.*State_12111111111111111211111111111111111111111111111111111111\(.*#i2', line): rank[95].append(num)
+
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.22.*', line): rank[94].append(num)
+
+
+    elif re.match('.*Message\( ~secureChan,.*<~k, .*\'ac\'.*', line): rank[74].append(num)
+    elif re.match('.*cid,.*\'ac\'.*', line): rank[73].append(num)
+    elif re.match('.*cid,.*\'aia\'.*vr.21.*', line): rank[72].append(num)
+    elif re.match('.*cid,.*\'aia\'.*vr.18.*', line): rank[72].append(num)
+#    elif re.match('.*cid,.*\'aia\'.*vr.22.*', line): rank[70].append(num)
+    elif re.match('.*cid,.*\'air\'.*', line): rank[71].append(num)
+
+# elif lemma == "weakagreement_ue_seaf_keyConf_noRev" or \
+#      lemma == "weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev" or \
+#      lemma == "weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev":
+#   for line in lines:
+#     num = line.split(':')[0]
+#     if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+#     elif re.match('.*Sqn_HSS\(.*~sqn_root, ~sqn_root.*', line): rank[99].append(num)
+#     elif re.match('.*Sqn_HSS\(.*,.*,.*,.*,.* ~.*', line): rank[99].append(num)
+#     elif re.match('.*!HSS\(.*', line): rank[98].append(num)
+#     elif re.match('.*!KU\( f5\(.*', line) or \
+# 	 re.match('.*!KU\( f5_star\(.*', line): rank[90].append(num)
+#     elif re.match('.*!KU\( ~sqn_root.*', line): rank[89].append(num)
+#     elif re.match('.*St_2_UE\(.*', line): rank[88].append(num)
+#     elif re.match('.*Sqn_UE\(.*', line): rank[88].append(num)
+#     elif re.match('.*!KU\( KDF\(<f3\(.*', line): rank[87].append(num)
+#     elif re.match('.*!KU\( KDF\(KDF\(<f3\(.*', line): rank[87].append(num)
+#     elif re.match('.*!KU\( f1\(KDF\(KDF\(<f3\(~k.*', line): rank[87].append(num)
+#     elif re.match('.*!KU\( f3\(~k*', line) : rank[87].append(num)
+#     elif re.match('.*St_1_UE\(.*', line): rank[84].append(num)
+#     elif re.match('.*St_1_SEAF\(.*', line): rank[84].append(num)
+#     elif re.match('.*St_3_SEAF\(.*', line): rank[84].append(num)
+#     elif re.match('.*~~>.*', line): rank[80].append(num)
+#     elif re.match('.*Sec\(.*', line): rank[50].append(num)
+#     elif re.match('.*RcvS\( ~idSN.*', line): rank[48].append(num)
+#     elif re.match('.*RcvS\(.*', line): rank[47].append(num)
+#     elif ("noKeyRev" in lemma and re.match('.*!KU\( f1\(.*', line)): rank[46].append(num)
+#     elif ("noKeyRev" in lemma and re.match('.*Sqn_HSS\(.*', line)): rank[45].append(num)
+#     elif re.match('.*!KU\( \(f5\(.*', line) or \
+# 	 re.match('.*!KD\( \(f5\(.*', line): rank[44].append(num)
+#     elif re.match('.*!Ltk_Sym\(.*', line): rank[40].append(num)
+#     elif re.match('.*!KU\( f4\(.*', line): rank[30].append(num)
+#     elif re.match('.*St_2_SEAF\(.*', line): rank[25].append(num)
+#     elif re.match('.*St_1_HSS\(.*', line): rank[25].append(num)
+#     elif re.match('.*!KU\( KDF\(.*', line): rank[22].append(num)
+#     elif re.match('.*!KU\( ~RAN.*', line): rank[20].append(num)
+#     elif re.match('.*!KU\( ~sup.*', line): rank[10].append(num)
+#     elif re.match('.*!KU\( f1\(.*', line): rank[8].append(num)
+#     elif re.match('.*Sqn_HSS\(.*', line): rank[7].append(num)
+#     elif re.match('.*!KU\( aenc\(.*', line): rank[6].append(num)
+#     elif re.match('.*!KU\( ~sup.*', line): rank[5].append(num)
+#     elif re.match('.*!KU\( ~sk.*', line): rank[4].append(num)
+
+# elif lemma == "weakagreement_ue_seaf_noRev":
+#   for line in lines:
+#     num = line.split(':')[0]
+#     if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+#     elif re.match('.*Sqn_HSS\(.*~sqn_root, ~sqn_root.*', line): rank[99].append(num)
+#     elif re.match('.*Sqn_HSS\(.*,.*,.*,.*,.* ~.*', line): rank[99].append(num)
+#     elif re.match('.*!HSS\(.*', line): rank[98].append(num)
+#     elif re.match('.*!KU\( f5\(.*', line) or \
+# 	 re.match('.*!KU\( f5_star\(.*', line): rank[90].append(num)
+#     elif re.match('.*!KU\( ~sqn_root.*', line): rank[85].append(num)
+#     elif re.match('.*St_1_UE\(.*', line): rank[84].append(num)
+#     elif re.match('.*St_2_UE\(.*', line): rank[84].append(num)
+#     elif re.match('.*St_3_SEAF\(.*', line): rank[84].append(num)
+#     elif re.match('.*Sqn_UE\(.*', line): rank[84].append(num)
+#     elif re.match('.*~~>.*', line): rank[80].append(num)
+#     elif re.match('.*RcvS\( ~idSN.*', line): rank[47].append(num)
+#     elif re.match('.*RcvS\(.*', line): rank[46].append(num)
+#     elif re.match('.*!KU\( \(f5\(.*', line) or \
+# 	 re.match('.*!KD\( \(f5\(.*', line): rank[45].append(num)
+#     elif re.match('.*!Ltk_Sym\(.*', line): rank[40].append(num)
+#     elif re.match('.*!KU\( f4\(.*', line): rank[30].append(num)
+#     elif re.match('.*St_2_SEAF\(.*', line): rank[25].append(num)
+#     elif re.match('.*St_1_HSS\(.*', line): rank[25].append(num)
+#     elif re.match('.*!KU\( KDF\(.*', line): rank[22].append(num)
+#     elif re.match('.*!KU\( ~RAN.*', line): rank[20].append(num)
+#     elif re.match('.*!KU\( ~sup.*', line): rank[10].append(num)
+#     elif re.match('.*!KU\( f1\(.*', line): rank[8].append(num)
+#     elif re.match('.*!KU\( aenc\(.*', line): rank[6].append(num)
+#     elif re.match('.*!KU\( ~sup.*', line): rank[5].append(num)
+#     elif re.match('.*!KU\( ~sk.*', line): rank[4].append(num)
+
+elif lemma == "true_injectiveagreement_seaf_ue_kseaf_noKeyRev_noChanRev":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+    elif re.match('.*!KU\( ~sk_HN.*', line): rank[99].append(num)
+#    elif re.match('.*L_CellLocked.*', line): rank[99].append(num)
+#    elif re.match('.*L_PureState\(.*~sqn_root.*', line): rank[99].append(num)
+#    elif re.match('.*Sqn_HSS\(.*,.*,.*,.*,.* ~.*', line): rank[99].append(num)
+    elif re.match('.*!KU\( f3\(~k,.*', line) : rank[95].append(num)
+#    elif re.match('.*St_2_UE\(.*', line): rank[92].append(num)
+    elif re.match('.*Commit\(.*', line): rank[93].append(num)
+    elif re.match('.*CommitConf\(.*', line): rank[92].append(num)
+#    elif re.match('.*!KU\( f5\(.*', line) or \
+#	 re.match('.*!KU\( f5_star\(.*', line): rank[90].append(num)
+#    elif re.match('.*!KU\( ~sqn_root.*', line): rank[89].append(num)
+           
+    elif re.match('.*State_11211111111111111111111111\(.*', line): rank[94].append(num)
+
+    elif re.match('.*!KU\( KDF\(<f3\(.*', line): rank[80].append(num)
+    elif re.match('.*!KU\( KDF\(KDF\(<f3\(.*', line): rank[87].append(num)
+    elif re.match('.*!KU\( f1\(KDF\(KDF\(<f3\(~k.*', line): rank[87].append(num)
+    elif re.match('.*!KU\( f3\(~k,.*', line) : rank[87].append(num)
+    elif re.match('.*!KU\( f1\(~k,.*', line) : rank[70].append(num) # need ac/air > f1
+    elif re.match('.*Message\( ~secureChan,.*<~k, .*\'air\'.*', line): rank[80].append(num)
+    elif re.match('.*Message\(.*\'aia\'.*SHA.*', line): rank[80].append(num)
+
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.40.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.57.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.48.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.53.*', line): rank[94].append(num)
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*#vr.34.*', line): rank[94].append(num)
+    elif re.match('.*Message\( ~secureChan,.*<~k, .*\'ac\'.*', line): rank[74].append(num)
+    elif re.match('.*cid,.*\'ac\'.*', line): rank[73].append(num)
+    elif re.match('.*cid,.*\'aia\'.*vr.20.*', line): rank[72].append(num)
+    elif re.match('.*cid,.*\'aia\'.*vr.17.*', line): rank[72].append(num)
+#    elif re.match('.*cid,.*\'aia\'.*vr.22.*', line): rank[70].append(num)
+    elif re.match('.*cid,.*\'air\'.*', line): rank[71].append(num)
+elif lemma == "true_injectiveagreement_seaf_ue_kseaf_keyConf_noKeyRev_noChanRev":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+    elif re.match('.*!KU\( ~sk_HN.*', line): rank[99].append(num)
+#    elif re.match('.*L_CellLocked.*', line): rank[99].append(num)
+#    elif re.match('.*L_PureState\(.*~sqn_root.*', line): rank[99].append(num)
+#    elif re.match('.*Sqn_HSS\(.*,.*,.*,.*,.* ~.*', line): rank[99].append(num)
+    elif re.match('.*!KU\( f3\(~k,.*', line) : rank[95].append(num)
+#    elif re.match('.*St_2_UE\(.*', line): rank[92].append(num)
+    elif re.match('.*Commit\(.*', line): rank[93].append(num)
+    elif re.match('.*CommitConf\(.*', line): rank[92].append(num)
+#    elif re.match('.*!KU\( f5\(.*', line) or \
+#	 re.match('.*!KU\( f5_star\(.*', line): rank[90].append(num)
+#    elif re.match('.*!KU\( ~sqn_root.*', line): rank[89].append(num)
+    elif re.match('.*State_112111111111111111111111\(.*', line): rank[94].append(num)
+
+    elif re.match('.*!KU\( KDF\(<f3\(.*', line): rank[88].append(num)
+    elif re.match('.*!KU\( KDF\(KDF\(<f3\(.*', line): rank[87].append(num)
+    elif re.match('.*!KU\( f1\(KDF\(KDF\(<f3\(~k.*#vk.1.*', line): rank[87].append(num)
+    elif re.match('.*!KU\( f3\(~k,.*', line) : rank[87].append(num)
+    elif re.match('.*!KU\( f1\(~k,.*', line) : rank[70].append(num) # need ac/air > f1
+    elif re.match('.*Message\( ~secureChan,.*<~k, .*\'air\'.*', line): rank[80].append(num)
+    elif re.match('.*Message\(.*\'aia\'.*SHA.*', line): rank[80].append(num)
+    elif re.match('.*State_1121111111111111111111111111111111111111111\(.*#i2', line): rank[95].append(num)
+
+    elif re.match('.*State_12111111111111111212111111111111111111111111111111111\(.*', line): rank[94].append(num)
+    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.57.*', line): rank[94].append(num)
+    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.48.*', line): rank[94].append(num)
+    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.53.*', line): rank[94].append(num)
+    elif re.match('.*State_1211111111111111121211111111111111111111111111111\(.*#vr.34.*', line): rank[94].append(num)
+    elif re.match('.*Message\( ~secureChan,.*<~k, .*\'ac\'.*', line): rank[74].append(num)
+    elif re.match('.*cid,.*\'ac\'.*', line): rank[73].append(num)
+    elif re.match('.*cid,.*\'aia\'.*vr.20.*', line): rank[72].append(num)
+    elif re.match('.*cid,.*\'aia\'.*vr.17.*', line): rank[72].append(num)
+#    elif re.match('.*cid,.*\'aia\'.*vr.22.*', line): rank[70].append(num)
+    elif re.match('.*cid,.*\'air\'.*', line): rank[71].append(num)
+#Old
+#     if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+
+#     elif re.match('.*Sqn_HSS\(.*~sqn_root, ~sqn_root.*', line): rank[99].append(num)
+#     elif re.match('.*Sqn_HSS\(.*,.*,.*,.*,.* ~.*', line): rank[99].append(num)
+#     elif re.match('.*!HSS\(.*', line): rank[98].append(num)
+#     elif re.match('.*!KU\( f3\(~k,.*', line) : rank[95].append(num)
+#     elif re.match('.*RcvS\( ~k,.*\'air\'.*', line): rank[95].append(num)
+#     elif re.match('.*RcvS\( ~sqn_root.*', line): rank[95].append(num)
+#     elif re.match('.*RcvS\( ~sk_HN.*', line): rank[95].append(num)
+#     elif re.match('.*RcvS\( ~supi.*', line): rank[95].append(num)
+#     elif re.match('.*Commit\(.*', line): rank[80].append(num)
+#     elif re.match('.*CommitConf\(.*', line): rank[80].append(num)
+#     elif re.match('.*St_3_SEAF\(.*', line): rank[79].append(num)
+#     elif re.match('.*St_4_SEAF\(.*', line): rank[79].append(num)
+#     elif re.match('.*!KU\( KDF\(<f3\(.*', line): rank[72].append(num)
+#     elif re.match('.*!KU\( KDF\(KDF\(<.*', line): rank[72].append(num)
+#     elif re.match('.*!KU\( f3\(.*', line): rank[72].append(num)
+#     elif re.match('.*RcvS\(.*<\'aia\'.*SHA.*', line): rank[68].append(num)
+#     elif re.match('.*RcvS\(.*<\'aca\'.*', line): rank[62].append(num)
+#     elif re.match('.*RcvS\(.*<\'ac\'.*', line): rank[61].append(num)
+#     elif re.match('.*RcvS\(.*<\'aia\'.*', line): rank[35].append(num)
+#     elif re.match('.*!KU\( f1\(.*', line): rank[30].append(num)
+
+# elif lemma == "weakagreement_seaf_ue_noKeyRev_noChanRev" or \
+#      lemma == "weakagreement_seaf_ue_KeyConf_noKeyRev_noChanRev" or \
+#      lemma == "weakagreement_seaf_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev" or \
+#      lemma == "weakagreement_seaf_ue_KeyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev" or \
+#      lemma == "noninjectiveagreement_seaf_ue_supi_noKeyRev_noChanRev" or \
+#      lemma == "noninjectiveagreement_seaf_ue_keyConf_supi_noKeyRev_noChanRev" or \
+#      lemma == "cleanAttack_injectiveagreement_seaf_ue_supi_noRev" or \
+#      lemma == "weakagreement_seaf_ue_KeyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev" or \
+#      lemma == "weakagreement_seaf_ue_KeyConf_noChanRev_noAsyKeyRev_noSupiRev_noSqnRev" or \
+#      lemma == "weakagreement_seaf_ue_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev":
+#   for line in lines:
+#     num = line.split(':')[0]
+#     if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+#     elif re.match('.*!KU\( ~sk_HN.*', line): rank[99].append(num)
+#     elif re.match('.*Sqn_HSS\(.*~sqn_root, ~sqn_root.*', line): rank[99].append(num)
+#     elif re.match('.*Sqn_HSS\(.*,.*,.*,.*,.* ~.*', line): rank[99].append(num)
+#     elif re.match('.*!HSS\(.*', line): rank[98].append(num)
+#     elif re.match('.*!KU\( f3\(~k,.*', line) : rank[95].append(num)
+#     elif re.match('.*RcvS\( ~k,.*\'air\'.*', line): rank[95].append(num)
+#     elif re.match('.*RcvS\( ~sqn_root.*', line): rank[95].append(num)
+#     elif re.match('.*RcvS\( ~sk_HN.*', line): rank[95].append(num)
+#     elif re.match('.*RcvS\( ~supi.*', line): rank[95].append(num)
+#     elif ("noSqnRev" in lemma or "noRev" in lemma) and \
+#         (re.match('.*!KU\( f5\(.*', line) or \
+# 	 re.match('.*!KU\( f5_star\(.*', line)): rank[85].append(num)
+#     elif re.match('.*!KU\( ~sqn_root.*', line): rank[84].append(num)
+#     elif re.match('.*~~.*', line): rank[80].append(num)
+#     elif re.match('.*=.*=.*=.*', line): rank[80].append(num)
+#     elif re.match('.*Commit\(.*', line): rank[79].append(num)
+#     elif re.match('.*St_3_SEAF\(.*', line): rank[79].append(num)
+#     elif re.match('.*St_4_SEAF\(.*', line): rank[79].append(num)
+#     elif re.match('.*RcvS\(.*<\'aca\'.*', line): rank[62].append(num)
+#     elif re.match('.*RcvS\(.*<\'ac\'.*', line): rank[61].append(num)
+#     elif re.match('.*!KU\( KDF\(<f3\(.*', line): rank[50].append(num)
+#     elif re.match('.*!KU\( KDF\(KDF\(<.*', line): rank[50].append(num)
+#     elif re.match('.*!KU\( f3\(.*', line): rank[40].append(num)
+#     elif re.match('.*RcvS\(.*<\'aia\'.*', line): rank[30].append(num)
+#     elif re.match('.*RcvS\(.*<\'air\'.*', line): rank[29].append(num)
+#     elif re.match('.*!KU\( \(f5\(~k.*', line): rank[28].append(num)
+#     elif re.match('.*!KD\( \(f5\(~k.*', line): rank[28].append(num)
+#     elif re.match('.*Sqn_HSS\(.*', line): rank[25].append(num)
+#     elif re.match('.*Sqn_UE\(.*', line): rank[25].append(num)
+#     elif re.match('.*!KU\( aenc\(.*', line): rank[20].append(num)
+#     elif re.match('.*!KU\( pk\(.*', line): rank[18].append(num)
+#     elif re.match('.*!KU\( ~supi.*', line): rank[15].append(num)
+#     elif re.match('.*!KU\( f1\(~.*', line): rank[12].append(num)
+#     elif re.match('.*!KU\( f1\(K.*', line): rank[11].append(num)
+
+# EXECUTABILITY LEMMAS
+
+elif lemma == "executability_honest":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+    if re.match('.*!KU\( ~sk_HN.*', line): rank[100].append(num)
+    elif re.match('.*Message\(.*', line): rank[99].append(num)
+#    elif re.match('.*!KU\( f5_star\(.*', line): rank[87].append(num)
+    elif re.match('.*!KU\( f1\(.*', line): rank[86].append(num)
+    elif re.match('.*!KU\( f3\(.*', line): rank[85].append(num)
+    elif re.match('.*!KU\( f5\(~k.*', line): rank[84].append(num)
+#    elif re.match('.*!KU\( ~sqn_root.*', line): rank[83].append(num)
+    elif re.match('.*!KU\( KDF\(.*', line): rank[72].append(num)
+    elif re.match('.*!KU\( \(f5\(.*', line): rank[60].append(num)
+    elif re.match('.*!KD\( \(f5\(.*', line): rank[60].append(num)
+
+elif lemma == "executability_keyConf_honest":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+    if re.match('.*!KU\( ~sk_HN.*', line): rank[100].append(num)
+    elif re.match('.*Message\(.*', line): rank[99].append(num)
+#    elif re.match('.*!KU\( f5_star\(.*', line): rank[87].append(num)
+#    elif re.match('.*!KU\( f1\(.*', line): rank[86].append(num)
+    elif re.match('.*!KU\( f3\(.*', line): rank[85].append(num)
+    elif re.match('.*!KU\( f5\(~k.*', line): rank[84].append(num)
+#    elif re.match('.*!KU\( ~sqn_root.*', line): rank[83].append(num)
+    elif re.match('.*!KU\( KDF\(.*', line): rank[72].append(num)
+    elif re.match('.*!KU\( \(f5\(.*', line): rank[60].append(num)
+    elif re.match('.*!KD\( \(f5\(.*', line): rank[60].append(num)
+
+
+elif lemma == "executability_desync":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*!KU\( ~k.*', line): rank[109].append(num)
+    if re.match('.*!KU\( ~sk_HN.*', line): rank[100].append(num)
+    elif  re.match('.*!KU\( \(f5_star\(.*', line): rank[100].append(num)
+    elif re.match('.*!KU\( f1_star\(.*', line): rank[40].append(num)
+    elif re.match('.*Message\(.*', line): rank[99].append(num)
+    elif re.match('.*State_121111111111111112121111111111111111111111111\(.*', line): rank[101].append(num)
+#    elif re.match('.*!KU\( f5_star\(.*', line): rank[87].append(num)
+#    elif re.match('.*!KU\( f1\(.*', line): rank[86].append(num)
+    elif re.match('.*!KU\( f3\(.*', line): rank[85].append(num)
+    elif re.match('.*!KU\( f5\(~k.*', line): rank[84].append(num)
+#    elif re.match('.*!KU\( ~sqn_root.*', line): rank[83].append(num)
+    elif re.match('.*!KU\( KDF\(.*', line): rank[72].append(num)
+    elif re.match('.*!KU\( \(f5\(.*', line): rank[60].append(num)
+    elif re.match('.*!KD\( \(f5\(.*', line): rank[60].append(num)
+
+    # if re.match('.*!KU\( ~k.*', line): rank[100].append(num)
+    # elif re.match('.*!HSS\(.*', line): rank[99].append(num)
+    # elif re.match('.*=.*=.*', line): rank[98].append(num)
+    # elif re.match('.*<.*=.*', line): rank[97].append(num)
+    # elif re.match('.*HSS_Resync_End\(.*', line): rank[96].append(num)
+    # elif re.match('.*!KU\( f5\(.*', line) or \
+    #      re.match('.*!KU\( f5_star\(.*', line): rank[95].append(num)
+    # elif re.match('.*!KU\( ~sqn_root.*', line): rank[95].append(num)
+    # elif re.match('.*St_1_UE\(.*', line): rank[94].append(num)
+    # elif re.match('.*St_1_HSS\(.*', line): rank[94].append(num)
+    # elif re.match('.*St_2_SEAF\(.*', line): rank[94].append(num)
+    # elif re.match('.*St_3_SEAF\(.*', line): rank[94].append(num)
+    # elif re.match('.*Sqn_UE\(.*', line): rank[93].append(num)
+    # elif re.match('.*Sqn_HSS\(.*', line): rank[93].append(num)
+    # elif re.match('.*~~>.*', line): rank[92].append(num)
+    # elif re.match('.*!Ltk_Sym\(.*', line): rank[90].append(num)
+    # elif re.match('.*RcvS\(.*', line): rank[70].append(num)
+    # elif re.match('.*!KU\( KDF\(.*', line): rank[60].append(num)
+    # elif re.match('.*!KU\( f3\(.*', line): rank[50].append(num)
+    # elif re.match('.*!KU\( f1_star\(.*', line): rank[40].append(num)
+    # elif re.match('.*!KU\( f1\(.*', line): rank[30].append(num)
+    # elif re.match('.*!KU\( \(f5\(.*', line): rank[20].append(num)
+    # elif re.match('.*!KD\( \(f5\(.*', line): rank[20].append(num)
+    # elif re.match('.*!KU\( \(f5_star\(.*', line): rank[20].append(num)
+    # elif re.match('.*!KD\( \(f5_star\(.*', line): rank[20].append(num)
+elif lemma == "executability_resync":
+  for line in lines:
+    num = line.split(':')[0]
+    if re.match('.*!KU\( ~k.*', line): rank[109].append(num)
+    if re.match('.*!KU\( ~sk_HN.*', line): rank[109].append(num)
+    elif re.match('.*L_CellLocked.*~.*~', line): rank[99].append(num)
+    elif  re.match('.*!KU\( \(f5_star\(.*', line): rank[100].append(num)
+    elif re.match('.*=.*=.*', line): rank[98].append(num)
+    elif re.match('.*<.*=.*', line): rank[97].append(num)
+    elif re.match('.*!KU\( f1_star\(.*', line): rank[101].append(num)
+    elif re.match('.*!KU\( f1\(~k.*', line): rank[101].append(num)
+    elif re.match('.*!KU\( KDF\(.*', line): rank[10].append(num)
+    elif re.match('.*Message\(.*', line): rank[99].append(num)
+    elif re.match('.*HSS_Resync_End\(.*', line): rank[96].append(num)
+    elif re.match('.*State_121111111111111112121111111111111111111111111\(.*', line): rank[101].append(num)
+#    elif re.match('.*!KU\( f5_star\(.*', line): rank[87].append(num)
+#    elif re.match('.*!KU\( f1\(.*', line): rank[86].append(num)
+    elif re.match('.*!KU\( f3\(.*', line): rank[85].append(num)
+    elif re.match('.*!KU\( f5\(~k.*', line): rank[84].append(num)
+#    elif re.match('.*!KU\( ~sqn_root.*', line): rank[83].append(num)
+    elif re.match('.*!KU\( KDF\(.*', line): rank[72].append(num)
+    elif re.match('.*!KU\( \(f5\(.*', line): rank[60].append(num)
+    elif re.match('.*!KD\( \(f5\(.*', line): rank[60].append(num)
+    elif  re.match('.*!KD\( \(f5_star\(.*', line): rank[40].append(num)
+
+
+else:
+  exit(0)
+
+# Ordering all goals by ranking (higher first)
+for listGoals in reversed(rank):
+  for goal in listGoals:
+    sys.stderr.write(goal)
+    print(goal)

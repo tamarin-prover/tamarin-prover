@@ -1,0 +1,112 @@
+/*
+ * Protocol: Centralized Monitor
+ * Modeler:  Kevin Morio and Robert Künnemann
+ * Date:     Nov 2019
+ * Source:   "Automated Verification of Accountability in Security Protocols", Robert Künnemann, Ilkan Esiyok, and Michael Backes, CSF19
+ * Status:   working
+ */
+
+theory CentralizedMonitor
+begin
+
+functions:
+  pk/1, sk/1[private],
+  sig/2, verify/3,
+  true/0,
+  extract/1,
+  NormalReq/0, SpecialReq/0
+
+equations:
+  verify(sig(m, sk(i)), m, pk(sk(i))) = true,
+  extract(sig(m, sk(i))) = m
+
+predicates:
+  IsSpecial(a)  <=> a = SpecialReq,
+  IsNormal(a)   <=> a = NormalReq,
+  IsValid(a)    <=>     a = SpecialReq | a = NormalReq,
+  IsInvalid(a)  <=> not(a = SpecialReq | a = NormalReq),
+  IsPair(m)     <=> Ex a b. m = <a, b>
+
+
+let D =
+  insert <'roles', $x, 'D'>, true;
+  out(pk(sk($x)));
+  let m_1 = <'Do', a>
+    m_2 = <'Permit', a>
+  in
+    in(a);
+    if IsNormal(a) then
+      out(<m_1, sig(m_1, sk($x))>)
+    else if IsSpecial(a) then
+      out(<m_2, sig(m_2, sk($x))>)
+
+let C =
+  insert <'roles', $y, 'C'>, true;
+  out(pk(sk($y)));
+  let m_2 = <'Permit', a>
+    m_3 = <m_2, sig_m_2>
+  in
+    in($x);
+    in(<m_2, sig_m_2>);
+    lookup <'roles', $x, 'D'> as is_d in
+      if verify(sig_m_2, m_2, pk(sk($x))) = true then
+        if IsSpecial(a) then
+          out(<m_3, sig(m_3, sk($y))>)
+
+let M =
+  let m_1 = <'Do', a>
+    m_2 = <'Permit', a>
+    m_3 = <m_2, sig_m_2>
+  in
+  ( in(<m_1, sig_m_1>);
+    if verify(sig_m_1, m_1, pk(sk($x))) = true then
+      lookup <'roles', $x, 'D'> as is_d in
+        new id;
+        event Log($x, a, id);
+        event Execute(a, id)
+  )
+  +
+  ( in(<m_3, sig_m_3>);
+    if verify(sig_m_3, m_3, pk(sk($y))) = true then
+      if verify(sig_m_2, m_2, pk(sk($x))) = true then
+        lookup <'roles', $y, 'C'> as is_c in
+          lookup <'roles', $x, 'D'> as is_d in
+            new id;
+            event Log(<$x, $y>, a, id);
+            event Execute(a, id)
+  )
+
+let Adv =
+  in('c', <'corrupt', $x>);
+  event Corrupted($x);
+  out('c', sk($x))
+
+let P = (in($x); D) | (in($y); C) | (in(<$x,$y>); M) | !Adv
+
+
+!P
+
+
+test invalidReqD:
+  "Ex a id #i #j. Log(x, a, id)@i & Execute(a, id)@j &
+                    IsInvalid(a) & not(IsPair(x))"
+
+test invalidReqDC:
+  "Ex a id #i #j. Log(<x, y>, a, id)@i & Execute(a, id)@j &
+                    not(x = y) & IsInvalid(a) &
+                    not(Ex z a id #i #j. Log(z, a, id)@i & Execute(a, id)@j &
+                                         IsInvalid(a) & not(IsPair(x)) &
+                                         (z = x | z = y))"
+
+lemma acc:
+  invalidReqD, invalidReqDC account for
+    "All a id #i. Execute(a, id)@i ==> IsValid(a)"
+
+
+restriction one_role:
+  "All x r_1 r_2 #i #j. Insert(<'roles', x, r_1>, true)@i &
+                        Insert(<'roles', x, r_2>, true)@j
+                          ==> #i = #j & r_1 = r_2"
+
+
+end

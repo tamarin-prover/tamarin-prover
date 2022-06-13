@@ -1,0 +1,12 @@
+theory Typing
+begin
+
+functions: f/1
+
+equations: f(x)=x
+
+process:
+   new x:lol; event Test(x); out(f(f(x)))
+
+
+end

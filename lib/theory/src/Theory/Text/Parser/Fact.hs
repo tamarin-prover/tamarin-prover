@@ -64,5 +64,5 @@ fact' pterm = try (
       _     -> return . protoFactAnn multi f ann
 
 -- | Parse a fact.
-fact :: Parser LNTerm -> Parser (Fact LNTerm)
+fact :: Ord l => Parser (Term l) -> Parser (Fact (Term l))
 fact plit = fact' (msetterm False plit)

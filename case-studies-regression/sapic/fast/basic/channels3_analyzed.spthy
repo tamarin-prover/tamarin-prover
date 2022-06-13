@@ -2,10 +2,16 @@ theory ChannelsTestThree begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
+
+
+
+
+
+
 
 lemma not_secret:
   exists-trace "∃ #i #j x. (Received( x ) @ #i) ∧ (!KU( x ) @ #j)"
@@ -14,8 +20,8 @@ guarded formula characterizing all satisfying traces:
 "∃ #i #j x. (Received( x ) @ #i) ∧ (!KU( x ) @ #j)"
 */
 simplify
-solve( State_21( x ) ▶₀ #i )
-  case incx_0_2
+solve( State_211( x ) ▶₀ #i )
+  case incx_1_21_case_2
   solve( (#vf < #t2)  ∥ (#vf = #t2) )
     case case_1
     SOLVED // trace found
@@ -30,73 +36,89 @@ guarded formula characterizing all satisfying traces:
 "∃ x #i. (Received( x ) @ #i) ∧ ∀ y #j. (K( y ) @ #j) ⇒ ¬(x = y)"
 */
 simplify
-solve( State_21( x ) ▶₀ #i )
-  case incx_0_2
-  solve( (#vf < #t2)  ∥ (#vf = #t2) )
-    case case_1
-    SOLVED // trace found
-  qed
+solve( State_211( x ) ▶₀ #i )
+  case incx_1_21_case_1
+  SOLVED // trace found
 qed
 
-rule (modulo E) Init[color=#ffffff, process="|"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
+rule (modulo E) newa_0_11[color=#6c8040, process="new a.1;"]:
+   [ State_11( ), Fr( a.1 ) ] --> [ State_111( a.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) newa_0_11[color=#6c8040, process="new a.1;"]:
+     [ State_11( ), Fr( a ) ] --> [ State_111( a ) ]
+  */
 
-rule (modulo E) p_0_[color=#ffffff, process="|"]:
-   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+rule (modulo E) outca_1_111[color=#6c8040, process="out('c',a.1);"]:
+   [ State_111( a.1 ) ] --> [ Message( 'c', a.1 ), Semistate_1111( a.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) outca_1_111[color=#6c8040, process="out('c',a.1);"]:
+     [ State_111( a ) ] --> [ Message( 'c', a ), Semistate_1111( a ) ]
+  */
 
-rule (modulo E) newa_0_1[color=#6c8040, process="new a;"]:
-   [ State_1( ), Fr( a ) ] --> [ State_11( a ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) outca_0_11[color=#6c8040, process="out('c',a);"]:
-   [ State_11( a ), In( 'c' ) ]
+rule (modulo E) outca_0_111[color=#6c8040, process="out('c',a.1);"]:
+   [ State_111( a.1 ), In( 'c' ) ]
   --[ ChannelIn( 'c' ) ]->
-   [ Out( a ), State_111( a ) ]
+   [ Out( a.1 ), State_1111( a.1 ) ]
+
+  /*
+  rule (modulo AC) outca_0_111[color=#6c8040, process="out('c',a.1);"]:
+     [ State_111( a ), In( 'c' ) ]
+    --[ ChannelIn( 'c' ) ]->
+     [ Out( a ), State_1111( a ) ]
+  */
+
+rule (modulo E) outca_2_111[color=#6c8040, process="out('c',a.1);"]:
+   [ Semistate_1111( a.1 ), Ack( 'c', a.1 ) ] --> [ State_1111( a.1 ) ]
+
+  /*
+  rule (modulo AC) outca_2_111[color=#6c8040, process="out('c',a.1);"]:
+     [ Semistate_1111( a ), Ack( 'c', a ) ] --> [ State_1111( a ) ]
+  */
+
+rule (modulo E) Init[color=#ffffff, process="|"]:
+   [ ] --[ Init( ) ]-> [ State_21( ), State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outca_1_11[color=#6c8040, process="out('c',a);"]:
-   [ State_11( a ) ] --> [ Message( 'c', a ), Semistate_111( a ) ]
+rule (modulo E) incx_0_21[color=#807140, process="in('c',x.1);"]:
+   [ State_21( ), Message( 'c', x ) ] --> [ Let_211( x ), Ack( 'c', x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outca_2_11[color=#6c8040, process="out('c',a);"]:
-   [ Semistate_111( a ), Ack( 'c', a ) ] --> [ State_111( a ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111[color=#6c8040, process="0"]:
-   [ State_111( a ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) incx_0_2[color=#807140, process="in('c',x);"]:
-   [ State_2( ), In( <'c', x> ) ]
+rule (modulo E) incx_2_21[color=#807140, process="in('c',x.1);"]:
+   [ State_21( ), In( <'c', x> ) ]
   --[ ChannelIn( <'c', x> ) ]->
-   [ State_21( x ) ]
+   [ Let_211( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) incx_1_2[color=#807140, process="in('c',x);"]:
-   [ State_2( ), Message( 'c', x ) ] --> [ Ack( 'c', x ), State_21( x ) ]
+rule (modulo E) incx_1_21[color=#807140, process="in('c',x.1);"]:
+   [ Let_211( x.1 ) ] --> [ State_211( x.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) incx_1_21[color=#807140, process="in('c',x.1);"]:
+     [ Let_211( x ) ] --> [ State_211( x ) ]
+  */
 
-rule (modulo E) eventReceivedx_0_21[color=#807140,
-                                    process="event Received( x );"]:
-   [ State_21( x ) ] --[ Received( x ), Event( ) ]-> [ State_211( x ) ]
+rule (modulo E) incx_3_21[color=#807140, process="in('c',x.1);"]:
+   [ Let_211( x.1 ) ] --> [ State_211( x.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) incx_3_21[color=#807140, process="in('c',x.1);"]:
+     [ Let_211( x ) ] --> [ State_211( x ) ]
+  */
 
-rule (modulo E) p_0_211[color=#807140, process="0"]:
-   [ State_211( x ) ] --> [ ]
+rule (modulo E) eventReceivedx_0_211[color=#807140,
+                                     process="event Received( x.1 );"]:
+   [ State_211( x.1 ) ] --[ Received( x.1 ), Event( ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) eventReceivedx_0_211[color=#807140,
+                                        process="event Received( x.1 );"]:
+     [ State_211( x ) ] --[ Received( x ), Event( ) ]-> [ ]
+  */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
@@ -126,9 +148,9 @@ analyzing: examples/sapic/fast/basic/channels3.spthy
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.126761532s
+  processing time: 0.065110218s
   not_secret (exists-trace): verified (4 steps)
-  internal_comm (exists-trace): verified (4 steps)
+  internal_comm (exists-trace): verified (3 steps)
 
 ------------------------------------------------------------------------------
 
@@ -138,9 +160,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.126761532s
+  processing time: 0.065110218s
   not_secret (exists-trace): verified (4 steps)
-  internal_comm (exists-trace): verified (4 steps)
+  internal_comm (exists-trace): verified (3 steps)
 
 ==============================================================================
 */

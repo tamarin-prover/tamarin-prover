@@ -6,6 +6,7 @@ builtins: symmetric-encryption
 predicates:
 SencSucc (c,k) <=> Ex m . senc(m,k)=c
 
+process:
 !(
 	(  new h; new k; event NewKey(h,k); 
 		insert <'key',h>,k; 

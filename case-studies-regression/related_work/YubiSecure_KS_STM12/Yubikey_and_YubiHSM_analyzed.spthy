@@ -2,9 +2,9 @@ theory YubikeyHSM begin
 
 // Function signature and definition of the equational theory E
 
-functions: S/1, demac/2, dexor1/2, dexor2/2, fst/1, keystream/2,
-           keystream_kh/1, keystream_n/1, mac/2, myzero/0, pair/2, sdec/2, senc/2,
-           snd/1, xorc/2
+functions: S/1, demac/2, dexor1/2, dexor2/2, fst/1[destructor],
+           keystream/2, keystream_kh/1, keystream_n/1, mac/2, myzero/0, pair/2,
+           sdec/2[destructor], senc/2, snd/1[destructor], xorc/2
 equations:
     demac(mac(m, k), k) = m,
     dexor1(xorc(a, b), a) = b,
@@ -20,6 +20,8 @@ equations:
 /* looping facts with injective instances: S_Counter/2, Y_counter/2 */
 
 section{* The Yubikey-Protocol with a YubiHSM *}
+
+
 
 rule (modulo E) InitSucc:
    [ In( myzero ), In( S(myzero) ) ]
@@ -7500,6 +7502,26 @@ next
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -7515,7 +7537,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 26.48113444s
+  processing time: 36.79725699s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (185 steps)
@@ -7529,7 +7551,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 26.48113444s
+  processing time: 36.79725699s
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (185 steps)

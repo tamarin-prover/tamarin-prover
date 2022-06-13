@@ -4,11 +4,12 @@ begin
 section{* Garay-Jakobsson-MacKenzie contract signing protocol *}
 
 /*
- * Protocol:    GJM contract signing 
- * Modeler:     Robert Kunnemann 
+ * Protocol:    GJM contract signing
+ * Modeler:     Robert Kunnemann
  * Date:        Jul 2016
  *
- * Status:      open 
+ * Status:      open // TODO need to adapt to new syntax
+ * 
  *
  * Juan A. Garay, Markus Jakobsson, and Philip D. MacKenzie. Abuse-free
  * optimistic contract signing. In Advances in Cryptology—Crypto’99, volume
@@ -24,7 +25,7 @@ section{* Garay-Jakobsson-MacKenzie contract signing protocol *}
  * originator.
  */
 
-functions: 
+functions:
     pk/1,sk/1[private],
     aenc/2, adec/2,
     sign/2, verify/2,
@@ -32,7 +33,7 @@ functions:
     true/0,
     pcs/3, checkpcs/5, convertpcs/2, verify/2, fakepcs/4
 
-equations: 
+equations:
     adec(aenc(m,pk(i)),sk(i))=m,
     verify(sign(m, sk(i)), pk(i)) = m,
     /* extrmsg(sign(m,x))=m, */
@@ -94,14 +95,14 @@ let A = new sida; event StartA($A,$B,text,sida);
         out('c',m1);
         (
         ( in('c',pat_m2a);
-          let m2=pat_m2a in 
+          let m2=pat_m2a in
           let r1=<m3,pat_m2a> in
-          AA ) 
+          AA )
         +
         ( in('c',pat_m2b);
           let m2=pat_m2b in
           let r1=<m3,pat_m2b> in
-          AA ) 
+          AA )
         +
         ( /* Abort */
           out('r',<TTPID,sida,a1>);
@@ -114,7 +115,7 @@ let A = new sida; event StartA($A,$B,text,sida);
           + (
             in('r',<$A,sida,pat_m4>);
             event ContractA($A,$B,text,sida);
-            event EndA2($A,$B,text,sida) 
+            event EndA2($A,$B,text,sida)
           )
           )
           /* SIMPLIFICATION: Protocol description forsees a third alternative:
@@ -125,7 +126,7 @@ let A = new sida; event StartA($A,$B,text,sida);
         )
         )
 
-let BB = 
+let BB =
         let m2 = pcs(sign(<text,'2'>,sk($B)),pk($A),pk(TTPID)) in
         let pat_m3 = sign(<text,'1'>,sk($A)) in
         let m4 = sign(<text,'2'>,sk($B)) in
@@ -157,23 +158,23 @@ let BB =
             )
             )
 
-let B = 
+let B =
         let pat_m1a = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in
         let pat_m1b = fakepcs(pk($A),sk($B),pk(TTPID),<text,'1'>) in
         (
         (
-        in('c',pat_m1a); 
-        let m1=pat_m1a in BB 
-        ) 
+        in('c',pat_m1a);
+        let m1=pat_m1a in BB
+        )
         +
         (
         in('c',pat_m1b);
-        let m1=pat_m1b in BB 
-        ) 
+        let m1=pat_m1b in BB
+        )
         )
 
 
-let TTP = 
+let TTP =
 let m1 = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in
 let m2 = pcs(sign(<text,'2'>,sk($B)),pk($A),pk(TTPID)) in
 let m3 = sign(<text,'1'>,sk($A)) in
@@ -225,7 +226,7 @@ let r2 = <m1,m4> in
 )
 )
 
-let Judge = 
+let Judge =
   let m1 = pcs(sign(<text,'1'>,sk($A)),pk($B),pk(TTPID)) in
   let m2 = pcs(sign(<text,'2'>,sk($B)),pk($A),pk(TTPID)) in
   let m3 = sign(<text,'1'>,sk($A)) in
@@ -236,6 +237,7 @@ let Judge =
              (in('c',<m3,m4>); event ContractJudge($A,$B,text))
          ||  (in('c',pat_a2); event AbortJudge($A,$B,text))
 
+process:
 let TTPID=<'TTP',$TTP> in
 let text=<$A,$B,$TEXT,TTPID> in
 !(
@@ -243,10 +245,10 @@ in('c',<$A,$B,<'TTP',$TTP>,$TEXT>);
 event TTP(TTPID);
  ( A || B || TTP || Judge)
 )
-|| !(   in('c',<'corrupt',$x>); 
+|| !(   in('c',<'corrupt',$x>);
         event Corrupt($x);
         out('c',sk($x));
-        (  !(in('r',<$x,sid,m>);0) 
+        (  !(in('r',<$x,sid,m>);0)
         )
    )
 
@@ -255,15 +257,15 @@ event TTP(TTPID);
 /* lemma cleanup [reuse]: */
 /* all-traces */
 /*     "All x1 x2 x sid m #i #j . */
-/*     Receive(x1,<x,sid,m>)@i  & */ 
+/*     Receive(x1,<x,sid,m>)@i  & */
 /*     Receive(x2,<x,sid,m>)@j */
 /*     ==> #i=#j | Ex #k. Corrupt(x)@k" */
 
 /* auto */
 lemma sanity_a4b3: /* optimistic execution */
 exists-trace
- "Ex #i #j  a b t sida sidb. 
-    EndA4(a,b,t,sida)@i 
+ "Ex #i #j  a b t sida sidb.
+    EndA4(a,b,t,sida)@i
   & EndB3(a,b,t,sidb)@j
   & not (Ex #k. Corrupt(a)@k)
   & not (Ex #k. Corrupt(b)@k)
@@ -272,8 +274,8 @@ exists-trace
 /* manual inspection */
 /* lemma sanity_a1b1: */
 /* exists-trace */
-/*  "Ex #i #j  a b t sida sidb. */ 
-/*     EndA1(a,b,t,sida)@i */ 
+/*  "Ex #i #j  a b t sida sidb. */
+/*     EndA1(a,b,t,sida)@i */
 /*   & EndB1(a,b,t,sidb)@j */
 /*   & not (Ex #k. Corrupt(a)@k) */
 /*   & not (Ex #k. Corrupt(b)@k) */
@@ -282,8 +284,8 @@ exists-trace
 /* manual */
 /* lemma sanity_a2b2: */
 /* exists-trace */
-/*  "Ex #i #j  a b t sida sidb. */ 
-/*     EndA2(a,b,t,sida)@i */ 
+/*  "Ex #i #j  a b t sida sidb. */
+/*     EndA2(a,b,t,sida)@i */
 /*   & EndB2(a,b,t,sidb)@j */
 /*   & not (Ex #k. Corrupt(a)@k) */
 /*   & not (Ex #k. Corrupt(b)@k) */
@@ -292,8 +294,8 @@ exists-trace
 
 /* lemma sanity_a3b3: */
 /* exists-trace */
-/*  "Ex #i #j  a b t sida sidb. */ 
-/*     EndA3(a,b,t,sida)@i */ 
+/*  "Ex #i #j  a b t sida sidb. */
+/*     EndA3(a,b,t,sida)@i */
 /*   & EndB3(a,b,t,sidb)@j */
 /*   & not (Ex #k. Corrupt(a)@k) */
 /*   & not (Ex #k. Corrupt(b)@k) */
@@ -321,21 +323,21 @@ lemma timelinessB [reuse]:
 /* auto confirmed */
 lemma fullfairnessA:
     "All #i a b t . ContractJudge(a,b,t)@i
-        ==> (Ex #j sida . ContractA(a,b,t, sida)@j) 
+        ==> (Ex #j sida . ContractA(a,b,t, sida)@j)
             | (Ex #k. Corrupt(a)@k)"
 
 /* auto 2:51h */
   /* helperB1 (all-traces): verified (2235 steps) */
 lemma helperB1 [reuse,hide_lemma=timelinessA]:
     "All #i a b t . BtriesResolve(a,b,t)@i
-        ==> (Ex #j sidb . ContractB(a,b,t, sidb)@j) 
+        ==> (Ex #j sidb . ContractB(a,b,t, sidb)@j)
             |    (Ex #k . Corrupt(b)@k)"
 
 /* auto 50:06h with helperB1 */
 /* fullfairnessB (all-traces): verified (849161 steps) */
 lemma fullfairnessB:
     "All #i a b t . ContractJudge(a,b,t)@i
-        ==> (Ex #j nb . ContractB(a,b,t, nb)@j) 
+        ==> (Ex #j nb . ContractB(a,b,t, nb)@j)
             | (Ex #k. Corrupt(b)@k)"
 
 end

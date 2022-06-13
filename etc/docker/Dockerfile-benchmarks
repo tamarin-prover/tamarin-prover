@@ -1,0 +1,8 @@
+FROM protocolplatform/protocolplatform
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+WORKDIR /opt/protocolplatform/examples
+RUN ./run-tamarin-CS.sh
+RUN ./run-proverif-CS.sh
+

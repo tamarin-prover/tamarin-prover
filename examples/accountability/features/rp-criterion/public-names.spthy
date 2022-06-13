@@ -1,0 +1,21 @@
+theory PublicNames
+begin
+
+functions:
+    f/1
+  , g/1
+
+rule A:
+   [ ]
+ --[ A($x)
+   , B(f(<g('x'), f('y')>))
+   , Corrupted($x) ]->
+   [ ]
+
+test A:
+  "Ex #i. A(x)@i"
+
+lemma acc:
+  A accounts for "not Ex x #i. A(x)@i"
+
+end

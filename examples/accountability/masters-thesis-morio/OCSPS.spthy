@@ -1,0 +1,124 @@
+/*
+ * Protocol:                OCSPS
+ * Modeler:                 Kevin Morio and Robert Künnemann
+ * Date:                    Nov 2019
+ * Source (protocol):       Based on RFC6066
+ * Source (original model): "Automated Verification of Accountability in Security Protocols",
+                            Robert Künnemann, Ilkan Esiyok, and Michael Backes, CSF19
+ * Status:                  working
+ */
+
+theory OCSPS
+begin
+
+functions:
+  pk/1, sk/1[private],
+  sig/2, verify/3,
+  true/0,
+  extract/1,
+  id/1
+
+equations:
+  verify(sig(m, sk(i)), m, pk(sk(i))) = true,
+  extract(sig(m, sk(i))) = m,
+  id(pk(sk(x))) = x
+
+
+let R =
+  insert <'roles', $x, 'R'>, true;
+  out(pk(sk($x)));
+  in(cert);
+  if verify(cert, extract(cert), pk(sk('CA'))) = true then
+    lock 'time';
+    lookup 'time' as ~t in
+      lookup <'cert_status', cert> as status in
+        let resp = <pk(sk($x)), cert, status, ~t> in
+          out(<resp, sig(resp, sk($x))>);
+          unlock 'time'
+      else
+        let resp = <pk(sk($x)), cert, 'unkown', ~t> in
+          out(<resp, sig(resp, sk($x))>);
+          unlock 'time'
+
+let C =
+  let resp = <pk_R, cert, status, ~t> in
+    in(<resp, resp_sig, server_sig>);
+    lookup <'roles', id(pk_R), 'R'> as is_r in
+      if verify(resp_sig, resp, pk_R) = true then
+        if verify(server_sig, resp, extract(cert)) = true then
+          if status = 'good' then
+            event Judged(~t, cert)
+          else if status = 'revoked' then
+            event Blame(id(extract(cert)));
+            event Judged(~t, cert)
+
+let S_h =
+  let resp = <pk_R, c, s, t> in
+    out(cert);
+    in(<resp, resp_sig>);
+    lookup <'roles', id(pk_R), 'R'> as is_r in
+      if c = cert then
+        if verify(resp_sig, resp, pk_R) = true then
+          out(<resp, resp_sig, sig(resp, sk($x))>)
+
+let S_c =
+  event Corrupted($x);
+  lock 'time';
+  insert <'cert_status', cert>, 'revoked';
+  event Revealed(sk($x));
+  out('c', sk($x));
+  new ~t;
+  out(~t);
+  event Time(~t);
+  insert 'time', ~t;
+  unlock 'time'
+
+let S =
+      let cert = sig(pk(sk($x)), sk('CA'))
+          resp = <pk_R, c, s, t>
+      in
+        insert <'roles', $x, 'S'>, true;
+        insert <'cert_status', cert>, 'good';
+        event Secret(cert, sk($x));
+        out(pk(sk($x)));
+        ( S_h + S_c )
+
+let Clock =
+  lock 'time';
+  new ~t;
+  out(~t);
+  event Time(~t);
+  insert 'time', ~t;
+  unlock 'time'
+
+let Adv =
+    in('c', <'corrupt', $x>);
+    lookup <'roles', $x, 'R'> as is_r in
+      event Corrupted($x);
+      out('c', sk($x))
+
+let P = (in($x); R) | C | (in($x); S) | !Clock | !Adv
+
+
+P
+
+
+test blamed:
+  "Ex t c #i #j. Judged(t, c)@i & Blame(x)@j"
+
+lemma acc:
+  blamed accounts for
+    "not(Ex c sk t #i #j #k #l. Judged(t, c)@i & Secret(c, sk)@j &
+                                Revealed(sk)@k & Time(t)@l & #k < #l)"
+
+
+// restriction R_trusted: // uncomment for untrusted R
+//  "not Ex x #i #j. Corrupted(x)@i & Insert(<'roles', x, 'R'>, true)@j"
+
+restriction one_role:
+  "All x r_1 r_2 #i #j. Insert(<'roles', x, r_1>, true)@i &
+                        Insert(<'roles', x, r_2>, true)@j
+                          ==> #i = #j & r_1 = r_2"
+
+
+end

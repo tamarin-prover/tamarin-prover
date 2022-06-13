@@ -1,9 +1,11 @@
-{-# LANGUAGE DeriveDataTypeable   #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
 -- {-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleInstances     #-}
 -- {-# LANGUAGE StandaloneDeriving   #-}
-{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TemplateHaskell       #-}
 -- {-# LANGUAGE TupleSections        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ViewPatterns         #-}
 {-# LANGUAGE DeriveGeneric        #-}
@@ -92,7 +94,7 @@ data Unit2 t = Unit2
             deriving( Eq, Ord, Show, Data, Typeable, Generic, NFData, Binary
                         , Foldable, Traversable, Functor )
 
-instance Apply (Unit2 t) where apply _ _ = Unit2
+instance Apply t' (Unit2 t) where apply _ _ = Unit2
 
 -- | @Atom@s are the atoms of trace formulas parametrized over arbitrary
 -- terms, excluding syntactic sugar
@@ -111,9 +113,7 @@ type LNAtom = Atom LNTerm
 -- | Atoms built over 'BLTerm's.
 type BLAtom = Atom BLTerm
 
-type SyntacticLNAtom = SyntacticAtom LNTerm
 type SyntacticNAtom v = SyntacticAtom (VTerm Name v)
-type SyntacticBLAtom = SyntacticAtom BLTerm
 
 
 -- Instances
@@ -145,10 +145,13 @@ instance (Traversable s) => Traversable (ProtoAtom s) where
     traverse f (Last i)        = Last <$> f i
     traverse f (Syntactic s)   = Syntactic <$> traverse f s
 
-instance Apply (SyntacticSugar LNTerm) where
+instance (IsConst c, IsVar v) 
+        => Apply (Subst c v) (SyntacticSugar (VTerm c v))
+    where
     apply subst (Pred fa) = Pred $ apply subst fa
 
-instance Apply (SyntacticSugar BLTerm) where
+instance (Apply s t) => Apply s (SyntacticSugar t)
+    where
     apply subst (Pred fa) = Pred $ apply subst fa
 
 instance HasFrees t => HasFrees (Atom t) where
@@ -156,38 +159,13 @@ instance HasFrees t => HasFrees (Atom t) where
     foldFreesOcc _ _ = const mempty -- we ignore occurences in atoms for now
     mapFrees  f = traverse (mapFrees f)
 
-instance Apply LNAtom where
+instance (Apply s t, Apply s (syn t)) => Apply s (ProtoAtom syn t) where
     apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
     apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
     apply subst (Subterm i j)     = Subterm (apply subst i) (apply subst j)
     apply subst (Less i j)        = Less (apply subst i) (apply subst j)
     apply subst (Last i)          = Last (apply subst i)
     apply subst (Syntactic fa)    = Syntactic (apply subst fa)
-
-instance Apply BLAtom where
-    apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
-    apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
-    apply subst (Subterm i j)     = Subterm (apply subst i) (apply subst j)
-    apply subst (Less i j)        = Less (apply subst i) (apply subst j)
-    apply subst (Last i)          = Last (apply subst i)
-    apply subst (Syntactic fa)    = Syntactic (apply subst fa)
-
-instance Apply SyntacticLNAtom where
-    apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
-    apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
-    apply subst (Subterm i j)     = Subterm (apply subst i) (apply subst j)
-    apply subst (Less i j)        = Less (apply subst i) (apply subst j)
-    apply subst (Last i)          = Last (apply subst i)
-    apply subst (Syntactic fa)    = Syntactic (apply subst fa)
-
-instance Apply SyntacticBLAtom where
-    apply subst (Action i fact)   = Action (apply subst i) (apply subst fact)
-    apply subst (EqE l r)         = EqE (apply subst l) (apply subst r)
-    apply subst (Subterm i j)     = Subterm (apply subst i) (apply subst j)
-    apply subst (Less i j)        = Less (apply subst i) (apply subst j)
-    apply subst (Last i)          = Last (apply subst i)
-    apply subst (Syntactic fa)    = Syntactic (apply subst fa)
-
 
 -- Queries
 ----------

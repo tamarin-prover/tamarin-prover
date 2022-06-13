@@ -2,12 +2,14 @@ theory OperatorPrecedenceLetTriple begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
 
 section{* A few test cases for operator precedence *}
+
+
 
 lemma second_process_covered:
   all-traces "∀ #e x. (E( x ) @ #e) ⇒ (x = '1')"
@@ -17,73 +19,33 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 solve( E( x ) @ #e )
-  case eventE_0_111
+  case in_0_11
   by contradiction /* from formulas */
 next
-  case eventE_0_121
+  case in_0_12
   by contradiction /* from formulas */
 next
-  case eventE_0_21
+  case in_0_2
   by contradiction /* from formulas */
 qed
 
-rule (modulo E) Init[color=#ffffff, process="|"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_[color=#ffffff, process="|"]:
-   [ State_( ) ] --> [ State_1( ), State_2( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1[color=#ffffff, process="|"]:
-   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
-
-  /* has exactly the trivial AC variant */
-
 rule (modulo E) in_0_11[color=#ffffff, process="in('1');"]:
-   [ State_11( ), In( '1' ) ] --> [ State_111( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventE_0_111[color=#ffffff, process="event E( '1' );"]:
-   [ State_111( ) ] --[ E( '1' ) ]-> [ State_1111( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1111[color=#ffffff, process="0"]:
-   [ State_1111( ) ] --> [ ]
+   [ State_11( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) in_0_12[color=#ffffff, process="in('1');"]:
-   [ State_12( ), In( '1' ) ] --> [ State_121( ) ]
+   [ State_12( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventE_0_121[color=#ffffff, process="event E( '1' );"]:
-   [ State_121( ) ] --[ E( '1' ) ]-> [ State_1211( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1211[color=#ffffff, process="0"]:
-   [ State_1211( ) ] --> [ ]
+rule (modulo E) Init[color=#ffffff, process="|"]:
+   [ ] --[ Init( ) ]-> [ State_11( ), State_12( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) in_0_2[color=#ffffff, process="in('1');"]:
-   [ State_2( ), In( '1' ) ] --> [ State_21( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventE_0_21[color=#ffffff, process="event E( '1' );"]:
-   [ State_21( ) ] --[ E( '1' ) ]-> [ State_211( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_211[color=#ffffff, process="0"]:
-   [ State_211( ) ] --> [ ]
+   [ State_2( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -106,7 +68,7 @@ analyzing: examples/sapic/fast/basic/operator-precedence-5.spthy
 analyzed: examples/sapic/fast/basic/operator-precedence-5.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-5.spthy.tmp
-  processing time: 0.074785408s
+  processing time: 0.015741644s
   second_process_covered (all-traces): verified (5 steps)
 
 ------------------------------------------------------------------------------
@@ -117,7 +79,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-5.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-5.spthy.tmp
-  processing time: 0.074785408s
+  processing time: 0.015741644s
   second_process_covered (all-traces): verified (5 steps)
 
 ==============================================================================

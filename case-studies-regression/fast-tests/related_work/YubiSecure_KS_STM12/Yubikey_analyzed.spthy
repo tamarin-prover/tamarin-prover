@@ -2,7 +2,8 @@ theory Yubikey begin
 
 // Function signature and definition of the equational theory E
 
-functions: S/1, fst/1, myzero/0, pair/2, sdec/2, senc/2, snd/1
+functions: S/1, fst/1[destructor], myzero/0, pair/2, sdec/2[destructor],
+           senc/2, snd/1[destructor]
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -13,6 +14,8 @@ equations:
 /* looping facts with injective instances: Server/3, Y_counter/2 */
 
 section{* The Yubikey-Protocol *}
+
+
 
 rule (modulo E) InitSucc:
    [ In( myzero ), In( S(myzero) ) ]
@@ -202,7 +205,7 @@ next
                   (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.1)  ∥ (#vr.1 = #t1) )
             case case_1
-            by contradiction /* non-injective facts (#vr,#vr.1,#t1) */
+            by contradiction /* cyclic */
           next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
@@ -255,7 +258,7 @@ next
                   (∃ #t3. (IsSmaller( S(otc), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.1)  ∥ (#vr.1 = #t1) )
             case case_1
-            by contradiction /* non-injective facts (#vr,#vr.1,#t1) */
+            by contradiction /* cyclic */
           next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
@@ -344,7 +347,7 @@ next
                   (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.1)  ∥ (#vr.1 = #t1) )
             case case_1
-            by contradiction /* non-injective facts (#vr,#vr.1,#t1) */
+            by contradiction /* cyclic */
           next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
@@ -397,7 +400,7 @@ next
                   (∃ #t3. (IsSmaller( S(y), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
                  (#t1 < #vr.1)  ∥ (#vr.1 = #t1) )
             case case_1
-            by contradiction /* non-injective facts (#vr,#vr.1,#t1) */
+            by contradiction /* cyclic */
           next
             case case_2
             solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
@@ -488,18 +491,11 @@ next
           by sorry /* unannotated */
         next
           case BuyANewYubikey
-          by contradiction /* non-injective facts (#vr.1,#t1,#t2) */
+          by contradiction /* cyclic */
         next
           case Server_ReceiveOTP_NewSession_case_1
-          solve( ((#vr.4 < #t1) ∧
-                  (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
-                 (#t1 < #vr.4) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
-            case case_2
-            by contradiction /* from formulas */
-          qed
+          simplify
+          by contradiction /* from formulas */
         next
           case Server_ReceiveOTP_NewSession_case_2
           solve( ((#vr.4 < #t1) ∧
@@ -646,50 +642,43 @@ next
           by sorry /* unannotated */
         next
           case BuyANewYubikey
-          by contradiction /* non-injective facts (#vr.1,#t1,#t2) */
+          by contradiction /* cyclic */
         next
           case Server_ReceiveOTP_NewSession_case_1
-          solve( ((#vr.4 < #t1) ∧
-                  (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
-                 (#t1 < #vr.4) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
-            case case_2
-            solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
-              case BuyANewYubikey
-              solve( !Smaller( S(otc), tc1 ) ▶₃ #t1 )
-                case SimpleSmaller
-                solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
-                  case BuyANewYubikey
-                  solve( !Smaller( S(myzero), tc2 ) ▶₃ #t2 )
-                    case SimpleSmaller
-                    by contradiction /* from formulas */
-                  next
-                    case ZExtendedSmaller_case_1
-                    by contradiction /* from formulas */
-                  next
-                    case ZExtendedSmaller_case_2
-                    by contradiction /* from formulas */
-                  qed
+          simplify
+          solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
+            case BuyANewYubikey
+            solve( !Smaller( S(otc), tc1 ) ▶₃ #t1 )
+              case SimpleSmaller
+              solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
+                case BuyANewYubikey
+                solve( !Smaller( S(myzero), tc2 ) ▶₃ #t2 )
+                  case SimpleSmaller
+                  by contradiction /* from formulas */
+                next
+                  case ZExtendedSmaller_case_1
+                  by contradiction /* from formulas */
+                next
+                  case ZExtendedSmaller_case_2
+                  by contradiction /* from formulas */
                 qed
-              next
-                case ZExtendedSmaller_case_1
-                by contradiction /* from formulas */
-              next
-                case ZExtendedSmaller_case_2
-                solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
-                  case BuyANewYubikey
-                  solve( !Smaller( S(myzero), tc2 ) ▶₃ #t2 )
-                    case SimpleSmaller
-                    by contradiction /* from formulas */
-                  next
-                    case ZExtendedSmaller_case_1
-                    by contradiction /* from formulas */
-                  next
-                    case ZExtendedSmaller_case_2
-                    by contradiction /* from formulas */
-                  qed
+              qed
+            next
+              case ZExtendedSmaller_case_1
+              by contradiction /* from formulas */
+            next
+              case ZExtendedSmaller_case_2
+              solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
+                case BuyANewYubikey
+                solve( !Smaller( S(myzero), tc2 ) ▶₃ #t2 )
+                  case SimpleSmaller
+                  by contradiction /* from formulas */
+                next
+                  case ZExtendedSmaller_case_1
+                  by contradiction /* from formulas */
+                next
+                  case ZExtendedSmaller_case_2
+                  by contradiction /* from formulas */
                 qed
               qed
             qed
@@ -912,18 +901,11 @@ next
           by sorry /* unannotated */
         next
           case BuyANewYubikey
-          by contradiction /* non-injective facts (#vr.1,#t1,#t2) */
+          by contradiction /* cyclic */
         next
           case Server_ReceiveOTP_NewSession_case_1
-          solve( ((#vr.4 < #t1) ∧
-                  (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
-                 (#t1 < #vr.4) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
-            case case_2
-            by contradiction /* from formulas */
-          qed
+          simplify
+          by contradiction /* from formulas */
         next
           case Server_ReceiveOTP_NewSession_case_2
           solve( ((#vr.4 < #t1) ∧
@@ -1070,50 +1052,43 @@ next
           by sorry /* unannotated */
         next
           case BuyANewYubikey
-          by contradiction /* non-injective facts (#vr.1,#t1,#t2) */
+          by contradiction /* cyclic */
         next
           case Server_ReceiveOTP_NewSession_case_1
-          solve( ((#vr.4 < #t1) ∧
-                  (∃ #t3. (IsSmaller( S(myzero), tc1 ) @ #t3) ∧ ¬(last(#t3))))  ∥
-                 (#t1 < #vr.4) )
-            case case_1
-            by contradiction /* non-injective facts (#vr.4,#t1,#t2) */
-          next
-            case case_2
-            solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
-              case BuyANewYubikey
-              solve( !Smaller( S(y), tc1 ) ▶₃ #t1 )
-                case SimpleSmaller
-                solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
-                  case BuyANewYubikey
-                  solve( !Smaller( S(myzero), tc2 ) ▶₃ #t2 )
-                    case SimpleSmaller
-                    by contradiction /* from formulas */
-                  next
-                    case ZExtendedSmaller_case_1
-                    by contradiction /* from formulas */
-                  next
-                    case ZExtendedSmaller_case_2
-                    by contradiction /* from formulas */
-                  qed
+          simplify
+          solve( !SharedKey( ~pid, k ) ▶₂ #t1 )
+            case BuyANewYubikey
+            solve( !Smaller( S(y), tc1 ) ▶₃ #t1 )
+              case SimpleSmaller
+              solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
+                case BuyANewYubikey
+                solve( !Smaller( S(myzero), tc2 ) ▶₃ #t2 )
+                  case SimpleSmaller
+                  by contradiction /* from formulas */
+                next
+                  case ZExtendedSmaller_case_1
+                  by contradiction /* from formulas */
+                next
+                  case ZExtendedSmaller_case_2
+                  by contradiction /* from formulas */
                 qed
-              next
-                case ZExtendedSmaller_case_1
-                by contradiction /* from formulas */
-              next
-                case ZExtendedSmaller_case_2
-                solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
-                  case BuyANewYubikey
-                  solve( !Smaller( S(myzero), tc2 ) ▶₃ #t2 )
-                    case SimpleSmaller
-                    by contradiction /* from formulas */
-                  next
-                    case ZExtendedSmaller_case_1
-                    by contradiction /* from formulas */
-                  next
-                    case ZExtendedSmaller_case_2
-                    by contradiction /* from formulas */
-                  qed
+              qed
+            next
+              case ZExtendedSmaller_case_1
+              by contradiction /* from formulas */
+            next
+              case ZExtendedSmaller_case_2
+              solve( !SharedKey( ~pid, k.1 ) ▶₂ #t2 )
+                case BuyANewYubikey
+                solve( !Smaller( S(myzero), tc2 ) ▶₃ #t2 )
+                  case SimpleSmaller
+                  by contradiction /* from formulas */
+                next
+                  case ZExtendedSmaller_case_1
+                  by contradiction /* from formulas */
+                next
+                  case ZExtendedSmaller_case_2
+                  by contradiction /* from formulas */
                 qed
               qed
             qed
@@ -3780,6 +3755,10 @@ next
   by contradiction /* from formulas */
 qed
 
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -3795,9 +3774,9 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 13.366438753s
+  processing time: 17.171069702s
   Login_reachable (exists-trace): verified (12 steps)
-  slightly_weaker_invariant (all-traces): verified (1145 steps)
+  slightly_weaker_invariant (all-traces): verified (1141 steps)
   no_replay (all-traces): verified (4 steps)
   injective_correspondance (all-traces): verified (23 steps)
   Login_invalidates_smaller_counters (all-traces): verified (4 steps)
@@ -3810,9 +3789,9 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 13.366438753s
+  processing time: 17.171069702s
   Login_reachable (exists-trace): verified (12 steps)
-  slightly_weaker_invariant (all-traces): verified (1145 steps)
+  slightly_weaker_invariant (all-traces): verified (1141 steps)
   no_replay (all-traces): verified (4 steps)
   injective_correspondance (all-traces): verified (23 steps)
   Login_invalidates_smaller_counters (all-traces): verified (4 steps)

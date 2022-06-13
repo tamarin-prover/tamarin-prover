@@ -1,6 +1,10 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns  #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -586,7 +590,7 @@ substNextGoalNr     = return ()
 
 -- | Apply the current substitution of the equation store to a part of the
 -- sequent. This is an internal function.
-substPart :: Apply a => (System :-> a) -> Reduction ()
+substPart :: Apply LNSubst a => (System :-> a) -> Reduction ()
 substPart l = do subst <- getM sSubst
                  modM l (apply subst)
 

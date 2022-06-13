@@ -414,7 +414,7 @@ precomputeSources ctxt restrictions =
           else []
       -- User-defined functions  --TODO-UNCERTAIN removed iterated functions
       , [ fAppNoEq o $ nMsgVars k
-        | o@(_,(k,priv)) <- S.toList . noEqFunSyms  $ msig
+        | o@(_,(k,priv,_)) <- S.toList . noEqFunSyms  $ msig
         , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
       ]
 

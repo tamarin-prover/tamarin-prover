@@ -3,7 +3,8 @@ theory CH07_UK1 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
+functions: fst/1[destructor], h/1, lh/1, pair/2, rh/1, rot/2,
+           snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -9215,7 +9216,7 @@ analyzing: examples/csf18-xor/diff-models/CH07-UK1.spthy
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 118.181113416s
+  processing time: 179.638424363s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3048 steps)
@@ -9228,7 +9229,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 118.181113416s
+  processing time: 179.638424363s
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3048 steps)

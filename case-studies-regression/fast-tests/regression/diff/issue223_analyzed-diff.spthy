@@ -2,7 +2,8 @@ theory issue223 begin
 
 // Function signature and definition of the equational theory E
 
-functions: commit/3, fake/4, fst/1, open/3, pair/2, pk/1, snd/1
+functions: commit/3, fake/4, fst/1[destructor], open/3, pair/2, pk/1,
+           snd/1[destructor]
 equations:
     commit(ni2, fake(ni1, r, sk, ni2), pk(sk)) = commit(ni1, r, pk(sk)),
     fake(ni2, fake(ni1, r, sk, ni2), sk, ni3) = fake(ni1, r, sk, ni3),
@@ -3246,7 +3247,7 @@ analyzing: examples/regression/diff/issue223.spthy
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 4.787789089s
+  processing time: 10.014423177s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ------------------------------------------------------------------------------
@@ -3257,7 +3258,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 4.787789089s
+  processing time: 10.014423177s
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ==============================================================================
