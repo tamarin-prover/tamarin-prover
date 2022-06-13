@@ -6564,7 +6564,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -6574,7 +6574,7 @@ analyzing: examples/csf18-xor/LAK06.spthy
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 18.63525065s
+  processing time: 17.302305082s
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2082 steps)
@@ -6588,7 +6588,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 18.63525065s
+  processing time: 17.302305082s
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2082 steps)

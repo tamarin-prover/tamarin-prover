@@ -395,7 +395,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -405,7 +405,7 @@ analyzing: examples/ccs15/Attack_TPM_Envelope.spthy
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.620680073s
+  processing time: 0.577828449s
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
@@ -424,7 +424,7 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.620680073s
+  processing time: 0.577828449s
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)

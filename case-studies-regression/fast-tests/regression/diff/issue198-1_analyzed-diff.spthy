@@ -13,11 +13,11 @@ rule (modulo E) Setup:
   --[ Setup( ), Roles( $H1, $H2, $D1, $D2 ) ]->
    [
    AgSt_H1v( diff($H2, $H1), diff($D2, $D1), ~v1 ),
-   ShuffleAgents( (<$D1, $H1>+<$D2, $H2>) )
+   ShuffleAgents( (<$D1, $H1>++<$D2, $H2>) )
    ]
 
 rule (modulo E) shuffleVoters:
-   [ ShuffleAgents( (x+y) ) ] --> [ AgSt_S0( x ), AgSt_S0( y ) ]
+   [ ShuffleAgents( (x++y) ) ] --> [ AgSt_S0( x ), AgSt_S0( y ) ]
 
 rule (modulo E) H_vote:
    [ AgSt_H1v( $H, $D, vote ) ]
@@ -86,11 +86,11 @@ next
   backward-search
     case LHS
     step( simplify )
-    by step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    by step( solve( !KD( (x++y) ) ▶₀ #i ) )
   next
     case RHS
     step( simplify )
-    by step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    by step( solve( !KD( (x++y) ) ▶₀ #i ) )
   qed
 next
   case Rule_Equality
@@ -254,7 +254,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( ShuffleAgents( (x+y) ) ▶₀ #i ) )
+    step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
       case Setup_case_1
       by sorry // Cannot prove
     next
@@ -264,7 +264,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( ShuffleAgents( (x+y) ) ▶₀ #i ) )
+    step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
       case Setup_case_1
       by sorry // Cannot prove
     next
@@ -277,7 +277,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -287,7 +287,7 @@ analyzing: examples/regression/diff/issue198-1.spthy
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.953121894s
+  processing time: 0.75515841s
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ------------------------------------------------------------------------------
@@ -298,7 +298,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.953121894s
+  processing time: 0.75515841s
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ==============================================================================

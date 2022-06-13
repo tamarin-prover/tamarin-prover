@@ -356,7 +356,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -366,7 +366,7 @@ analyzing: examples/csf12/NAXOS_eCK_PFS.spthy
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 5.756405421s
+  processing time: 3.484413727s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ------------------------------------------------------------------------------
@@ -377,7 +377,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 5.756405421s
+  processing time: 3.484413727s
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================

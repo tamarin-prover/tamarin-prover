@@ -131,7 +131,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -141,7 +141,7 @@ analyzing: examples/cav13/DH_example.spthy
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.281971466s
+  processing time: 0.108130993s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 
@@ -153,7 +153,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.281971466s
+  processing time: 0.108130993s
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 

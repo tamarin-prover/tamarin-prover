@@ -127,11 +127,11 @@ rule (modulo E) Yubikey_Plugin:
 rule (modulo E) Yubikey_PressButton:
    [
    Y_counter( pid, tc ), !Y_Key( pid, k2 ), !Y_sid( pid, sid ), Fr( ~pr ),
-   Fr( ~nonce ), In( ('1'+tc) )
+   Fr( ~nonce ), In( ('1'++tc) )
    ]
   --[ YubiPress( pid, tc ), YubiPressOtp( pid, <sid, tc, ~pr>, tc, k2 ) ]->
    [
-   Y_counter( pid, ('1'+tc) ),
+   Y_counter( pid, ('1'++tc) ),
    Out( <pid, ~nonce, senc(<sid, tc, ~pr>, k2)> )
    ]
 
@@ -156,16 +156,18 @@ rule (modulo E) Server_ReceiveOTP_NewSession:
   /* has exactly the trivial AC variant */
 
 restriction smaller:
-  "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. (a+z) = b)"
+  "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. (a++z) = b)"
 
 lemma transitivity:
   all-traces
   "∀ #t1 #t2 a b c.
-    ((Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)) ⇒ (∃ z. (a+z) = c)"
+    ((Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)) ⇒ (∃ z. (a++z) = c)"
 /*
 guarded formula characterizing all counter-examples:
 "∃ #t1 #t2 a b c.
-  (Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2) ∧ ∀ z. ((a+z) = c) ⇒ ⊥"
+  (Smaller( a, b ) @ #t1) ∧ (Smaller( b, c ) @ #t2)
+ ∧
+  ∀ z. ((a++z) = c) ⇒ ⊥"
 */
 simplify
 by contradiction /* from formulas */
@@ -199,7 +201,7 @@ next
             (∃ #t1 pid.
               (YubiPress( pid, sc ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t3))))  ∥
          (∃ #i a b.
-           (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+           (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a++z) = b) ⇒ ⊥)) )
     case case_1
     solve( (last(#t3))  ∥
            (∃ #t1 pid.
@@ -438,7 +440,7 @@ next
              ⇒
               ((last(#t6)) ∨ (last(#t5)))))  ∥
            (∃ #i a b.
-             (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+             (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a++z) = b) ⇒ ⊥)) )
       case case_1
       solve( (last(#t2))  ∥ (last(#t1)) )
         case case_1
@@ -468,7 +470,7 @@ next
              ⇒
               ((last(#t6)) ∨ (last(#t5)))))  ∥
            (∃ #i a b.
-             (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+             (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a++z) = b) ⇒ ⊥)) )
       case case_1
       solve( (last(#t6))  ∥ (last(#t5)) )
         case case_1
@@ -522,14 +524,14 @@ lemma slightly_weaker_invariant [reuse, use_induction]:
   "∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
     ((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
      (LoginCounter( pid, otc2, tc2 ) @ #t2)) ⇒
-    ((((#t1 < #t2) ∧ (∃ z. tc2 = (tc1+z))) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
+    ((((#t1 < #t2) ∧ (∃ z. tc2 = (tc1++z))) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
 /*
 guarded formula characterizing all counter-examples:
 "∃ pid otc1 tc1 otc2 tc2 #t1 #t2.
   (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
   (LoginCounter( pid, otc2, tc2 ) @ #t2)
  ∧
-  (((¬(#t1 < #t2)) ∨ (∀ z. (tc2 = (tc1+z)) ⇒ ⊥))) ∧
+  (((¬(#t1 < #t2)) ∨ (∀ z. (tc2 = (tc1++z)) ⇒ ⊥))) ∧
   (¬(#t2 < #t1)) ∧
   (¬(#t1 = #t2))"
 */
@@ -539,7 +541,7 @@ induction
 next
   case non_empty_trace
   simplify
-  solve( (¬(#t1 < #t2))  ∥ (∀ z.2. ((otc2+z.1) = (otc1+z+z.2)) ⇒ ⊥) )
+  solve( (¬(#t1 < #t2))  ∥ (∀ z.2. ((otc2++z.1) = (otc1++z++z.2)) ⇒ ⊥) )
     case case_1
     solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
       case case_1
@@ -566,13 +568,13 @@ next
                 ⇒
                  ((last(#t2)) ∨
                   (last(#t1)) ∨
-                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
+                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1++z)))) ∨
                   (#t2 < #t1) ∨
                   (#t1 = #t2)))  ∥
                (∃ #i a b.
-                 (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+                 (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a++z) = b) ⇒ ⊥)) )
           case case_1
-          solve( ((#vr < #t1) ∧ (∃ z.3. ((otc1+z) = (otc+z.2+z.3))))  ∥
+          solve( ((#vr < #t1) ∧ (∃ z.3. ((otc1++z) = (otc++z.2++z.3))))  ∥
                  (#t1 < #vr)  ∥ (#vr = #t1) )
             case case_1_case_01
             by contradiction /* cyclic */
@@ -739,13 +741,13 @@ next
                 ⇒
                  ((last(#t2)) ∨
                   (last(#t1)) ∨
-                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1+z)))) ∨
+                  ((#t1 < #t2) ∧ (∃ z. (tc2 = (tc1++z)))) ∨
                   (#t2 < #t1) ∨
                   (#t1 = #t2)))  ∥
                (∃ #i a b.
-                 (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a+z) = b) ⇒ ⊥)) )
+                 (Smaller( a, b ) @ #i) ∧ (¬(last(#i))) ∧ (∀ z. ((a++z) = b) ⇒ ⊥)) )
           case case_1
-          solve( ((#vr < #t1) ∧ (∃ z.3. ((otc1+z) = (otc+z.2+z.3))))  ∥
+          solve( ((#vr < #t1) ∧ (∃ z.3. ((otc1++z) = (otc++z.2++z.3))))  ∥
                  (#t1 < #vr)  ∥ (#vr = #t1) )
             case case_1_case_01
             by contradiction /* cyclic */
@@ -971,14 +973,14 @@ solve( !HSM( kh, k ) ▶₁ #t2 )
     case BuyANewYubikey
     solve( !S_sid( ~pid, ~sid ) ▶₄ #t2 )
       case BuyANewYubikey
-      solve( !KU( senc(<~sid, (otc+z), ~pr>, ~k2) ) @ #vk.4 )
+      solve( !KU( senc(<~sid, (otc++z), ~pr>, ~k2) ) @ #vk.4 )
         case Yubikey_PressButton
         solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
           case case_1
-          by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+          by solve( Login( ~pid, ~sid, (otc++z), otp2 ) @ #t3 )
         next
           case case_2
-          by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+          by solve( Login( ~pid, ~sid, (otc++z), otp2 ) @ #t3 )
         qed
       next
         case c_senc
@@ -992,14 +994,14 @@ solve( !HSM( kh, k ) ▶₁ #t2 )
     case write_AEAD
     solve( !S_sid( pid, sid ) ▶₄ #t2 )
       case BuyANewYubikey
-      solve( !KU( senc(<~sid, (otc+z), ~pr>, k2) ) @ #vk.4 )
+      solve( !KU( senc(<~sid, (otc++z), ~pr>, k2) ) @ #vk.4 )
         case Yubikey_PressButton
         solve( (#t3 < #t2)  ∥ (#t2 < #t3) )
           case case_1
-          by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+          by solve( Login( ~pid, ~sid, (otc++z), otp2 ) @ #t3 )
         next
           case case_2
-          by solve( Login( ~pid, ~sid, (otc+z), otp2 ) @ #t3 )
+          by solve( Login( ~pid, ~sid, (otc++z), otp2 ) @ #t3 )
         qed
       next
         case c_senc
@@ -1176,14 +1178,14 @@ lemma Login_invalidates_smaller_counters:
   "∀ pid otc1 tc1 otc2 tc2 #t1 #t2 z.
     (((LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
       (LoginCounter( pid, otc2, tc2 ) @ #t2)) ∧
-     (tc2 = (tc1+z))) ⇒
+     (tc2 = (tc1++z))) ⇒
     (#t1 < #t2)"
 /*
 guarded formula characterizing all counter-examples:
 "∃ pid otc1 tc1 otc2 tc2 #t1 #t2 z.
   (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
   (LoginCounter( pid, otc2, tc2 ) @ #t2) ∧
-  (tc2 = (tc1+z))
+  (tc2 = (tc1++z))
  ∧
   ¬(#t1 < #t2)"
 */
@@ -1198,13 +1200,13 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
       case BuyANewYubikey
       solve( !S_sid( ~pid, ~sid ) ▶₄ #t1 )
         case BuyANewYubikey
-        by solve( LoginCounter( ~pid, otc2, (otc1+z+z.1) ) @ #t1 )
+        by solve( LoginCounter( ~pid, otc2, (otc1++z++z.1) ) @ #t1 )
       qed
     next
       case write_AEAD
       solve( !S_sid( pid, sid ) ▶₄ #t1 )
         case BuyANewYubikey
-        by solve( LoginCounter( ~pid, otc2, (otc1+z+z.1) ) @ #t1 )
+        by solve( LoginCounter( ~pid, otc2, (otc1++z++z.1) ) @ #t1 )
       qed
     qed
   qed
@@ -1231,7 +1233,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -1241,7 +1243,7 @@ analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multise
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 6.550213065s
+  processing time: 5.69414785s
   transitivity (all-traces): verified (2 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (27 steps)
@@ -1258,7 +1260,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 6.550213065s
+  processing time: 5.69414785s
   transitivity (all-traces): verified (2 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
   neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (27 steps)

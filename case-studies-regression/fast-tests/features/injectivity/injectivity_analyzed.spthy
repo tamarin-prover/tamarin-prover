@@ -68,7 +68,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -78,7 +78,7 @@ analyzing: examples/features//injectivity/injectivity.spthy
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.023936838s
+  processing time: 0.021203497s
   injectivity_check (all-traces): verified (9 steps)
 
 ------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ summary of summaries:
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.023936838s
+  processing time: 0.021203497s
   injectivity_check (all-traces): verified (9 steps)
 
 ==============================================================================

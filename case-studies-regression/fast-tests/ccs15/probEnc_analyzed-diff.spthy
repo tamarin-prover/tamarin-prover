@@ -221,7 +221,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -231,7 +231,7 @@ analyzing: examples/ccs15/probEnc.spthy
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.51629814s
+  processing time: 0.210453188s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.51629814s
+  processing time: 0.210453188s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

@@ -523,7 +523,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -533,7 +533,7 @@ analyzing: examples/ake/bilinear/RYY.spthy
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 8.571853065s
+  processing time: 6.968541504s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
@@ -545,7 +545,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 8.571853065s
+  processing time: 6.968541504s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 

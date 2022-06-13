@@ -730,7 +730,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -740,7 +740,7 @@ analyzing: examples/csf12/NAXOS_eCK.spthy
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 6.004839056s
+  processing time: 3.772871613s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ------------------------------------------------------------------------------
@@ -751,7 +751,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 6.004839056s
+  processing time: 3.772871613s
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ==============================================================================

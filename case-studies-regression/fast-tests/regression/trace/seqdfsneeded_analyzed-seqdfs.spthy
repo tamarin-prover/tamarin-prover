@@ -139,7 +139,7 @@ rule (modulo E) amplify_decoy_case3:
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.1. OK.
  checking installation: OK.
 
 
@@ -149,7 +149,7 @@ analyzing: examples/regression/trace/seqdfsneeded.spthy
 analyzed: examples/regression/trace/seqdfsneeded.spthy
 
   output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.241769075s
+  processing time: 0.146266331s
   slow (exists-trace): verified (24 steps)
 
 ------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ summary of summaries:
 analyzed: examples/regression/trace/seqdfsneeded.spthy
 
   output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.241769075s
+  processing time: 0.146266331s
   slow (exists-trace): verified (24 steps)
 
 ==============================================================================
