@@ -3,11 +3,15 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Items.LemmaItem (
     module Items.LemmaItem
 ) where
 
+import GHC.Records
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
@@ -73,8 +77,12 @@ data DiffLemma p = DiffLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''DiffLemma])
 
+type HasLemmaName l = HasField "lName" l String
 
-
+instance HasField "lName" (ProtoLemma f p) String where
+  getField = _lName
+instance HasField "lName" (DiffLemma p) String where
+  getField = _lDiffName
 
 
 -- Instances
