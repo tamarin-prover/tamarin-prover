@@ -209,7 +209,7 @@ loadOpenDiffThy as = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThy as inFile = do
   thy0 <- loadOpenDiffThy as inFile
-  thy1 <- addMessageDeductionRuleVariantsDiff thy0
+  thy1 <- return $ addMessageDeductionRuleVariantsDiff thy0
   closeDiffThy as thy1
 
 reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
@@ -245,7 +245,7 @@ printFileName inFile = do
 loadClosedThyWf :: Arguments -> FilePath -> IO (ClosedTheory, Pretty.Doc)
 loadClosedThyWf as inFile = do
     (openThy, transThy0) <- loadOpenAndTranslatedThy as inFile
-    transThy <- addMessageDeductionRuleVariants transThy0
+    transThy <- return $ addMessageDeductionRuleVariants transThy0
     sig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
     -- report
     let errors = checkWellformedness transThy sig ++ Sapic.checkWellformednessSapic openThy
@@ -258,7 +258,7 @@ loadClosedThyWf as inFile = do
 loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
 loadClosedThyWfReport as inFile = do
     (openThy, transThy0) <- loadOpenAndTranslatedThy as inFile
-    transThy <- addMessageDeductionRuleVariants transThy0
+    transThy <- return $ addMessageDeductionRuleVariants transThy0
     transSig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
     -- report
     let prefix = printFileName inFile
@@ -271,7 +271,7 @@ loadClosedThyWfReport as inFile = do
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThyWfReport as inFile = do
     thy0 <- loadOpenDiffThy as inFile
-    thy1 <- addMessageDeductionRuleVariantsDiff thy0
+    thy1 <- return $ addMessageDeductionRuleVariantsDiff thy0
     sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
     -- report
     let prefix = printFileName inFile
@@ -296,7 +296,7 @@ loadClosedDiffThyString as input =
     case parseOpenDiffTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> fmap Right $ do
-          thy1 <- addMessageDeductionRuleVariantsDiff thy
+          thy1 <- return $ addMessageDeductionRuleVariantsDiff thy
           closeDiffThy as thy1
 
 -- | Load an open theory from a string.
@@ -333,7 +333,7 @@ reportOnClosedDiffThyStringWellformedness as input = do
     case loadOpenDiffThyString as input of
       Left  err   -> return $ "parse error: " ++ show err
       Right thy0 -> do
-        thy1 <- addMessageDeductionRuleVariantsDiff thy0
+        thy1 <- return $ addMessageDeductionRuleVariantsDiff thy0
         sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
         -- report
         case checkWellformednessDiff thy1 sig of
@@ -345,7 +345,7 @@ reportOnClosedDiffThyStringWellformedness as input = do
 -- | Close a theory according to arguments.
 closeThy :: Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
 closeThy as openThy transThy = do
-  transThy' <- addMessageDeductionRuleVariants transThy
+  transThy' <- return $ addMessageDeductionRuleVariants transThy
   sig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy'
   closeThyWithMaude sig as openThy transThy'
 
@@ -452,6 +452,7 @@ constructAutoProver as =
       Just other    -> error $ "unknown stop-on-trace method: " ++ other
 
 
+
 ------------------------------------------------------------------------------
 -- Message deduction variants cached in files
 ------------------------------------------------------------------------------
@@ -481,36 +482,34 @@ mkBpIntruderVariants msig =
 -- | Add the variants of the message deduction rule. Uses built-in cached
 -- files for the variants of the message deduction rules for Diffie-Hellman
 -- exponentiation and Bilinear-Pairing.
-addMessageDeductionRuleVariants :: OpenTranslatedTheory -> IO OpenTranslatedTheory
-                                -- TODO (SM): drop use of IO here.
+addMessageDeductionRuleVariants :: OpenTranslatedTheory -> OpenTranslatedTheory
 addMessageDeductionRuleVariants thy0
   | enableBP msig = addIntruderVariants [ mkDhIntruderVariants
                                         , mkBpIntruderVariants ]
   | enableDH msig = addIntruderVariants [ mkDhIntruderVariants ]
-  | otherwise     = return thy
+  | otherwise     = thy
   where
     msig         = get (sigpMaudeSig . thySignature) thy0
     rules        = subtermIntruderRules False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
     thy          = addIntrRuleACsAfterTranslate rules thy0
-    addIntruderVariants mkRuless = do
-        return $ addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
+    addIntruderVariants mkRuless = addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
 
 -- | Add the variants of the message deduction rule. Uses the cached version
 -- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
 -- deduction rules for Diffie-Hellman exponentiation.
-addMessageDeductionRuleVariantsDiff :: OpenDiffTheory -> IO OpenDiffTheory
+addMessageDeductionRuleVariantsDiff :: OpenDiffTheory -> OpenDiffTheory
 addMessageDeductionRuleVariantsDiff thy0
   | enableBP msig = addIntruderVariantsDiff [ mkDhIntruderVariants
                                             , mkBpIntruderVariants ]
   | enableDH msig = addIntruderVariantsDiff [ mkDhIntruderVariants ]
-  | otherwise     = return $ addIntrRuleLabels thy
+  | otherwise     = addIntrRuleLabels thy
   where
     msig         = get (sigpMaudeSig . diffThySignature) thy0
     rules diff'  = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
                     ++ (if enableMSet msig then multisetIntruderRules else [])
                     ++ (if enableXor msig then xorIntruderRules else [])
     thy          = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
-    addIntruderVariantsDiff mkRuless = do
-        return $ addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)
+    addIntruderVariantsDiff mkRuless =
+        addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)
