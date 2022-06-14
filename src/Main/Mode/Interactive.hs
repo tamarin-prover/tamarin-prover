@@ -99,18 +99,22 @@ run thisMode as = case findArg "workDir" as of
                 ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
                 cacheDir
                 workDir (argExists "loadstate" as) (argExists "autosave" as)
+
                 (loadClosedDiffThyWfReport as) (loadClosedDiffThyString as)
                 (reportOnClosedDiffThyStringWellformedness as)
+
                 (argExists "debug" as) (dotPath as) readImageFormat
-                (constructAutoDiffProver as)
+                (constructAutoProver as)
                 (runWarp port)
             else do 
               withWebUI
                 ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
                 cacheDir
                 workDir (argExists "loadstate" as) (argExists "autosave" as)
+
                 (loadClosedThyWfReport as) (loadClosedThyString as)
                 (reportOnClosedThyStringWellformedness as)
+
                 (argExists "debug" as) (graphPath as) readImageFormat
                 (constructAutoProver as)
                 (runWarp port)

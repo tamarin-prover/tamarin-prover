@@ -40,9 +40,8 @@ module Main.TheoryLoader (
   , reportOnClosedDiffThyStringWellformedness
 
 
-  -- ** Constructing automatic provers
+  -- ** Constructing automatic prover
   , constructAutoProver
-  , constructAutoDiffProver
 
   -- ** Cached Message Deduction Rule Variants
   , dhIntruderVariantsFile
@@ -416,7 +415,7 @@ closeDiffThyWithMaude sig as thy0 = do
       -- diff prover: replace all annotated sorrys with the configured autoprover.
       diffprover :: DiffProver
       diffprover | argExists "prove" as =
-                         replaceDiffSorryProver $ runAutoDiffProver $ constructAutoDiffProver as
+                         replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver as
                  | otherwise            = mempty
 
       -- replace all annotated sorrys with the configured autoprover.
@@ -437,33 +436,12 @@ constructAutoProver as =
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
-                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRanking) rawRankings
+                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . toGoalRanking) rawRankings
         Just []                -> error "--heuristic: at least one ranking must be given"
         _                      -> Nothing
 
-    stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
-      Nothing       -> CutDFS
-      Just "dfs"    -> CutDFS
-      Just "none"   -> CutNothing
-      Just "bfs"    -> CutBFS
-      Just "seqdfs" -> CutSingleThreadDFS
-      Just other    -> error $ "unknown stop-on-trace method: " ++ other
-
--- | Construct an 'AutoProver' from the given arguments (--bound,
--- --stop-on-trace).
-constructAutoDiffProver :: Arguments -> AutoProver
-constructAutoDiffProver as =
-    AutoProver heuristic proofBound stopOnTrace
-  where
-    -- handles to relevant arguments
-    --------------------------------
-    proofBound      = read <$> findArg "bound" as
-
-    heuristic = case findArg "heuristic" as of
-        Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
-                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . charToGoalRankingDiff) rawRankings
-        Just []                -> error "--heuristic: at least one ranking must be given"
-        _                      -> Nothing
+    toGoalRanking | argExists "diff" as = charToGoalRankingDiff
+                  | otherwise           = charToGoalRanking
 
     stopOnTrace = case (map toLower) <$> findArg "stopOnTrace" as of
       Nothing       -> CutDFS
