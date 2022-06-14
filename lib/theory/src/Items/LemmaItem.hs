@@ -84,6 +84,13 @@ instance HasField "lName" (ProtoLemma f p) String where
 instance HasField "lName" (DiffLemma p) String where
   getField = _lDiffName
 
+type HasLemmaAttributes l = HasField "lAttributes" l [LemmaAttribute]
+
+instance HasField "lAttributes" (ProtoLemma f p) [LemmaAttribute] where
+  getField = _lAttributes
+instance HasField "lAttributes" (DiffLemma p) [LemmaAttribute] where
+  getField = _lDiffAttributes
+
 
 -- Instances
 ------------

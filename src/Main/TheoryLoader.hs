@@ -1,5 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -83,6 +86,7 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 import qualified Theory.Text.Pretty as Pretty
+import           Items.LemmaItem (HasLemmaName, HasLemmaAttributes)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -146,15 +150,15 @@ quitOnWarning as = if argExists "quit-on-warning" as then ["quit-on-warning"] el
 hasQuitOnWarning :: Arguments -> Bool
 hasQuitOnWarning as = "quit-on-warning" `elem` quitOnWarning as
 
-lemmaSelectorByModule :: Arguments -> ProtoLemma f p -> Bool
+lemmaSelectorByModule :: HasLemmaAttributes l => Arguments -> l -> Bool
 lemmaSelectorByModule as lem = case lemmaModules of
     [] -> True -- default to true if no modules (or only empty ones) are set
     _  -> getOutputModule as `elem` lemmaModules
     where
-        lemmaModules = concat [ m | LemmaModule m <- get lAttributes lem]
+        lemmaModules = concat [ m | LemmaModule m <- lem.lAttributes]
 
 -- | Select lemmas for proving
-lemmaSelector :: Arguments -> Lemma p -> Bool
+lemmaSelector :: HasLemmaName l => Arguments -> l -> Bool
 lemmaSelector as lem
   | null lemmaNames = True
   | lemmaNames == [""] = True
@@ -166,22 +170,9 @@ lemmaSelector as lem
 
       lemmaMatches :: String -> Bool
       lemmaMatches pattern
-        | lastMay pattern == Just '*' = init pattern `isPrefixOf` get lName lem
-        | otherwise = get lName lem == pattern
+        | lastMay pattern == Just '*' = init pattern `isPrefixOf` lem.lName
+        | otherwise = lem.lName == pattern
 
--- | Select diffLemmas for proving
-diffLemmaSelector :: Arguments -> DiffLemma p -> Bool
-diffLemmaSelector as lem
-  | lemmaNames == [""] = True
-  | otherwise = any lemmaMatches lemmaNames
-  where
-      lemmaNames :: [String]
-      lemmaNames = (findArg "prove" as) ++ (findArg "lemma" as)
-
-      lemmaMatches :: String -> Bool
-      lemmaMatches pattern
-        | lastMay pattern == Just '*' = init pattern `isPrefixOf` get lDiffName lem
-        | otherwise = get lDiffName lem == pattern
 
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
@@ -406,7 +397,7 @@ closeDiffThyWithMaude sig as thy0 = do
   let thy2 = wfCheckDiff thy0
   -- close and prove
   let cthy = closeDiffTheoryWithMaude sig (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
-  return $ proveDiffTheory (lemmaSelectorByModule as &&& lemmaSelector as) (diffLemmaSelector as) prover diffprover $ partialEvaluation cthy
+  return $ proveDiffTheory (lemmaSelectorByModule as &&& lemmaSelector as) prover diffprover $ partialEvaluation cthy
     where
       -- apply partial application
       ----------------------------
