@@ -5,6 +5,6 @@ packages:
 - lib/term/
 - lib/utils/
 - lib/sapic/
-resolver: lts-18.13
+resolver: lts-19.0
 nix:
   packages: [ zlib ]

@@ -40,7 +40,7 @@ import           Control.Category
 import           Control.Monad.Disj
 -- import           Control.Monad.Fresh
 import           Control.Monad.Reader
-import           Control.Monad.State                (gets, modify)
+import           Control.Monad.State                (gets)
 
 
 import           Extension.Data.Label               hiding (modify)
@@ -68,7 +68,7 @@ simplifySystem = do
         -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
         -- Remove equation split goals that do not exist anymore
-        removeSolvedSplitGoals    
+        removeSolvedSplitGoals
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -230,7 +230,7 @@ enforceFreshAndKuNodeUniqueness =
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
-                    
+
 
 -- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
@@ -429,16 +429,15 @@ freshOrdering = do
           FreshFact -> Just (head $ factTerms prem, idx)
           _         -> Nothing
         ) prems
-      
+
       getFreshVarsNotBelowReducible :: FunSig -> (NodeId, RuleACInst) -> [(LNTerm, [NodeId])]
       getFreshVarsNotBelowReducible reducible (idx, get rPrems -> prems) = concatMap (\prem -> case factTag prem of
           FreshFact -> []
           _         -> S.toList $ S.fromList $ map (,[idx]) (concatMap (extractFreshNotBelowReducible reducible) (factTerms prem))
         ) prems
-      
+
       extractFreshNotBelowReducible :: FunSig -> LNTerm -> [LNTerm]
       extractFreshNotBelowReducible reducible (viewTerm -> FApp f as) | f `S.notMember` reducible
                                       = concatMap (extractFreshNotBelowReducible reducible) as
       extractFreshNotBelowReducible _ t | isFreshVar t = [t]
       extractFreshNotBelowReducible _ _                = []
-      
