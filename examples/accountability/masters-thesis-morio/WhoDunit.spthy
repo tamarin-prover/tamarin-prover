@@ -1,0 +1,80 @@
+/*
+ * Protocol: WhoDunit
+ * Modeler:  Kevin Morio and Robert Künnemann
+ * Date:     Nov 2019
+ * Source:   "Automated Verification of Accountability in Security Protocols", Robert Künnemann, Ilkan Esiyok, and Michael Backes, CSF19
+ * Status:   working
+ */
+
+theory WhoDunit
+begin
+
+functions:
+  pk/1, sk/1[private],
+  sig/2, verify/3,
+  true/0,
+  extract/1
+
+equations:
+  verify(sig(m, sk(i)), m, pk(sk(i))) = true,
+  extract(sig(m, sk(i))) = m
+
+
+let S =
+  let m = <<sid, v>, sig(<sid, v>, sk($x))> in
+    in(v);
+    out(c_SA, m);
+    out(c_SJ, m)
+
+let A =
+  let pk_x = pk(sk($x)) in
+    in(c_SA, <<sid_s, v>, sig_s>);
+    if verify(sig_s, <sid, v>, pk_x) = true then
+      out(c_AJ, <<sid, v>, sig_s, sig(<sid, v>, sk($y))>)
+
+let J =
+  let pk_x = pk(sk($x))
+    pk_y = pk(sk($y))
+  in
+    in(c_SJ, <<sid_s, v_s>, sig1_s>);
+    in(c_AJ, <<sid_a, v_a>, sig2_s, sig_a>);
+    if verify(sig1_s, <sid, v_s>, pk_x) = true then
+      if verify(sig2_s, <sid, v_a>, pk_x) = true then
+        if verify(sig_a, <sid, v_a>, pk_y) = true then
+          if v_s = v_a then
+            event Equal(sid)
+          else
+            event Unequal(sid);
+            event Blame(sid, $x)
+
+let Adv =
+  in('c', <'corrupt', $p>);
+  event Corrupted($p);
+  if $p = $x then
+    out('c', <sk($p), sid, c_SA, c_SJ>)
+  else if $p = $y then
+    out('c', <sk($p), sid, c_SA, c_AJ>)
+
+let P =
+  new sid; new c_SA; new c_AJ; new c_SJ;
+  in(<$x, $y>);
+  if $x = $y then 0 else
+    out(pk(sk($x)));
+    out(pk(sk($y)));
+    (S | A | J | !Adv)
+
+
+!P
+
+
+test blamed:
+  "Ex sid #i. Blame(sid, x)@i"
+
+lemma acc:
+  blamed accounts for "not (Ex sid #i. Unequal(sid)@i)"
+
+
+restriction unequal_blame:
+  "All sid #i. Unequal(sid)@i ==> Ex x #j. Blame(sid, x)@j"
+
+end

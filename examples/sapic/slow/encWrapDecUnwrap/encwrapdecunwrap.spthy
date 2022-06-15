@@ -1,11 +1,11 @@
 theory EncWrapDecUnwrap
 
 /*
- * Protocol:    Enc/Wrap/Dec/Unwrap 
- * Modelaler:     Robert Kunnemann 
+ * Protocol:    Enc/Wrap/Dec/Unwrap
+ * Modelaler:     Robert Kunnemann
  * Date:    	November 2014
  *
- * Status:      working 
+ * Status:      working
  */
 
 /* Some more comments: This is supposed to model typical problems that
@@ -13,7 +13,7 @@ theory EncWrapDecUnwrap
  * four commands, besides the creation of a key: Encryption of userdata,
  * Decryption of arbitrary Cyphertexts, Key-wrapping and Unwrapping, that
  * is: re-importing of keys. The configuration allows to move from 'init'
- * to 'wrap', or to move from 'init' to 'dec'. 
+ * to 'wrap', or to move from 'init' to 'dec'.
  *
  * 'dec' allows to encrypt/decrypt
  * 'wrap' allows to wrap/unwrap
@@ -27,21 +27,21 @@ begin
 
 builtins: symmetric-encryption
 
-functions: key/1,att/1,sencSucc/2, true/0
+functions: key/1,attC/1,sencSucc/2, true/0
 
 equations:
      key (<k,a>) = k
-   , att (<k,a>) = a
+   , attC (<k,a>) = a
    , sencSucc(senc(m,k),k)=true()
 
-
+process:
 !(
-	( in('create'); 
-            new L_h; 
+	( in('create');
+            new L_h;
             lock L_h;
-            new k; 
-            event NewKey(L_h,k); 
-            insert L_h,<k,'init'>; 
+            new k;
+            event NewKey(L_h,k);
+            insert L_h,<k,'init'>;
             out(L_h);
             unlock L_h
         )
@@ -49,26 +49,26 @@ equations:
 	( in(<'set_wrap',L_h>);
           lock L_h;
                 lookup L_h as v in
-		if att(v)='init' then 
-			event WrapKey(L_h,key(v)); 
-			insert L_h, <key(v),'wrap'>; 
-			event WrapHandle(L_h); 
+		if attC(v)='init' then
+			event WrapKey(L_h,key(v));
+			insert L_h, <key(v),'wrap'>;
+			event WrapHandle(L_h);
                         unlock L_h
 )
   ||
 	( in(<'set_dec',L_h>);
           lock L_h;
                 lookup L_h as v in
-		if att(v)='init' then 
-			event DecKey(L_h,key(v)); 
-			insert L_h, <key(v),'dec'>; 
+		if attC(v)='init' then
+			event DecKey(L_h,key(v));
+			insert L_h, <key(v),'dec'>;
                         unlock L_h
 )
   || //Dec
 	( in(<L_h,c>);
           lock L_h;
-        lookup L_h as v in 
-	if att(v)='dec' then 
+        lookup L_h as v in
+	if attC(v)='dec' then
             if sencSucc(c,key(v)) = true() then
                 let m = sdec(c,key(v)) in
 		event DecUsing(key(v),m);
@@ -76,30 +76,30 @@ equations:
                 unlock L_h
 			)
   || //Enc
-	( in(<L_h,m>); 
+	( in(<L_h,m>);
           lock L_h;
-        lookup L_h as v in 
-            if att(v)='dec' then 
-                event EncUsing(key(v),m); 
+        lookup L_h as v in
+            if attC(v)='dec' then
+                event EncUsing(key(v),m);
                 out(senc(m,key(v))) ;
                 unlock L_h
         )
   || //Wrap
-	( in(<L_h1,L_h2>); 
+	( in(<L_h1,L_h2>);
           lock L_h1;
-        lookup L_h1 as v1 in 
-            if att(v1)='wrap' then
-                lookup L_h2 as v2 in 
-                    if att(v2)='wrap' then
+        lookup L_h1 as v1 in
+            if attC(v1)='wrap' then
+                lookup L_h2 as v2 in
+                    if attC(v2)='wrap' then
                         event Wrap(key(v1),key(v2));
                         out(senc(key(v2),key(v1)));
                         unlock L_h1
 			)
   || //Unwrap
-	( in(<L_h,senc(m,k)>); 
+	( in(<L_h,senc(m,k)>);
           lock L_h;
-          lookup L_h as v in 
-            if att(v)='wrap' then 
+          lookup L_h as v in
+            if attC(v)='wrap' then
                 if key(v)=k then
                     new L_h2;
                     event Unwrapped(L_h2,m);
@@ -128,55 +128,55 @@ equations:
 /* 	exists-trace */
 /* 	"Ex #t h k.Unwrapped(h,k )@t" */
 
-lemma dec_limits[sources]: 
+lemma dec_limits[sources]:
 // a message that can be decrypted was either encrypted on the device, or some key leaked.
 // Also, every key that is unwrapped at some point was created earlier.
-	"( 
-          All k m #t1. DecUsing(k,m)@t1 ==> 
+	"(
+          All k m #t1. DecUsing(k,m)@t1 ==>
           ( Ex h2  k2 #t2 #t3. NewKey(h2, k2)@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
 	| ( Ex #t2 . EncUsing(k,m)@t2 & t2<t1 )
         | ( Ex h2  k2 #t2 #t3. Unwrapped(h2, k2)@t2 & KU(k2)@t3 & t2<t1 & t3<t1)
-        | ( Ex #t2 #t3 h1 h2 k2 .  WrapKey(h2, k2) @ t2 & DecKey(h1,k2) @ t3 
-                                  & t2<t1 & t3<t1 
+        | ( Ex #t2 #t3 h1 h2 k2 .  WrapKey(h2, k2) @ t2 & DecKey(h1,k2) @ t3
+                                  & t2<t1 & t3<t1
           )
-        | ( Ex #t2 #t3 h1 h2 k2 .  Unwrapped(h2, k2) @ t2 & DecKey(h1,k2) @ t3 
-                                  & t2<t1 & t3<t1 
+        | ( Ex #t2 #t3 h1 h2 k2 .  Unwrapped(h2, k2) @ t2 & DecKey(h1,k2) @ t3
+                                  & t2<t1 & t3<t1
           )
         )
 "
 
-lemma wrap_key_origins [use_induction,reuse]: 
+lemma wrap_key_origins [use_induction,reuse]:
 "All h2 k #t2 . Unwrapped (h2,k)@t2 ==>
          (Ex h1 #t1. NewKey (h1,k)@t1 & t1<t2 )
-          & 
+          &
           (Ex hp #t0 . WrapKey(hp,k)@t0
              &   (#t0 = #t2 | #t0 < #t2)
              &   (All hpp #t1 . Unwrapped(hpp,k)@#t1 ==>  #t0 < #t1 )
              )
         | ( Ex h k2 #t1 #t0. NewKey(h, k2)@t0 & KU(k2)@t1 & t1<t2 & t0<t2)
-        | ( Ex #t0 #t1 h1 h2 k.  WrapKey(h2, k)@ t0 & DecKey(h1,k) @ t1 
-                & t0<t2 & t1<t2 
+        | ( Ex #t0 #t1 h1 h2 k.  WrapKey(h2, k)@ t0 & DecKey(h1,k) @ t1
+                & t0<t2 & t1<t2
                 )
-        | ( Ex #t0 #t1 h1 h2 k.  Unwrapped(h2, k)@ t0 & DecKey(h1,k) @ t1 
-                & t0<t2 & t1<t2 
+        | ( Ex #t0 #t1 h1 h2 k.  Unwrapped(h2, k)@ t0 & DecKey(h1,k) @ t1
+                & t0<t2 & t1<t2
                 )
          "
 
-lemma no_key_is_wrap_and_dec_ind[use_induction,reuse]: 
+lemma no_key_is_wrap_and_dec_ind[use_induction,reuse]:
         "All #t2 #t3 h1 h2 k .  (DecKey(h1,k) @ t2 & WrapKey(h2, k) @ t3)
         ==>
-          ( Ex h k2 #t1 #t0. NewKey(h, k2)@t0 & KU(k2)@t1 
-              & 
+          ( Ex h k2 #t1 #t0. NewKey(h, k2)@t0 & KU(k2)@t1
+              &
              (  ( t1<t3 & t0<t3)
               | ( t1<t2 & t0<t2) )
           )
         "
 
-lemma no_key_is_wrap_and_dec_ind2[use_induction,reuse]: 
+lemma no_key_is_wrap_and_dec_ind2[use_induction,reuse]:
         "All #t2 #t3 h1 h2 k .  (DecKey(h1,k) @ t2 & Unwrapped(h2, k) @ t3)
         ==>
-          ( Ex h k2 #t1 #t0. NewKey(h, k2)@t0 & KU(k2)@t1 
-              & 
+          ( Ex h k2 #t1 #t0. NewKey(h, k2)@t0 & KU(k2)@t1
+              &
              (  ( t1<t3 & t0<t3)
               | ( t1<t2 & t0<t2) )
           )
@@ -185,8 +185,8 @@ lemma no_key_is_wrap_and_dec_ind2[use_induction,reuse]:
 lemma cannot_obtain_key_ind[reuse,use_induction]:
 	"not (Ex #i #j  h k . NewKey(h,k)@i & KU(k) @j)"
 
-lemma cannot_obtain_key:
-	"not (Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
+// lemma cannot_obtain_key:
+// 	"not (Ex #i #j  h k. NewKey(h,k)@i & K(k) @j)"
 
 end
 

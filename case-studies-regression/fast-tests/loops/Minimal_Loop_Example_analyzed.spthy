@@ -2,7 +2,7 @@ theory Minimal_Loop_Example begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -86,16 +86,16 @@ next
     case Loop
     solve( A( ~n ) ▶₀ #i )
       case Loop
-      by contradiction /* non-injective facts (#vr.1,#j,#i) */
+      by contradiction /* cyclic */
     next
       case Start
-      by contradiction /* non-injective facts (#i.1,#j,#i) */
+      by contradiction /* cyclic */
     qed
   next
     case Start
     solve( A( ~n ) ▶₀ #i )
       case Loop
-      by contradiction /* non-injective facts (#vr,#j,#i) */
+      by contradiction /* cyclic */
     qed
   qed
 qed
@@ -113,16 +113,16 @@ solve( (#i < #j)  ∥ (#j < #i) )
     case Loop
     solve( A( ~n ) ▶₀ #j )
       case Loop
-      by contradiction /* non-injective facts (#vr.1,#i,#j) */
+      by contradiction /* cyclic */
     next
       case Start
-      by contradiction /* non-injective facts (#i.1,#i,#j) */
+      by contradiction /* cyclic */
     qed
   next
     case Start
     solve( A( ~n ) ▶₀ #j )
       case Loop
-      by contradiction /* non-injective facts (#vr,#vr.1,#i) */
+      by contradiction /* cyclic */
     next
       case Start
       by contradiction /* cyclic */
@@ -132,10 +132,10 @@ next
   case case_2
   solve( A( x ) ▶₀ #i )
     case Loop
-    by contradiction /* non-injective facts (#vr,#j,#i) */
+    by contradiction /* cyclic */
   next
     case Start
-    by contradiction /* non-injective facts (#vr,#j,#i) */
+    by contradiction /* cyclic */
   qed
 qed
 
@@ -166,7 +166,7 @@ analyzing: examples/loops/Minimal_Loop_Example.spthy
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.089144476s
+  processing time: 0.040462244s
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)
@@ -181,7 +181,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.089144476s
+  processing time: 0.040462244s
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)

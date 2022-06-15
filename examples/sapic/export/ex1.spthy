@@ -1,0 +1,39 @@
+/*
+example illustrating some proverif translations:
+   tuples <> -> ()
+   constant 'test' -> must be translated with header free test:bitstring.
+   default bitstring type added everywhere
+*/
+
+theory ChannelsTestOne
+begin
+
+builtins: symmetric-encryption
+
+functions: bij/1, unbij/1, kdf(bitstring):skey
+/* Check for communication on private channels */
+/*  - communication is private */
+/*  - communication is possible */
+equations: bij(unbij(x))=x
+
+export queries :
+ "
+ (* This query was added manualy, and the other one automatically from the lemmas. *)
+ query x:bitstring; event(Secret(x)) && (attacker(x)).
+ "
+
+let P = new a; event Secret(a); out (senc(<a,'test'>,sk))
+let Q = in( m:bitstring); let <md,'test'> = sdec(m,sk) in  event Received(md)
+
+process:
+new sk:skey; (P || Q)
+
+lemma secret :
+      "not( Ex x #i #j. (Secret(x) @ i & KU(x) @ j))"
+
+lemma received : exists-trace
+      "Ex x #i. Received(x) @ i"
+
+end
+
+/* vim: set filetype=apip */

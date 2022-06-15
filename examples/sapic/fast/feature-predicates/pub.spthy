@@ -12,23 +12,23 @@ predicates:
 // Test if we can have public names in predicates used in restrictions.
 // Fixed a bug in the parser that disallowed this legitimate use.
 
-let 
+process:
+in(x);
+let
     z = eq(x,'test')
 in
-in(x);
-if True(x) then 
-if True(true()) then 
-if True(eq(x,x)) then 
+if True(x) then
+if True(true()) then
+if True(eq(x,x)) then
 if True(eq(x,'test') ) then
 if And2(eq(x,'test'),true()) then
 if True(z) then
 0
 
 rule testA:
-    [] --[_restrict(True('true'))]-> [] 
+    [] --[_restrict(True('true'))]-> []
 
 rule testB:
-    [In(x)] --[_restrict(True(x))]-> [] 
+    [In(x)] --[_restrict(True(x))]-> []
 
 end
-

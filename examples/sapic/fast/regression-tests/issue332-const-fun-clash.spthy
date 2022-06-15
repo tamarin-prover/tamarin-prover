@@ -1,0 +1,12 @@
+theory test
+
+// this file should produce a warning when called with the proverif export
+
+begin
+
+functions: toto/1
+
+process:
+  out('toto')
+
+end

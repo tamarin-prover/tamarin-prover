@@ -3,8 +3,12 @@ theory UM_PFS begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1, h/1, pair/2, snd/1
+functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -218,7 +222,7 @@ analyzing: examples/csf12/UM_PFS.spthy
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 0.887400567s
+  processing time: 0.995415822s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 
@@ -230,7 +234,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_PFS.spthy
 
   output:          examples/csf12/UM_PFS.spthy.tmp
-  processing time: 0.887400567s
+  processing time: 0.995415822s
   wPFS_initiator_key (all-traces): falsified - found trace (10 steps)
   wPFS_responder_key (all-traces): falsified - found trace (10 steps)
 

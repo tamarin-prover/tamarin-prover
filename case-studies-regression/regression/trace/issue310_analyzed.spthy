@@ -2,7 +2,7 @@ theory parseColors begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -27,7 +27,7 @@ analyzing: examples/regression/trace/issue310.spthy
 analyzed: examples/regression/trace/issue310.spthy
 
   output:          examples/regression/trace/issue310.spthy.tmp
-  processing time: 0.065858957s
+  processing time: 0.00633036s
 
 
 ------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue310.spthy
 
   output:          examples/regression/trace/issue310.spthy.tmp
-  processing time: 0.065858957s
+  processing time: 0.00633036s
 
 
 ==============================================================================

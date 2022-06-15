@@ -1,0 +1,29 @@
+theory issue331
+
+/*
+To avoid partial deconstructions, we often write:
+lookup t as counter in
+ in(counter);
+But currently, this will be translated (silently) to:
+lookup t as counter in
+ in(counter.1);
+What we actually need to write is:
+lookup t as counter in
+ in(=counter);
+It is the same thing as in(x);in(x) going to in(x);in(x.1).
+This renaming should not be silent.
+Further:  in(=x) with x unbound does not give an error.
+*/
+
+begin
+
+process:
+    insert 'bla', 'toto'
+    |
+    lookup 'bla' as counter in
+     in(counter) // give warning before rewriting variable
+    |
+        in(x); in(x) // same error
+
+end
+

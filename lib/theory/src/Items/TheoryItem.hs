@@ -17,11 +17,14 @@ import Theory.Model.Restriction
 import Theory.Constraint.Solver
 
 import Items.ProcessItem
-import Items.PredicateItem
+import Theory.Syntactic.Predicate
+import Items.CaseTestItem
+import Items.AccLemmaItem
 import Lemma
 import           Prelude                             hiding (id, (.))
 import           Control.DeepSeq
 import           Prelude                             hiding (id, (.))
+import Items.ExportInfo
 
 ------------------------------------------------------------------------------
 -- Theories
@@ -31,10 +34,17 @@ import           Prelude                             hiding (id, (.))
 
 type FormalComment = (String, String)
 
--- | SapicItems can be processes and accountability lemmas
-data SapicElement=
-      ProcessItem Process
+-- | TranslationItems can be processes, accountability lemmas, and case tests
+data TranslationElement =
+        ProcessItem PlainProcess
       | ProcessDefItem ProcessDef
+      | SignatureBuiltin String
+      | FunctionTypingInfo SapicFunSym
+      | ExportInfoItem ExportInfo
+      | DiffEquivLemma PlainProcess
+      | EquivLemma PlainProcess PlainProcess
+      | AccLemmaItem AccLemma
+      | CaseTestItem CaseTest
       deriving( Show, Eq, Ord, Generic, NFData, Binary )
 
 -- | A theory item built over the given rule type.
@@ -44,7 +54,7 @@ data TheoryItem r p s =
      | RestrictionItem Restriction
      | TextItem FormalComment
      | PredicateItem Predicate
-     | SapicItem s
+     | TranslationItem s
      deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )
 
 -- | A diff theory item built over the given rule type.

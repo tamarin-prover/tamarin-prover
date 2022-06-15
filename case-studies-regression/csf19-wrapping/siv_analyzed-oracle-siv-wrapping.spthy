@@ -3,8 +3,8 @@ theory PKCS11_siv begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: epsilon/0, fst/1, getIV/1, getTag/1, kdf/2, pair/2, sdec/4,
-           sdecSuc/4, senc/4, snd/1, true/0
+functions: epsilon/0, fst/1[destructor], getIV/1, getTag/1, kdf/2,
+           pair/2, sdec/4, sdecSuc/4, senc/4, snd/1[destructor], true/0
 equations:
     fst(<x.1, x.2>) = x.1,
     getIV(senc(k, iv, t, m)) = iv,
@@ -16,6 +16,8 @@ equations:
 
 
 /* looping facts with injective instances: DCtr/2 */
+
+
 
 restriction UniqueInteger:
   "∀ n #i #j. ((IsInteger( n ) @ #i) ∧ (IsInteger( n ) @ #j)) ⇒ (#i = #j)"
@@ -7865,7 +7867,7 @@ next
           case Encrypt
           solve( DCtr( d, ctr.1 ) ▶₃ #later )
             case Device
-            by contradiction /* non-injective facts (#vr,#before,#later) */
+            by contradiction /* cyclic */
           next
             case Encrypt_case_1
             solve( (#vr = #before)  ∥ (#before < #vr)  ∥
@@ -7877,10 +7879,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_2
@@ -7893,10 +7892,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_3
@@ -7909,10 +7905,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_4
@@ -7925,10 +7918,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_5
@@ -7941,10 +7931,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_6
@@ -7957,869 +7944,298 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_01
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_02
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_03
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_04
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_05
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_06
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_07
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_08
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_09
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_10
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_11
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_12
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_13
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_14
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_15
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_16
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_17
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_18
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_19
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_20
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_21
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_22
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_23
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_24
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_25
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_26
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_27
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_28
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_29
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_30
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_31
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_32
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_33
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_34
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_35
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_36
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_37
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_38
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_39
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_40
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_41
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_42
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_43
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_44
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_45
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_46
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_47
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_48
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_49
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_50
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_51
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_52
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_53
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_54
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_55
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_56
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_57
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_58
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_59
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_60
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_61
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_62
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_63
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_64
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_65
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           qed
         next
           case Wrap
           solve( DCtr( d, ctr.1 ) ▶₃ #later )
             case Device
-            by contradiction /* non-injective facts (#vr,#before,#later) */
+            by contradiction /* cyclic */
           next
             case Encrypt_case_1
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_2
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_3
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_4
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_5
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_6
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_01
             solve( (#vr = #before)  ∥ (#before < #vr)  ∥
@@ -8831,10 +8247,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_02
@@ -8847,10 +8260,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_03
@@ -8863,10 +8273,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_04
@@ -8879,10 +8286,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_05
@@ -8895,10 +8299,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_06
@@ -8911,10 +8312,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_07
@@ -8927,10 +8325,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_08
@@ -8943,10 +8338,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_09
@@ -8959,10 +8351,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_10
@@ -8975,10 +8364,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_11
@@ -8991,10 +8377,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_12
@@ -9007,10 +8390,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_13
@@ -9023,10 +8403,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_14
@@ -9039,10 +8416,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_15
@@ -9055,10 +8429,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_16
@@ -9071,10 +8442,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_17
@@ -9087,10 +8455,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_18
@@ -9103,10 +8468,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_19
@@ -9119,10 +8481,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_20
@@ -9135,10 +8494,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_21
@@ -9151,10 +8507,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_22
@@ -9167,10 +8520,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_23
@@ -9183,10 +8533,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_24
@@ -9199,10 +8546,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_25
@@ -9215,10 +8559,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_26
@@ -9231,10 +8572,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_27
@@ -9247,10 +8585,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_28
@@ -9263,10 +8598,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_29
@@ -9279,10 +8611,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_30
@@ -9295,10 +8624,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_31
@@ -9311,10 +8637,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_32
@@ -9327,10 +8650,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_33
@@ -9343,10 +8663,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_34
@@ -9359,10 +8676,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_35
@@ -9375,10 +8689,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_36
@@ -9391,10 +8702,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_37
@@ -9407,10 +8715,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_38
@@ -9423,10 +8728,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_39
@@ -9439,10 +8741,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_40
@@ -9455,10 +8754,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_41
@@ -9471,10 +8767,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_42
@@ -9487,10 +8780,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_43
@@ -9503,10 +8793,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_44
@@ -9519,10 +8806,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_45
@@ -9535,10 +8819,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_46
@@ -9551,10 +8832,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_47
@@ -9567,10 +8845,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_48
@@ -9583,10 +8858,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_49
@@ -9599,10 +8871,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_50
@@ -9615,10 +8884,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_51
@@ -9631,10 +8897,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_52
@@ -9647,10 +8910,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_53
@@ -9663,10 +8923,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_54
@@ -9679,10 +8936,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_55
@@ -9695,10 +8949,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_56
@@ -9711,10 +8962,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_57
@@ -9727,10 +8975,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_58
@@ -9743,10 +8988,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_59
@@ -9759,10 +9001,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_60
@@ -9775,10 +9014,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_61
@@ -9791,10 +9027,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_62
@@ -9807,10 +9040,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_63
@@ -9823,10 +9053,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_64
@@ -9839,10 +9066,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_65
@@ -9855,10 +9079,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           qed
         qed
@@ -9871,7 +9092,7 @@ next
           case Encrypt
           solve( DCtr( d, ctr.1 ) ▶₄ #later )
             case Device
-            by contradiction /* non-injective facts (#vr,#before,#later) */
+            by contradiction /* cyclic */
           next
             case Encrypt_case_1
             solve( (#vr = #before)  ∥ (#before < #vr)  ∥
@@ -9883,10 +9104,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_2
@@ -9899,10 +9117,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_3
@@ -9915,10 +9130,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_4
@@ -9931,10 +9143,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_5
@@ -9947,10 +9156,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Encrypt_case_6
@@ -9963,869 +9169,298 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_01
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_02
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_03
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_04
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_05
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_06
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_07
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_08
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_09
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_10
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_11
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_12
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_13
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_14
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_15
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_16
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_17
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_18
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_19
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_20
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_21
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_22
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_23
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_24
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_25
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_26
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_27
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_28
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_29
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_30
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_31
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_32
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_33
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_34
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_35
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_36
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_37
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_38
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_39
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_40
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_41
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_42
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_43
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_44
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_45
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_46
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_47
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_48
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_49
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_50
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_51
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_52
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_53
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_54
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_55
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_56
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_57
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_58
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_59
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_60
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_61
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_62
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_63
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_64
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_65
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           qed
         next
           case Wrap
           solve( DCtr( d, ctr.1 ) ▶₄ #later )
             case Device
-            by contradiction /* non-injective facts (#vr,#before,#later) */
+            by contradiction /* cyclic */
           next
             case Encrypt_case_1
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_2
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_3
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_4
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_5
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Encrypt_case_6
-            solve( (#before < #vr)  ∥ (∃ z. (('1'+ctr) = ('1'+z+ctr.1))) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
-            qed
+            simplify
+            by contradiction /* from formulas */
           next
             case Wrap_case_01
             solve( (#vr = #before)  ∥ (#before < #vr)  ∥
@@ -10837,10 +9472,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_02
@@ -10853,10 +9485,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_03
@@ -10869,10 +9498,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_04
@@ -10885,10 +9511,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_05
@@ -10901,10 +9524,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_06
@@ -10917,10 +9537,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_07
@@ -10933,10 +9550,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_08
@@ -10949,10 +9563,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_09
@@ -10965,10 +9576,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_10
@@ -10981,10 +9589,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_11
@@ -10997,10 +9602,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_12
@@ -11013,10 +9615,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_13
@@ -11029,10 +9628,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_14
@@ -11045,10 +9641,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_15
@@ -11061,10 +9654,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_16
@@ -11077,10 +9667,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_17
@@ -11093,10 +9680,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_18
@@ -11109,10 +9693,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_19
@@ -11125,10 +9706,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_20
@@ -11141,10 +9719,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_21
@@ -11157,10 +9732,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_22
@@ -11173,10 +9745,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_23
@@ -11189,10 +9758,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_24
@@ -11205,10 +9771,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_25
@@ -11221,10 +9784,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_26
@@ -11237,10 +9797,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_27
@@ -11253,10 +9810,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_28
@@ -11269,10 +9823,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_29
@@ -11285,10 +9836,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_30
@@ -11301,10 +9849,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_31
@@ -11317,10 +9862,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_32
@@ -11333,10 +9875,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_33
@@ -11349,10 +9888,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_34
@@ -11365,10 +9901,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_35
@@ -11381,10 +9914,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_36
@@ -11397,10 +9927,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_37
@@ -11413,10 +9940,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_38
@@ -11429,10 +9953,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_39
@@ -11445,10 +9966,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_40
@@ -11461,10 +9979,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_41
@@ -11477,10 +9992,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_42
@@ -11493,10 +10005,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_43
@@ -11509,10 +10018,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_44
@@ -11525,10 +10031,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_45
@@ -11541,10 +10044,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_46
@@ -11557,10 +10057,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_47
@@ -11573,10 +10070,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_48
@@ -11589,10 +10083,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_49
@@ -11605,10 +10096,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_50
@@ -11621,10 +10109,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_51
@@ -11637,10 +10122,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_52
@@ -11653,10 +10135,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_53
@@ -11669,10 +10148,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_54
@@ -11685,10 +10161,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_55
@@ -11701,10 +10174,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_56
@@ -11717,10 +10187,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_57
@@ -11733,10 +10200,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_58
@@ -11749,10 +10213,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_59
@@ -11765,10 +10226,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_60
@@ -11781,10 +10239,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_61
@@ -11797,10 +10252,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_62
@@ -11813,10 +10265,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_63
@@ -11829,10 +10278,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_64
@@ -11845,10 +10291,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           next
             case Wrap_case_65
@@ -11861,10 +10304,7 @@ next
               by contradiction /* from formulas */
             next
               case case_3
-              solve( (#vr < #before)  ∥ (∃ z.1. (('1'+ctr) = ('1'+ctr+z+z.1))) )
-                case case_1
-                by contradiction /* non-injective facts (#vr,#before,#later) */
-              qed
+              by simplify
             qed
           qed
         qed
@@ -14027,6 +12467,22 @@ next
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -14042,9 +12498,9 @@ analyzing: examples/csf19-wrapping/siv.spthy
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 145.184156312s
+  processing time: 264.035822692s
   origin (all-traces): verified (2087 steps)
-  Counter_Monotonicity (all-traces): verified (1302 steps)
+  Counter_Monotonicity (all-traces): verified (876 steps)
   IV_Uniqueness (all-traces): verified (8 steps)
   Key_UsageImpliesInitialization (all-traces): verified (86 steps)
   Key_IntegrityAndConfidentiality (all-traces): verified (427 steps)
@@ -14058,9 +12514,9 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 145.184156312s
+  processing time: 264.035822692s
   origin (all-traces): verified (2087 steps)
-  Counter_Monotonicity (all-traces): verified (1302 steps)
+  Counter_Monotonicity (all-traces): verified (876 steps)
   IV_Uniqueness (all-traces): verified (8 steps)
   Key_UsageImpliesInitialization (all-traces): verified (86 steps)
   Key_IntegrityAndConfidentiality (all-traces): verified (427 steps)

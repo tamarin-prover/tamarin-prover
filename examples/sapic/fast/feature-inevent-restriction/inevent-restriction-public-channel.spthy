@@ -1,7 +1,8 @@
 theory InEventRestrictionPublicChannel
 begin
 
-event A(); in('a'); event B()
+process:
+  event A(); in('a'); event B()
 
 // in_event guarantees that K(x) is between A() and B()
 

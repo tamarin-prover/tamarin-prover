@@ -1,0 +1,235 @@
+theory KEMTLS
+
+/*
+ * Protocol:    KEM TLS
+   proposed in CCS20, Post-quantum TLS without handshake signatures
+   Peter Schwabe, Douglas Stebila, Thom Wiggers.
+
+   Client authentication version -> the client only authenticates with a server that he knows.
+
+   Proverif : few seconds
+    tamarin-prover kemtls-clientauth.spthy -m=proverif > kem-reach.pv; proverif kem-reach.pv
+    tamarin-prover kemtls-clientauth.spthy -m=proverifequiv > kem-ind.pv; proverif kem-ind.pv
+
+   Tamarin : 20 minutes on 64 core server
+    tamarin-prover kemtls-clientauth.spthy --prove
+
+
+   Unlinkability proved:
+   * Deepsec : 2 sessions - a second
+             3 sessions - 4 min on 64 core server
+
+    tamarin-prover kemtls-clientauth.spthy -m=deepsec > kem-ind.ds; deepsec kem-ind.ds
+
+
+*/
+
+begin
+
+functions: senc/2, sdec/2[destructor], kempk/1, kemenc/2, kemdec/2[destructor], hkdfext/2, hkdfexp/3, htrans/1, cert/1[private],getcert/1[destructor], hmac/2
+
+equations: sdec(senc(m,sk),sk)=m, kemdec( kemenc(m,kempk(sk)) ,sk) = m,  getcert(cert(m))=m
+
+
+let P(~skP,desiredpkS) =
+    out('TCPSYN');
+    in('TCPACK');
+    new ske;
+    let pke = kempk(ske) in
+    new rc;
+    let ES = hkdfext('null','null') in
+    let dES = hkdfexp(ES,'derived','null') in  // useless initial shared secret, derived to mimick old TLS
+    out(<'CLIENTHello',pke,rc>);
+    in(<'SERVERHello',cte,rs>);
+      event Test();
+    let CHSH = htrans(<pke,rc,cte,rs>) in
+    let sse = kemdec(cte,ske) in
+    let HS = hkdfext(dES,sse) in
+    let CHTS = hkdfexp(HS, 'chsts', CHSH) in // stage 1 key, for client to server com
+    let SHTS = hkdfexp(HS,'shsts',CHSH) in // stage 2 key, for server to client com
+    let dHS = hkdfexp(HS, 'derived', 'null') in
+
+    // Begining of Phase 2
+    in(servercert);
+    let decservercert = sdec(servercert,SHTS) in
+    let <'ServerCert',certpk> = decservercert in
+    let pks = getcert(certpk) in
+    new sss;
+    let cts = kemenc(sss,pks) in
+    out(senc(<'ClientKem',cts>,CHTS));
+
+    let AHS = hkdfext(dES,sss) in
+    let CHCKC = htrans(<pke,rc,cte,rs,pks,cts>) in
+    let CAHTS = hkdfexp(AHS,'cahstr',CHCKC) in // stage 3, client to server
+    let SAHTS = hkdfexp(AHS,'sahstr',CHCKC) in // stage 4, client to server
+    let dAHS = hkdfexp(AHS,'derived',CHCKC) in
+    let pkP = kempk(~skP) in
+
+    if pks = desiredpkS then
+    (
+
+    out(senc(<'ClientCert',cert(pkP)>,CAHTS));
+
+
+    in(serverkem);
+    let decserverkem = sdec(serverkem,SAHTS) in
+    let <'ServerKem',ctc> = decserverkem in
+    let ssc = kemdec(ctc,~skP) in
+
+    let MS = hkdfext(dAHS,ssc) in
+    let fkc = hkdfexp(MS,'cfinished','null') in
+    let fks = hkdfexp(MS,'sfinished','null') in
+
+    let CHSKC = htrans(<pke,rc,cte,rs,pks,cts,pkP,ctc>) in
+
+    let CF = hmac(fkc,CHSKC) in
+
+
+    // Phase 3
+    let CHCF = htrans(<pke,rc,cte,rs,pks,cts,pkP,ctc,CF>) in
+    let CATS = hkdfexp(AHS,'captr',CHCF) in // stage 5, client to server
+    let SATS = hkdfexp(AHS,'saptr',CHCF) in // stage 6, client to server
+
+    event DerivedP(pks,pkP,CATS);
+    out(senc(<'ClientFinished',CF>,CAHTS));
+
+    in(serverfin);
+    let decserverfin = sdec(serverfin, SAHTS) in
+    let <'ServerFinished',SF> = decserverfin in
+    if SF  = hmac(fks,CHCF) then
+      (
+      event AcceptP(pks,pkP,CATS)
+      )
+     )
+
+let S(~skS) =
+    let pkS = kempk(~skS) in    
+    in('TCPSYN');
+    out('TCPACK');
+    in(<'CLIENTHello',pke,rc>);
+    let ES = hkdfext('null','null') in
+    let dES = hkdfexp(ES,'derived','null') in
+    new sse;
+    new rs;
+    let cte = kemenc(sse,pke) in
+    out(<'SERVERHello',cte,rs>);
+    let CHSH = htrans(<pke,rc,cte,rs>) in
+    let HS = hkdfext(dES,sse) in
+    let CHTS = hkdfexp(HS, 'chsts', CHSH) in // stage 1 key, for client to server com
+    let SHTS = hkdfexp(HS,'shsts',CHSH) in // stage 2 key, for server to client com
+    let dHS = hkdfexp(HS, 'derived', 'null') in
+
+    // Begining of Phase 2
+    out(senc(<'ServerCert',cert(pkS)>,SHTS));
+    in(clientkem);
+    let decclientkem = sdec(clientkem,CHTS) in
+    let <'ClientKem',cts> = decclientkem in
+
+    let sss = kemdec(cts,~skS) in
+    let AHS = hkdfext(dES,sss) in
+    let CHCKC = htrans(<pke,rc,cte,rs,pkS,cts>) in
+    let CAHTS = hkdfexp(AHS,'cahstr',CHCKC) in // stage 3, client to server
+    let SAHTS = hkdfexp(AHS,'sahstr',CHCKC) in // stage 4, client to server
+    let dAHS = hkdfexp(AHS,'derived',CHCKC) in
+
+    in(clientcert);
+    let decclientcert = sdec(clientcert,CAHTS) in
+    let <'ClientCert',certpk> = decclientcert in
+    let pkp = getcert(certpk) in
+    new ssc;
+    let ctc = kemenc(ssc,pkp) in
+    out(senc(<'ServerKem',ctc>,SAHTS));
+
+    let MS = hkdfext(dAHS,ssc) in
+    let fkc = hkdfexp(MS,'cfinished','null') in
+    let fks = hkdfexp(MS,'sfinished','null') in
+
+    let CHSKC = htrans(<pke,rc,cte,rs,pkS,cts,pkp,ctc>) in
+
+    in(clientfin);
+    let decclientfin = sdec(clientfin, CAHTS) in
+
+    let <'ClientFinished',CF> = decclientfin in
+
+    if CF  = hmac(fkc,CHSKC) then
+      (
+
+      let CHCF = htrans(<pke,rc,cte,rs,pkS,cts,pkp,ctc,CF>) in
+      let SF = hmac(fks,CHCF) in
+      let CATS = hkdfexp(AHS,'captr',CHCF) in // stage 5, client to server
+      let SATS = hkdfexp(AHS,'saptr',CHCF) in // stage 6, client to server
+      event AcceptS(pkS,pkp,CATS);
+      out(senc(<'ServerFinished',SF>,SAHTS))
+      )
+
+    
+
+process:
+! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');
+    new ~skA; out(<~skA,cert(kempk(~skA))>); // malicious servers and clients
+	  ( ! S(~skS) ||
+	  ( !(new ~skP;  out(kempk(~skP)); event Honnest(kempk(~skP),'Client');
+	     ! P(~skP, kempk(~skS))
+	     )
+	  )
+         )
+  )
+
+
+
+lemma execP: // sanity check
+  exists-trace
+  "Ex #t #t2 pkP pkS k. AcceptP(pkS,pkP,k)@t  & Honnest(pkS,'Serv')@t2"
+
+
+
+lemma execQ: // sanity check
+ exists-trace
+ "Ex #t #t2 pkP pkS k. AcceptS(pkS,pkP,k)@t & Honnest(pkP,'Client')@t2"
+
+
+/*
+lemma false_execbistestR: // should be false
+"not(Ex #t #t2 pkP pkS. TestE(<pkS,pkP>)@t & Honnest(<pkP,'Client'>)@t2)"
+
+
+lemma false_execbistestRP: // should be false
+"not(Ex #t #t2 pkP pkS. TestP(<pkS,pkP>)@t & Honnest(<pkS,'Serv'>)@t2)"
+*/
+
+lemma authPS: // should be true
+ "All #t #t2 pkS pkP key. (AcceptP(pkS,pkP,key)@t & Honnest(pkS,'Serv')@t2)
+     ==> Ex #s. (AcceptS(pkS,pkP,key)@s & s<t)"
+
+lemma authSP: // should be true
+ "All #t #t2 pkS pkP key. (AcceptS(pkS,pkP,key)@t & Honnest(pkP,'Client')@t2)
+     ==> Ex #s. (DerivedP(pkS,pkP,key)@s & s<t)"
+
+
+
+diffEquivLemma:
+! ( new ~skS; out(kempk(~skS));  event Honnest(kempk(~skS),'Serv');
+    new ~skA; out(<~skA,cert(kempk(~skA))>); // malicious servers and clients
+    new ~skPDiff;  out(kempk(~skPDiff));
+	  (S(~skS) ||
+	  ( !(new ~skP;  out(kempk(~skP)); event Honnest(kempk(diff(~skP,~skPDiff)),'Client');
+	     ! P(diff(~skP,~skPDiff), kempk(~skS))
+	     )
+	  )
+         )
+  )
+
+
+// The queries for Deepsec are as follows.
+export requests:
+"
+let sys1 = new sk; (!^3 (new skP; P(sk,skP)) | !^3 S(sk)).
+
+let sys2 = new sk; ( ( new skP; !^3 P(sk,skP)) | !^3 S(sk)).
+
+query session_equiv(sys1,sys2).
+"
+
+
+
+end

@@ -87,6 +87,7 @@ module Term.LTerm (
   , evalFreshTAvoiding
   , renameAvoiding
   , renameAvoidingIgnoring
+  , avoidPreciseVars
   , avoidPrecise
   , renamePrecise
   , renameDropNamehint
@@ -329,29 +330,29 @@ niFactors t = case viewTerm2 t of
 containsPrivate :: Term t -> Bool
 containsPrivate t = case viewTerm t of
     Lit _                          -> False
-    FApp (NoEq (_,(_,Private))) _  -> True
+    FApp (NoEq (_,(_,Private,_))) _  -> True
     FApp _                      as -> any containsPrivate as
 
 -- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
 containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool
 containsNoPrivateExcept funs t = case viewTerm t of
     Lit _                          -> True
-    FApp (NoEq (f,(_,Private))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
+    FApp (NoEq (f,(_,Private,_))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
     FApp _                      as -> all (containsNoPrivateExcept funs) as
 
-    
+
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
 -- fresh names, fresh variables, or private function symbols.
 isSimpleTerm :: LNTerm -> Bool
 isSimpleTerm t =
-    not (containsPrivate t) && 
+    not (containsPrivate t) &&
     (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
 
 -- | 'True' iff no instance of this term contains fresh names or private function symbols.
 neverContainsFreshPriv :: LNTerm -> Bool
 neverContainsFreshPriv t =
-    not (containsPrivate t) && 
+    not (containsPrivate t) &&
     (getAll . foldMap (All . (`notElem` [LSortMsg, LSortFresh]) . sortOfLit) $ t)
 
 -- | Replaces all Fresh variables with constants using toConst.
@@ -414,7 +415,6 @@ type BLVar = BVar LVar
 -- | Terms built over names and 'LVar's combined with quantified variables.
 type BLTerm = NTerm BLVar
 
-
 -- | Fold a possibly bound variable.
 {-# INLINE foldBVar #-}
 foldBVar :: (Integer -> a) -> (v -> a) -> BVar v -> a
@@ -464,6 +464,7 @@ bltermNodeId' t =
 
 instance Eq LVar where
   (LVar n1 s1 i1) == (LVar n2 s2 i2) = i1 == i2 && s1 == s2 && n1 == n2
+  -- x == y  =  compare x y == EQ -- slower, but consistent with Ord.
 
 -- An ord instance that prefers the 'lvarIdx' over the 'lvarName'.
 instance Ord LVar where
@@ -573,7 +574,7 @@ renameIgnoring vars x = case boundsVarIdx x of
   where
     incVar shift (LVar n so i) = pure $ if elem (LVar n so i) vars then (LVar n so i) else (LVar n so (i+shift))
 
-    
+
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not
 -- unique with respect to AC symbols.
@@ -617,13 +618,15 @@ renameAvoidingIgnoring :: (HasFrees s, HasFrees t) => s -> t -> [LVar] -> s
 renameAvoidingIgnoring s t vars = renameIgnoring vars s `evalFreshAvoiding` t
 
 
+avoidPreciseVars :: [LVar] -> Precise.FreshState
+avoidPreciseVars = foldl' ins M.empty
+  where
+    ins m v = M'.insertWith max (lvarName v) (lvarIdx v + 1) m
+
 -- | @avoidPrecise t@ computes a 'Precise.FreshState' that avoids generating
 -- variables occurring in @t@.
 avoidPrecise :: HasFrees t => t -> Precise.FreshState
-avoidPrecise =
-    foldl' ins M.empty . frees
-  where
-    ins m v = M'.insertWith max (lvarName v) (lvarIdx v + 1) m
+avoidPrecise = avoidPreciseVars . frees
 
 -- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
 --   If 'Control.Monad.PreciseFresh' is used with non-AC terms and identical
@@ -812,4 +815,3 @@ showLitName (Var (LVar v s i))       = "Var_" ++ sortSuffix s ++ "_" ++ body
         body | null v           = show i
              | i == 0           = v
              | otherwise        = show i ++ "_" ++ v
-

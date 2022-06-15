@@ -73,10 +73,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
         (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items)
   where
     h              = L.get diffThyHeuristic thy0
-    diffCacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
-    diffCacheRight its = closeRuleCache restrictionsRight (typAsms its) sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
-    cacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
-    cacheRight its = closeRuleCache restrictionsRight (typAsms its) sig (rightClosedRules its) (L.get diffThyCacheRight thy0) False
+    diffCacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
+    diffCacheRight its = closeRuleCache restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
+    cacheLeft  its = closeRuleCache restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
+    cacheRight its = closeRuleCache restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) False
 
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
@@ -168,7 +168,8 @@ closeTheoryWithMaude sig thy0 autoSources =
       $ Theory (L.get thyName thy0) h sig (cache items) items (L.get thyOptions thy0)
   where
     h          = L.get thyHeuristic thy0
-    cache its  = closeRuleCache restrictions (typAsms its) sig (rules its) (L.get thyCache thy0) False
+    forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
+    cache its = closeRuleCache restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
@@ -186,7 +187,7 @@ closeTheoryWithMaude sig thy0 autoSources =
        (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
        PredicateItem
-       SapicItem
+       TranslationItem
 
     unfoldClosedRules :: [TheoryItem [ClosedProtoRule] IncrementalProof s] -> [TheoryItem ClosedProtoRule IncrementalProof s]
     unfoldClosedRules        (RuleItem r:is) = map RuleItem r ++ unfoldClosedRules is
@@ -194,7 +195,7 @@ closeTheoryWithMaude sig thy0 autoSources =
     unfoldClosedRules       (LemmaItem i:is) = LemmaItem i:unfoldClosedRules is
     unfoldClosedRules        (TextItem i:is) = TextItem i:unfoldClosedRules is
     unfoldClosedRules   (PredicateItem i:is) = PredicateItem i:unfoldClosedRules is
-    unfoldClosedRules       (SapicItem i:is) = SapicItem i:unfoldClosedRules is
+    unfoldClosedRules       (TranslationItem i:is) = TranslationItem i:unfoldClosedRules is
     unfoldClosedRules                     [] = []
 
     -- Name of the auto-generated lemma
@@ -357,7 +358,7 @@ mkDiffSystem _ _ _ = emptyDiffSystem
 applyPartialEvaluation :: EvaluationStyle -> Bool -> ClosedTheory -> ClosedTheory
 applyPartialEvaluation evalStyle autosources thy0 =
     closeTheoryWithMaude sig
-      (removeSapicItems (L.modify thyItems replaceProtoRules (openTheory thy0)))
+      (removeTranslationItems (L.modify thyItems replaceProtoRules (openTheory thy0)))
       autosources
   where
     sig          = L.get thySignature thy0

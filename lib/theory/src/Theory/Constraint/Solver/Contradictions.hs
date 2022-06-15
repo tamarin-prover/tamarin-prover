@@ -2,6 +2,7 @@
 {-# LANGUAGE ViewPatterns    #-}
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE FlexibleContexts#-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -167,13 +168,17 @@ substCreatesNonNormalTerms hnd sys fsubst =
 --
 --   i < j < k
 --
--- and let there be an edge from (i,u) to (k,w) for some indices u and v
+-- and let there be an edge from (i,u) to (k,w) for some indices u and v,
+-- as well as an injectif fact `f(t,...)` in the conclusion (i,u).
 --
--- Then, we have a contradiction if both the premise (k,w) that requires a
--- fact 'f(t,...)' and there is a premise (j,v) requiring a fact 'f(t,...)'.
+-- Then, we have a contradiction either if:
+--  1) both the premises (k,w) and (j,v) requires a
+-- fact 'f(t,...)'.
+--  2) both the conclusions (i,u) and (j,v) produce a fact `f(t,..)`.
 --
--- These two premises would have to be merged, but cannot due to the ordering
--- constraint 'j < k'.
+-- In the first case, (k,w) and (j,v) would have to be merged, and in the second
+-- case (i,u) and (j,v) would have to be merged, but the merging contradicts the
+-- temporal orderings.
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
     Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
@@ -190,7 +195,7 @@ nonInjectiveFactInstances ctxt se = do
 
         -- FIXME: There should be a weaker version of the rule that just
         -- introduces the constraint 'k < j || k == j' here.
-        checkRule jRu    = any conflictingFact (L.get rPrems jRu) &&
+        checkRule jRu    = any conflictingFact (L.get rPrems jRu ++ L.get rConcs jRu) &&
                            (k `S.member` D.reachableSet [j] less
                              || isLast se k)
 
@@ -286,9 +291,9 @@ hasForbiddenChain sys =
         -- and whether we do not have an equality rule instance at the end
         is_not_equality <- pure $ not $ isIEqualityRule $ nodeRule (fst p) sys
         -- get all KU-facts with the same msg var
-        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys 
+        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys
         -- and check whether any of them happens before the KD-conclusion
-        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start 
+        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start
         return (is_msg_var && is_not_equality && ku_before)
 
 -- Diffie-Hellman and Bilinear Pairing

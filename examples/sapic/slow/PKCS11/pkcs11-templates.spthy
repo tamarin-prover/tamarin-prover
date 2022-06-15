@@ -181,6 +181,7 @@ attwt(tem(v)), attut(tem(v))) then
             event GetKeyValue(key(v)); out(key(v)); unlock 'device'
         )
 
+process:
 insert <'F_template','trusted'>,
 //       wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut
        < 'on', 'on', 'off','off','on','on', 'on', 'on','usage','usage'>;

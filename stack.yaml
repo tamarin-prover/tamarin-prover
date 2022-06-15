@@ -5,6 +5,8 @@ packages:
 - lib/term/
 - lib/utils/
 - lib/sapic/
-resolver: lts-19.0
+- lib/export/
+- lib/accountability/
+resolver: lts-19.2
 nix:
   packages: [ zlib ]

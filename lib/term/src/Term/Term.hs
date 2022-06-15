@@ -24,6 +24,7 @@ module Term.Term (
     , fAppInv
     , fAppPMult
     , fAppEMap
+    , fAppUnion
     , fAppPair
     , fAppFst
     , fAppSnd
@@ -50,6 +51,7 @@ module Term.Term (
     , ACSym(..)
     , CSym(..)
     , Privacy(..)
+    , Constructability(..)
     , NoEqSym
 
     -- ** Signatures
@@ -58,6 +60,7 @@ module Term.Term (
 
     -- ** concrete symbols strings
     , diffSymString
+    , munSymString 
     , expSymString
     , invSymString
     , pmultSymString
@@ -76,6 +79,7 @@ module Term.Term (
     , oneSym
     , zeroSym
     , dhNeutralSym
+
     -- ** concrete signatures
     , dhFunSig
     , bpFunSig
@@ -89,7 +93,6 @@ module Term.Term (
 
     , module Term.Term.Classes
     , module Term.Term.Raw
-
     ) where
 
 -- import           Data.Monoid
@@ -124,8 +127,9 @@ fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
 fAppPMult (s,p) = fAppNoEq pmultSym [s, p]
-fAppEMap :: Ord a => (Term a, Term a) -> Term a
+fAppEMap,fAppUnion :: Ord a => (Term a, Term a) -> Term a
 fAppEMap  (x,y) = fAppC    EMap     [x, y]
+fAppUnion (x,y) = fAppAC    Union     [x, y]
 
 -- | Smart constructors for inv, fst, and snd.
 fAppInv, fAppFst, fAppSnd :: Term a -> Term a
@@ -178,11 +182,11 @@ isUnion _                       = False
 
 -- | 'True' iff the term is a nullary, public function.
 isNullaryPublicFunction :: Term a -> Bool
-isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public))) _) = True
+isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public,_))) _) = True
 isNullaryPublicFunction _                                            = False
 
 isPrivateFunction :: Term a -> Bool
-isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private))) _) = True
+isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private,_))) _) = True
 isPrivateFunction _                                            = False
 
 -- | 'True' iff the term is an AC-operator.

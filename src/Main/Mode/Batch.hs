@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -24,13 +23,17 @@ import           Extension.Data.Label
 import qualified Text.PrettyPrint.Class          as Pretty
 
 import           Theory
-import           Theory.Tools.Wellformedness     (checkWellformedness, checkWellformednessDiff)
+import           Theory.Tools.Wellformedness     (checkWellformednessDiff)
+
+import qualified Sapic
+import qualified Export
 
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
 import           Main.Utils
 
+import           Theory.Module
 -- import           Debug.Trace
 
 -- | Batch processing mode.
@@ -65,22 +68,30 @@ batchMode = tamarinMode
     outputFlags =
       [ flagOpt "" ["output","o"] (updateArg "outFile") "FILE" "Output file"
       , flagOpt "" ["Output","O"] (updateArg "outDir") "DIR"  "Output directory"
+      , flagOpt "spthy" ["output-module", "m"] (updateArg "outModule") moduleList
+        moduleDescriptions
       ]
+    moduleConstructors = enumFrom minBound :: [ModuleType]
+    moduleList = intercalate "|" $ map show moduleConstructors
+    moduleDescriptions = "What to output:" ++ intercalate " " (map (\x -> "\n -"++description x) moduleConstructors) ++ "."
 
 -- | Process a theory file.
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
-  | otherwise    = do
+  | argExists "parseOnly" as || argExists "outModule" as = do
+      mapM_ processThy inFiles
+      putStrLn ""
+  | otherwise  = do
       _ <- ensureMaude as
-      putStrLn $ ""
-      summaries <- mapM processThy $ inFiles
-      putStrLn $ ""
+      putStrLn ""
+      summaries <- mapM processThy inFiles
+      putStrLn ""
       putStrLn $ replicate 78 '='
-      putStrLn $ "summary of summaries:"
-      putStrLn $ ""
+      putStrLn "summary of summaries:"
+      putStrLn ""
       putStrLn $ renderDoc $ Pretty.vcat $ intersperse (Pretty.text "") summaries
-      putStrLn $ ""
+      putStrLn ""
       putStrLn $ replicate 78 '='
   where
     -- handles to arguments
@@ -112,44 +123,45 @@ run thisMode as
     -- theory processing functions
     ------------------------------
 
-    processThy :: FilePath -> IO (Pretty.Doc)
+    processThy :: FilePath -> IO Pretty.Doc
     processThy inFile
-      -- | argExists "html" as =
-      --     generateHtml inFile =<< loadClosedThy as inFile
-      | (argExists "parseOnly" as) && (argExists "diff" as) =
-          out (const Pretty.emptyDoc) prettyOpenDiffTheory   (loadOpenDiffThy   as inFile)
-      | argExists "parseOnly" as =
-          out (const Pretty.emptyDoc) prettyOpenTranslatedTheory       (loadOpenThy       as inFile)
+      | argExists "parseOnly" as && argExists "diff" as =
+          out (const Pretty.emptyDoc) (return . prettyOpenDiffTheory) (loadOpenDiffThy   as inFile)
+      | argExists "parseOnly" as || argExists "outModule" as =
+          out (const Pretty.emptyDoc) choosePretty (loadOpenThy as inFile)
       | argExists "diff" as =
-          out ppWfAndSummaryDiff      prettyClosedDiffTheory (loadClosedDiffThy as inFile)
-      | otherwise        =
-          out ppWfAndSummary          prettyClosedTheory     (loadClosedThy     as inFile)
+          out ppWfAndSummaryDiff      (return . prettyClosedDiffTheory) (loadClosedDiffThy as inFile)
+      | otherwise        = do
+          (thy,report) <- loadClosedThyWf as inFile
+          out (ppWfAndSummary report) (return . prettyClosedTheory) (return thy)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
-
-        ppWfAndSummary thy =
-            case checkWellformedness (removeSapicItems (openTheory thy)) (get thySignature thy) of
-                []   -> Pretty.emptyDoc
-                errs -> Pretty.vcat $ map Pretty.text $
-                          [ "WARNING: " ++ show (length errs)
-                                        ++ " wellformedness check failed!"
-                          , "         The analysis results might be wrong!" ]
+        ppWfAndSummary report thy = do
+            report
             Pretty.$--$ prettyClosedSummary thy
 
-        ppWfAndSummaryDiff thy =
-            case checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy) of
-                []   -> Pretty.emptyDoc
-                errs -> Pretty.vcat $ map Pretty.text $
-                          [ "WARNING: " ++ show (length errs)
-                                        ++ " wellformedness check failed!"
-                          , "         The analysis results might be wrong!" ]
+        ppWfAndSummaryDiff thy = do
+            reportWellformednessDoc $ checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
             Pretty.$--$ prettyClosedDiffSummary thy
 
-        out :: (a -> Pretty.Doc) -> (a -> Pretty.Doc) -> IO a -> IO Pretty.Doc
+        choosePretty = case getOutputModule as of
+          ModuleSpthy      -> return . prettyOpenTheory  <=< Sapic.warnings -- output as is, including SAPIC elements
+          ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory <=< Sapic.warnings  -- additionally type
+          ModuleMsr        -> return . prettyOpenTranslatedTheory
+            <=< (return . (filterLemma $ lemmaSelector as))
+            <=< (return . removeTranslationItems)
+            <=< Sapic.typeTheory
+            <=< Sapic.warnings
+          ModuleProVerif              -> Export.prettyProVerifTheory (lemmaSelector as) <=< Sapic.typeTheoryEnv <=< Sapic.warnings
+          ModuleProVerifEquivalence   -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv <=< Sapic.warnings
+          ModuleDeepSec               -> Export.prettyDeepSecTheory <=< Sapic.typeTheory <=< Sapic.warnings
+
+        out :: (a -> Pretty.Doc) -> (a -> IO Pretty.Doc) -> IO a -> IO Pretty.Doc
         out summaryDoc fullDoc load
           | dryRun    = do
               thy <- load
-              putStrLn $ renderDoc $ fullDoc thy
+              doc <- fullDoc thy
+              putStrLn $ renderDoc doc
               return $ ppAnalyzed Pretty.$--$ Pretty.nest 2 (summaryDoc thy)
           | otherwise = do
               putStrLn $ ""
@@ -158,7 +170,8 @@ run thisMode as
               let outFile = mkOutPath inFile
               (thySummary, t) <- timed $ do
                   thy <- load
-                  writeFileWithDirs outFile $ renderDoc $ fullDoc thy
+                  doc <- fullDoc thy
+                  writeFileWithDirs outFile $ renderDoc doc
                   -- ensure that the summary is in normal form
                   evaluate $ force $ summaryDoc thy
               let summary = Pretty.vcat

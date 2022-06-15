@@ -2,7 +2,8 @@ theory RFID_Simple begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
+functions: adec/2[destructor], aenc/2, fst/1[destructor], pair/2, pk/1,
+           snd/1[destructor]
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -11,6 +12,8 @@ equations:
 
 
 /* looping facts with injective instances: Device_Alice/1 */
+
+
 
 rule (modulo E) GenKey:
    [ Fr( ~sk ) ]
@@ -388,16 +391,16 @@ next
         case Alice
         solve( Device_Alice( ~sk ) ▶₀ #i )
           case Alice
-          by contradiction /* non-injective facts (#vr.2,#j,#i) */
+          by contradiction /* cyclic */
         next
           case GenKey
-          by contradiction /* non-injective facts (#vr,#j,#i) */
+          by contradiction /* cyclic */
         qed
       next
         case GenKey
         solve( Device_Alice( ~sk ) ▶₀ #i )
           case Alice
-          by contradiction /* non-injective facts (#vr,#vr.1,#j) */
+          by contradiction /* cyclic */
         qed
       qed
     qed
@@ -440,16 +443,16 @@ next
           case Alice
           solve( Device_Alice( ~sk ) ▶₀ #i )
             case Alice
-            by contradiction /* non-injective facts (#vr.2,#j,#i) */
+            by contradiction /* cyclic */
           next
             case GenKey
-            by contradiction /* non-injective facts (#vr,#j,#i) */
+            by contradiction /* cyclic */
           qed
         next
           case GenKey
           solve( Device_Alice( ~sk ) ▶₀ #i )
             case Alice
-            by contradiction /* non-injective facts (#vr,#vr.1,#j) */
+            by contradiction /* cyclic */
           qed
         qed
       qed
@@ -519,7 +522,7 @@ analyzing: examples/loops/RFID_Simple.spthy
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          examples/loops/RFID_Simple.spthy.tmp
-  processing time: 0.500045487s
+  processing time: 0.617392087s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)
@@ -533,7 +536,7 @@ summary of summaries:
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          examples/loops/RFID_Simple.spthy.tmp
-  processing time: 0.500045487s
+  processing time: 0.617392087s
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)

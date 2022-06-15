@@ -76,7 +76,7 @@ proofMethod = asum
   , symbol "induction"     *> pure Induction
   ]
 
--- | Start parsing a proof skeleton. 
+-- | Start parsing a proof skeleton.
 -- | If the first step of the proof is a SOLVED, mark it as an inavalid proof step.
 -- | If that is not the case, call proofSkeleton
 startProofSkeleton :: Parser ProofSkeleton
@@ -91,7 +91,7 @@ proofSkeleton :: Parser ProofSkeleton
 proofSkeleton =
     solvedProof <|> finalProof <|> interProof
   where
-    solvedProof = 
+    solvedProof =
         symbol "SOLVED" *> pure (LNode (ProofStep Solved ()) M.empty)
 
     finalProof = do

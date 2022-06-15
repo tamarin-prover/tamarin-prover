@@ -1,0 +1,39 @@
+theory Typing
+begin
+
+functions: f(bitstring):bitstring, g(lol):lol,
+            h/1 // implicitely typed
+
+builtins: multiset
+
+let P(a:rofl) =
+        new x:lol;
+        new y; // TODO should be typed with test, too... need to propagate back
+        out(x); out(y); 
+        out(f(y));
+        /* out(f(x)); // should fail */
+        out(<x,y>); out(x + y); // should succeed
+        out(f(<x,y>));  // should succeed
+        out(h(x)); // implicitely types input to x as lol
+        out(h(h(x))); // should implictely tupe h as lol->lol now
+        /* out(f(h(x))); // should fail: as h goes to lol and f wants bitstring */
+	event Test(x,a); // should type the arguments
+        (new b:lol | new b:rofl) // should be allowed
+
+let Q(x) =
+    /* in(=x); // TODO currently gives exception, investigate */
+    in(<y,=x>)
+
+process:
+in(a:lol); // TODO we do not typecheck call to process correctly atm. I think the trick is to type check before inlining.
+new n:truc;
+(
+( new n:lol; out(n)) | (new n:rofl; out(n))
+|
+P(a)
+| Q(h(a))
+)
+
+
+
+end
