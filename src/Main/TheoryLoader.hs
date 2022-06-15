@@ -251,7 +251,7 @@ loadClosedThyWf as inFile = do
     let errors = checkWellformedness transThy sig ++ Sapic.checkWellformednessSapic openThy
     let report = reportWellformednessDoc errors
     -- return closed theory
-    closedTheory <- closeThyWithMaude sig as openThy transThy
+    let closedTheory = closeThyWithMaude sig as openThy transThy
     return (closedTheory, report)
 
 -- | Load a closed theory and report on well-formedness errors.
@@ -265,7 +265,7 @@ loadClosedThyWfReport as inFile = do
     let errors = checkWellformedness transThy transSig ++ Sapic.checkWellformednessSapic openThy
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
-    closeThyWithMaude transSig as openThy transThy
+    return $ closeThyWithMaude transSig as openThy transThy
 
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -278,7 +278,7 @@ loadClosedDiffThyWfReport as inFile = do
     let errors = checkWellformednessDiff thy1 sig
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
-    closeDiffThyWithMaude sig as thy1
+    return $ closeDiffThyWithMaude sig as thy1
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
@@ -347,18 +347,18 @@ closeThy :: Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
 closeThy as openThy transThy = do
   transThy' <- return $ addMessageDeductionRuleVariants transThy
   sig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy'
-  closeThyWithMaude sig as openThy transThy'
+  return $ closeThyWithMaude sig as openThy transThy'
 
 -- | Close a theory according to arguments.
-closeThyWithMaude :: SignatureWithMaude -> Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
-closeThyWithMaude sig as openThy transThy = do
-  -- FIXME: wf-check is at the wrong position here. Needs to be more
-  -- fine-grained.
-  let transThy' = wfCheck openThy transThy
-  -- close and prove
-  let closedThy = closeTheoryWithMaude sig transThy' (argExists "auto-sources" as)
-  return $ proveTheory (lemmaSelectorByModule as &&& lemmaSelector as) prover $ partialEvaluation closedThy
+closeThyWithMaude :: SignatureWithMaude -> Arguments -> OpenTheory -> OpenTranslatedTheory -> ClosedTheory
+closeThyWithMaude sig as openThy transThy =
+      proveTheory (lemmaSelectorByModule as &&& lemmaSelector as) prover $ partialEvaluation closedThy
     where
+      -- FIXME: wf-check is at the wrong position here. Needs to be more
+      -- fine-grained.
+      transThy' = wfCheck openThy transThy
+      -- close and prove
+      closedThy = closeTheoryWithMaude sig transThy' (argExists "auto-sources" as)
       -- apply partial application
       ----------------------------
       partialEvaluation = case map toLower <$> findArg "partialEvaluation" as of
@@ -383,21 +383,21 @@ closeThyWithMaude sig as openThy transThy = do
 closeDiffThy :: Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
 closeDiffThy as thy0 = do
   sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy0
-  closeDiffThyWithMaude sig as thy0
+  return $ closeDiffThyWithMaude sig as thy0
 
 (&&&) :: (t -> Bool) -> (t -> Bool) -> t -> Bool
 (&&&) f g x = f x && g x
 
 -- | Close a diff theory according to arguments.
-closeDiffThyWithMaude :: SignatureWithMaude -> Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
-closeDiffThyWithMaude sig as thy0 = do
-  -- FIXME: wf-check is at the wrong position here. Needs to be more
-  -- fine-grained.
-  let thy2 = wfCheckDiff thy0
-  -- close and prove
-  let cthy = closeDiffTheoryWithMaude sig (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
-  return $ proveDiffTheory (lemmaSelectorByModule as &&& lemmaSelector as) prover diffprover $ partialEvaluation cthy
+closeDiffThyWithMaude :: SignatureWithMaude -> Arguments -> OpenDiffTheory -> ClosedDiffTheory
+closeDiffThyWithMaude sig as thy0 =
+      proveDiffTheory (lemmaSelectorByModule as &&& lemmaSelector as) prover diffprover $ partialEvaluation cthy
     where
+      -- FIXME: wf-check is at the wrong position here. Needs to be more
+      -- fine-grained.
+      thy2 = wfCheckDiff thy0
+      -- close and prove
+      cthy = closeDiffTheoryWithMaude sig (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
       -- apply partial application
       ----------------------------
       partialEvaluation = case map toLower <$> findArg "partialEvaluation" as of
