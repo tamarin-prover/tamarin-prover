@@ -88,9 +88,7 @@ versionStr = unlines
   , concat
     [ "Git revision: "
     , $(gitHash)
-    , case $(gitDirty) of
-          True  -> " (with uncommited changes)"
-          False -> ""
+    , if $(gitDirty) then " (with uncommited changes)" else ""
     , ", branch: "
     , $(gitBranch)
     ]

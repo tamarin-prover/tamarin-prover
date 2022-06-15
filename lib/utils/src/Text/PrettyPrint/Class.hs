@@ -2,7 +2,7 @@
 -- |
 -- Copyright   : (c) 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- 'Document' class allowing to have different interpretations of the
@@ -20,7 +20,7 @@ module Text.PrettyPrint.Class (
      , ($--$)
      , emptyDoc
      , (<>)
-     , semi 
+     , semi
      , colon
      , comma
      , space
@@ -31,7 +31,7 @@ module Text.PrettyPrint.Class (
      , rbrack
      , lbrace
      , rbrace
-  
+
      , int
      , integer
      , float
@@ -42,7 +42,7 @@ module Text.PrettyPrint.Class (
      , parens
      , brackets
      , braces
-  
+
      , hang
      , punctuate
 
@@ -62,7 +62,7 @@ import           Control.DeepSeq        (NFData(..))
 
 import           Data.List              (intersperse)
 
-import           Extension.Data.Monoid  ((<>))
+-- import           Extension.Data.Monoid  ((<>))
 import           Extension.Prelude      (flushRight)
 
 import qualified Text.PrettyPrint.HughesPJ as P
@@ -111,10 +111,10 @@ emptyDoc = mempty
 
 -- | Vertical concatentation of two documents with an empty line in between.
 ($--$) :: Document d => d -> d -> d
-d1 $--$ d2 = 
+d1 $--$ d2 =
    caseEmptyDoc d2 (caseEmptyDoc d1 (d1 $-$ text "" $-$ d2) d2) d1
 
-semi, colon, comma, space, equals, 
+semi, colon, comma, space, equals,
   lparen, rparen, lbrack, rbrack, lbrace, rbrace :: Document d => d
 
 semi  = char ';'
@@ -175,8 +175,8 @@ instance Document Doc where
   text = Doc . P.text
   zeroWidthText = Doc . P.zeroWidthText
   (<->) (Doc d1) (Doc d2) = Doc $ (P.<+>) d1 d2
-  hcat  = Doc . P.hcat . map getPrettyLibraryDoc 
-  hsep  = Doc . P.hsep . map getPrettyLibraryDoc 
+  hcat  = Doc . P.hcat . map getPrettyLibraryDoc
+  hsep  = Doc . P.hsep . map getPrettyLibraryDoc
   ($$) (Doc d1) (Doc d2) = Doc $ (P.$$) d1 d2
   ($-$) (Doc d1) (Doc d2) = Doc $ (P.$+$) d1 d2
   vcat  = Doc . P.vcat . map getPrettyLibraryDoc
@@ -192,7 +192,7 @@ instance Semigroup Doc where
 
 instance Monoid Doc where
     mempty = Doc $ P.empty
-  
+
 ------------------------------------------------------------------------------
 -- Additional combinators
 ------------------------------------------------------------------------------
@@ -220,7 +220,7 @@ nestShort n lead finish body = sep [lead $$ nest n body, finish]
 
 -- | Nest document between two strings and indent body by @length lead + 1@.
 nestShort' :: Document d => String -> String -> d -> d
-nestShort' lead finish = 
+nestShort' lead finish =
   nestShort (length lead + 1) (text lead) (text finish)
 
 -- | Like 'nestShort' but doesn't print the lead and finish, if the document is
@@ -232,7 +232,7 @@ nestShortNonEmpty n lead finish body =
 -- | Like 'nestShort'' but doesn't print the lead and finish, if the document is
 -- empty.
 nestShortNonEmpty' :: Document d => String -> String -> d -> d
-nestShortNonEmpty' lead finish = 
+nestShortNonEmpty' lead finish =
   nestShortNonEmpty (length lead + 1) (text lead) (text finish)
 
 -- | Output text with a fixed width: if it is smaller then nothing happens,
@@ -252,7 +252,7 @@ symbol = fixedWidthText 1
 -- separator.
 numbered :: Document d => d -> [d] -> d
 numbered _   [] = emptyDoc
-numbered vsep ds = 
+numbered vsep ds =
     foldr1 ($-$) $ intersperse vsep $ map pp $ zip [(1::Int)..] ds
   where
     n         = length ds
