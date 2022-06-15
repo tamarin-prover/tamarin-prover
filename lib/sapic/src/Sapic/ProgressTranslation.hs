@@ -12,7 +12,7 @@
 --
 -- Michael Backes, Jannik Dreier, Steve Kremer and Robert Künnemann. "A Novel
 -- Approach for Reasoning about Liveness in Cryptographic Protocols and its
--- Application to Fair Exchange". EuroS&P 2017 
+-- Application to Fair Exchange". EuroS&P 2017
 --
 module Sapic.ProgressTranslation (
      progressTrans
@@ -52,7 +52,7 @@ addProgressFrom domPF child (l,a,r,res)
 -- init rules, if [] in @domPF@, the domain of the progress function. Updates
 -- the initial ~x accordingly.
 progressInit :: (MonadCatch m, Show ann1, Typeable ann1)
-                => AnProcess ann1 -> ([AnnotatedRule ann2], Set LVar) -> m ([AnnotatedRule ann2], Set LVar)
+                => LProcess ann1 -> ([AnnotatedRule ann2], Set LVar) -> m ([AnnotatedRule ann2], Set LVar)
 progressInit anP (initrules,initTx) = do
     domPF <- pfFrom anP
     -- invPF <- pfInv anP
@@ -109,18 +109,18 @@ progressTransNull _ tNull = tNull
 
 -- | Add ProgressTo or -From to rules generated on an action.
 progressTransAct :: (MonadCatch m, Show ann, Typeable ann) =>
-                    AnProcess ann
+                    LProcess ann
                     -> TransFAct (m TranslationResultAct)
                     -> TransFAct (m TranslationResultAct)
-progressTransAct anP tAct ac an pos tx = do 
-                (rs0,tx1) <- tAct ac an pos tx 
+progressTransAct anP tAct ac an pos tx = do
+                (rs0,tx1) <- tAct ac an pos tx
                 domPF <- pfFrom anP
                 invPF <- pfInv anP
                 return (map (addProgressItems domPF invPF pos) rs0,extendVars domPF pos tx1)
 
 -- | Add ProgressTo or -From to rules generated on a combinator.
 progressTransComb :: (MonadCatch m, Show ann, Typeable ann) =>
-                     AnProcess ann
+                     LProcess ann
                     -> TransFComb (m TranslationResultComb)
                     -> TransFComb (m TranslationResultComb)
 progressTransComb anP tComb comb an pos tx =  do
@@ -134,12 +134,12 @@ progressTransComb anP tComb comb an pos tx =  do
 -- | Overall translation is a triple of the other translations.
 progressTrans :: (Show ann, Typeable ann, MonadCatch m2,
                   MonadCatch m3) =>
-                 AnProcess ann
-                 -> 
+                 LProcess ann
+                 ->
                           (TransFNull (m1 TranslationResultNull),
                            TransFAct (m2 TranslationResultAct),
                            TransFComb (m3 TranslationResultComb))
-                 -> 
+                 ->
                           (TransFNull (m1 TranslationResultNull),
                            TransFAct (m2 TranslationResultAct),
                            TransFComb (m3 TranslationResultComb))
@@ -148,18 +148,18 @@ progressTrans anP (tN,tA,tC) = ( progressTransNull anP tN
                                , progressTransComb anP tC)
 
 resProgressInit :: String
-resProgressInit = [QQ.r|restriction progressInit: 
+resProgressInit = [QQ.r|restriction progressInit:
 "Ex #t . Init()@t"
 |]
 
 -- | Add restrictions for all transitions that have to take place according to the progress function.
-progressRestr :: (MonadThrow m, MonadCatch m, Show ann, Typeable ann) => AnProcess ann -> [SyntacticRestriction] -> m [SyntacticRestriction] 
+progressRestr :: (MonadThrow m, MonadCatch m, Show ann, Typeable ann) => LProcess ann -> [SyntacticRestriction] -> m [SyntacticRestriction]
 progressRestr anP restrictions  = do
     domPF <- pfFrom anP -- set of "from" positions
     initL <- toEx resProgressInit
     lss_to <- mapM restriction (toList domPF) -- list of set of sets of "to" positions
     return $ restrictions ++ concat lss_to ++ [initL]
-    where 
+    where
         restriction pos = do  -- produce restriction to go to one of the tos once pos is reached
             toss <- pf anP pos
             mapM (\tos -> return $ Restriction (name tos) (formula tos))  (toList toss)
@@ -172,6 +172,6 @@ progressRestr anP restrictions  = do
                 antecedent = Ato $ Action (varTerm $ Free t1var) $ actionToFactFormula (ProgressFrom pos)
                 conclusion tos = bigOr $ map progressTo $ toList tos
                 bigOr [to] = to
-                bigOr (to:tos) = to .||. bigOr tos 
+                bigOr (to:tos) = to .||. bigOr tos
                 bigOr []   = TF False -- This case should never occur
                 progressTo to = hinted exists t2var $ Ato $ Action (varTerm $ Free t2var) $ actionToFactFormula $ ProgressTo to pos

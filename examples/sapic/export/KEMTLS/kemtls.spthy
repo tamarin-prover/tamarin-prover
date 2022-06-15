@@ -1,0 +1,168 @@
+theory KEMTLS
+
+/*
+ * Protocol:    KEMTLS
+   proposed in CCS20, Post-quantum TLS without handshake signatures
+   Peter Schwabe, Douglas Stebila, Thom Wiggers.
+
+   A proposal of a new TLS based on Key Encapsulation Mechanisms.
+   We assume that KEMs manipulate uniformly sampled keys.
+
+   Proverif : everything in a second.
+
+   Tamarin : everything in 1 minutes on 64 core server
+      (The DDH model is then more precise)
+
+*/
+
+
+
+begin
+
+builtins : symmetric-encryption
+
+functions: kempk/1, kemenc/2, kemdec/2[destructor], hkdfext/2, hkdfexp/3, htrans/1, cert/1[private],getcert/1[destructor], hmac/2
+
+equations: kemdec( kemenc(m,kempk(sk)) ,sk) = m, getcert(cert(m))=m
+
+
+let P(var) =
+    out('TCPSYN');
+    in('TCPACK');
+    new ske:skey;
+    let pke = kempk(ske) in
+    new rc;
+    let ES = hkdfext('empty','empty') in
+    let dES = hkdfexp(ES,'derived','null') in  // useless initial shared secret, derived to mimick old TLS
+    out(<'CLIENTHello',pke,rc>);
+    in(<'SERVERHello',cte,rs>);
+      event Test();
+    let CHSH = htrans(<pke,rc,cte,rs>) in
+    let sse = kemdec(cte,ske) in
+    let HS = hkdfext(dES,sse) in
+    let CHTS = hkdfexp(HS, 'chsts', CHSH) in // stage 1 key, for client to server com
+    let SHTS = hkdfexp(HS,'shsts',CHSH) in // stage 2 key, for server to client com
+    let dHS = hkdfexp(HS, 'derived', 'null') in
+
+    // Begining of Phase 2
+    in(servercert);
+    let decservercert = sdec(servercert,SHTS) in
+    let <'ServerCert',certpk> = decservercert in
+    let pks = getcert(certpk) in
+    new sss;
+    let cts = kemenc(sss,pks) in
+    out(senc(<'ClientKem',cts>,CHTS));
+
+    let AHS = hkdfext(dES,sss) in
+    let CHCKC = htrans(<pke,rc,cte,rs,pks,cts>) in
+    let CAHTS = hkdfexp(AHS,'cahstr',CHCKC) in // stage 3, client to server
+    let SAHTS = hkdfexp(AHS,'sahstr',CHCKC) in // stage 4, client to server
+
+    let dAHS = hkdfexp(AHS,'derived',CHCKC) in
+    let MS = hkdfext(dAHS,'empty') in
+    let fkc = hkdfexp(MS,'cfinished','null') in
+    let fks = hkdfexp(MS,'sfinished','null') in
+
+    let CF = hmac(fkc,CHCKC) in
+    out(senc(<'ClientFinished',CF>,CAHTS));
+
+    // Phase 3
+    let CHCF = htrans(<pke,rc,cte,rs,pks,cts,CF>) in
+    let CATS = hkdfexp(AHS,'captr',CHCF) in // stage 5, client to server
+    let SATS = hkdfexp(AHS,'saptr',CHCF) in // stage 6, client to server
+    in(serverfin);
+    let decserverfin = sdec(serverfin, SAHTS) in
+    let <'ServerFinished',SF> = decserverfin in
+    if SF  = hmac(fks,CHCKC) then
+      (
+      event ClientKey(CATS);
+      event AcceptP()
+      )
+
+
+let S(~skS:skey) =
+    let pkS = kempk(~skS) in
+    !(
+    in('TCPSYN');
+    out('TCPACK');
+    in(<'CLIENTHello',pke,rc>);
+    let ES = hkdfext('empty','empty') in
+    let dES = hkdfexp(ES,'derived','null') in
+    new sse;
+    new rs;
+    let cte = kemenc(sse,pke) in
+    out(<'SERVERHello',cte,rs>);
+    let CHSH = htrans(<pke,rc,cte,rs>) in
+    let HS = hkdfext(dES,sse) in
+    let CHTS = hkdfexp(HS, 'chsts', CHSH) in // stage 1 key, for client to server com
+    let SHTS = hkdfexp(HS,'shsts',CHSH) in // stage 2 key, for server to client com
+    let dHS = hkdfexp(HS, 'derived', 'null') in
+
+    // Begining of Phase 2
+    out(senc(<'ServerCert',cert(pkS)>,SHTS));
+    in(clientkem);
+    let decclientkem = sdec(clientkem,CHTS) in
+    let <'ClientKem',cts> = decclientkem in
+
+    let sss = kemdec(cts,~skS) in
+    let AHS = hkdfext(dES,sss) in
+    let CHCKC = htrans(<pke,rc,cte,rs,pkS,cts>) in
+    let CAHTS = hkdfexp(AHS,'cahstr',CHCKC) in // stage 3, client to server
+    let SAHTS = hkdfexp(AHS,'sahstr',CHCKC) in // stage 4, client to server
+    event ServerKey(SAHTS);
+    let dAHS = hkdfexp(AHS,'derived',CHCKC) in
+    let MS = hkdfext(dAHS,'empty') in
+    let fkc = hkdfexp(MS,'cfinished','null') in
+    let fks = hkdfexp(MS,'sfinished','null') in
+
+    in(clientfin);
+    let decclientfin = sdec(clientfin, CAHTS) in
+
+    let <'ClientFinished',CF> = decclientfin in
+    if CF  = hmac(fkc,CHCKC) then
+      (
+      event AcceptS();
+      let SF = hmac(fks,CHCKC) in
+      let CHCF = htrans(<pke,rc,cte,rs,pkS,cts,CF>) in
+      let CATS = hkdfexp(AHS,'captr',CHCF) in // stage 5, client to server
+      let SATS = hkdfexp(AHS,'saptr',CHCF) in // stage 6, client to server
+      out(senc(<'ServerFinished',SF>,SAHTS))
+      )
+
+    )
+
+process:
+! ( P('null') )
+ ||
+! ( new ~skS:skey; !( S(~skS) )
+
+    ||
+    ( in('compromise');
+      event Compromise();
+      out(~skS)
+    )
+  )
+
+
+
+
+lemma exec:
+  exists-trace
+  "Ex #t. AcceptP()@t"
+
+lemma execbis:
+  exists-trace
+  "Ex #t. AcceptS()@t"
+
+lemma false_secserv: // should be false (non mutual authentication)
+  "not(Ex #t1 #t2 sk. ServerKey(sk)@t1 & KU(sk)@t2 )"
+
+lemma auth: // should be true
+   "All #t. AcceptP()@t ==> (Ex #s. AcceptS()@s & s<t) | (Ex #s2. Compromise()@s2)"
+
+
+lemma PFS_client : // should be true
+  "All #t1 #t2 sk. ClientKey(sk)@t1 & KU(sk)@t2 ==> Ex #t3. Compromise()@t3 & t3<t1"
+
+
+end

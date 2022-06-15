@@ -2,14 +2,18 @@ theory SpliceAS_3 begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2, aenc/2, dec/1, fst/1, inc/1, pair/2, pk/1, sign/2,
-           snd/1, true/0, verify/3
+functions: adec/2[destructor], aenc/2, dec/1, fst/1[destructor], inc/1,
+           pair/2, pk/1, sign/2, snd/1[destructor], true/0, verify/3[destructor]
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     dec(inc(x)) = x,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+
 
 
 
@@ -927,6 +931,10 @@ solve( StateC2( $C, AS, $S, ~ltkC, ~n1, ~n2, ~t, ~l, pkS ) ▶₁ #i )
   qed
 qed
 
+
+
+
+
 /* All well-formedness checks were successful. */
 
 lemma AUTO_typing [sources]:
@@ -1123,7 +1131,7 @@ analyzing: examples/features/auto-sources/spore/SpliceAS_3.spthy
 analyzed: examples/features/auto-sources/spore/SpliceAS_3.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_3.spthy.tmp
-  processing time: 13.773681173s
+  processing time: 16.425283551s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): verified (39 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)
@@ -1140,7 +1148,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_3.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_3.spthy.tmp
-  processing time: 13.773681173s
+  processing time: 16.425283551s
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): verified (39 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)

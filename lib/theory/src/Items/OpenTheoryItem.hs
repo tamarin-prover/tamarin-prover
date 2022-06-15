@@ -11,13 +11,13 @@ import Prelude hiding (id, (.))
 -- | Open theories can be extended. Invariants:
 --   1. Lemma names are unique.
 type OpenTheory =
-    Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton SapicElement
+    Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton TranslationElement
 
-type OpenTheoryItem = TheoryItem OpenProtoRule ProofSkeleton SapicElement
+type OpenTheoryItem = TheoryItem OpenProtoRule ProofSkeleton TranslationElement
 
 -- | Open theories can be extended. Invariants:
 --   1. Lemma names are unique.
---   2. All SapicItems are translated
+--   2. All TranslationItems are translated
 type OpenTranslatedTheory =
     Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton ()
 

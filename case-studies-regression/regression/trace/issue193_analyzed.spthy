@@ -2,13 +2,17 @@ theory RevealingSignatures begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, getMessage/1, h/1, h/7, pair/2, pk/1, revealSign/2,
-           revealVerify/3, snd/1, true/0
+functions: fst/1[destructor], getMessage/1, h/1, h/7, pair/2, pk/1,
+           revealSign/2, revealVerify/3, snd/1[destructor], true/0
 equations:
     fst(<x.1, x.2>) = x.1,
     getMessage(revealSign(x.1, x.2)) = x.1,
     revealVerify(revealSign(x.1, x.2), x.1, pk(x.2)) = true,
     snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -61,6 +65,8 @@ restriction equality:
   "∀ x y #i. (Equality( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -76,7 +82,7 @@ analyzing: examples/regression/trace/issue193.spthy
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.111261397s
+  processing time: 0.071221552s
   debug (exists-trace): verified (4 steps)
 
 ------------------------------------------------------------------------------
@@ -87,7 +93,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.111261397s
+  processing time: 0.071221552s
   debug (exists-trace): verified (4 steps)
 
 ==============================================================================

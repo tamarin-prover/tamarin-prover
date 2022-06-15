@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import sys
+
+oracles = {
+    "missing_verif_empty": [ ["="]
+               , ["!KU("]
+               , ["Sender"]
+               , ["Mixer"]
+               , ["Veri"]
+               , ["IntCipher"]
+               , ["Post( <"]
+               , ["!MixPhaseEnd"]
+               , ["'0'"] ],
+    "missing_mixer_evidence_uniq": [
+                 ["∃"]
+               , ["IntCipher"]
+               , ["!KU("]
+               , ["Veri"]
+               , ["Post( <"]
+               , ["∃"]
+               , ["Mixer"]
+               , ["Sender"]
+               , ["PostCount"]
+               , ["BBPost( ~sid, '0'"]
+               , ["BBPost( ~sid, S('0'"]
+               , ["BBPost( ~sid, S(S('0'"]
+               , ["BBPost( ~sid, S(S(S('0'"]
+               , ["BBPost( ~sid, S(S(S(S('0'"]
+               , ["BBPost( ~sid, S(S(S(S(S('0'"]
+               , ["IntCipher"]
+               , ["Verify"]
+               , ["Verified"]
+               , ["!MixPhaseEnd"]
+               , ["'0'"] ],
+    "default": [ ["∃"]
+               , ["Mixer"]
+               , ["Sender"]
+               , ["!KU("]
+               , ["BBPost( ~sid, '0'"]
+               , ["BBPost( ~sid, S('0'"]
+               , ["BBPost( ~sid, S(S('0'"]
+               , ["BBPost( ~sid, S(S(S('0'"]
+               , ["BBPost( ~sid, S(S(S(S('0'"]
+               , ["BBPost( ~sid, S(S(S(S(S('0'"]
+               , ["IntCipher"]
+               , ["Post( <"]
+               , ["Verify"]
+               , ["Verified"]
+               , ["!MixPhaseEnd"]
+               , ["'0'"] ]
+}
+
+lines = sys.stdin.readlines()
+lemma = sys.argv[1]
+oracle = oracles[lemma] if lemma in oracles else oracles["default"]
+
+results = []
+for current in oracle:
+    for line in list(lines):
+        for guess in current:
+            if guess in line.split(":")[1].strip():
+                num = line.split(":")[0]
+                results.append(num)
+                lines.remove(line)
+                break
+
+for num in results:
+    print(num)

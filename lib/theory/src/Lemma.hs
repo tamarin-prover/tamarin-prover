@@ -10,9 +10,14 @@ module Lemma (
   , isSourceLemma
   , isLeftLemma
   , isRightLemma
-  ,module Items.LemmaItem
-  , module Lemma
-) where
+  , module Items.LemmaItem
+  , prettyLemma
+  , prettyLemmaName
+  , prettyLemmaAttribute
+  , prettyDiffLemmaName
+  , prettyTraceQuantifier
+  , prettyDiffLemma
+  , prettyEitherLemma) where
 
 import Data.Label as L
 import Theory.Constraint.System
@@ -23,6 +28,7 @@ import Text.PrettyPrint.Highlight
 import Theory.Text.Pretty
 import Theory.Model
 import Theory.Constraint.Solver
+import Data.List (intercalate)
 
 
 -- | The source kind allowed for a lemma.
@@ -76,15 +82,17 @@ prettyLemmaName l = case L.get lAttributes l of
       [] -> text (L.get lName l)
       as -> text (L.get lName l) <->
             (brackets $ fsep $ punctuate comma $ map prettyLemmaAttribute as)
-  where
-    prettyLemmaAttribute SourceLemma        = text "sources"
-    prettyLemmaAttribute ReuseLemma         = text "reuse"
-    prettyLemmaAttribute ReuseDiffLemma     = text "diff_reuse"
-    prettyLemmaAttribute InvariantLemma     = text "use_induction"
-    prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
-    prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
-    prettyLemmaAttribute LHSLemma           = text "left"
-    prettyLemmaAttribute RHSLemma           = text "right"
+
+prettyLemmaAttribute :: Document d => LemmaAttribute -> d
+prettyLemmaAttribute SourceLemma        = text "sources"
+prettyLemmaAttribute ReuseLemma         = text "reuse"
+prettyLemmaAttribute ReuseDiffLemma     = text "diff_reuse"
+prettyLemmaAttribute InvariantLemma     = text "use_induction"
+prettyLemmaAttribute (HideLemma s)      = text ("hide_lemma=" ++ s)
+prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRankings h))
+prettyLemmaAttribute (LemmaModule h)    = text ("output=[" ++ intercalate "," (map show h)  ++ "]")
+prettyLemmaAttribute LHSLemma           = text "left"
+prettyLemmaAttribute RHSLemma           = text "right"
 --     prettyLemmaAttribute BothLemma      = text "both"
 
 
@@ -92,7 +100,7 @@ prettyLemmaName l = case L.get lAttributes l of
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
 prettyDiffLemmaName l = text ((L.get lDiffName l))
 
-    -- | Pretty print a lemma.
+-- | Pretty print a lemma.
 prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d
 prettyLemma ppPrf lem =
     kwLemma <-> prettyLemmaName lem <> colon $-$

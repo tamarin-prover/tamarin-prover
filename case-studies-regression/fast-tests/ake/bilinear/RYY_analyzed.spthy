@@ -3,8 +3,10 @@ theory RYY begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing
-functions: fst/1, hp/1, kdf/1, pair/2, snd/1
+functions: fst/1[destructor], hp/1, kdf/1, pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -512,6 +514,10 @@ next
   qed
 qed
 
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
@@ -527,7 +533,7 @@ analyzing: examples/ake/bilinear/RYY.spthy
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 6.680151457s
+  processing time: 8.571853065s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 
@@ -539,7 +545,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 6.680151457s
+  processing time: 8.571853065s
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 

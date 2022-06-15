@@ -1,4 +1,4 @@
-theory StatVerifSecurityDevice 
+theory StatVerifSecurityDevice
 begin
 
 /*
@@ -53,7 +53,7 @@ process
 builtins: asymmetric-encryption
 
 let Device=(
-	out(pk(sk)) 
+	out(pk(sk))
 	||
 	!(	lock s ; in(req);
 		lookup <'F_status',s> as status in
@@ -67,11 +67,11 @@ let Device=(
                                 event InitDevice(s);
 				insert <'F_status',s>,req;
 				unlock s)
-	) 
+	)
 	||
 	!(
 		lock s;
-		in(aenc{<x,y>}pk(sk));
+		in(aenc{<x,y>}pk(=sk));
 		lookup <'F_status',s> as status in
 			if status='left' then
 				event Access(x); out(x); unlock s
@@ -83,6 +83,7 @@ let Device=(
 
 let User=new lm; new rm; event Exclusive(lm,rm); out(aenc{<lm,rm>}pk(sk))
 
+process:
 !( new sk; new s; insert <'F_status',s>,'init'; ( Device || ! User ))
 
 // As we use a backwards search, we must specify the possible structure of

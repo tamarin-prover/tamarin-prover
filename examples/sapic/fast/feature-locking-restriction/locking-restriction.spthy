@@ -1,0 +1,14 @@
+theory LockingRestriction
+begin
+
+let P = lock 'P';
+        event A();
+        unlock 'P'
+
+process:
+  lock 'P'; P
+
+lemma ANotReachable:
+  "not Ex #t. A()@t"
+
+end

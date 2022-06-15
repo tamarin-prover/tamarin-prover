@@ -2,10 +2,12 @@ theory DesignChoices begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
+
+
 
 lemma visit_once:
   all-traces
@@ -21,12 +23,12 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
     case lookupvisitedasv_1_11
     solve( State_112( lock ) ▶₀ #t2 )
       case lookupvisitedasv_1_11
-      solve( ((#vr.1 < #vr.6) ∧
+      solve( ((#vr.1 < #vr.4) ∧
               (∃ #t2.
                 (Unlock_0( '0', ~n, 's' ) @ #t2)
                ∧
                 (#vr.1 < #t2) ∧
-                (#t2 < #vr.6) ∧
+                (#t2 < #vr.4) ∧
                 (∀ #t0 pp. (Unlock( pp, ~n, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
                 (∀ pp lpp #t0.
                   (Lock( pp, lpp, 's' ) @ #t0)
@@ -36,7 +38,7 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
                   (Unlock( pp, lpp, 's' ) @ #t0)
                  ⇒
                   ((#t0 < #vr.1) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-             (#vr.6 < #vr.1)  ∥ (#vr.1 = #vr.6) )
+             (#vr.4 < #vr.1)  ∥ (#vr.1 = #vr.4) )
         case case_1
         solve( Unlock_0( '0', ~n, 's' ) @ #t2.1 )
           case unlocks_0_111
@@ -72,12 +74,12 @@ next
     case lookupvisitedasv_1_11
     solve( State_112( lock ) ▶₀ #t2 )
       case lookupvisitedasv_1_11
-      solve( ((#vr.1 < #vr.6) ∧
+      solve( ((#vr.1 < #vr.4) ∧
               (∃ #t2.
                 (Unlock_0( '0', ~n, 's' ) @ #t2)
                ∧
                 (#vr.1 < #t2) ∧
-                (#t2 < #vr.6) ∧
+                (#t2 < #vr.4) ∧
                 (∀ #t0 pp. (Unlock( pp, ~n, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
                 (∀ pp lpp #t0.
                   (Lock( pp, lpp, 's' ) @ #t0)
@@ -87,7 +89,7 @@ next
                   (Unlock( pp, lpp, 's' ) @ #t0)
                  ⇒
                   ((#t0 < #vr.1) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-             (#vr.6 < #vr.1)  ∥ (#vr.1 = #vr.6) )
+             (#vr.4 < #vr.1)  ∥ (#vr.1 = #vr.4) )
         case case_1
         solve( Unlock_0( '0', ~n, 's' ) @ #t2.1 )
           case unlocks_0_111
@@ -120,50 +122,46 @@ next
 qed
 
 rule (modulo E) Init[color=#ffffff, process="!"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_[color=#ffffff, process="!"]:
-   [ State_( ) ] --> [ !Semistate_1( ) ]
+   [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) p_1_[color=#ffffff, process="!"]:
-   [ !Semistate_1( ) ] --> [ State_1( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) locks_0_1[color=#ffffff, process="lock 's';"]:
-   [ State_1( ), Fr( lock ) ]
+   [ !Semistate_1( ), Fr( lock ) ]
   --[ Lock_0( '0', lock, 's' ), Lock( '0', lock, 's' ) ]->
    [ State_11( lock ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) lookupvisitedasv_0_11[color=#ffffff,
-                                      process="lookup 'visited' as v"]:
+                                      process="lookup 'visited' as v.1"]:
    [ State_11( lock ) ]
-  --[ IsIn( 'visited', v ) ]->
-   [ State_111( lock, v ) ]
+  --[ IsIn( 'visited', v.1 ) ]->
+   [ State_111( lock, v.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) lookupvisitedasv_1_11[color=#ffffff,
-                                      process="lookup 'visited' as v"]:
-   [ State_11( lock ) ] --[ IsNotSet( 'visited' ) ]-> [ State_112( lock ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupvisitedasv_0_11[color=#ffffff,
+                                         process="lookup 'visited' as v.1"]:
+     [ State_11( lock ) ]
+    --[ IsIn( 'visited', v ) ]->
+     [ State_111( lock, v ) ]
+  */
 
 rule (modulo E) unlocks_0_111[color=#ffffff, process="unlock 's';"]:
-   [ State_111( lock, v ) ]
+   [ State_111( lock, v.1 ) ]
   --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
-   [ State_1111( lock, v ) ]
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) unlocks_0_111[color=#ffffff, process="unlock 's';"]:
+     [ State_111( lock, v ) ]
+    --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
+     [ ]
+  */
 
-rule (modulo E) p_0_1111[color=#ffffff, process="0"]:
-   [ State_1111( lock, v ) ] --> [ ]
+rule (modulo E) lookupvisitedasv_1_11[color=#ffffff,
+                                      process="lookup 'visited' as v.1"]:
+   [ State_11( lock ) ] --[ IsNotSet( 'visited' ) ]-> [ State_112( lock ) ]
 
   /* has exactly the trivial AC variant */
 
@@ -184,12 +182,7 @@ rule (modulo E) insertvisiteds_0_1121[color=#ffffff,
 rule (modulo E) unlocks_0_11211[color=#ffffff, process="unlock 's';"]:
    [ State_11211( lock ) ]
   --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
-   [ State_112111( lock ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_112111[color=#ffffff, process="0"]:
-   [ State_112111( lock ) ] --> [ ]
+   [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -241,7 +234,7 @@ analyzing: examples/sapic/fast/basic/design-choices.spthy
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.338865872s
+  processing time: 0.287655687s
   visit_once (all-traces): verified (26 steps)
 
 ------------------------------------------------------------------------------
@@ -252,7 +245,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.338865872s
+  processing time: 0.287655687s
   visit_once (all-traces): verified (26 steps)
 
 ==============================================================================

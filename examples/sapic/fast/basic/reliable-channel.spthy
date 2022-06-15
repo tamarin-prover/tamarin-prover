@@ -3,6 +3,7 @@ begin
 
 builtins: signing, hashing, reliable-channel
 
+process:
 (in('r',m); event A()) + !(in('r',m); event B())
 
 lemma A_possible:

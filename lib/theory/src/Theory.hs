@@ -8,43 +8,65 @@
 --
 -- Theory datatype and transformations on it.
 module Theory (
-  -- * Formulas
-    expandFormula
-
   -- * Restrictions
-  , expandRestriction
-
+    expandRestriction
 
   -- * Processes
   , ProcessDef(..)
-  , SapicElement(..)
+  , TranslationElement(..)
   -- Datastructure added to Theory Items
   , addProcess
   , findProcess
+  , mapMProcesses
+  , mapMProcessesDef
   , addProcessDef
   , lookupProcessDef
+  , lookupFunctionTypingInfo
   , pName
   , pBody
+  , pVars
+  , addFunctionTypingInfo
+  , clearFunctionTypingInfos
 
   -- * Options
   , transAllowPatternMatchinginLookup
   , transProgress
   , transReliable
   , transReport
+  , stateChannelOpt
+  , asynchronousChannels
+  , compressEvents
+  , forcedInjectiveFacts
+  , setforcedInjectiveFacts
   , thyOptions
   , setOption
-
+  , Option
   -- * Predicates
-  , Predicate(..)
-  , pFact
+  , module Theory.Syntactic.Predicate
   , addPredicate
+
+  -- * Export blocks
+  , ExportInfo(..)
+  , addExportInfo
+  , lookupExportInfo
+  , eTag
+  , eText
+
+  -- * Case Tests
+  , CaseTest(..)
+  , cName
+  , cFormula
+  , caseTestToPredicate
+  , defineCaseTests
 
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
+  , CaseIdentifier
   , Lemma
   , SyntacticLemma
   , ProtoLemma(..)
+  , AccLemma(..)
   , lName
   , DiffLemma
   , lDiffName
@@ -54,6 +76,11 @@ module Theory (
   , lFormula
   , lAttributes
   , lProof
+  , aName
+  , aAttributes
+  , aCaseIdentifiers
+  , aCaseTests
+  , aFormula
   , unprovenLemma
   , skeletonLemma
   , skeletonDiffLemma
@@ -86,12 +113,22 @@ module Theory (
   , diffTheoryDiffLemmas
   , theoryRules
   , theoryLemmas
+  , theoryCaseTests
   , theoryRestrictions
   , theoryProcesses
+  , theoryProcessDefs
+  , theoryFunctionTypingInfos
+  , theoryBuiltins
+  , theoryEquivLemmas
+  , theoryDiffEquivLemmas
+  , theoryPredicates
+  , theoryAccLemmas
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addRestriction
   , addLemma
+  , addAccLemma
+  , addCaseTest
   , addRestrictionDiff
   , addLemmaDiff
   , addDiffLemma
@@ -99,9 +136,12 @@ module Theory (
   , addDiffHeuristic
   , removeLemma
   , removeLemmaDiff
+  , filterLemma
   , removeDiffLemma
   , lookupLemma
   , lookupDiffLemma
+  , lookupAccLemma
+  , lookupCaseTest
   , lookupLemmaDiff
   , addComment
   , addDiffComment
@@ -118,7 +158,7 @@ module Theory (
   , OpenTheoryItem
   , OpenTranslatedTheory
   , OpenDiffTheory
-  , removeSapicItems
+  , removeTranslationItems
 --  , EitherTheory
   , EitherOpenTheory
   , EitherClosedTheory
@@ -194,7 +234,6 @@ module Theory (
 
   -- * Pretty printing
   , prettyTheory
-  , prettyFormalComment
   , prettyLemmaName
   , prettyRestriction
   , prettyLemma
@@ -211,7 +250,6 @@ module Theory (
   , prettyClosedSummary
   , prettyClosedDiffSummary
 
-  , prettyIntruderVariants
   , prettyTraceQuantifier
 
   , prettyProcess
@@ -224,26 +262,13 @@ module Theory (
 
   ) where
 
--- import           Debug.Trace
-
-import           Prelude                             hiding (id, (.))
-
-
--- import           Data.Typeable
-
-
--- import qualified Data.Label.Total
-
-
-import           Theory.Model
-import           Theory.Proof
-
-
-
-import           TheoryObject
-
-import OpenTheory
 import ClosedTheory
-import Prover
+import Items.ExportInfo
+import OpenTheory
 import Pretty
-
+import Prover
+import Theory.Model
+import Theory.Proof
+import Theory.Syntactic.Predicate
+import TheoryObject
+import Prelude hiding (id, (.))

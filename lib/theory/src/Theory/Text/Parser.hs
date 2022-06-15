@@ -20,6 +20,7 @@ module Theory.Text.Parser (
   , parseLemma
   , parseRestriction
   , parseIntruderRules
+  , liftedAddLemma
   , liftedAddProtoRule
   , liftedAddRestriction
   ) where
@@ -27,6 +28,7 @@ module Theory.Text.Parser (
 import           Prelude                    hiding (id, (.))
 import           Data.Foldable              (asum)
 import           Data.Label
+import           Data.Maybe
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import           System.FilePath
@@ -40,6 +42,7 @@ import           Text.PrettyPrint.Class     (render)
 import           Theory
 import           Theory.Text.Parser.Token
 
+import           Theory.Text.Parser.Accountability
 import           Theory.Text.Parser.Lemma
 import           Theory.Text.Parser.Rule
 import Theory.Text.Parser.Exceptions
@@ -82,10 +85,9 @@ parseLemma = parseString [] "<unknown source>" (lemma Nothing)
 -- Parsing Theories
 ------------------------------------------------------------------------------
 
-
 liftedExpandFormula :: Catch.MonadThrow m =>
                        Theory sig c r p s -> SyntacticLNFormula -> m LNFormula
-liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula thy
+liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula (theoryPredicates thy)
 
 liftedExpandLemma :: Catch.MonadThrow m => Theory sig c r p1 s
                      -> ProtoLemma SyntacticLNFormula p2 -> m (ProtoLemma LNFormula p2)
@@ -123,6 +125,19 @@ liftedAddLemma thy lem = do
                                          -- ++ " in lemma: "
                                          -- ++ get lName lem
                                          -- ++ "."
+
+liftedAddAccLemma :: Catch.MonadThrow m => 
+                     Theory sig c r p TranslationElement 
+                     -> AccLemma -> m (Theory sig c r p TranslationElement)
+liftedAddAccLemma thy lem =
+   liftMaybeToEx (DuplicateItem $ TranslationItem $ AccLemmaItem lem) (addAccLemma lem thy)
+
+liftedAddCaseTest :: Catch.MonadThrow m =>
+                     Theory sig c r p TranslationElement
+                     -> CaseTest -> m (Theory sig c r p TranslationElement)
+liftedAddCaseTest thy cTest =
+   liftMaybeToEx (DuplicateItem $ TranslationItem $ CaseTestItem cTest) (addCaseTest cTest thy)
+
 
 -- | Add new protocol rule and introduce restrictions for _restrict contruct
 --  1. expand syntactic restrict constructs
@@ -203,20 +218,29 @@ theory inFile = do
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
       , do thy' <- options thy
-           addItems inFile0 thy'
-      , do functions
+           addItems inFile0 thy'      
+      , do fs <- functions
            msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
+           let thy' = foldl (flip addFunctionTypingInfo) thy fs in           
+             addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
       , do equations
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
---           addItems inFile0 flags thy'
-      , do thy' <- liftedAddRestriction thy =<< restriction
+--           addItems flags thy'
+      , do thy' <- liftedAddRestriction thy =<< restriction msgvar nodevar
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems inFile0 thy'
            -- add legacy deprecation warning output
+      , do test <- caseTest
+           thy1 <- liftedAddCaseTest thy test
+           thy2 <- maybe (return thy1) (liftedAddPredicate thy1) (caseTestToPredicate test)
+           addItems inFile0 thy2
+      , do accLem <- lemmaAcc workDir
+           let tests = mapMaybe (flip lookupCaseTest $ thy) (get aCaseIdentifiers accLem)
+           thy' <- liftedAddAccLemma thy (defineCaseTests accLem tests)
+           addItems inFile0 thy'
       , do thy' <- liftedAddLemma thy =<< lemma workDir
            addItems inFile0 thy'
       , do ru <- protoRule
@@ -227,16 +251,24 @@ theory inFile = do
       , do r <- intrRule
            addItems inFile0 (addIntrRuleACs [r] thy)
       , do c <- formalComment
-           addItems inFile0 (addFormalComment c thy)
-      , do procc <- process thy                          -- try parsing a process
-           addItems inFile0 (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems inFile0 call)
+           addItems inFile0 (addFormalComment c thy)      
+      , do procc <- toplevelprocess thy                          -- try parsing a process
+           addItems inFile0 (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems inFile0 thy'
+      , do
+           lem <- equivLemma thy
+           addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
+      , do
+           lem <- diffEquivLemma thy
+           addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
       , do thy' <- preddeclaration thy
+           addItems inFile0 (thy')
+      , do thy'  <- export thy
            addItems inFile0 (thy')
       , do ifdef inFile0 thy
       , do define inFile0 thy
-      , do include inFile0 thy
+      , do include inFile0 thy      
       , do return thy
       ]
       where workDir = (takeDirectory <$> inFile0)
@@ -325,8 +357,9 @@ diffTheory inFile = do
       , do
            diffbuiltins
            msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
-      , do functions
+           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy           
+      , do _ <- functions -- typing affects only SAPIC translation, hence functions
+                          -- are only added to maude signature, but not to theory.
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
       , do equations

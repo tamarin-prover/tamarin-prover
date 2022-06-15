@@ -14,6 +14,7 @@ import Data.Binary (Binary)
 import Theory.Constraint.Solver (GoalRanking)
 import Theory.Model
 import Data.Label as L
+import Theory.Module
 
 ------------------------------------------------------------------------------
 -- Lemmas
@@ -29,6 +30,7 @@ data LemmaAttribute =
        | LHSLemma
        | RHSLemma
        | LemmaHeuristic [GoalRanking]
+       | LemmaModule [ModuleType]
 --        | BothLemma
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -73,18 +75,6 @@ $(mkLabels [''DiffLemma])
 
 
 
--- | An accountability Lemma describes a property that holds in the context
--- of a theory and some parties with a verdict function
---data AccLemma v p par = AccLemma
---       { _acName            :: String
---       , _acTraceQuantifier :: TraceQuantifier
---       , _acFormula         :: LNFormula
---       , _acAttributes      :: [LemmaAttribute]
---       , _acVerdict         :: v
---       , _acProof           :: p
---       , _acParties         :: par
---       }
---       deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 
 -- Instances

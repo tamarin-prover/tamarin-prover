@@ -10,10 +10,12 @@
 
 module Theory.Text.Parser.Term (
     msetterm
+    , vlit
     , llit
     , term
     , llitNoPub
-    , llitWithNode
+    , reservedBuiltins
+    , llitWithNode    
 )
 where
 
@@ -28,15 +30,21 @@ import           Text.Parsec                hiding ((<|>))
 import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
+import           Data.ByteString.Internal        (unpackChars)
+import Data.Functor (($>))
 
 
--- | Parse an lit with logical variables.
+-- | Parse a lit with logical variables parsed by @varp@
+vlit :: Parser v -> Parser (NTerm v)
+vlit varp = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> varp]
+
+-- | Parse a lit with logical variables.
 llit :: Parser LNTerm
-llit = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> msgvar]
+llit = vlit msgvar
 
--- | Parse an lit with logical variables including timepoint variables
+-- | Parse a lit with logical variables including timepoint variables
 llitWithNode :: Parser LNTerm
-llitWithNode = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> lvar]
+llitWithNode = vlit lvar
 
 -- | Parse an lit with logical variables without public names in single constants.
 llitNoPub :: Parser LNTerm
@@ -44,21 +52,34 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupArity :: String -> Parser (Int, Privacy)
+lookupArity :: String -> Parser (Int, Privacy,Constructability)
 lookupArity op = do
     maudeSig <- sig <$> getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms $ maudeSig) ++ [(emapSymString, (2,Public))]) of
+    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
         Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
-        Just (k,priv) -> return (k,priv)
+        Just (k,priv,cnstr) -> return (k,priv,cnstr)
+
+reservedBuiltins :: [[Char]]
+reservedBuiltins =  map unpackChars [
+    munSymString
+  , oneSymString 
+  , expSymString
+  , multSymString
+  , invSymString
+  , pmultSymString 
+  , emapSymString 
+  , zeroSymString
+  , xorSymString 
+  ]
 
 -- | Parse an n-ary operator application for arbitrary n.
 naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 naryOpApp eqn plit = do
     op <- identifier
     --traceM $ show op ++ " " ++ show eqn
-    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+    when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
-    (k,priv) <- lookupArity op
+    ar@(k,_,_) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm eqn plit
                      else commaSep (msetterm eqn plit)
@@ -67,20 +88,20 @@ naryOpApp eqn plit = do
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
     let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, (k,priv)) ts
+    return $ app (BC.pack op, ar) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 binaryAlgApp eqn plit = do
     op <- identifier
-    when (eqn && op `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
+    when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
-    (k,priv) <- lookupArity op
+    ar@(k,_,_) <- lookupArity op
     arg1 <- braced (tupleterm eqn plit)
     arg2 <- term plit eqn
     when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNoEq (BC.pack op, (2,priv)) [arg1, arg2]
+    return $ fAppNoEq (BC.pack op, ar) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do
@@ -101,8 +122,8 @@ term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
-    , symbol "1" *> pure fAppOne
-    , symbol "DH_neutral" *> pure fAppDHNeutral    
+    , symbol "1" $> fAppOne
+    , symbol "DH_neutral" $> fAppDHNeutral    
     , application <?> "function application"
     , nullaryApp
     , plit
@@ -114,8 +135,8 @@ term plit eqn = asum
     nullaryApp = do
       maudeSig <- sig <$> getState
       -- FIXME: This try should not be necessary.
-      asum [ try (symbol (BC.unpack sym)) *> pure (fApp (NoEq (sym,(0,priv))) [])
-           | NoEq (sym,(0,priv)) <- S.toList $ funSyms $ maudeSig ]
+      asum [ try (symbol (BC.unpack sym)) $> fApp fs []
+           | fs@(NoEq (sym,(0,_,_))) <- S.toList $ funSyms maudeSig ]
 
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)

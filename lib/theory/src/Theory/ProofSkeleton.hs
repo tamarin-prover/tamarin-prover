@@ -9,8 +9,7 @@ module Theory.ProofSkeleton
     unprovenDiffLemma,
     skeletonDiffLemma,
     incrementalToSkeletonDiffProof,
-    module Theory.ProofSkeleton
-  )
+  prettyIncrementalProof, prettyIncrementalDiffProof)
 where
 
 import           Prelude                             hiding (id, (.))
@@ -18,7 +17,6 @@ import           Prelude                             hiding (id, (.))
 import           Theory.Proof
 import Lemma
 import Theory.Model
-import Pretty
 import Text.PrettyPrint.Highlight
 import Theory.Text.Pretty
 import Control.Category
