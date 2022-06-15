@@ -17,12 +17,9 @@ module Main.TheoryLoader (
 
   -- ** Loading open theories
   , loadOpenThy
-  , loadOpenTranslatedThy
-  , loadOpenAndTranslatedThy
 
   -- ** Loading and closing theories
   , closeThy
-  , loadClosedThy
   , loadClosedThyWf
   , loadClosedThyWfReport
   , loadClosedThyString
@@ -177,14 +174,6 @@ lemmaSelector as lem
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
 loadOpenThy as inFile = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
 
--- | Load an open theory from a file. Returns the open translated theory.
-loadOpenTranslatedThy :: Arguments -> FilePath -> IO OpenTranslatedTheory
-loadOpenTranslatedThy as inFile =  do
-    thy <- loadOpenThy as inFile
-    thy' <- Sapic.translate thy
-    thy'' <- Acc.translate thy'
-    return (removeTranslationItems thy'')
-
 -- | Load an open theory from a file. Returns the open and the translated theory.
 loadOpenAndTranslatedThy :: Arguments -> FilePath -> IO (OpenTheory, OpenTranslatedTheory)
 loadOpenAndTranslatedThy as inFile =  do
@@ -194,12 +183,6 @@ loadOpenAndTranslatedThy as inFile =  do
       >>= Sapic.translate
       >>= Acc.translate
     return (thy, removeTranslationItems transThy)
-
--- | Load a closed theory from a file.
-loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy as inFile = do
-  (openThy, transThy) <- loadOpenAndTranslatedThy as inFile
-  closeThy as openThy transThy
 
 -- | Load an open diff theory from a file.
 loadOpenDiffThy :: Arguments -> FilePath -> IO OpenDiffTheory
