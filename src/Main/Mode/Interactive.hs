@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -27,10 +28,44 @@ import qualified Network.Wai.Handler.Warp        as Warp
 import           Web.Dispatch
 import qualified Web.Settings
 
-import           Main.Console
+import           Main.Console 
 import           Main.Environment
 import           Main.TheoryLoader
 
+
+-- For tamarin, git version, compile time... 
+import Data.Version (showVersion)
+import Paths_tamarin_prover (version)
+import           Development.GitRev
+import qualified Data.Time
+import Language.Haskell.TH
+
+------------------------------------------------------------------------------
+-- Versions String
+------------------------------------------------------------------------------
+
+-- | Git Version
+gitVersion :: String
+gitVersion = concat
+  [ "Git revision: "
+    , $(gitHash)
+    , case $(gitDirty) of
+          True  -> " (with uncommited changes)"
+          False -> ""
+    , ", branch: "
+    , $(gitBranch)
+  ]
+
+-- | Compile Time
+compileTime :: String
+compileTime = concat
+    [ "Compiled at: "
+    , $(stringE =<< runIO (show `fmap` Data.Time.getCurrentTime))
+    ]
+
+------------------------------------------------------------------------------
+-- Run
+------------------------------------------------------------------------------
 
 -- | Batch processing mode.
 interactiveMode :: TamarinMode
@@ -83,8 +118,17 @@ run thisMode as = case findArg "workDir" as of
           _ <- case (fst $ graphPath as) of
               "dot"  -> ensureGraphVizDot as
               "json" -> ensureGraphCommand as
-              _      -> return True
-          _ <- ensureMaude as
+              _      -> return (Just "")
+          -- Ensure Maude version and get Maude version 
+          maybeMaudeVersion <- ensureMaude as
+          let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
+
+          -- Get String for version
+          let tamarinVersion = showVersion version
+          let versionExport = "Generated from:\nTamarin version " ++ tamarinVersion
+                        ++  "\nMaude version " ++ maudeVersion ++ gitVersion
+                        ++ "\n" ++ compileTime
+
           port <- readPort
           let webUrl = serverUrl port
           putStrLn $ intercalate "\n"
