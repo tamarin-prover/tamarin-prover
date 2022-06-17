@@ -30,6 +30,7 @@ import qualified Web.Settings
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
+import qualified Data.Label as L
 
 
 -- | Batch processing mode.
@@ -93,18 +94,18 @@ run thisMode as = case findArg "workDir" as of
             , ""
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
             ]
-          if (argExists "diff" as)
+          if (L.get oDiffMode thyLoadOptions)
             then do 
               withWebUIDiff
                 ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
                 cacheDir
                 workDir (argExists "loadstate" as) (argExists "autosave" as)
 
-                (loadClosedDiffThyWfReport as) (loadClosedDiffThyString as)
-                (reportOnClosedDiffThyStringWellformedness as)
+                (loadClosedDiffThyWfReport thyLoadOptions) (loadClosedDiffThyString thyLoadOptions)
+                (reportOnClosedDiffThyStringWellformedness thyLoadOptions)
 
                 (argExists "debug" as) (dotPath as) readImageFormat
-                (constructAutoProver as)
+                (constructAutoProver thyLoadOptions)
                 (runWarp port)
             else do 
               withWebUI
@@ -112,16 +113,19 @@ run thisMode as = case findArg "workDir" as of
                 cacheDir
                 workDir (argExists "loadstate" as) (argExists "autosave" as)
 
-                (loadClosedThyWfReport as) (loadClosedThyString as)
-                (reportOnClosedThyStringWellformedness as)
+                (loadClosedThyWfReport thyLoadOptions) (loadClosedThyString thyLoadOptions)
+                (reportOnClosedThyStringWellformedness thyLoadOptions)
 
                 (argExists "debug" as) (graphPath as) readImageFormat
-                (constructAutoProver as)
+                (constructAutoProver thyLoadOptions)
                 (runWarp port)
         else
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")
   where
+    thyLoadOptions = case (mkTheoryLoadOptions as) of
+      Left (ArgumentError e) -> error e
+      Right opts             -> opts
 
     -- Port argument
     ----------------
