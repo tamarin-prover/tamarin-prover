@@ -379,13 +379,13 @@ precomputeSources ctxt restrictions =
     getProtoFact (Fact KDFact _ _ ) = mzero
     getProtoFact fa                 = return fa
 
-    absFact (Fact tag ann ts) = (tag, ann, length ts)
+    absFact (Fact tag _ ts) = (tag, length ts)
 
     nMsgVars n = [ varTerm (LVar "t" LSortMsg i) | i <- [1..fromIntegral n] ]
 
-    someProtoGoal :: (FactTag, S.Set FactAnnotation, Int) -> Goal
-    someProtoGoal (tag, ann, arity) =
-        PremiseG (someNodeId, PremIdx 0) (Fact tag ann (nMsgVars arity))
+    someProtoGoal :: (FactTag, Int) -> Goal
+    someProtoGoal (tag, arity) =
+        PremiseG (someNodeId, PremIdx 0) (Fact tag S.empty (nMsgVars arity))
 
     someKUGoal :: LNTerm -> Goal
     someKUGoal m = ActionG someNodeId (kuFact m)
@@ -396,7 +396,7 @@ precomputeSources ctxt restrictions =
     rules = get pcRules ctxt
     absProtoFacts = sortednub $ do
         ru <- joinAllRules rules
-        fa@(tag,_,_) <- absFact <$> (getProtoFact =<< (get rConcs ru ++ get rPrems ru))
+        fa@(tag,_) <- absFact <$> (getProtoFact =<< (get rConcs ru ++ get rPrems ru))
         -- exclude facts handled specially by the prover
         guard (not $ tag `elem` [OutFact, InFact, FreshFact])
         return fa
