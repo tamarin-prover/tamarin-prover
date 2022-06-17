@@ -379,6 +379,7 @@ precomputeSources ctxt restrictions =
     getProtoFact (Fact KDFact _ _ ) = mzero
     getProtoFact fa                 = return fa
 
+    -- remove annotations to avoid precomputing the same source with multiple annotations
     absFact (Fact tag _ ts) = (tag, length ts)
 
     nMsgVars n = [ varTerm (LVar "t" LSortMsg i) | i <- [1..fromIntegral n] ]
