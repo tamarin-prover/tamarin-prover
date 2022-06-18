@@ -40,9 +40,10 @@ nodeConc = parens ((,) <$> nodevar
 -- | Parse a goal.
 goal :: Parser Goal
 goal = asum
-    [ premiseGoal
+    [ stSplitGoal    
+    , premiseGoal
     , actionGoal
-    , chainGoal
+    , chainGoal     
     , disjSplitGoal
     , eqSplitGoal
     ]
@@ -60,6 +61,13 @@ goal = asum
     chainGoal = ChainG <$> (try (nodeConc <* opChain)) <*> nodePrem
 
     disjSplitGoal = (DisjG . Disj) <$> sepBy1 guardedFormula (symbol "∥")
+
+    stSplitGoal = do
+      a <- try (termp <* opSubterm)
+      b <- termp
+      return $ SubtermG (a, b)
+        where
+          termp =  msetterm False (vlit msgvar)      
 
     eqSplitGoal = try $ do
         symbol_ "splitEqs"
