@@ -58,7 +58,7 @@ import           Accountability.Generation
 
 import           Data.Char                           (toLower)
 import           Data.Label
-import           Data.List                           (isPrefixOf,intersperse)
+import           Data.List                           (isPrefixOf,intersperse, intercalate)
 import           Data.Map                            (keys)
 -- import           Data.Monoid
 import           Data.FileEmbed                      (embedFile)
@@ -252,6 +252,50 @@ printFileName inFile = do
           putStrLn $ replicate 78 '-'
           putStrLn ""
 
+
+-- Check that all the lemmas in the arguments are lemmas of the theory
+  -----------------------
+checkIfLemmasInTheory :: Arguments -> OpenTheory -> Pretty.Doc
+checkIfLemmasInTheory as thy = if argExists "prove" as || argExists "lemma" as then
+
+    if null notProvedLemma then Pretty.emptyDoc
+      else
+        Pretty.vcat
+        [
+          Pretty.text $ "WARNING " ++ "in " ++ _thyName thy
+          ++ ": '"++  intercalate "', '"  notProvedLemma ++ "'"  ++ " from --prove or --lemma arguments "
+          ++ "does not correspond to a specify lemma in the theory "
+        , Pretty.text "----- Debug data -----"
+        , Pretty.text $ "All arguments specified: " ++ show lemmaArgsNames ++ " -- Lists of lemmas from the theory: " ++ show (map _lName (theoryLemmas thy))
+        , Pretty.text "\n"
+        -- , prettyWfErrorReport notProvedLemma
+        ]
+
+    else Pretty.emptyDoc
+
+    where
+      lemmaArgsNames :: [String]
+      lemmaArgsNames = findArg "prove" as ++ findArg "lemma" as
+
+      -- | Check a lemma against a prefix* pattern or the name of a lemma 
+      lemmaChecker :: String -> String -> Bool
+      lemmaChecker argLem lemFromThy
+        | lastMay argLem == Just '*' = init argLem `isPrefixOf` lemFromThy
+        | otherwise = argLem == lemFromThy
+
+      -- | A filter to check if a lemma (str) is in the list of lemmas from the theory
+      argFilter :: String -> Bool
+      argFilter str =
+        let lemmasInTheory :: [String]
+            lemmasInTheory = map _lName (theoryLemmas thy)
+        in any (lemmaChecker str) lemmasInTheory
+
+       -- | A fold using the filter to check if the lemma is proper
+      notProvedLemma :: [String]
+      notProvedLemma = foldl (\acc x -> if not (argFilter x) then  x:acc else acc ) [] lemmaArgsNames
+
+
+
 loadClosedThyWf :: Arguments -> FilePath -> IO (ClosedTheory, Pretty.Doc)
 loadClosedThyWf as inFile = do
     (openThy, transThy0) <- loadOpenAndTranslatedThy as inFile
@@ -362,6 +406,9 @@ closeThy as openThy transThy = do
 -- | Close a theory according to arguments.
 closeThyWithMaude :: SignatureWithMaude -> Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
 closeThyWithMaude sig as openThy transThy = do
+
+  let check = checkIfLemmasInTheory as openThy
+  _ <- putStrLn $ Pretty.render check
   -- FIXME: wf-check is at the wrong position here. Needs to be more
   -- fine-grained.
   let transThy' = wfCheck openThy transThy
