@@ -253,7 +253,7 @@ printFileName inFile = do
           putStrLn ""
 
 
--- Check that all the lemmas in the arguments are lemmas of the theory
+-- | Check that all the lemmas in the arguments are lemmas of the theory
   -----------------------
 checkIfLemmasInTheory :: Arguments -> OpenTheory -> Pretty.Doc
 checkIfLemmasInTheory as thy = if argExists "prove" as || argExists "lemma" as then
@@ -261,13 +261,12 @@ checkIfLemmasInTheory as thy = if argExists "prove" as || argExists "lemma" as t
     if null notProvedLemma then Pretty.emptyDoc
       else
         Pretty.vcat
-        [
-          Pretty.text $ "WARNING " ++ "in " ++ _thyName thy
+        [ Pretty.text "\n"
+        , Pretty.text $ "WARNING " ++ "in " ++ _thyName thy
           ++ ": '"++  intercalate "', '"  notProvedLemma ++ "'"  ++ " from --prove or --lemma arguments "
           ++ "does not correspond to a specify lemma in the theory "
         , Pretty.text "----- Debug data -----"
         , Pretty.text $ "All arguments specified: " ++ show lemmaArgsNames ++ " -- Lists of lemmas from the theory: " ++ show (map _lName (theoryLemmas thy))
-        , Pretty.text "\n"
         -- , prettyWfErrorReport notProvedLemma
         ]
 
@@ -277,20 +276,20 @@ checkIfLemmasInTheory as thy = if argExists "prove" as || argExists "lemma" as t
       lemmaArgsNames :: [String]
       lemmaArgsNames = findArg "prove" as ++ findArg "lemma" as
 
-      -- | Check a lemma against a prefix* pattern or the name of a lemma 
+      -- Check a lemma against a prefix* pattern or the name of a lemma 
       lemmaChecker :: String -> String -> Bool
       lemmaChecker argLem lemFromThy
         | lastMay argLem == Just '*' = init argLem `isPrefixOf` lemFromThy
         | otherwise = argLem == lemFromThy
 
-      -- | A filter to check if a lemma (str) is in the list of lemmas from the theory
+      -- A filter to check if a lemma (str) is in the list of lemmas from the theory
       argFilter :: String -> Bool
       argFilter str =
         let lemmasInTheory :: [String]
             lemmasInTheory = map _lName (theoryLemmas thy)
         in any (lemmaChecker str) lemmasInTheory
 
-       -- | A fold using the filter to check if the lemma is proper
+       -- A fold using the filter to check if the lemma is proper
       notProvedLemma :: [String]
       notProvedLemma = foldl (\acc x -> if not (argFilter x) then  x:acc else acc ) [] lemmaArgsNames
 
