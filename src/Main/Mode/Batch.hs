@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -34,6 +35,8 @@ import           Main.TheoryLoader
 import           Main.Utils
 
 import           Theory.Module
+import           Control.Monad.Except (MonadIO(liftIO), runExcept, runExceptT)
+import           System.Exit (die)
 -- import           Debug.Trace
 
 -- | Batch processing mode.
@@ -80,12 +83,12 @@ run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | argExists "parseOnly" as || argExists "outModule" as = do
-      mapM_ processThy inFiles
+      mapM_ processThyNew inFiles
       putStrLn ""
   | otherwise  = do
       _ <- ensureMaude as
       putStrLn ""
-      summaries <- mapM processThy inFiles
+      summaries <- mapM processThyNew inFiles
       putStrLn ""
       putStrLn $ replicate 78 '='
       putStrLn "summary of summaries:"
@@ -126,6 +129,11 @@ run thisMode as
 
     -- theory processing functions
     ------------------------------
+    processThyNew :: FilePath -> IO Pretty.Doc
+    processThyNew inFile = either (die . show) return <=< runExceptT $ do
+      srcThy <- liftIO $ readFile inFile
+      res <- loadTheory thyLoadOptions srcThy inFile
+      either (return . prettyOpenTheory) (return . prettyOpenDiffTheory) res
 
     processThy :: FilePath -> IO Pretty.Doc
     processThy inFile
@@ -137,7 +145,7 @@ run thisMode as
           out ppWfAndSummaryDiff      (return . prettyClosedDiffTheory) (loadClosedDiffThy thyLoadOptions inFile)
       | otherwise = do
           (thy, report) <- loadClosedThyWf thyLoadOptions inFile
-          out (ppWfAndSummary report) (return . prettyClosedTheory) (return thy)
+          out (ppWfAndSummary report) (return . prettyClosedTheory)     (return thy)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile
         ppWfAndSummary report thy = do

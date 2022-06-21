@@ -17,6 +17,8 @@ module Theory.Text.Parser (
   , parseOpenTheoryString
   , parseOpenDiffTheory
   , parseOpenDiffTheoryString
+  , theory
+  , diffTheory
   , parseLemma
   , parseRestriction
   , parseIntruderRules

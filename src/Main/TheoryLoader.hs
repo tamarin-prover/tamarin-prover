@@ -22,6 +22,8 @@ module Main.TheoryLoader (
   , ArgumentError(..)
   , mkTheoryLoadOptions
 
+  , loadTheory
+
   -- ** Loading open theories
   , loadOpenThy
 
@@ -59,8 +61,8 @@ import           Debug.Trace
 
 import           Prelude                             hiding (id, (.))
 
-import           Accountability                      as Acc
-import           Accountability.Generation      
+import qualified Accountability                      as Acc
+import           Accountability.Generation (checkPreTransWellformedness)
 
 import           Data.Char                           (toLower)
 import           Data.Label
@@ -72,29 +74,32 @@ import           Data.FileEmbed                      (embedFile)
 -- import           Control.Basics
 
 import           Control.Category
+import           Control.Monad.Catch
 
 import           System.Console.CmdArgs.Explicit
 
 import           Theory
-import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString, parseOpenDiffTheory, parseOpenDiffTheoryString)
+import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString, parseOpenDiffTheory, parseOpenDiffTheoryString, theory, diffTheory)
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
-import           Sapic
+import qualified Sapic as Sapic
 import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments)
 
 import           Main.Environment
 
-import           Text.Parsec                hiding ((<|>),try)
+import           Text.Parsec                hiding ((<|>),try,parse)
 import           Safe
 import qualified Theory.Text.Pretty as Pretty
 import           Items.LemmaItem (HasLemmaName, HasLemmaAttributes)
-import Control.Monad.Except
-import Text.Read (readEither)
-import Theory.Module (ModuleType (ModuleSpthy, ModuleMsr))
-import qualified Data.Label as L
-import Theory.Text.Parser.Token (parseString, Parser)
+import           Control.Monad.Except
+import           Text.Read (readEither)
+import           Theory.Module (ModuleType (ModuleSpthy, ModuleMsr))
+import           qualified Data.Label as L
+import           Theory.Text.Parser.Token (parseString)
+import           Data.Bifunctor (Bifunctor(bimap))
+import           Data.Bitraversable (Bitraversable(bitraverse))
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -153,6 +158,7 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oAutoSources       :: Bool
   , _oOutputModule      :: ModuleType -- Note: This flag is only used for batch mode.
   , _oMaudePath         :: FilePath -- FIXME: Other functions defined in Environment.hs
+  , _oParseOnlyMode     :: Bool
 } deriving Show
 $(mkLabels [''TheoryLoadOptions])
 
@@ -170,6 +176,7 @@ defaultTheoryLoadOptions = TheoryLoadOptions {
   , _oAutoSources       = False
   , _oOutputModule      = ModuleSpthy
   , _oMaudePath         = "maude"
+  , _oParseOnlyMode     = False
 }
 
 toParserFlags :: TheoryLoadOptions -> [String]
@@ -194,6 +201,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
                          <*> autoSources
                          <*> outputModule
                          <*> (return $ maudePath as)
+                         <*> parseOnlyMode
   where
     proveMode  = return $ argExists "prove" as
     lemmaNames = return $ findArg "prove" as ++ findArg "lemma" as
@@ -238,6 +246,8 @@ mkTheoryLoadOptions as = TheoryLoadOptions
      , Just modCon <- find (\x -> show x  == str) (enumFrom minBound) = return modCon
      | otherwise   = throwError $ ArgumentError "output mode not supported."
 
+    -- Note: Output mode implicitly activates parse-only mode
+    parseOnlyMode = return $ argExists "parseOnly" as || argExists "outputMode" as
 
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
 lemmaSelectorByModule thyOpt lem = case lemmaModules of
@@ -266,6 +276,61 @@ lemmaSelector thyOpts lem
 -- | Load an open theory from a file.
 loadOpenThy :: TheoryLoadOptions -> FilePath -> IO OpenTheory
 loadOpenThy thyOpts inFile = parseOpenTheory (toParserFlags thyOpts) inFile
+
+-- FIXME: How can we avoid the MonadCatch here?
+loadTheory :: (MonadError ParseError m, MonadCatch m) => TheoryLoadOptions -> String -> FilePath -> m (Either OpenTheory OpenDiffTheory)
+loadTheory thyOpts input inFile = do
+    thy <- liftEither $ unwrapError $ bimap parse parse thyParser
+    withTheory translate thy
+  where
+    thyParser | isDiffMode = Right $ diffTheory $ Just inFile
+              | otherwise  = Left  $ theory     $ Just inFile
+
+    parse p = parseString (toParserFlags thyOpts) inFile p input
+
+    translate | isParseOnlyMode = return
+              | otherwise       = Sapic.typeTheory
+                              >=> Sapic.translate
+                              >=> Acc.translate
+
+    isDiffMode      = L.get oDiffMode thyOpts
+    isParseOnlyMode = L.get oParseOnlyMode thyOpts
+
+    unwrapError (Left (Left e)) = Left e
+    unwrapError (Left (Right v)) = Right $ Left v
+    unwrapError (Right (Left e)) = Left e
+    unwrapError (Right (Right v)) = Right $ Right v
+
+    withTheory     f t = bitraverse f return t
+    withDiffTheory f t = bitraverse return f t
+
+
+closeTheory' :: MonadError ParseError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m (Either ClosedTheory ClosedDiffTheory)
+closeTheory' thyOpts sig thy = do
+  transThy   <- withTheory (return . removeTranslationItems) thy
+  deducThy   <- bitraverse (return . addMessageDeductionRuleVariants)
+                           (return . addMessageDeductionRuleVariantsDiff) transThy
+  diffLemThy <- withDiffTheory (return . addDefaultDiffLemma) deducThy
+  closedThy  <- bitraverse (\t -> return $ closeTheoryWithMaude     sig t autoSources)
+                           (\t -> return $ closeDiffTheoryWithMaude sig t autoSources) diffLemThy
+  partialThy <- bitraverse (return . (maybe id (\s -> applyPartialEvaluation     s autoSources) partialStyle))
+                           (return . (maybe id (\s -> applyPartialEvaluationDiff s autoSources) partialStyle)) closedThy
+  provedThy  <- bitraverse (\t -> return $ proveTheory     (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover t)
+                           (\t -> return $ proveDiffTheory (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover diffProver t) partialThy
+  return provedThy
+
+  where
+    autoSources  = L.get oAutoSources thyOpts
+    partialStyle = L.get oPartialEvaluation thyOpts
+
+    prover | L.get oProveMode thyOpts = replaceSorryProver $ runAutoProver $ constructAutoProver thyOpts
+           | otherwise                = mempty
+
+    diffProver | L.get oProveMode thyOpts = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver thyOpts
+               | otherwise                = mempty
+
+    withTheory     f t = bitraverse f return t
+    withDiffTheory f t = bitraverse return f t
 
 -- | Load an open theory from a file. Returns the open and the translated theory.
 loadOpenAndTranslatedThy :: TheoryLoadOptions -> FilePath -> IO (OpenTheory, OpenTranslatedTheory)
