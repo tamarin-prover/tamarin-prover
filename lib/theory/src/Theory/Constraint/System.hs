@@ -610,6 +610,7 @@ goalRankingIdentifiersNoOracle = M.fromList
 goalRankingToIdentifiersNoOracle :: M.Map (GoalRanking ProofContext) Char
 goalRankingToIdentifiersNoOracle = M.fromList
                         [ (SmartRanking False, 's')
+                        , (SmartDiffRanking, 's')
                         , (SmartRanking True, 'S')
                         , (SapicRanking, 'p')
                         , (SapicPKCS11Ranking, 'P')
@@ -622,15 +623,18 @@ goalRankingToIdentifiersNoOracle = M.fromList
 goalRankingIdentifiersDiff :: M.Map String (GoalRanking ProofContext)
 goalRankingIdentifiersDiff  = M.fromList
                             [ ("s", SmartDiffRanking)
+                            , ("S", SmartRanking True)
                             , ("o", OracleRanking defaultOracle)
                             , ("O", OracleSmartRanking defaultOracle)
                             , ("c", UsefulGoalNrRanking)
                             , ("C", GoalNrRanking)
+                            , ("{.}", InternalTacticRanking defaultTacticI)
                             ]
 
 goalRankingIdentifiersDiffNoOracle :: M.Map String (GoalRanking ProofContext)
 goalRankingIdentifiersDiffNoOracle  = M.fromList
                             [ ("s", SmartDiffRanking)
+                            , ("S", SmartRanking True)
                             , ("c", UsefulGoalNrRanking)
                             , ("C", GoalNrRanking)
                             ]
@@ -639,7 +643,7 @@ stringToGoalRankingMay :: Bool -> String -> Maybe (GoalRanking ProofContext)
 stringToGoalRankingMay noOracle s = if noOracle then M.lookup s goalRankingIdentifiersNoOracle else M.lookup s goalRankingIdentifiers
 
 goalRankingToChar :: GoalRanking ProofContext -> Char
-goalRankingToChar g = fromMaybe (error $ render $ sep $ map text $ lines $ "Unknown goal ranking.")
+goalRankingToChar g = fromMaybe (error $ render $ sep $ map text $ lines $ "Unknown goal ranking."++ show g)
     $ M.lookup g goalRankingToIdentifiersNoOracle
 
 stringToGoalRanking :: Bool -> String -> GoalRanking ProofContext
@@ -648,14 +652,13 @@ stringToGoalRanking noOracle s = fromMaybe
         ++ "'. Use one of the following:\n" ++ listGoalRankings noOracle)
     $ stringToGoalRankingMay noOracle s
 
-
 stringToGoalRankingDiffMay :: Bool -> String -> Maybe (GoalRanking ProofContext)
 stringToGoalRankingDiffMay noOracle s = if noOracle then M.lookup s goalRankingIdentifiersDiffNoOracle else M.lookup s goalRankingIdentifiersDiff
 
 stringToGoalRankingDiff :: Bool -> String -> GoalRanking ProofContext
 stringToGoalRankingDiff noOracle s = fromMaybe
     (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
-        ++ "'. Use one of the following:\n" ++ listGoalRankings noOracle)
+        ++ "'. Use one of the following:\n" ++ listGoalRankingsDiff noOracle)
     $ stringToGoalRankingDiffMay noOracle s  
 
 listGoalRankings :: Bool -> String

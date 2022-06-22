@@ -71,6 +71,8 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 
+import           Debug.Trace
+
 
 
 ------------------------------------------------------------------------------
@@ -398,7 +400,7 @@ constructAutoDiffProver as =
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> Just $ roundRobinHeuristic
-                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . stringToGoalRankingDiff False) [rawRankings]
+                                       $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as))) (filterHeuristic rawRankings)
         Just []                -> error "--heuristic: at least one ranking must be given"
         _                      -> Nothing
         -- map (mapTacticRanking (maybeSetTacticRelPath (findArg "tacticname" as)))
