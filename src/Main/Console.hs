@@ -38,6 +38,9 @@ module Main.Console (
   , findArg
   , argExists
 
+  -- ** Add arguments for version data
+  , addArg
+  
   -- ** Utility Functions
   , getOutputModule
 

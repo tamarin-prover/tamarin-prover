@@ -76,7 +76,7 @@ import           Theory.Tools.IntruderRules          (specialIntruderRules, subt
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 import           Sapic
-import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments, getOutputModule)
+import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments, getOutputModule, getArg)
 
 import           Main.Environment
 
@@ -381,7 +381,8 @@ closeThyWithMaude sig as openThy transThy = do
       wfCheck :: OpenTheory -> OpenTranslatedTheory -> OpenTranslatedTheory
       wfCheck othy tthy =
         noteWellformedness
-          (checkWellformedness tthy sig ++ checkPreTransWellformedness othy) transThy (elem "quit-on-warning" (quitOnWarning as))
+          version (checkWellformedness tthy sig ++ checkPreTransWellformedness othy) transThy (elem "quit-on-warning" (quitOnWarning as))
+          where version = getArg "__versionPrettyPrint__" as
 
       -- replace all annotated sorrys with the configured autoprover.
       prover :: Prover

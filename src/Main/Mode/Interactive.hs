@@ -67,7 +67,7 @@ interactiveMode = tamarinMode
 
 -- | Start the interactive theorem proving mode.
 run :: TamarinMode -> Arguments -> IO ()
-run thisMode as = case findArg "workDir" as of
+run thisMode as' = case findArg "workDir" as' of
     Nothing       -> helpAndExit thisMode
                        (Just "no working directory specified")
     Just workDir0 -> do
@@ -84,18 +84,15 @@ run thisMode as = case findArg "workDir" as of
           unixLoginName <- lookupEnv "USER"
           let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
               cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
+
+          -- Ensure Maude and get the Version in the arguments (__versionPrettyPrint__)
+          as <- ensureMaudeAndGetVersion as'
+
           -- process theories
           _ <- case (fst $ graphPath as) of
               "dot"  -> ensureGraphVizDot as
               "json" -> ensureGraphCommand as
               _      -> return (Just "")
-          -- Ensure Maude version and get Maude version 
-          maybeMaudeVersion <- ensureMaude as
-          let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
-
-          -- Get String for version
-          versionExport <- getVersionIO maudeVersion 
-          _ <- putStrLn versionExport
 
           port <- readPort
           let webUrl = serverUrl port
@@ -134,18 +131,18 @@ run thisMode as = case findArg "workDir" as of
     -- Port argument
     ----------------
     readPort = do
-      let port = findArg "port" as >>= fmap fst . listToMaybe . reads
+      let port = findArg "port" as' >>= fmap fst . listToMaybe . reads
       when
-        (argExists "port" as && isNothing port)
+        (argExists "port" as' && isNothing port)
         (putStrLn $ "Unable to read port from argument `"
-                    ++ fromMaybe "" (findArg "port" as) ++ "'. Using default.")
+                    ++ fromMaybe "" (findArg "port" as') ++ "'. Using default.")
       return $ fromMaybe Web.Settings.defaultPort port
 
     -- Interface argument, we use 127.0.0.1 as default
     --------------------------------------------------
-    interface = fromMaybe "127.0.0.1" $ findArg "interface" as
+    interface = fromMaybe "127.0.0.1" $ findArg "interface" as'
 
-    readImageFormat = case map toLower <$> findArg "image-format" as of
+    readImageFormat = case map toLower <$> findArg "image-format" as' of
                           Just "svg" -> SVG
                           Just "png" -> PNG
                           Nothing    -> PNG
