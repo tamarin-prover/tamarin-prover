@@ -2,11 +2,14 @@ theory YahalomLowe begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
+           snd/1[destructor]
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -1051,7 +1054,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1061,7 +1064,7 @@ analyzing: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
 analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 2.300310386s
+  processing time: 7.985186781s
   executability (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): verified (33 steps)
@@ -1078,7 +1081,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 2.300310386s
+  processing time: 7.985186781s
   executability (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): verified (33 steps)

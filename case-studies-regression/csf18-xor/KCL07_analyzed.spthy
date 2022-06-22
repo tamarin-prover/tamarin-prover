@@ -3,8 +3,12 @@ theory KCL07 begin
 // Function signature and definition of the equational theory E
 
 builtins: xor
-functions: fst/1, h/1, pair/2, snd/1
+functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -476,7 +480,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -486,7 +490,7 @@ analyzing: examples/csf18-xor/KCL07.spthy
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.149840124s
+  processing time: 2.428247375s
   recentalive_tag (all-traces): verified (113 steps)
   executable (exists-trace): verified (17 steps)
 
@@ -498,7 +502,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.149840124s
+  processing time: 2.428247375s
   recentalive_tag (all-traces): verified (113 steps)
   executable (exists-trace): verified (17 steps)
 

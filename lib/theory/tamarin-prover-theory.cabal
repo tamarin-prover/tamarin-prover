@@ -75,6 +75,7 @@ library
     exposed-modules:
       Theory
       Theory.Proof
+      Theory.ProofSkeleton
 
       Theory.Constraint.Solver
       Theory.Constraint.Solver.Sources
@@ -91,6 +92,11 @@ library
       Theory.Constraint.System.JSON
       Theory.Constraint.System.Guarded
 
+      Theory.Sapic.Term
+      Theory.Sapic.Pattern
+      Theory.Sapic.Process
+      Theory.Sapic.Position
+      Theory.Sapic.Annotation
       Theory.Sapic
       Theory.Sapic.Print
 
@@ -101,6 +107,8 @@ library
       Theory.Model.Rule
       Theory.Model.Signature
       Theory.Model.Restriction
+
+      Theory.Module
 
       Theory.Text.Pretty
       Theory.Text.Parser
@@ -114,8 +122,27 @@ library
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
       Theory.Tools.Wellformedness
+      TheoryObject
+      Lemma
+      OpenTheory
+      ClosedTheory
+      Rule
+      Prover
+      Items.LemmaItem
+      Items.OpenTheoryItem
+      Items.OptionItem
+      Items.RuleItem
+      Items.ProcessItem
+      Items.TheoryItem
+      Items.ExportInfo
+      Items.CaseTestItem
+      Items.AccLemmaItem
+      Pretty
+
 
     other-modules:
+      Theory.Syntactic.Predicate
+      Theory.Text.Parser.Accountability
       Theory.Text.Parser.Exceptions
       Theory.Text.Parser.Fact
       Theory.Text.Parser.Formula
@@ -127,4 +154,5 @@ library
       Theory.Text.Parser.Signature
       Theory.Text.Parser.Tactics
       Theory.Text.Parser.Term
-      
+      Theory.Sapic.PlainProcess
+      Theory.Sapic.Substitution

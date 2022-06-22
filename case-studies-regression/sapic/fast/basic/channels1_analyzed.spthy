@@ -2,10 +2,16 @@ theory ChannelsTestOne begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
+
+
+
+
+
+
 
 lemma secret:
   all-traces "∀ x #i. (Secret( x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
@@ -14,11 +20,11 @@ guarded formula characterizing all counter-examples:
 "∃ x #i. (Secret( x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
 */
 simplify
-solve( State_111( x, c ) ▶₀ #i )
-  case newa_0_11
-  solve( !KU( ~n ) @ #vk )
-    case outca_0_1111
-    by solve( !KU( ~n.1 ) @ #vk.1 )
+solve( State_111( c ) ▶₀ #i )
+  case Init
+  solve( !KU( ~n.1 ) @ #vk )
+    case outca_0_11111
+    by solve( !KU( ~n ) @ #vk.1 )
   qed
 qed
 
@@ -29,82 +35,110 @@ guarded formula characterizing all satisfying traces:
 "∃ x #i. (Received( x ) @ #i)"
 */
 simplify
-solve( State_121( c, x ) ▶₀ #i )
-  case incx_1_12
+solve( State_1211( c, x ) ▶₀ #i )
+  case incx_1_121_case_1
   SOLVED // trace found
 qed
 
-rule (modulo E) Init[color=#ffffff, process="new c;"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
+rule (modulo E) newa_0_111[color=#6c8040, process="new a.1;"]:
+   [ State_111( c.1 ), Fr( a.1 ) ]
+  --[ Secret( a.1 ) ]->
+   [ State_11111( a.1, c.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) newa_0_111[color=#6c8040, process="new a.1;"]:
+     [ State_111( c ), Fr( a ) ] --[ Secret( a ) ]-> [ State_11111( a, c ) ]
+  */
 
-rule (modulo E) newc_0_[color=#ffffff, process="new c;"]:
-   [ State_( ), Fr( c ) ] --> [ State_1( c ) ]
+rule (modulo E) outca_1_11111[color=#6c8040, process="out(c.1,a.1);"]:
+   [ State_11111( a.1, c.1 ) ]
+  -->
+   [ Message( c.1, a.1 ), Semistate_111111( a.1, c.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) outca_1_11111[color=#6c8040, process="out(c.1,a.1);"]:
+     [ State_11111( a, c ) ] --> [ Message( c, a ), Semistate_111111( a, c ) ]
+  */
 
-rule (modulo E) p_0_1[color=#ffffff, process="|"]:
-   [ State_1( c ) ] --> [ State_11( c ), State_12( c ) ]
+rule (modulo E) outca_0_11111[color=#6c8040, process="out(c.1,a.1);"]:
+   [ State_11111( a.1, c.1 ), In( c.1 ) ]
+  -->
+   [ Out( a.1 ), State_111111( a.1, c.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) outca_0_11111[color=#6c8040, process="out(c.1,a.1);"]:
+     [ State_11111( a, c ), In( c ) ] --> [ Out( a ), State_111111( a, c ) ]
+  */
 
-rule (modulo E) newa_0_11[color=#6c8040, process="new a;"]:
-   [ State_11( c ), Fr( a ) ] --> [ State_111( a, c ) ]
+rule (modulo E) outca_2_11111[color=#6c8040, process="out(c.1,a.1);"]:
+   [ Semistate_111111( a.1, c.1 ), Ack( c.1, a.1 ) ]
+  -->
+   [ State_111111( a.1, c.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) outca_2_11111[color=#6c8040, process="out(c.1,a.1);"]:
+     [ Semistate_111111( a, c ), Ack( c, a ) ] --> [ State_111111( a, c ) ]
+  */
 
-rule (modulo E) eventSecreta_0_111[color=#6c8040,
-                                   process="event Secret( a );"]:
-   [ State_111( a, c ) ] --[ Secret( a ) ]-> [ State_1111( a, c ) ]
+rule (modulo E) outc_0_111111[color=#6c8040, process="out(c.1);"]:
+   [ State_111111( a.1, c.1 ) ] --> [ Out( c.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) outc_0_111111[color=#6c8040, process="out(c.1);"]:
+     [ State_111111( a, c ) ] --> [ Out( c ) ]
+  */
 
-rule (modulo E) outca_0_1111[color=#6c8040, process="out(c,a);"]:
-   [ State_1111( a, c ), In( c ) ] --> [ Out( a ), State_11111( a, c ) ]
+rule (modulo E) Init[color=#ffffff, process="new c.1;"]:
+   [ Fr( c.1 ) ] --[ Init( ) ]-> [ State_121( c.1 ), State_111( c.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="new c.1;"]:
+     [ Fr( c ) ] --[ Init( ) ]-> [ State_121( c ), State_111( c ) ]
+  */
 
-rule (modulo E) outca_1_1111[color=#6c8040, process="out(c,a);"]:
-   [ State_1111( a, c ) ] --> [ Message( c, a ), Semistate_11111( a, c ) ]
+rule (modulo E) incx_0_121[color=#807140, process="in(c.1,x.1);"]:
+   [ State_121( c.1 ), Message( c.1, x.2 ) ]
+  -->
+   [ Let_1211( x.2, c.1 ), Ack( c.1, x.2 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) incx_0_121[color=#807140, process="in(c.1,x.1);"]:
+     [ State_121( c ), Message( c, x ) ] --> [ Let_1211( x, c ), Ack( c, x ) ]
+  */
 
-rule (modulo E) outca_2_1111[color=#6c8040, process="out(c,a);"]:
-   [ Semistate_11111( a, c ), Ack( c, a ) ] --> [ State_11111( a, c ) ]
+rule (modulo E) incx_2_121[color=#807140, process="in(c.1,x.1);"]:
+   [ State_121( c.1 ), In( <c.1, x.2> ) ] --> [ Let_1211( x.2, c.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) incx_2_121[color=#807140, process="in(c.1,x.1);"]:
+     [ State_121( c ), In( <c, x> ) ] --> [ Let_1211( x, c ) ]
+  */
 
-rule (modulo E) outc_0_11111[color=#6c8040, process="out(c);"]:
-   [ State_11111( a, c ) ] --> [ State_111111( a, c ), Out( c ) ]
+rule (modulo E) incx_1_121[color=#807140, process="in(c.1,x.1);"]:
+   [ Let_1211( x.1, c.1 ) ] --> [ State_1211( c.1, x.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) incx_1_121[color=#807140, process="in(c.1,x.1);"]:
+     [ Let_1211( x, c ) ] --> [ State_1211( c, x ) ]
+  */
 
-rule (modulo E) p_0_111111[color=#6c8040, process="0"]:
-   [ State_111111( a, c ) ] --> [ ]
+rule (modulo E) incx_3_121[color=#807140, process="in(c.1,x.1);"]:
+   [ Let_1211( x.1, c.1 ) ] --> [ State_1211( c.1, x.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) incx_3_121[color=#807140, process="in(c.1,x.1);"]:
+     [ Let_1211( x, c ) ] --> [ State_1211( c, x ) ]
+  */
 
-rule (modulo E) incx_0_12[color=#807140, process="in(c,x);"]:
-   [ State_12( c ), In( <c, x> ) ] --> [ State_121( c, x ) ]
+rule (modulo E) eventReceivedx_0_1211[color=#807140,
+                                      process="event Received( x.1 );"]:
+   [ State_1211( c.1, x.1 ) ] --[ Received( x.1 ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) incx_1_12[color=#807140, process="in(c,x);"]:
-   [ State_12( c ), Message( c, x ) ] --> [ Ack( c, x ), State_121( c, x ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventReceivedx_0_121[color=#807140,
-                                     process="event Received( x );"]:
-   [ State_121( c, x ) ] --[ Received( x ) ]-> [ State_1211( c, x ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1211[color=#807140, process="0"]:
-   [ State_1211( c, x ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) eventReceivedx_0_1211[color=#807140,
+                                         process="event Received( x.1 );"]:
+     [ State_1211( c, x ) ] --[ Received( x ) ]-> [ ]
+  */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
@@ -115,7 +149,7 @@ restriction single_session:
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -125,7 +159,7 @@ analyzing: examples/sapic/fast/basic/channels1.spthy
 analyzed: examples/sapic/fast/basic/channels1.spthy
 
   output:          examples/sapic/fast/basic/channels1.spthy.tmp
-  processing time: 0.183971284s
+  processing time: 0.089541881s
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
 
@@ -137,7 +171,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels1.spthy
 
   output:          examples/sapic/fast/basic/channels1.spthy.tmp
-  processing time: 0.183971284s
+  processing time: 0.089541881s
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
 

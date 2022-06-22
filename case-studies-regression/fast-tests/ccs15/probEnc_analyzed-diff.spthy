@@ -2,7 +2,8 @@ theory probEnc begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, pdec/2, penc/3, pk/1, snd/1
+functions: fst/1[destructor], pair/2, pdec/2, penc/3, pk/1,
+           snd/1[destructor]
 equations:
     fst(<x.1, x.2>) = x.1,
     pdec(penc(m, pk(k), r), k) = m,
@@ -220,7 +221,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -230,7 +231,7 @@ analyzing: examples/ccs15/probEnc.spthy
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.136208112s
+  processing time: 0.51629814s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ------------------------------------------------------------------------------
@@ -241,7 +242,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.136208112s
+  processing time: 0.51629814s
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

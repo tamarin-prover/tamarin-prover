@@ -2,10 +2,11 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeSynonymInstances       #-}
+
+
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -81,7 +82,6 @@ module Theory.Constraint.System.Guarded (
 
   ) where
 
-import           Control.Applicative
 import           Control.Arrow
 import           Control.DeepSeq
 import           Control.Monad.Except
@@ -94,6 +94,7 @@ import           GHC.Generics                     (Generic)
 import           Data.Data
 import           Data.Binary
 import           Data.Either                      (partitionEithers)
+import           Data.Maybe
 -- import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
 import qualified Data.DList as D
@@ -108,8 +109,8 @@ import           Theory.Model
 
 import           Data.Functor.Identity
 
-instance MonadFail Identity where
-  fail = fail
+-- Control.Monad.Fail import will become redundant in GHC 8.8+
+-- import qualified Control.Monad.Fail as Fail
 
 ------------------------------------------------------------------------------
 -- Types
@@ -261,9 +262,9 @@ instance Foldable (Guarded s c) where
 
 traverseGuarded :: (Applicative f, Ord c, Ord v, Ord a)
                 => (a -> f v) -> Guarded s c a -> f (Guarded s c v)
-traverseGuarded f = foldGuarded (liftA GAto . traverse (traverseTerm (traverse (traverse f))))
-                                (liftA GDisj . sequenceA)
-                                (liftA GConj . sequenceA)
+traverseGuarded f = foldGuarded (fmap GAto . traverse (traverseTerm (traverse (traverse f))))
+                                (fmap GDisj . sequenceA)
+                                (fmap GConj . sequenceA)
                                 (\qua ss as gf -> GGuarded qua ss <$> traverse (traverse (traverseTerm (traverse (traverse f)))) as <*> gf)
 
 instance Ord c => HasFrees (Guarded (String, LSort) c LVar) where
@@ -371,7 +372,7 @@ closeGuarded qua vs as gf =
 
 type LNGuarded = Guarded (String,LSort) Name LVar
 
-instance Apply LNGuarded where
+instance Apply LNSubst LNGuarded where
   apply subst = mapGuardedAtoms (const $ apply subst)
 
 
@@ -825,7 +826,7 @@ prettyGuarded fm =
     pp gf0@(GGuarded _ _ _ _) =
       -- variable names invented here can be reused otherwise
       scopeFreshness $ do
-          Just (qua, vs, atoms, gf) <- openGuarded gf0
+          (qua, vs, atoms, gf) <- fromJust <$> openGuarded gf0
           let antecedent = (GAto . fmap (fmapTerm (fmap Free))) <$> atoms
               connective = operator_ (case qua of All -> "⇒"; Ex -> "∧")
                             -- operator_ (case qua of All -> "==>"; Ex -> "&")

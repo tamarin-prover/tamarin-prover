@@ -126,9 +126,9 @@ let Judge =
          || (in ('c', <k,t,eoo,eook> ); event OriginJudge($A,$B,t))
          || (in ('c', <k,t,conk> ); event OriginJudge($A,$B,t))
 
-let TTPID=<'TTP',$TTP> in
+process:
 !(
-in('c',<$A,$B,TTPID>);
+in('c',<$A,$B,<'TTP',$TTP>>);
  (A || B || TTP || Judge)
 )
 || !( in('c',<'corrupt',$x>); 

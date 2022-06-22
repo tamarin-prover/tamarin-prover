@@ -2,13 +2,19 @@ theory TPM_Envelope begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sign/2, snd/1,
-           true/0, verify/3
+functions: adec/2[destructor], aenc/2, fst/1[destructor], h/1, pair/2,
+           pk/1, sign/2, snd/1[destructor], true/0, verify/3[destructor]
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+
+
+
 
 
 
@@ -6130,7 +6136,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -6140,7 +6146,7 @@ analyzing: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 28.891395808s
+  processing time: 40.844027965s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
@@ -6153,7 +6159,7 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 28.891395808s
+  processing time: 40.844027965s
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)

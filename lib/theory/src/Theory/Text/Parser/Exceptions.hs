@@ -30,7 +30,7 @@ data ParsingException = UndefinedPredicate FactTag
                       | DuplicateItem OpenTheoryItem
                       | TryingToAddFreshRule
 
-instance Show ParsingException where
+instance Show (ParsingException) where
     show (UndefinedPredicate facttag) = "undefined predicate "
                                          ++ showFactTagArity facttag
                                          -- ++ " in lemma: "
@@ -41,9 +41,14 @@ instance Show ParsingException where
     show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
     show (DuplicateItem (TextItem _)) =  undefined
     show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
-    show (DuplicateItem (SapicItem (ProcessItem _))) =  undefined
-    show (DuplicateItem (SapicItem (ProcessDefItem pDef))) =
+    show (DuplicateItem (TranslationItem (ProcessDefItem pDef))) =
         "duplicate process: " ++ get pName pDef
+    show (DuplicateItem (TranslationItem (ProcessItem _))) = "duplicate process item"
+    show (DuplicateItem (TranslationItem (FunctionTypingInfo _)))   = "duplicate function typing info item"
+    show (DuplicateItem (TranslationItem (ExportInfoItem _))) = "duplicate exportinfo  item"
+    show (DuplicateItem (TranslationItem (SignatureBuiltin s))) = "duplicate BuiltIn signature: " ++ show s
+    show (DuplicateItem (TranslationItem (DiffEquivLemma _))) = "duplicate diff equiv lemma item"
+    show (DuplicateItem (TranslationItem (EquivLemma _ _))) = "duplicate equiv lemma item"    
     show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
 
 instance Catch.Exception ParsingException

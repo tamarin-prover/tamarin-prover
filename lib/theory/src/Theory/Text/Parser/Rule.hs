@@ -40,7 +40,6 @@ import Theory.Text.Parser.Let
 import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
-import Theory.Sapic ( AnProcess(ProcessNull) )
 
 
 -- | Parse a "(modulo ..)" information.
@@ -81,7 +80,7 @@ ruleAttribute = asum
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
     parseAndIgnore = do
                         _ <-  symbol "\""
-                        _ <- manyTill anyChar (try (symbol "\"")) 
+                        _ <- manyTill anyChar (try (symbol "\""))
                         return Nothing
 
 ruleAttributesp :: Parser [RuleAttribute]
@@ -106,7 +105,7 @@ diffRule = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0,rs0) <- genericRule
+    (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
     leftRight  <- optionMaybe ( (,) <$> (symbol "left"  *> protoRule) <*> (symbol "right" *> protoRule))
     return $ DiffProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) leftRight
@@ -120,7 +119,7 @@ protoRule = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0,rs0) <- genericRule
+    (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
     variants <- option [] $ symbol "variants" *> commaSep1 protoRuleAC
     return $ OpenProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) variants
@@ -140,7 +139,7 @@ protoRuleAC = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0,rs0) <- genericRule
+    (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,_) = apply subst (ps0,as0,cs0,rs0)
     return $ Rule ri ps cs as (newVariables ps $ cs ++ as)
 
@@ -148,7 +147,7 @@ protoRuleAC = do
 intrRule :: Parser IntrRuleAC
 intrRule = do
     info <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
-    (ps,as,cs,[]) <- genericRule -- intruder rules should not introduce restrictions.
+    (ps,as,cs,[]) <- genericRule msgvar nodevar -- intruder rules should not introduce restrictions.
     return $ Rule info ps cs as (newVariables ps cs)
   where
     intrInfo = do
@@ -164,18 +163,21 @@ intrRule = do
 embeddedRestriction :: Parser a -> Parser a
 embeddedRestriction factParser = symbol "_restrict" *> parens factParser <?> "restriction"
 
-factOrRestr ::  Parser (Either SyntacticLNFormula LNFact)
-factOrRestr = Right <$> fact llit
-              <|> Left <$> embeddedRestriction standardFormula
+-- factOrRestr ::  Parser (Either SyntacticLNFormula LNFact)
+factOrRestr :: (Ord v, Hinted v) => Parser v -> Parser v
+                -> Parser (Either (SyntacticNFormula v) (NFact v))
+factOrRestr varp nodep = Right <$> fact (vlit varp)
+              <|> Left <$> embeddedRestriction (standardFormula varp nodep)
 
-genericRule :: Parser ([LNFact], [LNFact], [LNFact], [SyntacticLNFormula]) --- lhs, actions, rhs, restrictions
-genericRule = do
-    lhs         <- list (fact llit)
+
+genericRule :: (Ord v, Hinted v) => Parser v -> Parser v -> Parser ([Fact (NTerm v)], [Fact (NTerm v)], [Fact (NTerm v)], [SyntacticFormula (String, LSort) Name v]) --- lhs, actions, rhs, restrictions
+genericRule varp nodep = do
+    lhs         <- list (fact (vlit varp))
     actsAndRsts <-
         (   (pure [] <* symbol "-->")
-        <|> (symbol "--[" *> commaSep factOrRestr <* symbol "]->")
+        <|> (symbol "--[" *> commaSep (factOrRestr varp nodep) <* symbol "]->")
         )
-    rhs <- list (fact llit)
+    rhs <- list (fact (vlit varp))
     return (lhs, rights actsAndRsts, rhs, lefts actsAndRsts)
 
 {-
@@ -190,5 +192,5 @@ addFacts cmd =
 parseIntruderRules
     :: MaudeSig -> String -> B.ByteString -> Either ParseError [IntrRuleAC]
 parseIntruderRules msig ctxtDesc =
-    parseString ctxtDesc (setState msig >> many intrRule)
+    parseString [] ctxtDesc (setState (mkStateSig msig) >> many intrRule)
   . T.unpack . TE.decodeUtf8

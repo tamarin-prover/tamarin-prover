@@ -3,14 +3,16 @@ theory Chaum_Offline_Anonymity begin
 // Function signature and definition of the equational theory E
 
 builtins: xor
-functions: blind/2, checksign/2, fst/1, pair/2, pk/1, sign/2, snd/1,
-           unblind/2
+functions: blind/2, checksign/2, fst/1[destructor], pair/2, pk/1, sign/2,
+           snd/1[destructor], unblind/2
 equations:
     checksign(sign(m, k), pk(k)) = m,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     unblind(blind(m, r), r) = m,
     unblind(sign(blind(m, r), k), r) = sign(m, k)
+
+
 
 
 
@@ -1480,12 +1482,22 @@ solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i1 )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1495,7 +1507,7 @@ analyzing: examples/csf18-xor/chaum_offline_anonymity.spthy
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 8.635000966s
+  processing time: 20.879793s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
   anonymity (all-traces): verified (54 steps)
@@ -1509,7 +1521,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 8.635000966s
+  processing time: 20.879793s
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)
   anonymity (all-traces): verified (54 steps)

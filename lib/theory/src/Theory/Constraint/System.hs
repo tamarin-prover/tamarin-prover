@@ -4,6 +4,9 @@
 {-# LANGUAGE ViewPatterns       #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE DeriveAnyClass     #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -1785,10 +1788,10 @@ prettySource th = vcat $
 
 deriving instance Show DiffSystem
 
-instance Apply SourceKind where
+instance Apply LNSubst SourceKind where
     apply = const id
 
-instance Apply System where
+instance Apply LNSubst System where
     apply subst (System a b c d e f g h i j k l) =
         System (apply subst a)
         -- we do not apply substitutions to node variables, so we do not apply them to the edges either

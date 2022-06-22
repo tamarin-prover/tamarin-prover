@@ -3,8 +3,13 @@ theory DH2_original begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: KDF/1, MAC/2, fst/1, h/1, pair/2, snd/1
+functions: KDF/1, MAC/2, fst/1[destructor], h/1, pair/2,
+           snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -1807,12 +1812,16 @@ next
   qed
 qed
 
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -1822,7 +1831,7 @@ analyzing: examples/csf12/DH2_original.spthy
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 27.951035633s
+  processing time: 26.621186603s
   KAS_key_secrecy (all-traces): verified (501 steps)
 
 ------------------------------------------------------------------------------
@@ -1833,7 +1842,7 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 27.951035633s
+  processing time: 26.621186603s
   KAS_key_secrecy (all-traces): verified (501 steps)
 
 ==============================================================================

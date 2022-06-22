@@ -1,15 +1,4 @@
-{-# LANGUAGE DeriveFunctor        #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE StandaloneDeriving   #-}
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE TupleSections        #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 -- FIXME: for functions prove
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE DeriveAnyClass       #-}
-{-# LANGUAGE ViewPatterns         #-}
-{-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -19,43 +8,65 @@
 --
 -- Theory datatype and transformations on it.
 module Theory (
-  -- * Formulas
-    expandFormula
-
   -- * Restrictions
-  , expandRestriction
-
+    expandRestriction
 
   -- * Processes
   , ProcessDef(..)
-  , SapicElement(..)
+  , TranslationElement(..)
   -- Datastructure added to Theory Items
   , addProcess
   , findProcess
+  , mapMProcesses
+  , mapMProcessesDef
   , addProcessDef
   , lookupProcessDef
+  , lookupFunctionTypingInfo
   , pName
   , pBody
+  , pVars
+  , addFunctionTypingInfo
+  , clearFunctionTypingInfos
 
   -- * Options
   , transAllowPatternMatchinginLookup
   , transProgress
   , transReliable
   , transReport
+  , stateChannelOpt
+  , asynchronousChannels
+  , compressEvents
+  , forcedInjectiveFacts
+  , setforcedInjectiveFacts
   , thyOptions
   , setOption
-
+  , Option
   -- * Predicates
-  , Predicate(..)
-  , pFact
+  , module Theory.Syntactic.Predicate
   , addPredicate
+
+  -- * Export blocks
+  , ExportInfo(..)
+  , addExportInfo
+  , lookupExportInfo
+  , eTag
+  , eText
+
+  -- * Case Tests
+  , CaseTest(..)
+  , cName
+  , cFormula
+  , caseTestToPredicate
+  , defineCaseTests
 
   -- * Lemmas
   , LemmaAttribute(..)
   , TraceQuantifier(..)
+  , CaseIdentifier
   , Lemma
   , SyntacticLemma
   , ProtoLemma(..)
+  , AccLemma(..)
   , lName
   , DiffLemma
   , lDiffName
@@ -65,6 +76,11 @@ module Theory (
   , lFormula
   , lAttributes
   , lProof
+  , aName
+  , aAttributes
+  , aCaseIdentifiers
+  , aCaseTests
+  , aFormula
   , unprovenLemma
   , skeletonLemma
   , skeletonDiffLemma
@@ -97,13 +113,23 @@ module Theory (
   , diffTheoryDiffLemmas
   , theoryRules
   , theoryLemmas
+  , theoryCaseTests
   , theoryRestrictions
   , theoryProcesses
+  , theoryProcessDefs
+  , theoryFunctionTypingInfos
+  , theoryBuiltins
+  , theoryEquivLemmas
+  , theoryDiffEquivLemmas
+  , theoryPredicates
+  , theoryAccLemmas
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , addTacticI
   , addRestriction
   , addLemma
+  , addAccLemma
+  , addCaseTest
   , addRestrictionDiff
   , addLemmaDiff
   , addDiffLemma
@@ -112,9 +138,12 @@ module Theory (
   , addDiffTacticI
   , removeLemma
   , removeLemmaDiff
+  , filterLemma
   , removeDiffLemma
   , lookupLemma
   , lookupDiffLemma
+  , lookupAccLemma
+  , lookupCaseTest
   , lookupLemmaDiff
   , addComment
   , addDiffComment
@@ -131,7 +160,7 @@ module Theory (
   , OpenTheoryItem
   , OpenTranslatedTheory
   , OpenDiffTheory
-  , removeSapicItems
+  , removeTranslationItems
 --  , EitherTheory
   , EitherOpenTheory
   , EitherClosedTheory
@@ -207,7 +236,6 @@ module Theory (
 
   -- * Pretty printing
   , prettyTheory
-  , prettyFormalComment
   , prettyLemmaName
   , prettyRestriction
   , prettyLemma
@@ -224,7 +252,6 @@ module Theory (
   , prettyClosedSummary
   , prettyClosedDiffSummary
 
-  , prettyIntruderVariants
   , prettyTraceQuantifier
 
   , prettyProcess
@@ -233,6 +260,7 @@ module Theory (
   -- * Convenience exports
   , module Theory.Model
   , module Theory.Proof
+  , module Pretty
 
   ) where
 
@@ -280,6 +308,16 @@ import           Term.Positions
 
 import           Utils.Misc
 import           Debug.Trace
+
+import ClosedTheory
+import Items.ExportInfo
+import OpenTheory
+import Pretty
+import Prover
+import Theory.Model
+import Theory.Proof
+import Theory.Syntactic.Predicate
+import TheoryObject
 
 ------------------------------------------------------------------------------
 -- Specific proof types
@@ -3106,3 +3144,4 @@ prettyTraceQuantifier ExistsTrace = text "exists-trace"
 prettyTraceQuantifier AllTraces   = text "all-traces"
 
 -- FIXME: Sort instances into the right files
+

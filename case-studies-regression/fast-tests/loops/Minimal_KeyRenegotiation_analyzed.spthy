@@ -2,7 +2,8 @@ theory KeyRenegotiation_Minimal begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
+           snd/1[destructor]
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -11,6 +12,8 @@ equations:
 
 
 /* looping facts with injective instances: Sender/1 */
+
+
 
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --> [ Sender( ~k ), Receiver( ~k ) ]
@@ -128,7 +131,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -138,7 +141,7 @@ analyzing: examples/loops/Minimal_KeyRenegotiation.spthy
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.094748361s
+  processing time: 0.071918046s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 
@@ -150,7 +153,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.094748361s
+  processing time: 0.071918046s
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 

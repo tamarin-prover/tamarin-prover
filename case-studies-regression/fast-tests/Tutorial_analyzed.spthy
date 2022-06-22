@@ -2,7 +2,8 @@ theory Tutorial begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, snd/1
+functions: adec/2, aenc/2, fst/1[destructor], h/1, pair/2, pk/1,
+           snd/1[destructor]
 equations:
     adec(aenc(m, pk(k)), k) = m,
     fst(<x.1, x.2>) = x.1,
@@ -222,12 +223,20 @@ solve( Client_1( S, k ) ▶₀ #i )
   qed
 qed
 
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -237,7 +246,7 @@ analyzing: examples/Tutorial.spthy
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.150810671s
+  processing time: 0.293417705s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)
@@ -251,7 +260,7 @@ summary of summaries:
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.150810671s
+  processing time: 0.293417705s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)

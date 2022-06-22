@@ -2,8 +2,8 @@ theory Okamoto_Eligibilty begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
-           sign/2, snd/1, tdcommit/3, unblind/2
+functions: blind/2, checksign/2, f/4, fst/1[destructor], open/2, pair/2,
+           pk/1, sign/2, snd/1[destructor], tdcommit/3, unblind/2
 equations:
     checksign(sign(m, sk), pk(sk)) = m,
     f(m1, f(m, r, td, m1), td, m2) = f(m, r, td, m2),
@@ -199,12 +199,28 @@ solve( P_Ch_Timeliness( $vote, ~r, x ) ▶₀ #j )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -214,7 +230,7 @@ analyzing: examples/post17/okamoto_eligibility.spthy
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.628270246s
+  processing time: 0.826635176s
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)
   eligibility (all-traces): verified (5 steps)
@@ -227,7 +243,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.628270246s
+  processing time: 0.826635176s
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)
   eligibility (all-traces): verified (5 steps)

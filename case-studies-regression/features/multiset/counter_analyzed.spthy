@@ -3,7 +3,8 @@ theory counter begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: fst/1, h/1, pair/2, sdec/2, senc/2, snd/1
+functions: fst/1[destructor], h/1, pair/2, sdec/2[destructor], senc/2,
+           snd/1[destructor]
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -12,6 +13,12 @@ equations:
 
 
 /* looping facts with injective instances: Counter/2 */
+
+
+
+
+
+
 
 rule (modulo E) Create:
    [ Fr( ~s ) ] --[ Start( ~s ) ]-> [ Counter( ~s, '1' ) ]
@@ -266,7 +273,7 @@ next
                   case case_2
                   solve( Counter( ~s, '1' ) ▶₀ #j )
                     case Create
-                    by contradiction /* non-injective facts (#j.1,#i,#j) */
+                    by contradiction /* cyclic */
                   qed
                 qed
               qed
@@ -277,7 +284,7 @@ next
               case case_2
               solve( Counter( ~s, '1' ) ▶₀ #j )
                 case Create
-                by contradiction /* non-injective facts (#j.1,#i,#j) */
+                by contradiction /* cyclic */
               qed
             qed
           qed
@@ -285,19 +292,10 @@ next
           case Inc_case_2
           solve( Counter( ~s, y ) ▶₀ #j )
             case Create
-            by contradiction /* non-injective facts (#j.1,#i,#j) */
+            by contradiction /* cyclic */
           next
             case Inc
-            solve( (#i < #vr.1)  ∥ (∃ z. ((x+z) = ('1'+'1'+x))) )
-              case case_2
-              solve( (#vr < #vr.1)  ∥ (∃ z. ((x+z) = ('1'+x))) )
-                case case_2
-                solve( (#vr.1 < #i)  ∥ (∃ z. (('1'+'1'+x+z) = x)) )
-                  case case_1
-                  by contradiction /* non-injective facts (#vr.1,#i,#j) */
-                qed
-              qed
-            qed
+            by simplify
           qed
         next
           case Inc_case_3
@@ -311,19 +309,10 @@ next
                   case case_1
                   solve( Counter( ~s, y ) ▶₀ #j )
                     case Create
-                    by contradiction /* non-injective facts (#j.1,#i,#j) */
+                    by contradiction /* cyclic */
                   next
                     case Inc
-                    solve( (#i < #vr.1)  ∥ (∃ z. ((z+x.1) = ('1'+'1'+x+x.1))) )
-                      case case_2
-                      solve( (#vr < #vr.1)  ∥ (∃ z. ((x+z) = ('1'+x+x.1))) )
-                        case case_2
-                        solve( (#vr.1 < #i)  ∥ (∃ z. (('1'+'1'+x+z+x.1) = x)) )
-                          case case_1
-                          by contradiction /* non-injective facts (#vr.1,#i,#j) */
-                        qed
-                      qed
-                    qed
+                    by simplify
                   qed
                 qed
               qed
@@ -345,16 +334,7 @@ next
                   case case_2
                   solve( Counter( ~s, ('1'+x) ) ▶₀ #j )
                     case Inc
-                    solve( (#i < #vr.1)  ∥ (∃ z.1. ((x+z.1) = ('1'+'1'+x+z))) )
-                      case case_2
-                      solve( (#vr < #vr.1)  ∥ (∃ z.1. ((x+z.1) = ('1'+x+z))) )
-                        case case_2
-                        solve( (#vr.1 < #i)  ∥ (∃ z.1. (('1'+'1'+x+z+z.1) = x)) )
-                          case case_1
-                          by contradiction /* non-injective facts (#vr.1,#i,#j) */
-                        qed
-                      qed
-                    qed
+                    by simplify
                   qed
                 qed
               qed
@@ -366,16 +346,7 @@ next
               case case_2
               solve( Counter( ~s, ('1'+x) ) ▶₀ #j )
                 case Inc
-                solve( (#i < #vr.1)  ∥ (∃ z. ((x+z) = ('1'+'1'+x))) )
-                  case case_2
-                  solve( (#vr < #vr.1)  ∥ (∃ z. ((x+z) = ('1'+x))) )
-                    case case_2
-                    solve( (#vr.1 < #i)  ∥ (∃ z. (('1'+'1'+x+z) = x)) )
-                      case case_1
-                      by contradiction /* non-injective facts (#vr.1,#i,#j) */
-                    qed
-                  qed
-                qed
+                by simplify
               qed
             qed
           qed
@@ -400,13 +371,7 @@ next
             case case_1
             solve( Counter( ~s, ('1'+x) ) ▶₀ #j )
               case Inc
-              solve( (#i < #vr.1)  ∥ (∃ z. ((x+z) = ('1'+x))) )
-                case case_2
-                solve( (#vr.1 = #vr)  ∥ (#vr < #vr.1)  ∥ (∃ z. ((x+z) = x)) )
-                  case case_1
-                  by contradiction /* cyclic */
-                qed
-              qed
+              by simplify
             qed
           qed
         qed
@@ -456,42 +421,37 @@ next
                     by solve( Counter( ~s, h(y) ) ▶₀ #vr )
                   next
                     case case_2
-                    by contradiction /* from formulas */
+                    by contradiction /* cyclic */
                   qed
                 qed
               qed
             qed
           next
             case Inc_case_2
-            solve( (¬(#vr < #vr.1))  ∥ (∃ z. ((z+h(y)) = (x+h(y)))) )
-              case case_2
-              solve( (¬(#vr.1 < #vr))  ∥ (∃ z. ((x+z+h(y)) = h(y))) )
-                case case_1
-                solve( (#vr.1 < #j)  ∥ (∃ z. ((y+z) = (x+h(y)))) )
-                  case case_1
-                  solve( (∃ z. (('1'+x+z+h(y)) = (x+h(y))))  ∥
-                         (∃ z. ((x+z+h(y)) = ('1'+x+h(y)))) )
-                    case case_2
-                    solve( (∃ z. ((x+z+h(y)) = h(y)))  ∥ (∃ z. ((z+h(y)) = (x+h(y)))) )
-                      case case_2
-                      solve( (∃ z. ((x+z+h(y)) = ('1'+x+h(y))))  ∥
-                             (∃ z. (('1'+x+z+h(y)) = (x+h(y)))) )
-                        case case_1
-                        solve( (∃ z. ((z+h(y)) = (x+h(y))))  ∥ (∃ z. ((x+z+h(y)) = h(y))) )
-                          case case_1
-                          by solve( Counter( ~s, h(y) ) ▶₀ #vr )
-                        qed
-                      qed
+            simplify
+            solve( (#vr.1 < #j)  ∥ (∃ z. ((y+z) = (x+h(y)))) )
+              case case_1
+              solve( (∃ z. (('1'+x+z+h(y)) = (x+h(y))))  ∥
+                     (∃ z. ((x+z+h(y)) = ('1'+x+h(y)))) )
+                case case_2
+                solve( (∃ z. ((x+z+h(y)) = h(y)))  ∥ (∃ z. ((z+h(y)) = (x+h(y)))) )
+                  case case_2
+                  solve( (∃ z. ((x+z+h(y)) = ('1'+x+h(y))))  ∥
+                         (∃ z. (('1'+x+z+h(y)) = (x+h(y)))) )
+                    case case_1
+                    solve( (∃ z. ((z+h(y)) = (x+h(y))))  ∥ (∃ z. ((x+z+h(y)) = h(y))) )
+                      case case_1
+                      by solve( Counter( ~s, h(y) ) ▶₀ #vr )
                     qed
                   qed
-                next
-                  case case_2_case_1
-                  by contradiction /* from formulas */
-                next
-                  case case_2_case_2
-                  by contradiction /* from formulas */
                 qed
               qed
+            next
+              case case_2_case_1
+              by contradiction /* from formulas */
+            next
+              case case_2_case_2
+              by contradiction /* from formulas */
             qed
           qed
         qed
@@ -511,7 +471,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -521,11 +481,11 @@ analyzing: examples/features//multiset/counter.spthy
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 1.001572685s
+  processing time: 1.353344609s
   counters_linear_order (all-traces): verified (50 steps)
   counter_start (all-traces): verified (8 steps)
-  counter_increases (all-traces): verified (58 steps)
-  lesser_senc_secret (all-traces): verified (26 steps)
+  counter_increases (all-traces): verified (44 steps)
+  lesser_senc_secret (all-traces): verified (25 steps)
 
 ------------------------------------------------------------------------------
 
@@ -535,11 +495,11 @@ summary of summaries:
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 1.001572685s
+  processing time: 1.353344609s
   counters_linear_order (all-traces): verified (50 steps)
   counter_start (all-traces): verified (8 steps)
-  counter_increases (all-traces): verified (58 steps)
-  lesser_senc_secret (all-traces): verified (26 steps)
+  counter_increases (all-traces): verified (44 steps)
+  lesser_senc_secret (all-traces): verified (25 steps)
 
 ==============================================================================
 */

@@ -3,12 +3,16 @@ theory DHKEA_NAXOS_C_eCK_PFS_partially_matching begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, multiset
-functions: concat/2, first/1, fst/1, h/1, h1/1, h2/1, pair/2, second/1,
-           snd/1
+functions: concat/2, first/1, fst/1[destructor], h/1, h1/1, h2/1, pair/2,
+           second/1, snd/1[destructor]
 equations:
     concat(first(x), second(x)) = x,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -4848,12 +4852,24 @@ next
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -4863,7 +4879,7 @@ analyzing: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy.tmp
-  processing time: 89.783610648s
+  processing time: 144.964944746s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)
 
@@ -4875,7 +4891,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy.tmp
-  processing time: 89.783610648s
+  processing time: 144.964944746s
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)
 

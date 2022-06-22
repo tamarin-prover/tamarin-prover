@@ -3,7 +3,7 @@ theory DDH begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1, g/0, pair/2, snd/1
+functions: fst/1[destructor], g/0, pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -7556,7 +7556,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -7566,7 +7566,7 @@ analyzing: examples/ccs15/DDH.spthy
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 6.815710496s
+  processing time: 16.052358045s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ------------------------------------------------------------------------------
@@ -7577,7 +7577,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 6.815710496s
+  processing time: 16.052358045s
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ==============================================================================

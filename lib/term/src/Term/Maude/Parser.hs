@@ -68,11 +68,31 @@ parseLSortSym s = case s of
 -- | Used to prevent clashes with predefined Maude function symbols
 --   like @true@
 funSymPrefix :: ByteString
-funSymPrefix = "tamX"
+funSymPrefix = "tam"
 
--- | Prefix for private function symbols.
-funSymPrefixPriv :: ByteString
-funSymPrefixPriv = "tamP"
+-- | Encode attributes in additional prefix
+funSymEncodeAttr :: Privacy -> Constructability -> ByteString
+funSymEncodeAttr priv constr  = f priv <> g constr
+    where
+        f Private = "P"
+        f Public  = "X"
+        g Constructor = "C"
+        g Destructor = "D"
+
+-- | Decode string @funSymPrefix || funSymEncodeAttr p c || ident@ into
+--   @(ident,p,c)@
+funSymDecode :: ByteString -> (ByteString, Privacy, Constructability)
+funSymDecode s = (ident,priv,constr)
+    where
+        prefixLen      = BC.length funSymPrefix
+        (eAttr,ident)  = BC.splitAt 2 (BC.drop prefixLen s) 
+        (priv,constr)  = case eAttr of
+                            "PD" -> (Private,Destructor)
+                            "PC" -> (Private,Constructor)
+                            "XD" -> (Public,Destructor)
+                            _    -> (Public,Constructor)
+
+         
 
 -- | Replace underscores "_" with minus "-" for Maude.
 replaceUnderscore :: ByteString -> ByteString
@@ -96,18 +116,18 @@ replaceMinus s = BC.map f s
 replaceMinusFun :: NoEqSym -> NoEqSym
 replaceMinusFun (s, p) = (replaceMinus s, p)
 
+
 -- | Pretty print an AC symbol for Maude.
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
     funSymPrefix <> case o of
-                      Mult  -> "mult"
-                      Union -> "mun"
-                      Xor   -> "xor"
+                      Mult  -> multSymString 
+                      Union -> munSymString
+                      Xor   -> xorSymString 
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
-ppMaudeNoEqSym (o,(_,Private)) = funSymPrefixPriv <> replaceUnderscore o
-ppMaudeNoEqSym (o,(_,Public))  = funSymPrefix     <> replaceUnderscore o
+ppMaudeNoEqSym (o,(_,prv,cnstr))  = funSymPrefix <> funSymEncodeAttr prv cnstr <> replaceUnderscore o
 
 -- | Pretty print a C symbol for Maude.
 ppMaudeCSym :: CSym -> ByteString
@@ -158,27 +178,28 @@ ppTheory msig = BC.unlines $
     ++
     (if enableMSet msig
        then
-       [ theoryOp "mun : Msg Msg -> Msg [comm assoc]" ]
+       [ theoryOpAC "mun : Msg Msg -> Msg [comm assoc]" ]
        else [])
     ++
     (if enableDH msig
        then
-       [ theoryOp "one : -> Msg"
-       , theoryOp "exp : Msg Msg -> Msg"
-       , theoryOp "mult : Msg Msg -> Msg [comm assoc]"
-       , theoryOp "inv : Msg -> Msg" ]
+       [ theoryOpEq "one : -> Msg"
+       , theoryOpEq "DH_neutral  : -> Msg"       
+       , theoryOpEq "exp : Msg Msg -> Msg"
+       , theoryOpAC "mult : Msg Msg -> Msg [comm assoc]"
+       , theoryOpEq "inv : Msg -> Msg" ]
        else [])
     ++
     (if enableBP msig
        then
-       [ theoryOp "pmult : Msg Msg -> Msg"
-       , theoryOp "em : Msg Msg -> Msg [comm]" ]
+       [ theoryOpEq "pmult : Msg Msg -> Msg"
+       , theoryOpC "em : Msg Msg -> Msg [comm]" ]
        else [])
     ++
     (if enableXor msig
        then
-       [ theoryOp "zero : -> Msg"
-       , theoryOp "xor : Msg Msg -> Msg [comm assoc]" ]
+       [ theoryOpEq "zero : -> Msg"
+       , theoryOpAC "xor : Msg Msg -> Msg [comm assoc]" ]
        else [])
     ++
     map theoryFunSym (S.toList $ stFunSyms msig)
@@ -187,11 +208,15 @@ ppTheory msig = BC.unlines $
     ++
     [ "endfm" ]
   where
-    theoryOpNoEq priv fsort =
-        "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
-    theoryOp = theoryOpNoEq Public
-    theoryFunSym (s,(ar,priv)) =
-        theoryOpNoEq priv (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
+    maybeEncode (Just (priv,cnstr)) = funSymEncodeAttr priv cnstr
+    maybeEncode Nothing             = ""
+    theoryOp attr fsort =
+        "  op " <> funSymPrefix <> maybeEncode attr <> fsort <>" ."
+    theoryOpEq = theoryOp (Just (Public,Constructor))
+    theoryOpAC = theoryOp Nothing
+    theoryOpC  = theoryOp Nothing
+    theoryFunSym (s,(ar,priv,cnstr)) =
+        theoryOp  (Just(priv,cnstr)) (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " [variant] ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
@@ -271,8 +296,8 @@ parseTerm msig = choice
                ]
    ]
   where
-    consSym = ("cons",(2,Public))
-    nilSym  = ("nil",(0,Public))
+    consSym = ("cons",(2,Public,Constructor))
+    nilSym  = ("nil",(0,Public,Constructor))
 
     parseFunSym ident args
       | op `elem` allowedfunSyms = replaceMinusFun op
@@ -280,12 +305,12 @@ parseTerm msig = choice
           error $ "Maude.Parser.parseTerm: unknown function "
                   ++ "symbol `"++ show op ++"', not in "
                   ++ show allowedfunSyms
-      where prefixLen      = BC.length funSymPrefix
-            special        = ident `elem` ["list", "cons", "nil" ]
-            priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident 
-                               then Private else Public
-            op             = (if special then ident else BC.drop prefixLen ident
-                             , ( length args, priv))
+      where 
+            special             = ident `elem` ["list", "cons", "nil" ]
+            (ident',priv,cnstr) = funSymDecode ident
+            op                  = if special then 
+                                        (ident , (length args,Public,Constructor))
+                                  else  (ident', (length args, priv, cnstr))
             allowedfunSyms = [consSym, nilSym]
                 ++ (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
 

@@ -3,7 +3,7 @@ theory KCL07_UK3 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1, h/1, pair/2, snd/1
+functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -184,7 +184,7 @@ next
             case Setup
             step( solve( !KU( r1 ) @ #vk.1 ) )
               case c_fst
-              by sorry
+              by sorry /* unannotated */
             next
               case c_h
               by sorry
@@ -193,7 +193,7 @@ next
               by sorry
             next
               case c_snd
-              by sorry
+              by sorry /* unannotated */
             next
               case c_union
               by sorry
@@ -418,7 +418,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -428,7 +428,7 @@ analyzing: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 0.762349444s
+  processing time: 2.065979375s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)
@@ -443,7 +443,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 0.762349444s
+  processing time: 2.065979375s
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)

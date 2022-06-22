@@ -2,8 +2,8 @@ theory FOO_Eligibility begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, commit/2, fst/1, open/2, pair/2, pk/1,
-           sign/2, snd/1, unblind/2
+functions: blind/2, checksign/2, commit/2, fst/1[destructor], open/2,
+           pair/2, pk/1, sign/2, snd/1[destructor], unblind/2
 equations:
     checksign(sign(m, k), pk(k)) = m,
     fst(<x.1, x.2>) = x.1,
@@ -312,12 +312,26 @@ solve( St_C_1( A, commit(vote, r) ) ▶₁ #j )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* All well-formedness checks were successful. */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -327,7 +341,7 @@ analyzing: examples/post17/foo_eligibility.spthy
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 1.108189481s
+  processing time: 1.177624371s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)
@@ -340,7 +354,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 1.108189481s
+  processing time: 1.177624371s
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)
   eligibility (all-traces): verified (11 steps)

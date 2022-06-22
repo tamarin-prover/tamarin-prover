@@ -1,0 +1,255 @@
+theory WhoDunit_Fixed
+begin
+
+functions: rep/2 [private], check_rep/2, get_rep/1
+equations: check_rep(rep(m,loc),loc)=m, get_rep(rep(m,loc))=m
+
+functions: pk/1, sk/1[private], sign/2, verify/3, true/0, extract/1
+
+equations: verify(sign(m, sk(i)), m, pk(sk(i)))=true,extract(sign(m, sk(i)))=m
+
+heuristic: p /* heuristic for SAPIC */
+
+rule Init_: // [process=top-level] Init 
+ [] --[Init()]-> [State_()]
+
+rule new_c_SA_: // [process=top-level] new c_SA 
+ [State_(), Fr(c_SA)] --[]-> [State_1(c_SA)]
+
+rule new_c_AJ_1: // [process=top-level] new c_AJ 
+ [State_1(c_SA), Fr(c_AJ)] --[]-> [State_11(c_AJ, c_SA)]
+
+rule new_c_SJ_11: // [process=top-level] new c_SJ 
+ [State_11(c_AJ, c_SA), Fr(c_SJ)] --[]-> [State_111(c_AJ, c_SA, c_SJ)]
+
+rule Par_111: // [process=top-level] Par 
+ [State_111(c_AJ, c_SA, c_SJ)] --[]-> [State_1111(c_AJ, c_SA, c_SJ), State_1112(c_AJ, c_SA, c_SJ)]
+
+rule Par_1111: // [process=top-level] Par 
+ [State_1111(c_AJ, c_SA, c_SJ)] --[]-> [State_11111(c_AJ, c_SA, c_SJ), State_11112(c_AJ, c_SA, c_SJ)]
+
+rule Par_11111: // [process=top-level] Par 
+ [State_11111(c_AJ, c_SA, c_SJ)] --[]-> [State_111111(c_AJ, c_SA, c_SJ), State_111112(c_AJ, c_SA, c_SJ)]
+
+rule Par_111111: // [process=top-level] Par 
+ [State_111111(c_AJ, c_SA, c_SJ)] --[]-> [State_1111111(c_AJ, c_SA, c_SJ), State_1111112(c_AJ, c_SA, c_SJ)]
+
+rule in_a_1111111 [color=#569DC0]: // [process=S] in a 
+ [State_1111111(c_AJ, c_SA, c_SJ), In(a)] --[]-> [State_11111111(a, c_AJ, c_SA, c_SJ)]
+
+rule out_c_SA_a_signa_sk_S__0_11111111 [color=#569DC0]: // [process=S] out c_SA,<a, sign(a, sk('S'))>, 0 
+ [State_11111111(a, c_AJ, c_SA, c_SJ), In(c_SA)] --[ChannelInEvent(c_SA)]-> [Out(<a, sign(a, sk('S'))>), State_111111111(a, c_AJ, c_SA, c_SJ)]
+
+rule out_c_SA_a_signa_sk_S__1_11111111 [color=#569DC0]: // [process=S] out c_SA,<a, sign(a, sk('S'))>, 1 
+ [State_11111111(a, c_AJ, c_SA, c_SJ)] --[]-> [Semistate_11111111(a, c_AJ, c_SA, c_SJ), Message(c_SA,<a, sign(a, sk('S'))>)]
+
+rule out_c_SA_a_signa_sk_S__2_11111111 [color=#569DC0]: // [process=S] out c_SA,<a, sign(a, sk('S'))>, 2 
+ [Semistate_11111111(a, c_AJ, c_SA, c_SJ), Ack(c_SA,<a, sign(a, sk('S'))>)] --[]-> [State_111111111(a, c_AJ, c_SA, c_SJ)]
+
+rule out_c_SJ_a_signa_sk_S__0_111111111 [color=#569DC0]: // [process=S] out c_SJ,<a, sign(a, sk('S'))>, 0 
+ [State_111111111(a, c_AJ, c_SA, c_SJ), In(c_SJ)] --[ChannelInEvent(c_SJ)]-> [Out(<a, sign(a, sk('S'))>), State_1111111111(a, c_AJ, c_SA, c_SJ)]
+
+rule out_c_SJ_a_signa_sk_S__1_111111111 [color=#569DC0]: // [process=S] out c_SJ,<a, sign(a, sk('S'))>, 1 
+ [State_111111111(a, c_AJ, c_SA, c_SJ)] --[]-> [Semistate_111111111(a, c_AJ, c_SA, c_SJ), Message(c_SJ,<a, sign(a, sk('S'))>)]
+
+rule out_c_SJ_a_signa_sk_S__2_111111111 [color=#569DC0]: // [process=S] out c_SJ,<a, sign(a, sk('S'))>, 2 
+ [Semistate_111111111(a, c_AJ, c_SA, c_SJ), Ack(c_SJ,<a, sign(a, sk('S'))>)] --[]-> [State_1111111111(a, c_AJ, c_SA, c_SJ)]
+
+rule Zero_1111111111 [color=#569DC0]: // [process=S] Zero 
+ [State_1111111111(a, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule in_c_SA_a_asig_0_1111112 [color=#2CD719]: // [process=A] in c_SA,<a, asig>, 0 
+ [State_1111112(c_AJ, c_SA, c_SJ), In(<c_SA, <a, asig>>)] --[ChannelInEvent(<c_SA, <a, asig>>)]-> [State_11111121(a, asig, c_AJ, c_SA, c_SJ)]
+
+rule in_c_SA_a_asig_1_1111112 [color=#2CD719]: // [process=A] in c_SA,<a, asig>, 1 
+ [State_1111112(c_AJ, c_SA, c_SJ), Message(c_SA,<a, asig>)] --[]-> [Ack(c_SA,<a, asig>), State_11111121(a, asig, c_AJ, c_SA, c_SJ)]
+
+rule if_eqverifyasig_a_pksk_S__true_0_11111121 [color=#2CD719]: // [process=A] if eq(verify(asig, a, pk(sk('S'))), true()), 0 
+ [State_11111121(a, asig, c_AJ, c_SA, c_SJ)] --[Pred_eq(verify(asig, a, pk(sk('S'))), true())]-> [State_111111211(a, asig, c_AJ, c_SA, c_SJ)]
+
+rule if_eqverifyasig_a_pksk_S__true_1_11111121 [color=#2CD719]: // [process=A] if eq(verify(asig, a, pk(sk('S'))), true()), 1 
+ [State_11111121(a, asig, c_AJ, c_SA, c_SJ)] --[Pred_not_eq(verify(asig, a, pk(sk('S'))), true())]-> [State_111111212(a, asig, c_AJ, c_SA, c_SJ)]
+
+rule out_c_AJ_a_asig_signa_sk_A__0_111111211 [color=#2CD719]: // [process=A] out c_AJ,<a, asig, sign(a, sk('A'))>, 0 
+ [State_111111211(a, asig, c_AJ, c_SA, c_SJ), In(c_AJ)] --[ChannelInEvent(c_AJ)]-> [Out(<a, asig, sign(a, sk('A'))>), State_1111112111(a, asig, c_AJ, c_SA, c_SJ)]
+
+rule out_c_AJ_a_asig_signa_sk_A__1_111111211 [color=#2CD719]: // [process=A] out c_AJ,<a, asig, sign(a, sk('A'))>, 1 
+ [State_111111211(a, asig, c_AJ, c_SA, c_SJ)] --[]-> [Semistate_111111211(a, asig, c_AJ, c_SA, c_SJ), Message(c_AJ,<a, asig, sign(a, sk('A'))>)]
+
+rule out_c_AJ_a_asig_signa_sk_A__2_111111211 [color=#2CD719]: // [process=A] out c_AJ,<a, asig, sign(a, sk('A'))>, 2 
+ [Semistate_111111211(a, asig, c_AJ, c_SA, c_SJ), Ack(c_AJ,<a, asig, sign(a, sk('A'))>)] --[]-> [State_1111112111(a, asig, c_AJ, c_SA, c_SJ)]
+
+rule Zero_1111112111 [color=#2CD719]: // [process=A] Zero 
+ [State_1111112111(a, asig, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule Zero_111111212 [color=#2CD719]: // [process=A] Zero 
+ [State_111111212(a, asig, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule in_c_SJ_a1_a1sig_0_111112 [color=#11EC28]: // [process=Tr] in c_SJ,<a1, a1sig>, 0 
+ [State_111112(c_AJ, c_SA, c_SJ), In(<c_SJ, <a1, a1sig>>)] --[ChannelInEvent(<c_SJ, <a1, a1sig>>)]-> [State_1111121(a1, a1sig, c_AJ, c_SA, c_SJ)]
+
+rule in_c_SJ_a1_a1sig_1_111112 [color=#11EC28]: // [process=Tr] in c_SJ,<a1, a1sig>, 1 
+ [State_111112(c_AJ, c_SA, c_SJ), Message(c_SJ,<a1, a1sig>)] --[]-> [Ack(c_SJ,<a1, a1sig>), State_1111121(a1, a1sig, c_AJ, c_SA, c_SJ)]
+
+rule in_c_AJ_a2_a2sigS_a2sigA_0_1111121 [color=#11EC28]: // [process=Tr] in c_AJ,<a2, a2sigS, a2sigA>, 0 
+ [State_1111121(a1, a1sig, c_AJ, c_SA, c_SJ), In(<c_AJ, <a2, a2sigS, a2sigA>>)] --[ChannelInEvent(<c_AJ, <a2, a2sigS, a2sigA>>)]-> [State_11111211(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule in_c_AJ_a2_a2sigS_a2sigA_1_1111121 [color=#11EC28]: // [process=Tr] in c_AJ,<a2, a2sigS, a2sigA>, 1 
+ [State_1111121(a1, a1sig, c_AJ, c_SA, c_SJ), Message(c_AJ,<a2, a2sigS, a2sigA>)] --[]-> [Ack(c_AJ,<a2, a2sigS, a2sigA>), State_11111211(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule if_and3verifya1sig_a1_pksk_S__verifya2sigS_a2_pksk_S__verifya2sigA_a2_pksk_A__0_11111211 [color=#11EC28]: // [process=Tr] if and3(verify(a1sig, a1, pk(sk('S'))), verify(a2sigS, a2, pk(sk('S'))), verify(a2sigA, a2, pk(sk('A')))), 0 
+ [State_11111211(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[Pred_and3(verify(a1sig, a1, pk(sk('S'))), verify(a2sigS, a2, pk(sk('S'))), verify(a2sigA, a2, pk(sk('A'))))]-> [State_111112111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule if_and3verifya1sig_a1_pksk_S__verifya2sigS_a2_pksk_S__verifya2sigA_a2_pksk_A__1_11111211 [color=#11EC28]: // [process=Tr] if and3(verify(a1sig, a1, pk(sk('S'))), verify(a2sigS, a2, pk(sk('S'))), verify(a2sigA, a2, pk(sk('A')))), 1 
+ [State_11111211(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[Pred_not_and3(verify(a1sig, a1, pk(sk('S'))), verify(a2sigS, a2, pk(sk('S'))), verify(a2sigA, a2, pk(sk('A'))))]-> [State_111112112(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule if_eqa1_a2_0_111112111 [color=#11EC28]: // [process=Tr] if eq(a1, a2), 0 
+ [State_111112111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[Pred_eq(a1, a2)]-> [State_1111121111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule if_eqa1_a2_1_111112111 [color=#11EC28]: // [process=Tr] if eq(a1, a2), 1 
+ [State_111112111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[Pred_not_eq(a1, a2)]-> [State_1111121112(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule event_Control_0_1__1111121111 [color=#11EC28]: // [process=Tr] event Control('0', '1') 
+ [State_1111121111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[Control('0', '1')]-> [State_11111211111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule event_Equal_11111211111 [color=#11EC28]: // [process=Tr] event Equal() 
+ [State_11111211111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[Equal()]-> [State_111112111111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule Zero_111112111111 [color=#11EC28]: // [process=Tr] Zero 
+ [State_111112111111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule event_Control_0_2__1111121112 [color=#11EC28]: // [process=Tr] event Control('0', '2') 
+ [State_1111121112(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[Control('0', '2')]-> [State_11111211121(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule event_BlameS_11111211121 [color=#11EC28]: // [process=Tr] event BlameS() 
+ [State_11111211121(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[BlameS()]-> [State_111112111211(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule event_Unequal_111112111211 [color=#11EC28]: // [process=Tr] event Unequal() 
+ [State_111112111211(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[Unequal()]-> [State_1111121112111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)]
+
+rule Zero_1111121112111 [color=#11EC28]: // [process=Tr] Zero 
+ [State_1111121112111(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule Zero_111112112 [color=#11EC28]: // [process=Tr] Zero 
+ [State_111112112(a1, a1sig, a2, a2sigA, a2sigS, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule out_pksk_S__11112: // [process=top-level] out pk(sk('S')) 
+ [State_11112(c_AJ, c_SA, c_SJ)] --[]-> [State_111121(c_AJ, c_SA, c_SJ), Out(pk(sk('S')))]
+
+rule out_pksk_A__111121: // [process=top-level] out pk(sk('A')) 
+ [State_111121(c_AJ, c_SA, c_SJ)] --[]-> [State_1111211(c_AJ, c_SA, c_SJ), Out(pk(sk('A')))]
+
+rule Zero_1111211: // [process=top-level] Zero 
+ [State_1111211(c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule Rep_0_1112: // [process=top-level] Rep, 0 
+ [State_1112(c_AJ, c_SA, c_SJ)] --[]-> [!Semistate_11121(c_AJ, c_SA, c_SJ)]
+
+rule Rep_1_1112: // [process=top-level] Rep, 1 
+ [!Semistate_11121(c_AJ, c_SA, c_SJ)] --[]-> [State_11121(c_AJ, c_SA, c_SJ)]
+
+rule in_c_corrupt_x_0_11121: // [process=top-level] in 'c',<'corrupt', $x>, 0 
+ [State_11121(c_AJ, c_SA, c_SJ), In(<'c', <'corrupt', $x>>)] --[ChannelInEvent(<'c', <'corrupt', $x>>)]-> [State_111211($x, c_AJ, c_SA, c_SJ)]
+
+rule in_c_corrupt_x_1_11121: // [process=top-level] in 'c',<'corrupt', $x>, 1 
+ [State_11121(c_AJ, c_SA, c_SJ), Message('c',<'corrupt', $x>)] --[]-> [Ack('c',<'corrupt', $x>), State_111211($x, c_AJ, c_SA, c_SJ)]
+
+rule event_Corrupted_x_111211: // [process=top-level] event Corrupted($x) 
+ [State_111211($x, c_AJ, c_SA, c_SJ)] --[Corrupted($x)]-> [State_1112111($x, c_AJ, c_SA, c_SJ)]
+
+rule out_c_sk_x_0_1112111: // [process=top-level] out 'c',sk($x), 0 
+ [State_1112111($x, c_AJ, c_SA, c_SJ), In('c')] --[ChannelInEvent('c')]-> [Out(sk($x)), State_11121111($x, c_AJ, c_SA, c_SJ)]
+
+rule out_c_sk_x_1_1112111: // [process=top-level] out 'c',sk($x), 1 
+ [State_1112111($x, c_AJ, c_SA, c_SJ)] --[]-> [Semistate_1112111($x, c_AJ, c_SA, c_SJ), Message('c',sk($x))]
+
+rule out_c_sk_x_2_1112111: // [process=top-level] out 'c',sk($x), 2 
+ [Semistate_1112111($x, c_AJ, c_SA, c_SJ), Ack('c',sk($x))] --[]-> [State_11121111($x, c_AJ, c_SA, c_SJ)]
+
+rule Rep_0_11121111: // [process=top-level] Rep, 0 
+ [State_11121111($x, c_AJ, c_SA, c_SJ)] --[]-> [!Semistate_111211111($x, c_AJ, c_SA, c_SJ)]
+
+rule Rep_1_11121111: // [process=top-level] Rep, 1 
+ [!Semistate_111211111($x, c_AJ, c_SA, c_SJ)] --[]-> [State_111211111($x, c_AJ, c_SA, c_SJ)]
+
+rule Par_111211111: // [process=top-level] Par 
+ [State_111211111($x, c_AJ, c_SA, c_SJ)] --[]-> [State_1112111111($x, c_AJ, c_SA, c_SJ), State_1112111112($x, c_AJ, c_SA, c_SJ)]
+
+rule if_eq_x_S__0_1112111111: // [process=top-level] if eq($x, 'S'), 0 
+ [State_1112111111($x, c_AJ, c_SA, c_SJ)] --[Pred_eq($x, 'S')]-> [State_11121111111($x, c_AJ, c_SA, c_SJ)]
+
+rule if_eq_x_S__1_1112111111: // [process=top-level] if eq($x, 'S'), 1 
+ [State_1112111111($x, c_AJ, c_SA, c_SJ)] --[Pred_not_eq($x, 'S')]-> [State_11121111112($x, c_AJ, c_SA, c_SJ)]
+
+rule out_c_SA_11121111111: // [process=top-level] out c_SA 
+ [State_11121111111($x, c_AJ, c_SA, c_SJ)] --[]-> [State_111211111111($x, c_AJ, c_SA, c_SJ), Out(c_SA)]
+
+rule out_c_SJ_111211111111: // [process=top-level] out c_SJ 
+ [State_111211111111($x, c_AJ, c_SA, c_SJ)] --[]-> [State_1112111111111($x, c_AJ, c_SA, c_SJ), Out(c_SJ)]
+
+rule Zero_1112111111111: // [process=top-level] Zero 
+ [State_1112111111111($x, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule Zero_11121111112: // [process=top-level] Zero 
+ [State_11121111112($x, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule if_eq_x_A__0_1112111112: // [process=top-level] if eq($x, 'A'), 0 
+ [State_1112111112($x, c_AJ, c_SA, c_SJ)] --[Pred_eq($x, 'A')]-> [State_11121111121($x, c_AJ, c_SA, c_SJ)]
+
+rule if_eq_x_A__1_1112111112: // [process=top-level] if eq($x, 'A'), 1 
+ [State_1112111112($x, c_AJ, c_SA, c_SJ)] --[Pred_not_eq($x, 'A')]-> [State_11121111122($x, c_AJ, c_SA, c_SJ)]
+
+rule out_c_SA_11121111121: // [process=top-level] out c_SA 
+ [State_11121111121($x, c_AJ, c_SA, c_SJ)] --[]-> [State_111211111211($x, c_AJ, c_SA, c_SJ), Out(c_SA)]
+
+rule out_c_AJ_111211111211: // [process=top-level] out c_AJ 
+ [State_111211111211($x, c_AJ, c_SA, c_SJ)] --[]-> [State_1112111112111($x, c_AJ, c_SA, c_SJ), Out(c_AJ)]
+
+rule Zero_1112111112111: // [process=top-level] Zero 
+ [State_1112111112111($x, c_AJ, c_SA, c_SJ)] --[]-> []
+
+rule Zero_11121111122: // [process=top-level] Zero 
+ [State_11121111122($x, c_AJ, c_SA, c_SJ)] --[]-> []
+
+restriction immeadiate_in:
+ "(All #i a b . ((Pred_eq(a, b)@#i ==> a = b)))"
+
+restriction predicate_not_eq:
+ "(All #i a b . ((Pred_not_eq(a, b)@#i ==> not(a = b))))"
+
+restriction single_session:
+ "(All #i #j . (((Init()@#i & Init()@#j) ==> #i = #j)))"
+restriction predicate1:
+	"All #i x y z. Pred_not_and3(x,y,z)@i ==> not((x = true() & (y = true() & z = true())))"
+
+restriction predicate0:
+	"All #i x y z. Pred_and3(x,y,z)@i ==> (x = true() & (y = true() & z = true()))"
+
+lemma acc_coarse_excl_0_1 :
+ all-traces
+"not(((Ex #i #j . ((Unequal()@#i & BlameS()@#j))) & not((Ex #i #j . ((Unequal()@#i & BlameS()@#j))))))"
+
+lemma acc_coarse_exh :
+ all-traces
+"((Ex #i #j . ((Unequal()@#i & BlameS()@#j))) | not((Ex #i #j . ((Unequal()@#i & BlameS()@#j)))))"
+
+lemma acc_coarse_suf_0_0 :
+ exists-trace
+"(((Ex #c1 . (Corrupted('S')@#c1)) & ((All #c0 . ((Corrupted('A')@#c0 ==> F))) & T)) & not(not((Ex #i . (Unequal()@#i)))))"
+
+lemma acc_coarse_ver_empty_1 :
+ all-traces
+"(not((Ex #i #j . ((Unequal()@#i & BlameS()@#j)))) ==> not((Ex #i . (Unequal()@#i))))"
+
+lemma acc_coarse_ver_nonempty_0 :
+ all-traces
+"((Ex #i #j . ((Unequal()@#i & BlameS()@#j))) ==> not(not((Ex #i . (Unequal()@#i)))))"
+
+lemma acc_coarse_min_0_0_0 :
+ all-traces
+"not((not(not((Ex #i . (Unequal()@#i)))) & ((All #c1 . ((Corrupted('S')@#c1 ==> F))) & ((All #c0 . ((Corrupted('A')@#c0 ==> F))) & T))))"
+
+lemma acc_coarse_uniq_0 :
+ all-traces
+"((Ex #i #j . ((Unequal()@#i & BlameS()@#j))) ==> (Ex #c0 . ((Corrupted('S')@#c0 & T))))"
+end

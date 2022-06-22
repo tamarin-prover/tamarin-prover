@@ -44,6 +44,11 @@ stack.yaml.lock
 .idea/
 out/
 
+*.pv
+
+.worktree
+
+
 **/benchmark
 **/input
 **/diff

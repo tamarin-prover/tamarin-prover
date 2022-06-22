@@ -1,0 +1,11 @@
+/* Modifying a tag for export, e.g., to output a proverif query unmodified */
+theory ExportInfo
+begin
+
+export tag : 
+      "This is some weird text."
+
+export anothertag : 
+      "You can have \" in the text, but you must escape it."
+
+end

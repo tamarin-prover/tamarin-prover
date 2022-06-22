@@ -15,15 +15,18 @@ module Theory.Text.Parser.Signature (
     , options
     , functions
     , equations
+    , liftedAddPredicate
     , preddeclaration
     , goalRanking
     , diffbuiltins
+    , export
 )
 where
 
 import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
 import           Data.Foldable              (asum)
+import           Data.Either
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 --import           Data.Char
@@ -42,6 +45,38 @@ import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
 
+import Data.Label.Total
+import Data.Label.Mono (Lens)
+import Theory.Sapic
+import qualified Data.Functor
+
+
+ -- Describes the mapping between Maude Signatures and the builtin Name
+builtinsDiffNames :: [(String,
+                       MaudeSig)]
+builtinsDiffNames = [
+  ("diffie-hellman", dhMaudeSig),
+  ("bilinear-pairing", bpMaudeSig),
+
+  ("multiset", msetMaudeSig),
+  ("xor", xorMaudeSig),
+  ("symmetric-encryption", symEncMaudeSig),
+  ("asymmetric-encryption", asymEncMaudeSig),
+  ("signing", signatureMaudeSig),
+  ("revealing-signing", revealSignatureMaudeSig),
+  ("hashing", hashMaudeSig)
+              ]
+
+-- | Describes the mapping between a builtin name, its potential Maude Signatures
+-- and its potential option
+builtinsNames :: [([Char], Maybe MaudeSig, Maybe (Lens Total Option Bool))]
+builtinsNames =
+  [
+  ("locations-report",  Just locationReportMaudeSig, Just transReport),
+  ("reliable-channel",  Nothing, Just transReliable)
+  ]
+  ++ map (\(x,y) -> (x, Just y, Nothing)) builtinsDiffNames
+
 -- | Builtin signatures.
 builtins :: OpenTheory -> Parser OpenTheory
 builtins thy0 =do
@@ -51,93 +86,84 @@ builtins thy0 =do
                                          -- builtinTheory modifies signature in state.
             return $ foldl setOption' thy0 l
   where
-    setOption' thy Nothing  = thy
-    setOption' thy (Just l) = setOption l thy
-    extendSig msig = do
-        modifyState (`mappend` msig)
-        return Nothing
-    builtinTheory = asum
-      [ try (symbol "diffie-hellman")
-          *> extendSig dhMaudeSig
-      , try (symbol "bilinear-pairing")
-          *> extendSig bpMaudeSig
-      , try (symbol "multiset")
-          *> extendSig msetMaudeSig
-      , try (symbol "xor")
-          *> extendSig xorMaudeSig
-      , try (symbol "symmetric-encryption")
-          *> extendSig symEncMaudeSig
-      , try (symbol "asymmetric-encryption")
-          *> extendSig asymEncMaudeSig
-      , try (symbol "signing")
-          *> extendSig signatureMaudeSig
-      , try (symbol "revealing-signing")
-          *> extendSig revealSignatureMaudeSig
-      , try (symbol "locations-report")
-          *>  do
-          modifyState (`mappend` locationReportMaudeSig)
-          return (Just transReport)
-      , try ( symbol "reliable-channel")
-             *> return (Just transReliable)
-      , symbol "hashing"
-          *> extendSig hashMaudeSig
-      ]
+    setName thy name = modify thyItems (++ [TranslationItem (SignatureBuiltin name)]) thy
+    setOption' thy (Nothing, name)  = setName thy name
+    setOption' thy (Just l, name) = setOption l (setName thy name)
+    extendSig (name, Just msig, opt) = do
+        _ <- symbol name
+        modifyStateSig (`mappend` msig)
+        return (opt, name)
+    extendSig (name, Nothing, opt) = do
+        _ <- symbol name
+        return (opt, name)
+    builtinTheory = asum $ map (try . extendSig) builtinsNames
 
 diffbuiltins :: Parser ()
 diffbuiltins =
-    symbol "builtins" *> colon *> commaSep1 builtinTheory *> pure ()
+    (symbol "builtins" *> colon *> commaSep1 builtinTheory) Data.Functor.$> ()
   where
-    extendSig msig = modifyState (`mappend` msig)
-    builtinTheory = asum
-      [ try (symbol "diffie-hellman")
-          *> extendSig dhMaudeSig
-      , try (symbol "bilinear-pairing")
-          *> extendSig bpMaudeSig
-      , try (symbol "multiset")
-          *> extendSig msetMaudeSig
-      , try (symbol "xor")
-          *> extendSig xorMaudeSig
-      , try (symbol "symmetric-encryption")
-          *> extendSig symEncMaudeSig
-      , try (symbol "asymmetric-encryption")
-          *> extendSig asymEncMaudeSig
-      , try (symbol "signing")
-          *> extendSig signatureMaudeSig
-      , try (symbol "revealing-signing")
-          *> extendSig revealSignatureMaudeSig
-      , symbol "hashing"
-          *> extendSig hashMaudeSig
-      ]
+    extendSig (name, msig) =
+        symbol name *>
+        modifyStateSig (`mappend` msig)
+    builtinTheory = asum $ map (try . extendSig) builtinsDiffNames
 
 
-functions :: Parser ()
-functions =
-    symbol "functions" *> colon *> commaSep1 functionSymbol *> pure ()
-  where
-    functionSymbol = do
-        f   <- BC.pack <$> identifier <* opSlash
-        k   <- fromIntegral <$> natural
-        priv <- option Public (symbol "[private]" *> pure Private)
-        if (BC.unpack f `elem` ["mun", "one", "exp", "mult", "inv", "pmult", "em", "zero", "xor"])
-          then fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
-          else return ()
-        sig <- getState
-        case lookup f [ o | o <- (S.toList $ stFunSyms sig)] of
-          Just kp' | kp' /= (k,priv) ->
+functionType :: Parser ([SapicType], SapicType)
+functionType = try (do
+                    _  <- opSlash
+                    k  <- fromIntegral <$> natural
+                    return (replicate k defaultSapicType, defaultSapicType)
+                   )
+                <|>(do
+                    argTypes  <- parens (commaSep typep)
+                    _         <- colon
+                    outType   <- typep
+                    return (argTypes, outType)
+                    )
+
+-- | Parse a 'FunctionAttribute'.
+functionAttribute :: Parser (Either Privacy Constructability)
+functionAttribute = asum
+  [ symbol "private" Data.Functor.$> Left Private
+  , symbol "destructor" Data.Functor.$> Right Destructor
+  ]
+
+function :: Parser SapicFunSym
+function =  do
+        f   <- BC.pack <$> identifier
+        (argTypes,outType) <- functionType
+        atts <- option [] $ list functionAttribute
+        when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
+        sign <- sig <$> getState
+        let k = length argTypes
+        let priv = if Private `elem` lefts atts then Private else Public
+        let destr = if Destructor `elem` rights atts then Destructor else Constructor
+        case lookup f (S.toList $ stFunSyms sign) of
+          Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
             fail $ "conflicting arities/private " ++
-                   show kp' ++ " and " ++ show (k,priv) ++
+                   show kp' ++ " and " ++ show (k,priv,destr) ++
                    " for `" ++ BC.unpack f
-          _ -> setState (addFunSym (f,(k,priv)) sig)
+          Just kp' | BC.unpack f == "fst" || BC.unpack f == "snd" -> do
+                return ((f,kp'),argTypes,outType)
+          _ -> do
+                modifyStateSig $ addFunSym (f,(k,priv,destr))
+                return ((f,(k,priv,destr)),argTypes,outType)
+
+
+functions :: Parser [SapicFunSym]
+functions =
+    (try (symbol "functions") <|> symbol "function") *> colon *> commaSep1 function
+
 
 equations :: Parser ()
 equations =
-      symbol "equations" *> colon *> commaSep1 equation *> pure ()
+      (symbol "equations" *> colon *> commaSep1 equation) Data.Functor.$> ()
     where
       equation = do
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         case rRuleToCtxtStRule rrule of
           Just str ->
-              modifyState (addCtxtStRule str)
+              modifyStateSig (addCtxtStRule str)
           Nothing  ->
               fail $ "Not a correct equation: " ++ show rrule
 
@@ -153,28 +179,45 @@ options thy0 =do
     setOption' thy Nothing  = thy
     setOption' thy (Just l) = setOption l thy
     builtinTheory = asum
-      [  try (symbol "translation-progress")
-             *> return (Just transProgress)
-        , symbol "translation-allow-pattern-lookups"
-             *> return (Just transAllowPatternMatchinginLookup)
+      [  try (symbol "translation-progress") Data.Functor.$> Just transProgress
+        , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
+        , symbol "enableStateOpt" Data.Functor.$> Just stateChannelOpt
+        , symbol "asynchronous-channels" Data.Functor.$> Just asynchronousChannels
+        , symbol "compress-events" Data.Functor.$> Just compressEvents
       ]
-
 
 predicate :: Parser Predicate
 predicate = do
            f <- fact' lvar
            _ <- symbol "<=>"
-           form <- plainFormula
-           return $ Predicate f form
+           Predicate f <$> plainFormula
            <?> "predicate declaration"
 
 preddeclaration :: OpenTheory -> Parser OpenTheory
 preddeclaration thy = do
-                    _          <- try (symbol "predicates") <|> symbol "predicate"
+                    _          <- try (symbol "predicates" <|> symbol "predicate")
                     _          <- colon
                     predicates <- commaSep1 predicate
                     foldM liftedAddPredicate thy predicates
-                    <?> "predicates"
+                    <?> "predicate block"
+
+-- | parse an export declaration
+export :: OpenTheory -> Parser OpenTheory
+export thy = do
+                    _          <- try (symbol "export")
+                    tag          <- identifier
+                    _          <- colon
+                    text       <- doubleQuoted $ many bodyChar -- TODO Gotta use some kind of text.
+                    let ei = ExportInfo tag text
+                    liftMaybeToEx (DuplicateItem (TranslationItem (ExportInfoItem ei))) (addExportInfo ei thy)
+                    <?> "export block"
+              where
+                bodyChar = try $ do
+                  c <- anyChar
+                  case c of
+                    '\\' -> char '\\' <|> char '"'
+                    '"'  -> mzero
+                    _    -> return c
 
 
 heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
@@ -201,6 +244,6 @@ goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regul
        toGoalRanking = if diff then stringToGoalRankingDiff False else stringToGoalRanking False
 
 liftedAddPredicate :: Catch.MonadThrow m =>
-                      Theory sig c r p SapicElement
-                      -> Predicate -> m (Theory sig c r p SapicElement)
+                      Theory sig c r p TranslationElement
+                      -> Predicate -> m (Theory sig c r p TranslationElement)
 liftedAddPredicate thy prd = liftMaybeToEx (DuplicateItem (PredicateItem prd)) (addPredicate prd thy)

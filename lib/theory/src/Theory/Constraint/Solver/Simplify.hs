@@ -40,8 +40,9 @@ import           Control.Category
 import           Control.Monad.Disj
 -- import           Control.Monad.Fresh
 import           Control.Monad.Reader
-import           Control.Monad.State                (gets, modify)
+import           Control.Monad.State                (gets)
 
+import           Safe                           (headMay)
 
 import           Extension.Data.Label               hiding (modify)
 import           Extension.Prelude
@@ -68,7 +69,9 @@ simplifySystem = do
         -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
         -- Remove equation split goals that do not exist anymore
-        removeSolvedSplitGoals    
+        removeSolvedSplitGoals
+        -- Add ordering constraint from injective facts
+        addNonInjectiveFactInstances
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -230,7 +233,7 @@ enforceFreshAndKuNodeUniqueness =
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
-                    
+
 
 -- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
@@ -429,16 +432,80 @@ freshOrdering = do
           FreshFact -> Just (head $ factTerms prem, idx)
           _         -> Nothing
         ) prems
-      
+
       getFreshVarsNotBelowReducible :: FunSig -> (NodeId, RuleACInst) -> [(LNTerm, [NodeId])]
       getFreshVarsNotBelowReducible reducible (idx, get rPrems -> prems) = concatMap (\prem -> case factTag prem of
           FreshFact -> []
           _         -> S.toList $ S.fromList $ map (,[idx]) (concatMap (extractFreshNotBelowReducible reducible) (factTerms prem))
         ) prems
-      
+
       extractFreshNotBelowReducible :: FunSig -> LNTerm -> [LNTerm]
       extractFreshNotBelowReducible reducible (viewTerm -> FApp f as) | f `S.notMember` reducible
                                       = concatMap (extractFreshNotBelowReducible reducible) as
       extractFreshNotBelowReducible _ t | isFreshVar t = [t]
       extractFreshNotBelowReducible _ _                = []
       
+
+-- | Compute all less relations implied by injective fact instances.
+--
+-- Formally, they are computed as follows. Let 'f' be a fact symbol with
+-- injective instances. Let i and k be temporal variables ordered
+-- according to
+--
+--   i < k
+--
+-- and let there be an edge from (i,u) to (k,w) for some indices u and w
+-- corresponding to fact f(t,...).
+-- If:
+--    -  j<k & f(t,...) occurs at j in prems, then j<i (j<>i as in i f occurs in concs).
+--    -  i<j & f(t,...) occurs at j concs, then k<j.
+nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId)]
+nonInjectiveFactInstances ctxt se = do
+    Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
+    let kFaPrem            = nodeConcFact c se
+        kTag               = factTag kFaPrem
+        kTerm              = firstTerm kFaPrem
+        conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
+
+    guard (kTag `S.member` get pcInjectiveFactInsts ctxt)
+--    j <- S.toList $ D.reachableSet [i] less
+    (j, _) <- M.toList $ get sNodes se
+    -- check that j<k
+    guard  (k `S.member` D.reachableSet [j] less)
+    let isCounterExample checkRule = (j /= i) && (j /= k) &&
+                           maybe False checkRule (M.lookup j $ get sNodes se)
+        checkRuleJK jRu    = (
+                           -- check that f(t,...) occurs at j in prems and j<k
+                           any conflictingFact (get rPrems jRu ++ get rConcs jRu) &&
+                           (k `S.member` D.reachableSet [j] less) &&
+                            nonUnifiableNodes j i
+                           )
+        checkRuleIJ jRu    = (
+                           -- check that f(t,...) occurs at j in concs and i<j
+                           any conflictingFact (get rPrems jRu ++  get rConcs jRu) &&
+                           (j `S.member` D.reachableSet [i] less) &&
+                            nonUnifiableNodes k j
+                           )
+    if (isCounterExample checkRuleJK) then return (j,i)
+      else do
+         guard (isCounterExample checkRuleIJ)
+         return (k,j)
+    -- (guard (isCounterExample checkRuleConcs)
+    --  return (k,j))
+--    insertLess k i
+--    return (i, j, k) -- counter-example to unique fact instances
+  where
+    less      = rawLessRel se
+    firstTerm = headMay . factTerms
+    runMaude   = (`runReader` get pcMaudeHandle ctxt)
+    nonUnifiableNodes :: NodeId -> NodeId -> Bool
+    nonUnifiableNodes i j = maybe False (not . runMaude) $
+        (unifiableRuleACInsts) <$> M.lookup i (get sNodes se)
+                               <*> M.lookup j (get sNodes se)
+
+addNonInjectiveFactInstances :: Reduction ()
+addNonInjectiveFactInstances = do
+  se <- gets id
+  ctxt <- ask
+  let list = nonInjectiveFactInstances ctxt se
+  mapM_ (uncurry insertLess) list

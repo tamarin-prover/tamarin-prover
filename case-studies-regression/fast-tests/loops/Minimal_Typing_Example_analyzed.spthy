@@ -2,11 +2,16 @@ theory Minimal_Typing_Example begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, h/1, pair/2, sdec/2, senc/2, snd/1
+functions: fst/1[destructor], h/1, pair/2, sdec/2[destructor], senc/2,
+           snd/1[destructor]
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -144,7 +149,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -154,7 +159,7 @@ analyzing: examples/loops/Minimal_Typing_Example.spthy
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          examples/loops/Minimal_Typing_Example.spthy.tmp
-  processing time: 0.125074392s
+  processing time: 0.114951591s
   sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)
@@ -167,7 +172,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          examples/loops/Minimal_Typing_Example.spthy.tmp
-  processing time: 0.125074392s
+  processing time: 0.114951591s
   sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)
   Public_part_public (exists-trace): verified (5 steps)

@@ -3,8 +3,10 @@ theory xor3 begin
 // Function signature and definition of the equational theory E
 
 builtins: xor
-functions: fst/1, pair/2, snd/1
+functions: fst/1[destructor], pair/2, snd/1[destructor]
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -103,7 +105,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -113,7 +115,7 @@ analyzing: examples/features/xor/basicfunctionality/xor3.spthy
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.213089017s
+  processing time: 0.347144208s
   secrecybroken (all-traces): falsified - found trace (12 steps)
 
 ------------------------------------------------------------------------------
@@ -124,7 +126,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.213089017s
+  processing time: 0.347144208s
   secrecybroken (all-traces): falsified - found trace (12 steps)
 
 ==============================================================================

@@ -1,12 +1,14 @@
 {-# LANGUAGE BangPatterns         #-}
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ViewPatterns         #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE MultiParamTypeClasses#-}
 {-# LANGUAGE PatternGuards        #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
@@ -16,6 +18,8 @@
 -- Portability : GHC only
 --
 -- Types and operations for handling sorted first-order logic
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Theory.Model.Formula (
 
    -- * Formulas
@@ -27,7 +31,11 @@ module Theory.Model.Formula (
   , LNFormula
   , ProtoLNFormula
   , SyntacticLNFormula
+  , SyntacticNFormula
   , LFormula
+
+  -- * class
+  , Hinted(..)
 
   , quantify
   , openFormula
@@ -50,6 +58,14 @@ module Theory.Model.Formula (
   , mapAtoms
   , foldFormula
   , traverseFormulaAtom
+
+  -- ** Normal forms / simplification
+  , simplifyFormula
+  , nnf
+  , pullquants
+  , prenex
+  , pnf
+  , shiftFreeIndices
 
   -- ** Pretty-Printing
   , prettyLNFormula
@@ -99,13 +115,20 @@ data ProtoFormula syn s c v = Ato (ProtoAtom syn (VTerm c (BVar v)))
                    | Not (ProtoFormula syn s c v)
                    | Conn !Connective (ProtoFormula syn  s c v) (ProtoFormula syn  s c v)
                    | Qua !Quantifier s (ProtoFormula syn  s c v)
-                   deriving ( Generic)
+                   deriving ( Generic )
 
 -- | First-order formulas in locally nameless representation with hints for the
 -- names/sorts of quantified variables.
 type Formula s c v = ProtoFormula Unit2 s c v
-
 type SyntacticFormula s c v = ProtoFormula SyntacticSugar s c v
+
+-- Classes
+----------
+
+-- | Types that provide hints of type (String,LSort) to recover the type and
+-- name of a bound variable.
+class Hinted v where
+    hint :: v -> (String,LSort)
 
 -- Folding
 ----------
@@ -117,7 +140,7 @@ foldFormula :: (ProtoAtom syn (VTerm c (BVar v)) -> b)
             -> (b -> b)
             -> (Connective -> b -> b -> b)
             -> (Quantifier -> s -> b -> b)
-            -> (ProtoFormula syn s c v)
+            -> ProtoFormula syn s c v
             -> b
 foldFormula fAto fTF fNot fConn fQua =
     go
@@ -149,19 +172,31 @@ foldFormulaScope fAto fTF fNot fConn fQua =
 -- Instances
 ------------
 
-{-
-instance Functor (Formula s c) where
-    fmap f = foldFormula (Ato . fmap (fmap (fmap (fmap f)))) TF Not Conn Qua
--}
+deriving instance (Show c, Show v, Show s) => Show (ProtoFormula SyntacticSugar s c v)
+deriving instance (Show c, Show v, Show s) => Show (ProtoFormula Unit2 s c v)
+
+deriving instance (Eq c, Eq v, Eq s) => Eq (ProtoFormula SyntacticSugar s c v)
+deriving instance (Eq c, Eq v, Eq s) => Eq (ProtoFormula Unit2 s c v)
+
+deriving instance (Ord c, Ord v, Ord s) => Ord (ProtoFormula SyntacticSugar s c v)
+deriving instance (Ord c, Ord v, Ord s) => Ord (ProtoFormula Unit2 s c v)
 
 deriving instance (NFData c, NFData v, NFData s) => NFData (ProtoFormula SyntacticSugar s c v)
-deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula SyntacticSugar s c v)
 deriving instance (NFData c, NFData v, NFData s) => NFData (ProtoFormula Unit2 s c v)
+
+deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula SyntacticSugar s c v)
 deriving instance (Binary c, Binary v, Binary s) => Binary (ProtoFormula Unit2 s c v)
+
+deriving instance (Data c, Data v, Data s) => Data (ProtoFormula SyntacticSugar s c v)
+deriving instance (Data c, Data v, Data s) => Data (ProtoFormula Unit2 s c v)
 
 instance (Foldable syn) => Foldable (ProtoFormula syn s c) where
     foldMap f = foldFormula (foldMap (foldMap (foldMap (foldMap f)))) mempty id
                             (const mappend) (const $ const id)
+
+instance (Functor syn) => Functor (ProtoFormula syn s c) where
+    fmap f = foldFormula (Ato . fmap (fmap (fmap (fmap f)))) TF Not Conn Qua
+
 
 -- | traverse formula down to the term level
 traverseFormula :: (Ord v, Ord c, Ord v', Applicative f, Traversable syn)
@@ -184,6 +219,9 @@ instance Traversable (Formula a s) where
                              (pure . TF) (liftA Not)
                              (liftA2 . Conn) ((liftA .) . Qua)
 -}
+
+instance Hinted LVar where
+    hint (LVar n s _) = (n,s)
 
 -- Abbreviations
 ----------------
@@ -219,7 +257,7 @@ type ProtoLFormula syn c = ProtoFormula syn (String, LSort) c LVar
 type LNFormula = Formula (String, LSort) Name LVar
 type ProtoLNFormula syn = ProtoLFormula syn Name
 type SyntacticLNFormula = ProtoLNFormula SyntacticSugar
-
+type SyntacticNFormula v = ProtoFormula SyntacticSugar (String, LSort) Name v
 
 -- | Change the representation of atoms.
 mapAtoms :: (Integer -> ProtoAtom syn (VTerm c (BVar v))
@@ -270,15 +308,6 @@ openFormulaPrefix f0 = case openFormula f0 of
 -- Instances
 ------------
 
-deriving instance Eq       LNFormula
-deriving instance Show     LNFormula
-deriving instance Ord      LNFormula
-
-deriving instance Eq       SyntacticLNFormula
-deriving instance Show     SyntacticLNFormula
-deriving instance Ord      SyntacticLNFormula
-deriving instance Data     SyntacticLNFormula
-
 instance HasFrees LNFormula where
     foldFrees  f = foldMap  (foldFrees  f)
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
@@ -289,11 +318,12 @@ instance HasFrees SyntacticLNFormula where
     foldFreesOcc _ _ = const mempty -- we ignore occurences in Formulas for now
     mapFrees   f = traverseFormula (mapFrees   f)
 
-instance Apply LNFormula where
+instance Apply LNSubst LNFormula where
     apply subst = mapAtoms (const $ apply subst)
 
-instance Apply SyntacticLNFormula where
-    apply subst = mapAtoms (const $ apply subst )
+instance {-# OVERLAPPABLE #-} (Apply s (VTerm c v), Apply s (VTerm c (BVar v)), Apply s (syn (Term (Lit c (BVar v))))) => Apply s (ProtoFormula syn h c v)
+  where
+    apply subst = mapAtoms (const $ apply subst)
 
 ------------------------------------------------------------------------------
 -- Formulas modulo E and modulo AC
@@ -309,15 +339,16 @@ quantify x =
 
 -- | Create a universal quantification with a sort hint for the bound variable.
 forall :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
-forall hint x = Qua All hint . quantify x
+forall hint' x = Qua All hint' . quantify x
 
 -- | Create a existential quantification with a sort hint for the bound variable.
 exists :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
-exists hint x = Qua Ex hint . quantify x
+exists hint' x = Qua Ex hint' . quantify x
 
--- | Transform @forall@ and @exists@ into functions that operate on logical variables
-hinted :: ((String, LSort) -> LVar -> a) -> LVar -> a
-hinted f v@(LVar n s _) = f (n,s) v
+-- | Transform @forall@ and @exists@ into functions that operate on logical variables or other variables
+--   that have hasHint
+hinted :: Hinted v => ((String, LSort) -> v -> a) -> v -> a
+hinted f v = f (hint v) v
 
 -- | Convert to LNFormula, if possible.
 -- toLNFormula :: Formula s c0 (ProtoAtom s0 t0) -> Maybe (Formula s c0 (Atom t0))
@@ -326,6 +357,100 @@ toLNFormula = traverseFormulaAtom (liftA Ato . f)
   where
         f x |  (Syntactic _) <- x = Nothing
             | otherwise           = Just (toAtom x)
+
+------------------------------------------------------------------------------
+-- Normal forms / simplification (adopted from FOL.hs)
+------------------------------------------------------------------------------
+
+-- | First-order simplification
+simplifyFormula :: (Eq c, Eq v) => ProtoFormula sync s c v -> ProtoFormula sync s c v
+simplifyFormula fm0 = case fm0 of
+    Ato a        -> simplifyFormula1 $ Ato a
+    Not p        -> simplifyFormula1 $ Not (simplifyFormula p)
+    Conn And p q -> simplifyFormula1 $ simplifyFormula p .&&.  simplifyFormula q
+    Conn Or  p q -> simplifyFormula1 $ simplifyFormula p .||.  simplifyFormula q
+    Conn Imp p q -> simplifyFormula1 $ simplifyFormula p .==>. simplifyFormula q
+    Conn Iff p q -> simplifyFormula1 $ simplifyFormula p .<=>. simplifyFormula q
+    Qua qua x p  -> simplifyFormula1 $ Qua qua x (simplifyFormula p)
+    _            -> fm0
+  where
+    simplifyFormula1 fm = case fm of
+        a@(Ato (EqE l r))               -> if l == r then TF True else a
+        Not (TF b)                      -> TF (not b)
+        Conn And (TF False) _           -> TF False
+        Conn And _          (TF False)  -> TF False
+        Conn And (TF True)  q           -> q
+        Conn And p          (TF True)   -> p
+        Conn Or  (TF False) q           -> q
+        Conn Or  p          (TF False)  -> p
+        Conn Or  (TF True)  _           -> TF True
+        Conn Or  _          (TF True)   -> TF True
+        Conn Imp (TF False) _           -> TF True
+        Conn Imp (TF True)  q           -> q
+        Conn Imp _          (TF True)   -> TF True
+        Conn Imp p          (TF False)  -> Not p
+        Conn Iff (TF True)  q           -> q
+        Conn Iff p          (TF True)   -> p
+        Conn Iff (TF False) (TF False)  -> TF True
+        Conn Iff (TF False) q           -> Not q
+        Conn Iff p          (TF False)  -> Not p
+        Qua  _   _          (TF b)      -> TF b
+        _                               -> fm
+
+-- | Negation normal form.
+nnf :: ProtoFormula sync s c v -> ProtoFormula sync s c v
+nnf fm = case fm of 
+    Conn And p q        -> nnf p       .&&. nnf q
+    Conn Or  p q        -> nnf p       .||. nnf q
+    Conn Imp p q        -> nnf (Not p) .||. nnf q
+    Conn Iff p q        -> (nnf p .&&. nnf q) .||. (nnf (Not p) .&&. nnf (Not q))
+    Not (Not p)         -> nnf p
+    Not (Conn And p q ) -> nnf (Not p) .||. nnf (Not q)
+    Not (Conn Or  p q ) -> nnf (Not p) .&&. nnf (Not q)
+    Not (Conn Imp p q ) -> nnf p       .&&. nnf (Not q)
+    Not (Conn Iff p q ) -> (nnf p .&&. nnf (Not q)) .||. (nnf(Not p) .&&. nnf q)
+    Qua qua x p         -> Qua qua     x $ nnf p
+    Not (Qua All x p)   -> Qua Ex  x $ nnf (Not p)
+    Not (Qua Ex  x p)   -> Qua All x $ nnf (Not p)
+    _                   -> fm
+
+-- | Pulling out quantifiers.
+pullquants :: (Functor sync, Ord c, Ord v, Eq s) => ProtoFormula sync s c v -> ProtoFormula sync s c v
+pullquants fm = case fm of
+    Conn And (Qua All x p) (Qua All x' q) | x == x' -> pull_2 All (.&&.) x p q
+    Conn Or  (Qua Ex  x p) (Qua Ex  x' q) | x == x' -> pull_2 Ex  (.||.) x p q
+    Conn And (Qua qua x p) q             -> pull_l qua (.&&.) x p q
+    Conn And p             (Qua qua x q) -> pull_r qua (.&&.) x p q
+    Conn Or  (Qua qua x p) q             -> pull_l qua (.||.) x p q
+    Conn Or  p             (Qua qua x q) -> pull_r qua (.||.) x p q
+    _                                    -> fm
+  where
+    pull_l qua op x p q = Qua qua x (pullquants (p `op` shiftFreeIndices 1 q))
+    pull_r qua op x p q = Qua qua x (pullquants (shiftFreeIndices 1 p `op` q))
+    pull_2 qua op x p q = Qua qua x (pullquants (p `op` q))
+
+-- | Conversion to prenex normal form under the assumption that the formula is already in NNF.
+prenex :: (Functor sync, Ord c, Ord v, Eq s) => ProtoFormula sync s c v -> ProtoFormula sync s c v
+prenex fm = case fm of
+    Qua qua x p  -> Qua qua x (prenex p)
+    Conn And p q -> pullquants $ prenex p .&&. prenex q
+    Conn Or  p q -> pullquants $ prenex p .||. prenex q
+    _            -> fm
+
+-- | Conversion to prenex normal form.
+pnf :: (Functor sync, Ord c, Ord v, Eq s) => ProtoFormula sync s c v -> ProtoFormula sync s c v
+pnf = simplifyFormula . prenex . nnf . simplifyFormula
+
+-- | Increase the bound variables by the given amount. This has to be used when
+-- moving a sub-formula inside an abstraction.
+shiftFreeIndices :: (Functor sync, Ord c, Ord v) => Integer -> ProtoFormula sync s c v -> ProtoFormula sync s c v
+shiftFreeIndices n =
+    mapAtoms (\i a -> fmap (mapLits (fmap (foldBVar (Bound . shift i) Free))) a)
+  where
+     shift i j | j < i     = j
+               | otherwise = j + n
+
+
 
 ------------------------------------------------------------------------------
 -- Pretty printing
