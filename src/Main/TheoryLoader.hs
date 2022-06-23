@@ -229,22 +229,22 @@ loadClosedDiffThy as inFile = do
   thy1 <- addMessageDeductionRuleVariantsDiff thy0
   closeDiffThy as thy1
 
-<<<<<<< HEAD
+-- <<<<<<< HEAD
 -- | Load a closed theory.
-loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThy as inFile = (loadOpenThy as inFile >>= closeThy as)
+--loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
+--loadClosedThy as inFile = (loadOpenThy as inFile >>= closeThy as)
 
 -- | Load a closed theory and report on well-formedness errors.
-loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
-loadClosedThyWfReport as inFile = do
-    thy0 <- loadOpenThy as inFile
-    thy <- addMessageDeductionRuleVariants thy0
-    sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy
-    -- report
-    case checkWellformedness thy sig of
-      []     -> return ()
-      report -> do
-=======
+--loadClosedThyWfReport :: Arguments -> FilePath -> IO ClosedTheory
+--loadClosedThyWfReport as inFile = do
+--    thy0 <- loadOpenThy as inFile
+--    thy <- addMessageDeductionRuleVariants thy0
+--    sig <- toSignatureWithMaude (maudePath as) $ get thySignature thy
+--    -- report
+--    case checkWellformedness thy sig of
+--      []     -> return ()
+--      report -> do
+-- =======
 reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
 reportWellformednessDoc [] =  Pretty.emptyDoc
 reportWellformednessDoc errs  = Pretty.vcat 
@@ -269,7 +269,7 @@ reportWellformedness prefixAct quit           wfreport =
 -- | helper function: print header with theory filename 
 printFileName :: [Char] -> IO ()
 printFileName inFile = do
->>>>>>> develop_master
+-- >>>>>>> develop_master
           putStrLn ""
           putStrLn $ replicate 78 '-'
           putStrLn $ "Theory file '" ++ inFile ++ "'"

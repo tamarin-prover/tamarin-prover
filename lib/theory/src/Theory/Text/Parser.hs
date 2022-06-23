@@ -216,7 +216,7 @@ theory inFile = do
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
            addItems inFile0 thy'
       , do thy' <- liftedAddTacticI thy =<< tactic False
-           addItems flags thy'
+           addItems inFile0 thy'
       , do thy' <- builtins thy
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
@@ -362,7 +362,7 @@ diffTheory inFile = do
       [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
            addItems inFile0 thy'
       , do thy' <- liftedAddTacticI thy =<< tactic True
-           addItems flags thy'
+           addItems inFile0 thy'
       , do
            diffbuiltins
            msig <- sig <$> getState

@@ -29,6 +29,8 @@ module TheoryObject (
   , diffThyDiffCacheRight
   , thyHeuristic
   , diffThyHeuristic
+  , thyTacticI
+  , diffThyTacticI
   , DiffLemma(..)
   , ProcessDef(..)
   , Predicate(..)
@@ -68,6 +70,8 @@ module TheoryObject (
   , addDiffLemma
   , addHeuristic
   , addDiffHeuristic
+  , addTacticI
+  , addDiffTacticI
   , removeLemma
   , removeLemmaDiff
   , removeDiffLemma
@@ -104,6 +108,7 @@ module TheoryObject (
   , lookupExportInfo
   , prettyRestriction
   , prettyProcess
+  , prettyTactic
   , theoryCaseTests
   , theoryAccLemmas
   , addAccLemma
@@ -112,7 +117,7 @@ module TheoryObject (
   , lookupCaseTest
   ) where
 
-import Theory.Constraint.Solver.Heuristics
+--import Theory.Constraint.Solver.Heuristics
 import Data.Label as L
 import Theory.Model.Restriction
 import Theory.Model.Fact
@@ -160,7 +165,8 @@ import Data.ByteString.Char8 (unpack)
 -- and the lemmas that
 data Theory sig c r p s = Theory {
          _thyName      :: String
-       , _thyHeuristic :: [GoalRanking]
+       , _thyHeuristic :: [GoalRanking ProofContext]
+       , _thyTacticI   :: [TacticI ProofContext]
        , _thySignature :: sig
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p s]
@@ -174,7 +180,8 @@ $(mkLabels [''Theory])
 -- | A diff theory contains a set of rewriting rules with diff modeling two instances
 data DiffTheory sig c r r2 p p2 = DiffTheory {
          _diffThyName           :: String
-       , _diffThyHeuristic      :: [GoalRanking]
+       , _diffThyHeuristic      :: [GoalRanking ProofContext]
+       , _diffThyTacticI        :: [TacticI ProofContext]
        , _diffThySignature      :: sig
        , _diffThyCacheLeft      :: c
        , _diffThyCacheRight     :: c
@@ -473,13 +480,22 @@ addDiffLemma l thy = do
     return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
 
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
-addHeuristic :: [GoalRanking] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
-addHeuristic h (Theory n [] sig c i o) = Just (Theory n h sig c i o)
+addHeuristic :: [GoalRanking ProofContext] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addHeuristic h (Theory n [] t sig c i o) = Just (Theory n h t sig c i o)
 addHeuristic _ _ = Nothing
 
-addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
-addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i) = Just (DiffTheory n h sig cl cr dcl dcr i)
+addDiffHeuristic :: [GoalRanking ProofContext] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffHeuristic h (DiffTheory n [] t sig cl cr dcl dcr i) = Just (DiffTheory n h t sig cl cr dcl dcr i)
 addDiffHeuristic _ _ = Nothing
+
+addTacticI :: TacticI ProofContext -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addTacticI t (Theory n h [] sig c i o) = Just (Theory n h [t] sig c i o)
+addTacticI t (Theory n h l sig c i o) = Just (Theory n h (l++[t]) sig c i o)
+-- addTacticI _ _ = Nothing
+
+addDiffTacticI :: TacticI ProofContext -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffTacticI t (DiffTheory n h [] sig cl cr dcl dcr i) = Just (DiffTheory n h [t] sig cl cr dcl dcr i)
+addDiffTacticI t (DiffTheory n h l sig cl cr dcl dcr i) = Just (DiffTheory n h (l++[t]) sig cl cr dcl dcr i)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemma :: String -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -597,6 +613,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get thySignature thy
+    , if thyT == [] then text "" else vcat $ map prettyTactic thyT
     , if null thyH then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
     , ppCache $ L.get thyCache thy
     ] ++
@@ -606,6 +623,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     ppItem = foldTheoryItem
         ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate ppSap
     thyH = L.get thyHeuristic thy
+    thyT = L.get thyTacticI thy
 
 
 prettyTranslationElement :: HighlightDocument d => TranslationElement -> d
@@ -679,3 +697,21 @@ prettyEitherRestriction (s, rstr) =
     (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
+
+prettyTactic :: HighlightDocument d => TacticI ProofContext -> d
+prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic) 
+    $-$ kwPresort <> colon <> space <> (char $ goalRankingToChar $ _presort tactic) $-$ sep
+        [ ppTabTab  "prio"  (map stringRankingPrio $ _prios tactic) (map stringsPrio $ _prios tactic)
+        , ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic)
+        , char '\n'
+        ]
+   where 
+
+        -- pretty print for a prio block
+        ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs) 
+        ppTab "deprio" (rankingName,xs) = kwDeprio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs)
+        --ppTab "prio" _ xs =  kwPrio <> colon $-$ (nest 2 $ vcat $ map text xs)
+        --ppTab "deprio" _ xs = kwDeprio <> colon $-$ (nest 2 $ vcat $ map text xs)
+
+        ppTabTab _ _ [] = emptyDoc
+        ppTabTab param rankingName listFunctions = vcat (map (ppTab param) (zip rankingName listFunctions))
