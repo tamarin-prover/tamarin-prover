@@ -995,9 +995,9 @@ checkWellformedness thy sig = concatMap ($ thy)
     ]
 
 -- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformedness :: String -> WfErrorReport -> OpenTranslatedTheory -> Bool -> OpenTranslatedTheory
-noteWellformedness version report thy quitOnWarning =
-    addComment (text version) (addComment wfErrorReport thy)  
+noteWellformedness :: WfErrorReport -> OpenTranslatedTheory -> Bool -> OpenTranslatedTheory
+noteWellformedness report thy quitOnWarning =
+    addComment wfErrorReport thy
   where
     wfErrorReport
       | null report = text "All well-formedness checks were successful."
