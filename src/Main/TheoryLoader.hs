@@ -309,7 +309,7 @@ loadClosedThyString as input =
             thy' <-  Sapic.typeTheory thy
                   >>= Sapic.translate
                   >>= Acc.translate
-            Right <$> closeThy as (addVersion as thy) (removeTranslationItems thy') -- No "return" because closeThy gives IO (ClosedTheory)
+            Right <$> closeThy as thy (removeTranslationItems thy') -- No "return" because closeThy gives IO (ClosedTheory)
 
 
 loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTheory)
@@ -318,7 +318,7 @@ loadClosedDiffThyString as input =
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> fmap Right $ do
           thy1 <- addMessageDeductionRuleVariantsDiff thy
-          closeDiffThy as (addDiffVersion as thy1)
+          closeDiffThy as thy1
 
 -- | Load an open theory from a string.
 loadOpenThyString :: Arguments -> String -> Either ParseError OpenTheory
