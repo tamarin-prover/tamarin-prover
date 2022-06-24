@@ -387,7 +387,7 @@ defaultOption :: Option
 defaultOption = Option False False False False False False False S.empty Map.empty
 
 defaultDiffOption :: DiffOption
-defaultDiffOption = DiffOption Map.empty False
+defaultDiffOption = DiffOption Map.empty
 
 
 -- | Default theory
