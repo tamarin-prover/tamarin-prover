@@ -27,6 +27,7 @@ module TheoryObject (
   , diffThyCacheRight
   , diffThyDiffCacheLeft
   , diffThyDiffCacheRight
+  , diffThyOptions
   , thyHeuristic
   , diffThyHeuristic
   , DiffLemma(..)
@@ -110,6 +111,8 @@ module TheoryObject (
   , addCaseTest
   , lookupAccLemma
   , lookupCaseTest
+  , addParamsToThyOptions
+  , addParamsToDiffThyOptions
   ) where
 
 import Theory.Constraint.Solver.Heuristics
@@ -154,6 +157,7 @@ import Items.ExportInfo
 import qualified Data.Set as S
 import Theory.Syntactic.Predicate
 import Data.ByteString.Char8 (unpack)
+import qualified Data.Map as Map
 
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
@@ -181,6 +185,7 @@ data DiffTheory sig c r r2 p p2 = DiffTheory {
        , _diffThyDiffCacheLeft  :: c
        , _diffThyDiffCacheRight :: c
        , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
+       , _diffThyOptions        :: DiffOption
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''DiffTheory])
@@ -478,7 +483,7 @@ addHeuristic h (Theory n [] sig c i o) = Just (Theory n h sig c i o)
 addHeuristic _ _ = Nothing
 
 addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
-addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i) = Just (DiffTheory n h sig cl cr dcl dcr i)
+addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i opt) = Just (DiffTheory n h sig cl cr dcl dcr i opt)
 addDiffHeuristic _ _ = Nothing
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
@@ -588,6 +593,13 @@ isRuleItem _            = False
 itemToRule :: TheoryItem r p s -> Maybe r
 itemToRule (RuleItem r) = Just r
 itemToRule _            = Nothing
+
+addParamsToThyOptions :: String -> [String] -> Theory sig c r p s -> Theory sig c r p s
+addParamsToThyOptions name params = modify (thyParams.thyOptions) (Map.insertWith (++) name params)
+
+addParamsToDiffThyOptions :: String -> [String] -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
+addParamsToDiffThyOptions name params = modify (diffThyParams.diffThyOptions) (Map.insertWith (++) name params)
+
 
 --Pretty print a theory
 prettyTheory :: HighlightDocument d

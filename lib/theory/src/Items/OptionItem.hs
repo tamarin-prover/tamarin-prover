@@ -12,6 +12,7 @@ import Data.Binary (Binary)
 import Data.Label as L
 import qualified Data.Set as S
 import Theory.Model.Fact
+import qualified Data.Map as Map
 
 ------------------------------------------------------------------------------
 -- Options
@@ -28,8 +29,19 @@ data Option = Option
         , _asynchronousChannels       :: Bool
         , _compressEvents       :: Bool
         , _forcedInjectiveFacts :: S.Set FactTag
+        , _thyParams               :: Map.Map String [String]  -- (Key,Value)
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''Option])
 -- generate accessors for Option data structure records
 
+
+-- | Options for diffTheory
+data DiffOption = DiffOption
+        {
+          _diffThyParams          :: Map.Map String [String]  -- (Key,Value)
+        , _diffFutureOptions      :: Bool --Temporary useless option 
+        }
+        deriving( Eq, Ord, Show, Generic, NFData, Binary )
+$(mkLabels [''DiffOption])
+-- generate accessors for Option data structure records
