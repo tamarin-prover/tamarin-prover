@@ -141,7 +141,8 @@ run thisMode as
             Pretty.$--$ prettyClosedSummary thy
 
         ppWfAndSummaryDiff thy = do
-            reportWellformednessDoc $ checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
+            let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
+            reportWellformednessDoc $ checkWellformednessDiff lemmaArgsNames (openDiffTheory thy) (get diffThySignature thy)
             Pretty.$--$ prettyClosedDiffSummary thy
 
         choosePretty = case getOutputModule as of

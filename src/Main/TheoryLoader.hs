@@ -297,7 +297,7 @@ loadClosedDiffThyWfReport as inFile = do
     -- report
     let prefix = printFileName inFile
     let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
-    let errors = checkWellformednessDiff thy1 sig
+    let errors = checkWellformednessDiff lemmaArgsNames thy1 sig
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
     closeDiffThyWithMaude sig as (addParamsToDiffThyOptions "prove" lemmaArgsNames thy1)
@@ -359,7 +359,8 @@ reportOnClosedDiffThyStringWellformedness as input = do
         thy1 <- addMessageDeductionRuleVariantsDiff thy0
         sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
         -- report
-        case checkWellformednessDiff thy1 sig of
+        let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
+        case checkWellformednessDiff lemmaArgsNames thy1 sig of
           []     -> return ""
           report -> do
             if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
@@ -418,7 +419,8 @@ closeDiffThyWithMaude :: SignatureWithMaude -> Arguments -> OpenDiffTheory -> IO
 closeDiffThyWithMaude sig as thy0 = do
   -- FIXME: wf-check is at the wrong position here. Needs to be more
   -- fine-grained.
-  let thy2 = wfCheckDiff thy0
+  let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
+  let thy2 = wfCheckDiff lemmaArgsNames thy0
   -- close and prove
   let cthy = closeDiffTheoryWithMaude sig (addDefaultDiffLemma thy2) (argExists "auto-sources" as)
   return $ proveDiffTheory (lemmaSelectorByModule as &&& lemmaSelector as) (diffLemmaSelector as) prover diffprover $ partialEvaluation cthy
@@ -432,10 +434,10 @@ closeDiffThyWithMaude sig as thy0 = do
 
       -- wellformedness check
       -----------------------
-      wfCheckDiff :: OpenDiffTheory -> OpenDiffTheory
-      wfCheckDiff thy =
+      wfCheckDiff :: [String] -> OpenDiffTheory -> OpenDiffTheory
+      wfCheckDiff lemmaArgs thy =
         noteWellformednessDiff
-          (checkWellformednessDiff thy sig) thy ("quit-on-warning" `elem` quitOnWarning as)
+          (checkWellformednessDiff lemmaArgs thy sig) thy ("quit-on-warning" `elem` quitOnWarning as)
 
       -- diff prover: replace all annotated sorrys with the configured autoprover.
       diffprover :: DiffProver

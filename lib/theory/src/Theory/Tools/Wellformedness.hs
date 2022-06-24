@@ -962,11 +962,12 @@ multRestrictedReportDiff thy = do
 ------------------------------------------------------------------------------
 
 -- | Returns a list of errors, if there are any.
-checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
+checkWellformednessDiff :: [String] -> OpenDiffTheory -> SignatureWithMaude
                     -> WfErrorReport
-checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
+checkWellformednessDiff args thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
   concatMap ($ thy)
-    [ unboundReportDiff
+    [ checkIfLemmasInDiffTheory args
+    , unboundReportDiff
     , freshNamesReportDiff
     , publicNamesReportDiff
     , ruleSortsReportDiff
@@ -1027,22 +1028,10 @@ noteWellformednessDiff report thy quitOnWarning =
           ]
 
 
-
--- | Check that all the lemmas in the arguments are lemmas of the theory and return an error if not
-  -----------------------
-checkIfLemmasInTheory :: [String] -> OpenTranslatedTheory -> WfErrorReport
-checkIfLemmasInTheory lemmaArgsNames thy 
-        | null notProvedLemmas = []
-        | otherwise = 
-            [(topic, vcat
-            [ text $ "--> '" ++ intercalate "', '"  notProvedLemmas ++ "'"  ++ " from arguments "
-              ++ "do(es) not correspond to a specified lemma in the theory "
-            , text $ "List of lemmas from the theory: " ++ show (map _lName (theoryLemmas thy))
-            ])]
-
-    where
-      topic = "Check presence of the --prove/--lemma arguments in theory"
-
+-- | A fold to check if the lemmas are proper
+findNotProvedLemmas :: [String] -> [String] -> [String]
+findNotProvedLemmas lemmaArgsNames lemmasInTheory = foldl (\acc x -> if not (argFilter x) then  x:acc else acc ) [] lemmaArgsNames
+  where
       -- Check a lemma against a prefix* pattern or the name of a lemma 
       lemmaChecker :: String -> String -> Bool
       lemmaChecker argLem lemFromThy
@@ -1051,11 +1040,44 @@ checkIfLemmasInTheory lemmaArgsNames thy
 
       -- A filter to check if a lemma (str) is in the list of lemmas from the theory
       argFilter :: String -> Bool
-      argFilter str =
-        let lemmasInTheory :: [String]
-            lemmasInTheory = map _lName (theoryLemmas thy)
-        in any (lemmaChecker str) lemmasInTheory
+      argFilter str = any (lemmaChecker str) lemmasInTheory
+    
 
-       -- A fold using the filter to check if the lemmas are proper
-      notProvedLemmas :: [String]
-      notProvedLemmas = foldl (\acc x -> if not (argFilter x) then  x:acc else acc ) [] lemmaArgsNames
+-- | Check that all the lemmas in the arguments are lemmas of the theory and return an error if not
+  -----------------------
+checkIfLemmasInTheory :: [String] -> Theory sig c r p s  -> WfErrorReport
+checkIfLemmasInTheory lemmaArgsNames thy 
+        | null notProvedLemmas = []
+        | otherwise = 
+            [(topic, vcat
+            [ text $ "--> '" ++ intercalate "', '" notProvedLemmas ++ "'"  ++ " from arguments "
+              ++ "do(es) not correspond to a specified lemma in the theory "
+            -- , text $ "List of lemmas from the theory: " ++ show (map _lName (theoryLemmas thy))
+            ])]
+
+    where
+      topic = "Check presence of the --prove/--lemma arguments in theory"
+      lemmasInTheory = map _lName (theoryLemmas thy)
+      notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
+
+
+-- | Check that all the lemmas in the arguments are lemmas of the diffTheory and return an error if not
+  -----------------------
+checkIfLemmasInDiffTheory :: [String] -> DiffTheory sig c r r2 p p2  -> WfErrorReport
+checkIfLemmasInDiffTheory lemmaArgsNames thy 
+        | null notProvedLemmas = []
+        | otherwise = 
+            [(topic, vcat
+            [ text $ "--> '" ++ intercalate "', '"  notProvedLemmas ++ "'"  ++ " from arguments "
+              ++ "do(es) not correspond to a specified lemma in the theory "
+            -- , text $ "List of lemmas from the theory: " ++ show (map _lName (theoryLemmas thy))
+            ])]
+
+    where
+      topic = "Check presence of the --prove/--lemma arguments in theory"
+      lemmasInTheory = map (_lName.snd) (diffTheoryLemmas thy)
+      notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
+
+
+
+

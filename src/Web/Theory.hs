@@ -85,6 +85,8 @@ import           Theory.Tools.Wellformedness
 import           Web.Settings
 import           Web.Types
 import qualified Data.Map as Map
+import           TheoryObject                (diffThyOptions)
+import           Items.OptionItem            (thyParams,diffThyParams)
 
 
 ------------------------------------------------------------------------------
@@ -1057,7 +1059,7 @@ htmlThyPath renderUrl info path =
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
              
-             lemmaArgsNames = Map.findWithDefault [] "prove" $ _thyParams thy -- Get the lemmas to prove (for error checking)
+             lemmaArgsNames = Map.findWithDefault [] "prove" $ get thyParams $ get thyOptions thy -- Get the lemmas to prove (for error checking)
              report = checkWellformedness lemmaArgsNames (removeTranslationItems (openTheory thy)) (get thySignature thy)
                    ++ checkPreTransWellformedness (openTheory thy) -- FIXME: openTheory doesn't contain translated items, hence no warning is shown in the interactive mode
 
@@ -1194,8 +1196,8 @@ htmlDiffThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             lemmaArgsNames = Map.findWithDefault [] "prove" $ _diffThyParams thy -- Get the lemmas to prove (for error checking)
-             report = checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
+             lemmaArgsNames = Map.findWithDefault [] "prove" $ get diffThyParams $ get diffThyOptions thy -- Get the lemmas to prove (for error checking)
+             report = checkWellformednessDiff lemmaArgsNames (openDiffTheory thy) (get diffThySignature thy)
 
 
 
