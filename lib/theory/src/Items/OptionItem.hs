@@ -40,7 +40,6 @@ $(mkLabels [''Option])
 data DiffOption = DiffOption
         {
           _diffThyParams          :: Map.Map String [String]  -- (Key,Value)
-        , _diffFutureOptions      :: Bool --Temporary useless option 
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''DiffOption])
