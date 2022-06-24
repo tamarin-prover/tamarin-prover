@@ -84,6 +84,7 @@ import           Theory.Tools.Wellformedness
 
 import           Web.Settings
 import           Web.Types
+import qualified Data.Map as Map
 
 
 ------------------------------------------------------------------------------
@@ -1055,7 +1056,9 @@ htmlThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             report = checkWellformedness [] (removeTranslationItems (openTheory thy)) (get thySignature thy)
+             
+             lemmaArgsNames = Map.findWithDefault [] "prove" $ _thyParams thy -- Get the lemmas to prove (for error checking)
+             report = checkWellformedness lemmaArgsNames (removeTranslationItems (openTheory thy)) (get thySignature thy)
                    ++ checkPreTransWellformedness (openTheory thy) -- FIXME: openTheory doesn't contain translated items, hence no warning is shown in the interactive mode
 
 -- | Render the item in the given theory given by the supplied path.
@@ -1191,6 +1194,7 @@ htmlDiffThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
+             lemmaArgsNames = Map.findWithDefault [] "prove" $ _diffThyParams thy -- Get the lemmas to prove (for error checking)
              report = checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
 
 

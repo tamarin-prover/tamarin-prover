@@ -84,6 +84,7 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 import qualified Theory.Text.Pretty as Pretty
+import           TheoryObject                        (addParamsToThyOptions,addParamsToDiffThyOptions)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -285,7 +286,7 @@ loadClosedThyWfReport as inFile = do
     let errors = checkWellformedness lemmaArgsNames transThy transSig ++ Sapic.checkWellformednessSapic openThy
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
-    closeThyWithMaude transSig as openThy transThy
+    closeThyWithMaude transSig as openThy (addParamsToThyOptions "prove" lemmaArgsNames transThy)
 
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
@@ -295,10 +296,11 @@ loadClosedDiffThyWfReport as inFile = do
     sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
     -- report
     let prefix = printFileName inFile
+    let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
     let errors = checkWellformednessDiff thy1 sig
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
-    closeDiffThyWithMaude sig as thy1
+    closeDiffThyWithMaude sig as (addParamsToDiffThyOptions "prove" lemmaArgsNames thy1)
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
