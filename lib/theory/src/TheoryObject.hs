@@ -185,7 +185,7 @@ data DiffTheory sig c r r2 p p2 = DiffTheory {
        , _diffThyDiffCacheLeft  :: c
        , _diffThyDiffCacheRight :: c
        , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
-       , _diffThyOptions        :: DiffOption
+       , _diffThyOptions        :: Option
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''DiffTheory])
@@ -598,7 +598,7 @@ addParamsToThyOptions :: String -> [String] -> Theory sig c r p s -> Theory sig 
 addParamsToThyOptions name params = modify (thyParams.thyOptions) (Map.insertWith (++) name params)
 
 addParamsToDiffThyOptions :: String -> [String] -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
-addParamsToDiffThyOptions name params = modify (diffThyParams.diffThyOptions) (Map.insertWith (++) name params)
+addParamsToDiffThyOptions name params = modify (thyParams.diffThyOptions) (Map.insertWith (++) name params)
 
 
 --Pretty print a theory

@@ -386,8 +386,6 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 defaultOption :: Option
 defaultOption = Option False False False False False False False S.empty Map.empty
 
-defaultDiffOption :: DiffOption
-defaultDiffOption = DiffOption Map.empty
 
 
 -- | Default theory
@@ -396,7 +394,7 @@ defaultOpenTheory flag = Theory "default" [] (emptySignaturePure flag) [] [] def
 
 -- | Default diff theory
 defaultOpenDiffTheory :: Bool -> OpenDiffTheory
-defaultOpenDiffTheory flag = DiffTheory "default" [] (emptySignaturePure flag) [] [] [] [] [] defaultDiffOption
+defaultOpenDiffTheory flag = DiffTheory "default" [] (emptySignaturePure flag) [] [] [] [] [] defaultOption
 
 -- Add the default Diff lemma to an Open Diff Theory
 addDefaultDiffLemma:: OpenDiffTheory -> OpenDiffTheory
