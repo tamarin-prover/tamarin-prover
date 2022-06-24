@@ -34,13 +34,3 @@ data Option = Option
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''Option])
 -- generate accessors for Option data structure records
-
-
--- | Options for diffTheory
-data DiffOption = DiffOption
-        {
-          _diffThyParams          :: Map.Map String [String]  -- (Key,Value)
-        }
-        deriving( Eq, Ord, Show, Generic, NFData, Binary )
-$(mkLabels [''DiffOption])
--- generate accessors for Option data structure records
