@@ -47,6 +47,7 @@ module Main.TheoryLoader (
   , addMessageDeductionRuleVariants
 
   , lemmaSelector
+  , getArgsLemmas
   ) where
 
 -- import           Debug.Trace
@@ -54,7 +55,7 @@ module Main.TheoryLoader (
 import           Prelude                             hiding (id, (.))
 
 import           Accountability                      as Acc
-import           Accountability.Generation      
+import           Accountability.Generation
 
 import           Data.Char                           (toLower)
 import           Data.Label
@@ -183,6 +184,12 @@ diffLemmaSelector as lem
         | lastMay pattern == Just '*' = init pattern `isPrefixOf` get lDiffName lem
         | otherwise = get lDiffName lem == pattern
 
+-- | Get lemmas from the arguments --prove / --lemma
+getArgsLemmas :: Arguments -> [String]
+getArgsLemmas as  = if argExists "prove" as || argExists "lemma" as
+    then findArg "prove" as ++ findArg "lemma" as
+    else []
+
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
 loadOpenThy as inFile = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
@@ -252,13 +259,15 @@ printFileName inFile = do
           putStrLn $ replicate 78 '-'
           putStrLn ""
 
+
 loadClosedThyWf :: Arguments -> FilePath -> IO (ClosedTheory, Pretty.Doc)
 loadClosedThyWf as inFile = do
     (openThy, transThy0) <- loadOpenAndTranslatedThy as inFile
     transThy <- addMessageDeductionRuleVariants transThy0
     sig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
     -- report
-    let errors = checkWellformedness transThy sig ++ Sapic.checkWellformednessSapic openThy
+    let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
+    let errors = checkWellformedness lemmaArgsNames transThy sig ++ Sapic.checkWellformednessSapic openThy
     let report = reportWellformednessDoc errors
     -- return closed theory
     closedTheory <- closeThyWithMaude sig as openThy transThy
@@ -272,7 +281,8 @@ loadClosedThyWfReport as inFile = do
     transSig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
     -- report
     let prefix = printFileName inFile
-    let errors = checkWellformedness transThy transSig ++ Sapic.checkWellformednessSapic openThy
+    let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
+    let errors = checkWellformedness lemmaArgsNames transThy transSig ++ Sapic.checkWellformednessSapic openThy
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
     closeThyWithMaude transSig as openThy transThy
@@ -328,7 +338,8 @@ reportOnClosedThyStringWellformedness as input =
                   >>= Acc.translate
             transSig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
             -- report
-            let errors = checkWellformedness (removeTranslationItems transThy) transSig 
+            let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
+            let errors = checkWellformedness lemmaArgsNames (removeTranslationItems transThy) transSig
                       ++ Sapic.checkWellformednessSapic openThy
                       ++ checkPreTransWellformedness openThy
             case errors of 
@@ -362,9 +373,11 @@ closeThy as openThy transThy = do
 -- | Close a theory according to arguments.
 closeThyWithMaude :: SignatureWithMaude -> Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
 closeThyWithMaude sig as openThy transThy = do
+  -- Get the lemmas to prove (for error checking)
+  let lemmaArgsNames = getArgsLemmas as
   -- FIXME: wf-check is at the wrong position here. Needs to be more
   -- fine-grained.
-  let transThy' = wfCheck openThy transThy
+  let transThy' = wfCheck lemmaArgsNames openThy transThy
   -- close and prove
   let closedThy = closeTheoryWithMaude sig transThy' (argExists "auto-sources" as)
   return $ proveTheory (lemmaSelectorByModule as &&& lemmaSelector as) prover $ partialEvaluation closedThy
@@ -378,10 +391,10 @@ closeThyWithMaude sig as openThy transThy = do
 
       -- wellformedness check
       -----------------------
-      wfCheck :: OpenTheory -> OpenTranslatedTheory -> OpenTranslatedTheory
-      wfCheck othy tthy =
+      wfCheck :: [String] -> OpenTheory -> OpenTranslatedTheory -> OpenTranslatedTheory
+      wfCheck lemmaArgsNames othy tthy =
         noteWellformedness
-          (checkWellformedness tthy sig ++ checkPreTransWellformedness othy) transThy (elem "quit-on-warning" (quitOnWarning as))
+          (checkWellformedness lemmaArgsNames tthy sig ++ checkPreTransWellformedness othy) transThy (elem "quit-on-warning" (quitOnWarning as))
 
       -- replace all annotated sorrys with the configured autoprover.
       prover :: Prover

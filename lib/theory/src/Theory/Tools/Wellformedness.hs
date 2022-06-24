@@ -77,7 +77,7 @@ import           Control.Category
 import           Data.Char
 import           Data.Generics.Uniplate.Data (universeBi)
 import           Data.Label
-import           Data.List                   (intersperse,(\\))
+import           Data.List                   (intersperse,(\\), intercalate, isPrefixOf)
 import           Data.Maybe
 -- import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Set                    as S
@@ -92,6 +92,7 @@ import           Theory
 import           Theory.Text.Pretty
 import           Theory.Sapic
 import           Theory.Tools.RuleVariants
+import           Safe                        (lastMay)
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -980,10 +981,11 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
 
 
 -- | Returns a list of errors, if there are any.
-checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
+checkWellformedness :: [String] -> OpenTranslatedTheory -> SignatureWithMaude
                     -> WfErrorReport
-checkWellformedness thy sig = concatMap ($ thy)
-    [ unboundReport
+checkWellformedness args thy sig = concatMap ($ thy)
+    [ checkIfLemmasInTheory args
+    , unboundReport
     , freshNamesReport
     , publicNamesReport
     , ruleSortsReport
@@ -1023,3 +1025,37 @@ noteWellformednessDiff report thy quitOnWarning =
           [ text "WARNING: the following wellformedness checks failed!"
           , prettyWfErrorReport report
           ]
+
+
+
+-- | Check that all the lemmas in the arguments are lemmas of the theory and return an error if not
+  -----------------------
+checkIfLemmasInTheory :: [String] -> OpenTranslatedTheory -> WfErrorReport
+checkIfLemmasInTheory lemmaArgsNames thy 
+        | null notProvedLemmas = []
+        | otherwise = 
+            [(topic, vcat
+            [ text $ "--> '" ++ intercalate "', '"  notProvedLemmas ++ "'"  ++ " from arguments "
+              ++ "do(es) not correspond to a specified lemma in the theory "
+            , text $ "List of lemmas from the theory: " ++ show (map _lName (theoryLemmas thy))
+            ])]
+
+    where
+      topic = "Check presence of the --prove/--lemma arguments in theory"
+
+      -- Check a lemma against a prefix* pattern or the name of a lemma 
+      lemmaChecker :: String -> String -> Bool
+      lemmaChecker argLem lemFromThy
+        | lastMay argLem == Just '*' = init argLem `isPrefixOf` lemFromThy
+        | otherwise = argLem == lemFromThy
+
+      -- A filter to check if a lemma (str) is in the list of lemmas from the theory
+      argFilter :: String -> Bool
+      argFilter str =
+        let lemmasInTheory :: [String]
+            lemmasInTheory = map _lName (theoryLemmas thy)
+        in any (lemmaChecker str) lemmasInTheory
+
+       -- A fold using the filter to check if the lemmas are proper
+      notProvedLemmas :: [String]
+      notProvedLemmas = foldl (\acc x -> if not (argFilter x) then  x:acc else acc ) [] lemmaArgsNames
