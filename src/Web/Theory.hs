@@ -86,7 +86,7 @@ import           Web.Settings
 import           Web.Types
 import qualified Data.Map as Map
 import           TheoryObject                (diffThyOptions)
-import           Items.OptionItem            (thyParams,diffThyParams)
+import           Items.OptionItem            (thyParams)
 
 
 ------------------------------------------------------------------------------
@@ -1196,7 +1196,7 @@ htmlDiffThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             lemmaArgsNames = Map.findWithDefault [] "prove" $ get diffThyParams $ get diffThyOptions thy -- Get the lemmas to prove (for error checking)
+             lemmaArgsNames = Map.findWithDefault [] "prove" $ get thyParams $ get diffThyOptions thy -- Get the lemmas to prove (for error checking)
              report = checkWellformednessDiff lemmaArgsNames (openDiffTheory thy) (get diffThySignature thy)
 
 
