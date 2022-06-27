@@ -30,16 +30,14 @@ prettyWFLockTag WFRep = "replication"
 prettyWFLockTag WFPar = "a parallel"
 
 -- | Wellformedness errors, see instance of show below for explanation.
-data WFerror p = WFLock WFLockTag p
-                | WFUnboundProto (Set LVar)
-                | WFUnbound (Set LVar) p
+data WFerror = WFLock WFLockTag
+                | WFUnbound (Set LVar)
                 | WFReliable
                 | WFBoundTwice SapicLVar
                 | TypingErrorArgument SapicTerm [SapicType]
                 | TypingError SapicTerm SapicType SapicType
                 | TypingErrorFunctionMerge NoEqSym SapicFunType SapicFunType
                 | FunctionNotDefined NoEqSym
-
     deriving (Typeable)
 
 -- | SapicExceptions see instance of show below for explanation.
@@ -48,7 +46,7 @@ data SapicException p = NotImplementedError String
                     -- | VerdictNotWellFormed String
                     -- | InternalRepresentationError String
                     -- | UnAnnotatedLock String
-                    | ProcessNotWellformed (WFerror p)
+                    | ProcessNotWellformed WFerror (Maybe p)
                     | InvalidPosition ProcessPosition
                     | ImplementationError String
                     | MoreThanOneProcess
@@ -72,7 +70,7 @@ instance (Show p) => Show (SapicException p) where
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
     show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s
     show (ImplementationError s) = "You've encountered an error in the implementation: " ++ s
-    show (ProcessNotWellformed e) = "Process not well-formed: " ++ show e
+    show (ProcessNotWellformed e p) = "Process not well-formed: " ++ show e ++ " in " ++ show p
     show ReliableTransmissionButNoProcess = "The builtin support for reliable channels currently only affects the process calculus, but you have not specified a top-level process. Please remove \"builtins: reliable-channel\" to proceed."
     show (CannotExpandPredicate facttag rstr) = "Undefined predicate "
                               ++ showFactTagArity facttag
@@ -80,25 +78,19 @@ instance (Show p) => Show (SapicException p) where
                               ++ get rstrName rstr
                               ++ "."
 
-instance (Show p) => Show (WFerror p) where
-    show (WFUnboundProto varset) =
-                   "The variable or variables "
+
+
+instance Show WFerror where
+    show (WFUnbound varset) =
+                   "The variable(s) "
                    ++
                    prettyVarSet varset
                    ++
                    " are not bound."
-    show (WFUnbound varset pr) =
-                   "The variable or variables"
-                   ++
-                   prettyVarSet  varset
-                   ++
-                   " are not bound in the process:"
-                   ++
-                   show pr
     show WFReliable =
                    "If reliable channels are activated, processes should only contain in('r',m), out('r',m), in('c',m) or out('c',m) for communication."
-    show (WFLock tag pr) =
-                   "Process " ++ show pr ++ " contains lock that extends over "
+    show (WFLock tag) =
+                   "Process contains lock that extends over "
                    ++ prettyWFLockTag tag ++ " which is not allowed."
     show (WFBoundTwice v) =
                    "Variable bound twice: " ++ show v ++ "."
@@ -124,5 +116,5 @@ instance (Show p) => Show (WFerror p) where
     show (FunctionNotDefined sym ) = "Function not defined " ++ show sym
         
 
-instance (Typeable a, Show a) => Exception (WFerror a)
+instance Exception WFerror
 instance (Typeable a, Show a) => Exception (SapicException a)

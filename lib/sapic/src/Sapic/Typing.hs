@@ -22,7 +22,6 @@ import Control.Monad.Catch
 import Theory
 import Theory.Sapic
 import Sapic.Exceptions
-import Sapic.Annotation
 import Sapic.Bindings
 import Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
@@ -70,14 +69,13 @@ typeWith t tt
     | Lit2 (Var v) <- viewTerm2 t , lvar' <- slvar v -- CASE: variable
     = do
         maybeType <- Map.lookup lvar' <$> gets vars
-        let stype' = fromMaybe Nothing maybeType
-        -- Note: we graciously ignore unbound variables. Wellformedness
-        -- checks on MSRs detect them for us. We might change that in
-        -- the future.
-        t' <- catch (sqcap stype' tt) (sqHandler t)
-        te <- get
-        modify' (\s -> s { vars = Map.insert (slvar v) t' (vars te)})
-        return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
+        case maybeType of
+            Nothing -> throwM $ WFUnbound (S.singleton lvar') 
+            (Just stype') -> do
+                t' <- catch (sqcap stype' tt) (sqHandler t)
+                te <- get
+                modify' (\s -> s { vars = Map.insert (slvar v) t' (vars te)})
+                return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
     | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application
     = do
         -- First determine output type of function from target constraint and update FunctionTypingEnvironment
@@ -110,7 +108,7 @@ typeWith t tt
                             case mergeFunTypes newFunType oldFunType of
                                 Right mergedFunType ->
                                   modify' (\s -> s {funs =  Map.insert fs mergedFunType fte })
-                                Left _ -> throwM (ProcessNotWellformed (TypingErrorFunctionMerge fs newFunType oldFunType) :: SapicException AnnotatedProcess)
+                                Left _ -> throwM $ TypingErrorFunctionMerge fs newFunType oldFunType
         getFun n fs = do
             maybeFType <- Map.lookup fs <$> gets funs
             return $ fromMaybe (defaultFunctionType n) maybeFType
@@ -119,7 +117,7 @@ typeWith t tt
             out <- sqcap out1 out2
             return (ins,out)
         sqHandler term (CannotMerge outt tterm) =
-                throwM (ProcessNotWellformed (TypingError term outt tterm) :: SapicException AnnotatedProcess)
+                throwM $ TypingError term outt tterm
 
 -- | Types a term with a given environment
 typeTermsWithEnv ::  (MonadThrow m, MonadCatch m) => TypingEnvironment -> [Term (Lit Name SapicLVar)] -> m TypingEnvironment
@@ -156,7 +154,7 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
         insertVar v = do
             te <- get
             case Map.lookup (slvar v) (vars te) of
-                Just _ -> throwM (ProcessNotWellformed ( WFBoundTwice v ) :: SapicException AnnotatedProcess)
+                Just _ -> throwM $ WFBoundTwice v
                 Nothing ->
                   modify' (\s -> s { vars = Map.insert (slvar v) (stype v) (vars te)})
 

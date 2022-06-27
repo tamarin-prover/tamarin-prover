@@ -5,10 +5,9 @@ builtins: diffie-hellman
 
 let Client(sk: secretkey) =
     new a;
-    let gA = g^A in
+    let gA = 'g'^a in
     out(<'helloClient',gA >);
-    /* in(<'helloServer',=gA, gB>); // crashes unless we comment this out. */
-    in(<'helloServer',=a, =gB>); 
+    in(<'helloServer',=gA, =gB>); 
     event Key(gB^a);
     0
 
