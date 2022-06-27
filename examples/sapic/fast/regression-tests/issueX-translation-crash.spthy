@@ -7,7 +7,7 @@ let Client(sk: secretkey) =
     new a;
     let gA = 'g'^a in
     out(<'helloClient',gA >);
-    in(<'helloServer',=gA, =gB>); 
+    in(<'helloServer',=gA, gB>); 
     event Key(gB^a);
     0
 

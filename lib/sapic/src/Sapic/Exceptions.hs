@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleInstances #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -12,7 +13,7 @@ module Sapic.Exceptions (
     WFLockTag(..),
     WFerror(..),
     SapicException(..)
-) where
+, prettySapicException) where
 import Data.Typeable
 import Data.Set as S
 import qualified Data.List as List
@@ -21,6 +22,8 @@ import Theory
 import Theory.Sapic
 import Data.Label
 import qualified Data.Maybe
+import Theory.Text.Pretty
+import Sapic.Annotation (toAnProcess, toProcess)
 
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
@@ -70,7 +73,7 @@ instance (Show p) => Show (SapicException p) where
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
     show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s
     show (ImplementationError s) = "You've encountered an error in the implementation: " ++ s
-    show (ProcessNotWellformed e p) = "Process not well-formed: " ++ show e ++ " in " ++ show p
+    show (ProcessNotWellformed e p) = "Process not well-formed: " ++ show e ++ maybe "" (\p' ->  "in " ++ show p') p
     show ReliableTransmissionButNoProcess = "The builtin support for reliable channels currently only affects the process calculus, but you have not specified a top-level process. Please remove \"builtins: reliable-channel\" to proceed."
     show (CannotExpandPredicate facttag rstr) = "Undefined predicate "
                               ++ showFactTagArity facttag
@@ -78,8 +81,11 @@ instance (Show p) => Show (SapicException p) where
                               ++ get rstrName rstr
                               ++ "."
 
-
-
+prettySapicException :: (Show an, HighlightDocument d, GoodAnnotation an) => SapicException (LProcess an) -> d
+prettySapicException (ProcessNotWellformed e p) = text (show e) <-> maybe emptyDoc ppP p 
+    where ppP = prettyProcess . toProcess
+prettySapicException o = text (show o) 
+        
 instance Show WFerror where
     show (WFUnbound varset) =
                    "The variable(s) "
