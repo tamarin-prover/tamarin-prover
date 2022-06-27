@@ -609,7 +609,7 @@ event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
 /*     Subscription Rules           */
 /************************************/
 // Initialize the subscription
-let addSub(~idHN,~sk_HN) = // HSS(~idHN, ~sk_HN)
+let addSub(~idHN,~sk_HN,~secureChan) = // HSS(~idHN, ~sk_HN)
   new ~supi;
   new ~k; new ~sqn_root;
   // Restriction
