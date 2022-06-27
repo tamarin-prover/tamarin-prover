@@ -74,8 +74,6 @@ simplifySystem = do
         exploitUniqueMsgOrder
         -- Remove equation split goals that do not exist anymore        
         removeSolvedSplitGoals
-        -- Add ordering constraint from injective facts
-        addNonInjectiveFactInstances        
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -101,6 +99,7 @@ simplifySystem = do
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
+              c12 <- addNonInjectiveFactInstances
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -115,6 +114,7 @@ simplifySystem = do
                     , ("orderings for ~vars (S_fresh-order)",             c9)
                     , ("simplification of SubtermStore",                  c10)
                     , ("equations and monotonicity from injective Facts", c11)
+                    , ("time constraints from injective Facts",           c12)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -137,7 +137,8 @@ simplifySystem = do
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
-
+              c12 <- addNonInjectiveFactInstances
+              
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
                     [ ("unique fresh instances (DG4)",                    c1)
@@ -151,6 +152,7 @@ simplifySystem = do
                     , ("orderings for ~vars (S_fresh-order)",             c9)
                     , ("simplification of SubtermStore",                  c10)
                     , ("equations and monotonicity from injective Facts", c11)
+                    , ("time constraints from injective Facts",           c12)                    
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -245,7 +247,7 @@ enforceFreshAndKuNodeUniqueness =
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
-                    
+
 
 -- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
@@ -393,7 +395,7 @@ partialAtomValuation ctxt sys =
                     | i `before` j || j `before` i  -> Just False
                     | nonUnifiableNodes i j         -> Just False
                   _                                 -> Nothing
-                  
+
           Subterm small big                      -> isTrueFalse reducible (Just sst) (small, big)
 
           Last (ltermNodeId' -> i)
@@ -446,7 +448,7 @@ freshOrdering = do
   let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r]  -- new ordering constraints that can be added (or enhanced and then added)
   let enhancedLesses = [(last r, j, tail r) | (i, j) <- newLesses, (frI, _) <- freshVars, i == frI, r <- [route frI], j `notElem` r, length r > 1]  -- improved orderings according to routeOfFreshVar
   let newFormulas = [gdisj (less i j : [eqe x j | x <- tl]) | (i, j, tl) <- enhancedLesses]
-  
+
   oldLesses <- gets (get sLessAtoms)
   oldFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
   mapM_ (uncurry insertLess) newLesses
@@ -460,14 +462,14 @@ freshOrdering = do
     where
       less i j = GAto (Less (varTerm $ Free i) (varTerm $ Free j))
       eqe x j = GAto (EqE (varTerm $ Free x) (varTerm $ Free j))
-    
+
       -- returns all (i,~x) where Fr(~x) is a premise of a node at position i
       getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
       getFreshVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
           FreshFact -> Just (idx, head $ factTerms prem)
           _         -> Nothing
         ) prems
-      
+
       -- the route function as described in the documentation of freshOrdering 
       getRoute :: M.Map NodeId RuleACInst -> S.Set Edge -> NodeId -> [NodeId]  -- also needs nodes and edges
       getRoute nodeMap edges nid = plainRoute nid
@@ -490,7 +492,7 @@ freshOrdering = do
       connectNodeToFreshes el ((nid, containing):xs) r@(get rPrems -> prems) =
         case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (filter notFresh prems), t `el` t'] of
           Just nid1 -> nid1 : connectNodeToFreshes el xs r
-          _         ->        connectNodeToFreshes el xs r      
+          _         ->        connectNodeToFreshes el xs r
       notFresh (factTag -> FreshFact) = False
       notFresh _                      = True
 
@@ -595,7 +597,7 @@ simpInjectiveFactEqMon = do
   mapM_ insertFormula newFormulas
   mapM_ (uncurry insertLess) -- $ trace (show ("newLesses", newLesses))
                               newLesses
-  
+
   -- check if anything changed
   updatedFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
   return $ if
@@ -687,10 +689,15 @@ nonInjectiveFactInstances ctxt se = do
         (unifiableRuleACInsts) <$> M.lookup i (get sNodes se)
                                <*> M.lookup j (get sNodes se)
 
-addNonInjectiveFactInstances :: Reduction ()
+addNonInjectiveFactInstances :: Reduction ChangeIndicator
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
+  oldLesses <- gets (get sLessAtoms)  
   let list = nonInjectiveFactInstances ctxt se
   mapM_ (uncurry insertLess) list
+  modifiedLesses <- gets (get sLessAtoms)
+  return $ if oldLesses == modifiedLesses 
+    then Unchanged
+    else Changed  
 
