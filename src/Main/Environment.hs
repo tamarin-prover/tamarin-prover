@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -27,32 +26,10 @@ import           Main.Console
 -- For tamarin, git version, compile time... 
 import Data.Version (showVersion)
 import Paths_tamarin_prover (version)
-import           Development.GitRev
-import qualified Data.Time
-import Language.Haskell.TH
 
 ------------------------------------------------------------------------------
 -- Versions String
 ------------------------------------------------------------------------------
-
--- | Git Version
-gitVersion :: String
-gitVersion = concat
-  [ "Git revision: "
-    , $(gitHash)
-    , case $(gitDirty) of
-          True  -> " (with uncommited changes)"
-          False -> ""
-    , ", branch: "
-    , $(gitBranch)
-  ]
-
--- | Compile Time
-compileTime :: String
-compileTime = concat
-    [ "Compiled at: "
-    , $(stringE =<< runIO (show `fmap` Data.Time.getCurrentTime))
-    ]
 
 -- | Get Version String by adding maude version
 getVersionIO :: String -> IO String
@@ -64,13 +41,12 @@ getVersionIO maudeVersion = do
               return versionExport
 
 ensureMaudeAndGetVersion :: Arguments -> IO String
-ensureMaudeAndGetVersion as = do 
+ensureMaudeAndGetVersion as = do
           -- Ensure Maude version and get Maude version 
           maybeMaudeVersion <- ensureMaude as
           let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
           -- Get String for version and put it in the arguments __version__
-          versionExport <- getVersionIO maudeVersion 
-          return versionExport
+          getVersionIO maudeVersion
 
 ------------------------------------------------------------------------------
 -- Retrieving the paths to required tools.

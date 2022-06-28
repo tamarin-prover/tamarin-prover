@@ -47,6 +47,10 @@ module Main.Console (
   , shortLineWidth
 
   , renderDoc
+
+  -- Version
+  , gitVersion
+  , compileTime
   ) where
 
 import           Data.Maybe
@@ -73,6 +77,25 @@ import           Data.List
 -- Static constants for the tamarin-prover
 ------------------------------------------------------------------------------
 
+-- | Git Version
+gitVersion :: String
+gitVersion = concat
+  [ "Git revision: "
+    , $(gitHash)
+    , case $(gitDirty) of
+          True  -> " (with uncommited changes)"
+          False -> ""
+    , ", branch: "
+    , $(gitBranch)
+  ]
+
+-- | Compile Time
+compileTime :: String
+compileTime = concat
+    [ "Compiled at: "
+    , $(stringE =<< runIO (show `fmap` Data.Time.getCurrentTime))
+    ]
+
 -- | Program name
 programName :: String
 programName = "tamarin-prover"
@@ -86,19 +109,8 @@ versionStr = unlines
     , showVersion version
     , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2020"
     ]
-  , concat
-    [ "Git revision: "
-    , $(gitHash)
-    , case $(gitDirty) of
-          True  -> " (with uncommited changes)"
-          False -> ""
-    , ", branch: "
-    , $(gitBranch)
-    ]
-  , concat
-    [ "Compiled at: "
-    , $(stringE =<< runIO (show `fmap` Data.Time.getCurrentTime))
-    ]
+  , gitVersion
+  , compileTime
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"
   , "are welcome to redistribute it according to its LICENSE, see"
@@ -162,7 +174,7 @@ helpFlag = flagHelpSimple (addEmptyArg "help")
 -- Utility Functions
 ------------------------------------------------------------------------------
 
-getOutputModule ::  Arguments -> ModuleType 
+getOutputModule ::  Arguments -> ModuleType
 getOutputModule as
      | Nothing <-  findArg "outModule" as = ModuleSpthy -- default
      | Just string <-  findArg "outModule" as
