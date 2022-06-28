@@ -3,7 +3,7 @@ This directory contains the Tamarin models of the following paper:
 
 ## Verification
 
-The translation of the accountability lemmas is done by the now deprecated [SAPiC plugin](https://github.com/tamarin-prover/tamarin-prover/tree/develop/plugins/sapic).
+The translation of the accountability lemmas is done by the now deprecated [SAPiC plugin](https://github.com/tamarin-prover/tamarin-prover/tree/be0214d5ea0516f1398744ec44590b5bdff2386a).
 If the `sapic` binary is not available, it can be built by `make sapic`.
 
 The `.sapic` files can then be translated to `.spthy` files and analyzed by Tamarin:
