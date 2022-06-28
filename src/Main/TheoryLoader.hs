@@ -18,11 +18,14 @@ module Main.TheoryLoader (
   , TheoryLoadOptions(..)
   , oDiffMode
   , oOutputModule
+  , oMaudePath
+  , oParseOnlyMode
   , defaultTheoryLoadOptions
   , ArgumentError(..)
   , mkTheoryLoadOptions
 
   , loadTheory
+  , closeTheory'
 
   -- ** Loading open theories
   , loadOpenThy
@@ -61,20 +64,13 @@ import           Debug.Trace
 
 import           Prelude                             hiding (id, (.))
 
-import qualified Accountability                      as Acc
-import           Accountability.Generation (checkPreTransWellformedness)
-
 import           Data.Char                           (toLower)
 import           Data.Label
 import           Data.List                           (isPrefixOf,intersperse, find)
 import           Data.Map                            (keys)
--- import           Data.Monoid
 import           Data.FileEmbed                      (embedFile)
 
--- import           Control.Basics
-
 import           Control.Category
-import           Control.Monad.Catch
 
 import           System.Console.CmdArgs.Explicit
 
@@ -100,6 +96,9 @@ import           qualified Data.Label as L
 import           Theory.Text.Parser.Token (parseString)
 import           Data.Bifunctor (Bifunctor(bimap))
 import           Data.Bitraversable (Bitraversable(bitraverse))
+import           Control.Monad.Catch (MonadCatch)
+import qualified Accountability as Acc
+import qualified Accountability.Generation as Acc
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -156,7 +155,7 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oDiffMode          :: Bool
   , _oQuitOnWarning     :: Bool
   , _oAutoSources       :: Bool
-  , _oOutputModule      :: ModuleType -- Note: This flag is only used for batch mode.
+  , _oOutputModule      :: Maybe ModuleType -- Note: This flag is only used for batch mode.
   , _oMaudePath         :: FilePath -- FIXME: Other functions defined in Environment.hs
   , _oParseOnlyMode     :: Bool
 } deriving Show
@@ -174,7 +173,7 @@ defaultTheoryLoadOptions = TheoryLoadOptions {
   , _oDiffMode          = False
   , _oQuitOnWarning     = False
   , _oAutoSources       = False
-  , _oOutputModule      = ModuleSpthy
+  , _oOutputModule      = Nothing
   , _oMaudePath         = "maude"
   , _oParseOnlyMode     = False
 }
@@ -239,11 +238,11 @@ mkTheoryLoadOptions as = TheoryLoadOptions
     autoSources   = return $ argExists "auto-sources" as
 
     outputModule
-     | Nothing  <- findArg "outModule" as , [] /= findArg "prove" as = return ModuleMsr
+     | Nothing  <- findArg "outModule" as , [] /= findArg "prove" as = return $ Just ModuleMsr
      -- ^ when proving, we act like we chose the Msr Output module.
-     | Nothing  <- findArg "outModule" as = return ModuleSpthy -- default
+     | Nothing  <- findArg "outModule" as = return $ Just ModuleSpthy -- default
      | Just str <- findArg "outModule" as
-     , Just modCon <- find (\x -> show x  == str) (enumFrom minBound) = return modCon
+     , Just modCon <- find (\x -> show x  == str) (enumFrom minBound) = return $ Just modCon
      | otherwise   = throwError $ ArgumentError "output mode not supported."
 
     -- Note: Output mode implicitly activates parse-only mode
@@ -252,7 +251,9 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
 lemmaSelectorByModule thyOpt lem = case lemmaModules of
     [] -> True -- default to true if no modules (or only empty ones) are set
-    _  -> (L.get oOutputModule thyOpt) `elem` lemmaModules
+    _  -> case (L.get oOutputModule thyOpt) of
+      Just outMod -> outMod `elem` lemmaModules
+      Nothing     -> ModuleSpthy `elem` lemmaModules
     where
         lemmaModules = concat [ m | LemmaModule m <- lem.lAttributes]
 
@@ -277,10 +278,19 @@ lemmaSelector thyOpts lem
 loadOpenThy :: TheoryLoadOptions -> FilePath -> IO OpenTheory
 loadOpenThy thyOpts inFile = parseOpenTheory (toParserFlags thyOpts) inFile
 
+data TheoryLoadError =
+    ParserError ParseError
+  | WarningError WfErrorReport
+
+instance Show TheoryLoadError
+  where
+    show (ParserError e) = "ParserError " ++ show e
+    show (WarningError e) = "WarningError " ++ Pretty.render (prettyWfErrorReport e)
+
 -- FIXME: How can we avoid the MonadCatch here?
-loadTheory :: (MonadError ParseError m, MonadCatch m) => TheoryLoadOptions -> String -> FilePath -> m (Either OpenTheory OpenDiffTheory)
+loadTheory :: MonadCatch m => TheoryLoadOptions -> String -> FilePath -> ExceptT TheoryLoadError m (Either OpenTheory OpenDiffTheory)
 loadTheory thyOpts input inFile = do
-    thy <- liftEither $ unwrapError $ bimap parse parse thyParser
+    thy <- withExceptT ParserError $ liftEither $ unwrapError $ bimap parse parse thyParser
     withTheory translate thy
   where
     thyParser | isDiffMode = Right $ diffTheory $ Just inFile
@@ -302,14 +312,25 @@ loadTheory thyOpts input inFile = do
     unwrapError (Right (Right v)) = Right $ Right v
 
     withTheory     f t = bitraverse f return t
-    withDiffTheory f t = bitraverse return f t
 
+closeTheory' :: MonadError TheoryLoadError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
+closeTheory' thyOpts sig srcThy = do
+  let preReport = either (\t -> (Sapic.checkWellformedness t ++ Acc.checkWellformedness t))
+                         (const []) srcThy
 
-closeTheory' :: MonadError ParseError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m (Either ClosedTheory ClosedDiffTheory)
-closeTheory' thyOpts sig thy = do
-  transThy   <- withTheory (return . removeTranslationItems) thy
+  transThy   <- withTheory (return . removeTranslationItems) srcThy
+
+  let transReport = either (\t -> checkWellformedness t sig)
+                           (\t -> checkWellformednessDiff t sig) transThy
+
+  let report = preReport ++ transReport
+  checkedThy <- bitraverse (\t -> return $ addComment     (reportToDoc report) t)
+                           (\t -> return $ addDiffComment (reportToDoc report) t) transThy
+
+  when (quitOnWarning && (not $ null report)) (throwError $ WarningError report)
+
   deducThy   <- bitraverse (return . addMessageDeductionRuleVariants)
-                           (return . addMessageDeductionRuleVariantsDiff) transThy
+                           (return . addMessageDeductionRuleVariantsDiff) checkedThy
   diffLemThy <- withDiffTheory (return . addDefaultDiffLemma) deducThy
   closedThy  <- bitraverse (\t -> return $ closeTheoryWithMaude     sig t autoSources)
                            (\t -> return $ closeDiffTheoryWithMaude sig t autoSources) diffLemThy
@@ -317,17 +338,24 @@ closeTheory' thyOpts sig thy = do
                            (return . (maybe id (\s -> applyPartialEvaluationDiff s autoSources) partialStyle)) closedThy
   provedThy  <- bitraverse (\t -> return $ proveTheory     (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover t)
                            (\t -> return $ proveDiffTheory (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover diffProver t) partialThy
-  return provedThy
+  return (report, provedThy)
 
   where
-    autoSources  = L.get oAutoSources thyOpts
-    partialStyle = L.get oPartialEvaluation thyOpts
+    autoSources   = L.get oAutoSources thyOpts
+    partialStyle  = L.get oPartialEvaluation thyOpts
+    quitOnWarning = L.get oQuitOnWarning thyOpts
 
     prover | L.get oProveMode thyOpts = replaceSorryProver $ runAutoProver $ constructAutoProver thyOpts
            | otherwise                = mempty
 
     diffProver | L.get oProveMode thyOpts = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver thyOpts
                | otherwise                = mempty
+
+    reportToDoc report
+      | null report = Pretty.text "All wellformedness checks were successful."
+      | otherwise   = Pretty.vsep
+                        [ Pretty.text "WARNING: the following wellformedness checks failed!"
+                        , prettyWfErrorReport report ]
 
     withTheory     f t = bitraverse f return t
     withDiffTheory f t = bitraverse return f t
@@ -336,7 +364,7 @@ closeTheory' thyOpts sig thy = do
 loadOpenAndTranslatedThy :: TheoryLoadOptions -> FilePath -> IO (OpenTheory, OpenTranslatedTheory)
 loadOpenAndTranslatedThy thyOpts inFile =  do
     thy <- loadOpenThy thyOpts inFile
-    transThy <- 
+    transThy <-
       Sapic.typeTheory thy
       >>= Sapic.translate
       >>= Acc.translate
@@ -355,7 +383,7 @@ loadClosedDiffThy thyOpts inFile = do
 
 reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
 reportWellformednessDoc [] =  Pretty.emptyDoc
-reportWellformednessDoc errs  = Pretty.vcat 
+reportWellformednessDoc errs  = Pretty.vcat
                           [ Pretty.text $ "WARNING: " ++ show (length errs)
                                                       ++ " wellformedness check failed!"
                           , Pretty.text "         The analysis results might be wrong!"
@@ -374,7 +402,7 @@ reportWellformedness prefixAct quit           wfreport =
       putStrLn $ replicate 78 '-'
       if quit then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
 
--- | helper function: print header with theory filename 
+-- | helper function: print header with theory filename
 printFileName :: [Char] -> IO ()
 printFileName inFile = do
           putStrLn ""
@@ -389,7 +417,7 @@ loadClosedThyWf thyOpts inFile = do
     transThy <- return $ addMessageDeductionRuleVariants transThy0
     sig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy
     -- report
-    let errors = checkWellformedness transThy sig ++ Sapic.checkWellformednessSapic openThy
+    let errors = checkWellformedness transThy sig ++ Sapic.checkWellformedness openThy ++ Acc.checkWellformedness openThy
     let report = reportWellformednessDoc errors
     -- return closed theory
     let closedTheory = closeThyWithMaude sig thyOpts openThy transThy
@@ -403,7 +431,7 @@ loadClosedThyWfReport thyOpts inFile = do
     transSig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy
     -- report
     let prefix = printFileName inFile
-    let errors = checkWellformedness transThy transSig ++ Sapic.checkWellformednessSapic openThy
+    let errors = checkWellformedness transThy transSig ++ Sapic.checkWellformedness openThy ++ Acc.checkWellformedness openThy
     reportWellformedness prefix (L.get oQuitOnWarning thyOpts) errors
     -- return closed theory
     return $ closeThyWithMaude transSig thyOpts openThy transThy
@@ -459,10 +487,10 @@ reportOnClosedThyStringWellformedness thyOpts input =
                   >>= Acc.translate
             transSig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy
             -- report
-            let errors = checkWellformedness (removeTranslationItems transThy) transSig 
-                      ++ Sapic.checkWellformednessSapic openThy
-                      ++ checkPreTransWellformedness openThy
-            case errors of 
+            let errors = checkWellformedness (removeTranslationItems transThy) transSig
+                      ++ Sapic.checkWellformedness openThy
+                      ++ Acc.checkWellformedness openThy
+            case errors of
                   []     -> return ""
                   report -> do
                     if (L.get oQuitOnWarning thyOpts) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
@@ -511,7 +539,7 @@ closeThyWithMaude sig thyOpts openThy transThy =
       wfCheck :: OpenTheory -> OpenTranslatedTheory -> OpenTranslatedTheory
       wfCheck othy tthy =
         noteWellformedness
-          (checkWellformedness tthy sig ++ checkPreTransWellformedness othy) transThy (L.get oQuitOnWarning thyOpts)
+          (checkWellformedness tthy sig ++ Acc.checkWellformedness othy) transThy (L.get oQuitOnWarning thyOpts)
 
       -- replace all annotated sorrys with the configured autoprover.
       prover :: Prover

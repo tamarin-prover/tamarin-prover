@@ -7,7 +7,8 @@
 -- Translation from OpenTheories to OpenTheories with accountability lemmas
 
 module Accountability (
-       translate
+       module Accountability.Generation
+     , translate
 ) where
 import Control.Monad.Catch (MonadThrow (throwM), MonadCatch, Exception)
 import Theory (OpenTheory, CaseIdentifier, theoryAccLemmas, aCaseIdentifiers, cName, aName, aCaseTests, AccLemma)
