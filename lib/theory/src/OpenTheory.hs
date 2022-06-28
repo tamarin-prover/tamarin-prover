@@ -30,7 +30,6 @@ import Prelude hiding (id, (.))
 import Pretty
 import Theory.Text.Pretty
 import Control.Parallel.Strategies
-import qualified Data.Map as Map
 
 
 -- remove Sapic items and convert other items to identical item but with unit type for sapic elements
@@ -384,7 +383,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False False False False False S.empty Map.empty
+defaultOption = Option False False False False False False False S.empty []
 
 
 

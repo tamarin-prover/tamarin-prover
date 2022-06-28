@@ -93,6 +93,8 @@ import           Theory.Text.Pretty
 import           Theory.Sapic
 import           Theory.Tools.RuleVariants
 import           Safe                        (lastMay)
+import           Items.OptionItem            (lemmasToProve)
+import           TheoryObject                (diffThyOptions)
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -962,11 +964,11 @@ multRestrictedReportDiff thy = do
 ------------------------------------------------------------------------------
 
 -- | Returns a list of errors, if there are any.
-checkWellformednessDiff :: [String] -> OpenDiffTheory -> SignatureWithMaude
+checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
                     -> WfErrorReport
-checkWellformednessDiff args thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
+checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
   concatMap ($ thy)
-    [ checkIfLemmasInDiffTheory args
+    [ checkIfLemmasInDiffTheory
     , unboundReportDiff
     , freshNamesReportDiff
     , publicNamesReportDiff
@@ -982,10 +984,10 @@ checkWellformednessDiff args thy sig = -- trace ("checkWellformednessDiff: " ++ 
 
 
 -- | Returns a list of errors, if there are any.
-checkWellformedness :: [String] -> OpenTranslatedTheory -> SignatureWithMaude
+checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
                     -> WfErrorReport
-checkWellformedness args thy sig = concatMap ($ thy)
-    [ checkIfLemmasInTheory args
+checkWellformedness thy sig = concatMap ($ thy)
+    [ checkIfLemmasInTheory
     , unboundReport
     , freshNamesReport
     , publicNamesReport
@@ -1045,8 +1047,8 @@ findNotProvedLemmas lemmaArgsNames lemmasInTheory = foldl (\acc x -> if not (arg
 
 -- | Check that all the lemmas in the arguments are lemmas of the theory and return an error if not
   -----------------------
-checkIfLemmasInTheory :: [String] -> Theory sig c r p s  -> WfErrorReport
-checkIfLemmasInTheory lemmaArgsNames thy 
+checkIfLemmasInTheory :: Theory sig c r p s  -> WfErrorReport
+checkIfLemmasInTheory thy 
         | null notProvedLemmas = []
         | otherwise = 
             [(topic, vcat
@@ -1056,6 +1058,7 @@ checkIfLemmasInTheory lemmaArgsNames thy
             ])]
 
     where
+      lemmaArgsNames = get (lemmasToProve.thyOptions) thy
       topic = "Check presence of the --prove/--lemma arguments in theory"
       lemmasInTheory = map _lName (theoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
@@ -1063,8 +1066,8 @@ checkIfLemmasInTheory lemmaArgsNames thy
 
 -- | Check that all the lemmas in the arguments are lemmas of the diffTheory and return an error if not
   -----------------------
-checkIfLemmasInDiffTheory :: [String] -> DiffTheory sig c r r2 p p2  -> WfErrorReport
-checkIfLemmasInDiffTheory lemmaArgsNames thy 
+checkIfLemmasInDiffTheory :: DiffTheory sig c r r2 p p2  -> WfErrorReport
+checkIfLemmasInDiffTheory thy 
         | null notProvedLemmas = []
         | otherwise = 
             [(topic, vcat
@@ -1074,6 +1077,7 @@ checkIfLemmasInDiffTheory lemmaArgsNames thy
             ])]
 
     where
+      lemmaArgsNames = get (lemmasToProve.diffThyOptions) thy
       topic = "Check presence of the --prove/--lemma arguments in theory"
       lemmasInTheory = map (_lName.snd) (diffTheoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory

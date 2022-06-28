@@ -111,8 +111,8 @@ module TheoryObject (
   , addCaseTest
   , lookupAccLemma
   , lookupCaseTest
-  , addParamsToThyOptions
-  , addParamsToDiffThyOptions
+  , addLemmasToProveThyOptions
+  , addLemmasToProveDiffThyOptions
   ) where
 
 import Theory.Constraint.Solver.Heuristics
@@ -157,7 +157,6 @@ import Items.ExportInfo
 import qualified Data.Set as S
 import Theory.Syntactic.Predicate
 import Data.ByteString.Char8 (unpack)
-import qualified Data.Map as Map
 
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
@@ -594,12 +593,13 @@ itemToRule :: TheoryItem r p s -> Maybe r
 itemToRule (RuleItem r) = Just r
 itemToRule _            = Nothing
 
-addParamsToThyOptions :: String -> [String] -> Theory sig c r p s -> Theory sig c r p s
-addParamsToThyOptions name params = modify (thyParams.thyOptions) (Map.insertWith (++) name params)
+addLemmasToProveThyOptions :: [String] -> Theory sig c r p s -> Theory sig c r p s
+addLemmasToProveThyOptions lemmas = modify (lemmasToProve.thyOptions) (adding lemmas)
+    where adding lems values = if null values then lems else values
 
-addParamsToDiffThyOptions :: String -> [String] -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
-addParamsToDiffThyOptions name params = modify (thyParams.diffThyOptions) (Map.insertWith (++) name params)
-
+addLemmasToProveDiffThyOptions :: [String] -> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
+addLemmasToProveDiffThyOptions lemmas = modify (lemmasToProve.diffThyOptions) (adding lemmas)
+    where adding lems values = if null values then lems else values
 
 --Pretty print a theory
 prettyTheory :: HighlightDocument d

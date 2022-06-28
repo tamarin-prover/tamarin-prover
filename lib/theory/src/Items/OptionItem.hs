@@ -12,7 +12,6 @@ import Data.Binary (Binary)
 import Data.Label as L
 import qualified Data.Set as S
 import Theory.Model.Fact
-import qualified Data.Map as Map
 
 ------------------------------------------------------------------------------
 -- Options
@@ -29,7 +28,7 @@ data Option = Option
         , _asynchronousChannels       :: Bool
         , _compressEvents       :: Bool
         , _forcedInjectiveFacts :: S.Set FactTag
-        , _thyParams               :: Map.Map String [String]  -- (Key,Value)
+        , _lemmasToProve        :: [String]
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''Option])
