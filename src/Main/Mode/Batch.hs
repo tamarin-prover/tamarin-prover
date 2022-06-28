@@ -77,15 +77,15 @@ batchMode = tamarinMode
 
 -- | Process a theory file.
 run :: TamarinMode -> Arguments -> IO ()
-run thisMode as'
+run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
-  | argExists "parseOnly" as' || argExists "outModule" as' = do
-      mapM_ (processThy as') inFiles
+  | argExists "parseOnly" as || argExists "outModule" as = do
+      mapM_ (processThy "") inFiles
       putStrLn ""
   | otherwise  = do
-      as <- ensureMaudeAndGetVersion as'
+      version <- ensureMaudeAndGetVersion as
       putStrLn ""
-      summaries <- mapM (processThy as) inFiles
+      summaries <- mapM (processThy version) inFiles
       putStrLn ""
       putStrLn $ replicate 78 '='
       putStrLn "summary of summaries:"
@@ -96,43 +96,43 @@ run thisMode as'
   where
     -- handles to arguments
     -----------------------
-    inFiles    = reverse $ findArg "inFile" as'
+    inFiles    = reverse $ findArg "inFile" as
 
     -- output generation
     --------------------
 
-    dryRun = not (argExists "outFile" as' || argExists "outDir" as')
+    dryRun = not (argExists "outFile" as || argExists "outDir" as)
 
     mkOutPath :: FilePath  -- ^ Input file name.
               -> FilePath  -- ^ Output file name.
     mkOutPath inFile =
         fromMaybe (error "please specify an output file or directory") $
-            do outFile <- findArg "outFile" as'
+            do outFile <- findArg "outFile" as
                guard (outFile /= "")
                return outFile
             <|>
-            do outDir <- findArg "outDir" as'
+            do outDir <- findArg "outDir" as
                return $ mkAutoPath outDir (takeBaseName inFile)
 
     -- automatically generate the filename for output
     mkAutoPath :: FilePath -> String -> FilePath
     mkAutoPath dir baseName
-      | argExists "html" as' = dir </> baseName
+      | argExists "html" as = dir </> baseName
       | otherwise           = dir </> addExtension (baseName ++ "_analyzed") "spthy"
 
     -- theory processing functions
     ------------------------------
 
-    processThy :: Arguments -> FilePath -> IO Pretty.Doc
-    processThy as inFile
+    processThy :: String -> FilePath -> IO Pretty.Doc
+    processThy version inFile
       | argExists "parseOnly" as && argExists "diff" as =
-          out (const Pretty.emptyDoc) (return . prettyOpenDiffTheory) (loadOpenDiffThy   as inFile)
+          out (const Pretty.emptyDoc) (return . prettyOpenDiffTheory) (loadOpenDiffThy as inFile)
       | argExists "parseOnly" as || argExists "outModule" as =
           out (const Pretty.emptyDoc) choosePretty (loadOpenThy as inFile)
       | argExists "diff" as =
-          out ppWfAndSummaryDiff      (return . prettyClosedDiffTheory) (loadClosedDiffThy as inFile)
+          out ppWfAndSummaryDiff      (return . prettyClosedDiffTheory) (loadClosedDiffThy version as inFile)
       | otherwise        = do
-          (thy,report) <- loadClosedThyWf as inFile
+          (thy,report) <- loadClosedThyWf version as inFile
           out (ppWfAndSummary report) (return . prettyClosedTheory) (return thy)
       where
         ppAnalyzed = Pretty.text $ "analyzed: " ++ inFile

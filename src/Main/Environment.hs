@@ -63,15 +63,14 @@ getVersionIO maudeVersion = do
                         ++ "\n" ++ compileTime
               return versionExport
 
-ensureMaudeAndGetVersion :: Arguments -> IO Arguments
+ensureMaudeAndGetVersion :: Arguments -> IO String
 ensureMaudeAndGetVersion as = do 
           -- Ensure Maude version and get Maude version 
           maybeMaudeVersion <- ensureMaude as
           let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
           -- Get String for version and put it in the arguments __version__
           versionExport <- getVersionIO maudeVersion 
-          let as' = addArg "__versionPrettyPrint__" versionExport as
-          return as'
+          return versionExport
 
 ------------------------------------------------------------------------------
 -- Retrieving the paths to required tools.
