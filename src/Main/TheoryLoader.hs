@@ -85,8 +85,8 @@ import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 import qualified Theory.Text.Pretty as Pretty
 
-import           TheoryObject                        (addLemmasToProveThyOptions,addLemmasToProveDiffThyOptions, diffThyOptions)
-import           Items.OptionItem                    (openChainsLimit,saturationLimit)
+import           TheoryObject                        (diffThyOptions)
+import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve)
 import           Text.Read                           (readMaybe)
 import           Data.Maybe                          (fromMaybe)
 
@@ -94,6 +94,9 @@ import           Data.Maybe                          (fromMaybe)
 -- Theory loading: shared between interactive and batch mode
 ------------------------------------------------------------------------------
 
+-----------------------------------------------
+-- Flags
+-----------------------------------------------
 
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
@@ -159,6 +162,10 @@ quitOnWarning as = if argExists "quit-on-warning" as then ["quit-on-warning"] el
 hasQuitOnWarning :: Arguments -> Bool
 hasQuitOnWarning as = "quit-on-warning" `elem` quitOnWarning as
 
+-----------------------------------------------
+-- Add Options parameters in an OpenTheory
+-----------------------------------------------
+
 -- | Get lemmas from the arguments --prove / --lemma
 getArgsLemmas :: Arguments -> [String]
 getArgsLemmas as  = if argExists "prove" as || argExists "lemma" as
@@ -178,7 +185,7 @@ addParamsOptions as = addSLArg saturation . addOCLArg openchain . addLemmaToProv
       addSLArg [] = id
       addSLArg sl = set (saturationLimit.thyOptions)  (fromMaybe 5 (readMaybe (head sl) ::Maybe Integer))
       -- Add lemmas to Prove in the Options
-      addLemmaToProve = addLemmasToProveThyOptions (getArgsLemmas as)
+      addLemmaToProve = set (lemmasToProve.thyOptions) (getArgsLemmas as)
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addDiffParamsOptions :: Arguments -> OpenDiffTheory -> OpenDiffTheory
@@ -193,7 +200,11 @@ addDiffParamsOptions as = addSLArg saturation . addOCLArg openchain . addLemmaTo
       addSLArg [] = id
       addSLArg sl = set (saturationLimit.diffThyOptions)  (fromMaybe 5 (readMaybe (head sl) ::Maybe Integer))
       -- Add lemmas to Prove in the Options
-      addLemmaToProve = addLemmasToProveDiffThyOptions (getArgsLemmas as)
+      addLemmaToProve = set (lemmasToProve.diffThyOptions) (getArgsLemmas as)
+
+-----------------------------------------------
+-- Select lemmas
+-----------------------------------------------
 
 lemmaSelectorByModule :: Arguments -> ProtoLemma f p -> Bool
 lemmaSelectorByModule as lem = case lemmaModules of
@@ -231,6 +242,10 @@ diffLemmaSelector as lem
       lemmaMatches pattern
         | lastMay pattern == Just '*' = init pattern `isPrefixOf` get lDiffName lem
         | otherwise = get lDiffName lem == pattern
+
+-----------------------------------------------
+-- Loading (Diff)Theory 
+-----------------------------------------------
 
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
@@ -378,7 +393,7 @@ reportOnClosedThyStringWellformedness as input =
     case loadOpenThyString as input of
       Left  err   -> return $ "parse error: " ++ show err
       Right thy -> do
-            let openThy = addLemmasToProveThyOptions (getArgsLemmas as) thy -- Get the lemmas to prove (for error checking)
+            let openThy = addParamsOptions as thy -- Get the lemmas to prove (for error checking) and add them to Options
             transThy <- Sapic.typeTheory openThy
                   >>= Sapic.translate
                   >>= Acc.translate
@@ -399,7 +414,7 @@ reportOnClosedDiffThyStringWellformedness as input = do
     case loadOpenDiffThyString as input of
       Left  err   -> return $ "parse error: " ++ show err
       Right thy0 -> do
-        let openThy = addLemmasToProveDiffThyOptions (getArgsLemmas as) thy0 -- Get the lemmas to prove (for error checking)
+        let openThy = addDiffParamsOptions as thy0 -- Get the lemmas to prove (for error checking) and add them to Options
         thy1 <- addMessageDeductionRuleVariantsDiff openThy
         sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
         -- report
