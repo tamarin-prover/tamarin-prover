@@ -84,7 +84,7 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 import qualified Theory.Text.Pretty as Pretty
-import           TheoryObject                        (addLemmasToProveThyOptions,addLemmasToProveDiffThyOptions)
+import           TheoryObject                        (addLemmasToProveThyOptions,addLemmasToProveDiffThyOptions, openChainsLimit, saturationLimit, diffThyOptions)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -129,6 +129,13 @@ theoryLoadFlags =
   , flagOpt (oraclePath defaultOracle) ["oraclename"] (updateArg "oraclename") "FILE"
       ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "')")
 
+  , flagOpt "10" ["OpenChainsLimit","OCL"] (updateArg "OpenChainsLimit" ) "PositiveInteger"
+      "(Expert argument) Limits the number of open chains"
+
+  , flagOpt "5" ["SaturationLimit","SL"] (updateArg "SaturationLimit" ) "PositiveInteger"
+      "(Expert argument) Limits the number of iterations when saturateSources"
+
+
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
   ]
@@ -147,6 +154,32 @@ quitOnWarning as = if argExists "quit-on-warning" as then ["quit-on-warning"] el
 
 hasQuitOnWarning :: Arguments -> Bool
 hasQuitOnWarning as = "quit-on-warning" `elem` quitOnWarning as
+
+-- | Add parameters in the OpenTheory, here openchain and saturation in the options
+addParamsOptions :: Arguments -> OpenTheory -> OpenTheory
+addParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain
+    where
+      openchain = findArg "OpenChainsLimit" as
+      saturation = findArg "SaturationLimit" as
+      -- Add Open Chain Limit parameters in the Options
+      addTmpOCLArg [] = id
+      addTmpOCLArg ocl = set (openChainsLimit.thyOptions) (read (head ocl)::Integer)
+      -- Add Saturation Limit parameters in the Options
+      addTmpSLArg [] = id
+      addTmpSLArg sl = set (saturationLimit.thyOptions)  (read (head sl)::Integer)
+
+-- | Add parameters in the OpenTheory, here openchain and saturation in the options
+addDiffParamsOptions :: Arguments -> OpenDiffTheory -> OpenDiffTheory
+addDiffParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain
+    where
+      openchain = findArg "OpenChainsLimit" as
+      saturation = findArg "SaturationLimit" as
+      -- Add Open Chain Limit parameters in the Options
+      addTmpOCLArg [] = id
+      addTmpOCLArg ocl = set (openChainsLimit.diffThyOptions) (read (head ocl)::Integer)
+      -- Add Saturation Limit parameters in the Options
+      addTmpSLArg [] = id
+      addTmpSLArg sl = set (saturationLimit.diffThyOptions)  (read (head sl)::Integer)
 
 lemmaSelectorByModule :: Arguments -> ProtoLemma f p -> Bool
 lemmaSelectorByModule as lem = case lemmaModules of
@@ -207,11 +240,12 @@ loadOpenTranslatedThy as inFile =  do
 loadOpenAndTranslatedThy :: Arguments -> FilePath -> IO (OpenTheory, OpenTranslatedTheory)
 loadOpenAndTranslatedThy as inFile =  do
     thy <- loadOpenThy as inFile
-    transThy <- 
-      Sapic.typeTheory thy
+    let thy' = addParamsOptions as thy
+    transThy <-
+      Sapic.typeTheory thy'
       >>= Sapic.translate
       >>= Acc.translate
-    return (thy, removeTranslationItems transThy)
+    return (thy', removeTranslationItems transThy)
 
 -- | Load a closed theory from a file.
 loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
@@ -232,7 +266,7 @@ loadClosedDiffThy as inFile = do
 
 reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
 reportWellformednessDoc [] =  Pretty.emptyDoc
-reportWellformednessDoc errs  = Pretty.vcat 
+reportWellformednessDoc errs  = Pretty.vcat
                           [ Pretty.text $ "WARNING: " ++ show (length errs)
                                                       ++ " wellformedness check failed!"
                           , Pretty.text "         The analysis results might be wrong!"
@@ -313,10 +347,11 @@ loadClosedThyString as input =
     case parseOpenTheoryString (defines as) input of
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> do
-            thy' <-  Sapic.typeTheory thy
+            let openThy = addParamsOptions as thy
+            thy' <-  Sapic.typeTheory openThy
                   >>= Sapic.translate
                   >>= Acc.translate
-            Right <$> closeThy as thy (removeTranslationItems thy') -- No "return" because closeThy gives IO (ClosedTheory)
+            Right <$> closeThy as openThy (removeTranslationItems thy') -- No "return" because closeThy gives IO (ClosedTheory)
 
 
 loadClosedDiffThyString :: Arguments -> String -> IO (Either String ClosedDiffTheory)
@@ -325,7 +360,8 @@ loadClosedDiffThyString as input =
         Left err  -> return $ Left $ "parse error: " ++ show err
         Right thy -> fmap Right $ do
           thy1 <- addMessageDeductionRuleVariantsDiff thy
-          closeDiffThy as thy1
+          let openThy = addDiffParamsOptions as thy1
+          closeDiffThy as openThy
 
 -- | Load an open theory from a string.
 loadOpenThyString :: Arguments -> String -> Either ParseError OpenTheory

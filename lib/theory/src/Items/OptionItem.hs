@@ -29,6 +29,8 @@ data Option = Option
         , _compressEvents       :: Bool
         , _forcedInjectiveFacts :: S.Set FactTag
         , _lemmasToProve        :: [String]
+        , _openChainsLimit      :: Integer
+        , _saturationLimit      :: Integer
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''Option])
