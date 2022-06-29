@@ -84,7 +84,8 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 import qualified Theory.Text.Pretty as Pretty
-import           TheoryObject                        (addLemmasToProveThyOptions,addLemmasToProveDiffThyOptions, openChainsLimit, saturationLimit, diffThyOptions)
+import           TheoryObject                        (addLemmasToProveThyOptions,addLemmasToProveDiffThyOptions, diffThyOptions)
+import           Items.OptionItem                    (openChainsLimit,saturationLimit)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -157,7 +158,7 @@ hasQuitOnWarning as = "quit-on-warning" `elem` quitOnWarning as
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addParamsOptions :: Arguments -> OpenTheory -> OpenTheory
-addParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain
+addParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain . addLemmaToProve
     where
       openchain = findArg "OpenChainsLimit" as
       saturation = findArg "SaturationLimit" as
@@ -167,10 +168,12 @@ addParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain
       -- Add Saturation Limit parameters in the Options
       addTmpSLArg [] = id
       addTmpSLArg sl = set (saturationLimit.thyOptions)  (read (head sl)::Integer)
+      -- Add lemmas to Prove
+      addLemmaToProve = addLemmasToProveThyOptions (getArgsLemmas as)
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addDiffParamsOptions :: Arguments -> OpenDiffTheory -> OpenDiffTheory
-addDiffParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain
+addDiffParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain . addLemmaToProve
     where
       openchain = findArg "OpenChainsLimit" as
       saturation = findArg "SaturationLimit" as
@@ -180,6 +183,8 @@ addDiffParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain
       -- Add Saturation Limit parameters in the Options
       addTmpSLArg [] = id
       addTmpSLArg sl = set (saturationLimit.diffThyOptions)  (read (head sl)::Integer)
+      -- Add 
+      addLemmaToProve = addLemmasToProveDiffThyOptions (getArgsLemmas as)
 
 lemmaSelectorByModule :: Arguments -> ProtoLemma f p -> Bool
 lemmaSelectorByModule as lem = case lemmaModules of
@@ -261,7 +266,8 @@ loadOpenDiffThy as = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThy as inFile = do
   thy0 <- loadOpenDiffThy as inFile
-  thy1 <- addMessageDeductionRuleVariantsDiff thy0
+  let openThy = addLemmasToProveDiffThyOptions (getArgsLemmas as) thy0 -- Get the lemmas to prove (for error checking)
+  thy1 <- addMessageDeductionRuleVariantsDiff openThy
   closeDiffThy as thy1
 
 reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
@@ -300,14 +306,11 @@ loadClosedThyWf as inFile = do
     (openThy, transThy0) <- loadOpenAndTranslatedThy as inFile
     transThy <- addMessageDeductionRuleVariants transThy0
     sig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
-    -- check --prove lemmas
-    let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
-    let transThy' = addLemmasToProveThyOptions lemmaArgsNames transThy
     -- report
-    let errors = checkWellformedness transThy' sig ++ Sapic.checkWellformednessSapic openThy
+    let errors = checkWellformedness transThy sig ++ Sapic.checkWellformednessSapic openThy
     let report = reportWellformednessDoc errors
     -- return closed theory
-    closedTheory <- closeThyWithMaude sig as openThy transThy'
+    closedTheory <- closeThyWithMaude sig as openThy transThy
     return (closedTheory, report)
 
 -- | Load a closed theory and report on well-formedness errors.
@@ -316,31 +319,26 @@ loadClosedThyWfReport as inFile = do
     (openThy, transThy0) <- loadOpenAndTranslatedThy as inFile
     transThy <- addMessageDeductionRuleVariants transThy0
     transSig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
-    -- Check --prove lemmas
-    let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
-    let transThy' = addLemmasToProveThyOptions lemmaArgsNames transThy
     -- report
     let prefix = printFileName inFile
-    let errors = checkWellformedness transThy' transSig ++ Sapic.checkWellformednessSapic openThy
+    let errors = checkWellformedness transThy transSig ++ Sapic.checkWellformednessSapic openThy
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
-    closeThyWithMaude transSig as openThy transThy'
+    closeThyWithMaude transSig as openThy transThy
 
 -- | Load a closed diff theory and report on well-formedness errors.
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThyWfReport as inFile = do
     thy0 <- loadOpenDiffThy as inFile
-    thy1 <- addMessageDeductionRuleVariantsDiff thy0
+    let openDiffThy = addLemmasToProveDiffThyOptions (getArgsLemmas as) thy0 -- Get the lemmas to prove (for error checking)
+    thy1 <- addMessageDeductionRuleVariantsDiff openDiffThy
     sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
-    -- Check --prove lemmas
-    let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
-    let thy1' = addLemmasToProveDiffThyOptions lemmaArgsNames thy1
     -- report
     let prefix = printFileName inFile
-    let errors = checkWellformednessDiff thy1' sig
+    let errors = checkWellformednessDiff thy1 sig
     reportWellformedness prefix (hasQuitOnWarning as) errors
     -- return closed theory
-    closeDiffThyWithMaude sig as thy1'
+    closeDiffThyWithMaude sig as thy1
 
 loadClosedThyString :: Arguments -> String -> IO (Either String ClosedTheory)
 loadClosedThyString as input =
@@ -376,16 +374,14 @@ reportOnClosedThyStringWellformedness :: Arguments -> String -> IO String
 reportOnClosedThyStringWellformedness as input =
     case loadOpenThyString as input of
       Left  err   -> return $ "parse error: " ++ show err
-      Right openThy -> do
+      Right thy -> do
+            let openThy = addLemmasToProveThyOptions (getArgsLemmas as) thy -- Get the lemmas to prove (for error checking)
             transThy <- Sapic.typeTheory openThy
                   >>= Sapic.translate
                   >>= Acc.translate
             transSig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy
-            -- Check --prove lemmas
-            let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
-            let transThy' = addLemmasToProveThyOptions lemmaArgsNames transThy
             -- report
-            let errors = checkWellformedness (removeTranslationItems transThy') transSig
+            let errors = checkWellformedness (removeTranslationItems transThy) transSig
                       ++ Sapic.checkWellformednessSapic openThy
                       ++ checkPreTransWellformedness openThy
             case errors of 
@@ -400,13 +396,11 @@ reportOnClosedDiffThyStringWellformedness as input = do
     case loadOpenDiffThyString as input of
       Left  err   -> return $ "parse error: " ++ show err
       Right thy0 -> do
-        thy1 <- addMessageDeductionRuleVariantsDiff thy0
+        let openThy = addLemmasToProveDiffThyOptions (getArgsLemmas as) thy0 -- Get the lemmas to prove (for error checking)
+        thy1 <- addMessageDeductionRuleVariantsDiff openThy
         sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
-        -- Check --prove lemmas
-        let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
-        let thy1' = addLemmasToProveDiffThyOptions lemmaArgsNames thy1
         -- report
-        case checkWellformednessDiff thy1' sig of
+        case checkWellformednessDiff thy1 sig of
           []     -> return ""
           report -> do
             if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
@@ -417,9 +411,7 @@ closeThy :: Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
 closeThy as openThy transThy = do
   transThy' <- addMessageDeductionRuleVariants transThy
   sig <- toSignatureWithMaude (maudePath as) $ get thySignature transThy'
-  let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
-  let transThy'' = addLemmasToProveThyOptions lemmaArgsNames transThy'
-  closeThyWithMaude sig as openThy transThy''
+  closeThyWithMaude sig as openThy transThy'
 
 -- | Close a theory according to arguments.
 closeThyWithMaude :: SignatureWithMaude -> Arguments -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
@@ -455,9 +447,7 @@ closeThyWithMaude sig as openThy transThy = do
 closeDiffThy :: Arguments -> OpenDiffTheory -> IO ClosedDiffTheory
 closeDiffThy as thy0 = do
   sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy0
-  let lemmaArgsNames = getArgsLemmas as -- Get the lemmas to prove (for error checking)
-  let thy0' = addLemmasToProveDiffThyOptions lemmaArgsNames thy0
-  closeDiffThyWithMaude sig as thy0'
+  closeDiffThyWithMaude sig as thy0
 
 (&&&) :: (t -> Bool) -> (t -> Bool) -> t -> Bool
 (&&&) f g x = f x && g x
