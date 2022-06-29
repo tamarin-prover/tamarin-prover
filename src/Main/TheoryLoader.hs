@@ -84,8 +84,11 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try)
 import           Safe
 import qualified Theory.Text.Pretty as Pretty
+
 import           TheoryObject                        (addLemmasToProveThyOptions,addLemmasToProveDiffThyOptions, diffThyOptions)
 import           Items.OptionItem                    (openChainsLimit,saturationLimit)
+import           Text.Read                           (readMaybe)
+import           Data.Maybe                          (fromMaybe)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -158,32 +161,32 @@ hasQuitOnWarning as = "quit-on-warning" `elem` quitOnWarning as
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addParamsOptions :: Arguments -> OpenTheory -> OpenTheory
-addParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain . addLemmaToProve
+addParamsOptions as = addSLArg saturation . addOCLArg openchain . addLemmaToProve
     where
       openchain = findArg "OpenChainsLimit" as
       saturation = findArg "SaturationLimit" as
       -- Add Open Chain Limit parameters in the Options
-      addTmpOCLArg [] = id
-      addTmpOCLArg ocl = set (openChainsLimit.thyOptions) (read (head ocl)::Integer)
+      addOCLArg [] = id
+      addOCLArg ocl = set (openChainsLimit.thyOptions) (fromMaybe 10 (readMaybe (head ocl) ::Maybe Integer))
       -- Add Saturation Limit parameters in the Options
-      addTmpSLArg [] = id
-      addTmpSLArg sl = set (saturationLimit.thyOptions)  (read (head sl)::Integer)
-      -- Add lemmas to Prove
+      addSLArg [] = id
+      addSLArg sl = set (saturationLimit.thyOptions)  (fromMaybe 5 (readMaybe (head sl) ::Maybe Integer))
+      -- Add lemmas to Prove in the Options
       addLemmaToProve = addLemmasToProveThyOptions (getArgsLemmas as)
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addDiffParamsOptions :: Arguments -> OpenDiffTheory -> OpenDiffTheory
-addDiffParamsOptions as = addTmpSLArg saturation . addTmpOCLArg openchain . addLemmaToProve
+addDiffParamsOptions as = addSLArg saturation . addOCLArg openchain . addLemmaToProve
     where
       openchain = findArg "OpenChainsLimit" as
       saturation = findArg "SaturationLimit" as
       -- Add Open Chain Limit parameters in the Options
-      addTmpOCLArg [] = id
-      addTmpOCLArg ocl = set (openChainsLimit.diffThyOptions) (read (head ocl)::Integer)
+      addOCLArg [] = id
+      addOCLArg ocl = set (openChainsLimit.diffThyOptions) (fromMaybe 10 (readMaybe (head ocl) ::Maybe Integer))
       -- Add Saturation Limit parameters in the Options
-      addTmpSLArg [] = id
-      addTmpSLArg sl = set (saturationLimit.diffThyOptions)  (read (head sl)::Integer)
-      -- Add 
+      addSLArg [] = id
+      addSLArg sl = set (saturationLimit.diffThyOptions)  (fromMaybe 5 (readMaybe (head sl) ::Maybe Integer))
+      -- Add lemmas to Prove in the Options
       addLemmaToProve = addLemmasToProveDiffThyOptions (getArgsLemmas as)
 
 lemmaSelectorByModule :: Arguments -> ProtoLemma f p -> Bool
