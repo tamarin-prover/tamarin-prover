@@ -159,6 +159,12 @@ quitOnWarning as = if argExists "quit-on-warning" as then ["quit-on-warning"] el
 hasQuitOnWarning :: Arguments -> Bool
 hasQuitOnWarning as = "quit-on-warning" `elem` quitOnWarning as
 
+-- | Get lemmas from the arguments --prove / --lemma
+getArgsLemmas :: Arguments -> [String]
+getArgsLemmas as  = if argExists "prove" as || argExists "lemma" as
+    then findArg "prove" as ++ findArg "lemma" as
+    else []
+
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addParamsOptions :: Arguments -> OpenTheory -> OpenTheory
 addParamsOptions as = addSLArg saturation . addOCLArg openchain . addLemmaToProve
@@ -226,12 +232,6 @@ diffLemmaSelector as lem
         | lastMay pattern == Just '*' = init pattern `isPrefixOf` get lDiffName lem
         | otherwise = get lDiffName lem == pattern
 
--- | Get lemmas from the arguments --prove / --lemma
-getArgsLemmas :: Arguments -> [String]
-getArgsLemmas as  = if argExists "prove" as || argExists "lemma" as
-    then findArg "prove" as ++ findArg "lemma" as
-    else []
-
 -- | Load an open theory from a file.
 loadOpenThy :: Arguments -> FilePath -> IO OpenTheory
 loadOpenThy as inFile = parseOpenTheory (diff as ++ defines as ++ quitOnWarning as) inFile
@@ -269,8 +269,8 @@ loadOpenDiffThy as = parseOpenDiffTheory (diff as ++ defines as ++ quitOnWarning
 loadClosedDiffThy :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThy as inFile = do
   thy0 <- loadOpenDiffThy as inFile
-  let openThy = addLemmasToProveDiffThyOptions (getArgsLemmas as) thy0 -- Get the lemmas to prove (for error checking)
-  thy1 <- addMessageDeductionRuleVariantsDiff openThy
+  let openDiffThy = addDiffParamsOptions as thy0
+  thy1 <- addMessageDeductionRuleVariantsDiff openDiffThy
   closeDiffThy as thy1
 
 reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
@@ -333,7 +333,7 @@ loadClosedThyWfReport as inFile = do
 loadClosedDiffThyWfReport :: Arguments -> FilePath -> IO ClosedDiffTheory
 loadClosedDiffThyWfReport as inFile = do
     thy0 <- loadOpenDiffThy as inFile
-    let openDiffThy = addLemmasToProveDiffThyOptions (getArgsLemmas as) thy0 -- Get the lemmas to prove (for error checking)
+    let openDiffThy = addDiffParamsOptions as thy0
     thy1 <- addMessageDeductionRuleVariantsDiff openDiffThy
     sig <- toSignatureWithMaude (maudePath as) $ get diffThySignature thy1
     -- report
@@ -393,7 +393,7 @@ reportOnClosedThyStringWellformedness as input =
                     if elem "quit-on-warning" (quitOnWarning as) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
                     return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
 
--- | Load a closed diff theory and report on well-formedness errors.
+-- | Load a closed diff theory and only report on well-formedness errors.
 reportOnClosedDiffThyStringWellformedness :: Arguments -> String -> IO String
 reportOnClosedDiffThyStringWellformedness as input = do
     case loadOpenDiffThyString as input of
