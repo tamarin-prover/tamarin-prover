@@ -116,17 +116,6 @@ translate th = case theoryProcesses th of
                       ]
     restrictions:: (MonadThrow m1, MonadCatch m1) => LProcess (ProcessAnnotation LVar)  -> m1 [SyntacticRestriction]
     restrictions anP = foldM (flip ($)) []  --- fold from left to right
-                                                                 --- TODO once accountability is supported, substitute True
-                                                                 -- with predicate saying whether we need single_session lemma
-                                                                 -- need to incorporate lemma2string_noacc once we handle accountability
-                                                                 -- if op.accountability then
-                                                                 --   (* if an accountability lemma with control needs to be shown, we use a
-                                                                 --    * more complex variant of the restritions, that applies them to only one execution *)
-                                                                 --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
-                                                                 --   @ (if op.progress then [progress_init_lemma_acc] else [])
-                                                                 -- else
-                                                                 --   restrs
-                                                                 --    @ (if op.progress then [progress_init_lemma] else [])
                         $ [BT.baseRestr anP needsInEvRes True] ++
                            mapMaybe (uncurry checkOps) [
                             (transProgress, PT.progressRestr anP)
@@ -135,20 +124,6 @@ translate th = case theoryProcesses th of
                            ]
     heuristics = [SapicRanking]
     needsInEvRes = any lemmaNeedsInEvRes (theoryLemmas th)
-  -- TODO This function is not yet complete. This is what the ocaml code
-  -- was doing:
-  -- NOTE: Kevin Morio is working on accountability
-  --
-  -- and predicate_restrictions = print_predicates input.pred
-  -- and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
-  -- in
-  -- let msr' = if Lemma.contains_control input.lem (* equivalent to op.accountability *)
-  --            then annotate_eventId msr
-  --            else msr
-  -- in
-  -- input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
-  -- predicate_restrictions ^ lemmas_tamarin
-  --- ^ "end"
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and
