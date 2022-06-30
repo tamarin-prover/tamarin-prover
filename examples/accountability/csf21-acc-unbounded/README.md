@@ -41,5 +41,5 @@ The number of mix servers in the model is indicated by `<i>`.
 The directory [mixvote](./mixvote) contains a variant of the MixVote protocol extended to unbounded sessions for the indicated number of allowed server identities.
 The case study is based on the MixVote model [mixvote_SmHh.spthy](https://github.com/tamarin-prover/tamarin-prover/blob/develop/examples/csf20-disputeResolution/mixvote_SmHh.spthy) by Lara Schmid.
 
-The directory [previous](./previous) contains the case studies of the following paper, which were ported from the now deprecated acccountability implementation provided by the [SAPiC plugin](https://github.com/tamarin-prover/tamarin-prover/tree/develop/plugins/sapic) to the new implementation presented in [1]:
+The directory [previous](./previous) contains the case studies of the following paper, which were ported from the now deprecated acccountability implementation provided by the [SAPiC plugin](https://github.com/tamarin-prover/tamarin-prover/tree/be0214d5ea0516f1398744ec44590b5bdff2386a) to the new implementation presented in [1]:
 [2] "Automated Verification of Accountability in Security Protocols", Robert Künnemann, Ilkan Esiyok, and Michael Backes, CSF19.
