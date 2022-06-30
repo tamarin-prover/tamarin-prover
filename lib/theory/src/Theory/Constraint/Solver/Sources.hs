@@ -143,7 +143,7 @@ solveAllSafeGoals ths' openChainsLimit =
       case goal of
         ChainG _ _    -> if (chainsLeft > 0)
                             then True
-                            else (trace ("Stopping precomputation, too many chain goals. Open Chains limits (can be change with --OCL=): "++ show openChainsLimit) False)
+                            else trace ("Stopping precomputation, too many chain goals. Open Chains limits (can be change with --OCL=): "++ show openChainsLimit) False
         ActionG _ fa  -> not (isKUFact fa)
         -- we do not solve KD goals for Xor facts as insertAction inserts
         -- these goals directly. This prevents loops in the precomputations
@@ -355,10 +355,10 @@ saturateSources parameters ctxt thsInit  =
     go :: [Source] -> Integer -> [Source]
     go ths n =
         if (any or (changes `using` parList rdeepseq)) && (n <= _paramSaturationLimit parameters)
-          then go ths' (n + 1)
+          then trace("saturateSources: step " ++ show n) $ go ths' (n + 1)
           else if (n > _paramSaturationLimit parameters)
             then trace ("saturateSources: Saturation aborted, more than " ++ (show (_paramSaturationLimit parameters)) ++ " iterations. (Limit can be change with --SL=)") ths'
-            else ths'
+            else trace("saturateSources: step " ++ show n) ths'
       where
         (changes, ths') = unzip $ map (refineSource ctxt solver) ths
         goodTh th  = length (getDisj (get cdCases th)) <= 1
