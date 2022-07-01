@@ -174,31 +174,31 @@ getArgsLemmas as  = if argExists "prove" as || argExists "lemma" as
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addParamsOptions :: Arguments -> OpenTheory -> OpenTheory
-addParamsOptions as = addSLArg saturation . addOCLArg openchain . addLemmaToProve
+addParamsOptions as = addSatArg saturation . addChainsArg openchain . addLemmaToProve
     where
       openchain = findArg "OpenChainsLimit" as
       saturation = findArg "SaturationLimit" as
       -- Add Open Chain Limit parameters in the Options
-      addOCLArg [] = id
-      addOCLArg ocl = set (openChainsLimit.thyOptions) (fromMaybe 10 (readMaybe (head ocl) ::Maybe Integer))
+      addChainsArg [] = id
+      addChainsArg chain = set (openChainsLimit.thyOptions) (fromMaybe 10 (readMaybe (head chain) ::Maybe Integer))
       -- Add Saturation Limit parameters in the Options
-      addSLArg [] = id
-      addSLArg sl = set (saturationLimit.thyOptions)  (fromMaybe 5 (readMaybe (head sl) ::Maybe Integer))
+      addSatArg [] = id
+      addSatArg sat = set (saturationLimit.thyOptions)  (fromMaybe 5 (readMaybe (head sat) ::Maybe Integer))
       -- Add lemmas to Prove in the Options
       addLemmaToProve = set (lemmasToProve.thyOptions) (getArgsLemmas as)
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addDiffParamsOptions :: Arguments -> OpenDiffTheory -> OpenDiffTheory
-addDiffParamsOptions as = addSLArg saturation . addOCLArg openchain . addLemmaToProve
+addDiffParamsOptions as = addSatArg saturation . addChainsArg openchain . addLemmaToProve
     where
       openchain = findArg "OpenChainsLimit" as
       saturation = findArg "SaturationLimit" as
       -- Add Open Chain Limit parameters in the Options
-      addOCLArg [] = id
-      addOCLArg ocl = set (openChainsLimit.diffThyOptions) (fromMaybe 10 (readMaybe (head ocl) ::Maybe Integer))
+      addChainsArg [] = id
+      addChainsArg chain = set (openChainsLimit.diffThyOptions) (fromMaybe 10 (readMaybe (head chain) ::Maybe Integer))
       -- Add Saturation Limit parameters in the Options
-      addSLArg [] = id
-      addSLArg sl = set (saturationLimit.diffThyOptions)  (fromMaybe 5 (readMaybe (head sl) ::Maybe Integer))
+      addSatArg [] = id
+      addSatArg sat = set (saturationLimit.diffThyOptions)  (fromMaybe 5 (readMaybe (head sat) ::Maybe Integer))
       -- Add lemmas to Prove in the Options
       addLemmaToProve = set (lemmasToProve.diffThyOptions) (getArgsLemmas as)
 
