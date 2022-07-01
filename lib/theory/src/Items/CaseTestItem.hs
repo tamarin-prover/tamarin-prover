@@ -32,6 +32,6 @@ $(mkLabels [''CaseTest])
 caseTestToPredicate :: CaseTest -> Maybe Predicate
 caseTestToPredicate caseTest = fmap (Predicate fact) formula
   where
-    fact = protoFact Linear name (frees formula)
+    fact = protoFact Consume name (frees formula)
     name = L.get cName caseTest
     formula = toLNFormula (L.get cFormula caseTest)

@@ -240,7 +240,7 @@ baseTransComb c an p tildex
                     ProcessNotWellformed $ WFUnboundProto (freevars_f `difference` tildex)
                         :: SapicException AnnotatedProcess)
     | CondEq t1 t2 <- c =
-        let fa = toLNFact (protoFact Linear "Eq" [t1,t2]) in
+        let fa = toLNFact (protoFact Consume "Eq" [t1,t2]) in
         let vars_f = fromList $ getFactVariables fa in
         if vars_f `isSubsetOf` tildex then
                 ([ ([def_state],  [PredicateA fa], [def_state1 tildex], []),
@@ -418,12 +418,12 @@ resLocking hasUnlock v =  do
     where
         subst _ a
             | (Action t f) <- a,
-              Fact {factTag = ProtoFact Linear "LockPOS" 3} <- f
+              Fact {factTag = ProtoFact Consume "LockPOS" 3} <- f
             =
-              Action t (f {factTag = ProtoFact Linear (hardcode "Lock") 3})
+              Action t (f {factTag = ProtoFact Consume (hardcode "Lock") 3})
             | (Action t f) <- a,
-              Fact {factTag = ProtoFact Linear "UnlockPOS" 3} <- f =
-              Action t (f {factTag = ProtoFact Linear (hardcode "Unlock") 3})
+              Fact {factTag = ProtoFact Consume "UnlockPOS" 3} <- f =
+              Action t (f {factTag = ProtoFact Consume (hardcode "Unlock") 3})
             | otherwise = a
         hardcode s = s ++ "_" ++ show (lvarIdx v)
         mapFormula = L.modify rstrFormula

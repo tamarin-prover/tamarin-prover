@@ -29,8 +29,8 @@ module Theory.Model.Fact (
   , normFact
 
   -- ** Queries
-  , isLinearFact
-  , isPersistentFact
+  , isConsumeFact
+  , isReadOnlyFact
   , isProtoFact
   , isInFact
 
@@ -127,12 +127,12 @@ import           Text.PrettyPrint.Class
 -- Fact
 ------------------------------------------------------------------------------
 
-data Multiplicity = Persistent | Linear
+data Multiplicity = ReadOnly | Consume
                   deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Fact tags/symbols
 data FactTag = ProtoFact Multiplicity String Int
-               -- ^ A protocol fact together with its arity and multiplicity.
+               -- ^ A protocol fact together with its multiplicity, name, and arity.
              | FreshFact  -- ^ Freshly generated value.
              | OutFact    -- ^ Sent by the protocol
              | InFact     -- ^ Officially known by the intruder/network.
@@ -142,8 +142,7 @@ data FactTag = ProtoFact Multiplicity String Int
                           -- a message using a construction rule.
              | TermFact   -- ^ internal fact, only used to convert terms to facts
                           -- to simplify computations. should never occur in a graph.
-    deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
-
+    deriving( Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Annotations are properties thhat might be used elsewhere (e.g. in
 --   dot rendering, or for sorting by heuristics) but do not affect
@@ -162,6 +161,39 @@ data Fact t = Fact
 
 -- Instances
 ------------
+
+-- Ignore "multiplicity" in equality and ord testing
+instance Eq FactTag where
+    (==) (ProtoFact _ name arity) (ProtoFact _ name' arity') = (name == name') && (arity == arity')
+    (==) FreshFact FreshFact = True
+    (==) OutFact   OutFact   = True
+    (==) InFact    InFact    = True
+    (==) KUFact    KUFact    = True
+    (==) KDFact    KDFact    = True
+    (==) DedFact   DedFact   = True
+    (==) TermFact  TermFact  = True
+    (==) _         _         = False
+
+instance Ord FactTag where
+    compare a b | a == b        = EQ
+    compare (ProtoFact _ name arity) (ProtoFact _ name' arity') = compare name name' <> compare arity arity'
+    compare ProtoFact{} _           = GT
+    compare _           ProtoFact{} = LT
+    compare FreshFact   _           = GT
+    compare _           FreshFact   = LT
+    compare OutFact     _           = GT
+    compare _           OutFact     = LT
+    compare InFact      _           = GT
+    compare _           InFact      = LT
+    compare KUFact      _           = GT
+    compare _           KUFact      = LT
+    compare KDFact      _           = GT
+    compare _           KDFact      = LT
+    compare DedFact     _           = GT
+    compare _           DedFact     = LT
+    compare TermFact    _           = GT
+    --compare _           TermFact    = LT  --redundant;)
+    
 
 -- Ignore annotations in equality and ord testing
 instance Eq t => Eq (Fact t) where
@@ -280,7 +312,7 @@ inFactAnn an = Fact InFact an . return
 
 -- | A fact logging that the intruder knows a message.
 kLogFact :: t -> Fact t
-kLogFact = protoFact Linear "K" . return
+kLogFact = protoFact Consume "K" . return
 
 -- | A fact logging that the intruder deduced a message using a construction
 -- rule. We use this to formulate invariants over normal dependency graphs.
@@ -334,21 +366,21 @@ protoOrOutFactView fa = case fa of
     Fact OutFact           _  _  -> errMalformed "protoOrOutFactView" fa
     _                            -> Nothing
 
--- | True if the fact is a linear fact.
-isLinearFact :: Fact t -> Bool
-isLinearFact = (Linear ==) . factMultiplicity
+-- | True if the fact is a Consume fact.
+isConsumeFact :: Fact t -> Bool
+isConsumeFact = (Consume ==) . factMultiplicity
 
--- | True if the fact is a persistent fact.
-isPersistentFact :: Fact t -> Bool
-isPersistentFact = (Persistent ==) . factMultiplicity
+-- | True if the fact is a ReadOnly fact.
+isReadOnlyFact :: Fact t -> Bool
+isReadOnlyFact = (ReadOnly ==) . factMultiplicity
 
 -- | The multiplicity of a 'FactTag'.
 factTagMultiplicity :: FactTag -> Multiplicity
 factTagMultiplicity tag = case tag of
     ProtoFact multi _ _ -> multi
-    KUFact              -> Persistent
-    KDFact              -> Persistent
-    _                   -> Linear
+    KUFact              -> ReadOnly
+    KDFact              -> ReadOnly
+    _                   -> Consume
 
 -- | The arity of a 'FactTag'.
 factTagArity :: FactTag -> Int
@@ -512,8 +544,8 @@ factTagName tag = case tag of
 showFactTag :: FactTag -> String
 showFactTag tag =
     (++ factTagName tag) $ case factTagMultiplicity tag of
-                             Linear     -> ""
-                             Persistent -> "!"
+                             Consume  -> ""
+                             ReadOnly -> "!"
 
 -- | Show a fact tag together with its aritiy.
 showFactTagArity :: FactTag -> String

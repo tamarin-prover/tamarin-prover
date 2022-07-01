@@ -24,7 +24,7 @@ module Theory.Constraint.Solver.Goals (
   , plainOpenGoals
   ) where
 
--- import           Debug.Trace
+import           Debug.Trace
 
 import           Prelude                                 hiding (id, (.))
 

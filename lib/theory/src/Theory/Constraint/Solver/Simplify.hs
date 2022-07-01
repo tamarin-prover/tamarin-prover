@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns       #-}
 {-# LANGUAGE TupleSections      #-}
+{-# LANGUAGE LambdaCase         #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -33,7 +34,9 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
-import           Data.Maybe                         (mapMaybe)
+import           Data.Maybe                         (mapMaybe, listToMaybe, maybeToList)
+import           Data.Bifunctor                     (bimap)
+import           Safe                               (atMay, headMay)
 
 import           Control.Basics
 import           Control.Category
@@ -52,6 +55,7 @@ import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
+import           Theory.Tools.InjectiveFactInstances
 
 
 -- | Apply CR-rules that don't result in case splitting until the constraint
@@ -68,10 +72,10 @@ simplifySystem = do
        else do
         -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
-        -- Remove equation split goals that do not exist anymore
+        -- Remove equation split goals that do not exist anymore        
         removeSolvedSplitGoals
         -- Add ordering constraint from injective facts
-        addNonInjectiveFactInstances
+        addNonInjectiveFactInstances        
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -89,7 +93,7 @@ simplifySystem = do
           if isdiff
             then do
               (c1,c3) <- enforceFreshAndKuNodeUniqueness
-              c4 <- enforceEdgeUniqueness
+              c4 <- enforceEdgeConstraints
               c5 <- solveUniqueActions
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
@@ -98,15 +102,15 @@ simplifySystem = do
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
-                    [ ("unique fresh instances (DG4)",        c1)
---                     , ("unique K↓-facts (N5↓)",               c2)
-                    , ("unique K↑-facts (N5↑)",               c3)
-                    , ("unique (linear) edges (DG2 and DG3)", c4)
-                    , ("solve unambiguous actions (S_@)",     c5)
-                    , ("decompose trace formula",             c6)
-                    , ("propagate atom valuation to formula", c7)
-                    , ("saturate under ∀-clauses (S_∀)",      c8)
-                    , ("orderings for ~vars (S_fresh-order)", c9)
+                    [ ("unique fresh instances (DG4)",                 c1)
+--                     , ("unique K↓-facts (N5↓)",                        c2)
+                    , ("unique K↑-facts (N5↑)",                        c3)
+                    , ("readonly & consume edges (DG2, DG3' and DG5)", c4)
+                    , ("solve unambiguous actions (S_@)",              c5)
+                    , ("decompose trace formula",                      c6)
+                    , ("propagate atom valuation to formula",          c7)
+                    , ("saturate under ∀-clauses (S_∀)",               c8)
+                    , ("orderings for ~vars (S_fresh-order)",          c9)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -121,7 +125,7 @@ simplifySystem = do
               traceIfLooping $ go (n + 1) (map snd changes)
             else do
               (c1,c2,c3) <- enforceNodeUniqueness
-              c4 <- enforceEdgeUniqueness
+              c4 <- enforceEdgeConstraints
               c5 <- solveUniqueActions
               c6 <- reduceFormulas
               c7 <- evalFormulaAtoms
@@ -130,15 +134,15 @@ simplifySystem = do
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
-                    [ ("unique fresh instances (DG4)",        c1)
-                    , ("unique K↓-facts (N5↓)",               c2)
-                    , ("unique K↑-facts (N5↑)",               c3)
-                    , ("unique (linear) edges (DG2 and DG3)", c4)
-                    , ("solve unambiguous actions (S_@)",     c5)
-                    , ("decompose trace formula",             c6)
-                    , ("propagate atom valuation to formula", c7)
-                    , ("saturate under ∀-clauses (S_∀)",      c8)
-                    , ("orderings for ~vars (S_fresh-order)", c9)
+                    [ ("unique fresh instances (DG4)",                 c1)
+                    , ("unique K↓-facts (N5↓)",                        c2)
+                    , ("unique K↑-facts (N5↑)",                        c3)
+                    , ("readonly & consume edges (DG2, DG3' and DG5)", c4)
+                    , ("solve unambiguous actions (S_@)",              c5)
+                    , ("decompose trace formula",                      c6)
+                    , ("propagate atom valuation to formula",          c7)
+                    , ("saturate under ∀-clauses (S_∀)",               c8)
+                    , ("orderings for ~vars (S_fresh-order)",          c9)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -233,25 +237,23 @@ enforceFreshAndKuNodeUniqueness =
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
+                    
 
-
--- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
+-- | CR-rules *DG2_1*, *DG3'* and *DG5*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
-enforceEdgeUniqueness :: Reduction ChangeIndicator
-enforceEdgeUniqueness = do
-    se <- gets id
-    let edges = S.toList (get sEdges se)
-    (<>) <$> mergeNodes eSrc eTgt edges
-         <*> mergeNodes eTgt eSrc (filter (proveLinearConc se . eSrc) edges)
+enforceEdgeConstraints :: Reduction ChangeIndicator
+enforceEdgeConstraints = do
+    nodes <- getM sNodes
+    edges <- S.toList <$> getM sEdges
+    foldl1 (liftM2 (<>)) [mergeNodes eSrc eTgt edges,  -- DG2 uniqueness (no two sources for a single premise)
+                          mergeNodes eTgt eSrc (filter (isConsumeEdge nodes) edges),  -- DG3' (no two consumes from the same source)
+                          readBeforeConsume]  -- DG5 (ReadOnly before Consume)
   where
-    -- | @proveLinearConc se (v,i)@ tries to prove that the @i@-th
-    -- conclusion of node @v@ is a linear fact.
-    proveLinearConc se (v, i) =
-        maybe False (isLinearFact . (get (rConc i))) $
-            M.lookup v $ get sNodes se
+    -- | @isConsumeEdge se (Edge _ (v,i))@ checks wether the @i@-th
+    -- premise of node @v@ is a consume fact, i.e., the edge is not used for a ReadOnly premise
+    isConsumeEdge nodes (Edge _ (v, i)) = maybe False (isConsumeFact . get (rPrem i)) $ M.lookup v nodes
 
-    -- merge the nodes on the 'mergeEnd' for edges that are equal on the
-    -- 'compareEnd'
+    -- | merge the nodes on the 'mergeEnd' for edges that are equal on the 'compareEnd'
     mergeNodes mergeEnd compareEnd edges
       | null eqs  = return Unchanged
       | otherwise = do
@@ -264,6 +266,24 @@ enforceEdgeUniqueness = do
 
         merge _    []            = error "exploitEdgeProps: impossible"
         merge proj (keep:remove) = map (Equal (proj keep) . proj) remove
+
+    readBeforeConsume :: Reduction ChangeIndicator
+    readBeforeConsume = do
+      nodes <- getM sNodes
+      consumeEdges <- (filter (isConsumeEdge nodes) . S.toList) <$> getM sEdges
+      readOnlyEdges <- (filter (not . isConsumeEdge nodes) . S.toList) <$> getM sEdges
+      let readOnlyEdgeMap = M.fromListWith (++) [(a,[i]) | (Edge a (i, _)) <- readOnlyEdges]
+      let getConsumeOrd m (Edge src (j, _)) = [(i,j) | i <- concat $ M.lookup src m]
+      let orderings = concatMap (getConsumeOrd readOnlyEdgeMap) consumeEdges
+      changes <- forM orderings $ (\(i,j) -> do
+              before <- alwaysBefore <$> gets id
+              if i `before` j
+                then return Unchanged
+                else insertLess i j >> return Changed
+              )
+      return $ foldl (<>) Unchanged $ trace (show ("orderings", orderings)) changes
+
+
 
 -- | Special version of CR-rule *S_at*, which is only applied to solve actions
 -- that are guaranteed not to result in case splits.
@@ -331,6 +351,8 @@ evalFormulaAtoms = do
 --
 -- The interpretation for @Just False@ is analogous. @Nothing@ is used to
 -- represent *unknown*.
+--
+-- FIXME this function is almost identical to System>safePartial evaluation -> join them
 --
 partialAtomValuation :: ProofContext -> System -> LNAtom -> Maybe Bool
 partialAtomValuation ctxt sys =
@@ -444,7 +466,7 @@ freshOrdering = do
                                       = concatMap (extractFreshNotBelowReducible reducible) as
       extractFreshNotBelowReducible _ t | isFreshVar t = [t]
       extractFreshNotBelowReducible _ _                = []
-      
+
 
 -- | Compute all less relations implied by injective fact instances.
 --
@@ -456,9 +478,8 @@ freshOrdering = do
 --
 -- and let there be an edge from (i,u) to (k,w) for some indices u and w
 -- corresponding to fact f(t,...).
--- If:
---    -  j<k & f(t,...) occurs at j in prems, then j<i (j<>i as in i f occurs in concs).
---    -  i<j & f(t,...) occurs at j concs, then k<j.
+-- If: i<j & f(t,...) occurs at j concs, then k<j.
+--    NOT ANYMORE: if j<k & f(t,...) occurs at j in prems, then j<i (j<>i as in i f occurs in concs).
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
     Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
@@ -466,8 +487,8 @@ nonInjectiveFactInstances ctxt se = do
         kTag               = factTag kFaPrem
         kTerm              = firstTerm kFaPrem
         conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
-
-    guard (kTag `S.member` get pcInjectiveFactInsts ctxt)
+        injFacts           = get pcInjectiveFactInsts ctxt
+    guard (kTag `S.member` {- S.map fst -} injFacts)  --TODO-Subterm when enabling subterms, add the map fst
 --    j <- S.toList $ D.reachableSet [i] less
     (j, _) <- M.toList $ get sNodes se
     -- check that j<k
@@ -476,13 +497,13 @@ nonInjectiveFactInstances ctxt se = do
                            maybe False checkRule (M.lookup j $ get sNodes se)
         checkRuleJK jRu    = (
                            -- check that f(t,...) occurs at j in prems and j<k
-                           any conflictingFact (get rPrems jRu ++ get rConcs jRu) &&
+                           any conflictingFact ({- get rPrems jRu ++ -} get rConcs jRu) &&
                            (k `S.member` D.reachableSet [j] less) &&
                             nonUnifiableNodes j i
                            )
         checkRuleIJ jRu    = (
                            -- check that f(t,...) occurs at j in concs and i<j
-                           any conflictingFact (get rPrems jRu ++  get rConcs jRu) &&
+                           any conflictingFact ({- get rPrems jRu ++ -} get rConcs jRu) &&
                            (j `S.member` D.reachableSet [i] less) &&
                             nonUnifiableNodes k j
                            )
@@ -509,3 +530,4 @@ addNonInjectiveFactInstances = do
   ctxt <- ask
   let list = nonInjectiveFactInstances ctxt se
   mapM_ (uncurry insertLess) list
+

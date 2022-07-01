@@ -92,6 +92,7 @@ import           Theory
 import           Theory.Text.Pretty
 import           Theory.Sapic
 import           Theory.Tools.RuleVariants
+import           Utils.Misc
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -430,11 +431,10 @@ factReports thy = concat
        msum [ check "uses disallowed facts on left-hand-side:"  lhsf
             , check "uses disallowed facts on right-hand-side:" rhsf ]
 
-    -- Check for facts with equal name modulo capitalization, but different
-    -- multiplicity or arity.
+    -- Check for facts with equal name modulo capitalization, but different arity.
     factUsage = do
-       clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-       return $ (,) "Fact usage" $ numbered' $ do
+       clash <- clashesOn factIdentifier ((\(a,b,c) -> (a,b)) . snd . snd) theoryFacts'
+       return $ (,) "Fact arity different" $ numbered' $ do
            (origin, (ppFa, info@(tag, _, _))) <- clash
            return $ text (origin ++
                           ", fact " ++ show (map toLower $ factTagName tag) ++
@@ -598,18 +598,18 @@ factReportsDiff thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do DiffRuleItem ruO <- get diffThyItems thy; let ru = get dprRule ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        : (do DiffRuleItem ruO <- get diffThyItems thy; let ru = get dprRule ruO in Fact {factTag = ProtoFact Consume ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do
           DiffRuleItem ruO <- get diffThyItems thy
           case get dprLeftRight ruO of
             Nothing -> []
-            Just (OpenProtoRule lr lrAC, OpenProtoRule rr rrAC) -> get rActs lr ++ get rActs rr ++ concatMap (\x -> Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName x) 0, factAnnotations = S.empty, factTerms = []} : get rActs x) (lrAC ++ rrAC))
-        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; let ru = get oprRuleE ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; ru <- get oprRuleAC ruO; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do ru <- get diffThyCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do ru <- get diffThyDiffCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+            Just (OpenProtoRule lr lrAC, OpenProtoRule rr rrAC) -> get rActs lr ++ get rActs rr ++ concatMap (\x -> Fact {factTag = ProtoFact Consume ("DiffProto" ++ getRuleName x) 0, factAnnotations = S.empty, factTerms = []} : get rActs x) (lrAC ++ rrAC))
+        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; let ru = get oprRuleE ruO in Fact {factTag = ProtoFact Consume ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; ru <- get oprRuleAC ruO; Fact {factTag = ProtoFact Consume ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyCacheRight thy; Fact {factTag = ProtoFact Consume ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Consume ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Consume ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyDiffCacheLeft thy; Fact {factTag = ProtoFact Consume ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
 
     inexistentActions = do
         EitherLemmaItem (s, l) <- {-trace ("Caches: " ++ show ((get diffThyCacheRight thy) ++ (get diffThyDiffCacheRight thy) ++ (get diffThyCacheLeft thy) ++ (get diffThyDiffCacheLeft thy))) $-} get diffThyItems thy

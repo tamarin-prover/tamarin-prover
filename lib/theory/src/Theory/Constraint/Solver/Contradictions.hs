@@ -161,6 +161,8 @@ substCreatesNonNormalTerms hnd sys fsubst =
 
 
 -- | Compute all contradictions to injective fact instances.
+-- CAREFUL: this is DUPLICATED CODE from Simplify.hs
+-- FIXME: We can probably remove this function without replacement
 --
 -- Formally, they are computed as follows. Let 'f' be a fact symbol with
 -- injective instances. Let i, j, and k be temporal variables ordered
@@ -169,11 +171,10 @@ substCreatesNonNormalTerms hnd sys fsubst =
 --   i < j < k
 --
 -- and let there be an edge from (i,u) to (k,w) for some indices u and v,
--- as well as an injectif fact `f(t,...)` in the conclusion (i,u).
+-- as well as an injective fact `f(t,...)` in the conclusion (i,u).
 --
 -- Then, we have a contradiction either if:
---  1) both the premises (k,w) and (j,v) requires a
--- fact 'f(t,...)'.
+--  1) both the premises (k,w) and (j,v) require a fact 'f(t,...)'.
 --  2) both the conclusions (i,u) and (j,v) produce a fact `f(t,..)`.
 --
 -- In the first case, (k,w) and (j,v) would have to be merged, and in the second
@@ -193,9 +194,7 @@ nonInjectiveFactInstances ctxt se = do
     let isCounterExample = (j /= i) && (j /= k) &&
                            maybe False checkRule (M.lookup j $ L.get sNodes se)
 
-        -- FIXME: There should be a weaker version of the rule that just
-        -- introduces the constraint 'k < j || k == j' here.
-        checkRule jRu    = any conflictingFact (L.get rPrems jRu ++ L.get rConcs jRu) &&
+        checkRule jRu    = any conflictingFact ({- L.get rPrems jRu ++ -} L.get rConcs jRu) &&
                            (k `S.member` D.reachableSet [j] less
                              || isLast se k)
 

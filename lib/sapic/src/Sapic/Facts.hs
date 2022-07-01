@@ -149,11 +149,11 @@ addVarToState :: LVar -> TransFact -> TransFact
 addVarToState v' (State kind pos vs)  = State kind pos (v' `S.insert` vs)
 addVarToState _ x = x
 
-multiplicity :: StateKind -> Multiplicity
-multiplicity LState = Linear
-multiplicity LSemiState = Linear
-multiplicity PState = Persistent
-multiplicity PSemiState = Persistent
+multiplicity :: StateKind -> Multiplicity  --TODO-Robert what are StateKinds? is the Consume/Readonly fine here?
+multiplicity LState = Consume
+multiplicity LSemiState = Consume
+multiplicity PState = ReadOnly
+multiplicity PSemiState = ReadOnly
 
 -- | map f to the name of a fact
 mapFactName :: (String -> String) -> Fact t -> Fact t
@@ -193,26 +193,26 @@ varMsgId p = LVar n s i
           i = 0
 
 actionToFact :: TransAction -> Fact LNTerm
-actionToFact InitEmpty = protoFact Linear "Init" []
+actionToFact InitEmpty = protoFact Consume "Init" []
   --  | StopId
   --  | EventEmpty
   --  | EventId
-actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p, t]
-actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
-actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
-actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
-actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
-actionToFact (DeleteA t )   =  protoFact Linear "Delete" [t]
-actionToFact (ChannelIn t)   =  protoFact Linear "ChannelIn" [t]
-actionToFact (EventEmpty)   =   protoFact Linear "Event" []
+actionToFact (Send p t) = protoFact Consume "Send" [varTerm $ varMsgId p, t]
+actionToFact (Receive p t) = protoFact Consume "Receive" [varTerm $ varMsgId p ,t]
+actionToFact (IsIn t v)   =  protoFact Consume "IsIn" [t,varTerm v]
+actionToFact (IsNotSet t )   =  protoFact Consume "IsNotSet" [t]
+actionToFact (InsertA t1 t2)   =  protoFact Consume "Insert" [t1,t2]
+actionToFact (DeleteA t )   =  protoFact Consume "Delete" [t]
+actionToFact (ChannelIn t)   =  protoFact Consume "ChannelIn" [t]
+actionToFact (EventEmpty)   =   protoFact Consume "Event" []
 actionToFact (PredicateA f)   =  mapFactName (\s -> "Pred_" ++ s) f
 actionToFact (NegPredicateA f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
-actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,varTerm v, t ]
-actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, varTerm v, t ]
-actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,varTerm v,t]
-actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varTerm v,t]
-actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
-actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
+actionToFact (LockNamed t v)   = protoFact Consume (lockFactName v) [lockPubTerm v,varTerm v, t ]
+actionToFact (LockUnnamed t v)   = protoFact Consume "Lock" [lockPubTerm v, varTerm v, t ]
+actionToFact (UnlockNamed t v) = protoFact Consume (unlockFactName v) [lockPubTerm v,varTerm v,t]
+actionToFact (UnlockUnnamed t v) = protoFact Consume "Unlock" [lockPubTerm v,varTerm v,t]
+actionToFact (ProgressFrom p) = protoFact Consume ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
+actionToFact (ProgressTo p pf) = protoFact Consume ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
 
 toFreeMsgVariable :: LVar -> BVar LVar
@@ -235,27 +235,27 @@ factToFact :: TransFact -> Fact LNTerm
 factToFact (Fr v) = freshFact $ varTerm (v)
 factToFact (In t) = inFact t
 factToFact (Out t) = outFact t
-factToFact (FLet p t vars) = protoFact Linear ("Let"++ "_" ++ prettyPosition p) (t:ts)
+factToFact (FLet p t vars) = protoFact Consume ("Let"++ "_" ++ prettyPosition p) (t:ts)
       where
         ts = map varTerm (S.toList vars)
-factToFact (Message t t') = protoFact Linear "Message" [t, t']
-factToFact (Ack t t') = protoFact Linear "Ack" [t, t']
-factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTerm $ varMID p ]
-factToFact (MessageIDReceiver p) = protoFact Linear "MID_Receiver" [ varTerm$ varMID p ]
+factToFact (Message t t') = protoFact Consume "Message" [t, t']
+factToFact (Ack t t') = protoFact Consume "Ack" [t, t']
+factToFact (MessageIDSender p) = protoFact Consume "MID_Sender" [ varTerm $ varMID p ]
+factToFact (MessageIDReceiver p) = protoFact Consume "MID_Receiver" [ varTerm$ varMID p ]
 factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_" ++ prettyPosition p) ts
     where
         name k = if isSemiState k then "Semistate" else "State"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
-factToFact (PureCell t1 t2) = protoFact Linear ("L_PureState") [t1, t2]
-factToFact (CellLocked t1 t2) = protoFact Linear ("L_CellLocked") [t1, t2]
+factToFact (PureCell t1 t2) = protoFact Consume ("L_PureState") [t1, t2]
+factToFact (CellLocked t1 t2) = protoFact Consume ("L_CellLocked") [t1, t2]
 
 
 pureStateFactTag :: FactTag
-pureStateFactTag =  ProtoFact Linear ("L_PureState") 2
+pureStateFactTag =  ProtoFact Consume ("L_PureState") 2
 
 pureStateLockFactTag :: FactTag
-pureStateLockFactTag =  ProtoFact Linear ("L_CellLocked") 2
+pureStateLockFactTag =  ProtoFact Consume ("L_CellLocked") 2
 
 
 isOutFact :: Fact t -> Bool

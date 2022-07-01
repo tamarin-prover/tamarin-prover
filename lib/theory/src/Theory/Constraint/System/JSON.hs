@@ -79,7 +79,7 @@ data JSONGraphNodeFact = JSONGraphNodeFact
       jgnFactId    :: String
     , jgnFactTag   :: String  -- ^ ProtoFact, FreshFact, OutFact, InFact, KUFact, KDFact, DedFact
     , jgnFactName  :: String  -- ^ Fr, Out, In, !KU, ...
-    , jgnFactMult  :: String  -- ^ "!" = persistent, "" = linear
+    , jgnFactMult  :: String  -- ^ "!" = readOnly, "" = consume
     , jgnFactTerms :: [JSONGraphNodeTerm]
     , jgnFactShow  :: String
     } deriving (Show)
@@ -216,8 +216,8 @@ itemToJSONGraphNodeFact pretty id' f =
                                           False -> show (factTag f)
                        , jgnFactName  = showFactTag $ factTag f
                        , jgnFactMult  = case factTagMultiplicity $ factTag f of
-                                          Linear     -> ""
-                                          Persistent -> "!"
+                                          Consume  -> ""
+                                          ReadOnly -> "!"
                        , jgnFactTerms = map (lntermToJSONGraphNodeTerm pretty) (factTerms f)
                        , jgnFactShow  = case pretty of
                                           True  -> pps $ prettyLNFact f
@@ -258,7 +258,7 @@ getRelationType src tgt se =
     let check p = maybe False p (resolveNodePremFact tgt se) ||
                   maybe False p (resolveNodeConcFact src se)
         relationType | check isKFact          = "KFact"
-                     | check isPersistentFact = "PersistentFact"
+                     | check isReadOnlyFact   = "ReadOnlyFact"
                      | check isProtoFact      = "ProtoFact"
                      | otherwise              = "default"
     in
