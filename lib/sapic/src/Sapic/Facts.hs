@@ -149,7 +149,7 @@ addVarToState :: LVar -> TransFact -> TransFact
 addVarToState v' (State kind pos vs)  = State kind pos (v' `S.insert` vs)
 addVarToState _ x = x
 
-multiplicity :: StateKind -> Multiplicity  --TODO-Robert what are StateKinds? is the Consume/Readonly fine here?
+multiplicity :: StateKind -> Multiplicity
 multiplicity LState = Consume
 multiplicity LSemiState = Consume
 multiplicity PState = ReadOnly
