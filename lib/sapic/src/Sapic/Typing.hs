@@ -126,9 +126,13 @@ typeWith t tt
                 throwM $ TypingError term outt tterm
 
 -- | Types a term with a given environment
+-- | Ignores unbounded vars by populating the set of bound vars with all free vars inside terms
 typeTermsWithEnv ::  (MonadThrow m, MonadCatch m) => TypingEnvironment -> [Term (Lit Name SapicLVar)] -> m TypingEnvironment
-typeTermsWithEnv typeEnv terms = execStateT (mapM typeWith' terms) typeEnv
+typeTermsWithEnv typeEnv terms = execStateT (mapM typeWith' terms) typeEnv'
          where typeWith' t = typeWith t Nothing
+               freeVars = foldl (\acc x -> acc `List.union` frees x) [] (map toLNTerm terms)
+               nVars = foldl (\acc x -> Map.insert x Nothing acc ) (vars typeEnv) freeVars
+               typeEnv' = typeEnv{ vars = nVars}
 
 typeProcess :: (GoodAnnotation a, MonadThrow m, MonadCatch m, Show a, Typeable a) =>
     Process a SapicLVar ->  StateT
