@@ -74,9 +74,7 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
       proveDiffTheory (const True) (const True) checkProof checkDiffProof
         (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items (L.get diffThyOptions thy0))
   where
-    parameters = 
-      Sources.IntegerParameters {_paramOpenChainsLimit = L.get (openChainsLimit.diffThyOptions) thy0, 
-                                 _paramSaturationLimit = L.get (saturationLimit.diffThyOptions) thy0 }
+    parameters = Sources.IntegerParameters (L.get (openChainsLimit.diffThyOptions) thy0) (L.get (saturationLimit.diffThyOptions) thy0)
     h              = L.get diffThyHeuristic thy0
     diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
     diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
@@ -172,9 +170,7 @@ closeTheoryWithMaude sig thy0 autoSources =
         proveTheory (const True) checkProof
       $ Theory (L.get thyName thy0) h sig (cache items) items (L.get thyOptions thy0)
   where
-    parameters = 
-      Sources.IntegerParameters {_paramOpenChainsLimit = L.get (openChainsLimit.thyOptions) thy0, 
-                                 _paramSaturationLimit = L.get (saturationLimit.thyOptions) thy0 }
+    parameters = Sources.IntegerParameters (L.get (openChainsLimit.thyOptions) thy0) (L.get (saturationLimit.thyOptions) thy0)
     h          = L.get thyHeuristic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
     cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) False

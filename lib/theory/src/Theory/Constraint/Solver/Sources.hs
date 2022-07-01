@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 -- |
 -- Copyright   : (c) 2011,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -24,6 +27,8 @@ module Theory.Constraint.Solver.Sources (
 
   -- Paramters type
   , IntegerParameters(..)
+  , paramOpenChainsLimit
+  , paramSaturationLimit
 
   ) where
 
@@ -61,13 +66,17 @@ import           Theory.Model
 import           Control.Monad.Bind
 
 import           Debug.Trace
+import qualified GHC.Generics as G
+import qualified Data.Binary  as B
 
 
 -- | Parameters
-data IntegerParameters = IntegerParameters {
+data IntegerParameters = IntegerParameters 
+    {
       _paramOpenChainsLimit :: Integer
     , _paramSaturationLimit :: Integer
-}
+    } deriving( Eq, Ord, Show, G.Generic, NFData, B.Binary )
+$(mkLabels [''IntegerParameters])
 
 ------------------------------------------------------------------------------
 -- Precomputing case distinctions
@@ -143,7 +152,7 @@ solveAllSafeGoals ths' openChainsLimit =
       case goal of
         ChainG _ _    -> if (chainsLeft > 0)
                             then True
-                            else trace ("Stopping precomputation, too many chain goals. Open Chains limits (can be change with --OCL=): "++ show openChainsLimit) False
+                            else trace ("[Open Chains] Too many chain goals, stopping precomputation. Open Chains limits (can be changed with -c=): "++ show openChainsLimit) False
         ActionG _ fa  -> not (isKUFact fa)
         -- we do not solve KD goals for Xor facts as insertAction inserts
         -- these goals directly. This prevents loops in the precomputations
@@ -354,15 +363,15 @@ saturateSources parameters ctxt thsInit  =
   where
     go :: [Source] -> Integer -> [Source]
     go ths n =
-        if (any or (changes `using` parList rdeepseq)) && (n <= _paramSaturationLimit parameters)
-          then trace("saturateSources: step " ++ show n) $ go ths' (n + 1)
-          else if (n > _paramSaturationLimit parameters)
-            then trace ("saturateSources: Saturation aborted, more than " ++ (show (_paramSaturationLimit parameters)) ++ " iterations. (Limit can be change with --SL=)") ths'
-            else trace("saturateSources: step " ++ show n) ths'
+        if (any or (changes `using` parList rdeepseq)) && (n <= get paramSaturationLimit parameters)
+          then trace("[Saturating Sources] Step " ++ show n ++ "/" ++ show (get paramSaturationLimit parameters)) $ go ths' (n + 1)
+          else if (n > get paramSaturationLimit parameters)
+            then trace ("[Saturating Sources] Saturation aborted, more than " ++ (show (get paramSaturationLimit parameters)) ++ " iterations. (Limit can be change with -s=)") ths'
+            else trace("[Saturating Sources] Step " ++ show n ++ "/" ++ show (get paramSaturationLimit parameters)) ths'
       where
         (changes, ths') = unzip $ map (refineSource ctxt solver) ths
         goodTh th  = length (getDisj (get cdCases th)) <= 1
-        solver     = do names <- solveAllSafeGoals (filter goodTh ths) (_paramOpenChainsLimit parameters) 
+        solver     = do names <- solveAllSafeGoals (filter goodTh ths) (get paramOpenChainsLimit parameters) 
                         return (not $ null names, names)
 
 -- | Precompute a saturated set of case distinctions.

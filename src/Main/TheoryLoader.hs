@@ -136,11 +136,11 @@ theoryLoadFlags =
   , flagOpt (oraclePath defaultOracle) ["oraclename"] (updateArg "oraclename") "FILE"
       ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "')")
 
-  , flagReq ["OpenChainsLimit","OCL"] (updateArg "OpenChainsLimit" ) "PositiveInteger"
-      "(Expert argument) Limits the number of open chains"
+  , flagReq ["open-chains","c"] (updateArg "OpenChainsLimit" ) "PositiveInteger"
+      "Limits the number of open chains to be resoled during precomputations (default 10)"
 
-  , flagReq ["SaturationLimit","SL"] (updateArg "SaturationLimit" ) "PositiveInteger"
-      "(Expert argument) Limits the number of iterations when saturateSources"
+  , flagReq ["saturation","s"] (updateArg "SaturationLimit" ) "PositiveInteger"
+      "Limits the number of saturations during precomputations (default 5)"
 
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
