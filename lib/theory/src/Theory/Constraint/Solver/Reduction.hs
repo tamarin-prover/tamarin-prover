@@ -385,7 +385,7 @@ insertAction i fa@(Fact _ ann _) = do
 
 -- | Insert a 'Less' atom. @insertLess i j@ means that *i < j* is added.
 insertLess :: NodeId -> NodeId -> Reduction ()
-insertLess i j = trace (show ("INS insertLess", i, j)) $ modM sLessAtoms (S.insert (i, j))
+insertLess i j = modM sLessAtoms (S.insert (i, j))
 
 -- | Insert a 'Last' atom and ensure their uniqueness.
 insertLast :: NodeId -> Reduction ChangeIndicator
