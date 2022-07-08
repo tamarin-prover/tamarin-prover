@@ -281,7 +281,7 @@ enforceEdgeConstraints = do
                 then return Unchanged
                 else insertLess i j >> return Changed
               )
-      return $ foldl (<>) Unchanged $ trace (show ("orderings", orderings)) changes
+      return $ foldl (<>) Unchanged changes
 
 
 
