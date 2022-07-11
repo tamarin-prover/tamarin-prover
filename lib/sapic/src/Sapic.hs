@@ -16,6 +16,9 @@ translate
 , module Sapic.Typing
 , module Sapic.Warnings
 , ) where
+
+import Prelude hiding ((.),id)
+import Control.Category ( Category(id, (.)) )
 import Control.Exception hiding (catch)
 import Control.Monad.Fresh
 import Control.Monad.Catch
@@ -24,7 +27,7 @@ import Theory.Sapic
 import Data.Typeable
 import Data.Maybe
 import qualified Data.Set as S
-import qualified Extension.Data.Label                as L
+import Extension.Data.Label
 import Control.Monad.Trans.FastFresh   ()
 import Sapic.Exceptions
 import Sapic.Annotation
@@ -45,24 +48,27 @@ import Sapic.Warnings
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
-             OpenTheory
-             -> m OpenTheory
+             OpenTheory -> m OpenTheory
 translate th = case theoryProcesses th of
-      []  -> if L.get transReliable ops then
+      []  -> if get transReliable ops then
                throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
              else
                return th
       [p] -> do
                 -- annotate
                 an_proc_pre <- translateLetDestr sigRules
-                  $ translateReport
-                  $ optimizeStateChannel
+                  $ checkOps' transReport translateTermsReport
+                  $ checkOps' stateChannelOpt annotatePureStates
                   $ annotateSecretChannels
                   $ propagateNames
                   $ toAnProcess p
                 an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
                 -- compute initial rules
-                (initRules,initTx) <- initialRules an_proc
+                (initRules,initTx) <- 
+                             checkOps transReport (reportInit an_proc)
+                        =<<  checkOps transReliable (RCT.reliableChannelInit an_proc)
+                        =<<  checkOps transProgress (PT.progressInit an_proc)
+                             (BT.baseInit an_proc)
                 -- generate protocol rules, starting from variables in initial tilde x
                 protoRule <-  gen (trans an_proc) an_proc [] initTx
                 -- apply path compression
@@ -70,85 +76,32 @@ translate th = case theoryProcesses th of
                 -- add these rules
                 th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
                 -- add restrictions
-                rest<- restrictions an_proc
+                rest<- checkOps transReliable (RCT.reliableChannelRestr an_proc)
+                     =<<  checkOps transProgress (PT.progressRestr an_proc)
+                     =<<  BT.baseRestr an_proc needsInEvRes True []
                 th2 <- foldM liftedAddRestriction th1 rest
-                -- add heuristic, if not already defined:
-                let th3 = setPureStateInjective $ fromMaybe th2 (addHeuristic heuristics th2) -- does not overwrite user defined heuristic
-                return th3
+                -- add heuristic, if not already defined by user
+                let th3 = fromMaybe th2 (addHeuristic [SapicRanking] th2)
+                -- for state optimisation: force special facts  to be injective
+                let th4 = checkOps' stateChannelOpt (setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag])) th3
+                return th4
       _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
-    ops = L.get thyOptions th
-    translateReport anp =
-      if L.get transReport ops then
-        translateTermsReport anp
-      else
-        anp
-    pathComp p =
-      if L.get transProgress ops then
-        return p
-      else
-        pathCompression (L.get compressEvents ops) p
-    optimizeStateChannel anp =
-      if L.get stateChannelOpt ops then
-        annotatePureStates anp
-      else
-        anp
-    setPureStateInjective thy =
-      if L.get stateChannelOpt ops then
-          setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag] ) thy
---         L.set (forcedInjectiveFacts . thyOptions) S.empty thy
-      else
-        thy
-    sigRules =  stRules (L.get sigpMaudeSig (L.get thySignature th))
-    checkOps lens x
-        | L.get lens ops = Just x
-        | otherwise = Nothing
-    initialRules anP = foldM (flip ($))  (BT.baseInit anP) --- fold from left to right
-                        $ catMaybes [
-                        checkOps transProgress (PT.progressInit anP)
-                        , checkOps transReliable (RCT.reliableChannelInit anP)
-                        , checkOps transReport (reportInit anP)
-                      ]
-    trans anP = foldr ($) (BT.baseTrans (L.get asynchronousChannels ops) needsInEvRes)  --- fold from right to left, not that foldr applies ($) the other way around compared to foldM
-                        $ mapMaybe (uncurry checkOps) [ --- remove if fst element does not point to option that is set
-                        (transProgress, PT.progressTrans anP)
-                      , (transReliable, RCT.reliableChannelTrans )
-                      ]
-    restrictions:: (MonadThrow m1, MonadCatch m1) => LProcess (ProcessAnnotation LVar)  -> m1 [SyntacticRestriction]
-    restrictions anP = foldM (flip ($)) []  --- fold from left to right
-                                                                 --- TODO once accountability is supported, substitute True
-                                                                 -- with predicate saying whether we need single_session lemma
-                                                                 -- need to incorporate lemma2string_noacc once we handle accountability
-                                                                 -- if op.accountability then
-                                                                 --   (* if an accountability lemma with control needs to be shown, we use a
-                                                                 --    * more complex variant of the restritions, that applies them to only one execution *)
-                                                                 --   (List.map (bind_lemma_to_session (Msg id_ExecId)) restrs)
-                                                                 --   @ (if op.progress then [progress_init_lemma_acc] else [])
-                                                                 -- else
-                                                                 --   restrs
-                                                                 --    @ (if op.progress then [progress_init_lemma] else [])
-                        $ [BT.baseRestr anP needsInEvRes True] ++
-                           mapMaybe (uncurry checkOps) [
-                            (transProgress, PT.progressRestr anP)
-                          , (transReliable, RCT.reliableChannelRestr anP)
---                          , (stateChannelOpt, BT.resLockingPure)
-                           ]
-    heuristics = [SapicRanking]
+    ops = get thyOptions th
+    checkOps l x
+        | get l ops = x
+        | otherwise = return
+    checkOps' l x
+        | get l ops = x
+        | otherwise = id
+    pathComp r =
+      if get transProgress ops then return r
+      else pathCompression (get compressEvents ops) r
+    sigRules =  stRules (get (sigpMaudeSig . thySignature) th)
+    trans anP = checkOps' transProgress (PT.progressTrans anP)
+              $ checkOps' transReliable RCT.reliableChannelTrans
+              $ BT.baseTrans (get asynchronousChannels ops) needsInEvRes
     needsInEvRes = any lemmaNeedsInEvRes (theoryLemmas th)
-  -- TODO This function is not yet complete. This is what the ocaml code
-  -- was doing:
-  -- NOTE: Kevin Morio is working on accountability
-  --
-  -- and predicate_restrictions = print_predicates input.pred
-  -- and sapic_restrictions = print_lemmas (generate_sapic_restrictions input.op annotated_process)
-  -- in
-  -- let msr' = if Lemma.contains_control input.lem (* equivalent to op.accountability *)
-  --            then annotate_eventId msr
-  --            else msr
-  -- in
-  -- input.sign ^ ( print_msr msr' ) ^ sapic_restrictions ^
-  -- predicate_restrictions ^ lemmas_tamarin
-  --- ^ "end"
 
 -- | Processes through an annotated process and translates every single action
 -- | according to trans. It substitutes states by pstates for replication and
@@ -226,7 +179,7 @@ isPosNegFormula fm = case fm of
 
 -- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is needed.
 lemmaNeedsInEvRes :: Lemma p -> Bool
-lemmaNeedsInEvRes lem = case (L.get lTraceQuantifier lem, isPosNegFormula $ L.get lFormula lem) of
+lemmaNeedsInEvRes lem = case (get lTraceQuantifier lem, isPosNegFormula $ get lFormula lem) of
   (AllTraces,   (_, True))     -> False -- L- for all-traces
   (ExistsTrace, (True, _))     -> False -- L+ for exists-trace
   (ExistsTrace, (False, True)) -> True  -- L- for exists-trace
