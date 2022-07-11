@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveFunctor #-}
 module Items.ProcessItem (
@@ -24,7 +23,7 @@ import           Prelude                             hiding (id, (.))
 data ProcessDef = ProcessDef
         { _pName            :: String
         , _pBody            :: PlainProcess
-        , _pVars            :: [SapicLVar]
+        , _pVars            :: Maybe [SapicLVar]
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''ProcessDef])

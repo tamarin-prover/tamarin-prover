@@ -15,7 +15,7 @@ dcde(cde(m))=m,dshared(shared(m))=m,dscode(scode(m))=m,dsko(sko(m))=m
 
 predicates: Report(x,y) <=> not( y = 'loc')
 
-let user =
+let user(pc,cu,pw) =
     in(pc,code);                        // Side channel verification (sms,phone call)
     event ProvU(code);
     out(cde(code));
@@ -23,10 +23,9 @@ let user =
     out(cu,<pw,fr>))
 
 
-let enclave =
-
-    (new shared_k; event SessionP(pk(skV),shared_k);let signed=report( aenc(shared_k, pk(skV))) in
-    out(shared(<aenc(shared_k, pk(skV)),signed>));     // Key exchange with the server
+let enclave(pkV,cu,pw) =
+    (new shared_k; event SessionP(pkV,shared_k);let signed=report( aenc(shared_k, pkV)) in
+    out(shared(<aenc(shared_k, pkV),signed>));     // Key exchange with the server
     in(cdcode);
     let code = dcde(cdcode) in
     event ProvE(code);                   // reception of an attested code of the user
@@ -43,7 +42,7 @@ let enclave =
     )
     )@'loc'
 
-let server =
+let server(skV,pc,pw) =
 //    in(shared(<aenc(shared_k, pk(=skV)), signed>));
     in(share);
     let mess = dshared(share) in
@@ -69,7 +68,11 @@ let server =
      else (0)
 
 process:
-new skV; new pc:channel; new cu:channel; new pw; event Chan(cu); event Chan(pc); out(pw); event Key(skV);out(pk(skV));(!server||!user || !enclave)
+new skV; new pc:channel; new cu:channel; new pw;
+event Chan(cu); event Chan(pc);
+out(pw); 
+event Key(skV);out(pk(skV));
+(!user(pc,cu,pw) | !enclave(pk(skV),cu,pw) | !server(skV,pc,pw))
 
 
 lemma reachV:

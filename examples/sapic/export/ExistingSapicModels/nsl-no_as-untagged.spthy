@@ -121,13 +121,13 @@ equivLemma:
  ( new skA; ( !( P(skA))
 |
  ( new skB;
-        out(att,pk(skB)); ! (  new Nb; new test; Qleak(skB,Nb,test,pk(skA))) )
+        out(pk(skB)); ! (  new Nb; new test; Qleak(skB,Nb,test,pk(skA))) )
 ))
 
  ( new skA; ( !( P(skA))
 |
  ( new skB;
-        out(att,pk(skB)); ! (  new Nb; new test; Qleak(skB,Nb,Nb,pk(skA))) )
+        out(pk(skB)); ! (  new Nb; new test; Qleak(skB,Nb,Nb,pk(skA))) )
 ))
 
 

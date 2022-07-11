@@ -17,19 +17,19 @@ functions: pk/1, sign/2, getmess/1, checksign/2, succ/1
 
 equations:  getmess( sign(m, k )) = m,  checksign( sign(m, k ) ,pk(k)) = m
 
-let S =
+let S(~tls,log,pass,u2fpk) =
    in(~tls, <=log,=pass>);
    new chall:bitstring;
    out(~tls, chall);
    in(~tls, signed:bitstring);
-   if checksign( signed, pk(u2fkey)) = <log,pass,chall> then
+   if checksign( signed, u2fpk) = <log,pass,chall> then
       lock 'EvServer';
       lookup 'EvServer' as cnt in
       event ServerAccept(cnt);
       insert 'EvServer', succ(cnt);
       unlock 'EvServer'
 
-let P =
+let P(~tls,~u2f,~kb) =
   in(~kb, <lg:bitstring,pss:bitstring>);
   out(~tls, <lg,pss>);
   in(~tls, chall:bitstring);
@@ -37,14 +37,14 @@ let P =
   in(~u2f, signed:bitstring);
   out(~tls, signed)
 
-let T =
+let T(~u2f,~btn, u2fkey) =
  in(~u2f, payload:bitstring);
  out(~btn,'askpress');
  in(~btn, 'pressed');
  out(~u2f, sign( payload, u2fkey))
 
 
-let U =
+let U(~kb,~btn,log,pass) =
   lock 'EvToken';
   lookup 'EvToken' as cnt in
   event UserInit(cnt);
@@ -58,7 +58,11 @@ process:
 new ~tls:channel; new ~u2f:channel; new ~kb:channel; new ~btn:channel; new log; new pass; new u2fkey;
 insert 'EvToken', 'zero';
 insert 'EvServer', 'zero';
-! ( S || U || T || P)
+! ( S(~tls,log,pass,pk(u2fkey))
+|| P(~tls,~u2f,~kb)
+|| T(~u2f,~btn, u2fkey)
+|| U(~kb,~btn,log,pass)
+)
 
 
 lemma auth[reuse,use_induction]:

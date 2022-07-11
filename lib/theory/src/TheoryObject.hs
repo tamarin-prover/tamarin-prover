@@ -617,18 +617,21 @@ prettyTranslationElement (ProcessDefItem p) =
     <->
     (text (L.get pName p))
     <->
-    (text ("(" ++ intercalate "," (map show $ L.get pVars p) ++ ")"))
+    (case L.get pVars p of
+        Nothing -> emptyDoc
+        Just l  -> text ("(" ++ intercalate "," (map show l) ++ ")")
+    )
     <->
     (text "=")
     <->
-    (nest 2 $ prettyProcess $ L.get pBody p)
+    nest 2 (prettyProcess $ L.get pBody p)
 
 prettyTranslationElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype)) =
     (text "function:")
     <->
     text (unpack fsn)
     <->
-    (parens $ fsep $ punctuate comma $ map printType intypes)
+    parens (fsep $ punctuate comma $ map printType intypes)
     <->
     text ":"
     <->
@@ -642,9 +645,9 @@ prettyTranslationElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype
 prettyTranslationElement (ExportInfoItem eInfo) =
     (text "export: ")
     <->
-    (text $ L.get eTag eInfo)
+    text (L.get eTag eInfo)
     <->
-    (nest 2 $ doubleQuotes $ text $ L.get eText eInfo)
+    nest 2 (doubleQuotes $ text $ L.get eText eInfo)
 
 prettyTranslationElement (SignatureBuiltin s) = (text "builtin ")<->(text s)
 

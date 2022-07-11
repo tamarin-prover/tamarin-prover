@@ -7,17 +7,16 @@ import Theory.Sapic
 import Sapic.Exceptions
 import Sapic.Bindings
 import Control.Monad.Catch
-import Sapic.Annotation (AnnotatedProcess)
 import Data.Foldable (traverse_)
 import Theory.Tools.Wellformedness (WfErrorReport)
 import Theory.Text.Pretty (text)
 
 
 -- warnProcess :: [WFerror AnnotatedProcess]
-warnProcess :: GoodAnnotation a => Process a SapicLVar -> [WFerror AnnotatedProcess]
+warnProcess :: GoodAnnotation a => Process a SapicLVar -> [WFerror]
 warnProcess p = map WFBoundTwice (capturedVariables p)
 
-toWfErrorReport :: (Show p) => [WFerror p] -> WfErrorReport
+toWfErrorReport :: [WFerror] -> WfErrorReport
 toWfErrorReport = map f
     where
         f e = ("Wellformedness-error in Process", (text . show) e)
