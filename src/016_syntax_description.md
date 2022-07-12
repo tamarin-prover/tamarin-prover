@@ -13,7 +13,7 @@ All security protocol theory are named and delimited by `begin` and `end`.
 We explain the non-terminals of the body in the following paragraphs.
 
     security_protocol_theory := 'theory' ident 'begin' body 'end'
-    body := (signature_spec | global_heuristic | rule |
+    body := (signature_spec | global_heuristic | tactic | rule |
                 restriction | lemma | formal_comment)*
 
 Here, we use the term signature more liberally to denote both the defined
@@ -53,6 +53,24 @@ Section [Heuristics](010_advanced-features.html#sec:heuristics).
     goal_ranking          := standard_goal_ranking | oracle_goal_ganking
     standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
     oracle_goal_ranking   := 'o' '"' [^'"']* '"' | 'O' '"' [^'"']* '"'
+
+The tactics allow the user to write their own heuristics based on the lemmas there are trying to prove. Their use is descibed in in Section [Using a Tactic](010_advanced-features.html#sec:fact-annotations#subsec:tactic).
+
+    tactic                := 'tactic' ':' ident
+                             [presort]
+                             (prio)+ (deprio)* | (prio)* (deprio)+
+    presort               := 'presort' ':' standard_goal_ranking
+    prio                  := 'prio' ':' [pre_ranking]
+                                 (function)+
+    deprio                := 'deprio' ':' [pre_ranking]
+                                 (function)+
+    standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's' 
+    preranking            := 'smallest' | 'id'                   
+    function              := and_function [ '|' and_function]*
+    and_function          := not_function [ '&' not_function]*
+    not_function          := (not)? function_name ['"' param '"']*
+    function_name         :=   'regex' | 'isFactName' | 'isInFactTerms' | 'dhreNoise'
+                             | 'defaultNoise' | 'reasonableNoncesNoise' | 'nonAbsurdGoal'
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
 to a security protocol theory is the set of all multiset rewriting rules
