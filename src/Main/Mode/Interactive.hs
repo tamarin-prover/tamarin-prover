@@ -30,7 +30,6 @@ import qualified Web.Settings
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
-import qualified Data.Label as L
 
 
 -- | Batch processing mode.
@@ -93,32 +92,21 @@ run thisMode as = case findArg "workDir" as of
             , "Browse to " ++ webUrl ++ " once the server is ready."
             , ""
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
+            , ""
             ]
-          if (L.get oDiffMode thyLoadOptions)
-            then do 
-              withWebUIDiff
-                ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
-                cacheDir
-                workDir (argExists "loadstate" as) (argExists "autosave" as)
+          withWebUI
+            ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
+            cacheDir
+            workDir (argExists "loadstate" as) (argExists "autosave" as)
 
-                (loadClosedDiffThyWfReport thyLoadOptions) (loadClosedDiffThyString thyLoadOptions)
-                (reportOnClosedDiffThyStringWellformedness thyLoadOptions)
+            thyLoadOptions
 
-                (argExists "debug" as) (dotPath as) readImageFormat
-                (constructAutoProver thyLoadOptions)
-                (runWarp port)
-            else do 
-              withWebUI
-                ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
-                cacheDir
-                workDir (argExists "loadstate" as) (argExists "autosave" as)
+            (loadTheory thyLoadOptions)
+            (closeTheory' thyLoadOptions)
 
-                (loadClosedThyWfReport thyLoadOptions) (loadClosedThyString thyLoadOptions)
-                (reportOnClosedThyStringWellformedness thyLoadOptions)
-
-                (argExists "debug" as) (graphPath as) readImageFormat
-                (constructAutoProver thyLoadOptions)
-                (runWarp port)
+            (argExists "debug" as) (graphPath as) readImageFormat
+            (constructAutoProver thyLoadOptions)
+            (runWarp port)
         else
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")

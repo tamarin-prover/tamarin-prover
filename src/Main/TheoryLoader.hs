@@ -24,6 +24,7 @@ module Main.TheoryLoader (
   , ArgumentError(..)
   , mkTheoryLoadOptions
 
+  , TheoryLoadError(..)
   , loadTheory
   , closeTheory'
 
@@ -31,10 +32,8 @@ module Main.TheoryLoader (
   , loadOpenThy
 
   -- ** Loading and closing theories
-  , closeThy
   , loadClosedThyWf
   , loadClosedThyWfReport
-  , loadClosedThyString
   , reportOnClosedThyStringWellformedness
   , reportWellformednessDoc
 
@@ -449,15 +448,15 @@ loadClosedDiffThyWfReport thyOpts inFile = do
     -- return closed theory
     return $ closeDiffThyWithMaude sig thyOpts thy1
 
-loadClosedThyString :: TheoryLoadOptions -> String -> IO (Either String ClosedTheory)
-loadClosedThyString thyOpts input =
-    case parseOpenTheoryString (toParserFlags thyOpts) input of
-        Left err  -> return $ Left $ "parse error: " ++ show err
-        Right thy -> do
-            thy' <-  Sapic.typeTheory thy
-                  >>= Sapic.translate
-                  >>= Acc.translate
-            Right <$> closeThy thyOpts thy (removeTranslationItems thy') -- No "return" because closeThy gives IO (ClosedTheory)
+-- loadClosedThyString :: TheoryLoadOptions -> String -> IO (Either String ClosedTheory)
+-- loadClosedThyString thyOpts input =
+--     case parseOpenTheoryString (toParserFlags thyOpts) input of
+--         Left err  -> return $ Left $ "parse error: " ++ show err
+--         Right thy -> do
+--             thy' <-  Sapic.typeTheory thy
+--                   >>= Sapic.translate
+--                   >>= Acc.translate
+--             Right <$> closeThy thyOpts thy (removeTranslationItems thy') -- No "return" because closeThy gives IO (ClosedTheory)
 
 
 loadClosedDiffThyString :: TheoryLoadOptions -> String -> IO (Either String ClosedDiffTheory)
@@ -512,11 +511,11 @@ reportOnClosedDiffThyStringWellformedness thyOpts input = do
             return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
 
 -- | Close a theory according to arguments.
-closeThy :: TheoryLoadOptions -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
-closeThy thyOpts openThy transThy = do
-  transThy' <- return $ addMessageDeductionRuleVariants transThy
-  sig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy'
-  return $ closeThyWithMaude sig thyOpts openThy transThy'
+-- closeThy :: TheoryLoadOptions -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
+-- closeThy thyOpts openThy transThy = do
+--   transThy' <- return $ addMessageDeductionRuleVariants transThy
+--   sig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy'
+--   return $ closeThyWithMaude sig thyOpts openThy transThy'
 
 -- | Close a theory according to arguments.
 closeThyWithMaude :: SignatureWithMaude -> TheoryLoadOptions -> OpenTheory -> OpenTranslatedTheory -> ClosedTheory
