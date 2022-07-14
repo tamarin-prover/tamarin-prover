@@ -14,6 +14,7 @@
 module Main.TheoryLoader (
   -- * Static theory loading settings
     theoryLoadFlags
+  , lemmaSelector
 
   , TheoryLoadOptions(..)
   , oDiffMode
@@ -26,27 +27,7 @@ module Main.TheoryLoader (
 
   , TheoryLoadError(..)
   , loadTheory
-  , closeTheory'
-
-  -- ** Loading open theories
-  , loadOpenThy
-
-  -- ** Loading and closing theories
-  , loadClosedThyWf
-  , loadClosedThyWfReport
-  , reportOnClosedThyStringWellformedness
-  , reportWellformednessDoc
-
-
-  -- ** Loading open diff theories
-  , loadOpenDiffThy
-
-  -- ** Loading and closing diff theories
-  , loadClosedDiffThy
-  , loadClosedDiffThyWfReport
-  , loadClosedDiffThyString
-  , reportOnClosedDiffThyStringWellformedness
-
+  , closeTheory
 
   -- ** Constructing automatic prover
   , constructAutoProver
@@ -56,7 +37,6 @@ module Main.TheoryLoader (
   , bpIntruderVariantsFile
   , addMessageDeductionRuleVariants
 
-  , lemmaSelector
   ) where
 
 -- import           Debug.Trace
@@ -73,14 +53,14 @@ import           Control.Category
 
 import           System.Console.CmdArgs.Explicit
 
-import           Theory hiding (transReport)
-import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString, parseOpenDiffTheory, parseOpenDiffTheoryString, theory, diffTheory)
+import           Theory hiding (closeTheory)
+import           Theory.Text.Parser                  (parseIntruderRules, theory, diffTheory)
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 import qualified Sapic as Sapic
-import           Main.Console                        (renderDoc, argExists, findArg, addEmptyArg, updateArg, Arguments)
+import           Main.Console                        (argExists, findArg, addEmptyArg, updateArg, Arguments)
 
 import           Main.Environment
 
@@ -272,11 +252,6 @@ lemmaSelector thyOpts lem
         | lastMay pattern == Just '*' = init pattern `isPrefixOf` lem.lName
         | otherwise = lem.lName == pattern
 
-
--- | Load an open theory from a file.
-loadOpenThy :: TheoryLoadOptions -> FilePath -> IO OpenTheory
-loadOpenThy thyOpts inFile = parseOpenTheory (toParserFlags thyOpts) inFile
-
 data TheoryLoadError =
     ParserError ParseError
   | WarningError WfErrorReport
@@ -312,8 +287,8 @@ loadTheory thyOpts input inFile = do
 
     withTheory     f t = bitraverse f return t
 
-closeTheory' :: MonadError TheoryLoadError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
-closeTheory' thyOpts sig srcThy = do
+closeTheory :: MonadError TheoryLoadError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
+closeTheory thyOpts sig srcThy = do
   let preReport = either (\t -> (Sapic.checkWellformedness t ++ Acc.checkWellformedness t))
                          (const []) srcThy
 
@@ -359,236 +334,8 @@ closeTheory' thyOpts sig srcThy = do
     withTheory     f t = bitraverse f return t
     withDiffTheory f t = bitraverse return f t
 
--- | Load an open theory from a file. Returns the open and the translated theory.
-loadOpenAndTranslatedThy :: TheoryLoadOptions -> FilePath -> IO (OpenTheory, OpenTranslatedTheory)
-loadOpenAndTranslatedThy thyOpts inFile =  do
-    thy <- loadOpenThy thyOpts inFile
-    transThy <-
-      Sapic.typeTheory thy
-      >>= Sapic.translate
-      >>= Acc.translate
-    return (thy, removeTranslationItems transThy)
-
--- | Load an open diff theory from a file.
-loadOpenDiffThy :: TheoryLoadOptions -> FilePath -> IO OpenDiffTheory
-loadOpenDiffThy thyOpts = parseOpenDiffTheory (toParserFlags thyOpts)
-
--- | Load a closed diff theory from a file.
-loadClosedDiffThy :: TheoryLoadOptions -> FilePath -> IO ClosedDiffTheory
-loadClosedDiffThy thyOpts inFile = do
-  thy0 <- loadOpenDiffThy thyOpts inFile
-  thy1 <- return $ addMessageDeductionRuleVariantsDiff thy0
-  closeDiffThy thyOpts thy1
-
-reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
-reportWellformednessDoc [] =  Pretty.emptyDoc
-reportWellformednessDoc errs  = Pretty.vcat
-                          [ Pretty.text $ "WARNING: " ++ show (length errs)
-                                                      ++ " wellformedness check failed!"
-                          , Pretty.text "         The analysis results might be wrong!"
-                          , prettyWfErrorReport errs
-                          ]
-
--- | Report well-formedness errors unless empty. Quit on warning. Start with prefix `prefixAct`
-reportWellformedness :: IO a -> Bool -> WfErrorReport -> IO ()
-reportWellformedness _          _            []       = return ()
-reportWellformedness prefixAct quit           wfreport =
-   do
-      _ <- prefixAct -- optional: printout of file name or similar
-      putStrLn "WARNING: ignoring the following wellformedness errors"
-      putStrLn ""
-      putStrLn $ renderDoc $ prettyWfErrorReport wfreport
-      putStrLn $ replicate 78 '-'
-      if quit then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
-
--- | helper function: print header with theory filename
-printFileName :: [Char] -> IO ()
-printFileName inFile = do
-          putStrLn ""
-          putStrLn $ replicate 78 '-'
-          putStrLn $ "Theory file '" ++ inFile ++ "'"
-          putStrLn $ replicate 78 '-'
-          putStrLn ""
-
-loadClosedThyWf :: TheoryLoadOptions -> FilePath -> IO (ClosedTheory, Pretty.Doc)
-loadClosedThyWf thyOpts inFile = do
-    (openThy, transThy0) <- loadOpenAndTranslatedThy thyOpts inFile
-    transThy <- return $ addMessageDeductionRuleVariants transThy0
-    sig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy
-    -- report
-    let errors = checkWellformedness transThy sig ++ Sapic.checkWellformedness openThy ++ Acc.checkWellformedness openThy
-    let report = reportWellformednessDoc errors
-    -- return closed theory
-    let closedTheory = closeThyWithMaude sig thyOpts openThy transThy
-    return (closedTheory, report)
-
--- | Load a closed theory and report on well-formedness errors.
-loadClosedThyWfReport :: TheoryLoadOptions -> FilePath -> IO ClosedTheory
-loadClosedThyWfReport thyOpts inFile = do
-    (openThy, transThy0) <- loadOpenAndTranslatedThy thyOpts inFile
-    transThy <- return $ addMessageDeductionRuleVariants transThy0
-    transSig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy
-    -- report
-    let prefix = printFileName inFile
-    let errors = checkWellformedness transThy transSig ++ Sapic.checkWellformedness openThy ++ Acc.checkWellformedness openThy
-    reportWellformedness prefix (L.get oQuitOnWarning thyOpts) errors
-    -- return closed theory
-    return $ closeThyWithMaude transSig thyOpts openThy transThy
-
--- | Load a closed diff theory and report on well-formedness errors.
-loadClosedDiffThyWfReport :: TheoryLoadOptions -> FilePath -> IO ClosedDiffTheory
-loadClosedDiffThyWfReport thyOpts inFile = do
-    thy0 <- loadOpenDiffThy thyOpts inFile
-    thy1 <- return $ addMessageDeductionRuleVariantsDiff thy0
-    sig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get diffThySignature thy1
-    -- report
-    let prefix = printFileName inFile
-    let errors = checkWellformednessDiff thy1 sig
-    reportWellformedness prefix (L.get oQuitOnWarning thyOpts) errors
-    -- return closed theory
-    return $ closeDiffThyWithMaude sig thyOpts thy1
-
--- loadClosedThyString :: TheoryLoadOptions -> String -> IO (Either String ClosedTheory)
--- loadClosedThyString thyOpts input =
---     case parseOpenTheoryString (toParserFlags thyOpts) input of
---         Left err  -> return $ Left $ "parse error: " ++ show err
---         Right thy -> do
---             thy' <-  Sapic.typeTheory thy
---                   >>= Sapic.translate
---                   >>= Acc.translate
---             Right <$> closeThy thyOpts thy (removeTranslationItems thy') -- No "return" because closeThy gives IO (ClosedTheory)
-
-
-loadClosedDiffThyString :: TheoryLoadOptions -> String -> IO (Either String ClosedDiffTheory)
-loadClosedDiffThyString thyOpts input =
-    case parseOpenDiffTheoryString (toParserFlags thyOpts) input of
-        Left err  -> return $ Left $ "parse error: " ++ show err
-        Right thy -> fmap Right $ do
-          thy1 <- return $ addMessageDeductionRuleVariantsDiff thy
-          closeDiffThy thyOpts thy1
-
--- | Load an open theory from a string.
-loadOpenThyString :: TheoryLoadOptions -> String -> Either ParseError OpenTheory
-loadOpenThyString thyOpts = parseOpenTheoryString (toParserFlags thyOpts)
-
--- | Load an open theory from a string.
-loadOpenDiffThyString :: TheoryLoadOptions -> String -> Either ParseError OpenDiffTheory
-loadOpenDiffThyString thyOpts = parseOpenDiffTheoryString (toParserFlags thyOpts)
-
--- | Load a close theory and only report on well-formedness errors or translation errors
-reportOnClosedThyStringWellformedness :: TheoryLoadOptions -> String -> IO String
-reportOnClosedThyStringWellformedness thyOpts input =
-    case loadOpenThyString thyOpts input of
-      Left  err   -> return $ "parse error: " ++ show err
-      Right openThy -> do
-            transThy <- Sapic.typeTheory openThy
-                  >>= Sapic.translate
-                  >>= Acc.translate
-            transSig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy
-            -- report
-            let errors = checkWellformedness (removeTranslationItems transThy) transSig
-                      ++ Sapic.checkWellformedness openThy
-                      ++ Acc.checkWellformedness openThy
-            case errors of
-                  []     -> return ""
-                  report -> do
-                    if (L.get oQuitOnWarning thyOpts) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
-                    return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
-
--- | Load a closed diff theory and report on well-formedness errors.
-reportOnClosedDiffThyStringWellformedness :: TheoryLoadOptions -> String -> IO String
-reportOnClosedDiffThyStringWellformedness thyOpts input = do
-    case loadOpenDiffThyString thyOpts input of
-      Left  err   -> return $ "parse error: " ++ show err
-      Right thy0 -> do
-        thy1 <- return $ addMessageDeductionRuleVariantsDiff thy0
-        sig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get diffThySignature thy1
-        -- report
-        case checkWellformednessDiff thy1 sig of
-          []     -> return ""
-          report -> do
-            if (L.get oQuitOnWarning thyOpts) then error "quit-on-warning mode selected - aborting on wellformedness errors." else putStrLn ""
-            return $ " WARNING: ignoring the following wellformedness errors: " ++(renderDoc $ prettyWfErrorReport report)
-
--- | Close a theory according to arguments.
--- closeThy :: TheoryLoadOptions -> OpenTheory -> OpenTranslatedTheory -> IO ClosedTheory
--- closeThy thyOpts openThy transThy = do
---   transThy' <- return $ addMessageDeductionRuleVariants transThy
---   sig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get thySignature transThy'
---   return $ closeThyWithMaude sig thyOpts openThy transThy'
-
--- | Close a theory according to arguments.
-closeThyWithMaude :: SignatureWithMaude -> TheoryLoadOptions -> OpenTheory -> OpenTranslatedTheory -> ClosedTheory
-closeThyWithMaude sig thyOpts openThy transThy =
-      proveTheory (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover $ partialEvaluation closedThy
-    where
-      -- FIXME: wf-check is at the wrong position here. Needs to be more
-      -- fine-grained.
-      transThy' = wfCheck openThy transThy
-      -- close and prove
-      closedThy = closeTheoryWithMaude sig transThy' (L.get oAutoSources thyOpts)
-      -- apply partial application
-      ----------------------------
-      partialEvaluation = case (L.get oPartialEvaluation thyOpts) of
-        Just style -> applyPartialEvaluation style (L.get oAutoSources thyOpts)
-        Nothing    -> id
-
-      -- wellformedness check
-      -----------------------
-      wfCheck :: OpenTheory -> OpenTranslatedTheory -> OpenTranslatedTheory
-      wfCheck othy tthy =
-        noteWellformedness
-          (checkWellformedness tthy sig ++ Acc.checkWellformedness othy) transThy (L.get oQuitOnWarning thyOpts)
-
-      -- replace all annotated sorrys with the configured autoprover.
-      prover :: Prover
-      prover | L.get oProveMode thyOpts =
-                  replaceSorryProver $ runAutoProver $ constructAutoProver thyOpts
-             | otherwise            = mempty
-
--- | Close a diff theory according to arguments.
-closeDiffThy :: TheoryLoadOptions -> OpenDiffTheory -> IO ClosedDiffTheory
-closeDiffThy thyOpts thy0 = do
-  sig <- toSignatureWithMaude (L.get oMaudePath thyOpts) $ get diffThySignature thy0
-  return $ closeDiffThyWithMaude sig thyOpts thy0
-
 (&&&) :: (t -> Bool) -> (t -> Bool) -> t -> Bool
 (&&&) f g x = f x && g x
-
--- | Close a diff theory according to arguments.
-closeDiffThyWithMaude :: SignatureWithMaude -> TheoryLoadOptions -> OpenDiffTheory -> ClosedDiffTheory
-closeDiffThyWithMaude sig thyOpts thy0 =
-      proveDiffTheory (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover diffprover $ partialEvaluation cthy
-    where
-      -- FIXME: wf-check is at the wrong position here. Needs to be more
-      -- fine-grained.
-      thy2 = wfCheckDiff thy0
-      -- close and prove
-      cthy = closeDiffTheoryWithMaude sig (addDefaultDiffLemma thy2) (L.get oAutoSources thyOpts)
-      -- apply partial application
-      ----------------------------
-      partialEvaluation = case (L.get oPartialEvaluation thyOpts) of
-        Just style -> applyPartialEvaluationDiff style (L.get oAutoSources thyOpts)
-        Nothing    -> id
-
-      -- wellformedness check
-      -----------------------
-      wfCheckDiff :: OpenDiffTheory -> OpenDiffTheory
-      wfCheckDiff thy =
-        noteWellformednessDiff
-          (checkWellformednessDiff thy sig) thy (L.get oQuitOnWarning thyOpts)
-
-      -- diff prover: replace all annotated sorrys with the configured autoprover.
-      diffprover :: DiffProver
-      diffprover | L.get oProveMode thyOpts =
-                         replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver thyOpts
-                 | otherwise            = mempty
-
-      -- replace all annotated sorrys with the configured autoprover.
-      prover :: Prover
-      prover | L.get oProveMode thyOpts =
-                  replaceSorryProver $ runAutoProver $ constructAutoProver thyOpts
-             | otherwise            = mempty
 
 -- | Construct an 'AutoProver' from the given arguments (--bound,
 -- --stop-on-trace).

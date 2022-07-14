@@ -22,7 +22,7 @@ import           Extension.Data.Label
 
 import qualified Text.PrettyPrint.Class          as Pretty
 
-import           Theory
+import           Theory hiding (closeTheory)
 
 import qualified Sapic
 import qualified Export
@@ -165,7 +165,7 @@ run thisMode as
         let sig = either (get thySignature) (get diffThySignature) thy
         sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath thyLoadOptions) sig
 
-        (report, thy') <- closeTheory' thyLoadOptions sig' thy
+        (report, thy') <- closeTheory thyLoadOptions sig' thy
         either (\t -> return (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
                (\d -> return (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d)) thy'
       where

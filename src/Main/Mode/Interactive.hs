@@ -102,7 +102,7 @@ run thisMode as = case findArg "workDir" as of
             thyLoadOptions
 
             (loadTheory thyLoadOptions)
-            (closeTheory' thyLoadOptions)
+            (closeTheory thyLoadOptions)
 
             (argExists "debug" as) (graphPath as) readImageFormat
             (constructAutoProver thyLoadOptions)
