@@ -40,7 +40,6 @@ module Web.Theory
   )
 where
 
-import qualified Accountability               as Acc
 
 import           Debug.Trace                  (trace)
 

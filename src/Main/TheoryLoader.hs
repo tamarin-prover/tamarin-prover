@@ -59,7 +59,7 @@ module Main.TheoryLoader (
   , lemmaSelector
   ) where
 
-import           Debug.Trace
+-- import           Debug.Trace
 
 import           Prelude                             hiding (id, (.))
 
@@ -73,7 +73,7 @@ import           Control.Category
 
 import           System.Console.CmdArgs.Explicit
 
-import           Theory
+import           Theory hiding (transReport)
 import           Theory.Text.Parser                  (parseIntruderRules, parseOpenTheory, parseOpenTheoryString, parseOpenDiffTheory, parseOpenDiffTheoryString, theory, diffTheory)
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules

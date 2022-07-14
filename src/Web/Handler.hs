@@ -492,7 +492,7 @@ postRootR = do
             then setMessage "No theory file given."
           else do
             yesod <- getYesod
-            result <- liftIO $ runExceptT $ do
+            thyWithRep <- liftIO $ runExceptT $ do
               openThy <- loadThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content) (T.unpack $ fileName fileinfo)
 
               let sig = either (get thySignature) (get diffThySignature) openThy
@@ -500,7 +500,7 @@ postRootR = do
 
               closeThy yesod sig' openThy
 
-            case result of
+            case thyWithRep of
               Left err -> setMessage $ "Theory loading failed:\n" <> toHtml (show err)
               Right (report, thy) -> do
                 void $ either (putTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo))

@@ -207,35 +207,3 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
                                                   , prettyWfErrorReport report
                                                   , Pretty.text $ replicate 78 '-'
                                                   , Pretty.text $ "" ]
-
-
--- | Load theories from the current directory, generate map.
-loadDiffTheories :: String
-             -> FilePath
-             -> (FilePath -> IO ClosedDiffTheory)
-             -> AutoProver
-             -> IO TheoryMap
-loadDiffTheories readyMsg thDir thLoader autoProver = do
-    thPaths <- filter (".spthy" `isSuffixOf`) <$> getDirectoryContents thDir
-    theories <- catMaybes <$> mapM loadThy (zip [1..] (map (thDir </>) thPaths))
-    putStrLn readyMsg
-    return $ M.fromList theories
-  where
-    -- Load theories
-    loadThy (idx, path) = E.handle catchEx $ do
-        thy <- thLoader path
-        time <- getZonedTime
-        return $ Just
-          ( idx
-          , Diff $ DiffTheoryInfo idx thy time Nothing True (Local path) autoProver
-          )
-      where
-        -- Exception handler (if loading theory fails)
-        catchEx :: E.SomeException -> IO (Maybe (TheoryIdx, EitherTheoryInfo))
-        catchEx e = do
-          putStrLn ""
-          putStrLn $ replicate 78 '-'
-          putStrLn $ "Unable to load theory file `" ++ path ++ "'"
-          putStrLn $ replicate 78 '-'
-          print e
-          return Nothing
