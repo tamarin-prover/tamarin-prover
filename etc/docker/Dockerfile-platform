@@ -18,7 +18,7 @@ RUN curl -SL ${PROVERIF_URL} | tar -xzC .
 
 # Note: installation will fail because of lacking libgtk, but still produce the binary :D
 # Note: need to run bash so the .bashrc sets the environment variables and ocamlfind can be found
-# CharlieNote: running the eval is the minimal lightweight setup to build
+# Note: running the eval is the minimal lightweight setup to build
 RUN eval `opam config env` && cd ${PROVERIF_DIR_NAME} && ./build; test -x proverif
 
 RUN git clone --depth 1 ${DEEPSEC_URL} ${DEEPSEC_DIR_NAME} && cd ${DEEPSEC_DIR_NAME} &&  eval `opam config env` && make
