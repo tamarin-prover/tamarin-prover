@@ -60,21 +60,10 @@ selectedPreSort diff = do
     presort <- goalRankingPresort diff <* lexeme spaces 
     return $ presort
 
--- Default ranking
---selectedRanking :: Parser Ranking
---selectedRanking = do
---    _ <- symbol "ranking"
---    _ <- colon
---    ranking <- identifier
---    return $ Ranking (Just $ nameToRanking ranking) (Just ranking)
-
---Function name (remplaced by identifier)
---functionName :: Parser String
---functionName = many space *> many (alphaNum <|> oneOf "[]_-@")
 
 --Function value
 functionValue :: Parser String
-functionValue = many $ noneOf "\"" --interdit de mettre des " dans les regex, dommage
+functionValue = many $ noneOf "\"" --forbid using " char in parameter 
 
 
 --Fonction (fonction, pretty printing)
@@ -82,9 +71,6 @@ function :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
 function = do
     f <- identifier
     param <- many1 $ doubleQuoted functionValue
-    --Need to add something for the space?
-    --paramCtxt <- doubleQuoted functionValue
-    --paramSys <- doubleQuoted functionValue
     return $ (nameToFunction (f,param),f++" \""++intercalate "\" \"" param++"\"")
 
 functionNot :: ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String)
@@ -106,14 +92,12 @@ conjuncts = chainl1 negation (functionAnd <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
 disjuncts :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
-disjuncts = try $ (chainl1 conjuncts (functionOr <$ opLOr)) -- error here is not triggered when empty prio (appends higher -> function parsing) 
+disjuncts = try $ (chainl1 conjuncts (functionOr <$ opLOr))
 
 --Parsing prio
 prio :: Parser (Prio ProofContext)
 prio = do
-    ranking <- symbol "prio"
-    _ <- colon
-    ranking <- option "id" identifier -- if none take regex as the identifier
+    ranking <- symbol "prio" *> colon *> option "id" (braced identifier) -- if none use default ranking
     -- _ <- newline
     fs <- many1 disjuncts --
     return $ Prio (nameToRanking ranking) ranking (map fst fs) (map snd fs)
@@ -121,9 +105,7 @@ prio = do
 --Parsing deprio
 deprio :: Parser (Deprio ProofContext)
 deprio = do
-    _ <- symbol "deprio"
-    _  <- colon
-    ranking <- option "id" identifier
+    ranking <- symbol "deprio" *> colon *> option "id" (braced identifier)
     fs <- many1 disjuncts
     return $ Deprio (nameToRanking ranking) ranking (map fst fs) (map snd fs)
 
@@ -132,7 +114,6 @@ tactic :: Bool -> Parser (TacticI ProofContext)
 tactic diff = do
     tName <- tacticName
     presort <- option (SmartRanking diff) (selectedPreSort diff)
-    -- ranking <- option (Ranking Nothing Nothing) selectedRanking
     prios <- option [] $ many1 prio
     deprios <- option [] $ many1 deprio
     return $ TacticI tName presort prios deprios
@@ -150,7 +131,6 @@ tacticFunctions = M.fromList
   where
     regex' :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
     regex' (regex:_) (agoal,_,_) = pg =~ regex
-    --regex' _ _ = False
         where
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
             pg = concat . lines . render $ pgoal agoal
@@ -173,20 +153,17 @@ tacticFunctions = M.fromList
 
     dhreNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
     dhreNoise param (goal,_,sys) = pg =~ goalPattern
-    --dhreNoise _ _ = False
         where 
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
             pg = concat . lines . render $ pgoal goal
 
             oracleType = head param
-            fesse = map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys))
             sysPatternDiff = "(~[a-zA-Z0-9.]*)"
             sysPattern = if oracleType == "curve" then "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys)))++")(?![.0-9a-zA-Z])" else "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys)))++")"-- ++ head t (fst param f)
             goalPattern = if oracleType == "diff" then ".*(\\(("++sysPatternDiff++"\\*)+"++sysPatternDiff++"\\)|inv\\("++sysPatternDiff++"\\))" else ".*(\\(("++sysPattern++"\\*)+"++sysPattern++"\\)|inv\\("++sysPattern++"\\))"
 
     defaultNoise :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
     defaultNoise param (goal,_,sys) = or $ map ((flip elem) sysPattern) goalMatches
-    --defaultNoise _ _ = False
         where 
             paramGoal = head param
             oracleType = head $ tail param
@@ -216,8 +193,11 @@ tacticFunctions = M.fromList
     checkFormula oracleType f = if rev && expG then concat $ getFormulaTermsCore f else []
 
         where
-          rev = elem "RevealEk" (map factTagName $ guardFactTags f)
+          rev = or $ map matchReveal (map factTagName $ guardFactTags f)
           expG = if oracleType == "curve" then show (getFormulaTerms f) =~ "grpid,exp\\('g'" else show (getFormulaTerms f) =~ "exp\\('g'"
+
+          matchReveal :: String -> Bool
+          matchReveal s = s =~ "Reveal"
 
           getFormulaTerms :: LNGuarded -> [VTerm Name (BVar LVar)]
           getFormulaTerms (GGuarded _ _ [Action t fa] _ ) = getFactTerms fa

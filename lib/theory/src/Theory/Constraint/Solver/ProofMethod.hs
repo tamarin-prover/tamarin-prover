@@ -575,7 +575,6 @@ oracleRanking oracle ctxt _sys ags0
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
                    ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
-                   ++ show ags0
       guard $ trace logMsg True
       -- _ <- getLine
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
@@ -604,15 +603,13 @@ oracleSmartRanking oracle ctxt _sys ags0
       let indices = catMaybes . map readMay . lines $ outp
           ranked = catMaybes . map (atMay ags) $ indices
           remaining = filter (`notElem` ranked) ags
-          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT Petite\n"
+          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
                    ++ outp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
-      -- _ <- getLine
       -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
-      -- guard $ trace indices True
 
       return (ranked ++ remaining)
   where
@@ -623,8 +620,6 @@ itRanking :: TacticI ProofContext -> [AnnotatedGoal] -> ProofContext -> System -
 itRanking tactic ags ctxt _sys = result
     where
       -- Getting the functions from priorities
-      --prioName = tacticiPrio tactic
-      --prioTab = map prioFunctions prioName
       prioToFunctions = map functionsPrio (_prios tactic)
       indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions ctxt _sys) ags    -- find the first prio that match every goal
       indexedPrio = sortOn fst $ zip indexPrio ags                                              -- ordening of goals given the fisrt prio they meet 
@@ -638,8 +633,6 @@ itRanking tactic ags ctxt _sys = result
       rankedPrioGoals = concat prioReorderedGoals
       
       -- Getting the functions from depriorities
-      -- deprioName = tacticiDeprio tactic
-      -- deprioTab = map deprioFunctions deprioName
       deprioToFunctions = map functionsDeprio (_deprios tactic)
       indexDeprio = map (findIndex (==True)) $ map (applyIsPrio deprioToFunctions ctxt _sys) ags
       indexedDeprio = sortOn fst $ zip indexDeprio ags 
@@ -655,7 +648,6 @@ itRanking tactic ags ctxt _sys = result
       --Concatenation of results
       nonRanked = filter (`notElem` rankedPrioGoals++rankedDeprioGoals) ags
       result = rankedPrioGoals ++ nonRanked ++ rankedDeprioGoals
-      -- result = rankedDeprioGoals
 
       -- Check whether a goal match a prio
       isPrio :: [(AnnotatedGoal, ProofContext, System) -> Bool] -> ProofContext -> System -> AnnotatedGoal -> Bool
@@ -695,31 +687,16 @@ internalTacticRanking tactic ctxt _sys ags0 =
       let inp = unlines
                   (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                        (zip [(0::Int)..] ags))
-      --let ctxtl = ctxt2light
-      --let _sysl = 
       let res = itRanking tactic ags ctxt _sys
-      -- let orderIndex = map fst (orderList (zip [(0::Int)..] res) (reverse $ (zip [(0::Int)..] ags)) [])
-          -- index = map fst (zip [(0::Int)..] ags)
-          -- out = map (show . snd) (sortOn fst (zip orderIndex index))
       let dict = M.fromList (zip ags [(0::Int)..])
           outp = map (fromMaybe (-1)) (map (flip M.lookup dict) res)
-      --let prettyOut = unlines
-      --            (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-      --                 (zip outp res))
       let prettyOut = unlines (map show outp)
-      --          (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-      --              (zip outp res))
-      let logMsg = -- ">>>>>>>>>>>>>>>>>>>>>>>> Context\n"
-                   -- ++ show (map getFormulaTerms (S.toList $ L.get sFormulas _sys))
-                   -- ">>>>>>>>>>>>>>>>>>>>>>>> AnnotatedGoal\n"
-                   -- ++ show ags
-                   ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+      let logMsg = ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
                    ++ prettyOut 
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
-      -- _ <- getLine
       return (res)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
@@ -728,8 +705,8 @@ internalTacticRanking tactic ctxt _sys ags0 =
     orderList _ [] res        = res
     orderList (h1:l) (h2:ref) res = if (snd h1 == snd h2) then orderList l ref (h1:res) else orderList (l++[h1]) (h2:ref) res
 
-    decomposeGoal :: AnnotatedGoal -> Maybe LNFact-- [Maybe [LVar]]
-    decomposeGoal (ActionG _ lnfact,(_,_)) = Just lnfact -- map getMsgVar (getFactTerms lnfact)
+    decomposeGoal :: AnnotatedGoal -> Maybe LNFact
+    decomposeGoal (ActionG _ lnfact,(_,_)) = Just lnfact
     decomposeGoal _ = Nothing
 
 -- | Utilities for SAPiC translations specifically 

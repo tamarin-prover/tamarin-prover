@@ -229,7 +229,6 @@ loadClosedDiffThy as inFile = do
   thy1 <- addMessageDeductionRuleVariantsDiff thy0
   closeDiffThy as thy1
 
--- <<<<<<< HEAD
 -- | Load a closed theory.
 --loadClosedThy :: Arguments -> FilePath -> IO ClosedTheory
 --loadClosedThy as inFile = (loadOpenThy as inFile >>= closeThy as)
@@ -244,7 +243,7 @@ loadClosedDiffThy as inFile = do
 --    case checkWellformedness thy sig of
 --      []     -> return ()
 --      report -> do
--- =======
+
 reportWellformednessDoc :: WfErrorReport  -> Pretty.Doc
 reportWellformednessDoc [] =  Pretty.emptyDoc
 reportWellformednessDoc errs  = Pretty.vcat 
@@ -269,7 +268,6 @@ reportWellformedness prefixAct quit           wfreport =
 -- | helper function: print header with theory filename 
 printFileName :: [Char] -> IO ()
 printFileName inFile = do
--- >>>>>>> develop_master
           putStrLn ""
           putStrLn $ replicate 78 '-'
           putStrLn $ "Theory file '" ++ inFile ++ "'"

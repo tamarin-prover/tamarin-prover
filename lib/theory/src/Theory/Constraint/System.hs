@@ -400,7 +400,7 @@ sConjDisjEqs :: System :-> Conj (SplitId, S.Set (LNSubstVFresh))
 sConjDisjEqs = eqsConj . sEqStore
 
 ------------------------------------------------------------------------------
--- Tactics external
+-- Oracles
 ------------------------------------------------------------------------------
 
 data Oracle = Oracle {
@@ -410,7 +410,7 @@ data Oracle = Oracle {
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 ------------------------------------------------------------------------------
--- Tactics internal
+-- Tactics 
 ------------------------------------------------------------------------------
 
 data Prio a = Prio {
@@ -437,7 +437,7 @@ instance NFData (Prio a) where
 
 instance Binary (Prio a) where
     put p = put $ show p
-    get = return (Prio Nothing "" [] []) --Prio{..}
+    get = return (Prio Nothing "" [] []) 
 
 data Deprio a = Deprio {
        rankingDeprio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
@@ -464,37 +464,15 @@ instance Binary (Deprio a) where
     put d = put $ show d
     get = return (Deprio Nothing "" [] [])
 
---data Ranking = Ranking {
---          functionsRanking :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
---        , stringsRanking :: Maybe String
---    }
----    deriving (Show, Generic) 
-
---instance Eq Ranking where
---    (==) _ _ = True
-
---instance Ord Ranking where
--- -   compare _ _ = EQ
---    (<=) _ _ = True
-
---instance Binary Ranking where
---    put d = put $ show d
---    get = return (Ranking Nothing Nothing)
-
---instance NFData Ranking where
---    rnf _ = ()
-
 
 -- | New type for Tactis inside the theory file
 data TacticI a = TacticI{
       _name :: String,
       _presort :: GoalRanking a,
-    --  _ranking :: Ranking, 
       _prios :: [Prio a],
       _deprios :: [Deprio a]
     }
     deriving (Eq, Ord, Show, Generic, NFData, Binary )
-    --deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 
 -- | The different available functions to rank goals with respect to their
@@ -511,11 +489,9 @@ data GoalRanking a =
   | SmartDiffRanking
   | InjRanking Bool
   deriving (Eq, Ord, Show, Generic, NFData, Binary  )
-  --deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 newtype Heuristic a = Heuristic [GoalRanking a]
     deriving (Eq, Ord, Show, Generic, NFData, Binary  )
-    --deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- Default rankings for normal and diff mode.
 defaultRankings :: Bool -> [GoalRanking ProofContext]
@@ -555,33 +531,6 @@ mapInternalTacticRanking :: (TacticI ProofContext -> TacticI ProofContext) -> Go
 mapInternalTacticRanking f (InternalTacticRanking t) = InternalTacticRanking (f t)
 mapInternalTacticRanking _ r = r
 
-
---tacticiName :: TacticI -> String
---tacticiName TacticI _ = _name
-
---tacticiPresort :: TacticI -> GoalRanking
---tacticiPresort TacticI{..} = _presort
-
---tacticiPrio :: TacticI -> [Prio]
---tacticiPrio TacticI{..} = _prios
-
---prioString :: Prio -> [String]
---prioString Prio{..} = stringsPrio
-
---prioFunctions :: Prio -> [AnnotatedGoal -> ProofContextLight -> SystemLight -> Bool] 
---prioFunctions Prio{..} = functionsPrio
-
-
---tacticiDeprio :: TacticI -> [Deprio]
---tacticiDeprio TacticI{..} = _deprios
-
---deprioFunctions :: Deprio -> [AnnotatedGoal -> ProofContextLight -> SystemLight -> Bool] 
---deprioFunctions Deprio{..} = functionsDeprio
-
---deprioString :: Deprio -> [String]
---deprioString Deprio{..} = stringsDeprio
-
---setTact
 
 goalRankingIdentifiers :: M.Map String (GoalRanking ProofContext)
 goalRankingIdentifiers = M.fromList
