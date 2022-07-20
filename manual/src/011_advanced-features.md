@@ -70,6 +70,10 @@ The goal rankings are as follows.
 
 `I`:
 : is like 'i' but without delaying loop breakers.
+
+`{.}`:
+: is the tactic ranking. It allows the user to provide an arbitrary ranking for the proof goals, specified in a language native to Tamarin. Each tactic needs to be given a name. For the tactic named `default`, the call would be `{default}`. 
+The syntax of the tactics will be detailed below in the part `Using a tactic`. However, for a quick overview, a tactic is composed of several fields. The first one, `tactic`, specifies the name of the tactic and is mandatory. Then `presort` (optional) allows the user to choose the based ranking of the input. The keywords `prio` and `deprio` defines the ranks of the goals. They gather functions that will recognize the goals. The higher the prio that recognize a goal, the sooner it will be treated and the lower the deprio, the later. The user can choose to write as much of prio or deprio as needed. A tactic can also be composed of only prio or deprio. The functions are preimplemented and allow to reach information unavailable from oracle (the state of the system or the proof context).
   
 `o`:
 : is the oracle ranking. It allows the user to provide an arbitrary program
@@ -92,9 +96,7 @@ The goal rankings are as follows.
 `O`:
 : is the oracle ranking based on the 'smart' heuristic `s`. It works the same as `o` but uses 'smart' instead of 'Consecutive' ranking to start with.
 
-`{.}`:
-: is the tactic ranking. As for the oracle ranking, it allows the user to provide an arbitrary ranking for the proof goals. The difference with the oracle is that the ranking is specified in a language native to Tamarin. Each tactic needs to be given a name. For the tactic named `default`, the call would be `{default}`. 
-The syntax of the tactics will be detailed below in the part `Using a tactic`. However, for a quick overview, a tactic is composed of several fields. The first one, `tactic`, specifies the name of the tactic and is mandatory. Then `presort` (optional) allows the user to choose the based ranking of the input. The keywords `prio` and `deprio` defines the ranks of the goals. They gather functions that will recognize the goals. The higher the prio that recognize a goal, the sooner it will be treated and the lower the deprio, the later. The user can choose to write as much of prio or deprio as needed. A tactic can also be composed of only prio or deprio. The functions are preimplemented and allow to reach information unavailable from oracle (the state of the system or the proof context).
+
 
 
 If several rankings are given for the heuristic flag, then they are employed
@@ -147,6 +149,60 @@ was necessary to compute a full deconstruction.
 The `no_precomp` annotation can be used in combination with heuristic annotations
 by including both separated by commas---e.g., a premise
 `A(x)[-,no_precomp]` will be delayed and also will not have its sources precomputed.
+
+### Using a Tactic {subsec: tactic}
+
+The tactics are a language native to Tamarin designed to allow user to write custom rankings of proof goals. 
+
+#### Writing a tactic
+
+In order to explain the way a tactic should be written, we will use the simple example (theory SourceOfUniqueness). 
+The first step is to identify the tactic by giving it a name (here uniqueness). Then you can choose a `presort`. It has the same role as the c or C option but with more options. Depending on whether you are using the diff mode are not, you will respectively be able to choose among 's', 'S', 'c' and 'C' and 'C', 'I', 'P', 'S', 'c', 'i', 'p', 's'. Note that this field is optional and will by default be set at `s`.
+
+```
+tactic: uniqueness
+presort: C
+```
+
+Then we will start to write the priorities following which we want to order the goals. Everey priority, announced by the `prio`  keywords, is composed of functions that will try to recognize caracteristics in the goals given by the Tamarin proofs. If a goal is recognized by a function in a priority, it will be be ranked as such, ie the higher the priority in the tactic, the higher the goals it recognizes will be ranked. The particularity recaognized by every function will be detailled in a paragraph below. The tactic language authorizes to combine functions using `|`, `&` and `not`. 
+Even if the option is not necessary for the proof of the lemma uniqueness, let's now explore the `deprio` keyword. It works as the `prio` one but with the opposite goal since it allows the user to put the recognized goals at the bottom of the ranking. In case several `deprio` are written, the first one will be ranked higher than the last ones. If a goal is recognized by two or more 'priorities' or 'depriorities', only the first one (ie the higher rank possible) will be taken into account for the final ranking.
+```
+prio:
+    isFactName "ReceiverKeySimple"
+prio: 
+    regex "senc\(xsimple" | regex "senc\(~xsimple"
+prio:
+    regex "KU\( ~key"
+```
+
+
+
+#### Calling a tactic
+
+As the other heuristics, tactics can be called two ways. The first one is using the command line. In the case study above, it would be: `tamarin-prover --prove --heuristic={prove=uniqueness} SourceOfUniqueness.spthy`.
+The other way is directly integrated in the file by adding `[heuristic={uniqueness}]` next to the name of the lemma that is supposed to use it. The option won't need to be called again from the command line. The second function has been proven very helpful when working with a file containing several tactics used by different lemmas since it allows to run all proofs at once.
+
+#### Ranking functions
+
+As explained above, the functions used in the tactic language have already been implemented in Tamarin. For now, here is a list of the toolkit we have put in place. At the end at this section, you will however find an explanation on how to write your own functions if the one described here do not suffice for your usage.
+
+Pre-implemented functions
+    * `regex`: as explain above, this function takes in parameter a string and will use it as a pattern to match against the goals. (Since it is based on the Text.Regex.PCRE module of Haskell, some characters, as the parenthesis, will need to be escaped to achieve the desired behavior).
+    * `isFactName`: as is given by its name, this function will go look in the Tamarin object 'goal' and check if the field FactName matches its parameter. To give an example of its usage, `isFactName` could be used instead of `regex` for the first prio of the above example with same results.
+    * `isInFactTerms`: the function will look in the list contained in the field FactTest whether an element corresponding the parameter can be found.
+The following functions are also preimplemented but specifically designed to translate the oracles of the Vacarme tool in tactic:
+    * `dhreNoise`: recognize goals containing a Diffie-Hellman exponentiation. For example, the goal `Recv( <'g'^~e.1,aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer),aead(kdf2(<kdf1(<ck, 'g'^(~e*~e.1)>), z>), '0',h(<h(<hash, 'g'^~e.1>),aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer)>), payload)>) ▶₁ #claim` is recognized thanks to the presence of the following pattern `'g'^~e.1`. The function does not need parameter from the user. 
+    It works as follow. First, it will retrieve from the system state the formulas that have the `Reveal` fact name and matchs the regex `exp\\('g'`. For the retrieved formulas, it will then put in a list the content of the `Free` variable along the variable `~n`. In the case of the example given above, the list would be `[~n,~e,~e.1]`. They are the variable that the function will try to match against. Once it is done, the tested goal will be recognized if it includes an exponentiation that uses the previously listed elements (just one as exponent or a multiplication).  
+    * `defaultNoise`: 
+    this function takes two parameters. The first one is a pattern, the second is the type of oracle we are translating, as explained above. This function is meant to retrieve to check that the Diffie-Hellman exponentiation happening in the considered goal (retieved thanks to the pattern) are present in a list derived from the system state. In order to fully detect the "default" goals, it should be used in combination with `not regex "^!KU\("`.
+    * `reasonableNoncesNoise`: this function takes one argument (the same as dhreNoise). It extracts from the system state a list of pattern and then checks if the fact terms of the goal considered is one of them. 
+    * `nonAbsurdGoal`: this function retrieve the functions names present in the goal and verifies if they are "Ku" or "inv". It also retrieves a list of pattern form the system state and checks if they do not appear in the goal. If both the conditions are verified, the goal is recognized. It only takes one argument (the same as dhreNoise)
+
+
+Now here is a brief tour on how to write your own function. The functions will need to be written in the lib/theory/src/Theory/Text/Parser/Tactics.hs file, in the function named tacticFunctions. The implementation has been designed to be modular so adding new functions should be easy and not compromise what is already working. The first step is to record the function in the repertory, the name in quote will be the one used by the user in the tactic, the other, the one used for the implementation. They can be different if necessary. The "user function name" also need to be added to the nameToFunction list, along with a quick description for the error message.
+Regarding the implementation of the function, the first thing to know is that every function you write will take two parameters. The first one is the list of strings that the user may pass to the function (the pattern for regex for example). Nothing forbids the user to write as many parameters as he wants, we will however only use the first ones we need. The second parameter is a triplet composed of the goal being tested, the proof context and the system. The function then needs to return a boolean, `True` if the goal, proof context or system have been recognized, `False` if not. 
+To be considered, the code then needs to be recompiled, using `make`. The new function is now ready to be used.
+
 
 
 ### Using an Oracle
@@ -267,57 +323,6 @@ tamarin-prover --prove=uniqueness SourceOfUniqueness.spthy
 
 The generated proof consists of only 10 steps.
 (162 steps with 'consecutive' ranking, non-termination with 'smart' ranking).
-
-### Using a Tactic {subsec: tactic}
-
-As the oracles, the tactics allow to write user-defined heuristics as custom rankings of proof goals. However, they have been designed with the objective of offering a language native of Tamarin for an easier use. Moreover, their integration in the tool gives them access to more information than given to the oracle scripts, such as the state of the system and the proof context at the time of the call of the heuristic.
-
-
-#### Writing a tactic
-
-In order to explain the way a tactic should be written, we will use the same example as in above (theory SourceOfUniqueness). 
-The first step is to identify the tactic by giving it a name (here uniqueness). Then you can choose a `presort`. It has the same role as the c or C option but with more options. Depending on whether you are using the diff mode are not, you will respectively be able to choose among 's', 'S', 'c' and 'C' and 'C', 'I', 'P', 'S', 'c', 'i', 'p', 's'. Here, we have chosen to go with C since it will have the same pretreatment as the `o` option for the oracle. Note however that this field is optional and will by default be set at `s`.
-
-```
-tactic: uniqueness
-presort: C
-```
-
-Then we will start to write the priorities following which we want to order the goals. When trying to mimicing an oracle, one can use the regex function since it will compare the pretty printing of the ranked goals to the string passed as parameter. Therefore, the previous oracle can be rewritten as follows:
-```
-prio:
-    regex "ReceiverKeySimple"
-prio: 
-    regex "senc\(xsimple" | regex "senc\(~xsimple"
-prio:
-    regex "KU\( ~key"
-```
-The different `prio` keywords marks the separation between two 'order' of priority. It could be compared to l1 to l3 in the oracle. As can be noticed for the second priority, the `or` in the python script has been replaced by `|`. The tactic language authorizes to combine functions using `|`, `&` and `not`. The higher the priority in the tactic, the higher the goals it recognizes will be ranked. We just skip the last priority since every goal not matched by any function will automatically be ranked after the prioritized ones. 
-Even if the option is not necessary for the proof of the lemma uniqueness, let's now explore the `deprio` keyword. It works as the `prio` one but with the opposite goal since it allows the user to put the recognized goals at the bottom of the ranking. In case several `deprio` are written, the first one will be ranked higher than the last ones. If a goal is recognized by two or more 'priorities' or 'depriorities', only the first one (ie the higher rank possible) will be taken into account for the final ranking.
-
-#### Calling a tactic
-
-As the other heuristics, tactics can be called two ways. The first one is using the command line. In the case study above, it would be: `tamarin-prover --prove --heuristic={prove=uniqueness} SourceOfUniqueness.spthy`.
-The other way is directly integrated in the file by adding `[heuristic={uniqueness}]` next to the name of the lemma that is supposed to use it. The option won't need to be called again from the command line. The second function has been proven very helpful when working with a file containing several tactics used by different lemmas since it allows to run all proofs at once.
-
-#### Ranking functions
-
-As explained above, the functions used in the tactic language have already been implemented in Tamarin. For now, here is a list of the toolkit we have put in place. At the end at this section, you will however find an explanation on how to write your own functions if the one described here do not suffice for your usage.
-
-Pre-implemented functions
-    * `regex`: as explain above, this function takes in parameter a string and will use it as a pattern to match against the goals. (Since it is based on the Text.Regex.PCRE module of Haskell, some characters, as the parenthesis, will need to be escaped to achieve the desired behavior).
-    * `isFactName`: as is given by its name, this function will go look in the Tamarin object 'goal' and check if the field FactName matches its parameter. To give an example of its usage, `isFactName` could be used instead of `regex` for the first prio of the above example with same results.
-    * `isInFactTerms`: the function will look in the list contained in the field FactTest whether an element corresponding the parameter can be found.
-The following functions are also preimplemented but specifically designed to translate the oracles of the Vacarme tool in tactic:
-    * `dhreNoise`: recognize the goals containing a Diffie-Hellman exponentiation. The content of the exposant to be recognized is based on the state of the system at the call of the tactic. Its only parameter is the type of oracle it is called with (it can be "curve" for oracle_C25519_K1X1.py or "diff" for oracle_diff.py). In case anything else is specified, the default mode (for oracle.py) will be used.
-    * `defaultNoise`: this function takes two parameters. The first one is a pattern, the second is the type of oracle we are translating, as explained above. This function is meant to retrieve to check that the Diffie-Hellman exponentiation happening in the considered goal (retieved thanks to the pattern) are present in a list derived from the system state. In order to fully detect the "default" goals, it should be used in combination with `not regex "^!KU\("`.
-    * `reasonableNoncesNoise`: this function takes one argument (the same as dhreNoise). It extracts from the system state a list of pattern and then checks if the fact terms of the goal considered is one of them. 
-    * `nonAbsurdGoal`: this function retrieve the functions names present in the goal and verifies if they are "Ku" or "inv". It also retrieves a list of pattern form the system state and checks if they do not appear in the goal. If both the conditions are verified, the goal is recognized. It only takes one argument (the same as dhreNoise)
-
-
-Now here is a brief tour on how to write your own function. The functions will need to be written in the tacticFunctions function in the lib/theory/src/Theory/Text/Parser/Tactics.hs file. The implementation has been designed to be modular so adding new functions should be easy and not compromise what is already working. The first step is to record the function in the repertory, the name in quote will be the one used by the user in the tactic, the other, the one used for the implementation. They can be different if necessary. The "user function name" also need to be added to the nameToFunction list, along with a quick description for the error message.
-Regarding the implementation of the function, the first thing to know is that every function you write will take two parameters. The first one is the list of strings that the user may pass to the function (the pattern for regex for example). Nothing forbids the user to write as many parameters as he wants, we will however only use the first ones we need. The second parameter is a triplet composed of the goal being tested, the proof context and the system. The function then needs to return a boolean, `True` if the goal, proof context or system have been recognized, `False` if not. 
-To be considered, the code then needs to be recompiled, using `make`. The new function is now ready to be used.
 
 
 <!--Advanced Encoding
