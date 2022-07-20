@@ -469,17 +469,24 @@ freshOrdering = do
 
 
 -- | Compute all less relations implied by injective fact instances.
+-- CAREFUL: this is DUPLICATED CODE from Contradictions.hs
 --
 -- Formally, they are computed as follows. Let 'f' be a fact symbol with
--- injective instances. Let i and k be temporal variables ordered
+-- injective instances. Let i, j, and k be temporal variables ordered
 -- according to
 --
---   i < k
+--   i < j < k
 --
--- and let there be an edge from (i,u) to (k,w) for some indices u and w
--- corresponding to fact f(t,...).
--- If: i<j & f(t,...) occurs at j concs, then k<j.
---    NOT ANYMORE: if j<k & f(t,...) occurs at j in prems, then j<i (j<>i as in i f occurs in concs).
+-- and let there be an edge from (i,u) to (k,w) for some indices u and v,
+-- as well as an injective fact `f(t,...)` in the conclusion (i,u).
+--
+-- Then, we have a contradiction either if:
+--  1) both the premises (k,w) and (j,v) are consuming and require a fact 'f(t,...)'.
+--  2) both the conclusions (i,u) and (j,v) produce a fact `f(t,..)`.
+--
+-- In the first case, (k,w) and (j,v) would have to be merged, and in the second
+-- case (i,u) and (j,v) would have to be merged, but the merging contradicts the
+-- temporal orderings.
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
     Edge c@(i, _) (k, _) <- S.toList $ get sEdges se
@@ -493,17 +500,18 @@ nonInjectiveFactInstances ctxt se = do
     (j, _) <- M.toList $ get sNodes se
     -- check that j<k
     guard  (k `S.member` D.reachableSet [j] less)
+    let consumePrems ru = [p | p <- get rPrems ru, isConsumeFact p]
     let isCounterExample checkRule = (j /= i) && (j /= k) &&
                            maybe False checkRule (M.lookup j $ get sNodes se)
         checkRuleJK jRu    = (
                            -- check that f(t,...) occurs at j in prems and j<k
-                           any conflictingFact ({- get rPrems jRu ++ -} get rConcs jRu) &&
+                           any conflictingFact (consumePrems jRu ++ get rConcs jRu) &&
                            (k `S.member` D.reachableSet [j] less) &&
                             nonUnifiableNodes j i
                            )
         checkRuleIJ jRu    = (
                            -- check that f(t,...) occurs at j in concs and i<j
-                           any conflictingFact ({- get rPrems jRu ++ -} get rConcs jRu) &&
+                           any conflictingFact (consumePrems jRu ++ get rConcs jRu) &&
                            (j `S.member` D.reachableSet [i] less) &&
                             nonUnifiableNodes k j
                            )

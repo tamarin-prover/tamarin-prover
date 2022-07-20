@@ -174,7 +174,7 @@ substCreatesNonNormalTerms hnd sys fsubst =
 -- as well as an injective fact `f(t,...)` in the conclusion (i,u).
 --
 -- Then, we have a contradiction either if:
---  1) both the premises (k,w) and (j,v) require a fact 'f(t,...)'.
+--  1) both the premises (k,w) and (j,v) are consuming and require a fact 'f(t,...)'.
 --  2) both the conclusions (i,u) and (j,v) produce a fact `f(t,..)`.
 --
 -- In the first case, (k,w) and (j,v) would have to be merged, and in the second
@@ -191,10 +191,11 @@ nonInjectiveFactInstances ctxt se = do
     guard (kTag `S.member` L.get pcInjectiveFactInsts ctxt)
     j <- S.toList $ D.reachableSet [i] less
 
+    let consumePrems ru = [p | p <- L.get rPrems ru, isConsumeFact p]
     let isCounterExample = (j /= i) && (j /= k) &&
                            maybe False checkRule (M.lookup j $ L.get sNodes se)
 
-        checkRule jRu    = any conflictingFact ({- L.get rPrems jRu ++ -} L.get rConcs jRu) &&
+        checkRule jRu    = any conflictingFact (consumePrems jRu ++ L.get rConcs jRu) &&
                            (k `S.member` D.reachableSet [j] less
                              || isLast se k)
 
