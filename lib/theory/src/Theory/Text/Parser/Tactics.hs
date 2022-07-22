@@ -190,7 +190,7 @@ tacticFunctions = M.fromList
             sysPattern = "~n":(map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys)))
 
     checkFormula :: String -> LNGuarded -> [LVar]
-    checkFormula oracleType f = if rev && expG then concat $ getFormulaTermsCore f else []
+    checkFormula oracleType f = if rev && expG then trace (show $ concat $ getFormulaTermsCore f ) concat $ getFormulaTermsCore f else []
 
         where
           rev = or $ map matchReveal (map factTagName $ guardFactTags f)

@@ -623,7 +623,7 @@ itRanking tactic ags ctxt _sys = result
       prioToFunctions = map functionsPrio (_prios tactic)
       indexPrio = map (findIndex (==True)) $ map (applyIsPrio prioToFunctions ctxt _sys) ags    -- find the first prio that match every goal
       indexedPrio = sortOn fst $ zip indexPrio ags                                              -- ordening of goals given the fisrt prio they meet 
-      groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio        -- grouping goals by prio
+      groupedPrio = trace ("Hellooooooo\n" ++ show indexedPrio) groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio        -- grouping goals by prio
       preorderedPrio = if (Nothing `elem` indexPrio) then map (snd . unzip) (tail groupedPrio) else map (snd . unzip) groupedPrio -- recovering ranked goals only (no prio = Nothing = fst)
 
       prioRankingFunctions = map rankingPrio (_prios tactic)
@@ -694,7 +694,7 @@ internalTacticRanking tactic ctxt _sys ags0 =
       let logMsg = ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ prettyOut 
+                   ++ show pretttOut
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
       return (res)
