@@ -13,7 +13,6 @@ module Main.Mode.Batch (
 
 import           Control.Basics
 import           Data.List
-import           Data.Maybe
 import           Data.Bitraversable              (bisequence)
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
@@ -93,7 +92,10 @@ run thisMode as
       let (docs, reps) = unzip thys
 
       if writeOutput then do
-        let outFiles = mkOutPath <$> inFiles
+        let maybeOutFiles = sequence $ mkOutPath <$> inFiles
+        outFiles <- case maybeOutFiles of
+          Just f -> return f
+          Nothing -> die "Please specify a valid output file/directory"
         let repsWithInfo = ppRep <$> zip4 inFiles (Just <$> outFiles) times reps
         let summary = Pretty.vcat $ intersperse (Pretty.text "") repsWithInfo
 
@@ -137,9 +139,8 @@ run thisMode as
     writeOutput = argExists "outFile" as || argExists "outDir" as
 
     mkOutPath :: FilePath  -- ^ Input file name.
-              -> FilePath  -- ^ Output file name.
+              -> Maybe FilePath  -- ^ Output file name.
     mkOutPath inFile =
-        fromMaybe (error "please specify an output file or directory") $
             do outFile <- findArg "outFile" as
                guard (outFile /= "")
                return outFile
