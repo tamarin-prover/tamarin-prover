@@ -35,6 +35,7 @@ import           Main.Utils
 import           Theory.Module
 import           Control.Monad.Except (MonadIO(liftIO), runExceptT)
 import           System.Exit (die)
+import Theory.Tools.Wellformedness (prettyWfErrorReport)
 
 -- | Batch processing mode.
 batchMode :: TamarinMode
@@ -112,6 +113,7 @@ run thisMode as
                                     , summary
                                     , Pretty.text $ ""
                                     , Pretty.text $ replicate 78 '=' ]
+
     ppRep (inFile, outFile, time, summary)=
       Pretty.vcat [ Pretty.text $ "analyzed: " ++ inFile
                   , Pretty.text $ ""
@@ -154,7 +156,7 @@ run thisMode as
     -- theory processing functions
     ------------------------------
     processThy :: FilePath -> IO (Pretty.Doc, Pretty.Doc)
-    processThy inFile = either (die . show) return <=< runExceptT $ do
+    processThy inFile = either handleError return <=< runExceptT $ do
       srcThy <- liftIO $ readFile inFile
       thy    <- loadTheory thyLoadOptions srcThy inFile
 
@@ -170,6 +172,15 @@ run thisMode as
                (\d -> return (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d)) thy'
       where
         isParseOnlyMode = get oParseOnlyMode thyLoadOptions
+
+        handleError (ParserError e) = error $ show e
+        handleError (WarningError report) = do
+          putStrLn $ renderDoc $ Pretty.vcat [ Pretty.text ""
+                                             , Pretty.text "WARNING: the following wellformedness checks failed!"
+                                             , Pretty.text ""
+                                             , prettyWfErrorReport report
+                                             , Pretty.text "" ]
+          die "quit-on-warning mode selected - aborting on wellformedness errors."
 
         -- FIXME: Does it make sense to print the warning even though not in prove mode?
         ppWf []  = Pretty.emptyDoc
