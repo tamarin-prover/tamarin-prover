@@ -1,7 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeApplications #-}
 
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
@@ -78,6 +79,7 @@ import           Data.Bitraversable (Bitraversable(bitraverse))
 import           Control.Monad.Catch (MonadCatch)
 import qualified Accountability as Acc
 import qualified Accountability.Generation as Acc
+import GHC.Records (HasField(getField))
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -234,7 +236,7 @@ lemmaSelectorByModule thyOpt lem = case lemmaModules of
       Just outMod -> outMod `elem` lemmaModules
       Nothing     -> ModuleSpthy `elem` lemmaModules
     where
-        lemmaModules = concat [ m | LemmaModule m <- lem.lAttributes]
+        lemmaModules = concat [ m | LemmaModule m <- getField @"lAttributes" lem]
 
 -- | Select lemmas for proving
 lemmaSelector :: HasLemmaName l => TheoryLoadOptions -> l -> Bool
@@ -249,8 +251,8 @@ lemmaSelector thyOpts lem
 
       lemmaMatches :: String -> Bool
       lemmaMatches pattern
-        | lastMay pattern == Just '*' = init pattern `isPrefixOf` lem.lName
-        | otherwise = lem.lName == pattern
+        | lastMay pattern == Just '*' = init pattern `isPrefixOf` getField @"lName" lem
+        | otherwise = getField @"lName" lem == pattern
 
 data TheoryLoadError =
     ParserError ParseError
