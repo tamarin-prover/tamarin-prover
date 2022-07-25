@@ -53,7 +53,7 @@ import           Control.Category
 
 import           System.Console.CmdArgs.Explicit
 
-import           Theory hiding (closeTheory)
+import           Theory hiding (transReport, closeTheory)
 import           Theory.Text.Parser                  (parseIntruderRules, theory, diffTheory)
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
@@ -159,9 +159,9 @@ defaultTheoryLoadOptions = TheoryLoadOptions {
 
 toParserFlags :: TheoryLoadOptions -> [String]
 toParserFlags thyOpts = concat
-  [ [ "diff" |  _oDiffMode thyOpts ]
-  , _oDefines thyOpts
-  , [ "quit-on-warning" | _oQuitOnWarning thyOpts ] ]
+  [ [ "diff" |  L.get oDiffMode thyOpts ]
+  , L.get oDefines thyOpts
+  , [ "quit-on-warning" | L.get oQuitOnWarning thyOpts ] ]
 
 data ArgumentError = ArgumentError String
 
@@ -224,7 +224,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
      , Just modCon <- find (\x -> show x  == str) (enumFrom minBound) = return $ Just modCon
      | otherwise   = throwError $ ArgumentError "output mode not supported."
 
-    -- Note: Output mode implicitly activates parse-only mode
+    -- NOTE: Output mode implicitly activates parse-only mode
     parseOnlyMode = return $ argExists "parseOnly" as || argExists "outputMode" as
 
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
@@ -258,8 +258,8 @@ data TheoryLoadError =
 
 instance Show TheoryLoadError
   where
-    show (ParserError e) = "ParserError " ++ show e
-    show (WarningError e) = "WarningError " ++ Pretty.render (prettyWfErrorReport e)
+    show (ParserError e) = show e
+    show (WarningError e) = Pretty.render (prettyWfErrorReport e)
 
 -- FIXME: How can we avoid the MonadCatch here?
 loadTheory :: MonadCatch m => TheoryLoadOptions -> String -> FilePath -> ExceptT TheoryLoadError m (Either OpenTheory OpenDiffTheory)
