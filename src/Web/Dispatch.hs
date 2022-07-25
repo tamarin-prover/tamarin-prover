@@ -57,6 +57,7 @@ import Theory.Tools.Wellformedness
 import qualified Data.Label as L
 import Main.Console (renderDoc)
 import qualified Text.PrettyPrint.Class          as Pretty
+import System.Exit
 -- import           System.Process
 
 -- | Create YesodDispatch instance for the interface.
@@ -164,22 +165,22 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
     putStrLn readyMsg
     return $ M.fromList theories
   where
-    -- Load theories
-    loadThy (idx, path) = E.handle catchEx $ do
-      srcThy <- liftIO $ readFile path
+    loadThy (idx, path) = do
+      srcThy <- readFile path
 
-      result <- liftIO $ runExceptT $ do
+      result <- runExceptT $ do
         openThy <- thLoad srcThy path
         let sig = either (L.get thySignature) (L.get diffThySignature) openThy
-        sig'   <- liftIO $ toSignatureWithMaude (L.get oMaudePath thOpts) sig
+        sig' <- liftIO $ toSignatureWithMaude (L.get oMaudePath thOpts) sig
         thClose sig' openThy
 
       case result of
-        Left (ParserError e) -> 
-          error (show e)
+        Left (ParserError e) -> do
+          putStrLn $ renderDoc $ reportFailure e path
+          return Nothing
         Left (WarningError report) -> do
           putStrLn $ renderDoc $ ppInteractive report path
-          error "quit-on-warning mode selected - aborting on wellformedness errors."
+          die "quit-on-warning mode selected - aborting on wellformedness errors."
         Right (report, thy) -> do
           time <- getZonedTime
           putStrLn $ renderDoc $ ppInteractive report path
@@ -189,14 +190,13 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
                       (\t -> Diff $ DiffTheoryInfo idx t time Nothing True (Local path) autoProver) thy
              )
       where
-        -- Exception handler (if loading theory fails)
-        catchEx :: E.SomeException -> IO (Maybe (TheoryIdx, EitherTheoryInfo))
-        catchEx e = do
-          putStrLn $ replicate 78 '-'
-          putStrLn $ "Unable to load theory file `" ++ path ++ "'"
-          putStrLn $ replicate 78 '-'
-          print e
-          return Nothing
+        reportFailure error inFile = Pretty.vcat [ Pretty.text $ replicate 78 '-'
+                                                 , Pretty.text $ "Unable to load theory file `" ++ inFile ++ "'"
+                                                 , Pretty.text $ replicate 78 '-'
+                                                 , Pretty.text $ ""
+                                                 , Pretty.text $ show error
+                                                 , Pretty.text $ replicate 78 '-'
+                                                 , Pretty.text $ "" ]
 
         ppInteractive report inFile = Pretty.vcat [ Pretty.text $ replicate 78 '-'
                                                   , Pretty.text $ "Theory file '" ++ inFile ++ "'"
