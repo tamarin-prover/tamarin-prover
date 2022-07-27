@@ -236,8 +236,8 @@ theory inFile = do
            addItems inFile0 thy'
            -- add legacy deprecation warning output
       , do test <- caseTest
-           thy <- liftedAddCaseTest thy test
-           addItems inFile0 thy
+           thy' <- liftedAddCaseTest thy test
+           addItems inFile0 thy'
       , do accLem <- lemmaAcc workDir
            let tests = mapMaybe (flip lookupCaseTest $ thy) (get aCaseIdentifiers accLem)
            thy' <- liftedAddAccLemma thy (defineCaseTests accLem tests)
