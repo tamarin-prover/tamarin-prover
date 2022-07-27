@@ -236,9 +236,7 @@ baseTransComb c an p tildex
                     ([def_state], [], [def_state2 tildex], [Not f])]
                      , tildex, tildex )
         else
-                    throw (
-                    ProcessNotWellformed $ WFUnboundProto (freevars_f `difference` tildex)
-                        :: SapicException AnnotatedProcess)
+                    throw $ WFUnbound (freevars_f `difference` tildex) 
     | CondEq t1 t2 <- c =
         let fa = toLNFact (protoFact Linear "Eq" [t1,t2]) in
         let vars_f = fromList $ getFactVariables fa in
@@ -247,9 +245,7 @@ baseTransComb c an p tildex
                     ([def_state], [NegPredicateA fa], [def_state2 tildex], [])]
                      , tildex, tildex )
                 else
-                    throw (
-                    ProcessNotWellformed $ WFUnboundProto (vars_f `difference` tildex)
-                        :: SapicException AnnotatedProcess)
+                    throw $ WFUnbound (vars_f `difference` tildex)
     | Let t1' t2' _ <- c,  -- match vars are ignored in the translation, as they are bound in the def_state
       elsBranch <- elseBranch an
       =

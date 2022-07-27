@@ -1,0 +1,18 @@
+theory Typing
+begin
+
+builtins: diffie-hellman
+
+let Client(sk: secretkey) =
+    new a;
+    let gA = 'g'^a in
+    out(<'helloClient',gA >);
+    in(<'helloServer',=gA, gB>); 
+    event Key(gB^a);
+    0
+
+process:
+    new sk;
+    Client(sk)
+
+end
