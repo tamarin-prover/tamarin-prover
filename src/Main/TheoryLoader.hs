@@ -18,6 +18,7 @@ module Main.TheoryLoader (
   , lemmaSelector
 
   , TheoryLoadOptions(..)
+  , oProveMode
   , oDiffMode
   , oOutputModule
   , oMaudePath

@@ -183,10 +183,9 @@ run thisMode as
                                              , Pretty.text "" ]
           die "quit-on-warning mode selected - aborting on wellformedness errors."
 
-        -- FIXME: Does it make sense to print the warning even though not in prove mode?
         ppWf []  = Pretty.emptyDoc
-        ppWf rep = Pretty.vcat [ Pretty.text $ "WARNING: " ++ show (length rep) ++ " wellformedness check failed!"
-                               , Pretty.text   "         The analysis results might be wrong!" ]
+        ppWf rep = Pretty.vcat $ Pretty.text ("WARNING: " ++ show (length rep) ++ " wellformedness check failed!")
+                             : [ Pretty.text   "         The analysis results might be wrong!" | get oProveMode thyLoadOptions ]
 
         choosePretty = case get oOutputModule thyLoadOptions of
           Nothing               -> return . prettyOpenTheory  <=< Sapic.warnings -- output as is, including SAPIC elements
