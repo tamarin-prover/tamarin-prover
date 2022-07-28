@@ -194,7 +194,7 @@ ensureMaude as = do
 
 --  Maude versions prior to 2.7.1 are no longer supported,
 --  because the 'get variants' command is incompatible.
-    supportedVersions = ["2.7.1", "3.0", "3.1"]
+    supportedVersions = ["2.7.1", "3.0", "3.1", "3.2.1"]
 
     errMsg' = errMsg $ "'" ++ maude ++ "' executable not found / does not work"
 
