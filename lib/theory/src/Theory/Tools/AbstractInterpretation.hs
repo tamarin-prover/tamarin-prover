@@ -85,6 +85,7 @@ interpretAbstractly unifyFactEqs initState addFact stateFacts rus =
 
 -- | How to report on performing a partial evaluation.
 data EvaluationStyle = Silent | Summary | Tracing
+  deriving Show
 
 -- | Concrete partial evaluator activated with flag: --partial-evaluation
 partialEvaluation :: EvaluationStyle

@@ -109,6 +109,7 @@ library
       Theory.Text.Parser
       Theory.Text.Parser.Token
       Theory.Text.Parser.Restriction
+      Theory.Text.Parser.Signature
 
       Theory.Tools.AbstractInterpretation
       Theory.Tools.EquationStore
@@ -146,7 +147,6 @@ library
       Theory.Text.Parser.Proof
       Theory.Text.Parser.Rule
       Theory.Text.Parser.Sapic
-      Theory.Text.Parser.Signature
       Theory.Text.Parser.Term
       Theory.Sapic.PlainProcess
       Theory.Sapic.Substitution

@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types #-}
+
 module Prover (
     module Prover
 ) where
@@ -66,10 +68,10 @@ closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> Bool -> Clos
 closeDiffTheoryWithMaude sig thy0 autoSources =
   if autoSources && (containsPartialDeconstructions (cacheLeft items) || containsPartialDeconstructions (cacheRight items))
     then
-      proveDiffTheory (const True) (const True) checkProof checkDiffProof
+      proveDiffTheory (const True) checkProof checkDiffProof
         (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items') (cacheRight items') (diffCacheLeft items') (diffCacheRight items') items')
     else
-      proveDiffTheory (const True) (const True) checkProof checkDiffProof
+      proveDiffTheory (const True) checkProof checkDiffProof
         (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items)
   where
     h              = L.get diffThyHeuristic thy0
@@ -264,13 +266,12 @@ proveTheory selector prover thy =
 
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
-proveDiffTheory :: (Lemma IncrementalProof -> Bool)       -- ^ Lemma selector.
-            -> (DiffLemma IncrementalDiffProof -> Bool)   -- ^ DiffLemma selector.
-            -> Prover
-            -> DiffProver
-            -> ClosedDiffTheory
-            -> ClosedDiffTheory
-proveDiffTheory selector diffselector prover diffprover thy =
+proveDiffTheory :: (forall l. (HasLemmaName l, HasLemmaAttributes l) => l -> Bool)       -- ^ Lemma selector.
+                   -> Prover
+                   -> DiffProver
+                   -> ClosedDiffTheory
+                   -> ClosedDiffTheory
+proveDiffTheory selector prover diffprover thy =
     modify diffThyItems ((`MS.evalState` []) . mapM prove) thy
   where
     prove item = case item of
@@ -291,7 +292,7 @@ proveDiffTheory selector diffselector prover diffprover thy =
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
     proveDiffLemma lem preItems
-      | diffselector lem = modify lDiffProof add lem
+      | selector lem = modify lDiffProof add lem
       | otherwise        = lem
       where
         ctxt    = getDiffProofContext lem thy

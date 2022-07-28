@@ -7,6 +7,8 @@ packages:
 - lib/sapic/
 - lib/export/
 - lib/accountability/
-resolver: lts-19.2
+resolver: lts-19.16
+ghc-options:
+  "$everything": -Wall
 nix:
   packages: [ zlib ]

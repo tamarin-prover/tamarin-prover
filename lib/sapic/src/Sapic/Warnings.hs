@@ -29,5 +29,5 @@ throwWarningsProcess p = traverse_ throwM capture_warnings >> return p -- search
 warnings :: (Monad m, MonadThrow m) => Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement)
 warnings = mapMProcesses throwWarningsProcess
 
-checkWellformednessSapic :: OpenTheory  -> WfErrorReport
-checkWellformednessSapic = concatMap (toWfErrorReport . warnProcess) . theoryProcesses
+checkWellformedness :: OpenTheory  -> WfErrorReport
+checkWellformedness = concatMap (toWfErrorReport . warnProcess) . theoryProcesses

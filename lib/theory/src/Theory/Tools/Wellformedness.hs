@@ -59,9 +59,7 @@ module Theory.Tools.Wellformedness (
   -- * Wellformedness checking
     WfErrorReport
   , checkWellformedness
-  , noteWellformedness
   , checkWellformednessDiff
-  , noteWellformednessDiff
 
   , prettyWfErrorReport
 
@@ -993,33 +991,3 @@ checkWellformedness thy sig = concatMap ($ thy)
     , lemmaAttributeReport
     , multRestrictedReport
     ]
-
--- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformedness :: WfErrorReport -> OpenTranslatedTheory -> Bool -> OpenTranslatedTheory
-noteWellformedness report thy quitOnWarning =
-    addComment wfErrorReport thy
-  where
-    wfErrorReport
-      | null report = text "All well-formedness checks were successful."
-      | otherwise   = if quitOnWarning
-                      then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render (prettyWfErrorReport report)))
-                      else vsep
-          [ text "WARNING: the following wellformedness checks failed!"
-          , prettyWfErrorReport report
-          ]
-
--- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformednessDiff :: WfErrorReport -> OpenDiffTheory -> Bool -> OpenDiffTheory
-noteWellformednessDiff report thy quitOnWarning =
-    addDiffComment wfErrorReport thy
-  where
-    wfErrorReport
-      | null report = text "All well-formedness checks were successful."
-      | otherwise   = if quitOnWarning
-                      then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render (prettyWfErrorReport report)))
-                      else vsep
-          [ text "WARNING: the following wellformedness checks failed!"
-          , prettyWfErrorReport report
-          ]
