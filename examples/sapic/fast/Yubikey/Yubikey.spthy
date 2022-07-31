@@ -12,9 +12,7 @@ section{* The Yubikey-Protocol *}
 builtins: symmetric-encryption, multiset
 options: enableStateOpt
 
-let Yubikey(L_pid,YL_pid,SL_pid)=
- 
-
+let Yubikey(L_pid,YL_pid,SL_pid,secretid,k)=
  !(( //Plug
 	lock YL_pid;
 	  lookup YL_pid as sc in
@@ -24,7 +22,7 @@ let Yubikey(L_pid,YL_pid,SL_pid)=
   )||( //ButtonPress
 	lock YL_pid;
 	  lookup YL_pid as tc in
-		in(=sc); //just a trick to enforce adv learning tc
+		in(sc); //just a trick to enforce adv learning tc
 		new nonce;
 		new npr;
 		event YubiPress(L_pid,secretid,k,tc);
@@ -59,7 +57,7 @@ process:
  insert SL_pid, <secretid,k,'zero'>;
  insert YL_pid,('zero'+'one');
  event YubiInit(L_pid,secretid,k);
- !Yubikey(L_pid,YL_pid,SL_pid)
+ !Yubikey(L_pid,YL_pid,SL_pid,secretid,k)
  ))
 
 

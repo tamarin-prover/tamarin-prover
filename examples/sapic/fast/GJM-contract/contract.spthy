@@ -145,7 +145,13 @@ if <ct,pk(sk1),pk2> = check_getmsg(signed2,pk(sk1)) then
 
 
 let WitnessResolved =
-in (sign(<sign(=ct,sk1), sign(=ct,sk2)>,=skT));
+/* old form, abusing pattern matching:
+ * in (sign(<sign(=ct,sk1), sign(=ct,sk2)>,=skT)); */
+in(<xsig,pk1, pk2>);
+let <xsig1,xsig2> = check_getmsg(xsig,pk(skT)) in
+let ct = check_getmsg(xsig1,pk1) in
+if verify(xsig1,pk1,ct)=true then 
+if ct = check_getmsg(xsig2,pk2) then
 event ResolveCert(ct)
 
 /* Honest client specification, useless here because all clients are dishonest

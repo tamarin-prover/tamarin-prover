@@ -37,6 +37,7 @@ import Theory.Text.Parser.Let
 import Theory.Text.Parser.Formula
 import Theory.Sapic.Pattern
 import qualified Data.Functor.Identity ()
+import Data.Maybe (fromMaybe)
 
 
 -- used for debugging
@@ -64,9 +65,8 @@ processDef :: OpenTheory -> Parser ProcessDef
 processDef thy= do
                 i <- try $ do
                     _ <- letIdentifier
-                    i <- BC.pack <$> identifier
-                    return i
-                vs <- option [] $ parens $ commaSep (sapicvar)
+                    BC.pack <$> identifier
+                vs <- optionMaybe $ parens $ commaSep sapicvar
                 equalSign
                 p <- process thy
                 return (ProcessDef (BC.unpack i) p vs)
@@ -75,8 +75,7 @@ toplevelprocess :: OpenTheory -> Parser PlainProcess
 toplevelprocess thy = do
                     _ <- try (symbol "process")
                     _ <- colon
-                    p <- process thy
-                    return p
+                    process thy
                     <?> "top-level process"
 
 -- | Parse a single sapic action, i.e., a thing that can appear before the ";"
@@ -314,5 +313,5 @@ actionprocess thy=
 -- | checks if process exists, if not -> error
 checkProcess :: String -> OpenTheory -> Parser (PlainProcess, [SapicLVar])
 checkProcess i thy = case lookupProcessDef i thy of
-    Just p -> return $ (get pBody p, get pVars p)
+    Just p -> return (get pBody p, fromMaybe [] $ get pVars p)
     Nothing -> fail $ "process not defined: " ++ i

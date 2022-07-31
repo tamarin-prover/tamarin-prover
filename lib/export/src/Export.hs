@@ -705,8 +705,8 @@ loadMacroProcs tc thy (p : q) =
   let (docs, heads) = loadMacroProcs tc3 thy q
    in case L.get pVars p of
         -- TODO bugfix, this is probably wrong when the macro does not have any parameter
-        [] -> (docs, hd `S.union` heads)
-        pvars ->
+        Nothing -> (docs, hd `S.union` heads)
+        Just pvars ->
           let (new_text, new_heads) = ppSapic tc3 mainProc
            in let vrs = text "(" <> (fsep (punctuate comma (map (ppTypeVar tc3) pvars))) <> text ")"
                in let headers = headersOfType $ map extractType pvars

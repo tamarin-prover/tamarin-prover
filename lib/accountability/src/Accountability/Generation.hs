@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
--- Copyright   : (c) 2019-2021 Robert Künnemann, Kevin Morio & Yavor Ivanov
+-- Copyright   : (c) 2019-2022 Robert Künnemann, Kevin Morio & Yavor Ivanov
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Robert Künnemann <robert@kunnemann.de>
@@ -8,7 +8,7 @@
 -- Compute translation-specific restrictions
 module Accountability.Generation (
         generateAccountabilityLemmas
-      , checkPreTransWellformedness
+      , checkWellformedness
 ) where
 
 import           Control.Monad.Catch         (MonadThrow)
@@ -332,5 +332,5 @@ accRPReport thy
                           $-$ text "and the parties corrupted in t’’ are the same as the parties"
                           $-$ text "corrupted in t’ renamed from rng(ρ’) to rng(ρ)."
 
-checkPreTransWellformedness :: OpenTheory -> WfErrorReport
-checkPreTransWellformedness thy = if null $ theoryAccLemmas thy then [] else accRPReport thy
+checkWellformedness :: OpenTheory -> WfErrorReport
+checkWellformedness thy = if null $ theoryAccLemmas thy then [] else accRPReport thy

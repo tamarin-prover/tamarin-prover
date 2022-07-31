@@ -45,9 +45,9 @@ let Initiator =
   new ~ni;
   event OUT_I_1( aenc(<'1', ~ni, $I>,pkR) );
   out( aenc(<'1', ~ni, $I>,pkR) );
-  let nr = x ⊕ $R in
   lookup   <'Ltk', $I>  as ltkI in
-  in( aenc(<'2', ~ni, x>,pk(ltkI)) );
+  in( aenc(<'2', =~ni, x>,pk(=ltkI)) );
+  let nr = x ⊕ $R in
   event IN_I_2_nr( nr , aenc(<'2', ~ni, x>,pk(ltkI)) ); // alternatively use "x" here?
   event Commit ($I, $R, <'init', ~ni,nr>);  // need to log identities explicitly to
   event Running($R, $I, <'resp', ~ni,nr>);  // specify that they must not be
@@ -60,18 +60,19 @@ let Initiator =
 let Responder =
   in( $R );
   lookup   <'Ltk', $R>  as ltkR in
-  in( aenc(<'1', ni, $I>,pk(ltkR)) );
+  in( aenc(<'1', ni, $I>,pk(=ltkR)) );
   lookup  <'Pk', $I>  as pkI in
   new ~nr;
   event IN_R_1_ni( ni, aenc(<'1', ni, $I>,pk(ltkR)) );
   event OUT_R_1( aenc(<'2', ni, ~nr ⊕ $R>,pkI) );
   event Running($I, $R, <'init',ni,~nr>);
   out( aenc(<'2', ni, ~nr ⊕ $R>,pkI) );
-  in( aenc(<'3', ~nr>,pk(ltkR)) );
+  in( aenc(<'3', ~nr>,pk(=ltkR)) );
   event Commit ($R, $I, <'resp',ni,~nr>);
   event Secret($R,$I,~nr);
   event Secret($R,$I,ni)
   
+process:
   (!Register) || (!Reveal_ltk) || (!Initiator) || (!Responder)
 
 

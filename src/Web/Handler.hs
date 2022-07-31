@@ -67,7 +67,7 @@ import           Theory                       (
     sorryDiffProver, runAutoDiffProver,
     prettyClosedTheory, prettyOpenTheory,
     openDiffTheory,
-    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas
+    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas, thySignature, diffThySignature, toSignatureWithMaude
   )
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
 import           Text.PrettyPrint.Html
@@ -112,6 +112,10 @@ import           Data.Time.LocalTime
 import           System.Directory
 
 import           Debug.Trace                  (trace)
+import Control.Monad.Except (runExceptT)
+import Main.TheoryLoader
+import Main.Console (renderDoc)
+import Theory.Tools.Wellformedness (prettyWfErrorReport)
 
 -- Quasi-quotation syntax changed from GHC 6 to 7,
 -- so we need this switch in order to support both
@@ -486,27 +490,25 @@ postRootR = do
           content <- liftIO $ runResourceT $ C.runConduit (fileSource fileinfo C..| consume)
           if null content
             then setMessage "No theory file given."
-            else do
-              yesod <- getYesod
-              if isDiffTheory yesod
-                 then do
-                    closedThy <- liftIO $ diffParseThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
-                    case closedThy of
-                      Left err -> setMessage $ "Theory loading failed:\n" <> toHtml err
-                      Right thy -> do
-                          void $ putDiffTheory Nothing
-                                  (Just $ Upload $ T.unpack $ fileName fileinfo) thy
-                          wfReport <- liftIO $ thyWf yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
-                          setMessage $ toHtml $ "Loaded new theory!" ++  wfReport
-                 else do
-                    closedThy <- liftIO $ parseThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
-                    case closedThy of
-                      Left err -> setMessage $ "Theory loading failed:\n" <> toHtml err
-                      Right thy -> do
-                          void $ putTheory Nothing
-                                  (Just $ Upload $ T.unpack $ fileName fileinfo) thy
-                          wfReport <- liftIO $ thyWf yesod (T.unpack $ T.decodeUtf8 $ BS.concat content)
-                          setMessage $ toHtml $ "Loaded new theory!" ++ wfReport
+          else do
+            yesod <- getYesod
+            thyWithRep <- liftIO $ runExceptT $ do
+              openThy <- loadThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content) (T.unpack $ fileName fileinfo)
+
+              let sig = either (get thySignature) (get diffThySignature) openThy
+              sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) sig
+
+              closeThy yesod sig' openThy
+
+            case thyWithRep of
+              Left err -> setMessage $ "Theory loading failed:\n" <> toHtml (show err)
+              Right (report, thy) -> do
+                void $ either (putTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo))
+                              (putDiffTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo)) thy
+                setMessage $ toHtml $ "Loaded new theory!" ++
+                                      " WARNING: ignoring the following wellformedness errors: " ++
+                                      renderDoc (prettyWfErrorReport report)
+
     theories <- getTheories
     defaultLayout $ do
       setTitle "Welcome to the Tamarin prover"
