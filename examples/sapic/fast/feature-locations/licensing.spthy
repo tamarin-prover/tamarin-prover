@@ -27,7 +27,7 @@ let p =
 	        )
 )@<'loc',pk(skV)>
 // The verifier, that check the encoding and the signing.
-let vendor =
+let vendor(prog) =
     new skV;
     event HonestP(pk(skV));
     out(pk(skV));
@@ -55,7 +55,7 @@ let vendor =
 process:
 
 new prog; event Auth(prog);   // initialisiation of the licensed program
- (  (!p) || (!vendor) )
+ (  (!p) || (!vendor(prog)) )
 
 
 lemma attested_comput:

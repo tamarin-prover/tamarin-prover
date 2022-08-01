@@ -1,7 +1,8 @@
 theory BoundTwice
 begin
 
+process:
 // x is bound twice and should be renamed appropriately
-new x; new x
+new x | new x
 
 end

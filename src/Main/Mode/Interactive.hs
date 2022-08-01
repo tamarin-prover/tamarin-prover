@@ -92,32 +92,28 @@ run thisMode as = case findArg "workDir" as of
             , "Browse to " ++ webUrl ++ " once the server is ready."
             , ""
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
+            , ""
             ]
-          if (argExists "diff" as)
-            then do 
-              withWebUIDiff
-                ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
-                cacheDir
-                workDir (argExists "loadstate" as) (argExists "autosave" as)
-                (loadClosedDiffThyWfReport as) (loadClosedDiffThyString as)
-                (reportOnClosedDiffThyStringWellformedness as)
-                (argExists "debug" as) (dotPath as) readImageFormat
-                (constructAutoDiffProver as)
-                (runWarp port)
-            else do 
-              withWebUI
-                ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
-                cacheDir
-                workDir (argExists "loadstate" as) (argExists "autosave" as)
-                (loadClosedThyWfReport as) (loadClosedThyString as)
-                (reportOnClosedThyStringWellformedness as)
-                (argExists "debug" as) (graphPath as) readImageFormat
-                (constructAutoProver as)
-                (runWarp port)
+          withWebUI
+            ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
+            cacheDir
+            workDir (argExists "loadstate" as) (argExists "autosave" as)
+
+            thyLoadOptions
+
+            (loadTheory thyLoadOptions)
+            (closeTheory thyLoadOptions)
+
+            (argExists "debug" as) (graphPath as) readImageFormat
+            (constructAutoProver thyLoadOptions)
+            (runWarp port)
         else
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")
   where
+    thyLoadOptions = case (mkTheoryLoadOptions as) of
+      Left (ArgumentError e) -> error e
+      Right opts             -> opts
 
     -- Port argument
     ----------------

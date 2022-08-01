@@ -68,10 +68,10 @@ simplifySystem = do
        else do
         -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
-        -- Remove equation split goals that do not exist anymore        
+        -- Remove equation split goals that do not exist anymore
         removeSolvedSplitGoals
         -- Add ordering constraint from injective facts
-        addNonInjectiveFactInstances        
+        addNonInjectiveFactInstances
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -233,7 +233,7 @@ enforceFreshAndKuNodeUniqueness =
         mergers ((_,(xKeep, iKeep)):remove) =
             mappend <$> solver         (map (Equal xKeep . fst . snd) remove)
                     <*> solveNodeIdEqs (map (Equal iKeep . snd . snd) remove)
-                    
+
 
 -- | CR-rules *DG2_1* and *DG3*: merge multiple incoming edges to all facts
 -- and multiple outgoing edges from linear facts.
@@ -432,20 +432,19 @@ freshOrdering = do
           FreshFact -> Just (head $ factTerms prem, idx)
           _         -> Nothing
         ) prems
-      
+
       getFreshVarsNotBelowReducible :: FunSig -> (NodeId, RuleACInst) -> [(LNTerm, [NodeId])]
       getFreshVarsNotBelowReducible reducible (idx, get rPrems -> prems) = concatMap (\prem -> case factTag prem of
           FreshFact -> []
           _         -> S.toList $ S.fromList $ map (,[idx]) (concatMap (extractFreshNotBelowReducible reducible) (factTerms prem))
         ) prems
-      
+
       extractFreshNotBelowReducible :: FunSig -> LNTerm -> [LNTerm]
       extractFreshNotBelowReducible reducible (viewTerm -> FApp f as) | f `S.notMember` reducible
                                       = concatMap (extractFreshNotBelowReducible reducible) as
       extractFreshNotBelowReducible _ t | isFreshVar t = [t]
       extractFreshNotBelowReducible _ _                = []
       
-
 
 -- | Compute all less relations implied by injective fact instances.
 --

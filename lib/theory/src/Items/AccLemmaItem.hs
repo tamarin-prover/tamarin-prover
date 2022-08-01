@@ -11,12 +11,12 @@ module Items.AccLemmaItem (
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
+import Data.List
 import Data.Label as L
 import Text.PrettyPrint.Highlight
 import Theory.Text.Pretty
 import Theory.Model
 import Lemma
-
 import Items.CaseTestItem
 
 ------------------------------------------------------------------------------
@@ -48,6 +48,10 @@ prettyAccLemma :: HighlightDocument d => AccLemma -> d
 prettyAccLemma alem =
     kwLemma <-> prettyAccLemmaName alem <> colon $-$
     (nest 2 $
+      text (intercalate ", " (L.get aCaseIdentifiers alem)) <-> account $-$
       sep [  doubleQuotes $ prettySyntacticLNFormula $ L.get aFormula alem
           ]
     )
+    where
+        account | length (L.get aCaseIdentifiers alem) == 1 = text "accounts for"
+                | otherwise                                 = text "accounts for"

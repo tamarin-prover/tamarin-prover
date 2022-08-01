@@ -6,7 +6,7 @@ section{* The ASW contract signing protocol *}
 /*
  * Protocol:    ASW
  * Date:        Jan 2016
- * Status:      working
+ * Status:      Broken --- cannot use "pat_" variables for patterns anymore.
  *
  * ASW protocol with the following modifications:
  *      - The third and fourth message are modified according to [1], in particular:

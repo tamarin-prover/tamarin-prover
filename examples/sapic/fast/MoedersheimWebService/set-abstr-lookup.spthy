@@ -44,7 +44,7 @@ let Server=
 )
 ||
 ( /* Revoke key */
-        in(<'renew',=user,pk(=nsk)>);
+        in(<'renew',user,pk(nsk)>);
         in(sign(<'renew',=user,pk(=nsk)>,sk));
         lock <'SERVER',user>;
         lookup <'SERVER',pki,user> as pksk in
@@ -57,7 +57,7 @@ let Server=
 )
 
 process:
-!(new pki; ! Server || (new user; out(user); ! Client) )
+!(new pki; ! Server || (new user; out(user); ! Client))
 
 lemma Knows_Honest_Key_imp_Revoked:
   "All sk #i #d. HonestKey(sk) @ i & K(sk) @ d ==>

@@ -59,9 +59,7 @@ module Theory.Tools.Wellformedness (
   -- * Wellformedness checking
     WfErrorReport
   , checkWellformedness
-  , noteWellformedness
   , checkWellformednessDiff
-  , noteWellformednessDiff
 
   , prettyWfErrorReport
 
@@ -959,76 +957,9 @@ multRestrictedReportDiff thy = do
 -- multicombine2 xs0 = do (x,xs) <- zip xs0 $ tails xs0; (,) x <$> xs
 
 
-------------------------------------------------------------------------------
--- Theory
-------------------------------------------------------------------------------
-
--- | Returns a list of errors, if there are any.
-checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
-                    -> WfErrorReport
-checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
-  concatMap ($ thy)
-    [ checkIfLemmasInDiffTheory
-    , unboundReportDiff
-    , freshNamesReportDiff
-    , publicNamesReportDiff
-    , ruleSortsReportDiff
-    , factReportsDiff
-    , ruleVariantsReportDiff sig
-    , leftRightRuleReportDiff
---     , ruleNameReportDiff
-    , formulaReportsDiff
-    , lemmaAttributeReportDiff
-    , multRestrictedReportDiff
-    ]
-
-
--- | Returns a list of errors, if there are any.
-checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
-                    -> WfErrorReport
-checkWellformedness thy sig = concatMap ($ thy)
-    [ checkIfLemmasInTheory
-    , unboundReport
-    , freshNamesReport
-    , publicNamesReport
-    , ruleSortsReport
-    , ruleVariantsReport sig
-    , factReports
-    , formulaReports
-    , lemmaAttributeReport
-    , multRestrictedReport
-    ]
-
--- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformedness :: WfErrorReport -> OpenTranslatedTheory -> Bool -> OpenTranslatedTheory
-noteWellformedness report thy quitOnWarning =
-    addComment wfErrorReport thy
-  where
-    wfErrorReport
-      | null report = text "All well-formedness checks were successful."
-      | otherwise   = if quitOnWarning
-                      then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render (prettyWfErrorReport report)))
-                      else vsep
-          [ text "WARNING: the following wellformedness checks failed!"
-          , prettyWfErrorReport report
-          ]
-
--- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformednessDiff :: WfErrorReport -> OpenDiffTheory -> Bool -> OpenDiffTheory
-noteWellformednessDiff report thy quitOnWarning =
-    addDiffComment wfErrorReport thy
-  where
-    wfErrorReport
-      | null report = text "All well-formedness checks were successful."
-      | otherwise   = if quitOnWarning
-                      then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render (prettyWfErrorReport report)))
-                      else vsep
-          [ text "WARNING: the following wellformedness checks failed!"
-          , prettyWfErrorReport report
-          ]
-
+--------------------
+-- Check if lemmas from "--prove" / "--lemma" args are in the theory
+--------------------
 
 -- | A fold to check if the lemmas are proper
 findNotProvedLemmas :: [String] -> [String] -> [String]
@@ -1083,5 +1014,43 @@ checkIfLemmasInDiffTheory thy
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
 
 
+------------------------------------------------------------------------------
+-- Theory
+------------------------------------------------------------------------------
 
+-- | Returns a list of errors, if there are any.
+checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
+                    -> WfErrorReport
+checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
+  concatMap ($ thy)
+    [ checkIfLemmasInDiffTheory
+    , unboundReportDiff
+    , freshNamesReportDiff
+    , publicNamesReportDiff
+    , ruleSortsReportDiff
+    , factReportsDiff
+    , ruleVariantsReportDiff sig
+    , leftRightRuleReportDiff
+--     , ruleNameReportDiff
+    , formulaReportsDiff
+    , lemmaAttributeReportDiff
+    , multRestrictedReportDiff
+    ]
+
+
+-- | Returns a list of errors, if there are any.
+checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
+                    -> WfErrorReport
+checkWellformedness thy sig = concatMap ($ thy)
+    [ checkIfLemmasInTheory
+    , unboundReport
+    , freshNamesReport
+    , publicNamesReport
+    , ruleSortsReport
+    , ruleVariantsReport sig
+    , factReports
+    , formulaReports
+    , lemmaAttributeReport
+    , multRestrictedReport
+    ]
 
