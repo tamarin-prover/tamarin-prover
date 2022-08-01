@@ -206,7 +206,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
                          <*> quitOnWarning
                          <*> autoSources
                          <*> outputModule
-                         <*> return (maudePath as)
+                         <*> (return $ maudePath as)
                          <*> parseOnlyMode
                          <*> openchain
                          <*> saturation
@@ -259,12 +259,17 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 
     chain = findArg "OpenChainsLimit" as
     chainDefault = L.get oOpenChain defaultTheoryLoadOptions
-    openchain = return (fromMaybe chainDefault (readMaybe (head chain) ::Maybe Integer))
+    openchain = if not (null chain) 
+                  then return (fromMaybe chainDefault (readMaybe (head chain) ::Maybe Integer))
+                  else return chainDefault
+    -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
 
     sat = findArg "SaturationLimit" as
     satDefault = L.get oSaturation defaultTheoryLoadOptions
-    saturation = return (fromMaybe satDefault (readMaybe (head sat) ::Maybe Integer))
-
+    saturation = if not (null sat)
+                   then return (fromMaybe satDefault (readMaybe (head sat) ::Maybe Integer))
+                   else return satDefault
+    -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
 
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
 lemmaSelectorByModule thyOpt lem = case lemmaModules of
