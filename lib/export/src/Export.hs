@@ -17,7 +17,8 @@
 module Export (
     prettyProVerifTheory,
     prettyProVerifEquivTheory,
-    prettyDeepSecTheory
+    prettyDeepSecTheory,
+    msrTranslation
 
 ) where
 
@@ -1177,3 +1178,36 @@ makeAnnotations thy p = res
       if (List.find (\x -> x == "locations-report") $ theoryBuiltins thy) == Nothing
         then pr
         else translateTermsReport pr
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------
+-- MSR Translation
+------------------------------------------------------------------------------
+
+
+msrTranslation :: HighlightDocument d => OpenTranslatedTheory -> d
+msrTranslation thy = vsep $
+    map translateTheoryItem (L.get thyItems thy)
+    -- FOR LATER: parMap rdeepseq translateTheoryItem (L.get thyItems thy)
+
+
+translateTheoryItem
+    :: HighlightDocument d => TheoryItem OpenProtoRule p s -> d
+translateTheoryItem  i = case i of
+    RuleItem ru   -> translateRule ru
+    LemmaItem lem -> sep [text "TODO!"] --translateLemma lem
+    TextItem txt  -> sep [text "TODO?"] --translateComment txt
+    RestrictionItem rstr  -> sep [text "TODO?"] --translateRestriction rstr
+    PredicateItem     p  -> sep [text "TODO?"] --translatePredicate p
+    TranslationItem s -> sep [text ""]
+
+
+translateRule :: HighlightDocument d => OpenProtoRule -> d
+translateRule ru = sep [text "RULE"]

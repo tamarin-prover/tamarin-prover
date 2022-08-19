@@ -21,6 +21,7 @@ data ModuleType =
   | ModuleProVerifEquivalence
   | ModuleProVerif
   | ModuleDeepSec
+  | ModuleTranslate
   deriving (Eq, Ord, Enum, Bounded, Generic, Data, NFData, Binary)
 instance Show ModuleType where
     show ModuleSpthyTyped ="spthytyped"
@@ -29,6 +30,7 @@ instance Show ModuleType where
     show ModuleProVerifEquivalence ="proverifequiv"
     show ModuleProVerif ="proverif"
     show ModuleDeepSec ="deepsec"
+    show ModuleTranslate ="translate"
 
 description :: ModuleType -> String
 description ModuleSpthy = "spthy (including Sapic Processes)"
@@ -37,3 +39,4 @@ description ModuleMsr ="pure msrs (with Sapic translation)"
 description ModuleProVerifEquivalence ="ProVerif export for the equivalence lemmas"
 description ModuleProVerif ="ProVerif export for the reachability lemmas"
 description ModuleDeepSec ="DeepSec export for the equivalences lemmas"
+description ModuleTranslate = "Translate MSR rules to ProVerif"
