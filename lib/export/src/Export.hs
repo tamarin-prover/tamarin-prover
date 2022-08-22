@@ -1201,7 +1201,7 @@ msrTranslation thy = vsep $
 translateTheoryItem
     :: HighlightDocument d => TheoryItem OpenProtoRule p s -> d
 translateTheoryItem  i = case i of
-    RuleItem ru   -> translateRule ru
+    RuleItem ru   -> translateOpenProtoRule ru
     LemmaItem lem -> sep [text "TODO!"] --translateLemma lem
     TextItem txt  -> sep [text "TODO?"] --translateComment txt
     RestrictionItem rstr  -> sep [text "TODO?"] --translateRestriction rstr
@@ -1209,5 +1209,23 @@ translateTheoryItem  i = case i of
     TranslationItem s -> sep [text ""]
 
 
-translateRule :: HighlightDocument d => OpenProtoRule -> d
-translateRule ru = sep [text "RULE"]
+translateOpenProtoRule :: HighlightDocument d => OpenProtoRule -> d
+translateOpenProtoRule (OpenProtoRule ruE _) = translateProtoRule ruE
+
+translateProtoRule :: (HighlightDocument d)
+                => Rule ProtoRuleEInfo -> d
+translateProtoRule ru =
+    text "let" <-> printRuleName (L.get preName (L.get rInfo ru)) <> text "=" $-$
+    nest 8
+    (translateRule (facts rPrems) acts (facts rConcs))
+    where
+    acts             = filter isNotDiffAnnotation (L.get rActs ru)
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
+    facts proj     = L.get proj ru
+
+printRuleName :: (HighlightDocument d) => ProtoRuleName -> d
+printRuleName FreshRule = text "Fresh"
+printRuleName (StandRule s) = text s
+
+translateRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d
+translateRule prems acts concls = text "RULE"
