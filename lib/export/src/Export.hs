@@ -1215,7 +1215,7 @@ translateOpenProtoRule (OpenProtoRule ruE _) = translateProtoRule ruE
 translateProtoRule :: (HighlightDocument d)
                 => Rule ProtoRuleEInfo -> d
 translateProtoRule ru =
-    text "let" <-> printRuleName (L.get preName (L.get rInfo ru)) <> text "=" $-$
+    text "let" <-> printRuleName (L.get preName (L.get rInfo ru)) <-> text "=" $-$
     nest 8
     (translateRule (facts rPrems) acts (facts rConcs))
     where
@@ -1228,4 +1228,35 @@ printRuleName FreshRule = text "Fresh"
 printRuleName (StandRule s) = text s
 
 translateRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d
-translateRule prems acts concls = text "RULE"
+translateRule prems acts concls = 
+    translatePatternGets prems $-$
+    translateNonPatternGets prems $-$
+    translatePatternIns prems $-$
+    translateNonPatternIns prems $-$
+    translateActions acts $-$
+    translateInserts prems concls $-$
+    translateOuts concls
+
+translatePatternGets :: HighlightDocument d => [LNFact] -> d
+translatePatternGets prems = text "PATTERNGETS"
+
+translateNonPatternGets :: HighlightDocument d => [LNFact] -> d
+translateNonPatternGets prems = text "NONPATTERNGETS"
+
+translatePatternIns :: HighlightDocument d => [LNFact] -> d
+translatePatternIns prems = text "PATTERNINS"
+
+translateNonPatternIns :: HighlightDocument d => [LNFact] -> d
+translateNonPatternIns prems = text "NONPATTERNINS"
+
+translateFreshs :: HighlightDocument d => [LNFact] -> d
+translateFreshs prems = text "FRESHS"
+
+translateActions :: HighlightDocument d => [LNFact] -> d
+translateActions acts = text "ACTIONS"
+
+translateInserts :: HighlightDocument d => [LNFact] -> [LNFact] -> d
+translateInserts prems concls = text "INSERTS"
+
+translateOuts :: HighlightDocument d => [LNFact] -> d
+translateOuts concls = text "OUTS"
