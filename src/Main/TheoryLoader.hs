@@ -290,8 +290,8 @@ loadTheory thyOpts input inFile = do
 
     withTheory     f t = bitraverse f return t
 
-closeTheory :: MonadError TheoryLoadError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
-closeTheory thyOpts sig srcThy = do
+closeTheory :: MonadError TheoryLoadError m => String -> TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
+closeTheory version thyOpts sig srcThy = do
   let preReport = either (\t -> (Sapic.checkWellformedness t ++ Acc.checkWellformedness t))
                          (const []) srcThy
 
@@ -315,7 +315,10 @@ closeTheory thyOpts sig srcThy = do
                            (return . (maybe id (\s -> applyPartialEvaluationDiff s autoSources) partialStyle)) closedThy
   provedThy  <- bitraverse (\t -> return $ proveTheory     (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover t)
                            (\t -> return $ proveDiffTheory (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover diffProver t) partialThy
-  return (report, provedThy)
+  provedThyWithVersion <- bitraverse (return . addComment (Pretty.text version))
+                           (return . addDiffComment (Pretty.text version) )  provedThy
+
+  return (report, provedThyWithVersion)
 
   where
     autoSources   = L.get oAutoSources thyOpts
@@ -408,3 +411,5 @@ addMessageDeductionRuleVariantsDiff thy0
     thy          = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
     addIntruderVariantsDiff mkRuless =
         addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)
+
+

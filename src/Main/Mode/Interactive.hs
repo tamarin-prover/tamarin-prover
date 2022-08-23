@@ -27,10 +27,15 @@ import qualified Network.Wai.Handler.Warp        as Warp
 import           Web.Dispatch
 import qualified Web.Settings
 
-import           Main.Console
+import           Main.Console 
 import           Main.Environment
 import           Main.TheoryLoader
 
+
+
+------------------------------------------------------------------------------
+-- Run
+------------------------------------------------------------------------------
 
 -- | Batch processing mode.
 interactiveMode :: TamarinMode
@@ -79,12 +84,16 @@ run thisMode as = case findArg "workDir" as of
           unixLoginName <- lookupEnv "USER"
           let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
               cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
+
+          -- Ensure Maude and get the Version in the arguments (__versionPrettyPrint__)
+          version <- ensureMaudeAndGetVersion as
+
           -- process theories
           _ <- case (fst $ graphPath as) of
               "dot"  -> ensureGraphVizDot as
               "json" -> ensureGraphCommand as
-              _      -> return True
-          _ <- ensureMaude as
+              _      -> return (Just "")
+
           port <- readPort
           let webUrl = serverUrl port
           putStrLn $ intercalate "\n"
@@ -94,6 +103,7 @@ run thisMode as = case findArg "workDir" as of
             , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
             , ""
             ]
+
           withWebUI
             ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
             cacheDir
@@ -102,11 +112,12 @@ run thisMode as = case findArg "workDir" as of
             thyLoadOptions
 
             (loadTheory thyLoadOptions)
-            (closeTheory thyLoadOptions)
+            (closeTheory version thyLoadOptions)
 
             (argExists "debug" as) (graphPath as) readImageFormat
             (constructAutoProver thyLoadOptions)
             (runWarp port)
+
         else
           helpAndExit thisMode
             (Just $ "directory '" ++ workDir ++ "' does not exist.")
