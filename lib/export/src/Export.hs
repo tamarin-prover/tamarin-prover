@@ -1241,7 +1241,26 @@ translatePatternGets :: HighlightDocument d => [LNFact] -> d
 translatePatternGets prems = text "PATTERNGETS"
 
 translateNonPatternGets :: HighlightDocument d => [LNFact] -> d
-translateNonPatternGets prems = text "NONPATTERNGETS"
+translateNonPatternGets prems = vcat $
+    map translateGet nonPatternGets
+    where
+      nonPatternGets = filter (\p -> (isStorage p) && not (hasPattern p)) prems
+      translateGet prem = text "get" <-> translateFact prem <> text ";"
+
+isStorage :: LNFact -> Bool
+isStorage (Fact tag _ _) = case factTagName tag of
+  "Fr"  -> False
+  "In"  -> False
+  "Out" -> False
+  _     -> True
+
+hasPattern :: LNFact -> Bool
+hasPattern (Fact tag an ts) = 
+  foldl (\acc t -> acc || isPattern t) False ts
+  where
+    isPattern t = case viewTerm t of
+      Lit l -> False
+      _     -> True
 
 translatePatternIns :: HighlightDocument d => [LNFact] -> d
 translatePatternIns prems = text "PATTERNINS"
@@ -1260,3 +1279,24 @@ translateInserts prems concls = text "INSERTS"
 
 translateOuts :: HighlightDocument d => [LNFact] -> d
 translateOuts concls = text "OUTS"
+
+
+
+translateFact :: Document d => LNFact -> d
+translateFact (Fact tag _ ts) = 
+    text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map translateTerm ts) <> text ")"
+
+
+translateTerm :: (Document d, Show l) => Term l -> d
+translateTerm t = case viewTerm t of
+    Lit l                                           -> text $ show l
+    FApp (AC o)        ts                           -> text "TODO"
+    FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> text "(" <> printPair ts <> text ")"
+    FApp (NoEq (f, _)) ts                           -> text (BC.unpack f) <> printList ts
+    FApp (C EMap)      ts                           -> text "TODO"
+    FApp List          ts                           -> printList ts
+    where
+      printList ts = text "(" <> (fsep . punctuate comma $ map translateTerm ts) <> text ")"
+      printPair [t1,t2] = case viewTerm t2 of
+        FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> translateTerm t1 <> text ", " <> printPair ts
+        _                                               -> translateTerm t1 <> text ", " <> translateTerm t2
