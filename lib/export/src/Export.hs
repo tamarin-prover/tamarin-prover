@@ -1238,7 +1238,15 @@ translateRule prems acts concls =
     translateOuts concls
 
 translatePatternGets :: HighlightDocument d => [LNFact] -> d
-translatePatternGets prems = text "PATTERNGETS"
+translatePatternGets prems = vcat $
+    map translateGet patternGets
+    where
+      patternGets = filter (\p -> (isStorage p) && hasPattern p) prems
+      translateGet prem@(Fact _ _ ts) = text "get" <-> translatePatternFact prem <> text ";" $-$
+                                        (vcat $ map makeDestructorExpressions patternTerms)
+                                        where
+                                          patternTerms = filter isPattern ts
+
 
 translateNonPatternGets :: HighlightDocument d => [LNFact] -> d
 translateNonPatternGets prems = vcat $
@@ -1254,13 +1262,14 @@ isStorage (Fact tag _ _) = case factTagName tag of
   "Out" -> False
   _     -> True
 
+isPattern :: Term l -> Bool
+isPattern t = case viewTerm t of
+    Lit l -> False
+    _     -> True
+
 hasPattern :: LNFact -> Bool
 hasPattern (Fact tag an ts) = 
   foldl (\acc t -> acc || isPattern t) False ts
-  where
-    isPattern t = case viewTerm t of
-      Lit l -> False
-      _     -> True
 
 translatePatternIns :: HighlightDocument d => [LNFact] -> d
 translatePatternIns prems = text "PATTERNINS"
@@ -1286,6 +1295,9 @@ translateFact :: Document d => LNFact -> d
 translateFact (Fact tag _ ts) = 
     text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map translateTerm ts) <> text ")"
 
+translatePatternFact :: Document d => LNFact -> d
+translatePatternFact (Fact tag _ ts) =
+    text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map translatePatternTerm ts) <> text ")"
 
 translateTerm :: (Document d, Show l) => Term l -> d
 translateTerm t = case viewTerm t of
@@ -1300,3 +1312,28 @@ translateTerm t = case viewTerm t of
       printPair [t1,t2] = case viewTerm t2 of
         FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> translateTerm t1 <> text ", " <> printPair ts
         _                                               -> translateTerm t1 <> text ", " <> translateTerm t2
+
+translatePatternTerm :: (Document d, Show l) => Term l -> d
+translatePatternTerm t = case viewTerm t of
+    Lit l -> text $ show l
+    _     -> text $ makeVariable t
+
+makeVariable :: (Show l) => Term l -> String
+makeVariable t = "x"
+
+makeDestructorName :: (Show l) => Term l -> String -> String
+makeDestructorName t a = "g"
+
+makeDestructorExpressions :: (Document d, Show l) => Term l -> d
+makeDestructorExpressions t = vcat $
+    map (makeDestructorExpression t) (getAtoms t)
+
+getAtoms :: (Show l) => Term l -> [String]
+getAtoms t = case viewTerm t of
+    Lit l     -> [show l]
+    FApp _ ts -> foldl (\acc t -> acc ++ getAtoms t) [] ts
+
+makeDestructorExpression :: (Document d, Show l) => Term l -> String -> d
+makeDestructorExpression t a = text "let" <-> text a <->
+                               text "=" <-> text (makeDestructorName t a) <> 
+                               text "(" <> text (makeVariable t) <> text ");"
