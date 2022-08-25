@@ -1242,7 +1242,7 @@ translatePatternGets prems = vcat $
     map translateGet patternGets
     where
       patternGets = filter (\p -> (isStorage p) && hasPattern p) prems
-      translateGet prem@(Fact _ _ ts) = text "get" <-> translatePatternFact prem <> text ";" $-$
+      translateGet prem@(Fact _ _ ts) = text "get" <-> translatePatternFact prem <-> text "in" $-$
                                         (vcat $ map makeDestructorExpressions patternTerms)
                                         where
                                           patternTerms = filter isPattern ts
@@ -1253,7 +1253,7 @@ translateNonPatternGets prems = vcat $
     map translateGet nonPatternGets
     where
       nonPatternGets = filter (\p -> (isStorage p) && not (hasPattern p)) prems
-      translateGet prem = text "get" <-> translateFact prem <> text ";"
+      translateGet prem = text "get" <-> translateFact prem <-> text "in"
 
 isStorage :: LNFact -> Bool
 isStorage (Fact tag _ _) = case factTagName tag of
@@ -1299,9 +1299,16 @@ translatePatternFact :: Document d => LNFact -> d
 translatePatternFact (Fact tag _ ts) =
     text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map translatePatternTerm ts) <> text ")"
 
+showAtom :: String -> String
+showAtom a = case head a of
+  '~' -> tail a
+  '$' -> tail a
+  '\'' -> init $ tail a
+  _ -> a
+
 translateTerm :: (Document d, Show l) => Term l -> d
 translateTerm t = case viewTerm t of
-    Lit l                                           -> text $ show l
+    Lit l                                           -> text . showAtom $ show l
     FApp (AC o)        ts                           -> text "TODO"
     FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> text "(" <> printPair ts <> text ")"
     FApp (NoEq (f, _)) ts                           -> text (BC.unpack f) <> printList ts
@@ -1315,14 +1322,26 @@ translateTerm t = case viewTerm t of
 
 translatePatternTerm :: (Document d, Show l) => Term l -> d
 translatePatternTerm t = case viewTerm t of
-    Lit l -> text $ show l
+    Lit l -> text . showAtom $ show l
     _     -> text $ makeVariable t
 
+hashString :: String -> Int
+hashString s = foldl (\acc c -> acc + ord c) 0 s
+
+hashTerm :: (Show l) => Term l -> Int
+hashTerm t = case viewTerm t of
+    Lit l                                           -> hashString $ show l
+    FApp (AC o)        ts                           -> 1 + (sum $ map hashTerm ts)
+    FApp (NoEq (f, _)) ts                           -> (hashString $ BC.unpack f) + (sum $ map hashTerm ts)
+    FApp (C EMap)      ts                           -> 2 + (sum $ map hashTerm ts)
+    FApp List          ts                           -> 3 + (sum $ map hashTerm ts)
+    --This is all very basic, but it should be good enough until I can come up with something better
+
 makeVariable :: (Show l) => Term l -> String
-makeVariable t = "x"
+makeVariable t = "x" ++ (show $ hashTerm t)
 
 makeDestructorName :: (Show l) => Term l -> String -> String
-makeDestructorName t a = "g"
+makeDestructorName t a = "g_" ++ a ++ "_" ++ (show $ hashTerm t)
 
 makeDestructorExpressions :: (Document d, Show l) => Term l -> d
 makeDestructorExpressions t = vcat $
@@ -1330,7 +1349,7 @@ makeDestructorExpressions t = vcat $
 
 getAtoms :: (Show l) => Term l -> [String]
 getAtoms t = case viewTerm t of
-    Lit l     -> [show l]
+    Lit l     -> [showAtom $ show l]
     FApp _ ts -> foldl (\acc t -> acc ++ getAtoms t) [] ts
 
 makeDestructorExpression :: (Document d, Show l) => Term l -> String -> d
