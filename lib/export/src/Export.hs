@@ -1193,63 +1193,68 @@ makeAnnotations thy p = res
 
 
 msrTranslation :: HighlightDocument d => OpenTranslatedTheory -> d
-msrTranslation thy = vsep $
-    map translateTheoryItem (L.get thyItems thy)
+msrTranslation thy = vsep $ doclist
+    where
+      (doclist, _) = foldl (\(docs, destrs) i -> let (doc, destrs') = translateTheoryItem i destrs in (docs ++ [doc], destrs')) ([], M.empty) (L.get thyItems thy)
     -- FOR LATER: parMap rdeepseq translateTheoryItem (L.get thyItems thy)
 
 
 translateTheoryItem
-    :: HighlightDocument d => TheoryItem OpenProtoRule p s -> d
-translateTheoryItem  i = case i of
-    RuleItem ru   -> translateOpenProtoRule ru
-    LemmaItem lem -> sep [text "TODO!"] --translateLemma lem
-    TextItem txt  -> sep [text "TODO?"] --translateComment txt
-    RestrictionItem rstr  -> sep [text "TODO?"] --translateRestriction rstr
-    PredicateItem     p  -> sep [text "TODO?"] --translatePredicate p
-    TranslationItem s -> sep [text ""]
+    :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, M.Map (String, String) String)
+translateTheoryItem i de = case i of
+    RuleItem ru   -> translateOpenProtoRule ru de
+    LemmaItem lem -> (sep [text "TODO!"], de) --translateLemma lem
+    TextItem txt  -> (sep [text "TODO?"], de) --translateComment txt
+    RestrictionItem rstr  -> (sep [text "TODO?"], de) --translateRestriction rstr
+    PredicateItem     p  -> (sep [text "TODO?"], de) --translatePredicate p
+    TranslationItem s -> (sep [text ""], de)
 
 
-translateOpenProtoRule :: HighlightDocument d => OpenProtoRule -> d
-translateOpenProtoRule (OpenProtoRule ruE _) = translateProtoRule ruE
+translateOpenProtoRule :: HighlightDocument d => OpenProtoRule -> M.Map (String, String) String -> (d, M.Map (String, String) String)
+translateOpenProtoRule (OpenProtoRule ruE _) de = translateProtoRule ruE de
 
 translateProtoRule :: (HighlightDocument d)
-                => Rule ProtoRuleEInfo -> d
-translateProtoRule ru =
-    text "let" <-> printRuleName (L.get preName (L.get rInfo ru)) <-> text "=" $-$
-    nest 8
-    (translateRule (facts rPrems) acts (facts rConcs))
+                => Rule ProtoRuleEInfo -> M.Map (String, String) String -> (d, M.Map (String, String) String)
+translateProtoRule ru de =
+    (ruleDoc, destructors)
     where
     acts             = filter isNotDiffAnnotation (L.get rActs ru)
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
     facts proj     = L.get proj ru
+    (factsDoc,destructors) = translateRule (facts rPrems) acts (facts rConcs) de
+    ruleDoc = text "let" <-> printRuleName (L.get preName (L.get rInfo ru)) <-> text "=" $-$
+              nest 8
+              factsDoc
 
 printRuleName :: (HighlightDocument d) => ProtoRuleName -> d
 printRuleName FreshRule = text "Fresh"
 printRuleName (StandRule s) = text s
 
-translateRule :: HighlightDocument d => [LNFact] -> [LNFact] -> [LNFact] -> d
-translateRule prems acts concls = 
-    let (d1, v1) = translatePatternGets prems
-        (d2, v2) = translateNonPatternGets prems v1
-        (d3, v3) = translatePatternIns prems v2
-        (d4, v4) = translateNonPatternIns prems v3
-        (d5, v5) = translateActions acts v4
-        (d6, v6) = translateInserts prems concls v5
-        d7 = translateOuts concls v6
+translateRule :: (HighlightDocument d) => [LNFact] -> [LNFact] -> [LNFact] -> M.Map (String, String) String -> (d, M.Map (String, String) String)
+translateRule prems acts concls destrs = 
+    let (doc1, vars1, vars1', destr1) = translatePatternGets prems destrs
+        (doc2, vars2) = translateNonPatternGets prems vars1
+        (doc3, vars3, destr3) = translatePatternIns prems vars2 vars1' destr1
+        (doc4, vars4) = translateNonPatternIns prems vars3
+        (doc5, vars5) = translateActions acts vars4
+        (doc6, vars6) = translateInserts prems concls vars5
+        doc7 = translateOuts concls vars6
       in
-    d1 $-$ d2 $-$ d3 $-$ d4 $-$ d5 $-$ d6 $-$ d7
+    ((doc1 $-$ doc2 $-$ doc3 $-$ doc4 $-$ doc5 $-$ doc6 $-$ doc7), destr3)
 
-translatePatternGets :: HighlightDocument d => [LNFact] -> (d, S.Set String)
-translatePatternGets prems =
-    let (doclist, finalvars) = foldl (\(d1, v1) g -> let (d2, v2) = translateGet g v1 in (d1 ++ [d2], S.union v1 v2)) ([], S.empty) patternGets
+translatePatternGets :: (HighlightDocument d) => [LNFact] -> M.Map (String, String) String -> (d, S.Set String, M.Map String String, M.Map (String, String) String)
+translatePatternGets prems destrs =
+    let (doclist, finalvars, finalHelperVars, finalDestructors) = foldl (\(d1, v1, v1', destr1) g -> let (d2, v2, v2', destr2) = translateGet g v1 v1' destr1 in (d1 ++ [d2], (S.union v1 v2), v2', destr2)) ([], S.empty, M.empty, destrs) patternGets
       in
-    ((vcat doclist), finalvars)
+    ((vcat doclist), finalvars, finalHelperVars, finalDestructors)
     where
       patternGets = filter (\p -> (isStorage p) && hasPattern p) prems
-      translateGet prem@(Fact _ _ ts) vars = (getDoc, atoms)
+      translateGet prem@(Fact _ _ ts) vars helperVars destructors = (getDoc, atoms, newHelperVars, newDestructors)
                                              where
-                                               getDoc = text "get" <-> translatePatternFact prem vars <-> text "in" $-$
-                                                        (vcat $ map (makeDestructorExpressions (S.union vars literals)) patternTerms)
+                                               (factDoc, newHelperVars) = translatePatternFact prem vars helperVars
+                                               (destrDocList, newDestructors) = foldl (\(docs,des) t -> let (doc,des') = makeDestructorExpressions (S.union vars literals) newHelperVars des t in (docs ++ [doc], des')) ([], destructors) patternTerms
+                                               getDoc = text "get" <-> factDoc <-> text "in" $-$
+                                                        (vcat $ destrDocList)
                                                patternTerms = filter isPattern ts
                                                literals = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] (filter (not . isPattern) ts))
                                                atoms = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
@@ -1283,8 +1288,8 @@ hasPattern :: LNFact -> Bool
 hasPattern (Fact tag an ts) = 
   foldl (\acc t -> acc || isPattern t) False ts
 
-translatePatternIns :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
-translatePatternIns prems vars = (text "PATTERNINS", vars)
+translatePatternIns :: (HighlightDocument d) => [LNFact] -> S.Set String -> M.Map String String -> M.Map (String, String) String -> (d, S.Set String, M.Map (String, String) String)
+translatePatternIns prems vars helperVars destructors = (text "PATTERNINS", vars, destructors)
 
 translateNonPatternIns :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
 translateNonPatternIns prems vars = (text "NONPATTERNINS", vars)
@@ -1307,9 +1312,12 @@ translateFact :: Document d => LNFact -> S.Set String -> d
 translateFact (Fact tag _ ts) vars = 
     text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ")"
 
-translatePatternFact :: Document d => LNFact -> S.Set String -> d
-translatePatternFact (Fact tag _ ts) vars =
-    text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translatePatternTerm vars) ts) <> text ")"
+translatePatternFact :: (Document d) => LNFact -> S.Set String -> M.Map String String -> (d, M.Map String String)
+translatePatternFact (Fact tag _ ts) vars helperVars =
+    (factDoc, newHelperVars)
+    where
+      (doclist, newHelperVars) = foldl (\(docs, helpers) t -> let (doc, helpers') = translatePatternTerm vars helpers t in (docs ++ [doc], helpers')) ([], helperVars) ts
+      factDoc = text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ doclist) <> text ")"
 
 showAtom :: String -> String
 showAtom a = case head a of
@@ -1333,44 +1341,62 @@ translateTerm vars t = case viewTerm t of
         FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> translateTerm vars t1 <> text ", " <> printPair ts
         _                                               -> translateTerm vars t1 <> text ", " <> translateTerm vars t2
 
-translatePatternTerm :: (Document d, Show l) => S.Set String -> Term l -> d
-translatePatternTerm vars t = case viewTerm t of
-    Lit l | S.member (showAtom $ show l) vars -> text "=" <> (text . showAtom $ show l)
-    Lit l -> text . showAtom $ show l
-    _     -> text $ makeVariable t
+translatePatternTerm :: (Document d, Show l) => S.Set String -> M.Map String String -> Term l -> (d, M.Map String String)
+translatePatternTerm vars helperVars t = case viewTerm t of
+    Lit l | S.member (showAtom $ show l) vars -> ((text "=" <> (text . showAtom $ show l)), helperVars)
+    Lit l -> ((text . showAtom $ show l), helperVars)
+    _     -> (varDoc, newHelperVars)
+             where
+               (newVar, newHelperVars) = makeVariable t helperVars
+               varDoc = text newVar
 
-hashString :: String -> Int
-hashString s = foldl (\acc c -> acc + ord c) 0 s
-
-hashTerm :: (Show l) => Term l -> Int
+hashTerm :: (Show l) => Term l -> String
 hashTerm t = case viewTerm t of
-    Lit l                                           -> hashString $ show l
-    FApp (AC o)        ts                           -> 1 + (sum $ map hashTerm ts)
-    FApp (NoEq (f, _)) ts                           -> (hashString $ BC.unpack f) + (sum $ map hashTerm ts)
-    FApp (C EMap)      ts                           -> 2 + (sum $ map hashTerm ts)
-    FApp List          ts                           -> 3 + (sum $ map hashTerm ts)
-    --This is all very basic, but it should be good enough until I can come up with something better
+    Lit l                                           -> show l
+    FApp (AC o)        ts                           -> "AC" ++ (unwords $ map hashTerm ts)
+    FApp (NoEq (f, _)) ts                           -> (BC.unpack f) ++ (unwords $ map hashTerm ts)
+    FApp (C EMap)      ts                           -> "EMAP" ++ (unwords $ map hashTerm ts)
+    FApp List          ts                           -> "LIST" ++ (unwords $ map hashTerm ts)
+    --This is still very basic, but it should be good enough until I can come up with something better
 
-makeVariable :: (Show l) => Term l -> String
-makeVariable t = "x" ++ (show $ hashTerm t)
+makeVariable :: (Show l) => Term l -> M.Map String String -> (String, M.Map String String)
+makeVariable t varMap = case M.lookup (hashTerm t) varMap of
+    Just v  -> (v, varMap)
+    Nothing -> let newVar = "x" ++ (show $ M.size varMap)
+                   newMap = M.insert (hashTerm t) newVar varMap
+                 in
+               (newVar, newMap)
+      
 
-makeDestructorName :: (Show l) => Term l -> String -> String
-makeDestructorName t a = "g_" ++ a ++ "_" ++ (show $ hashTerm t)
+makeDestructorName :: (Show l) => M.Map (String, String) String -> Term l -> String -> (String, M.Map (String, String) String)
+makeDestructorName dMap t a = case M.lookup ((hashTerm t),a) dMap of
+    Just d  -> (d, dMap)
+    Nothing -> let newDestructor = "g_" ++ a ++ "_" ++ (show $ M.size dMap)
+                   newMap = M.insert ((hashTerm t),a) newDestructor dMap
+                 in
+               (newDestructor, newMap)
 
-makeDestructorExpressions :: (Document d, Show l) => S.Set String -> Term l -> d
-makeDestructorExpressions vars t = vcat $
-    map (makeDestructorExpression vars t) (getAtoms t)
+makeDestructorExpressions :: (Document d, Show l, Ord l) => S.Set String -> M.Map String String -> M.Map (String, String) String -> Term l -> (d, M.Map (String, String) String)
+makeDestructorExpressions vars helperVars destructors t = 
+    ((vcat doclist), newDestructors)
+    where
+      (doclist, newDestructors) = foldl (\(docs,destrs) a -> let (doc, destrs') = makeDestructorExpression vars helperVars destrs t a in (docs ++ [doc], destrs')) ([], destructors) (getAtoms t)
 
 getAtoms :: (Show l) => Term l -> [String]
 getAtoms t = case viewTerm t of
     Lit l     -> [showAtom $ show l]
     FApp _ ts -> foldl (\acc t -> acc ++ getAtoms t) [] ts
 
-makeDestructorExpression :: (Document d, Show l) => S.Set String -> Term l -> String -> d
-makeDestructorExpression vars t a = if S.member a vars
-                                      then text "if" <-> text a <->
-                                           text "=" <-> text (makeDestructorName t a) <> 
-                                           text "(" <> text (makeVariable t) <> text ") then"
-                                      else text "let" <-> text a <->
-                                           text "=" <-> text (makeDestructorName t a) <> 
-                                           text "(" <> text (makeVariable t) <> text ");"
+makeDestructorExpression :: (Document d, Show l) => S.Set String -> M.Map String String -> M.Map (String, String) String -> Term l -> String -> (d, M.Map (String, String) String)
+makeDestructorExpression vars helperVars destructors t a = if S.member a vars
+                                      then (ifDoc, newDestructors)
+                                      else (letDoc, newDestructors)
+                                      where
+                                        (var, _) = makeVariable t helperVars
+                                        (destr, newDestructors) = makeDestructorName destructors t a
+                                        ifDoc = text "if" <-> text a <->
+                                                text "=" <-> text destr <> 
+                                                text "(" <> text var <> text ") then"
+                                        letDoc = text "let" <-> text a <->
+                                                 text "=" <-> text destr <> 
+                                                 text "(" <> text var <> text ");"
