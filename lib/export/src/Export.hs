@@ -1232,44 +1232,50 @@ printRuleName (StandRule s) = text s
 
 translateRule :: (HighlightDocument d) => [LNFact] -> [LNFact] -> [LNFact] -> M.Map (String, String) String -> (d, M.Map (String, String) String)
 translateRule prems acts concls destrs = 
-    let (doc1, vars1, vars1', destr1) = translatePatternGets prems destrs
-        (doc2, vars2) = translateNonPatternGets prems vars1
+    let (doc1, vars1, vars1', destr1) = translatePatterns prems "GET" patternGetsFilter S.empty M.empty destrs
+        (doc2, vars2) = translateNonPatterns prems "GET" nonPatternGetsFilter vars1
         (doc3, vars3, destr3) = translatePatternIns prems vars2 vars1' destr1
         (doc4, vars4) = translateNonPatternIns prems vars3
-        (doc5, vars5) = translateActions acts vars4
-        (doc6, vars6) = translateInserts prems concls vars5
-        doc7 = translateOuts concls vars6
+        (doc5, vars5) = translateNews prems vars4
+        (doc6, vars6) = translateActions acts vars5
+        (doc7, vars7) = translateInserts prems concls vars6
+        doc8 = translateOuts concls vars7
       in
-    ((doc1 $-$ doc2 $-$ doc3 $-$ doc4 $-$ doc5 $-$ doc6 $-$ doc7), destr3)
+    ((doc1 $-$ doc2 $-$ doc3 $-$ doc4 $-$ doc5 $-$ doc6 $-$ doc7 $-$ doc8), destr3)
 
-translatePatternGets :: (HighlightDocument d) => [LNFact] -> M.Map (String, String) String -> (d, S.Set String, M.Map String String, M.Map (String, String) String)
-translatePatternGets prems destrs =
-    let (doclist, finalvars, finalHelperVars, finalDestructors) = foldl (\(d1, v1, v1', destr1) g -> let (d2, v2, v2', destr2) = translateGet g v1 v1' destr1 in (d1 ++ [d2], (S.union v1 v2), v2', destr2)) ([], S.empty, M.empty, destrs) patternGets
+patternGetsFilter :: LNFact -> Bool
+patternGetsFilter p = (isStorage p) && hasPattern p
+
+nonPatternGetsFilter :: LNFact -> Bool
+nonPatternGetsFilter p = (isStorage p) && not (hasPattern p)
+
+translatePatterns :: (HighlightDocument d) => [LNFact] -> String -> (LNFact -> Bool) -> S.Set String -> M.Map String String -> M.Map (String, String) String -> (d, S.Set String, M.Map String String, M.Map (String, String) String)
+translatePatterns facts factType filterFunction vars helperVars destructors =
+    let (doclist, finalvars, finalHelperVars, finalDestructors) = foldl (\(d1, v1, v1', destr1) g -> let (d2, v2, v2', destr2) = translate g v1 v1' destr1 in (d1 ++ [d2], (S.union v1 v2), v2', destr2)) ([], vars, helperVars, destructors) patternFacts
       in
     ((vcat doclist), finalvars, finalHelperVars, finalDestructors)
     where
-      patternGets = filter (\p -> (isStorage p) && hasPattern p) prems
-      translateGet prem@(Fact _ _ ts) vars helperVars destructors = (getDoc, atoms, newHelperVars, newDestructors)
+      patternFacts = filter filterFunction facts
+      translate prem@(Fact _ _ ts) vs hvs destrs = (getDoc, atoms, newHelperVars, newDestructors)
                                              where
-                                               (factDoc, newHelperVars) = translatePatternFact prem vars helperVars
-                                               (destrDocList, newDestructors) = foldl (\(docs,des) t -> let (doc,des') = makeDestructorExpressions (S.union vars literals) newHelperVars des t in (docs ++ [doc], des')) ([], destructors) patternTerms
-                                               getDoc = text "get" <-> factDoc <-> text "in" $-$
-                                                        (vcat $ destrDocList)
+                                               (factDoc, newHelperVars) = translatePatternFact prem factType vs hvs
+                                               (destrDocList, newDestructors) = foldl (\(docs,des) t -> let (doc,des') = makeDestructorExpressions (S.union vs literals) newHelperVars des t in (docs ++ [doc], des')) ([], destrs) patternTerms
+                                               getDoc = factDoc $-$ (vcat $ destrDocList)
                                                patternTerms = filter isPattern ts
                                                literals = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] (filter (not . isPattern) ts))
                                                atoms = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
 
 
-translateNonPatternGets :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
-translateNonPatternGets prems varset =
-    let (doclist, finalvars) = foldl (\(d1, v1) g -> let (d2, v2) = translateGet g v1 in (d1 ++ [d2], S.union v1 v2)) ([], varset) nonPatternGets
+translateNonPatterns :: HighlightDocument d => [LNFact] -> String -> (LNFact -> Bool) -> S.Set String -> (d, S.Set String)
+translateNonPatterns facts factType filterFunction vars =
+    let (doclist, finalvars) = foldl (\(d1, v1) g -> let (d2, v2) = translate g v1 in (d1 ++ [d2], S.union v1 v2)) ([], vars) nonPatternFacts
      in
     ((vcat doclist), finalvars)
     where
-      nonPatternGets = filter (\p -> (isStorage p) && not (hasPattern p)) prems
-      translateGet prem@(Fact _ _ ts) vars = (getDoc, atoms)
+      nonPatternFacts = filter filterFunction facts
+      translate prem@(Fact _ _ ts) vs = (getDoc, atoms)
                                              where
-                                              getDoc = text "get" <-> translateFact prem vars <-> text "in"
+                                              getDoc = translateFact prem factType vs
                                               atoms = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
 
 isStorage :: LNFact -> Bool
@@ -1300,6 +1306,9 @@ translateFreshs prems vars = (text "FRESHS", vars)
 translateActions :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
 translateActions acts vars = (text "ACTIONS", vars)
 
+translateNews :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
+translateNews prems vars = (text "NEWS", vars)
+
 translateInserts :: HighlightDocument d => [LNFact] -> [LNFact] -> S.Set String -> (d, S.Set String)
 translateInserts prems concls vars = (text "INSERTS", vars)
 
@@ -1308,16 +1317,20 @@ translateOuts concls vars = text "OUTS"
 
 
 
-translateFact :: Document d => LNFact -> S.Set String -> d
-translateFact (Fact tag _ ts) vars = 
-    text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ")"
+translateFact :: Document d => LNFact -> String -> S.Set String -> d
+translateFact (Fact tag _ ts) factType vars = case factType of
+    "GET" -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
+    _     -> text "TODO"
 
-translatePatternFact :: (Document d) => LNFact -> S.Set String -> M.Map String String -> (d, M.Map String String)
-translatePatternFact (Fact tag _ ts) vars helperVars =
+translatePatternFact :: (Document d) => LNFact -> String -> S.Set String -> M.Map String String -> (d, M.Map String String)
+translatePatternFact (Fact tag _ ts) factType vars helperVars =
     (factDoc, newHelperVars)
     where
       (doclist, newHelperVars) = foldl (\(docs, helpers) t -> let (doc, helpers') = translatePatternTerm vars helpers t in (docs ++ [doc], helpers')) ([], helperVars) ts
-      factDoc = text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ doclist) <> text ")"
+      factDoc = case factType of
+        "GET" -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ doclist) <> text ") in"
+        "IN"  -> text "TODO"
+        _     -> text "" --should never happen
 
 showAtom :: String -> String
 showAtom a = case head a of
