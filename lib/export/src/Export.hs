@@ -1234,8 +1234,8 @@ translateRule :: (HighlightDocument d) => [LNFact] -> [LNFact] -> [LNFact] -> M.
 translateRule prems acts concls destrs = 
     let (doc1, vars1, vars1', destr1) = translatePatterns prems "GET" patternGetsFilter S.empty M.empty destrs
         (doc2, vars2) = translateNonPatterns prems "GET" nonPatternGetsFilter vars1
-        (doc3, vars3, destr3) = translatePatternIns prems vars2 vars1' destr1
-        (doc4, vars4) = translateNonPatternIns prems vars3
+        (doc3, vars3, _, destr3) = translatePatterns prems "IN" patternInsFilter vars2 vars1' destr1
+        (doc4, vars4) = translateNonPatterns prems "IN" nonPatternInsFilter vars3
         (doc5, vars5) = translateNews prems vars4
         (doc6, vars6) = translateActions acts vars5
         (doc7, vars7) = translateInserts prems concls vars6
@@ -1243,11 +1243,33 @@ translateRule prems acts concls destrs =
       in
     ((doc1 $-$ doc2 $-$ doc3 $-$ doc4 $-$ doc5 $-$ doc6 $-$ doc7 $-$ doc8), destr3)
 
+isStorage :: LNFact -> Bool
+isStorage (Fact tag _ _) = case factTagName tag of
+  "Fr"  -> False
+  "In"  -> False
+  "Out" -> False
+  _     -> True
+
+isPattern :: Term l -> Bool
+isPattern t = case viewTerm t of
+    Lit l -> False
+    _     -> True
+
+hasPattern :: LNFact -> Bool
+hasPattern (Fact tag an ts) = 
+  foldl (\acc t -> acc || isPattern t) False ts
+
 patternGetsFilter :: LNFact -> Bool
 patternGetsFilter p = (isStorage p) && hasPattern p
 
 nonPatternGetsFilter :: LNFact -> Bool
 nonPatternGetsFilter p = (isStorage p) && not (hasPattern p)
+
+patternInsFilter :: LNFact -> Bool
+patternInsFilter p@(Fact tag _ _) = (factTagName tag) == "In" && hasPattern p
+
+nonPatternInsFilter :: LNFact -> Bool
+nonPatternInsFilter p@(Fact tag _ _) = (factTagName tag) == "In" && not (hasPattern p)
 
 translatePatterns :: (HighlightDocument d) => [LNFact] -> String -> (LNFact -> Bool) -> S.Set String -> M.Map String String -> M.Map (String, String) String -> (d, S.Set String, M.Map String String, M.Map (String, String) String)
 translatePatterns facts factType filterFunction vars helperVars destructors =
@@ -1278,22 +1300,6 @@ translateNonPatterns facts factType filterFunction vars =
                                               getDoc = translateFact prem factType vs
                                               atoms = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
 
-isStorage :: LNFact -> Bool
-isStorage (Fact tag _ _) = case factTagName tag of
-  "Fr"  -> False
-  "In"  -> False
-  "Out" -> False
-  _     -> True
-
-isPattern :: Term l -> Bool
-isPattern t = case viewTerm t of
-    Lit l -> False
-    _     -> True
-
-hasPattern :: LNFact -> Bool
-hasPattern (Fact tag an ts) = 
-  foldl (\acc t -> acc || isPattern t) False ts
-
 translatePatternIns :: (HighlightDocument d) => [LNFact] -> S.Set String -> M.Map String String -> M.Map (String, String) String -> (d, S.Set String, M.Map (String, String) String)
 translatePatternIns prems vars helperVars destructors = (text "PATTERNINS", vars, destructors)
 
@@ -1320,6 +1326,7 @@ translateOuts concls vars = text "OUTS"
 translateFact :: Document d => LNFact -> String -> S.Set String -> d
 translateFact (Fact tag _ ts) factType vars = case factType of
     "GET" -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
+    "IN"  -> text "in(c," <-> (translateTerm vars (head ts)) <> text ": bitstring);"
     _     -> text "TODO"
 
 translatePatternFact :: (Document d) => LNFact -> String -> S.Set String -> M.Map String String -> (d, M.Map String String)
@@ -1329,7 +1336,7 @@ translatePatternFact (Fact tag _ ts) factType vars helperVars =
       (doclist, newHelperVars) = foldl (\(docs, helpers) t -> let (doc, helpers') = translatePatternTerm vars helpers t in (docs ++ [doc], helpers')) ([], helperVars) ts
       factDoc = case factType of
         "GET" -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ doclist) <> text ") in"
-        "IN"  -> text "TODO"
+        "IN"  -> text "in(c," <-> (head doclist) <> text ": bitstring);"
         _     -> text "" --should never happen
 
 showAtom :: String -> String
