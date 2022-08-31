@@ -27,6 +27,7 @@ import           Theory.Tools.RuleVariants
 import           Theory.Tools.IntruderRules
 
 import           Term.Positions
+import Theory.Constraint.Solver.Sources (IntegerParameters)
 
 
 
@@ -113,7 +114,8 @@ closeIntrRule _   ir                                        = [ir]
 
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
-closeRuleCache :: [LNGuarded]        -- ^ Restrictions to use.
+closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturation limits
+               -> [LNGuarded]        -- ^ Restrictions to use.
                -> [LNGuarded]        -- ^ Source lemmas to use.
                -> S.Set FactTag      -- ^ Fact tags forced to be injective
                -> SignatureWithMaude -- ^ Signature of theory.
@@ -121,7 +123,7 @@ closeRuleCache :: [LNGuarded]        -- ^ Restrictions to use.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> Bool               -- ^ Diff or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
@@ -139,8 +141,8 @@ closeRuleCache restrictions typAsms forcedInjFacts sig protoRules intrRules isdi
     -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
     -- distinctions for properties proven using induction.
     safetyRestrictions = filter isSafetyFormula restrictions
-    rawSources         = precomputeSources ctxt0 safetyRestrictions
-    refinedSources     = refineWithSourceAsms typAsms ctxt0 rawSources
+    rawSources         = precomputeSources parameters ctxt0 safetyRestrictions
+    refinedSources     = refineWithSourceAsms parameters typAsms ctxt0 rawSources
 
     -- Maude handle
     hnd = L.get sigmMaudeHandle sig

@@ -8,7 +8,7 @@ section{* Garay-Jakobsson-MacKenzie contract signing protocol *}
  * Modeler:     Robert Kunnemann 
  * Date:        Jul 2016
  *
- * Status:  wip  // TODO need to adapt to new syntax
+ * Status:      Broken --- cannot use "pat_" variables for patterns anymore.
  *
  * Juan A. Garay, Markus Jakobsson, and Philip D. MacKenzie. Abuse-free
  * optimistic contract signing. In Advances in Cryptology—Crypto’99, volume
@@ -205,27 +205,27 @@ let Judge =
   let m4 = sign(<$TEXT,'2'>,sk($B)) in
   let a1 = sign(<$TEXT,$A,$B,'abort'>,sk($A)) in
   let pat_a2 = sign(a1,sk(TTPID)) in
-  let wittness_resolved = sign(<sign($TEXT,sk1), sign($TEXT,sk2)>,sk(TTPID)) in
   (
              (in('c',<m3,m4>); event ContractJudge($A,$B,$TEXT))
          ||  (in('c',pat_a2); event AbortJudge($A,$B,$TEXT))
   )
 
+process:
+!  in('c',<$A,$B,<'TTP',$TTP>>);
 let TTPID=<'TTP',$TTP> in
-!(
-in('c',<$A,$B,<'TTP',$TTP>>);
-event TTP(TTPID);
- ( A || B || TTP || Judge)
-)
-|| !(   in('c',<'corrupt',$x>); 
+event TTP(TTPID); (
+A | B | TTP | Judge
+  | !(   in('c',<'corrupt',$x>); 
         event Corrupt($x);
         out('c',sk($x));
         (  !(in('r',<'responder',$x,TTPID,m>);0) 
-        || !(in('r',<'originator',$x,TTPID,m>);0)
-        || !(in('r',<'responder',TTPID,$x,m>);0)
-        || !(in('r',<'originator',TTPID,$x,m>);0)
+        | !(in('r',<'originator',$x,TTPID,m>);0)
+        | !(in('r',<'responder',TTPID,$x,m>);0)
+        | !(in('r',<'originator',TTPID,$x,m>);0)
         )
    )
+)
+
 
 /* auto */
 lemma sanity_a4b3: /* optimistic execution */

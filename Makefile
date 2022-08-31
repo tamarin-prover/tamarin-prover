@@ -31,16 +31,6 @@ profiling:
 	stack setup
 	stack install --no-system-ghc --executable-profiling --library-profiling --ghc-options="-fprof-auto -rtsopts" --flag tamarin-prover:-threaded
 
-# SAPIC
-.PHONY: sapic
-sapic:
-	cd plugins/sapic && $(MAKE)
-
-# Clean target for SAPIC
-.PHONY: sapic-clean
-sapic-clean:
-	cd plugins/sapic && $(MAKE) clean
-
 # Clean target for Tamarin
 .PHONY: tamarin-clean
 tamarin-clean:

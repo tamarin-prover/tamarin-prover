@@ -40,7 +40,6 @@ module Web.Theory
   )
 where
 
-import           Accountability.Generation    (checkPreTransWellformedness)
 
 import           Debug.Trace                  (trace)
 
@@ -84,7 +83,7 @@ import           Theory.Tools.Wellformedness
 
 import           Web.Settings
 import           Web.Types
-
+import qualified Accountability.Generation as Acc
 
 ------------------------------------------------------------------------------
 -- Various other functions
@@ -1061,8 +1060,9 @@ htmlThyPath renderUrl info path =
              wfErrors = case report of
                              [] -> ""
                              _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
+
              report = checkWellformedness (removeTranslationItems (openTheory thy)) (get thySignature thy)
-                   ++ checkPreTransWellformedness (openTheory thy) -- FIXME: openTheory doesn't contain translated items, hence no warning is shown in the interactive mode
+                   ++ Acc.checkWellformedness (openTheory thy) -- FIXME: openTheory doesn't contain translated items, hence no warning is shown in the interactive mode
 
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.

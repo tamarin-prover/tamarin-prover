@@ -49,6 +49,8 @@ instance Show (ParsingException) where
     show (DuplicateItem (TranslationItem (SignatureBuiltin s))) = "duplicate BuiltIn signature: " ++ show s
     show (DuplicateItem (TranslationItem (DiffEquivLemma _))) = "duplicate diff equiv lemma item"
     show (DuplicateItem (TranslationItem (EquivLemma _ _))) = "duplicate equiv lemma item"    
+    show (DuplicateItem (TranslationItem (AccLemmaItem _))) = "duplicate accountability lemma item"
+    show (DuplicateItem (TranslationItem (CaseTestItem _))) = "duplicate case test item"
     show TryingToAddFreshRule = "The fresh rule is implicitely contained in the theory and does not need to be added."
 
 instance Catch.Exception ParsingException

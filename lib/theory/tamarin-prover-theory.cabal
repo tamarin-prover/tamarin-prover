@@ -114,6 +114,7 @@ library
       Theory.Text.Parser
       Theory.Text.Parser.Token
       Theory.Text.Parser.Restriction
+      Theory.Text.Parser.Signature
 
       Theory.Tools.AbstractInterpretation
       Theory.Tools.EquationStore

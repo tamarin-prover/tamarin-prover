@@ -136,6 +136,7 @@ executable tamarin-prover
       , containers
       , deepseq
       , directory
+      , exceptions
       , fclabels
       , file-embed
       , filepath
