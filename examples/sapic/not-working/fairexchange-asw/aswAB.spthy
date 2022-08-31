@@ -6,7 +6,7 @@ section{* The ASW contract signing protocol *}
 /*
  * Protocol:    ASW
  * Date:        Dec 2015
- * Status:      working
+ * Status:      Broken --- cannot use "pat_" variables for patterns anymore.
  *
  * Unmodified variant of the ASW protocol with strict interpretation
  * of the meaning of a contract (see Definition of Judge).

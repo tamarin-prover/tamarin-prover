@@ -7,10 +7,11 @@
 -- Translation from OpenTheories to OpenTheories with accountability lemmas
 
 module Accountability (
-       translate
+       module Accountability.Generation
+     , translate
 ) where
 import Control.Monad.Catch (MonadThrow (throwM), MonadCatch, Exception)
-import Theory (OpenTheory, CaseIdentifier, theoryAccLemmas, aCaseIdentifiers, cName, aName, aCaseTests, AccLemma)
+import Theory (OpenTheory, CaseIdentifier, theoryAccLemmas, aCaseIdentifiers, cName, aName, aCaseTests, AccLemma, caseTestToPredicate, theoryCaseTests)
 import Data.Data (Typeable)
 import Control.Applicative (Alternative)
 import qualified Data.Label as L
@@ -18,7 +19,8 @@ import Data.List (intercalate, (\\))
 import Data.Maybe (mapMaybe)
 import Control.Monad (unless, guard, foldM)
 import Accountability.Generation (generateAccountabilityLemmas)
-import Theory.Text.Parser
+import Theory.Text.Parser (liftedAddLemma)
+import Theory.Text.Parser.Signature (liftedAddPredicate)
 
 
 ------------------------------------------------------------------------------
@@ -42,7 +44,10 @@ translate thy = do
     let undef = mapMaybe undefinedCaseTests (theoryAccLemmas thy)
     unless (null undef) (throwM (CaseTestsUndefined undef :: AccException))
     accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas thy)
-    foldM liftedAddLemma thy (concat accLemmas)
+    thy' <- foldM liftedAddLemma thy (concat accLemmas)
+    let casePredicates = mapMaybe caseTestToPredicate (theoryCaseTests thy)
+    foldM liftedAddPredicate thy' casePredicates
+
 
 -- | Checks if the case tests requiered by an accountability lemma are present
 undefinedCaseTests :: Alternative f => AccLemma -> f (String, [CaseIdentifier])

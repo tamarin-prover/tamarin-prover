@@ -59,9 +59,7 @@ module Theory.Tools.Wellformedness (
   -- * Wellformedness checking
     WfErrorReport
   , checkWellformedness
-  , noteWellformedness
   , checkWellformednessDiff
-  , noteWellformednessDiff
 
   , prettyWfErrorReport
 
@@ -77,7 +75,7 @@ import           Control.Category
 import           Data.Char
 import           Data.Generics.Uniplate.Data (universeBi)
 import           Data.Label
-import           Data.List                   (intersperse,(\\))
+import           Data.List                   (intersperse,(\\), intercalate, isPrefixOf)
 import           Data.Maybe
 -- import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Set                    as S
@@ -92,6 +90,9 @@ import           Theory
 import           Theory.Text.Pretty
 import           Theory.Sapic
 import           Theory.Tools.RuleVariants
+import           Safe                        (lastMay)
+import           Items.OptionItem            (lemmasToProve)
+import           TheoryObject                (diffThyOptions)
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -956,6 +957,63 @@ multRestrictedReportDiff thy = do
 -- multicombine2 xs0 = do (x,xs) <- zip xs0 $ tails xs0; (,) x <$> xs
 
 
+--------------------
+-- Check if lemmas from "--prove" / "--lemma" args are in the theory
+--------------------
+
+-- | A fold to check if the lemmas are proper
+findNotProvedLemmas :: [String] -> [String] -> [String]
+findNotProvedLemmas lemmaArgsNames lemmasInTheory = foldl (\acc x -> if not (argFilter x) then  x:acc else acc ) [] lemmaArgsNames
+  where
+      -- Check a lemma against a prefix* pattern or the name of a lemma 
+      lemmaChecker :: String -> String -> Bool
+      lemmaChecker argLem lemFromThy
+        | lastMay argLem == Just '*' = init argLem `isPrefixOf` lemFromThy
+        | otherwise = argLem == lemFromThy
+
+      -- A filter to check if a lemma (str) is in the list of lemmas from the theory
+      argFilter :: String -> Bool
+      argFilter str = any (lemmaChecker str) lemmasInTheory
+    
+
+-- | Check that all the lemmas in the arguments are lemmas of the theory and return an error if not
+  -----------------------
+checkIfLemmasInTheory :: Theory sig c r p s  -> WfErrorReport
+checkIfLemmasInTheory thy 
+        | null notProvedLemmas = []
+        | otherwise = 
+            [(topic, vcat
+            [ text $ "--> '" ++ intercalate "', '" notProvedLemmas ++ "'"  ++ " from arguments "
+              ++ "do(es) not correspond to a specified lemma in the theory "
+            -- , text $ "List of lemmas from the theory: " ++ show (map _lName (theoryLemmas thy))
+            ])]
+
+    where
+      lemmaArgsNames = get (lemmasToProve.thyOptions) thy
+      topic = "Check presence of the --prove/--lemma arguments in theory"
+      lemmasInTheory = map _lName (theoryLemmas thy)
+      notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
+
+
+-- | Check that all the lemmas in the arguments are lemmas of the diffTheory and return an error if not
+  -----------------------
+checkIfLemmasInDiffTheory :: DiffTheory sig c r r2 p p2  -> WfErrorReport
+checkIfLemmasInDiffTheory thy 
+        | null notProvedLemmas = []
+        | otherwise = 
+            [(topic, vcat
+            [ text $ "--> '" ++ intercalate "', '"  notProvedLemmas ++ "'"  ++ " from arguments "
+              ++ "do(es) not correspond to a specified lemma in the theory "
+            -- , text $ "List of lemmas from the theory: " ++ show (map _lName (theoryLemmas thy))
+            ])]
+
+    where
+      lemmaArgsNames = get (lemmasToProve.diffThyOptions) thy
+      topic = "Check presence of the --prove/--lemma arguments in theory"
+      lemmasInTheory = map (_lName.snd) (diffTheoryLemmas thy)
+      notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
+
+
 ------------------------------------------------------------------------------
 -- Theory
 ------------------------------------------------------------------------------
@@ -965,7 +1023,8 @@ checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
                     -> WfErrorReport
 checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show thy) $
   concatMap ($ thy)
-    [ unboundReportDiff
+    [ checkIfLemmasInDiffTheory
+    , unboundReportDiff
     , freshNamesReportDiff
     , publicNamesReportDiff
     , ruleSortsReportDiff
@@ -983,7 +1042,8 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
 checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
                     -> WfErrorReport
 checkWellformedness thy sig = concatMap ($ thy)
-    [ unboundReport
+    [ checkIfLemmasInTheory
+    , unboundReport
     , freshNamesReport
     , publicNamesReport
     , ruleSortsReport
@@ -994,32 +1054,3 @@ checkWellformedness thy sig = concatMap ($ thy)
     , multRestrictedReport
     ]
 
--- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformedness :: WfErrorReport -> OpenTranslatedTheory -> Bool -> OpenTranslatedTheory
-noteWellformedness report thy quitOnWarning =
-    addComment wfErrorReport thy
-  where
-    wfErrorReport
-      | null report = text "All well-formedness checks were successful."
-      | otherwise   = if quitOnWarning
-                      then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render (prettyWfErrorReport report)))
-                      else vsep
-          [ text "WARNING: the following wellformedness checks failed!"
-          , prettyWfErrorReport report
-          ]
-
--- | Adds a note to the end of the theory, if it is not well-formed.
-noteWellformednessDiff :: WfErrorReport -> OpenDiffTheory -> Bool -> OpenDiffTheory
-noteWellformednessDiff report thy quitOnWarning =
-    addDiffComment wfErrorReport thy
-  where
-    wfErrorReport
-      | null report = text "All well-formedness checks were successful."
-      | otherwise   = if quitOnWarning
-                      then error ("quit-on-warning mode selected - aborting on following wellformedness errors.\n"
-                                 ++ (render (prettyWfErrorReport report)))
-                      else vsep
-          [ text "WARNING: the following wellformedness checks failed!"
-          , prettyWfErrorReport report
-          ]

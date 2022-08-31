@@ -6,7 +6,7 @@ builtins: signing, hashing, reliable-channel
 options: translation-progress
 
 process:
-new k; ( (in('r',sign(m,=k)); event A())+(in('r',=m); out('c',m);event B()))
+new k; ( (in('r',sign(m,=k)); event A())+(in('r',m); out('c',m);event B()))
 
 lemma A_impossible:
         "not(Ex #t. A()@t)"
