@@ -498,8 +498,8 @@ addTacticI t (Theory n h l sig c i o) = Just (Theory n h (l++[t]) sig c i o)
 -- addTacticI _ _ = Nothing
 
 addDiffTacticI :: TacticI ProofContext -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
-addDiffTacticI t (DiffTheory n h [] sig cl cr dcl dcr i) = Just (DiffTheory n h [t] sig cl cr dcl dcr i)
-addDiffTacticI t (DiffTheory n h l sig cl cr dcl dcr i) = Just (DiffTheory n h (l++[t]) sig cl cr dcl dcr i)
+addDiffTacticI t (DiffTheory n h [] sig cl cr dcl dcr i o) = Just (DiffTheory n h [t] sig cl cr dcl dcr i o)
+addDiffTacticI t (DiffTheory n h l sig cl cr dcl dcr i o) = Just (DiffTheory n h (l++[t]) sig cl cr dcl dcr i o)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemma :: String -> Theory sig c r p s -> Maybe (Theory sig c r p s)

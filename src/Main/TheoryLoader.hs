@@ -47,7 +47,7 @@ import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
 import           Data.Label
-import           Data.List                           (isPrefixOf,intersperse, find)
+import           Data.List                           (isPrefixOf,intersperse, intercalate, find)
 
 import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
@@ -156,7 +156,7 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oLemmaNames        :: [String]
   , _oStopOnTrace       :: SolutionExtractor
   , _oProofBound        :: Maybe Int
-  , _oHeuristic         :: Maybe Heuristic
+  , _oHeuristic         :: Maybe (Heuristic ProofContext)
   , _oPartialEvaluation :: Maybe EvaluationStyle
   , _oDefines           :: [String]
   , _oDiffMode          :: Bool
@@ -232,12 +232,12 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> return $ Just $ roundRobinHeuristic
-                                         $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . toGoalRanking) rawRankings
+                                         $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as))) (filterHeuristic rawRankings)
         Just []                -> throwError $ ArgumentError "heuristic: at least one ranking must be given"
         _                      -> return Nothing
 
-    toGoalRanking | argExists "diff" as = charToGoalRankingDiff
-                  | otherwise           = charToGoalRanking
+    toGoalRanking | argExists "diff" as = stringToGoalRankingDiff
+                  | otherwise           = stringToGoalRanking
 
     partialEvaluation = case map toLower <$> findArg "partial-evaluation" as of
       Just "summary" -> return $ Just Summary
@@ -398,6 +398,7 @@ closeTheory version thyOpts sig srcThy = do
 constructAutoProver :: TheoryLoadOptions -> AutoProver
 constructAutoProver thyOpts =
     AutoProver (L.get oHeuristic thyOpts)
+               Nothing
                (L.get oProofBound thyOpts)
                (L.get oStopOnTrace thyOpts)
 

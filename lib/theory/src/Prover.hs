@@ -70,10 +70,10 @@ closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> Bool -> Clos
 closeDiffTheoryWithMaude sig thy0 autoSources =
   if autoSources && (containsPartialDeconstructions (cacheLeft items) || containsPartialDeconstructions (cacheRight items))
     then
-      proveDiffTheory (const True) (const True) checkProof checkDiffProof
+      proveDiffTheory (const True) checkProof checkDiffProof
         (DiffTheory (L.get diffThyName thy0) h t sig (cacheLeft items') (cacheRight items') (diffCacheLeft items') (diffCacheRight items') items' (L.get diffThyOptions thy0))
     else
-      proveDiffTheory (const True) (const True) checkProof checkDiffProof
+      proveDiffTheory (const True) checkProof checkDiffProof
         (DiffTheory (L.get diffThyName thy0) h t sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items (L.get diffThyOptions thy0))
 
   where
@@ -142,9 +142,9 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
 
     -- extract protocol rules
     leftClosedRules  :: [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
-    leftClosedRules its = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose errClose its errClose)
+    leftClosedRules its = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose errClose errClose its errClose)
     rightClosedRules :: [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
-    rightClosedRules its = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose errClose its errClose)
+    rightClosedRules its = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose errClose errClose its errClose)
     errClose  = error "closeDiffTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC

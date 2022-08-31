@@ -152,7 +152,6 @@ library
       Theory.Text.Parser.Proof
       Theory.Text.Parser.Rule
       Theory.Text.Parser.Sapic
-      Theory.Text.Parser.Signature
       Theory.Text.Parser.Tactics
       Theory.Text.Parser.Term
       Theory.Sapic.PlainProcess

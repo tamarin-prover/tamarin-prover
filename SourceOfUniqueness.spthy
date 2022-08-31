@@ -4,7 +4,7 @@ builtins: symmetric-encryption
 
 // Comment
 tactic: huhu
-presort: c
+presort: C
 prio:
     isFactName "ReceiverKeySimple"
     // Comment
@@ -16,7 +16,7 @@ prio:
 
 tactic: uniqueness
 // Comment
-presort: c
+presort: C
 prio:
     isFactName "ReceiverKeySimple"
 prio:
