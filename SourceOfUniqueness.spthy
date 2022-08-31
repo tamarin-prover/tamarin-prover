@@ -16,7 +16,7 @@ prio:
 
 tactic: uniqueness
 // Comment
-presort: X
+presort: c
 prio:
     isFactName "ReceiverKeySimple"
 prio:
