@@ -229,7 +229,7 @@ goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regul
        regularRanking = toGoalRanking <$> many1 letter <* skipMany (char ' ')
 
        internalTacticRanking = do
-            _ <- string "{" <* skipMany (char ' ') -- FIXME: use braces!
+            _ <- string "{" <* skipMany (char ' ')
             goal <- toGoalRanking <$> pure ("{.}")
             tacticName <- optionMaybe (many1 (noneOf "\"\n\r{}") <* char '}' <* skipMany (char ' '))
 
