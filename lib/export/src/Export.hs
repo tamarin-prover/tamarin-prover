@@ -1237,7 +1237,7 @@ translateRule prems acts concls destrs =
         (doc3, vars3, _, destr3) = translatePatterns prems "IN" patternInsFilter vars2 vars1' destr1
         (doc4, _) = translateNonPatterns prems "IN" nonPatternInsFilter vars3
         (doc5, _) = translateNonPatterns prems "NEW" newsFilter S.empty
-        (doc6, _) = translateActions acts S.empty
+        (doc6, _) = translateNonPatterns acts "EVENT" (\x -> True) S.empty
         (doc7, _) = translateNonPatterns (concls \\ prems) "INSERT" isStorage S.empty
         (doc8, _) = translateNonPatterns concls "OUT" outsFilter S.empty
       in
@@ -1308,29 +1308,8 @@ translateNonPatterns facts factType filterFunction vars =
                                                 "INSERT" -> S.empty
                                                 "OUT"    -> S.empty
                                                 "NEW"    -> S.empty
+                                                "EVENT"  -> S.empty
                                                 _        -> S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
-
-translatePatternIns :: (HighlightDocument d) => [LNFact] -> S.Set String -> M.Map String String -> M.Map (String, String) String -> (d, S.Set String, M.Map (String, String) String)
-translatePatternIns prems vars helperVars destructors = (text "PATTERNINS", vars, destructors)
-
-translateNonPatternIns :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
-translateNonPatternIns prems vars = (text "NONPATTERNINS", vars)
-
-translateFreshs :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
-translateFreshs prems vars = (text "FRESHS", vars)
-
-translateActions :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
-translateActions acts vars = (text "ACTIONS", vars)
-
-translateNews :: HighlightDocument d => [LNFact] -> S.Set String -> (d, S.Set String)
-translateNews prems vars = (text "NEWS", vars)
-
-translateInserts :: HighlightDocument d => [LNFact] -> [LNFact] -> S.Set String -> (d, S.Set String)
-translateInserts prems concls vars = (text "INSERTS", vars)
-
-translateOuts :: HighlightDocument d => [LNFact] -> S.Set String -> d
-translateOuts concls vars = text "OUTS"
-
 
 
 translateFact :: Document d => LNFact -> String -> S.Set String -> d
@@ -1340,6 +1319,7 @@ translateFact (Fact tag _ ts) factType vars = case factType of
     "NEW"    -> text "new" <-> (translateTerm vars (head ts)) <> text ": bitstring;"
     "INSERT" -> text "insert" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ");"
     "OUT"    -> text "out(c," <-> (translateTerm vars (head ts)) <> text ");"
+    "EVENT"  -> text "event" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ");"
     _        -> text "" --should never happen
 
 translatePatternFact :: (Document d) => LNFact -> String -> S.Set String -> M.Map String String -> (d, M.Map String String)
