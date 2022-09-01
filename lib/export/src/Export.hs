@@ -1235,11 +1235,11 @@ translateRule prems acts concls destrs =
     let (doc1, vars1, vars1', destr1) = translatePatterns prems "GET" patternGetsFilter S.empty M.empty destrs
         (doc2, vars2) = translateNonPatterns prems "GET" nonPatternGetsFilter vars1
         (doc3, vars3, _, destr3) = translatePatterns prems "IN" patternInsFilter vars2 vars1' destr1
-        (doc4, vars4) = translateNonPatterns prems "IN" nonPatternInsFilter vars3
-        (doc5, vars5) = translateNews prems vars4
-        (doc6, vars6) = translateActions acts vars5
-        (doc7, vars7) = translateInserts prems concls vars6
-        doc8 = translateOuts concls vars7
+        (doc4, _) = translateNonPatterns prems "IN" nonPatternInsFilter vars3
+        (doc5, _) = translateNonPatterns prems "NEW" newsFilter S.empty
+        (doc6, _) = translateActions acts S.empty
+        (doc7, _) = translateNonPatterns (concls \\ prems) "INSERT" isStorage S.empty
+        (doc8, _) = translateNonPatterns concls "OUT" outsFilter S.empty
       in
     ((doc1 $-$ doc2 $-$ doc3 $-$ doc4 $-$ doc5 $-$ doc6 $-$ doc7 $-$ doc8), destr3)
 
@@ -1271,6 +1271,12 @@ patternInsFilter p@(Fact tag _ _) = (factTagName tag) == "In" && hasPattern p
 nonPatternInsFilter :: LNFact -> Bool
 nonPatternInsFilter p@(Fact tag _ _) = (factTagName tag) == "In" && not (hasPattern p)
 
+newsFilter :: LNFact -> Bool
+newsFilter (Fact tag _ _) = (factTagName tag) == "Fr"
+
+outsFilter :: LNFact -> Bool
+outsFilter (Fact tag _ _) = (factTagName tag) == "Out"
+
 translatePatterns :: (HighlightDocument d) => [LNFact] -> String -> (LNFact -> Bool) -> S.Set String -> M.Map String String -> M.Map (String, String) String -> (d, S.Set String, M.Map String String, M.Map (String, String) String)
 translatePatterns facts factType filterFunction vars helperVars destructors =
     let (doclist, finalvars, finalHelperVars, finalDestructors) = foldl (\(d1, v1, v1', destr1) g -> let (d2, v2, v2', destr2) = translate g v1 v1' destr1 in (d1 ++ [d2], (S.union v1 v2), v2', destr2)) ([], vars, helperVars, destructors) patternFacts
@@ -1298,7 +1304,11 @@ translateNonPatterns facts factType filterFunction vars =
       translate prem@(Fact _ _ ts) vs = (getDoc, atoms)
                                              where
                                               getDoc = translateFact prem factType vs
-                                              atoms = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
+                                              atoms = case factType of
+                                                "INSERT" -> S.empty
+                                                "OUT"    -> S.empty
+                                                "NEW"    -> S.empty
+                                                _        -> S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
 
 translatePatternIns :: (HighlightDocument d) => [LNFact] -> S.Set String -> M.Map String String -> M.Map (String, String) String -> (d, S.Set String, M.Map (String, String) String)
 translatePatternIns prems vars helperVars destructors = (text "PATTERNINS", vars, destructors)
@@ -1325,9 +1335,12 @@ translateOuts concls vars = text "OUTS"
 
 translateFact :: Document d => LNFact -> String -> S.Set String -> d
 translateFact (Fact tag _ ts) factType vars = case factType of
-    "GET" -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
-    "IN"  -> text "in(c," <-> (translateTerm vars (head ts)) <> text ": bitstring);"
-    _     -> text "TODO"
+    "GET"    -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
+    "IN"     -> text "in(c," <-> (translateTerm vars (head ts)) <> text ": bitstring);"
+    "NEW"    -> text "new" <-> (translateTerm vars (head ts)) <> text ": bitstring;"
+    "INSERT" -> text "insert" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ");"
+    "OUT"    -> text "out(c," <-> (translateTerm vars (head ts)) <> text ");"
+    _        -> text "" --should never happen
 
 translatePatternFact :: (Document d) => LNFact -> String -> S.Set String -> M.Map String String -> (d, M.Map String String)
 translatePatternFact (Fact tag _ ts) factType vars helperVars =
