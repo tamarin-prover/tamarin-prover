@@ -1241,7 +1241,7 @@ translateRule prems acts concls destrs =
         (doc7, _) = translateNonPatterns (concls \\ prems) "INSERT" isStorage S.empty
         (doc8, _) = translateNonPatterns concls "OUT" outsFilter S.empty
       in
-    ((doc1 $-$ doc2 $-$ doc3 $-$ doc4 $-$ doc5 $-$ doc6 $-$ doc7 $-$ doc8), destr3)
+    ((doc1 $-$ doc2 $-$ doc3 $-$ doc4 $-$ doc5 $-$ doc6 $-$ doc7 $-$ doc8 $-$ text "0."), destr3)
 
 isStorage :: LNFact -> Bool
 isStorage (Fact tag _ _) = case factTagName tag of
