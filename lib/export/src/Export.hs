@@ -1235,11 +1235,11 @@ translateRule prems acts concls destrs =
     let (doc1, vars1, vars1', destr1) = translatePatterns prems "GET" patternGetsFilter S.empty M.empty destrs
         (doc2, vars2) = translateNonPatterns prems "GET" nonPatternGetsFilter vars1
         (doc3, vars3, _, destr3) = translatePatterns prems "IN" patternInsFilter vars2 vars1' destr1
-        (doc4, _) = translateNonPatterns prems "IN" nonPatternInsFilter vars3
-        (doc5, _) = translateNonPatterns prems "NEW" newsFilter S.empty
-        (doc6, _) = translateNonPatterns acts "EVENT" (\x -> True) S.empty
-        (doc7, _) = translateNonPatterns (concls \\ prems) "INSERT" isStorage S.empty
-        (doc8, _) = translateNonPatterns concls "OUT" outsFilter S.empty
+        (doc4, vars4) = translateNonPatterns prems "IN" nonPatternInsFilter vars3
+        (doc5, vars5) = translateNonPatterns prems "NEW" newsFilter vars4
+        (doc6, vars6) = translateNonPatterns acts "EVENT" (\x -> True) vars5
+        (doc7, vars7) = translateNonPatterns (concls \\ prems) "INSERT" isStorage vars6
+        (doc8, _) = translateNonPatterns concls "OUT" outsFilter vars7
       in
     ((doc1 $-$ doc2 $-$ doc3 $-$ doc4 $-$ doc5 $-$ doc6 $-$ doc7 $-$ doc8 $-$ text "0."), destr3)
 
@@ -1303,23 +1303,30 @@ translateNonPatterns facts factType filterFunction vars =
       nonPatternFacts = filter filterFunction facts
       translate prem@(Fact _ _ ts) vs = (getDoc, atoms)
                                              where
-                                              getDoc = translateFact prem factType vs
-                                              atoms = case factType of
-                                                "INSERT" -> S.empty
-                                                "OUT"    -> S.empty
-                                                "NEW"    -> S.empty
-                                                "EVENT"  -> S.empty
-                                                _        -> S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
+                                              getDoc = case factType of
+                                                "OUT"    -> if checkForNewIDs
+                                                              then idConstructor $-$ translateFact prem factType vs
+                                                              else translateFact prem factType vs
+                                                "INSERT" -> if checkForNewIDs
+                                                              then idConstructor $-$ translateFact prem factType vs
+                                                              else translateFact prem factType vs
+                                                _        -> translateFact prem factType vs
+                                              atoms = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
+                                              checkForNewIDs = if atoms `S.isSubsetOf` vars
+                                                                 then False
+                                                                 else foldl (\acc a -> acc || ((head a) == '$')) False $ S.difference atoms vars
+                                              idConstructor = newExp . S.toList $ S.difference atoms vars
+                                              newExp as = vcat . map (\a -> text "new " <> (text $ showAtom a) <> text ": bitstring;") . filter (\a -> (head a) == '$') $ as
 
 
 translateFact :: Document d => LNFact -> String -> S.Set String -> d
 translateFact (Fact tag _ ts) factType vars = case factType of
     "GET"    -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
     "IN"     -> text "in(c," <-> (translateTerm vars (head ts)) <> text ": bitstring);"
-    "NEW"    -> text "new" <-> (translateTerm vars (head ts)) <> text ": bitstring;"
-    "INSERT" -> text "insert" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ");"
-    "OUT"    -> text "out(c," <-> (translateTerm vars (head ts)) <> text ");"
-    "EVENT"  -> text "event" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ");"
+    "NEW"    -> text "new" <-> (translateTerm S.empty (head ts)) <> text ": bitstring;"
+    "INSERT" -> text "insert" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ");"
+    "OUT"    -> text "out(c," <-> (translateTerm S.empty (head ts)) <> text ");"
+    "EVENT"  -> text "event" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ");"
     _        -> text "" --should never happen
 
 translatePatternFact :: (Document d) => LNFact -> String -> S.Set String -> M.Map String String -> (d, M.Map String String)
@@ -1341,7 +1348,7 @@ showAtom a = case head a of
 
 translateTerm :: (Document d, Show l) => S.Set String -> Term l -> d
 translateTerm vars t = case viewTerm t of
-    Lit l | S.member (showAtom $ show l) vars       -> text "=" <> (text . showAtom $ show l)
+    Lit l | S.member (show l) vars                  -> text "=" <> (text . showAtom $ show l)
     Lit l                                           -> text . showAtom $ show l
     FApp (AC Mult)     ts                           -> text "mult" <> printList ts
     FApp (AC Union)    ts                           -> text "union" <> printList ts
@@ -1358,12 +1365,12 @@ translateTerm vars t = case viewTerm t of
 
 translatePatternTerm :: (Document d, Show l) => S.Set String -> M.Map String String -> Term l -> (d, M.Map String String)
 translatePatternTerm vars helperVars t = case viewTerm t of
-    Lit l | S.member (showAtom $ show l) vars -> ((text "=" <> (text . showAtom $ show l)), helperVars)
-    Lit l -> ((text . showAtom $ show l), helperVars)
-    _     -> (varDoc, newHelperVars)
-             where
-               (newVar, newHelperVars) = makeVariable t helperVars
-               varDoc = text newVar
+    Lit l | S.member (show l) vars -> ((text "=" <> (text . showAtom $ show l)), helperVars)
+    Lit l                          -> ((text . showAtom $ show l), helperVars)
+    _                              -> (varDoc, newHelperVars)
+                                      where
+                                        (newVar, newHelperVars) = makeVariable t helperVars
+                                        varDoc = text newVar
 
 hashTerm :: (Show l) => Term l -> String
 hashTerm t = case viewTerm t of
@@ -1386,7 +1393,7 @@ makeVariable t varMap = case M.lookup (hashTerm t) varMap of
 makeDestructorName :: (Show l) => M.Map (String, String) String -> Term l -> String -> (String, M.Map (String, String) String)
 makeDestructorName dMap t a = case M.lookup ((hashTerm t),a) dMap of
     Just d  -> (d, dMap)
-    Nothing -> let newDestructor = "g_" ++ a ++ "_" ++ (show $ M.size dMap)
+    Nothing -> let newDestructor = "g_" ++ (showAtom a) ++ "_" ++ (show $ M.size dMap)
                    newMap = M.insert ((hashTerm t),a) newDestructor dMap
                  in
                (newDestructor, newMap)
@@ -1399,7 +1406,7 @@ makeDestructorExpressions vars helperVars destructors t =
 
 getAtoms :: (Show l) => Term l -> [String]
 getAtoms t = case viewTerm t of
-    Lit l     -> [showAtom $ show l]
+    Lit l     -> [show l]
     FApp _ ts -> foldl (\acc t -> acc ++ getAtoms t) [] ts
 
 makeDestructorExpression :: (Document d, Show l) => S.Set String -> M.Map String String -> M.Map (String, String) String -> Term l -> String -> (d, M.Map (String, String) String)
@@ -1409,9 +1416,9 @@ makeDestructorExpression vars helperVars destructors t a = if S.member a vars
                                       where
                                         (var, _) = makeVariable t helperVars
                                         (destr, newDestructors) = makeDestructorName destructors t a
-                                        ifDoc = text "if" <-> text a <->
+                                        ifDoc = text "if" <-> (text $ showAtom a) <->
                                                 text "=" <-> text destr <> 
                                                 text "(" <> text var <> text ") then"
-                                        letDoc = text "let" <-> text a <->
+                                        letDoc = text "let" <-> (text $ showAtom a) <->
                                                  text "=" <-> text destr <> 
                                                  text "(" <> text var <> text ");"
