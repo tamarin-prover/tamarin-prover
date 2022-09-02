@@ -1343,10 +1343,12 @@ translateTerm :: (Document d, Show l) => S.Set String -> Term l -> d
 translateTerm vars t = case viewTerm t of
     Lit l | S.member (showAtom $ show l) vars       -> text "=" <> (text . showAtom $ show l)
     Lit l                                           -> text . showAtom $ show l
-    FApp (AC o)        ts                           -> text "TODO"
+    FApp (AC Mult)     ts                           -> text "mult" <> printList ts
+    FApp (AC Union)    ts                           -> text "union" <> printList ts
+    FApp (AC Xor)      ts                           -> text "xor" <> printList ts
     FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> text "(" <> printPair ts <> text ")"
     FApp (NoEq (f, _)) ts                           -> text (BC.unpack f) <> printList ts
-    FApp (C EMap)      ts                           -> text "TODO"
+    FApp (C EMap)      ts                           -> text "em" <> printList ts
     FApp List          ts                           -> printList ts
     where
       printList ts = text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ")"
