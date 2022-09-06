@@ -1192,22 +1192,51 @@ makeAnnotations thy p = res
 ------------------------------------------------------------------------------
 
 
-msrTranslation :: HighlightDocument d => OpenTranslatedTheory -> d
-msrTranslation thy = vsep $ doclist
+msrTranslation :: HighlightDocument d => OpenTheory -> d
+msrTranslation thy = vsep headers
+                    $$ vsep queries
+                    $$ vsep processes
+                    $$ footer
     where
-      (doclist, _) = foldl (\(docs, destrs) i -> let (doc, destrs') = translateTheoryItem i destrs in (docs ++ [doc], destrs')) ([], M.empty) (L.get thyItems thy)
+      (processes, queries, _) = foldl (\(docs, qs, destrs) i -> let (doc, q, destrs') = translateTheoryItem i destrs in (docs ++ [doc], qs ++ q, destrs')) ([], [], M.empty) (L.get thyItems thy)
     -- FOR LATER: parMap rdeepseq translateTheoryItem (L.get thyItems thy)
+      headers = baseHeaders ++ biHeaders ++ funHeaders ++ eqHeaders
+      baseHeaders = [text "free c: channel."]
+      footer = text "FOOTER"
+      builtins = theoryBuiltins thy
+      biHeaders = map makeBuiltinHeader builtins
+      declaredFunctions = theoryFunctionTypingInfos thy
+      funHeaders = map makeFunctionHeader declaredFunctions
+      sig = L.get sigpMaudeSig $ L.get thySignature thy
+      equations = S.toList $ stRules sig
+      eqHeaders = map makeEquationHeader equations
 
+makeBuiltinHeader :: HighlightDocument d => String -> d
+makeBuiltinHeader b = text b
+
+makeFunctionHeader :: HighlightDocument d => SapicFunSym -> d
+makeFunctionHeader ((f, (i,_,_)), _, _) = 
+  text "fun" <-> text (BC.unpack f) <> text "(" <> inTypeString <> text "): bitstring."
+  where
+    inTypeString = fsep . punctuate comma . map text $ replicate i "bitstring"
+
+makeEquationHeader :: HighlightDocument d => CtxtStRule -> d
+makeEquationHeader (CtxtStRule t1 (StRhs _ t2)) = 
+  text "reduc forall" <-> (fsep . punctuate comma . map text $ map buildAtomString atoms) <> text ";"
+  $$ translateTerm S.empty t1 <-> text "=" <-> translateTerm S.empty t2 <> text "."
+  where
+    atoms = S.toList $ S.fromList (getAtoms t1 ++ getAtoms t2)
+    buildAtomString a = showAtom a ++ ":bitstring"
 
 translateTheoryItem
-    :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, M.Map (String, String) String)
+    :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, [d], M.Map (String, String) String)
 translateTheoryItem i de = case i of
-    RuleItem ru   -> translateOpenProtoRule ru de
-    LemmaItem lem -> (sep [text "TODO!"], de) --translateLemma lem
-    TextItem txt  -> (sep [text "TODO?"], de) --translateComment txt
-    RestrictionItem rstr  -> (sep [text "TODO?"], de) --translateRestriction rstr
-    PredicateItem     p  -> (sep [text "TODO?"], de) --translatePredicate p
-    TranslationItem s -> (sep [text ""], de)
+    RuleItem ru   -> let (ruledoc, des) = translateOpenProtoRule ru de in (ruledoc, [], des)
+    LemmaItem lem -> (text "", [text "LEMMA"], de) --translateLemma lem
+    TextItem txt  -> (text "TODO?", [], de) --translateComment txt
+    RestrictionItem rstr  -> (text "TODO?", [], de) --translateRestriction rstr
+    PredicateItem     p  -> (text "TODO?", [], de) --translatePredicate p
+    TranslationItem s -> (text "", [], de)
 
 
 translateOpenProtoRule :: HighlightDocument d => OpenProtoRule -> M.Map (String, String) String -> (d, M.Map (String, String) String)
@@ -1341,10 +1370,12 @@ translatePatternFact (Fact tag _ ts) factType vars helperVars =
 
 showAtom :: String -> String
 showAtom a = case head a of
-  '~' -> tail a
-  '$' -> tail a
-  '\'' -> init $ tail a
-  _ -> a
+  '~'  -> replaceDots $ tail a
+  '$'  -> replaceDots $ tail a
+  '\'' -> replaceDots . init $ tail a
+  _    -> replaceDots a
+  where
+    replaceDots a = map (\c -> if c == '.' then '_' else c) a
 
 translateTerm :: (Document d, Show l) => S.Set String -> Term l -> d
 translateTerm vars t = case viewTerm t of

@@ -200,7 +200,5 @@ run thisMode as
           Just ModuleProVerifEquivalence   -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv <=< Sapic.warnings
           Just ModuleDeepSec               -> Export.prettyDeepSecTheory <=< Sapic.typeTheory <=< Sapic.warnings
           Just ModuleTranslate             -> return . Export.msrTranslation
-            <=< (return . filterLemma (lemmaSelector thyLoadOptions))
-            <=< (return . removeTranslationItems)
             <=< Sapic.typeTheory
             <=< Sapic.warnings
