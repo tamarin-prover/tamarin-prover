@@ -694,7 +694,7 @@ internalTacticRanking tactic ctxt _sys ags0 =
       let logMsg = ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                    ++ inp
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ show prettyOut
+                   ++ prettyOut
                    ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
       guard $ trace logMsg True
       return (res)
