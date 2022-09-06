@@ -1212,7 +1212,65 @@ msrTranslation thy = vsep headers
       eqHeaders = map makeEquationHeader equations
 
 makeBuiltinHeader :: HighlightDocument d => String -> d
-makeBuiltinHeader b = text b
+makeBuiltinHeader b = case b of
+  "hashing"               -> text "fun h(bitstring): bitstring."
+  "asymmetric-encryption" -> text "fun aenc(bitstring, bitstring): bitstring."
+                            $$ text "fun adec(bitstring, bitstring): bitstring."
+                            $$ text "fun pk(bitstring): bitstring."
+                            $$ text "reduc forall m:bitstring, sk:bitstring; adec(aenc(m, pk(sk)), sk) = m."
+  "signing"               -> text "fun sign(bitstring, bitstring): bitstring."
+                            $$ text "fun verify(bitstring, bitstring, bitstring): bitstring."
+                            $$ text "fun pk(bitstring): bitstring."
+                            $$ text "fun true'(): bitstring."
+                            $$ text "reduc forall m:bitstring, sk:bitstring; verify(sign(m,sk),m,pk(sk)) = true'()."
+  "revealing-signing"     -> text "fun revealSign(bitstring, bitstring): bitstring."
+                            $$ text "fun revealVerify(bitstring, bitstring, bitstring): bitstring."
+                            $$ text "fun getMessage(): bitstring."
+                            $$ text "fun pk(bitstring): bitstring."
+                            $$ text "fun true'(): bitstring."
+                            $$ text "reduc forall m:bitstring, sk:bitstring; revealVerify(revealSign(m,sk),m,pk(sk)) = true'()."
+                            $$ text "reduc forall m:bitstring, sk:bitstring; getMessage(revealSign(m,sk)) = m."
+  "symmetric-encryption"  -> text "fun senc(bitstring, bitstring): bitstring."
+                            $$ text "fun sdec(bitstring, bitstring): bitstring."
+                            $$ text "reduc forall m:bitstring, k:bitstring; sdec(senc(m,k),k) = m."
+  "diffie-hellman"        -> text "fun inv(bitstring): bitstring."
+                            $$ text "fun translated_1(bitstring): bitstring."
+                            $$ text "fun exp(bitstring, bitstring): bitstring."
+                            $$ text "fun mult(bitstring, bitstring): bitstring."
+                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; exp(exp(x,y), z) = exp(x, mult(y, z))."
+                            $$ text "reduc forall x:bitstring; exp(x, translated_1()) = x."
+                            $$ text "reduc forall x:bitstring, y:bitstring; mult(x, y) = mult(y, x)."
+                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; mult(mult(x, y), z) = mult(x, mult(y, z))."
+                            $$ text "reduc forall x:bitstring; mult(x, translated_1()) = x."
+                            $$ text "reduc forall x:bitstring; mult(x, inv(x)) = translated_1()."
+  "bilinear-pairing"      -> text "fun inv(bitstring): bitstring."
+                            $$ text "fun translated_1(bitstring): bitstring."
+                            $$ text "fun exp(bitstring, bitstring): bitstring."
+                            $$ text "fun mult(bitstring, bitstring): bitstring."
+                            $$ text "fun pmult(bitstring, bitstring): bitstring."
+                            $$ text "fun em(bitstring, bitstring): bitstring."
+                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; exp(exp(x,y), z) = exp(x, mult(y, z))."
+                            $$ text "reduc forall x:bitstring; exp(x, translated_1()) = x."
+                            $$ text "reduc forall x:bitstring, y:bitstring; mult(x, y) = mult(y, x)."
+                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; mult(mult(x, y), z) = mult(x, mult(y, z))."
+                            $$ text "reduc forall x:bitstring; mult(x, translated_1()) = x."
+                            $$ text "reduc forall x:bitstring; mult(x, inv(x)) = translated_1()."
+                            $$ text "reduc forall x:bitstring, y:bitstring, p:bitstring; pmult(x, (pmult(y, p)) = pmult(mult(x, y), p)."
+                            $$ text "reduc forall p:bitstring; pmult(translated_1(), p) = p."
+                            $$ text "reduc forall p:bitstring, q:bitstring; em(p, q) = em(q, p)."
+                            $$ text "reduc forall x:bitstring, p:bitstring, q:bitstring; em(pmult(x, p), q) = pmult(x, em(q, p))."
+  "xor"                   -> text "fun xor(bitstring, bitstring): bitstring."
+                            $$ text "fun zero(): bitstring."
+                            $$ text "reduc forall x:bitstring, y:bitstring; xor(x, y) = xor(y, x)."
+                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; xor(xor(x, y), z) = xor(x, xor(y, z))."
+                            $$ text "reduc forall x:bitstring; xor(x, zero()) = x."
+                            $$ text "reduc forall x:bitstring; xor(x, x) = zero()."
+  "multiset"              -> text "fun union(bitstring, bitstring): bitstring."
+                            $$ text "reduc forall x:bitstring, y:bitstring; union(x, y) = union(y, x)."
+                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; union(union(x, y), z) = union(x, union(y, z))."
+  _                       -> text ""
+
+
 
 makeFunctionHeader :: HighlightDocument d => SapicFunSym -> d
 makeFunctionHeader ((f, (i,_,_)), _, _) = 
@@ -1377,6 +1435,12 @@ showAtom a = case head a of
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
 
+showFunction :: String -> String
+showFunction f
+  | f == "true"                 = "true'"
+  | not . isAlpha $ head f = "translated_" ++ f
+  | otherwise                   = f
+
 translateTerm :: (Document d, Show l) => S.Set String -> Term l -> d
 translateTerm vars t = case viewTerm t of
     Lit l | S.member (show l) vars                  -> text "=" <> (text . showAtom $ show l)
@@ -1385,7 +1449,7 @@ translateTerm vars t = case viewTerm t of
     FApp (AC Union)    ts                           -> text "union" <> printList ts
     FApp (AC Xor)      ts                           -> text "xor" <> printList ts
     FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> text "(" <> printPair ts <> text ")"
-    FApp (NoEq (f, _)) ts                           -> text (BC.unpack f) <> printList ts
+    FApp (NoEq (f, _)) ts                           -> text (showFunction $ BC.unpack f) <> printList ts
     FApp (C EMap)      ts                           -> text "em" <> printList ts
     FApp List          ts                           -> printList ts
     where
