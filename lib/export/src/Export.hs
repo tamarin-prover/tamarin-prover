@@ -1198,9 +1198,9 @@ msrTranslation thy = vsep headers
                     $$ vsep processes
                     $$ footer
     where
-      (processes, queries, _) = foldl (\(docs, qs, destrs) i -> let (doc, q, destrs') = translateTheoryItem i destrs in (docs ++ [doc], qs ++ q, destrs')) ([], [], M.empty) (L.get thyItems thy)
+      (processes, queries, destructors) = foldl (\(docs, qs, destrs) i -> let (doc, q, destrs') = translateTheoryItem i destrs in (docs ++ [doc], qs ++ q, destrs')) ([], [], M.empty) (L.get thyItems thy)
     -- FOR LATER: parMap rdeepseq translateTheoryItem (L.get thyItems thy)
-      headers = baseHeaders ++ biHeaders ++ funHeaders ++ eqHeaders
+      headers = baseHeaders ++ biHeaders ++ funHeaders ++ eqHeaders ++ desHeaders
       baseHeaders = [text "free c: channel."]
       footer = text "FOOTER"
       builtins = theoryBuiltins thy
@@ -1210,6 +1210,7 @@ msrTranslation thy = vsep headers
       sig = L.get sigpMaudeSig $ L.get thySignature thy
       equations = S.toList $ stRules sig
       eqHeaders = map makeEquationHeader equations
+      desHeaders = map makeDestructorHeader $ M.toList destructors
 
 makeBuiltinHeader :: HighlightDocument d => String -> d
 makeBuiltinHeader b = case b of
@@ -1285,6 +1286,12 @@ makeEquationHeader (CtxtStRule t1 (StRhs _ t2)) =
   where
     atoms = S.toList $ S.fromList (getAtoms t1 ++ getAtoms t2)
     buildAtomString a = showAtom a ++ ":bitstring"
+
+makeDestructorHeader :: HighlightDocument d => ((String, String), String) -> d
+makeDestructorHeader ((dDef, atom), dName) =
+  let (s1,s2) = break (=='#') dDef
+  in
+    text (s1 ++ dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom atom) ++ " [private].")
 
 translateTheoryItem
     :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, [d], M.Map (String, String) String)
@@ -1442,21 +1449,24 @@ showFunction f
   | otherwise                   = f
 
 translateTerm :: (Document d, Show l) => S.Set String -> Term l -> d
-translateTerm vars t = case viewTerm t of
-    Lit l | S.member (show l) vars                  -> text "=" <> (text . showAtom $ show l)
-    Lit l                                           -> text . showAtom $ show l
-    FApp (AC Mult)     ts                           -> text "mult" <> printList ts
-    FApp (AC Union)    ts                           -> text "union" <> printList ts
-    FApp (AC Xor)      ts                           -> text "xor" <> printList ts
-    FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> text "(" <> printPair ts <> text ")"
-    FApp (NoEq (f, _)) ts                           -> text (showFunction $ BC.unpack f) <> printList ts
-    FApp (C EMap)      ts                           -> text "em" <> printList ts
+translateTerm vars t = text $ printTerm vars t
+
+printTerm :: (Show l) => S.Set String -> Term l -> String
+printTerm vars t = case viewTerm t of
+    Lit l | S.member (show l) vars                  -> "=" ++ (showAtom $ show l)
+    Lit l                                           -> showAtom $ show l
+    FApp (AC Mult)     ts                           -> "mult" ++ printList ts
+    FApp (AC Union)    ts                           -> "union" ++ printList ts
+    FApp (AC Xor)      ts                           -> "xor" ++ printList ts
+    FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> "(" ++ printPair ts ++ ")"
+    FApp (NoEq (f, _)) ts                           -> (showFunction $ BC.unpack f) ++ printList ts
+    FApp (C EMap)      ts                           -> "em" ++ printList ts
     FApp List          ts                           -> printList ts
     where
-      printList ts = text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ")"
+      printList ts = "(" ++ (intercalate ", " $ map (printTerm vars) ts) ++ ")"
       printPair [t1,t2] = case viewTerm t2 of
-        FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> translateTerm vars t1 <> text ", " <> printPair ts
-        _                                               -> translateTerm vars t1 <> text ", " <> translateTerm vars t2
+        FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printTerm vars t1 ++ ", " ++ printPair ts
+        _                                               -> printTerm vars t1 ++ ", " ++ printTerm vars t2
 
 translatePatternTerm :: (Document d, Show l) => S.Set String -> M.Map String String -> Term l -> (d, M.Map String String)
 translatePatternTerm vars helperVars t = case viewTerm t of
@@ -1467,29 +1477,26 @@ translatePatternTerm vars helperVars t = case viewTerm t of
                                         (newVar, newHelperVars) = makeVariable t helperVars
                                         varDoc = text newVar
 
-hashTerm :: (Show l) => Term l -> String
-hashTerm t = case viewTerm t of
-    Lit l                                           -> show l
-    FApp (AC o)        ts                           -> "AC" ++ (unwords $ map hashTerm ts)
-    FApp (NoEq (f, _)) ts                           -> (BC.unpack f) ++ (unwords $ map hashTerm ts)
-    FApp (C EMap)      ts                           -> "EMAP" ++ (unwords $ map hashTerm ts)
-    FApp List          ts                           -> "LIST" ++ (unwords $ map hashTerm ts)
-    --This is still very basic, but it should be good enough until I can come up with something better
+makeDestructorDefinition :: (Show l) => Term l -> String
+makeDestructorDefinition t = 
+  "reduc forall " ++ intercalate ", " (map (++":bitstring") atoms) ++ "; #" ++ printTerm S.empty t
+  where
+    atoms = map showAtom . S.toList . S.fromList $ getAtoms t
 
 makeVariable :: (Show l) => Term l -> M.Map String String -> (String, M.Map String String)
-makeVariable t varMap = case M.lookup (hashTerm t) varMap of
+makeVariable t varMap = case M.lookup (printTerm S.empty t) varMap of
     Just v  -> (v, varMap)
     Nothing -> let newVar = "x" ++ (show $ M.size varMap)
-                   newMap = M.insert (hashTerm t) newVar varMap
+                   newMap = M.insert (printTerm S.empty t) newVar varMap
                  in
                (newVar, newMap)
       
 
 makeDestructorName :: (Show l) => M.Map (String, String) String -> Term l -> String -> (String, M.Map (String, String) String)
-makeDestructorName dMap t a = case M.lookup ((hashTerm t),a) dMap of
+makeDestructorName dMap t a = case M.lookup ((makeDestructorDefinition t),a) dMap of
     Just d  -> (d, dMap)
     Nothing -> let newDestructor = "g_" ++ (showAtom a) ++ "_" ++ (show $ M.size dMap)
-                   newMap = M.insert ((hashTerm t),a) newDestructor dMap
+                   newMap = M.insert ((makeDestructorDefinition t),a) newDestructor dMap
                  in
                (newDestructor, newMap)
 
