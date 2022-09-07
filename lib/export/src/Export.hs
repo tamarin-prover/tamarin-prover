@@ -1291,7 +1291,7 @@ makeDestructorHeader :: HighlightDocument d => ((String, String), String) -> d
 makeDestructorHeader ((dDef, atom), dName) =
   let (s1,s2) = break (=='#') dDef
   in
-    text (s1 ++ dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom atom) ++ " [private].")
+    text (s1 ++ dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom2 atom) ++ " [private].")
 
 translateTheoryItem
     :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, [d], M.Map (String, String) String)
@@ -1442,6 +1442,15 @@ showAtom a = case head a of
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
 
+showAtom2 :: String -> String
+showAtom2 a = case head a of
+  '~'  -> replaceDots $ tail a
+  '$'  -> replaceDots $ tail a
+  '\'' -> map toLower . replaceDots . init $ tail a
+  _    -> replaceDots a
+  where
+    replaceDots a = map (\c -> if c == '.' then '_' else c) a
+
 showFunction :: String -> String
 showFunction f
   | f == "true"                 = "true'"
@@ -1468,6 +1477,22 @@ printTerm vars t = case viewTerm t of
         FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printTerm vars t1 ++ ", " ++ printPair ts
         _                                               -> printTerm vars t1 ++ ", " ++ printTerm vars t2
 
+printTerm2 :: (Show l) => Term l -> String
+printTerm2 t = case viewTerm t of
+    Lit l                                           -> showAtom2 $ show l
+    FApp (AC Mult)     ts                           -> "mult" ++ printList ts
+    FApp (AC Union)    ts                           -> "union" ++ printList ts
+    FApp (AC Xor)      ts                           -> "xor" ++ printList ts
+    FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> "(" ++ printPair ts ++ ")"
+    FApp (NoEq (f, _)) ts                           -> (showFunction $ BC.unpack f) ++ printList ts
+    FApp (C EMap)      ts                           -> "em" ++ printList ts
+    FApp List          ts                           -> printList ts
+    where
+      printList ts = "(" ++ (intercalate ", " $ map printTerm2 ts) ++ ")"
+      printPair [t1,t2] = case viewTerm t2 of
+        FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printTerm2 t1 ++ ", " ++ printPair ts
+        _                                               -> printTerm2 t1 ++ ", " ++ printTerm2 t2
+
 translatePatternTerm :: (Document d, Show l) => S.Set String -> M.Map String String -> Term l -> (d, M.Map String String)
 translatePatternTerm vars helperVars t = case viewTerm t of
     Lit l | S.member (show l) vars -> ((text "=" <> (text . showAtom $ show l)), helperVars)
@@ -1479,9 +1504,9 @@ translatePatternTerm vars helperVars t = case viewTerm t of
 
 makeDestructorDefinition :: (Show l) => Term l -> String
 makeDestructorDefinition t = 
-  "reduc forall " ++ intercalate ", " (map (++":bitstring") atoms) ++ "; #" ++ printTerm S.empty t
+  "reduc forall " ++ intercalate ", " (map (++":bitstring") atoms) ++ "; #" ++ printTerm2 t
   where
-    atoms = map showAtom . S.toList . S.fromList $ getAtoms t
+    atoms = map showAtom2 . S.toList . S.fromList $ getAtoms t
 
 makeVariable :: (Show l) => Term l -> M.Map String String -> (String, M.Map String String)
 makeVariable t varMap = case M.lookup (printTerm S.empty t) varMap of
@@ -1495,7 +1520,7 @@ makeVariable t varMap = case M.lookup (printTerm S.empty t) varMap of
 makeDestructorName :: (Show l) => M.Map (String, String) String -> Term l -> String -> (String, M.Map (String, String) String)
 makeDestructorName dMap t a = case M.lookup ((makeDestructorDefinition t),a) dMap of
     Just d  -> (d, dMap)
-    Nothing -> let newDestructor = "g_" ++ (showAtom a) ++ "_" ++ (show $ M.size dMap)
+    Nothing -> let newDestructor = "g_" ++ (showAtom2 a) ++ "_" ++ (show $ M.size dMap)
                    newMap = M.insert ((makeDestructorDefinition t),a) newDestructor dMap
                  in
                (newDestructor, newMap)
