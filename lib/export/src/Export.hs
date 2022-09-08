@@ -1205,7 +1205,6 @@ msrTranslation thy = vsep headers
                ++ [vcat funHeaders] ++ [vcat eqHeaders] ++ [vcat desHeaders] 
                ++ tblHeaders ++ evHeaders
       baseHeaders = [text "free c: channel."]
-      footer = text "FOOTER"
       builtins = theoryBuiltins thy
       biHeaders = map makeBuiltinHeader builtins
       declaredFunctions = theoryFunctionTypingInfos thy
@@ -1223,6 +1222,7 @@ msrTranslation thy = vsep headers
       frHeaders = groupHeaders frHeaderList
       tblHeaders = groupHeaders tblHeaderList
       evHeaders = groupHeaders evHeaderList
+      footer = makeFooter $ map (\(RuleItem ru) -> ru) rules
 
 makeBuiltinHeader :: HighlightDocument d => String -> d
 makeBuiltinHeader b = case b of
@@ -1282,8 +1282,6 @@ makeBuiltinHeader b = case b of
                             $$ text "reduc forall x:bitstring, y:bitstring; union(x, y) = union(y, x)."
                             $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; union(union(x, y), z) = union(x, union(y, z))."
   _                       -> text ""
-
-
 
 makeFunctionHeader :: HighlightDocument d => SapicFunSym -> d
 makeFunctionHeader ((f, (i,_,_)), _, _) = 
@@ -1350,6 +1348,11 @@ makeEventHeaders acts =
     allFactInfos = S.toList $ S.fromList (map getFactInfo acts)
     headers = map (\(t,n) -> "event " ++ t ++ "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ").") allFactInfos
 
+makeFooter :: HighlightDocument d => [OpenProtoRule] -> d
+makeFooter rules = let ruleNames = map (\(OpenProtoRule ruE _) -> printRuleName . L.get preName $ L.get rInfo ruE) rules
+                    in
+                    text ("process ( " ++ (intercalate " | " . map (++")") $ map ("!("++) ruleNames) ++ " )")
+
 translateTheoryItem
     :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, [d], M.Map (String, String) String)
 translateTheoryItem i de = case i of
@@ -1373,13 +1376,13 @@ translateProtoRule ru de =
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
     facts proj     = L.get proj ru
     (factsDoc,destructors) = translateRule (facts rPrems) acts (facts rConcs) de
-    ruleDoc = text "let" <-> printRuleName (L.get preName (L.get rInfo ru)) <-> text "=" $-$
+    ruleDoc = text "let" <-> (text . printRuleName . L.get preName $ L.get rInfo ru) <-> text "=" $-$
               nest 8
               factsDoc
 
-printRuleName :: (HighlightDocument d) => ProtoRuleName -> d
-printRuleName FreshRule = text "Fresh"
-printRuleName (StandRule s) = text s
+printRuleName :: ProtoRuleName -> String
+printRuleName FreshRule = "Fresh"
+printRuleName (StandRule s) = s
 
 translateRule :: (HighlightDocument d) => [LNFact] -> [LNFact] -> [LNFact] -> M.Map (String, String) String -> (d, M.Map (String, String) String)
 translateRule prems acts concls destrs = 
