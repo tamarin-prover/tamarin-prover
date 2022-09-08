@@ -1513,7 +1513,7 @@ translateTerm vars t = text $ printTerm vars t
 
 printTerm :: (Show l) => S.Set String -> Term l -> String
 printTerm vars t = case viewTerm t of
-    Lit l | S.member (show l) vars                  -> "=" ++ (showAtom $ show l)
+    Lit l | (S.member (show l) vars && head (show l) /= '\'') -> "=" ++ (showAtom $ show l)
     Lit l                                           -> showAtom $ show l
     FApp (AC Mult)     ts                           -> "mult" ++ printList ts
     FApp (AC Union)    ts                           -> "union" ++ printList ts
@@ -1588,7 +1588,7 @@ getAtoms t = case viewTerm t of
     FApp _ ts -> foldl (\acc t -> acc ++ getAtoms t) [] ts
 
 makeDestructorExpression :: (Document d, Show l) => S.Set String -> M.Map String String -> M.Map (String, String) String -> Term l -> String -> (d, M.Map (String, String) String)
-makeDestructorExpression vars helperVars destructors t a = if S.member a vars
+makeDestructorExpression vars helperVars destructors t a = if (S.member a vars) || (head a == '\'')
                                       then (ifDoc, newDestructors)
                                       else (letDoc, newDestructors)
                                       where
