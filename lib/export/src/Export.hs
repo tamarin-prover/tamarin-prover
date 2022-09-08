@@ -1201,7 +1201,8 @@ msrTranslation thy = vsep headers
       (processes, queries, destructors) =
         foldl (\(docs, qs, destrs) i -> let (doc, q, destrs') = translateTheoryItem i destrs in (docs ++ [doc], qs ++ q, destrs')) ([], [], M.empty) (L.get thyItems thy)
     -- FOR LATER: parMap rdeepseq translateTheoryItem (L.get thyItems thy)
-      headers = baseHeaders ++ frHeaders ++ biHeaders ++ funHeaders ++ eqHeaders ++ desHeaders 
+      headers = baseHeaders ++ frHeaders ++ biHeaders
+               ++ [vcat funHeaders] ++ [vcat eqHeaders] ++ [vcat desHeaders] 
                ++ tblHeaders ++ evHeaders
       baseHeaders = [text "free c: channel."]
       footer = text "FOOTER"
@@ -1342,7 +1343,12 @@ makeTableHeaders prems concls =
     headers = map (\(t,n) -> "table " ++ t ++ "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ").") tableInfos
 
 makeEventHeaders :: [LNFact] -> [String]
-makeEventHeaders acts = [""]
+makeEventHeaders acts = 
+  headers
+  where
+    getFactInfo (Fact tag _ ts) = (factTagName tag, length ts)
+    allFactInfos = S.toList $ S.fromList (map getFactInfo acts)
+    headers = map (\(t,n) -> "event " ++ t ++ "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ").") allFactInfos
 
 translateTheoryItem
     :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, [d], M.Map (String, String) String)
