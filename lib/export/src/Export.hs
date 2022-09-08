@@ -1198,9 +1198,11 @@ msrTranslation thy = vsep headers
                     $$ vsep processes
                     $$ footer
     where
-      (processes, queries, destructors) = foldl (\(docs, qs, destrs) i -> let (doc, q, destrs') = translateTheoryItem i destrs in (docs ++ [doc], qs ++ q, destrs')) ([], [], M.empty) (L.get thyItems thy)
+      (processes, queries, destructors) =
+        foldl (\(docs, qs, destrs) i -> let (doc, q, destrs') = translateTheoryItem i destrs in (docs ++ [doc], qs ++ q, destrs')) ([], [], M.empty) (L.get thyItems thy)
     -- FOR LATER: parMap rdeepseq translateTheoryItem (L.get thyItems thy)
-      headers = baseHeaders ++ biHeaders ++ funHeaders ++ eqHeaders ++ desHeaders
+      headers = baseHeaders ++ frHeaders ++ biHeaders ++ funHeaders ++ eqHeaders ++ desHeaders 
+               ++ tblHeaders ++ evHeaders
       baseHeaders = [text "free c: channel."]
       footer = text "FOOTER"
       builtins = theoryBuiltins thy
@@ -1211,6 +1213,15 @@ msrTranslation thy = vsep headers
       equations = S.toList $ stRules sig
       eqHeaders = map makeEquationHeader equations
       desHeaders = map makeDestructorHeader $ M.toList destructors
+      onlyRules (RuleItem ru) = True
+      onlyRules _ = False
+      rules = filter onlyRules (L.get thyItems thy)
+      (frHeaderList, tblHeaderList, evHeaderList) =
+        foldl (\(fr, tbl, ev) (RuleItem ru) -> let (fr', tbl', ev') = makeHeadersFromRule ru in (fr++fr', tbl++tbl', ev++ev')) ([], [], []) rules
+      groupHeaders hs = [vcat . map text . S.toList $ S.fromList hs]
+      frHeaders = groupHeaders frHeaderList
+      tblHeaders = groupHeaders tblHeaderList
+      evHeaders = groupHeaders evHeaderList
 
 makeBuiltinHeader :: HighlightDocument d => String -> d
 makeBuiltinHeader b = case b of
@@ -1292,6 +1303,46 @@ makeDestructorHeader ((dDef, atom), dName) =
   let (s1,s2) = break (=='#') dDef
   in
     text (s1 ++ dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom2 atom) ++ " [private].")
+
+makeHeadersFromRule:: OpenProtoRule -> ([String], [String], [String])
+makeHeadersFromRule (OpenProtoRule ruE _) = makeHeadersFromProtoRule ruE
+
+makeHeadersFromProtoRule :: Rule ProtoRuleEInfo -> ([String], [String], [String])
+makeHeadersFromProtoRule ru = 
+  (frees, tables, events)
+    where
+    acts             = filter isNotDiffAnnotation (L.get rActs ru)
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
+    facts proj     = L.get proj ru
+    frees = makeFreeHeaders (facts rPrems) acts (facts rConcs)
+    tables = makeTableHeaders (facts rPrems) (facts rConcs)
+    events = makeEventHeaders acts
+
+makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> [String]
+makeFreeHeaders prems acts concls = 
+  headers
+  where
+    getTerms (Fact tag an ts) = ts
+    allTerms = (concat $ map getTerms prems) ++ (concat $ map getTerms acts) ++ (concat $ map getTerms concls)
+    bitstrings = foldl (\acc t -> S.union acc $ searchForBitstrings t) (S.empty) (S.toList $ S.fromList allTerms)
+    headers = map (++": bitstring.") . map ("free "++) $ S.toList bitstrings
+
+searchForBitstrings :: (Show l) => Term l -> S.Set String
+searchForBitstrings t = case viewTerm t of
+    Lit l     -> if (head $ show l) == '\'' && (last $ show l) == '\'' then S.fromList [showAtom $ show l] else S.empty
+    FApp _ ts -> foldl (\acc t -> S.union acc $ searchForBitstrings t) (S.empty) ts
+
+makeTableHeaders :: [LNFact] -> [LNFact] -> [String]
+makeTableHeaders prems concls =
+  headers
+  where
+    getFactInfo (Fact tag _ ts) = (factTagName tag, length ts)
+    allFactInfos = S.toList $ S.fromList (map getFactInfo prems ++ map getFactInfo concls)
+    tableInfos = filter (\(t, _) -> t /= "Fr" && t /= "Out" && t /= "In") allFactInfos
+    headers = map (\(t,n) -> "table " ++ t ++ "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ").") tableInfos
+
+makeEventHeaders :: [LNFact] -> [String]
+makeEventHeaders acts = [""]
 
 translateTheoryItem
     :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, [d], M.Map (String, String) String)
@@ -1437,7 +1488,7 @@ showAtom :: String -> String
 showAtom a = case head a of
   '~'  -> replaceDots $ tail a
   '$'  -> replaceDots $ tail a
-  '\'' -> replaceDots . init $ tail a
+  '\'' -> replaceDots $ tail a
   _    -> replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
