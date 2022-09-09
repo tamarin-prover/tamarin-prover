@@ -1357,7 +1357,7 @@ translateTheoryItem
     :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, [d], M.Map (String, String) String)
 translateTheoryItem i de = case i of
     RuleItem ru   -> let (ruledoc, des) = translateOpenProtoRule ru de in (ruledoc, [], des)
-    LemmaItem lem -> (text "", [text "LEMMA"], de) --translateLemma lem
+    LemmaItem lem -> let lemmadoc = translateLemma lem in (text "", [lemmadoc], de)
     TextItem txt  -> (text "TODO?", [], de) --translateComment txt
     RestrictionItem rstr  -> (text "TODO?", [], de) --translateRestriction rstr
     PredicateItem     p  -> (text "TODO?", [], de) --translatePredicate p
@@ -1497,19 +1497,25 @@ showAtom :: String -> String
 showAtom a = case head a of
   '~'  -> replaceDots $ tail a
   '$'  -> replaceDots $ tail a
-  '\'' -> replaceDots $ tail a
+  '\'' -> sanitize $ tail a
   _    -> replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
+    sanitize a = if (isDigit $ head a)
+                   then "num" ++  replaceDots a
+                   else replaceDots a
 
 showAtom2 :: String -> String
 showAtom2 a = case head a of
   '~'  -> replaceDots $ tail a
   '$'  -> replaceDots $ tail a
-  '\'' -> map toLower . replaceDots . init $ tail a
+  '\'' -> map toLower . sanitize . init $ tail a
   _    -> replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
+    sanitize a = if (isDigit $ head a)
+                   then "num" ++  replaceDots a
+                   else replaceDots a
 
 showFunction :: String -> String
 showFunction f
@@ -1609,3 +1615,6 @@ makeDestructorExpression vars helperVars destructors t a = if (S.member a vars) 
                                         letDoc = text "let" <-> (text $ showAtom a) <->
                                                  text "=" <-> text destr <> 
                                                  text "(" <> text var <> text ");"
+
+translateLemma :: (HighlightDocument d) => Lemma p -> d
+translateLemma lem = text "LEMMA"
