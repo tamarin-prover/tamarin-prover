@@ -17,8 +17,7 @@
 module Export (
     prettyProVerifTheory,
     prettyProVerifEquivTheory,
-    prettyDeepSecTheory,
-    msrTranslation
+    prettyDeepSecTheory
 
 ) where
 
@@ -79,24 +78,26 @@ emptyTC =
 -- Core Proverif Export
 ------------------------------------------------------------------------------
 
-proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> d
-proverifTemplate headers queries process macroproc lemmas =
+proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> [d] -> d
+proverifTemplate headers queries process macroproc ruleproc lemmas =
   vcat headers
     $$ vcat queries
     $$ vcat lemmas
     $$ vcat macroproc
+    $$ vcat ruleproc
     $$ text "process"
     $$ nest 4 process
 
 prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO (Doc)
 prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd
+  headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd `S.union` ruleHeaders
   let hd = attribHeaders tc headers2
-  return $ proverifTemplate hd queries proc macroproc lemmas
+  return $ proverifTemplate hd queries proc macroproc ruleproc lemmas
   where
     tc = emptyTC {predicates = theoryPredicates thy}
     (proc, prochd, hasBoundState, hasUnboundState) = loadProc tc thy
+    (ruleproc, ruleHeaders) = loadRules thy
     base_headers = if hasUnboundState then state_headers else S.empty
     queries = loadQueries thy
     lemmas = loadLemmas lemSel tc typEnv thy
@@ -1191,122 +1192,28 @@ makeAnnotations thy p = res
 -- MSR Translation
 ------------------------------------------------------------------------------
 
+loadRules :: OpenTheory -> ([Doc], S.Set ProVerifHeader)
+loadRules thy = case theoryRules thy of
+  [] -> ([text ""], S.empty)
+  rules -> (ruleDocs, headers)
+           where
+            (ruleDocs, destructors) = foldl (\(docs, destrs) r -> let (doc, destrs') = translateOpenProtoRule r destrs in (docs++[doc], destrs')) ([], M.empty) rules
+            headers = baseHeaders `S.union` desHeaders `S.union` frHeaders `S.union` tblHeaders `S.union` evHeaders
+            baseHeaders = S.fromList [Sym "free" "c" ":channel" []]
+            desHeaders = S.fromList . map makeDestructorHeader $ M.toList destructors
+            (frHeaders, tblHeaders, evHeaders) =
+              foldl (\(fr, tbl, ev) ru -> let (fr', tbl', ev') = makeHeadersFromRule ru in (fr `S.union` fr', tbl `S.union` tbl', ev `S.union` ev')) (S.empty, S.empty, S.empty) rules
 
-msrTranslation :: HighlightDocument d => OpenTheory -> d
-msrTranslation thy = vsep headers
-                    $$ vsep queries
-                    $$ vsep processes
-                    $$ footer
-    where
-      (processes, queries, destructors) =
-        foldl (\(docs, qs, destrs) i -> let (doc, q, destrs') = translateTheoryItem i destrs in (docs ++ [doc], qs ++ q, destrs')) ([], [], M.empty) (L.get thyItems thy)
-    -- FOR LATER: parMap rdeepseq translateTheoryItem (L.get thyItems thy)
-      headers = baseHeaders ++ frHeaders ++ biHeaders
-               ++ [vcat funHeaders] ++ [vcat eqHeaders] ++ [vcat desHeaders] 
-               ++ tblHeaders ++ evHeaders
-      baseHeaders = [text "free c: channel."]
-      builtins = theoryBuiltins thy
-      biHeaders = map makeBuiltinHeader builtins
-      declaredFunctions = theoryFunctionTypingInfos thy
-      funHeaders = map makeFunctionHeader declaredFunctions
-      sig = L.get sigpMaudeSig $ L.get thySignature thy
-      equations = S.toList $ stRules sig
-      eqHeaders = map makeEquationHeader equations
-      desHeaders = map makeDestructorHeader $ M.toList destructors
-      onlyRules (RuleItem ru) = True
-      onlyRules _ = False
-      rules = filter onlyRules (L.get thyItems thy)
-      (frHeaderList, tblHeaderList, evHeaderList) =
-        foldl (\(fr, tbl, ev) (RuleItem ru) -> let (fr', tbl', ev') = makeHeadersFromRule ru in (fr++fr', tbl++tbl', ev++ev')) ([], [], []) rules
-      groupHeaders hs = [vcat . map text . S.toList $ S.fromList hs]
-      frHeaders = groupHeaders frHeaderList
-      tblHeaders = groupHeaders tblHeaderList
-      evHeaders = groupHeaders evHeaderList
-      footer = makeFooter $ map (\(RuleItem ru) -> ru) rules
-
-makeBuiltinHeader :: HighlightDocument d => String -> d
-makeBuiltinHeader b = case b of
-  "hashing"               -> text "fun h(bitstring): bitstring."
-  "asymmetric-encryption" -> text "fun aenc(bitstring, bitstring): bitstring."
-                            $$ text "fun adec(bitstring, bitstring): bitstring."
-                            $$ text "fun pk(bitstring): bitstring."
-                            $$ text "reduc forall m:bitstring, sk:bitstring; adec(aenc(m, pk(sk)), sk) = m."
-  "signing"               -> text "fun sign(bitstring, bitstring): bitstring."
-                            $$ text "fun verify(bitstring, bitstring, bitstring): bitstring."
-                            $$ text "fun pk(bitstring): bitstring."
-                            $$ text "fun true'(): bitstring."
-                            $$ text "reduc forall m:bitstring, sk:bitstring; verify(sign(m,sk),m,pk(sk)) = true'()."
-  "revealing-signing"     -> text "fun revealSign(bitstring, bitstring): bitstring."
-                            $$ text "fun revealVerify(bitstring, bitstring, bitstring): bitstring."
-                            $$ text "fun getMessage(): bitstring."
-                            $$ text "fun pk(bitstring): bitstring."
-                            $$ text "fun true'(): bitstring."
-                            $$ text "reduc forall m:bitstring, sk:bitstring; revealVerify(revealSign(m,sk),m,pk(sk)) = true'()."
-                            $$ text "reduc forall m:bitstring, sk:bitstring; getMessage(revealSign(m,sk)) = m."
-  "symmetric-encryption"  -> text "fun senc(bitstring, bitstring): bitstring."
-                            $$ text "fun sdec(bitstring, bitstring): bitstring."
-                            $$ text "reduc forall m:bitstring, k:bitstring; sdec(senc(m,k),k) = m."
-  "diffie-hellman"        -> text "fun inv(bitstring): bitstring."
-                            $$ text "fun translated_1(bitstring): bitstring."
-                            $$ text "fun exp(bitstring, bitstring): bitstring."
-                            $$ text "fun mult(bitstring, bitstring): bitstring."
-                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; exp(exp(x,y), z) = exp(x, mult(y, z))."
-                            $$ text "reduc forall x:bitstring; exp(x, translated_1()) = x."
-                            $$ text "reduc forall x:bitstring, y:bitstring; mult(x, y) = mult(y, x)."
-                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; mult(mult(x, y), z) = mult(x, mult(y, z))."
-                            $$ text "reduc forall x:bitstring; mult(x, translated_1()) = x."
-                            $$ text "reduc forall x:bitstring; mult(x, inv(x)) = translated_1()."
-  "bilinear-pairing"      -> text "fun inv(bitstring): bitstring."
-                            $$ text "fun translated_1(bitstring): bitstring."
-                            $$ text "fun exp(bitstring, bitstring): bitstring."
-                            $$ text "fun mult(bitstring, bitstring): bitstring."
-                            $$ text "fun pmult(bitstring, bitstring): bitstring."
-                            $$ text "fun em(bitstring, bitstring): bitstring."
-                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; exp(exp(x,y), z) = exp(x, mult(y, z))."
-                            $$ text "reduc forall x:bitstring; exp(x, translated_1()) = x."
-                            $$ text "reduc forall x:bitstring, y:bitstring; mult(x, y) = mult(y, x)."
-                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; mult(mult(x, y), z) = mult(x, mult(y, z))."
-                            $$ text "reduc forall x:bitstring; mult(x, translated_1()) = x."
-                            $$ text "reduc forall x:bitstring; mult(x, inv(x)) = translated_1()."
-                            $$ text "reduc forall x:bitstring, y:bitstring, p:bitstring; pmult(x, (pmult(y, p)) = pmult(mult(x, y), p)."
-                            $$ text "reduc forall p:bitstring; pmult(translated_1(), p) = p."
-                            $$ text "reduc forall p:bitstring, q:bitstring; em(p, q) = em(q, p)."
-                            $$ text "reduc forall x:bitstring, p:bitstring, q:bitstring; em(pmult(x, p), q) = pmult(x, em(q, p))."
-  "xor"                   -> text "fun xor(bitstring, bitstring): bitstring."
-                            $$ text "fun zero(): bitstring."
-                            $$ text "reduc forall x:bitstring, y:bitstring; xor(x, y) = xor(y, x)."
-                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; xor(xor(x, y), z) = xor(x, xor(y, z))."
-                            $$ text "reduc forall x:bitstring; xor(x, zero()) = x."
-                            $$ text "reduc forall x:bitstring; xor(x, x) = zero()."
-  "multiset"              -> text "fun union(bitstring, bitstring): bitstring."
-                            $$ text "reduc forall x:bitstring, y:bitstring; union(x, y) = union(y, x)."
-                            $$ text "reduc forall x:bitstring, y:bitstring, z:bitstring; union(union(x, y), z) = union(x, union(y, z))."
-  _                       -> text ""
-
-makeFunctionHeader :: HighlightDocument d => SapicFunSym -> d
-makeFunctionHeader ((f, (i,_,_)), _, _) = 
-  text "fun" <-> text (BC.unpack f) <> text "(" <> inTypeString <> text "): bitstring."
-  where
-    inTypeString = fsep . punctuate comma . map text $ replicate i "bitstring"
-
-makeEquationHeader :: HighlightDocument d => CtxtStRule -> d
-makeEquationHeader (CtxtStRule t1 (StRhs _ t2)) = 
-  text "reduc forall" <-> (fsep . punctuate comma . map text $ map buildAtomString atoms) <> text ";"
-  $$ translateTerm S.empty t1 <-> text "=" <-> translateTerm S.empty t2 <> text "."
-  where
-    atoms = S.toList $ S.fromList (getAtoms t1 ++ getAtoms t2)
-    buildAtomString a = showAtom a ++ ":bitstring"
-
-makeDestructorHeader :: HighlightDocument d => ((String, String), String) -> d
+makeDestructorHeader :: ((String, String), String) -> ProVerifHeader
 makeDestructorHeader ((dDef, atom), dName) =
   let (s1,s2) = break (=='#') dDef
   in
-    text (s1 ++ dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom2 atom) ++ " [private].")
+    Eq "equation" s1 (dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom2 atom) ++ " [private]")
 
-makeHeadersFromRule:: OpenProtoRule -> ([String], [String], [String])
+makeHeadersFromRule:: OpenProtoRule -> (S.Set ProVerifHeader, S.Set ProVerifHeader, S.Set ProVerifHeader)
 makeHeadersFromRule (OpenProtoRule ruE _) = makeHeadersFromProtoRule ruE
 
-makeHeadersFromProtoRule :: Rule ProtoRuleEInfo -> ([String], [String], [String])
+makeHeadersFromProtoRule :: Rule ProtoRuleEInfo -> (S.Set ProVerifHeader, S.Set ProVerifHeader, S.Set ProVerifHeader)
 makeHeadersFromProtoRule ru = 
   (frees, tables, events)
     where
@@ -1317,52 +1224,36 @@ makeHeadersFromProtoRule ru =
     tables = makeTableHeaders (facts rPrems) (facts rConcs)
     events = makeEventHeaders acts
 
-makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> [String]
+makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> S.Set ProVerifHeader
 makeFreeHeaders prems acts concls = 
   headers
   where
     getTerms (Fact tag an ts) = ts
     allTerms = (concat $ map getTerms prems) ++ (concat $ map getTerms acts) ++ (concat $ map getTerms concls)
     bitstrings = foldl (\acc t -> S.union acc $ searchForBitstrings t) (S.empty) (S.toList $ S.fromList allTerms)
-    headers = map (++": bitstring.") . map ("free "++) $ S.toList bitstrings
+    headers = S.fromList . map (\b -> Sym "free" b ":bitstring" []) $ S.toList bitstrings
 
 searchForBitstrings :: (Show l) => Term l -> S.Set String
 searchForBitstrings t = case viewTerm t of
     Lit l     -> if (head $ show l) == '\'' && (last $ show l) == '\'' then S.fromList [showAtom $ show l] else S.empty
     FApp _ ts -> foldl (\acc t -> S.union acc $ searchForBitstrings t) (S.empty) ts
 
-makeTableHeaders :: [LNFact] -> [LNFact] -> [String]
+makeTableHeaders :: [LNFact] -> [LNFact] -> S.Set ProVerifHeader
 makeTableHeaders prems concls =
   headers
   where
     getFactInfo (Fact tag _ ts) = (factTagName tag, length ts)
     allFactInfos = S.toList $ S.fromList (map getFactInfo prems ++ map getFactInfo concls)
     tableInfos = filter (\(t, _) -> t /= "Fr" && t /= "Out" && t /= "In") allFactInfos
-    headers = map (\(t,n) -> "table " ++ t ++ "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ").") tableInfos
+    headers = S.fromList $ map (\(t,n) -> Table t ("(" ++ (intercalate ", " $ replicate n "bitstring") ++ ")")) tableInfos
 
-makeEventHeaders :: [LNFact] -> [String]
+makeEventHeaders :: [LNFact] -> S.Set ProVerifHeader
 makeEventHeaders acts = 
   headers
   where
     getFactInfo (Fact tag _ ts) = (factTagName tag, length ts)
     allFactInfos = S.toList $ S.fromList (map getFactInfo acts)
-    headers = map (\(t,n) -> "event " ++ t ++ "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ").") allFactInfos
-
-makeFooter :: HighlightDocument d => [OpenProtoRule] -> d
-makeFooter rules = let ruleNames = map (\(OpenProtoRule ruE _) -> printRuleName . L.get preName $ L.get rInfo ruE) rules
-                    in
-                    text ("process ( " ++ (intercalate " | " . map (++")") $ map ("!("++) ruleNames) ++ " )")
-
-translateTheoryItem
-    :: HighlightDocument d => TheoryItem OpenProtoRule p s -> M.Map (String, String) String -> (d, [d], M.Map (String, String) String)
-translateTheoryItem i de = case i of
-    RuleItem ru   -> let (ruledoc, des) = translateOpenProtoRule ru de in (ruledoc, [], des)
-    LemmaItem lem -> let lemmadoc = translateLemma lem in (text "", [lemmadoc], de)
-    TextItem txt  -> (text "TODO?", [], de) --translateComment txt
-    RestrictionItem rstr  -> (text "TODO?", [], de) --translateRestriction rstr
-    PredicateItem     p  -> (text "TODO?", [], de) --translatePredicate p
-    TranslationItem s -> (text "", [], de)
-
+    headers = S.fromList $ map (\(t,n) -> HEvent t ("(" ++ (intercalate ", " $ replicate n "bitstring") ++ ")")) allFactInfos
 
 translateOpenProtoRule :: HighlightDocument d => OpenProtoRule -> M.Map (String, String) String -> (d, M.Map (String, String) String)
 translateOpenProtoRule (OpenProtoRule ruE _) de = translateProtoRule ruE de
@@ -1570,7 +1461,7 @@ translatePatternTerm vars helperVars t = case viewTerm t of
 
 makeDestructorDefinition :: (Show l) => Term l -> String
 makeDestructorDefinition t = 
-  "reduc forall " ++ intercalate ", " (map (++":bitstring") atoms) ++ "; #" ++ printTerm2 t
+  "reduc forall " ++ intercalate ", " (map (++":bitstring") atoms) ++ ";#" ++ printTerm2 t
   where
     atoms = map showAtom2 . S.toList . S.fromList $ getAtoms t
 
@@ -1614,7 +1505,4 @@ makeDestructorExpression vars helperVars destructors t a = if (S.member a vars) 
                                                 text "(" <> text var <> text ") then"
                                         letDoc = text "let" <-> (text $ showAtom a) <->
                                                  text "=" <-> text destr <> 
-                                                 text "(" <> text var <> text ");"
-
-translateLemma :: (HighlightDocument d) => Lemma p -> d
-translateLemma lem = text "LEMMA"
+                                                 text "(" <> text var <> text ") in"
