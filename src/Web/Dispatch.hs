@@ -183,7 +183,7 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
           die "quit-on-warning mode selected - aborting on wellformedness errors."
         Right (report, thy) -> do
           time <- getZonedTime
-          putStrLn $ renderDoc $ ppInteractive report path
+          unless (null report) $ putStrLn $ renderDoc $ ppInteractive report path
           return $ Just
              ( idx
              , either (\t -> Trace $ TheoryInfo idx t time Nothing True (Local path) autoProver)
