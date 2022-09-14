@@ -93,11 +93,16 @@ prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
   headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd `S.union` ruleHeaders
   let hd = attribHeaders tc headers2
-  return $ proverifTemplate hd queries proc macroproc ruleproc lemmas
+  return $ proverifTemplate hd queries proc' macroproc ruleproc lemmas
   where
     tc = emptyTC {predicates = theoryPredicates thy}
     (proc, prochd, hasBoundState, hasUnboundState) = loadProc tc thy
-    (ruleproc, ruleHeaders) = loadRules thy
+    (ruleproc, ruleComb, ruleHeaders) = loadRules thy
+    proc' = if theoryProcesses thy == []
+              then ruleComb
+              else if theoryRules thy == []
+                     then proc
+                     else proc <-> text "|" <-> ruleComb
     base_headers = if hasUnboundState then state_headers else S.empty
     queries = loadQueries thy
     lemmas = loadLemmas lemSel tc typEnv thy
@@ -1192,10 +1197,10 @@ makeAnnotations thy p = res
 -- MSR Translation
 ------------------------------------------------------------------------------
 
-loadRules :: OpenTheory -> ([Doc], S.Set ProVerifHeader)
+loadRules :: OpenTheory -> ([Doc], Doc, S.Set ProVerifHeader)
 loadRules thy = case theoryRules thy of
-  [] -> ([text ""], S.empty)
-  rules -> (ruleDocs, headers)
+  [] -> ([text ""], text "", S.empty)
+  rules -> (ruleDocs, ruleComb, headers)
            where
             (ruleDocs, destructors) = foldl (\(docs, destrs) r -> let (doc, destrs') = translateOpenProtoRule r destrs in (docs++[doc], destrs')) ([], M.empty) rules
             headers = baseHeaders `S.union` desHeaders `S.union` frHeaders `S.union` tblHeaders `S.union` evHeaders
@@ -1203,6 +1208,8 @@ loadRules thy = case theoryRules thy of
             desHeaders = S.fromList . map makeDestructorHeader $ M.toList destructors
             (frHeaders, tblHeaders, evHeaders) =
               foldl (\(fr, tbl, ev) ru -> let (fr', tbl', ev') = makeHeadersFromRule ru in (fr `S.union` fr', tbl `S.union` tbl', ev `S.union` ev')) (S.empty, S.empty, S.empty) rules
+            ruleNames = map (\(OpenProtoRule ruE _) -> printRuleName . L.get preName $ L.get rInfo ruE) rules
+            ruleComb = text ("( " ++ (intercalate " | " . map (++")") $ map ("!("++) ruleNames) ++ " )")
 
 makeDestructorHeader :: ((String, String), String) -> ProVerifHeader
 makeDestructorHeader ((dDef, atom), dName) =
