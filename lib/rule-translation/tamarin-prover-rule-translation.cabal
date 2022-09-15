@@ -7,11 +7,10 @@ license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
 author:             Julian Biehl <s8jubieh@stud.uni-saarland.de>
-maintainer:         Robert Künnemann <robert@kunnemann.de>
-copyright:          Robert Künnemann, CISPA-Helmholtz-Centre Saarbrücken, 2019
-                    Charlie Jacomme, LSV, 2019
+maintainer:         Julian Biehl <s8jubieh@stud.uni-saarland.de>
+copyright:          Julian Biehl, Universität des Saarlandes, 2022
 
-synopsis:           Library for export of processes in the Sapic calculus to the Proverif calculus
+synopsis:           Library for the translation of multiset rewrite rules to the Proverif calculus
 
 description:        This is an internal library of the Tamarin prover for
                     security protocol verification

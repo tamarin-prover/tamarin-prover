@@ -6,13 +6,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns               #-}
 -- |
--- Copyright   : (c) 2019 Charlie Jacomme and Robert Künnemann
+-- Copyright   : (c) 2022 Julian Biehl
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Robert Künnemann <robert@kunnemann.de>
+-- Maintainer  : Julian Biehl <s8jubieh@stud.uni-saarland.de>
 -- Portability : GHC only
 --
--- Translation from Sapic processes to Proverif
+-- Translation from multiset rewrite rules to Proverif
 
 module RuleTranslation (
     loadRules
