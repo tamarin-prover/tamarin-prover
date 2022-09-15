@@ -223,12 +223,15 @@ translateNonPatterns facts factType filterFunction vars =
                                                 "INSERT" -> if checkForNewIDs
                                                               then idConstructor $-$ translateFact prem factType vs
                                                               else translateFact prem factType vs
+                                                "EVENT"  -> if checkForNewIDs
+                                                              then idConstructor $-$ translateFact prem factType vs
+                                                              else translateFact prem factType vs
                                                 _        -> translateFact prem factType vs
                                               atoms = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
-                                              checkForNewIDs = if atoms `S.isSubsetOf` vars
+                                              checkForNewIDs = if atoms `S.isSubsetOf` vs
                                                                  then False
-                                                                 else foldl (\acc a -> acc || ((head a) == '$')) False $ S.difference atoms vars
-                                              idConstructor = newExp . S.toList $ S.difference atoms vars
+                                                                 else foldl (\acc a -> acc || ((head a) == '$')) False $ S.difference atoms vs
+                                              idConstructor = newExp . S.toList $ S.difference atoms vs
                                               newExp as = vcat . map (\a -> text "new " <> (text $ showAtom a) <> text ": bitstring;") . filter (\a -> (head a) == '$') $ as
 
 
