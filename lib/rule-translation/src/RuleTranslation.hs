@@ -235,7 +235,9 @@ translateNonPatterns facts factType filterFunction vars =
 translateFact :: Document d => LNFact -> String -> S.Set String -> d
 translateFact (Fact tag _ ts) factType vars = case factType of
     "GET"    -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
-    "IN"     -> text "in(c," <-> (translateTerm vars (head ts)) <> text ": bitstring)"
+    "IN"     -> if (head $ printTerm vars (head ts)) == '='
+                  then text "in(c," <-> (translateTerm vars (head ts)) <> text ")"
+                  else text "in(c," <-> (translateTerm vars (head ts)) <> text ": bitstring)"
     "NEW"    -> text "new" <-> (translateTerm S.empty (head ts)) <> text ": bitstring"
     "INSERT" -> text "insert" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
     "OUT"    -> text "out(c," <-> (translateTerm S.empty (head ts)) <> text ")"
