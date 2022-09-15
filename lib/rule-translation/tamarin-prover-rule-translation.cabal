@@ -1,4 +1,4 @@
-name:               tamarin-prover-export
+name:               tamarin-prover-rule-translation
 
 cabal-version:      >= 1.8
 build-type:         Simple
@@ -6,8 +6,7 @@ version:            1.7.1
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
-author:             Robert Künnemann <robert@kunnemann.de>,
-                    Charlie Jacomme <charlie.jacomme@lsv.fr>
+author:             Julian Biehl <s8jubieh@stud.uni-saarland.de>
 maintainer:         Robert Künnemann <robert@kunnemann.de>
 copyright:          Robert Künnemann, CISPA-Helmholtz-Centre Saarbrücken, 2019
                     Charlie Jacomme, LSV, 2019
@@ -59,9 +58,8 @@ library
       , tamarin-prover-term
       , tamarin-prover-theory
       , tamarin-prover-sapic
-      , tamarin-prover-rule-translation
 
     hs-source-dirs: src
 
     exposed-modules:
-        Export
+        RuleTranslation

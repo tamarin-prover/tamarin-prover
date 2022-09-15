@@ -162,6 +162,7 @@ executable tamarin-prover
       , tamarin-prover-sapic == 1.7.1
       , tamarin-prover-export == 1.7.1
       , tamarin-prover-accountability == 1.7.1
+      , tamarin-prover-rule-translation == 1.7.1
 
     other-modules:
       Paths_tamarin_prover
