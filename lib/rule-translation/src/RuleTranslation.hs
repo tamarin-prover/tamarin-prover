@@ -200,11 +200,10 @@ translatePatterns facts factType filterFunction vars helperVars destructors =
       translate prem@(Fact _ _ ts) vs hvs destrs = (getDoc, atoms, newHelperVars, newDestructors)
                                              where
                                                (factDoc, newHelperVars) = translatePatternFact prem factType vs hvs
-                                               (destrDocList, newDestructors) = foldl (\(docs,des) t -> let (doc,des') = makeDestructorExpressions (S.union vs literals) newHelperVars des t in (docs ++ [doc], des')) ([], destrs) patternTerms
+                                               (destrDocList, atoms, newDestructors) = foldl (\(docs,vset,des) t -> let (doc,vset',des') = makeDestructorExpressions vset newHelperVars des t in (docs ++ [doc], vset `S.union` vset', des')) ([], (vs `S.union` literals), destrs) patternTerms
                                                getDoc = factDoc $-$ (vcat $ destrDocList)
                                                patternTerms = filter isPattern ts
                                                literals = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] (filter (not . isPattern) ts))
-                                               atoms = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] ts)
 
 
 translateNonPatterns :: HighlightDocument d => [LNFact] -> String -> (LNFact -> Bool) -> S.Set String -> ([d], S.Set String)
@@ -355,11 +354,12 @@ makeDestructorName dMap t a = case M.lookup ((makeDestructorDefinition t),a) dMa
                  in
                (newDestructor, newMap)
 
-makeDestructorExpressions :: (Document d, Show l, Ord l) => S.Set String -> M.Map String String -> M.Map (String, String) String -> Term l -> (d, M.Map (String, String) String)
+makeDestructorExpressions :: (Document d, Show l, Ord l) => S.Set String -> M.Map String String -> M.Map (String, String) String -> Term l -> (d, S.Set String, M.Map (String, String) String)
 makeDestructorExpressions vars helperVars destructors t = 
-    ((vcat doclist), newDestructors)
+    ((vcat doclist), S.fromList atoms, newDestructors)
     where
-      (doclist, newDestructors) = foldl (\(docs,destrs) a -> let (doc, destrs') = makeDestructorExpression vars helperVars destrs t a in (docs ++ [doc], destrs')) ([], destructors) (getAtoms t)
+      (doclist, newDestructors) = foldl (\(docs,destrs) a -> let (doc, destrs') = makeDestructorExpression vars helperVars destrs t a in (docs ++ [doc], destrs')) ([], destructors) atoms
+      atoms = nub $ getAtoms t
 
 getAtoms :: (Show l) => Term l -> [String]
 getAtoms t = case viewTerm t of
