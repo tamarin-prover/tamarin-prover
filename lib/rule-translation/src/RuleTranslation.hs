@@ -260,25 +260,19 @@ showAtom :: String -> String
 showAtom a = case head a of
   '~'  -> replaceDots $ tail a
   '$'  -> replaceDots $ tail a
-  '\'' -> sanitize $ tail a
+  '\'' -> "str_" ++ (replaceDots . init $ tail a)
   _    -> replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
-    sanitize a = if (isDigit $ head a)
-                   then "num" ++  replaceDots a
-                   else replaceDots a
 
 showAtom2 :: String -> String
 showAtom2 a = case head a of
   '~'  -> replaceDots $ tail a
   '$'  -> replaceDots $ tail a
-  '\'' -> map toLower . sanitize . init $ tail a
+  '\'' -> "var_" ++ (map toLower . replaceDots . init $ tail a)
   _    -> replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
-    sanitize a = if (isDigit $ head a)
-                   then "num" ++  replaceDots a
-                   else replaceDots a
 
 showFunction :: String -> String
 showFunction f
@@ -340,7 +334,7 @@ makeDestructorDefinition t =
 makeVariable :: (Show l) => Term l -> M.Map String String -> (String, M.Map String String)
 makeVariable t varMap = case M.lookup (printTerm S.empty t) varMap of
     Just v  -> (v, varMap)
-    Nothing -> let newVar = "x" ++ (show $ M.size varMap)
+    Nothing -> let newVar = "helperVar" ++ (show $ M.size varMap)
                    newMap = M.insert (printTerm S.empty t) newVar varMap
                  in
                (newVar, newMap)
