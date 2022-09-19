@@ -151,8 +151,7 @@ builtins =
         ]
       ),
       ( "xor",
-        [ Fun "fun" "xor" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "zero" 0 "():bitstring" []
+        [ Fun "fun" "xor" 2 "(bitstring,bitstring):bitstring" []
         ]
       ),
       ( "hashing",
@@ -178,31 +177,6 @@ builtins =
       ),
       ( "symmetric-encryption",
         [ Fun "fun" "senc" 2 "(bitstring,bitstring):bitstring" []
-        ]
-      ),
-      ( "bilinear-pairing",
-        [ Fun "fun" "exp" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "mult" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "pmult" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "em" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "inv" 1 "(bitstring):bitstring" [],
-          Fun "fun" "translated_1" 0 "():bitstring" [],
-          Eq "equation" "forall x:bitstring, y:bitstring, z:bitstring;" "exp(exp(x,y), z) = exp(x, mult(y, z))",
-          Eq "equation" "forall x:bitstring;" "exp(x, translated_1) = x",
-          Eq "equation" "forall x:bitstring, y:bitstring;" "mult(x, y) = mult(y, x)",
-          Eq "equation" "forall x:bitstring, y:bitstring, z:bitstring;" "mult(mult(x, y), z) = mult(x, mult(y, z))",
-          Eq "equation" "forall x:bitstring;" "mult(x, translated_1) = x",
-          Eq "equation" "forall x:bitstring;" "mult(x, inv(x)) = translated_1",
-          Eq "equation" "forall x:bitstring, y:bitstring, p:bitstring;" "pmult(x, pmult(y, p)) = pmult(mult(x, y), p)",
-          Eq "equation" "forall p:bitstring;" "pmult(translated_1, p) = p",
-          Eq "equation" "forall p:bitstring, q:bitstring;" "em(p, q) = em(q, p)",
-          Eq "equation" "forall x:bitstring, p:bitstring, q:bitstring;" "em(pmult(x, p), q) = pmult(x, em(q, p))"
-        ]
-      ),
-      ( "multiset",
-        [ Fun "fun" "union" 2 "(bitstring,bitstring):bitstring" [],
-         Eq "equation" "forall x:bitstring, y:bitstring;" "union(x, y) = union(y, x)",
-         Eq "equation" "forall x:bitstring, y:bitstring, z:bitstring;" "union(union(x, y), z) = union(x, union(y, z))"
         ]
       )
     ]
