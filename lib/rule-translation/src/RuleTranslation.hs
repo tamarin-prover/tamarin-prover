@@ -287,9 +287,9 @@ printTerm :: (Show l) => S.Set String -> Term l -> String
 printTerm vars t = case viewTerm t of
     Lit l | (S.member (show l) vars && head (show l) /= '\'') -> "=" ++ (showAtom $ show l)
     Lit l                                           -> showAtom $ show l
-    FApp (AC Mult)     ts                           -> "mult" ++ printList ts
-    FApp (AC Union)    ts                           -> "union" ++ printList ts
-    FApp (AC Xor)      ts                           -> "xor" ++ printList ts
+    FApp (AC Mult)     ts                           -> printAC "mult" ts
+    FApp (AC Union)    ts                           -> printAC "union" ts
+    FApp (AC Xor)      ts                           -> printAC "xor" ts
     FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> "(" ++ printPair ts ++ ")"
     FApp (NoEq (f, _)) ts                           -> (showFunction $ BC.unpack f) ++ printList ts
     FApp (C EMap)      ts                           -> "em" ++ printList ts
@@ -299,6 +299,8 @@ printTerm vars t = case viewTerm t of
       printPair [t1,t2] = case viewTerm t2 of
         FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printTerm vars t1 ++ ", " ++ printPair ts
         _                                               -> printTerm vars t1 ++ ", " ++ printTerm vars t2
+      printAC op [t1,t2] = op ++ "(" ++ printTerm vars t1 ++ ", " ++ printTerm vars t2 ++ ")"
+      printAC op (t:ts) = op ++ "(" ++ printTerm vars t ++ ", " ++ printAC op ts ++ ")"
 
 printTerm2 :: (Show l) => Term l -> String
 printTerm2 t = case viewTerm t of
