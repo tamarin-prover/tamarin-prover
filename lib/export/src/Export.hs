@@ -1041,7 +1041,7 @@ headerOfFunSym _ = S.empty
 loadHeaders :: TranslationContext -> OpenTheory -> TypingEnvironment -> IO (S.Set ProVerifHeader)
 loadHeaders tc thy typeEnv = do
   eqHeaders <- mapM (headersOfRule tc typeEnv) (S.toList sigRules)
-  return $ typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (foldl (\acc x -> x `S.union` acc) S.empty eqHeaders) `S.union` eventHeaders
+  return $ typedHeaderOfFunSym `S.union` headerBuiltins' `S.union` (foldl (\acc x -> x `S.union` acc) S.empty eqHeaders) `S.union` eventHeaders
   where
     sig = (L.get sigpMaudeSig (L.get thySignature thy))
     -- all builtins are contained in Sapic Element
@@ -1058,6 +1058,13 @@ loadHeaders tc thy typeEnv = do
     -- all user declared function symbols have typinginfos
     userDeclaredFunctions = theoryFunctionTypingInfos thy
     typedHeaderOfFunSym = foldl (\y x -> headerOfFunSym x `S.union` y) S.empty userDeclaredFunctions
+
+    -- builtin headers need to be filtered, to make sure we don't redefine a user-defined function
+    headerBuiltins' = S.fromList $ filter builtinFilter (S.toList headerBuiltins)
+    builtinFilter (Fun _ name _ _ _) = foldl (checkNames name) True (S.toList typedHeaderOfFunSym)
+    builtinFilter _ = True
+    checkNames name acc (Fun _ name' _ _ _) = acc && name /= name'
+    checkNames _ acc _ = acc
 
     -- events headers
     eventHeaders = M.foldrWithKey (\tag types acc -> HEvent (showFactTag tag) ("(" ++ make_argtypes types ++ ")") `S.insert` acc) S.empty (events typeEnv)
