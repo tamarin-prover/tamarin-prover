@@ -212,7 +212,8 @@ checkDuplicates hd = do
 ppPubName :: NameId -> Doc
 ppPubName (NameId "zero") = text "0"
 ppPubName (NameId "one") = text "1"
-ppPubName (NameId t) = text t
+ppPubName (NameId "g") = text "g"
+ppPubName (NameId t) = text $ "s" ++ t
 -- Loader of the export functions
 ------------------------------------------------------------------------------
 loadQueries :: Theory sig c b p TranslationElement -> [Doc]
@@ -350,7 +351,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       Lit (Con (Name PubName n)) ->
         if List.elem (show n) ["g", "one", "zero"]
           then S.empty
-          else S.singleton (Sym "free" (show n) ":bitstring" [])
+          else S.singleton (Sym "free" ("s" ++ show n) ":bitstring" [])
       Lit (_) -> S.empty
       FApp _ ts -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
 
@@ -362,7 +363,7 @@ auxppSapicTerm tc mVars isPattern t = auxppTerm ppLit t
   where
     ppLit v = case v of
       Con (Name FreshName n) -> (text $ show n)
-      Con (Name PubName n) | isPattern -> text "=" <> (text $ show n)
+      Con (Name PubName n) | isPattern -> text "=" <> (text $ "s" ++ show n)
       Con (Name PubName n) -> ppPubName n
       Var (SapicLVar (lvar) _)
         | S.member lvar mVars -> text "=" <> ppLVar lvar

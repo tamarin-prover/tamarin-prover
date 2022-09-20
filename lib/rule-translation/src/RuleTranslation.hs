@@ -60,7 +60,7 @@ loadRules thy = case theoryRules thy of
             desHeaders = map makeDestructorHeader $ M.toList destructors
             (frHeaders, tblHeaders, evHeaders) =
               foldl (\(fr, tbl, ev) ru -> let (fr', tbl', ev') = makeHeadersFromRule ru in (fr ++ fr', tbl ++ tbl', ev ++ ev')) ([], [], []) rules
-            ruleNames = map (\(OpenProtoRule ruE _) -> printRuleName . L.get preName $ L.get rInfo ruE) rules
+            ruleNames = map (\(OpenProtoRule ruE _) -> showRuleName . L.get preName $ L.get rInfo ruE) rules
             ruleComb = text ("( " ++ (intercalate " | " . map (++")") $ map ("!("++) ruleNames) ++ " )")
 
 makeDestructorHeader :: ((String, String), String) -> (String, String, String)
@@ -101,7 +101,7 @@ makeTableHeaders :: [LNFact] -> [LNFact] -> [(String, String)]
 makeTableHeaders prems concls =
   headers
   where
-    getFactInfo (Fact tag _ ts) = (factTagName tag, length ts)
+    getFactInfo (Fact tag _ ts) = (showFactName tag, length ts)
     allFactInfos = S.toList $ S.fromList (map getFactInfo prems ++ map getFactInfo concls)
     tableInfos = filter (\(t, _) -> t /= "Fr" && t /= "Out" && t /= "In") allFactInfos
     headers = map (\(t,n) -> (t, "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ")")) tableInfos
@@ -110,7 +110,7 @@ makeEventHeaders :: [LNFact] -> [(String, String)]
 makeEventHeaders acts = 
   headers
   where
-    getFactInfo (Fact tag _ ts) = (factTagName tag, length ts)
+    getFactInfo (Fact tag _ ts) = (showEventName tag, length ts)
     allFactInfos = S.toList $ S.fromList (map getFactInfo acts)
     headers = map (\(t,n) -> (t, "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ")")) allFactInfos
 
@@ -126,13 +126,13 @@ translateProtoRule ru de =
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
     facts proj     = L.get proj ru
     (factsDoc,destructors) = translateRule (facts rPrems) acts (facts rConcs) de
-    ruleDoc = text "let" <-> (text . printRuleName . L.get preName $ L.get rInfo ru) <-> text "=" $-$
+    ruleDoc = text "let" <-> (text . showRuleName . L.get preName $ L.get rInfo ru) <-> text "=" $-$
               nest 8
               factsDoc
 
-printRuleName :: ProtoRuleName -> String
-printRuleName FreshRule = "Fresh"
-printRuleName (StandRule s) = s
+showRuleName :: ProtoRuleName -> String
+showRuleName FreshRule = "rFresh"
+showRuleName (StandRule s) = "r" ++ s
 
 translateRule :: (HighlightDocument d) => [LNFact] -> [LNFact] -> [LNFact] -> M.Map (String, String) String -> (d, M.Map (String, String) String)
 translateRule prems acts concls destrs = 
@@ -236,14 +236,14 @@ translateNonPatterns facts factType filterFunction vars =
 
 translateFact :: Document d => LNFact -> String -> S.Set String -> d
 translateFact (Fact tag _ ts) factType vars = case factType of
-    "GET"    -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
+    "GET"    -> text "get" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
     "IN"     -> if (head $ printTerm vars (head ts)) == '='
                   then text "in(c," <-> (translateTerm vars (head ts)) <> text ")"
                   else text "in(c," <-> (translateTerm vars (head ts)) <> text ": bitstring)"
     "NEW"    -> text "new" <-> (translateTerm S.empty (head ts)) <> text ": bitstring"
-    "INSERT" -> text "insert" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
+    "INSERT" -> text "insert" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
     "OUT"    -> text "out(c," <-> (translateTerm S.empty (head ts)) <> text ")"
-    "EVENT"  -> text "event" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
+    "EVENT"  -> text "event" <-> text (showEventName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
     _        -> text "" --should never happen
 
 translatePatternFact :: (Document d) => LNFact -> String -> S.Set String -> M.Map String String -> (d, M.Map String String)
@@ -252,7 +252,7 @@ translatePatternFact (Fact tag _ ts) factType vars helperVars =
     where
       (doclist, newHelperVars) = foldl (\(docs, helpers) t -> let (doc, helpers') = translatePatternTerm vars helpers t in (docs ++ [doc], helpers')) ([], helperVars) ts
       factDoc = case factType of
-        "GET" -> text "get" <-> text (factTagName tag) <> text "(" <> (fsep . punctuate comma $ doclist) <> text ") in"
+        "GET" -> text "get" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ doclist) <> text ") in"
         "IN"  -> text "in(c," <-> (head doclist) <> text ": bitstring);"
         _     -> text "" --should never happen
 
@@ -260,7 +260,7 @@ showAtom :: String -> String
 showAtom a = case head a of
   '~'  -> replaceDots $ tail a
   '$'  -> replaceDots $ tail a
-  '\'' -> "str_" ++ (replaceDots . init $ tail a)
+  '\'' -> "s" ++ (replaceDots . init $ tail a)
   _    -> replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
@@ -279,6 +279,14 @@ showFunction f
   | f == "true"                 = "true'"
   | not . isAlpha $ head f = "translated_" ++ f
   | otherwise                   = f
+
+showFactName :: FactTag -> String
+showFactName tag = if factTagName tag `List.elem` ["Fr", "In", "Out"]
+                     then factTagName tag
+                     else "t" ++ factTagName tag
+
+showEventName :: FactTag -> String
+showEventName tag = factTagName tag
 
 translateTerm :: (Document d, Show l) => S.Set String -> Term l -> d
 translateTerm vars t = text $ printTerm vars t
