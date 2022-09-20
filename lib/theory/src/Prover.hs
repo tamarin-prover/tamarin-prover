@@ -79,7 +79,7 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
   where
     parameters = Sources.IntegerParameters (L.get (openChainsLimit.diffThyOptions) thy0) (L.get (saturationLimit.diffThyOptions) thy0)
     h              = L.get diffThyHeuristic thy0
-    t              = L.get diffThyTacticI thy0
+    t              = L.get diffThyTactic thy0
     diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
     diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
     cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
@@ -176,7 +176,7 @@ closeTheoryWithMaude sig thy0 autoSources =
   where
     parameters = Sources.IntegerParameters (L.get (openChainsLimit.thyOptions) thy0) (L.get (saturationLimit.thyOptions) thy0)
     h          = L.get thyHeuristic thy0
-    t          = L.get thyTacticI thy0
+    t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
     cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)

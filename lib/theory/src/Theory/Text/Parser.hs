@@ -217,7 +217,7 @@ theory inFile = do
     addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
            addItems inFile0 thy'
-      , do thy' <- liftedAddTacticI thy =<< tactic False
+      , do thy' <- liftedAddTactic thy =<< tactic False
            addItems inFile0 thy'
       , do thy' <- builtins thy
            msig <- sig <$> getState
@@ -341,7 +341,7 @@ theory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
-    liftedAddTacticI thy t = case addTacticI t thy of
+    liftedAddTactic thy t = case addTactic t thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "default tactic already defined"
 
@@ -362,7 +362,7 @@ diffTheory inFile = do
     addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
            addItems inFile0 thy'
-      , do thy' <- liftedAddTacticI thy =<< tactic True
+      , do thy' <- liftedAddTactic thy =<< tactic True
            addItems inFile0 thy'
       , do
            diffbuiltins
@@ -460,7 +460,7 @@ diffTheory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
-    liftedAddTacticI thy t = case addDiffTacticI t thy of
+    liftedAddTactic thy t = case addDiffTactic t thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "default tactic already defined"
 

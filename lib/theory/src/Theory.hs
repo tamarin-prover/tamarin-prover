@@ -125,7 +125,7 @@ module Theory (
   , theoryAccLemmas
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
-  , addTacticI
+  , addTactic
   , addRestriction
   , addLemma
   , addAccLemma
@@ -135,7 +135,7 @@ module Theory (
   , addDiffLemma
   , addHeuristic
   , addDiffHeuristic
-  , addDiffTacticI
+  , addDiffTactic
   , removeLemma
   , removeLemmaDiff
   , filterLemma

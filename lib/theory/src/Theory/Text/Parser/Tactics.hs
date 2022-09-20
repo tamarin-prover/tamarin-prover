@@ -33,10 +33,6 @@ import           Theory.Text.Parser.Token
 import           Text.Parsec                hiding ((<|>))
 import           Text.Regex.PCRE
 
-
-import           Debug.Trace
-
-
 --Tactic
 tacticName :: Parser String
 tacticName = do
@@ -110,13 +106,13 @@ deprio = do
     return $ Deprio (nameToRanking ranking) ranking (map fst fs) (map snd fs)
 
 
-tactic :: Bool -> Parser (TacticI ProofContext)
+tactic :: Bool -> Parser (Tactic ProofContext)
 tactic diff = do
     tName <- tacticName
     presort <- option (SmartRanking diff) (selectedPreSort diff)
     prios <- option [] $ many1 prio
     deprios <- option [] $ many1 deprio
-    return $ TacticI tName presort prios deprios
+    return $ Tactic tName presort prios deprios
 
 tacticFunctions :: M.Map String ([String] -> (AnnotatedGoal, ProofContext, System) -> Bool)
 tacticFunctions = M.fromList
@@ -190,7 +186,7 @@ tacticFunctions = M.fromList
             sysPattern = "~n":(map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys)))
 
     checkFormula :: String -> LNGuarded -> [LVar]
-    checkFormula oracleType f = if rev && expG then trace (show $ concat $ getFormulaTermsCore f ) concat $ getFormulaTermsCore f else []
+    checkFormula oracleType f = if rev && expG then concat $ getFormulaTermsCore f else []
 
         where
           rev = or $ map matchReveal (map factTagName $ guardFactTags f)

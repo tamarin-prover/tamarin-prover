@@ -414,7 +414,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
 
     isSolved :: Side -> System -> Bool
-    isSolved s sys' = (rankProofMethods GoalNrRanking [defaultTacticI] (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+    isSolved s sys' = (rankProofMethods GoalNrRanking [defaultTactic] (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
 
 ------------------------------------------------------------------------------
 -- Heuristics
@@ -422,7 +422,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
 
 -- | Use a 'GoalRanking' to sort a list of 'AnnotatedGoal's stemming from the
 -- given constraint 'System'.
-rankGoals :: ProofContext -> GoalRanking ProofContext -> [TacticI ProofContext] -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+rankGoals :: ProofContext -> GoalRanking ProofContext -> [Tactic ProofContext] -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking tacticsList = case ranking of
     GoalNrRanking       -> \_sys -> goalNrRanking
     OracleRanking oracleName -> oracleRanking oracleName ctxt
@@ -437,7 +437,7 @@ rankGoals ctxt ranking tacticsList = case ranking of
     InternalTacticRanking tactic-> internalTacticRanking (chosenTactic tacticsList tactic) ctxt
 
     where 
-      chosenTactic :: [TacticI ProofContext] -> TacticI ProofContext-> TacticI ProofContext
+      chosenTactic :: [Tactic ProofContext] -> Tactic ProofContext-> Tactic ProofContext
       chosenTactic   []  t = chooseError tacticsList t
       chosenTactic (h:q) t = case (checkName h t) of 
         True  -> h
@@ -454,7 +454,7 @@ rankGoals ctxt ranking tacticsList = case ranking of
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
 -- for this 'System'. If the resulting list is empty, then the constraint
 -- system is solved.
-rankProofMethods :: GoalRanking ProofContext -> [TacticI ProofContext] -> ProofContext -> System
+rankProofMethods :: GoalRanking ProofContext -> [Tactic ProofContext] -> ProofContext -> System
                  -> [(ProofMethod, (M.Map CaseName System, String))]
 rankProofMethods ranking tactics ctxt sys = do
     (m, expl) <-
@@ -487,7 +487,7 @@ rankProofMethods ranking tactics ctxt sys = do
 -- 'ProofMethod's and their corresponding results in this 'DiffProofContext' and
 -- for this 'DiffSystem'. If the resulting list is empty, then the constraint
 -- system is solved.
-rankDiffProofMethods :: GoalRanking ProofContext -> [TacticI ProofContext] -> DiffProofContext -> DiffSystem
+rankDiffProofMethods :: GoalRanking ProofContext -> [Tactic ProofContext] -> DiffProofContext -> DiffSystem
                  -> [(DiffProofMethod, (M.Map CaseName DiffSystem, String))]
 rankDiffProofMethods ranking tactics ctxt sys = do
     (m, expl) <-
@@ -616,7 +616,7 @@ oracleSmartRanking oracle ctxt _sys ags0
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
 
-itRanking :: TacticI ProofContext -> [AnnotatedGoal] -> ProofContext -> System -> [AnnotatedGoal]
+itRanking :: Tactic ProofContext -> [AnnotatedGoal] -> ProofContext -> System -> [AnnotatedGoal]
 itRanking tactic ags ctxt _sys = result
     where
       -- Getting the functions from priorities
@@ -679,35 +679,24 @@ itRanking tactic ags ctxt _sys = result
 
 
 
-internalTacticRanking :: TacticI ProofContext -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
-internalTacticRanking tactic ctxt _sys ags0 = 
-  unsafePerformIO $ do
-      let defaultMethod =  _presort tactic
-      let ags = rankGoals ctxt defaultMethod [tactic] _sys ags0
-      let inp = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip [(0::Int)..] ags))
-      let res = itRanking tactic ags ctxt _sys
-      let dict = M.fromList (zip ags [(0::Int)..])
-          outp = map (fromMaybe (-1)) (map (flip M.lookup dict) res)
-      let prettyOut = unlines (map show outp)
-      let logMsg = ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
-                   ++ inp
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ prettyOut
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
-      guard $ trace logMsg True
-      return (res)
-  where
-    pgoal (g,(_nr,_usefulness)) = prettyGoal g
-
-    orderList [] _ res        = res
-    orderList _ [] res        = res
-    orderList (h1:l) (h2:ref) res = if (snd h1 == snd h2) then orderList l ref (h1:res) else orderList (l++[h1]) (h2:ref) res
-
-    decomposeGoal :: AnnotatedGoal -> Maybe LNFact
-    decomposeGoal (ActionG _ lnfact,(_,_)) = Just lnfact
-    decomposeGoal _ = Nothing
+internalTacticRanking :: Tactic ProofContext -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+internalTacticRanking tactic ctxt _sys ags0 = trace logMsg res
+    where
+        defaultMethod =  _presort tactic
+        ags = rankGoals ctxt defaultMethod [tactic] _sys ags0
+        pgoal (g,(_nr,_usefulness)) = prettyGoal g
+        inp = unlines
+                    (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                         (zip [(0::Int)..] ags))
+        res = itRanking tactic ags ctxt _sys
+        dict = M.fromList (zip ags [(0::Int)..])
+        outp = map (fromMaybe (-1)) (map (flip M.lookup dict) res)
+        prettyOut = unlines (map show outp)
+        logMsg = ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+                     ++ inp
+                     ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                     ++ prettyOut
+                     ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
 
 -- | Utilities for SAPiC translations specifically 
 

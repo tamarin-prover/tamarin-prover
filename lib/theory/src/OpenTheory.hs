@@ -37,7 +37,7 @@ removeTranslationItems :: OpenTheory -> OpenTranslatedTheory
 removeTranslationItems thy =
   Theory {_thyName=(L.get thyName thy)
           ,_thyHeuristic=(L.get thyHeuristic thy)
-          ,_thyTacticI=(L.get thyTacticI thy)
+          ,_thyTactic=(L.get thyTactic thy)
           ,_thySignature=(L.get thySignature thy)
           ,_thyCache=(L.get thyCache thy)
           ,_thyItems = newThyItems
@@ -57,7 +57,7 @@ openTranslatedTheory :: OpenTranslatedTheory -> OpenTheory
 openTranslatedTheory thy =
   Theory {_thyName=(L.get thyName thy)
           ,_thyHeuristic=(L.get thyHeuristic thy)
-          ,_thyTacticI=(L.get thyTacticI thy)
+          ,_thyTactic=(L.get thyTactic thy)
           ,_thySignature=(L.get thySignature thy)
           ,_thyCache=(L.get thyCache thy)
           ,_thyItems = newThyItems
@@ -747,5 +747,5 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     ppItem = foldDiffTheoryItem
         prettyDiffRule ppRule (prettyDiffLemma ppDiffPrf) (prettyEitherLemma ppPrf) prettyEitherRestriction (uncurry prettyFormalComment)
     thyH = L.get diffThyHeuristic thy
-    thyT = L.get diffThyTacticI thy
+    thyT = L.get diffThyTactic thy
 

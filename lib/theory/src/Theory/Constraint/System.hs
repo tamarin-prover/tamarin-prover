@@ -33,11 +33,11 @@ module Theory.Constraint.System (
   , maybeSetOracleRelPath
   , mapOracleRanking
 
-  , TacticI(..)
+  , Tactic(..)
   , Prio(..)
   , Deprio(..)
   -- , Ranking(..)
-  , defaultTacticI
+  , defaultTactic
   , mapInternalTacticRanking
   , maybeSetInternalTacticName
 
@@ -77,7 +77,7 @@ module Theory.Constraint.System (
   , pcSourceKind
   , pcUseInduction
   , pcHeuristic
-  , pcTacticI
+  , pcTactic
   , pcTraceQuantifier
   , pcLemmaName
   , pcHiddenLemmas
@@ -466,7 +466,7 @@ instance Binary (Deprio a) where
 
 
 -- | New type for Tactis inside the theory file
-data TacticI a = TacticI{
+data Tactic a = Tactic{
       _name :: String,
       _presort :: GoalRanking a,
       _prios :: [Prio a],
@@ -481,7 +481,7 @@ data GoalRanking a =
     GoalNrRanking
   | OracleRanking Oracle
   | OracleSmartRanking Oracle
-  | InternalTacticRanking (TacticI a)
+  | InternalTacticRanking (Tactic a)
   | SapicRanking
   | SapicPKCS11Ranking
   | UsefulGoalNrRanking
@@ -502,8 +502,8 @@ defaultRankings True = [SmartDiffRanking]
 defaultHeuristic :: Bool -> (Heuristic ProofContext)
 defaultHeuristic = Heuristic . defaultRankings
 
-defaultTacticI :: TacticI ProofContext
-defaultTacticI = TacticI "default" (SmartRanking False) [] []
+defaultTactic :: Tactic ProofContext
+defaultTactic = Tactic "default" (SmartRanking False) [] []
 
 
 -- Default to "./oracle" in the current working directory.
@@ -524,10 +524,10 @@ mapOracleRanking _ r = r
 oraclePath :: Oracle -> FilePath
 oraclePath (Oracle oracleWorkDir oracleRelPath) = oracleWorkDir </> normalise oracleRelPath
 
-maybeSetInternalTacticName :: Maybe String -> TacticI ProofContext -> TacticI ProofContext
+maybeSetInternalTacticName :: Maybe String -> Tactic ProofContext -> Tactic ProofContext
 maybeSetInternalTacticName s t = maybe t (\x -> t{ _name = x }) s
 
-mapInternalTacticRanking :: (TacticI ProofContext -> TacticI ProofContext) -> GoalRanking ProofContext -> GoalRanking ProofContext
+mapInternalTacticRanking :: (Tactic ProofContext -> Tactic ProofContext) -> GoalRanking ProofContext -> GoalRanking ProofContext
 mapInternalTacticRanking f (InternalTacticRanking t) = InternalTacticRanking (f t)
 mapInternalTacticRanking _ r = r
 
@@ -544,7 +544,7 @@ goalRankingIdentifiers = M.fromList
                         , ("C", GoalNrRanking)
                         , ("i", InjRanking False)
                         , ("I", InjRanking True)
-                        , ("{.}", InternalTacticRanking defaultTacticI)
+                        , ("{.}", InternalTacticRanking defaultTactic)
                         ]
 
 goalRankingIdentifiersNoOracle :: M.Map String (GoalRanking ProofContext)
@@ -580,7 +580,7 @@ goalRankingIdentifiersDiff  = M.fromList
                             , ("O", OracleSmartRanking defaultOracle)
                             , ("c", UsefulGoalNrRanking)
                             , ("C", GoalNrRanking)
-                            , ("{.}", InternalTacticRanking defaultTacticI)
+                            , ("{.}", InternalTacticRanking defaultTactic)
                             ]
 
 goalRankingIdentifiersDiffNoOracle :: M.Map String (GoalRanking ProofContext)
@@ -628,7 +628,7 @@ listGoalRankingsDiff noOracle = M.foldMapWithKey
 
 
 filterHeuristic :: String -> [GoalRanking ProofContext]
-filterHeuristic ('{':t) = InternalTacticRanking (TacticI (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
+filterHeuristic ('{':t) = InternalTacticRanking (Tactic (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
 filterHeuristic (c:t)   = (stringToGoalRanking False [c]):(filterHeuristic t)
 filterHeuristic ("")    = []
 
@@ -700,7 +700,7 @@ data ProofContext = ProofContext
        , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
        , _pcHeuristic          :: Maybe (Heuristic ProofContext)
-       , _pcTacticI            :: Maybe [TacticI ProofContext]
+       , _pcTactic            :: Maybe [Tactic ProofContext]
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
