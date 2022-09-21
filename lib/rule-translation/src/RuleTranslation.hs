@@ -56,7 +56,7 @@ loadRules thy = case theoryRules thy of
            where
             (ruleDocs, destructors) = foldl (\(docs, destrs) r -> let (doc, destrs') = translateOpenProtoRule r destrs in (docs++[doc], destrs')) ([], M.empty) rules
             headers = (baseHeaders, desHeaders, frHeaders, tblHeaders, evHeaders)
-            baseHeaders = [("free", "c", ":channel"), ("fun", "okay", "():bitstring")]
+            baseHeaders = [("free", "publicChannel", ":channel"), ("fun", "okay", "():bitstring")]
             desHeaders = map makeDestructorHeader $ M.toList destructors
             (frHeaders, tblHeaders, evHeaders) =
               foldl (\(fr, tbl, ev) ru -> let (fr', tbl', ev') = makeHeadersFromRule ru in (fr ++ fr', tbl ++ tbl', ev ++ ev')) ([], [], []) rules
@@ -238,11 +238,11 @@ translateFact :: Document d => LNFact -> String -> S.Set String -> d
 translateFact (Fact tag _ ts) factType vars = case factType of
     "GET"    -> text "get" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
     "IN"     -> if (head $ printTerm vars (head ts)) == '='
-                  then text "in(c," <-> (translateTerm vars (head ts)) <> text ")"
-                  else text "in(c," <-> (translateTerm vars (head ts)) <> text ": bitstring)"
+                  then text "in(publicChannel," <-> (translateTerm vars (head ts)) <> text ")"
+                  else text "in(publicChannel," <-> (translateTerm vars (head ts)) <> text ": bitstring)"
     "NEW"    -> text "new" <-> (translateTerm S.empty (head ts)) <> text ": bitstring"
     "INSERT" -> text "insert" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
-    "OUT"    -> text "out(c," <-> (translateTerm S.empty (head ts)) <> text ")"
+    "OUT"    -> text "out(publicChannel," <-> (translateTerm S.empty (head ts)) <> text ")"
     "EVENT"  -> text "event" <-> text (showEventName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
     _        -> text "" --should never happen
 
@@ -253,7 +253,7 @@ translatePatternFact (Fact tag _ ts) factType vars helperVars =
       (doclist, newHelperVars) = foldl (\(docs, helpers) t -> let (doc, helpers') = translatePatternTerm vars helpers t in (docs ++ [doc], helpers')) ([], helperVars) ts
       factDoc = case factType of
         "GET" -> text "get" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ doclist) <> text ") in"
-        "IN"  -> text "in(c," <-> (head doclist) <> text ": bitstring);"
+        "IN"  -> text "in(publicChannel," <-> (head doclist) <> text ": bitstring);"
         _     -> text "" --should never happen
 
 showAtom :: String -> String
