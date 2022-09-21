@@ -100,7 +100,9 @@ prettyProVerifTheory lemSel (thy, typEnv) = do
     tc = emptyTC {predicates = theoryPredicates thy}
     (proc, prochd, hasBoundState, hasUnboundState) = loadProc tc thy
     (ruleproc, ruleComb, (baseRuleHeaders, destrHeaders, frHeaders, tblHeaders, evHeaders)) = loadRules thy
-    baseRuleHeaderSet = S.fromList $ map (\(s1,s2,s3,l) -> Sym s1 s2 s3 l) baseRuleHeaders
+    (s1,s2,s3) = baseRuleHeaders !! 0
+    (s4,s5,s6) = baseRuleHeaders !! 1
+    baseRuleHeaderSet = S.fromList $ [(Sym s1 s2 s3 []), (Fun s4 s5 0 s6 [])]
     destrHeaderSet = S.fromList $ map (\(s1,s2,s3) -> Eq s1 s2 s3) destrHeaders
     frHeaderSet = S.fromList $ map (\(s1,s2,s3,l) -> Sym s1 s2 s3 l) frHeaders
     tblHeaderSet = S.fromList $ map (\(s1,s2) -> Table s1 s2) tblHeaders
@@ -165,14 +167,12 @@ builtins =
       ),
       ( "signing",
         [ Fun "fun" "sign" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "pk" 1 "(bitstring):bitstring" [],
-          Fun "fun" "true'" 0 "():bitstring" []
+          Fun "fun" "pk" 1 "(bitstring):bitstring" []
         ]
       ),
       ( "revealing-signing",
         [ Fun "fun" "revealSign" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "pk" 1 "(bitstring):bitstring" [],
-          Fun "fun" "true'" 0 "():bitstring" []
+          Fun "fun" "pk" 1 "(bitstring):bitstring" []
         ]
       ),
       ( "symmetric-encryption",
@@ -327,7 +327,9 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       FApp (NoEq s) [t1, t2] | s == expSym -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
       FApp (NoEq s) [t1, t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
       FApp (NoEq _) [t1, t2] | isPair tm -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-      FApp (NoEq (f, _)) [] -> text (BC.unpack f)
+      FApp (NoEq (f, _)) [] -> if BC.unpack f == "true"
+                                 then text "okay"
+                                 else text (BC.unpack f)
       FApp (NoEq (f, _)) ts -> ppFun f ts
       FApp (C EMap) ts -> ppFun emapSymString ts
       FApp List ts -> ppFun (BC.pack "LIST") ts
