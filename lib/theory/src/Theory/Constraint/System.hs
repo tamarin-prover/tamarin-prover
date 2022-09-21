@@ -413,11 +413,17 @@ data Oracle = Oracle {
 -- Tactics 
 ------------------------------------------------------------------------------
 
+
+-- | Prio keeps a list of function that aim at recognizing some goals based on the state of the 
+-- | System, the ProofContext and the Annotated Goal considered. If one of the function returns 
+-- | True for a goal, it is considered recognized by the all priority. Prio also holds an other 
+-- | function that will order the recognized goals based on some arbitrary criteria such as size...
+-- | The goals recognized by a Prio will be treated earlier than the others.
 data Prio a = Prio {
-       rankingPrio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
-     , stringRankingPrio :: String
-     , functionsPrio :: [(AnnotatedGoal, a, System) -> Bool]  
-     , stringsPrio :: [String]
+       rankingPrio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -- An optional function to order the recognized goals
+     , stringRankingPrio :: String                               -- The name of the function for pretty printing
+     , functionsPrio :: [(AnnotatedGoal, a, System) -> Bool]     -- The main list of function
+     , stringsPrio :: [String]                                   -- The name of the function for pretty printing
     }
     --deriving Show
     deriving( Generic )
@@ -439,11 +445,16 @@ instance Binary (Prio a) where
     put p = put $ show p
     get = return (Prio Nothing "" [] []) 
 
+-- | Derio keeps a list of function that aim at recognizing some goals based on the state of the 
+-- | System, the ProofContext and the Annotated Goal considered. If one of the function returns 
+-- | True for a goal, it is considered recognized by the all priority. Prio also holds an other 
+-- | function that will order the recognized goals based on some arbitrary criteria such as size...
+-- | Deprio works as Prio but the goals it recognizes will be treated later than the others.
 data Deprio a = Deprio {
-       rankingDeprio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal])
-     , stringRankingDeprio :: String
-     , functionsDeprio :: [(AnnotatedGoal, a, System) -> Bool]
-     , stringsDeprio :: [String]
+       rankingDeprio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -- An optional function to order the recognized goals
+     , stringRankingDeprio :: String                               -- The name of the function for pretty printing
+     , functionsDeprio :: [(AnnotatedGoal, a, System) -> Bool]     -- The main list of function
+     , stringsDeprio :: [String]                                   -- The name of the function for pretty printing
     }
     deriving ( Generic )
 
@@ -465,12 +476,13 @@ instance Binary (Deprio a) where
     get = return (Deprio Nothing "" [] [])
 
 
--- | New type for Tactis inside the theory file
+-- | The object that record a user written tactic. 
 data Tactic a = Tactic{
-      _name :: String,
-      _presort :: GoalRanking a,
-      _prios :: [Prio a],
-      _deprios :: [Deprio a]
+      _name :: String,                  -- The name of the tactic
+      _presort :: GoalRanking a,        -- The default strategy to order recognized goals in a tactic 
+      _prios :: [Prio a],               -- The list of priorities, the higher in the list the priority, the earlier its recognized goals will be treated
+      _deprios :: [Deprio a]            -- The list of depriorities, the higher in the list the priority, the earlier its recognized goals will be treated 
+                                        -- (but still after all the goals recognized by the priorities and not recognized has been treated).
     }
     deriving (Eq, Ord, Show, Generic, NFData, Binary )
 

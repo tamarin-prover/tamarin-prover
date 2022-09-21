@@ -722,8 +722,6 @@ prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic)
         -- pretty print for a prio block
         ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs) 
         ppTab "deprio" (rankingName,xs) = kwDeprio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs)
-        --ppTab "prio" _ xs =  kwPrio <> colon $-$ (nest 2 $ vcat $ map text xs)
-        --ppTab "deprio" _ xs = kwDeprio <> colon $-$ (nest 2 $ vcat $ map text xs)
 
         ppTabTab _ _ [] = emptyDoc
         ppTabTab param rankingName listFunctions = vcat (map (ppTab param) (zip rankingName listFunctions))

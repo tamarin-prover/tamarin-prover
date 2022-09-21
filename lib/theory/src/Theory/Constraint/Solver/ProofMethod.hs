@@ -615,7 +615,8 @@ oracleSmartRanking oracle ctxt _sys ags0
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
-
+-- | This function apply a tactic to a list of AnnotatedGoals to retrive an ordered list according
+-- | to its Prio/Deprio's functions
 itRanking :: Tactic ProofContext -> [AnnotatedGoal] -> ProofContext -> System -> [AnnotatedGoal]
 itRanking tactic ags ctxt _sys = result
     where
@@ -626,13 +627,13 @@ itRanking tactic ags ctxt _sys = result
       groupedPrio = groupBy (\(indice1,_) (indice2,_) -> indice1 == indice2) indexedPrio        -- grouping goals by prio
       preorderedPrio = if (Nothing `elem` indexPrio) then map (snd . unzip) (tail groupedPrio) else map (snd . unzip) groupedPrio -- recovering ranked goals only (no prio = Nothing = fst)
 
-      prioRankingFunctions = map rankingPrio (_prios tactic)
+      prioRankingFunctions = map rankingPrio (_prios tactic)                                              -- retrieve rankingFuntions for all Prio
       rankingFunToBeAppliedPrio = chooseRankingFunctionByPrio prioRankingFunctions (map head groupedPrio) -- only the functions for prios that are relevant
-      prioReorderedGoals = applyRankingFunctions rankingFunToBeAppliedPrio preorderedPrio
+      prioReorderedGoals = applyRankingFunctions rankingFunToBeAppliedPrio preorderedPrio                 -- apply the function 
 
-      rankedPrioGoals = concat prioReorderedGoals
+      rankedPrioGoals = concat prioReorderedGoals                                                         -- string the results in a single table
       
-      -- Getting the functions from depriorities
+      -- Getting the functions from depriorities (same as above but dor the depriorities)
       deprioToFunctions = map functionsDeprio (_deprios tactic)
       indexDeprio = map (findIndex (==True)) $ map (applyIsPrio deprioToFunctions ctxt _sys) ags
       indexedDeprio = sortOn fst $ zip indexDeprio ags 
@@ -659,6 +660,7 @@ itRanking tactic ags ctxt _sys = result
       applyIsPrio [xs] agoal ctxt sys = isPrio xs agoal ctxt sys:[]
       applyIsPrio (h:t) agoal ctxt sys = isPrio h agoal ctxt sys:applyIsPrio t agoal ctxt sys
 
+      -- If it exists, retrieve the right rankingFuntion for all Goals recognized by a Prio/Deprio
       chooseRankingFunctionByPrio :: [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])] -> [(Maybe Int,AnnotatedGoal)] -> [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])]
       chooseRankingFunctionByPrio [] _ = []
       chooseRankingFunctionByPrio _ [] = []
@@ -667,6 +669,7 @@ itRanking tactic ags ctxt _sys = result
       chooseRankingFunctionByPrio rf ((Nothing,_):t) = (chooseRankingFunctionByPrio rf t)
       chooseRankingFunctionByPrio rf ((Just n,_):t) = (rf !! n):(chooseRankingFunctionByPrio rf t)
 
+      -- If a given Prio/Deprio has a rankingFunction defined, apply it to the goals regognized by this Prio/Deprio
       applyRankingFunctions :: [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])] -> [[AnnotatedGoal]] -> [[AnnotatedGoal]]
       applyRankingFunctions [] _ = []
       applyRankingFunctions _ [] = []
@@ -678,17 +681,19 @@ itRanking tactic ags ctxt _sys = result
 
 
 
-
+-- | A ranking function using a tactic to allow user-definable heuristics
+--   for each lemma separately, using the user chosen defaultMethod heuristic
+--   as the baseline.
 internalTacticRanking :: Tactic ProofContext -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 internalTacticRanking tactic ctxt _sys ags0 = trace logMsg res
     where
-        defaultMethod =  _presort tactic
-        ags = rankGoals ctxt defaultMethod [tactic] _sys ags0
+        defaultMethod =  _presort tactic                        -- retrieve baseline heuristic 
+        ags = rankGoals ctxt defaultMethod [tactic] _sys ags0   -- get goals accordingly
         pgoal (g,(_nr,_usefulness)) = prettyGoal g
         inp = unlines
                     (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                          (zip [(0::Int)..] ags))
-        res = itRanking tactic ags ctxt _sys
+        res = itRanking tactic ags ctxt _sys                    -- apply the tactic ranking
         dict = M.fromList (zip ags [(0::Int)..])
         outp = map (fromMaybe (-1)) (map (flip M.lookup dict) res)
         prettyOut = unlines (map show outp)
