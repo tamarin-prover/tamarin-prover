@@ -236,14 +236,14 @@ translateNonPatterns facts factType filterFunction vars =
 
 translateFact :: Document d => LNFact -> String -> S.Set String -> d
 translateFact (Fact tag _ ts) factType vars = case factType of
-    "GET"    -> text "get" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars) ts) <> text ") in"
-    "IN"     -> if (head $ printTerm vars (head ts)) == '='
-                  then text "in(publicChannel," <-> (translateTerm vars (head ts)) <> text ")"
-                  else text "in(publicChannel," <-> (translateTerm vars (head ts)) <> text ": bitstring)"
-    "NEW"    -> text "new" <-> (translateTerm S.empty (head ts)) <> text ": bitstring"
-    "INSERT" -> text "insert" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
-    "OUT"    -> text "out(publicChannel," <-> (translateTerm S.empty (head ts)) <> text ")"
-    "EVENT"  -> text "event" <-> text (showEventName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty) ts) <> text ")"
+    "GET"    -> text "get" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm vars True) ts) <> text ") in"
+    "IN"     -> if (head $ printTerm vars True (head ts)) == '='
+                  then text "in(publicChannel," <-> (translateTerm vars True (head ts)) <> text ")"
+                  else text "in(publicChannel," <-> (translateTerm vars True (head ts)) <> text ": bitstring)"
+    "NEW"    -> text "new" <-> (translateTerm S.empty False (head ts)) <> text ": bitstring"
+    "INSERT" -> text "insert" <-> text (showFactName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty False) ts) <> text ")"
+    "OUT"    -> text "out(publicChannel," <-> (translateTerm S.empty False (head ts)) <> text ")"
+    "EVENT"  -> text "event" <-> text (showEventName tag) <> text "(" <> (fsep . punctuate comma $ map (translateTerm S.empty False) ts) <> text ")"
     _        -> text "" --should never happen
 
 translatePatternFact :: (Document d) => LNFact -> String -> S.Set String -> M.Map String String -> (d, M.Map String String)
@@ -288,12 +288,12 @@ showFactName tag = if factTagName tag `List.elem` ["Fr", "In", "Out"]
 showEventName :: FactTag -> String
 showEventName tag = factTagName tag
 
-translateTerm :: (Document d, Show l) => S.Set String -> Term l -> d
-translateTerm vars t = text $ printTerm vars t
+translateTerm :: (Document d, Show l) => S.Set String -> Bool -> Term l -> d
+translateTerm vars checkEq t = text $ printTerm vars checkEq t
 
-printTerm :: (Show l) => S.Set String -> Term l -> String
-printTerm vars t = case viewTerm t of
-    Lit l | (S.member (show l) vars && head (show l) /= '\'') -> "=" ++ (showAtom $ show l)
+printTerm :: (Show l) => S.Set String -> Bool -> Term l -> String
+printTerm vars checkEq t = case viewTerm t of
+    Lit l | checkEq && (S.member (show l) vars || head (show l) == '\'') -> "=" ++ (showAtom $ show l)
     Lit l                                           -> showAtom $ show l
     FApp (AC Mult)     ts                           -> printAC "mult" ts
     FApp (AC Union)    ts                           -> printAC "union" ts
@@ -303,12 +303,12 @@ printTerm vars t = case viewTerm t of
     FApp (C EMap)      ts                           -> "em" ++ printList ts
     FApp List          ts                           -> printList ts
     where
-      printList ts = "(" ++ (intercalate ", " $ map (printTerm vars) ts) ++ ")"
+      printList ts = "(" ++ (intercalate ", " $ map (printTerm vars checkEq) ts) ++ ")"
       printPair [t1,t2] = case viewTerm t2 of
-        FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printTerm vars t1 ++ ", " ++ printPair ts
-        _                                               -> printTerm vars t1 ++ ", " ++ printTerm vars t2
-      printAC op [t1,t2] = op ++ "(" ++ printTerm vars t1 ++ ", " ++ printTerm vars t2 ++ ")"
-      printAC op (t:ts) = op ++ "(" ++ printTerm vars t ++ ", " ++ printAC op ts ++ ")"
+        FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printTerm vars checkEq t1 ++ ", " ++ printPair ts
+        _                                               -> printTerm vars checkEq t1 ++ ", " ++ printTerm vars checkEq t2
+      printAC op [t1,t2] = op ++ "(" ++ printTerm vars checkEq t1 ++ ", " ++ printTerm vars checkEq t2 ++ ")"
+      printAC op (t:ts) = op ++ "(" ++ printTerm vars checkEq t ++ ", " ++ printAC op ts ++ ")"
 
 printTerm2 :: (Show l) => Term l -> String
 printTerm2 t = case viewTerm t of
@@ -330,12 +330,12 @@ printTerm2 t = case viewTerm t of
 
 translatePatternTerm :: (Document d, Show l) => S.Set String -> M.Map String String -> Term l -> (d, M.Map String String)
 translatePatternTerm vars helperVars t = case viewTerm t of
-    Lit l | S.member (show l) vars -> ((text "=" <> (text . showAtom $ show l)), helperVars)
-    Lit l                          -> ((text . showAtom $ show l), helperVars)
-    _                              -> (varDoc, newHelperVars)
-                                      where
-                                        (newVar, newHelperVars) = makeVariable t helperVars
-                                        varDoc = text newVar
+    Lit l | (S.member (show l) vars || head (show l) == '\'') -> ((text "=" <> (text . showAtom $ show l)), helperVars)
+    Lit l                                                     -> ((text . showAtom $ show l), helperVars)
+    _                                                         -> (varDoc, newHelperVars)
+                                                                 where
+                                                                   (newVar, newHelperVars) = makeVariable t helperVars
+                                                                   varDoc = text newVar
 
 makeDestructorDefinition :: (Show l) => Term l -> String
 makeDestructorDefinition t = 
@@ -344,10 +344,10 @@ makeDestructorDefinition t =
     atoms = map showAtom2 . S.toList . S.fromList $ getAtoms t
 
 makeVariable :: (Show l) => Term l -> M.Map String String -> (String, M.Map String String)
-makeVariable t varMap = case M.lookup (printTerm S.empty t) varMap of
+makeVariable t varMap = case M.lookup (printTerm S.empty False t) varMap of
     Just v  -> (v, varMap)
     Nothing -> let newVar = "helperVar" ++ (show $ M.size varMap)
-                   newMap = M.insert (printTerm S.empty t) newVar varMap
+                   newMap = M.insert (printTerm S.empty False t) newVar varMap
                  in
                (newVar, newMap)
       
