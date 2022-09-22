@@ -100,9 +100,7 @@ prettyProVerifTheory lemSel (thy, typEnv) = do
     tc = emptyTC {predicates = theoryPredicates thy}
     (proc, prochd, hasBoundState, hasUnboundState) = loadProc tc thy
     (ruleproc, ruleComb, (baseRuleHeaders, destrHeaders, frHeaders, tblHeaders, evHeaders)) = loadRules thy
-    (s1,s2,s3) = baseRuleHeaders !! 0
-    (s4,s5,s6) = baseRuleHeaders !! 1
-    baseRuleHeaderSet = S.fromList $ [(Sym s1 s2 s3 []), (Fun s4 s5 0 s6 [])]
+    baseRuleHeaderSet = S.fromList $ map (\(s1, s2, s3, l) -> Sym s1 s2 s3 l) baseRuleHeaders
     destrHeaderSet = S.fromList $ map (\(s1,s2,s3) -> Eq s1 s2 s3) destrHeaders
     frHeaderSet = S.fromList $ map (\(s1,s2,s3,l) -> Sym s1 s2 s3 l) frHeaders
     tblHeaderSet = S.fromList $ map (\(s1,s2) -> Table s1 s2) tblHeaders
@@ -167,12 +165,14 @@ builtins =
       ),
       ( "signing",
         [ Fun "fun" "sign" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "pk" 1 "(bitstring):bitstring" []
+          Fun "fun" "pk" 1 "(bitstring):bitstring" [],
+          Fun "fun" "okay" 0 "():bitstring" []
         ]
       ),
       ( "revealing-signing",
         [ Fun "fun" "revealSign" 2 "(bitstring,bitstring):bitstring" [],
-          Fun "fun" "pk" 1 "(bitstring):bitstring" []
+          Fun "fun" "pk" 1 "(bitstring):bitstring" [],
+          Fun "fun" "okay" 0 "():bitstring" []
         ]
       ),
       ( "symmetric-encryption",
@@ -1034,7 +1034,7 @@ headersOfType types =
 
 headerOfFunSym :: SapicFunSym -> S.Set ProVerifHeader
 headerOfFunSym ((f, (k, pub, Constructor)), inTypes, outType) =
-  Fun "fun" (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert` headersOfType (outType : inTypes)
+  Fun "fun" (replaceTrue $ BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert` headersOfType (outType : inTypes)
   where
     priv_or_pub Public = []
     priv_or_pub Private = ["private"]
@@ -1227,3 +1227,7 @@ makeAnnotations thy p = res
       if (List.find (\x -> x == "locations-report") $ theoryBuiltins thy) == Nothing
         then pr
         else translateTermsReport pr
+
+replaceTrue :: String -> String
+replaceTrue "true" = "okay"
+replaceTrue s = s

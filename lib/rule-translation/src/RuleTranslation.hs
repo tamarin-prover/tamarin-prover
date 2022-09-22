@@ -49,14 +49,14 @@ import Data.Data
 -- MSR Translation
 ------------------------------------------------------------------------------
 
-loadRules :: OpenTheory -> ([Doc], Doc, ([(String, String, String)], [(String, String, String)], [(String, String, String, [String])], [(String, String)], [(String, String)]))
+loadRules :: OpenTheory -> ([Doc], Doc, ([(String, String, String, [String])], [(String, String, String)], [(String, String, String, [String])], [(String, String)], [(String, String)]))
 loadRules thy = case theoryRules thy of
   [] -> ([text ""], text "", ([],[],[],[],[]))
   rules -> (ruleDocs, ruleComb, headers)
            where
             (ruleDocs, destructors) = foldl (\(docs, destrs) r -> let (doc, destrs') = translateOpenProtoRule r destrs in (docs++[doc], destrs')) ([], M.empty) rules
             headers = (baseHeaders, desHeaders, frHeaders, tblHeaders, evHeaders)
-            baseHeaders = [("free", "publicChannel", ":channel"), ("fun", "okay", "():bitstring")]
+            baseHeaders = [("free", "publicChannel", ":channel", [])]
             desHeaders = map makeDestructorHeader $ M.toList destructors
             (frHeaders, tblHeaders, evHeaders) =
               foldl (\(fr, tbl, ev) ru -> let (fr', tbl', ev') = makeHeadersFromRule ru in (fr ++ fr', tbl ++ tbl', ev ++ ev')) ([], [], []) rules
