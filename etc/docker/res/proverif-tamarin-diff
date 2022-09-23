@@ -2,4 +2,4 @@
 
 set -x # print what we do
 temp=$(mktemp -d)/$(basename "$1")
-tamarin-prover "$1" --diff -m=proverif -D=PROVERIFEQUIV > "$temp.pv"; proverif "$temp.pv"
+tamarin-prover "$1" --diff -m=proverifequiv > "$temp.pv"; proverif "$temp.pv"

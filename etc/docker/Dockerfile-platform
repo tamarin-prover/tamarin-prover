@@ -1,5 +1,5 @@
 FROM ocaml/opam as build-ocaml
-# MAINTAINER Protocol Platform <protocolplatform@protonmail.com>
+MAINTAINER Robert Künnemann <robert.kuennemann@cispa.de>
 USER root
 RUN opam install -y ocamlfind ocamlbuild
 
