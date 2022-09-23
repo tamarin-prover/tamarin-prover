@@ -210,3 +210,19 @@ of the loaded theory in two ways:
    annotations. When exporting such a theory from Tamarin using, e.g., the
    ``Download`` button in the interactive mode, Tamarin will export the rule(s)
     together with their (annotated) variants, which can be re-imported as usual.
+
+Limiting Precomputations {#sec:limitingPrecomputations}
+-----------
+
+Sometimes Tamarin's precomputations can take a long time, in particular if there are many open chains or the saturation of sources grows too quickly.
+
+In such a case two command line flags can be used to limit the precomputations:
+
+- `--open-chains` or `-c` limits the number of chain goals Tamarin will solve during precomputations. In particular, this value stops Tamarin from solving any deconstruction chains that are longer than the given value. This is useful as some equational theories can cause loops when solving deconstruction chains. At the same time, some equational theories may need larger values (without looping), in which case it can be necessary to increase this value. However, a too small value can lead to sources that contain open deconstruction chains which would be easy to solve, rendering the precomputations inefficient.
+Tamarin shows a warning on the command line when this limit is reached.
+Default value: 10
+
+- `--saturation` or `--s` limits the number of saturation steps Tamarin will do during precomputations. In a nutshell, Tamarin first computes sources independently, and then saturates them (i.e., applies each source to all other sources if possible) to increase overall efficiency. However, this can sometimes grow very quickly, in which case it might be necessary to fix a smaller value.
+Default value: 5
+
+In case Tamarin's precomputations take too long, try fixing smaller values for both parameters, and analyze the sources shown in interactive mode to understand what exactly caused the problem.
