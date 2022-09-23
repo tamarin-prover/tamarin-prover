@@ -87,7 +87,7 @@ makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> [(String, String, String,
 makeFreeHeaders prems acts concls = 
   headers
   where
-    getTerms (Fact tag an ts) = ts
+    getTerms (Fact _ _ ts) = ts
     allTerms = (concat $ map getTerms prems) ++ (concat $ map getTerms acts) ++ (concat $ map getTerms concls)
     bitstrings = foldl (\acc t -> S.union acc $ searchForBitstrings t) (S.empty) (S.toList $ S.fromList allTerms)
     headers = map (\b -> ("free", b, ":bitstring", [])) $ S.toList bitstrings
@@ -165,11 +165,11 @@ isStorage (Fact tag _ _) = case factTagName tag of
 
 isPattern :: Term l -> Bool
 isPattern t = case viewTerm t of
-    Lit l -> False
+    Lit _ -> False
     _     -> True
 
 hasPattern :: LNFact -> Bool
-hasPattern (Fact tag an ts) = 
+hasPattern (Fact _ _ ts) = 
   foldl (\acc t -> acc || isPattern t) False ts
 
 patternGetsFilter :: LNFact -> Bool
@@ -260,7 +260,7 @@ showAtom :: String -> String
 showAtom a = case head a of
   '~'  -> replaceDots $ tail a
   '$'  -> replaceDots $ tail a
-  '\'' -> "s" ++ (replaceDots . init $ tail a)
+  '\'' -> 's' : (replaceDots . init $ tail a)
   _    -> replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
@@ -276,13 +276,13 @@ showAtom2 a = case head a of
 
 showFunction :: String -> String
 showFunction f
-  | f == "true"                 = "okay"
-  | otherwise                   = f
+  | f == "true" = "okay"
+  | otherwise   = f
 
 showFactName :: FactTag -> String
 showFactName tag = if factTagName tag `List.elem` ["Fr", "In", "Out"]
                      then factTagName tag
-                     else "t" ++ factTagName tag
+                     else 't' : factTagName tag
 
 showEventName :: FactTag -> String
 showEventName tag = 'e' : factTagName tag
@@ -292,7 +292,7 @@ translateTerm vars checkEq t = text $ printTerm vars checkEq t
 
 printTerm :: (Show l) => S.Set String -> Bool -> Term l -> String
 printTerm vars checkEq t = case viewTerm t of
-    Lit l | checkEq && (S.member (show l) vars || head (show l) == '\'') -> "=" ++ (showAtom $ show l)
+    Lit l | checkEq && (S.member (show l) vars || head (show l) == '\'') -> '=' : (showAtom $ show l)
     Lit l                                           -> showAtom $ show l
     FApp (AC Mult)     ts                           -> printAC "mult" ts
     FApp (AC Union)    ts                           -> printAC "union" ts
