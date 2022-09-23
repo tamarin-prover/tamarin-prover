@@ -286,7 +286,7 @@ showFactName tag = if factTagName tag `List.elem` ["Fr", "In", "Out"]
                      else "t" ++ factTagName tag
 
 showEventName :: FactTag -> String
-showEventName tag = factTagName tag
+showEventName tag = 'e' : factTagName tag
 
 translateTerm :: (Document d, Show l) => S.Set String -> Bool -> Term l -> d
 translateTerm vars checkEq t = text $ printTerm vars checkEq t
