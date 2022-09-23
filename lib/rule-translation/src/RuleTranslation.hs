@@ -277,7 +277,6 @@ showAtom2 a = case head a of
 showFunction :: String -> String
 showFunction f
   | f == "true"                 = "okay"
-  | not . isAlpha $ head f = "translated_" ++ f
   | otherwise                   = f
 
 showFactName :: FactTag -> String
