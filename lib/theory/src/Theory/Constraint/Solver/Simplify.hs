@@ -74,8 +74,6 @@ simplifySystem = do
         exploitUniqueMsgOrder
         -- Remove equation split goals that do not exist anymore
         removeSolvedSplitGoals
-        -- Add ordering constraint from injective facts
-        addNonInjectiveFactInstances
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
