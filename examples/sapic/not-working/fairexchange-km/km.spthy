@@ -5,7 +5,7 @@ section{* The  Kremer-Markowitch non-repudiation protocol *}
 /*
  * Protocol:    Non-repudiation protocol from [1]
  * Date:        Jan 2016
- * Status:      working
+ * Status:      Broken --- cannot use "pat_" variables for patterns anymore.
  * 
  * [1] Steve Kremer, Olivier Markowitch, and Jianying Zhou. An Intensive Survey
  * of Fair Non-repudiation Protocols. Section 6.1. Computer Communications,
@@ -127,15 +127,17 @@ let Judge =
          || (in ('c', <k,t,conk> ); event OriginJudge($A,$B,t))
 
 process:
-!(
+!
 in('c',<$A,$B,<'TTP',$TTP>>);
- (A || B || TTP || Judge)
-)
-|| !( in('c',<'corrupt',$x>); 
+let TTPID=<'TTP',$TTP> in
+ (
+ A | B | TTP | Judge
+ | !( in('c',<'corrupt',$x>); 
         event Corrupt($x);
         out('c',sk($x));
         (!(in('r',<p,$x,m>);0))
     )
+)
 
 
 /* auto */

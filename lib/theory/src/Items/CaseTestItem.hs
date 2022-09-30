@@ -14,6 +14,7 @@ import Data.Binary (Binary)
 import Data.Label as L
 import Theory.Model
 import Theory.Syntactic.Predicate
+import Text.PrettyPrint.Highlight (HighlightDocument, Document (nest, (<->), ($-$), text, sep), colon, doubleQuotes)
 
 ------------------------------------------------------------------------------
 -- Case Tests
@@ -35,3 +36,11 @@ caseTestToPredicate caseTest = fmap (Predicate fact) formula
     fact = protoFact Linear name (frees formula)
     name = L.get cName caseTest
     formula = toLNFormula (L.get cFormula caseTest)
+
+prettyCaseTest :: HighlightDocument d => CaseTest -> d
+prettyCaseTest caseTest =
+    text "test" <-> text (L.get cName caseTest) <> colon $-$
+    (nest 2 $
+      sep [  doubleQuotes $ prettySyntacticLNFormula $ L.get cFormula caseTest
+          ]
+    )

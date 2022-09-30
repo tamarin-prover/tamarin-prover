@@ -269,7 +269,7 @@ let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
     let	AK = f5(~k, RAND) in
     let SqnHSS = <~sqn_root,c2> in
 
-    let MAC =  f1(~k, < <~sqn_root,c2> , RAND>) in
+//    let MAC =  f1(~k, < <~sqn_root,c2> , RAND>) in // useless rebind?
     let	SNID = <'FiveG', idSN>  in
     let AUTN = <xored, MAC> in
 	// Authentication Request (Auth-Req) + Authentication Response (Auth-Resp)
@@ -358,11 +358,11 @@ let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
 let Seaf(~idSN,~secureChan) =
 // Attach Request + Authentication Initiation Request (AIR)
 // NOTE: The AIR message is in fact the initial authentication request of the service "Nausf_UEAuthentication_Authenticate" (see TS 33.501 9.6.2).
-    let SNID = <'FiveG', ~idSN> in
+    let SNID2 = <'FiveG', ~idSN> in
     new ~tid; new ~cid;
     in( <conc_supi,  idHN>);
     let suci = <conc_supi,  idHN> in
-    let msg = <suci, SNID > in
+    let msg = <suci, SNID2 > in
     event Start_SEAF_Session(~idSN);
     event SrcId(~idSN);
     //  SndS(~cid, ~idSN, idHN, <'air', msg>)];
@@ -377,7 +377,7 @@ let Seaf(~idSN,~secureChan) =
 //     let msgIn = 5G_AV in
 //     let 5G_AV = < RAND, HXRES_star, K_seaf, AUTN > in
 
-     let msgOut = < RAND, AUTN, SNID > in
+     let msgOut = < RAND, AUTN, SNID2 > in
      event Out_Src(RAND, AUTN);
      event Id(idHN);
      // Security properties
@@ -391,12 +391,12 @@ let Seaf(~idSN,~secureChan) =
       // Authentication Response (Auth-Resp) + 5G Authentication Confirmation (5G-AC)
       // NOTE: The 5G-AC is a subsequent authentication requests to the service "Nausf_UEAuthentication_Authenticate" (see TS 33.501 9.6.2).
       (
-	let suci = <conc_supi,  idHN> in
-	let msgOut = < RES_star, suci, SNID > in
+	let suci2 = <conc_supi,  idHN> in
+	let msgOut2 = < RES_star, suci2, SNID2 > in
 	event Running(~idSN, idHN, <'HSS','SEAF', <'RES_star', RES_star>>);
         event RunningId(~idSN, idHN);
 // 	SndS(~cid, ~idSN, idHN, <'ac', msgOut>)
-	out(~secureChan, <~cid, ~idSN, idHN, <'ac', msgOut>>);
+	out(~secureChan, <~cid, ~idSN, idHN, <'ac', msgOut2>>);
 	// St_3_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, RAND, RES_star, K_seaf, ~cid)
 	// Authentication Confirmation Answer (5G-ACA)
 	// RcvS(~cid, idHN, ~idSN, <'aca', msgIn>)
@@ -546,12 +546,13 @@ event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
 
 //        in(~secureChan, <=~cid, =idSN, =~idHN, <'ac',     >>);
         let Sqn = SqnNext in
-	let CK = f3(~k, ~RAND) in
-	let IK = f4(~k, ~RAND) in
-	let AK = f5(~k, ~RAND) in
-	let K_seaf = KDF(KDF(<CK, IK>, <SNID, Sqn XOR AK>), SNID) in
+	// bellow are useless rebinds?
+	// let CK = f3(~k, ~RAND) in
+	// let IK = f4(~k, ~RAND) in
+	// let AK = f5(~k, ~RAND) in
+	// let K_seaf = KDF(KDF(<CK, IK>, <SNID, Sqn XOR AK>), SNID) in
 
-	let msgOut = <'confirm', ~supi> in
+	let msgOut2 = <'confirm', ~supi> in
 	// Executability
 	event HSS_End();
 	// Security properties
@@ -564,7 +565,7 @@ event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
 	event Honest(~supi);
 	event Honest(idSN);
 	// SndS(~cid, ~idHN, idSN, <'aca', msgOut>)
-	out(~secureChan, <~cid, ~idHN, idSN, <'aca', msgOut>>)
+	out(~secureChan, <~cid, ~idHN, idSN, <'aca', msgOut2>>)
 
      )
      else if rty='resync' then
@@ -581,7 +582,7 @@ event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
         lookup ~sqn_root as count2:nat in
 	event CounterGS(~sqn_root,count2);
         if count2 = count+'one' then
-        let SqnHSS = SqnNext in
+//        let SqnHSS2 = SqnNext in
 	in(count3:nat);
 	if    count2 (<) count3 then
 	  let SqnUE = <~sqn_root,count3> in
@@ -609,7 +610,7 @@ event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
 /*     Subscription Rules           */
 /************************************/
 // Initialize the subscription
-let addSub(~idHN,~sk_HN) = // HSS(~idHN, ~sk_HN)
+let addSub(~idHN,~sk_HN,~secureChan) = // HSS(~idHN, ~sk_HN)
   new ~supi;
   new ~k; new ~sqn_root;
   // Restriction

@@ -15,7 +15,7 @@ predicates: Report(x,y) <=>  not(fst(y) = 'loc')
 // predicates: Report(x,y) <=> not(Ex z. y = <'loc',z>)
 
 
-let r=
+let R(init)=
         in(pkV);                   // we begin by a Key Exchange
         !(
 
@@ -42,7 +42,7 @@ let r=
 
 
 // Run part of the NSL on the verifier side.
-let v =
+let V(init) =
     new skV;
     event HonestP(pk(skV));
     out(pk(skV));
@@ -71,7 +71,7 @@ let v =
 
 
 process:
-new init; ( (!r) || (!v))
+new init; ( (!R(init)) || (!V(init)))
 
 /* First some auxilliary lemmas, for sanity or to help in other proofs */
 

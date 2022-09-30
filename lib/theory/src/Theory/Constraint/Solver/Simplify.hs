@@ -72,8 +72,10 @@ simplifySystem = do
        else do
         -- Add all ordering constraint implied by CR-rule *N6*.
         exploitUniqueMsgOrder
-        -- Remove equation split goals that do not exist anymore        
+        -- Remove equation split goals that do not exist anymore
         removeSolvedSplitGoals
+        -- Add ordering constraint from injective facts
+        addNonInjectiveFactInstances
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -138,7 +140,7 @@ simplifySystem = do
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
               c12 <- addNonInjectiveFactInstances
-              
+
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
                     [ ("unique fresh instances (DG4)",                    c1)
@@ -152,7 +154,7 @@ simplifySystem = do
                     , ("orderings for ~vars (S_fresh-order)",             c9)
                     , ("simplification of SubtermStore",                  c10)
                     , ("equations and monotonicity from injective Facts", c11)
-                    , ("time constraints from injective Facts",           c12)                    
+                    , ("time constraints from injective Facts",           c12)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -345,7 +347,7 @@ evalFormulaAtoms = do
 --
 -- The interpretation for @Just False@ is analogous. @Nothing@ is used to
 -- represent *unknown*.
--- 
+--
 -- FIXME this function is almost identical to System>safePartial evaluation -> join them
 --
 partialAtomValuation :: ProofContext -> System -> LNAtom -> Maybe Bool
@@ -470,7 +472,7 @@ freshOrdering = do
           _         -> Nothing
         ) prems
 
-      -- the route function as described in the documentation of freshOrdering 
+      -- the route function as described in the documentation of freshOrdering
       getRoute :: M.Map NodeId RuleACInst -> S.Set Edge -> NodeId -> [NodeId]  -- also needs nodes and edges
       getRoute nodeMap edges nid = plainRoute nid
         where
@@ -693,11 +695,11 @@ addNonInjectiveFactInstances :: Reduction ChangeIndicator
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
-  oldLesses <- gets (get sLessAtoms)  
+  oldLesses <- gets (get sLessAtoms)
   let list = nonInjectiveFactInstances ctxt se
   mapM_ (uncurry insertLess) list
   modifiedLesses <- gets (get sLessAtoms)
-  return $ if oldLesses == modifiedLesses 
+  return $ if oldLesses == modifiedLesses
     then Unchanged
-    else Changed  
+    else Changed
 

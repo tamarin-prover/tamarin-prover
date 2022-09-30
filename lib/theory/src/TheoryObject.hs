@@ -27,6 +27,7 @@ module TheoryObject (
   , diffThyCacheRight
   , diffThyDiffCacheLeft
   , diffThyDiffCacheRight
+  , diffThyOptions
   , thyHeuristic
   , diffThyHeuristic
   , DiffLemma(..)
@@ -154,6 +155,8 @@ import Items.ExportInfo
 import qualified Data.Set as S
 import Theory.Syntactic.Predicate
 import Data.ByteString.Char8 (unpack)
+import Items.AccLemmaItem (prettyAccLemma)
+import Items.CaseTestItem (prettyCaseTest)
 
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
@@ -181,6 +184,7 @@ data DiffTheory sig c r r2 p p2 = DiffTheory {
        , _diffThyDiffCacheLeft  :: c
        , _diffThyDiffCacheRight :: c
        , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
+       , _diffThyOptions        :: Option
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''DiffTheory])
@@ -478,7 +482,7 @@ addHeuristic h (Theory n [] sig c i o) = Just (Theory n h sig c i o)
 addHeuristic _ _ = Nothing
 
 addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
-addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i) = Just (DiffTheory n h sig cl cr dcl dcr i)
+addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i opt) = Just (DiffTheory n h sig cl cr dcl dcr i opt)
 addDiffHeuristic _ _ = Nothing
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
@@ -589,6 +593,11 @@ itemToRule :: TheoryItem r p s -> Maybe r
 itemToRule (RuleItem r) = Just r
 itemToRule _            = Nothing
 
+
+------------------------------------------------------------------------------
+-- Pretty Print
+------------------------------------------------------------------------------
+
 --Pretty print a theory
 prettyTheory :: HighlightDocument d
              => (sig -> d) -> (c -> d) -> (r -> d) -> (p -> d) -> (s -> d)
@@ -612,23 +621,27 @@ prettyTranslationElement :: HighlightDocument d => TranslationElement -> d
 prettyTranslationElement (ProcessItem p) = text "process" <> colon $-$ (nest 2 $ prettyProcess p)
 prettyTranslationElement (DiffEquivLemma p) = text "diffEquivLemma" <> colon $-$ (nest 2 $ prettyProcess p)
 prettyTranslationElement (EquivLemma p1 p2) = text "equivLemma" <> colon $-$ (nest 2 $ prettyProcess p1) $$ (nest 2 $ prettyProcess p2)
+prettyTranslationElement (AccLemmaItem a) = prettyAccLemma a
+prettyTranslationElement (CaseTestItem c) = prettyCaseTest c
 prettyTranslationElement (ProcessDefItem p) =
     (text "let ")
     <->
     (text (L.get pName p))
     <->
-    (text ("(" ++ intercalate "," (map show $ L.get pVars p) ++ ")"))
+    (case L.get pVars p of
+        Nothing -> emptyDoc
+        Just l  -> text ("(" ++ intercalate "," (map show l) ++ ")")
+    )
     <->
     (text "=")
     <->
-    (nest 2 $ prettyProcess $ L.get pBody p)
-
+    nest 2 (prettyProcess $ L.get pBody p)
 prettyTranslationElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype)) =
     (text "function:")
     <->
     text (unpack fsn)
     <->
-    (parens $ fsep $ punctuate comma $ map printType intypes)
+    parens (fsep $ punctuate comma $ map printType intypes)
     <->
     text ":"
     <->
@@ -642,10 +655,9 @@ prettyTranslationElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype
 prettyTranslationElement (ExportInfoItem eInfo) =
     (text "export: ")
     <->
-    (text $ L.get eTag eInfo)
+    text (L.get eTag eInfo)
     <->
-    (nest 2 $ doubleQuotes $ text $ L.get eText eInfo)
-
+    nest 2 (doubleQuotes $ text $ L.get eText eInfo)
 prettyTranslationElement (SignatureBuiltin s) = (text "builtin ")<->(text s)
 
 prettyPredicate :: HighlightDocument d => Predicate -> d

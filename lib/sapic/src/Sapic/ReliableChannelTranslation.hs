@@ -14,7 +14,6 @@ module Sapic.ReliableChannelTranslation (
 ) where
 import           Control.Monad.Catch
 import           Data.Set              hiding (map)
-import           Sapic.Annotation
 import           Sapic.Basetranslation
 import           Sapic.Exceptions
 import           Sapic.Facts
@@ -46,37 +45,37 @@ reliableChannelTransAct tAct ac an p tx
             ,Lit (Con name) <- viewTerm v
             , sortOfName name == LSortPub
             , getNameId (nId name) == "c"
-            = let tx' = (freeset v) `union` (freeset t) `union` tx in
+            = let tx' = freeset v `union` freeset t `union` tx in
               let ts  = fAppPair (v,t) in
-              return $ ([ ([def_state, (In ts) ], [ChannelIn ts], [def_state1 tx'],[]) ],tx')
+              return ([ ([def_state, In ts ], [ChannelIn ts], [def_state1 tx'],[]) ],tx')
             | (ChOut (Just v') t') <- ac
             , v <- toLNTerm v'
             , t <- toLNTerm t'
             ,Lit (Con name) <- viewTerm v
             , sortOfName name == LSortPub
             , getNameId (nId name) == "c"
-            = let tx' = (freeset v) `union` (freeset t) `union` tx in
-              return $ ([ ([def_state, (In v) ], [ChannelIn v], [def_state1 tx', Out t],[]) ],tx')
+            = let tx' = freeset v `union` freeset t `union` tx in
+              return ([ ([def_state, In v ], [ChannelIn v], [def_state1 tx', Out t],[]) ],tx')
             | (ChIn (Just r') t' _) <- ac  -- match vars are ignored in the translation, as they are bound in the def_state
             , r <- toLNTerm r'
             , t <- toLNTerm t'
             ,Lit (Con name) <- viewTerm r
             , sortOfName name == LSortPub
             , getNameId (nId name) == "r"
-            = let tx' = (freeset r) `union` (freeset t) `union` tx in
-              return $ ([ ([def_state, In t, MessageIDReceiver p ], [Receive p t], [def_state1 tx'],[]) ],tx')
+            = let tx' = freeset r `union` freeset t `union` tx in
+              return ([ ([def_state, In t, MessageIDReceiver p ], [Receive p t], [def_state1 tx'],[]) ],tx')
             | (ChOut (Just r') t') <- ac
             , r <- toLNTerm r'
             , t <- toLNTerm t'
             ,Lit (Con name) <- viewTerm r
             , sortOfName name == LSortPub
             , getNameId (nId name) == "r"
-            = let tx' = (freeset r) `union` (freeset t) `union` tx in
-              return $ ([ ([MessageIDSender p, def_state], [Send p t], [Out t, def_state1 tx'], []) ],tx')
-            | (ChOut (Just _) _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
-            | (ChIn (Just _) _ _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
-            | (ChOut Nothing _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
-            | (ChIn Nothing _ _) <- ac = throwM ( ProcessNotWellformed WFReliable :: SapicException AnnotatedProcess)
+            = let tx' = freeset r `union` freeset t `union` tx in
+              return ([ ([MessageIDSender p, def_state], [Send p t], [Out t, def_state1 tx'], []) ],tx')
+            | (ChOut (Just _) _) <- ac = throwM  WFReliable
+            | (ChIn (Just _) _ _) <- ac = throwM WFReliable
+            | (ChOut Nothing _) <- ac = throwM WFReliable
+            | (ChIn Nothing _ _) <- ac = throwM WFReliable
                          -- raising exceptions is done with throwM. Add exceptions to Exceptions.hs
             | otherwise = tAct ac an p tx -- otherwise case: call tAct
             where
