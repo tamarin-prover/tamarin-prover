@@ -135,7 +135,6 @@ import qualified Data.Label.Poly
 import qualified Data.Label.Total as Data.Label.Point
 
 
-
 import           Prelude                             hiding (id, (.))
 
 import           Data.List
@@ -169,7 +168,7 @@ import Items.CaseTestItem (prettyCaseTest)
 data Theory sig c r p s = Theory {
          _thyName      :: String
        , _thyHeuristic :: [GoalRanking ProofContext]
-       , _thyTactic   :: [Tactic ProofContext]
+       , _thyTactic    :: [Tactic ProofContext]
        , _thySignature :: sig
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p s]
@@ -713,11 +712,20 @@ prettyEitherRestriction (s, rstr) =
 prettyTactic :: HighlightDocument d => Tactic ProofContext -> d
 prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic) 
     $-$ kwPresort <> colon <> space <> (char $ goalRankingToChar $ _presort tactic) $-$ sep
-        [ ppTabTab  "prio"  (map stringRankingPrio $ _prios tactic) (map stringsPrio $ _prios tactic)
-        , ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic)
-        , char '\n'
+        [ -- ppTabTab  "prio"  (map stringRankingPrio $ _prios tactic) (map stringsPrio $ _prios tactic)
+        -- , ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic)
+        char '\n' -- , char '\n'
         ]
    where 
+
+        --mimou :: [Doc]
+        --mimou = map stringRankingPrio $ _prios tactic
+
+        --moumi :: [[Doc]]
+        --moumi = map stringsPrio $ _prios tactic
+
+        --tarace :: ((Doc, [Doc]) -> Doc) -> [(Doc, [Doc])] -> [Doc]
+        --tarace fun tab = map fun tab
 
         -- pretty print for a prio block
         ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs) 
