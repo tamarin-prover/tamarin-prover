@@ -333,6 +333,7 @@ data TheoryPath
   | TheoryMethod String ProofPath Int   -- ^ Apply the proof method to proof path
   | TheoryRules                         -- ^ Theory rules
   | TheoryMessage                       -- ^ Theory message deduction
+  | TheoryTactic                        -- ^ Theory tactic
   deriving (Eq, Show, Read)
 
 -- | Simple data type for specifying a path to a specific
@@ -366,6 +367,7 @@ renderTheoryPath =
     go (TheorySource k i j) = ["cases", show k, show i, show j]
     go (TheoryProof lemma path) = "proof" : lemma : path
     go (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
+    go TheoryTactic = ["tactic"]
 
 -- | Render a theory path to a list of strings. Note that we prefix an
 -- underscore to the empty string and strings starting with an underscore.
@@ -415,6 +417,7 @@ parseTheoryPath =
       "help"    -> Just TheoryHelp
       "rules"   -> Just TheoryRules
       "message" -> Just TheoryMessage
+      "tactic"  -> Just TheoryTactic
       "lemma"   -> parseLemma xs
       "cases"   -> parseCases xs
       "proof"   -> parseProof xs

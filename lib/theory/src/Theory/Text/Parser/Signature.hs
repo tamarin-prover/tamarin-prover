@@ -50,6 +50,8 @@ import Data.Label.Mono (Lens)
 import Theory.Sapic
 import qualified Data.Functor
 
+import Debug.Trace
+
 
  -- Describes the mapping between Maude Signatures and the builtin Name
 builtinsDiffNames :: [(String,
@@ -221,25 +223,25 @@ export thy = do
 
 
 heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
-heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> many1 (goalRanking diff workDir) <* lexeme spaces
+heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> (concat <$> many1 (goalRanking diff workDir)) <* lexeme spaces
 
-goalRanking :: Bool -> Maybe FilePath -> Parser (GoalRanking ProofContext)
+goalRanking :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
 goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "goal ranking"
    where
-       regularRanking = toGoalRanking <$> many1 letter <* skipMany (char ' ')
+       regularRanking = filterHeuristic diff <$> many1 letter <* skipMany (char ' ')
 
        internalTacticRanking = do
             _ <- string "{" <* skipMany (char ' ')
             goal <- toGoalRanking <$> pure ("{.}")
             tacticName <- optionMaybe (many1 (noneOf "\"\n\r{}") <* char '}' <* skipMany (char ' '))
 
-            return $ mapInternalTacticRanking (maybeSetInternalTacticName tacticName) goal
+            return $ [mapInternalTacticRanking (maybeSetInternalTacticName tacticName) goal]
 
        oracleRanking = do
            goal <- toGoalRanking <$> (string "o" <|> string "O") <* skipMany (char ' ')
            relPath <- optionMaybe (char '"' *> many1 (noneOf "\"\n\r") <* char '"' <* skipMany (char ' '))
 
-           return $ mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal
+           return $ [mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal]
 
        toGoalRanking = if diff then stringToGoalRankingDiff False else stringToGoalRanking False
 

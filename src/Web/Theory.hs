@@ -80,6 +80,7 @@ import           Theory
 import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
 import           Theory.Tools.Wellformedness
+import           TheoryObject
 
 import           Web.Settings
 import           Web.Types
@@ -371,6 +372,8 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     , text ""
     , ruleLink
     , text ""
+    , tacticLink
+    , text ""
     , reqCasesLink "Raw sources" RawSource
     , text ""
     , reqCasesLink "Refined sources " RefinedSource
@@ -400,6 +403,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
     ruleLinkMsg         = "Multiset rewriting rules" ++
                           if null(theoryRestrictions thy) then "" else " and restrictions"
+    tacticLink          = overview "Tactic" (text "") TheoryTactic
 
     reqCasesLink name k = overview name (casesInfo k) (TheorySource k 0 0)
 
@@ -887,6 +891,15 @@ messageSnippet thy = vcat
         [("class","monospace rules")]
         (vcat (intersperse (text "") $ s))
 
+-- | Build the Html document showing the message theory.
+tacticSnippet :: HtmlDocument d => ClosedTheory -> d
+tacticSnippet thy = ppSection "Tactic" (map prettyTactic $ get thyTactic thy)
+  where
+    ppSection header s =
+      withTag "h2" [] (text header) $$ withTag "p"
+        [("class","monospace rules")]
+        (vcat (intersperse (text "") $ s))
+
 -- | Build the Html document showing the diff rules of the diff theory.
 rulesDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
 rulesDiffSnippet thy = vcat
@@ -958,6 +971,7 @@ htmlThyPath renderUrl info path =
 
     go TheoryRules             = pp $ rulesSnippet thy
     go TheoryMessage           = pp $ messageSnippet thy
+    go TheoryTactic            = pp $ tacticSnippet thy 
     go (TheorySource kind _ _) = pp $ reqCasesSnippet renderUrl tidx kind thy
 
     go (TheoryProof l p)       = pp $
@@ -1467,6 +1481,7 @@ titleThyPath thy path = go path
     go TheoryHelp                       = "Theory: " ++ get thyName thy
     go TheoryRules                      = "Multiset rewriting rules and restrictions"
     go TheoryMessage                    = "Message theory"
+    go TheoryTactic                     = "Tactics"
     go (TheorySource RawSource _ _)     = "Raw sources"
     go (TheorySource RefinedSource _ _) = "Refined sources"
     go (TheoryLemma l)                  = "Lemma: " ++ l
@@ -1553,7 +1568,8 @@ nextThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextThyPath thy = go
   where
     go TheoryHelp                       = TheoryMessage
-    go TheoryMessage                    = TheoryRules
+    go TheoryMessage                    = TheoryTactic
+    go TheoryTactic                     = TheoryRules
     go TheoryRules                      = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)     = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource _ _) = fromMaybe TheoryHelp firstLemma
@@ -1645,7 +1661,8 @@ prevThyPath thy = go
   where
     go TheoryHelp                        = TheoryHelp
     go TheoryMessage                     = TheoryHelp
-    go TheoryRules                       = TheoryMessage
+    go TheoryTactic                      = TheoryMessage
+    go TheoryRules                       = TheoryTactic
     go (TheorySource RawSource _ _)      = TheoryRules
     go (TheorySource RefinedSource _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)
@@ -1758,7 +1775,8 @@ nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextSmartThyPath thy = go
   where
     go TheoryHelp                         = TheoryMessage
-    go TheoryMessage                      = TheoryRules
+    go TheoryMessage                      = TheoryTactic
+    go TheoryTactic                       = TheoryRules
     go TheoryRules                        = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)       = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource   _ _) = fromMaybe TheoryHelp firstLemma
@@ -1856,7 +1874,8 @@ prevSmartThyPath thy = go
   where
     go TheoryHelp                          = TheoryHelp
     go TheoryMessage                       = TheoryHelp
-    go TheoryRules                         = TheoryMessage
+    go TheoryTactic                        = TheoryMessage
+    go TheoryRules                         = TheoryTactic
     go (TheorySource RawSource _ _)        = TheoryRules
     go (TheorySource RefinedSource   _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)

@@ -236,7 +236,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> return $ Just $ roundRobinHeuristic
-                                         $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as))) (filterHeuristic rawRankings)
+                                         $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as))) (filterHeuristic (argExists "diff" as) rawRankings)
         Just []                -> throwError $ ArgumentError "heuristic: at least one ranking must be given"
         _                      -> return Nothing
 

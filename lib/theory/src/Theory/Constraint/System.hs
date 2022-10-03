@@ -277,8 +277,6 @@ import           System.FilePath
 import           Text.Show.Functions()
 import           Debug.Trace
 
-
-
 ----------------------------------------------------------------------
 -- ClassifiedRules
 ----------------------------------------------------------------------
@@ -611,7 +609,7 @@ goalRankingToChar g = fromMaybe (error $ render $ sep $ map text $ lines $ "Unkn
     $ M.lookup g goalRankingToIdentifiersNoOracle
 
 stringToGoalRanking :: Bool -> String -> GoalRanking ProofContext
-stringToGoalRanking noOracle s = fromMaybe
+stringToGoalRanking noOracle s = trace s fromMaybe
     (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
         ++ "'. Use one of the following:\n" ++ listGoalRankings noOracle)
     $ stringToGoalRankingMay noOracle s
@@ -639,10 +637,11 @@ listGoalRankingsDiff noOracle = M.foldMapWithKey
         goalRankingIdentifiersDiffList = if noOracle then goalRankingIdentifiersDiffNoOracle else goalRankingIdentifiersDiff
 
 
-filterHeuristic :: String -> [GoalRanking ProofContext]
-filterHeuristic ('{':t) = InternalTacticRanking (Tactic (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic $ tail $ dropWhile (/= '}') t)
-filterHeuristic (c:t)   = (stringToGoalRanking False [c]):(filterHeuristic t)
-filterHeuristic ("")    = []
+filterHeuristic :: Bool -> String -> [GoalRanking ProofContext]
+filterHeuristic diff  ('{':t) = InternalTacticRanking (Tactic (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic diff $ tail $ dropWhile (/= '}') t)
+filterHeuristic False (c:t)   = (stringToGoalRanking False [c]):(filterHeuristic False t)
+filterHeuristic True  (c:t)   = (stringToGoalRankingDiff False [c]):(filterHeuristic True t)
+filterHeuristic   _   ("")    = []
 
 -- | The name/explanation of a 'GoalRanking'.
 goalRankingName :: GoalRanking ProofContext -> String

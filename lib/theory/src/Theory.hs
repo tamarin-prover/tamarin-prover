@@ -98,6 +98,7 @@ module Theory (
   , DiffTheoryItem(..)
   , thyName
   , thySignature
+  , thyTactic
   , thyCache
   , thyItems
   , diffThyName

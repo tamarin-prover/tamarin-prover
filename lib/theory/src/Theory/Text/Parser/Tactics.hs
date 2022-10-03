@@ -33,6 +33,8 @@ import           Theory.Text.Parser.Token
 import           Text.Parsec                hiding ((<|>))
 import           Text.Regex.PCRE
 
+import Debug.Trace
+
 --Tactic
 tacticName :: Parser String
 tacticName = do

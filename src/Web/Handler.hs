@@ -67,7 +67,7 @@ import           Theory                       (
     sorryDiffProver, runAutoDiffProver,
     prettyClosedTheory, prettyOpenTheory,
     openDiffTheory,
-    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas, thySignature, diffThySignature, toSignatureWithMaude
+    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas, thySignature, thyTactic, diffThySignature, toSignatureWithMaude
   )
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
 import           Text.PrettyPrint.Html
@@ -497,6 +497,9 @@ postRootR = do
 
               let sig = either (get thySignature) (get diffThySignature) openThy
               sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) sig
+
+              -- let tactic = get thyTactic openThy
+              --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
 
               closeThy yesod sig' openThy
 
