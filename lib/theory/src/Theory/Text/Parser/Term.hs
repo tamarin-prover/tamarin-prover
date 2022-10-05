@@ -126,10 +126,10 @@ term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
-    , symbol "1"          *> pure fAppOne
     , symbol "DH_neutral" *> pure fAppDHNeutral    
     , symbol "1:nat"      *> pure fAppNatOne
     , symbol "%1"         *> pure fAppNatOne
+    , symbol "1"          *> pure fAppOne
     , application        <?> "function application"
     , nullaryApp
     , plit
@@ -172,31 +172,13 @@ msetterm eqn plit = do
         then chainl1 (natterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opUnion)
         else natterm eqn plit
 
--- | A left-associative sequence of terms on natural numbers.
+-- | A left-associative sequence of natural numbers.
 natterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 natterm eqn plit = do
     nats <- enableNat . sig <$> getState
-    if nats -- if nat is not enabled, do not accept 'natterms's
-        then try (xorterm eqn plit) <|> sumterm  --TODO-UNCERTAIN: not sure whether the order (mset-nat-xor-mult) matters (Cedric's was nat-mult-mset)
+    if nats && not eqn-- if xor is not enabled, do not accept 'xorterms's
+        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
         else xorterm eqn plit
-  where
-    sumterm = chainl1 subNatTerm ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
-
-    subNatTerm = try $ asum
-      [ parens sumterm
-      , symbol "1:nat" *> pure fAppNatOne
-      , symbol "%1"    *> pure fAppNatOne
-      , symbol "1"     *> pure fAppNatOne  -- if we expect a nat, we take 1 as nat instead of diffie-hellman
-      , plit
-      ]
-
--- @PHILIP: I don't know how to fix this, is it needed? For instance, we don't check in this file if the user is writing (~x + #i).
---     natLlit = varTerm <$> asum
---       [ try $ sortedLVar [LSortNat]
--- --      , do (n, i) <- indexedIdentifier
--- --           return $ LVar n LSortNat i
---       ]
-
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
