@@ -68,7 +68,6 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 
-import           Text.Regex.PCRE
 
 
 ------------------------------------------------------------------------------
@@ -447,8 +446,8 @@ rankGoals ctxt ranking tacticsList = case ranking of
 
       checkName t1 t2 = (_name t1) == (_name t2)
 
-      chooseError [] t = error $ "No tactic has been written in the theory file"
-      chooseError l  t = error $ "The tactic specified ( "++(show $ _name t)++" ) is not written in the theory file, please chose among the following: "++(show definedHeuristic)
+      chooseError [] _ = error $ "No tactic has been written in the theory file"
+      chooseError _  t = error $ "The tactic specified ( "++(show $ _name t)++" ) is not written in the theory file, please chose among the following: "++(show definedHeuristic)
 
 -- | Use a 'GoalRanking' to generate the ranked, list of possible
 -- 'ProofMethod's and their corresponding results in this 'ProofContext' and
@@ -641,7 +640,7 @@ itRanking tactic ags ctxt _sys = result
       preorderedDeprio = if (Nothing `elem` indexDeprio) then map (snd . unzip) (tail groupedDeprio) else map (snd . unzip) groupedDeprio -- recovering ranked goals only (no prio = Nothing = fst)
 
       deprioRankingFunctions = map rankingDeprio (_deprios tactic)
-      rankingFunToBeAppliedDeprio = chooseRankingFunctionByPrio prioRankingFunctions (map head groupedPrio)
+      rankingFunToBeAppliedDeprio = chooseRankingFunctionByPrio deprioRankingFunctions (map head groupedPrio)
       deprioReorderedGoals = applyRankingFunctions rankingFunToBeAppliedDeprio preorderedDeprio
 
       rankedDeprioGoals = concat deprioReorderedGoals
@@ -652,19 +651,19 @@ itRanking tactic ags ctxt _sys = result
 
       -- Check whether a goal match a prio
       isPrio :: [(AnnotatedGoal, ProofContext, System) -> Bool] -> ProofContext -> System -> AnnotatedGoal -> Bool
-      isPrio list agoal ctxt sys = or $ (sequenceA list) (sys,agoal,ctxt)
+      isPrio list agoal ctxt_ sys = or $ (sequenceA list) (sys,agoal,ctxt_)
 
       -- Try to match all prio with all goals
       applyIsPrio :: [[(AnnotatedGoal, ProofContext, System) -> Bool]] -> ProofContext -> System -> AnnotatedGoal -> [Bool]
       applyIsPrio [] _ _ _ = []
-      applyIsPrio [xs] agoal ctxt sys = isPrio xs agoal ctxt sys:[]
-      applyIsPrio (h:t) agoal ctxt sys = isPrio h agoal ctxt sys:applyIsPrio t agoal ctxt sys
+      applyIsPrio [xs] agoal ctxt_ sys = isPrio xs agoal ctxt_ sys:[]
+      applyIsPrio (h:t) agoal ctxt_ sys = isPrio h agoal ctxt_ sys:applyIsPrio t agoal ctxt_ sys
 
       -- If it exists, retrieve the right rankingFuntion for all Goals recognized by a Prio/Deprio
       chooseRankingFunctionByPrio :: [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])] -> [(Maybe Int,AnnotatedGoal)] -> [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])]
       chooseRankingFunctionByPrio [] _ = []
       chooseRankingFunctionByPrio _ [] = []
-      chooseRankingFunctionByPrio rf [(Nothing,_)] = []
+      chooseRankingFunctionByPrio _ [(Nothing,_)] = []
       chooseRankingFunctionByPrio rf [(Just n,_)] = [rf !! n]
       chooseRankingFunctionByPrio rf ((Nothing,_):t) = (chooseRankingFunctionByPrio rf t)
       chooseRankingFunctionByPrio rf ((Just n,_):t) = (rf !! n):(chooseRankingFunctionByPrio rf t)
@@ -673,11 +672,11 @@ itRanking tactic ags ctxt _sys = result
       applyRankingFunctions :: [Maybe ([AnnotatedGoal] -> [AnnotatedGoal])] -> [[AnnotatedGoal]] -> [[AnnotatedGoal]]
       applyRankingFunctions [] _ = []
       applyRankingFunctions _ [] = []
-      applyRankingFunctions (hf:tf) (hg:tg) = (apply hf hg):(applyRankingFunctions tf tg)
+      applyRankingFunctions (hf:tf) (hg:tg) = (apply_ hf hg):(applyRankingFunctions tf tg)
         where
-            apply :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -> [AnnotatedGoal] -> [AnnotatedGoal]
-            apply Nothing l = l
-            apply (Just f) l = f l
+            apply_ :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -> [AnnotatedGoal] -> [AnnotatedGoal]
+            apply_ Nothing l = l
+            apply_ (Just f) l = f l
 
 
 

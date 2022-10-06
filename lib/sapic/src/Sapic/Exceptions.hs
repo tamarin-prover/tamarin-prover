@@ -23,7 +23,7 @@ import Theory.Sapic
 import Data.Label
 import qualified Data.Maybe
 import Theory.Text.Pretty
-import Sapic.Annotation (toAnProcess, toProcess)
+import Sapic.Annotation (toProcess) --toAnProcess
 
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)

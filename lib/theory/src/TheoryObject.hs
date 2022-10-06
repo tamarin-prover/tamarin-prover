@@ -159,9 +159,6 @@ import Items.ExportInfo
 import qualified Data.Set as S
 import Theory.Syntactic.Predicate
 import Data.ByteString.Char8 (unpack)
-import Items.AccLemmaItem (prettyAccLemma)
-import Items.CaseTestItem (prettyCaseTest)
-
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
 -- and the lemmas that
@@ -712,11 +709,27 @@ prettyEitherRestriction (s, rstr) =
 prettyTactic :: HighlightDocument d => Tactic ProofContext -> d
 prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic) 
     $-$ kwPresort <> colon <> space <> (char $ goalRankingToChar $ _presort tactic) $-$ sep
-        [ -- ppTabTab  "prio"  (map stringRankingPrio $ _prios tactic) (map stringsPrio $ _prios tactic)
-        -- , ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic)
-        char '\n' -- , char '\n'
+        [ ppTabTab  "prio"  (map stringRankingPrio $ _prios tactic) (map stringsPrio $ _prios tactic)
+        , ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic)
+        , char '\n'
         ]
    where 
+
+        -- pretty print for a prio block
+        ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map prettify (map words xs))
+        ppTab "deprio" (rankingName,xs) = kwDeprio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map prettify (map words xs))
+        ppTab _ _ = emptyDoc
+
+        ppTabTab _ _ [] = emptyDoc
+        ppTabTab param rankingName listFunctions = vcat (map (ppTab param) (zip rankingName listFunctions))
+
+        prettify :: HighlightDocument d => [String] -> d
+        prettify []    = emptyDoc
+        --prettify (s:t) = (operator_ s) <> prettify t
+        prettify ("|":t) = (operator_ " | ") <> prettify t-- if (s == "|") || (s == "&") || (s == "not") then (operator_ s) <> prettify t else text s <> prettify t
+        prettify ("&":t) = (operator_ " & ") <> prettify t
+        prettify ("not":t) = (operator_ "not ") <> prettify t
+        prettify (s:t) = text s <> prettify t
 
         --mimou :: [Doc]
         --mimou = map stringRankingPrio $ _prios tactic
@@ -726,10 +739,3 @@ prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic)
 
         --tarace :: ((Doc, [Doc]) -> Doc) -> [(Doc, [Doc])] -> [Doc]
         --tarace fun tab = map fun tab
-
-        -- pretty print for a prio block
-        ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs) 
-        ppTab "deprio" (rankingName,xs) = kwDeprio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map text xs)
-
-        ppTabTab _ _ [] = emptyDoc
-        ppTabTab param rankingName listFunctions = vcat (map (ppTab param) (zip rankingName listFunctions))

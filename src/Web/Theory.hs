@@ -403,7 +403,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
     ruleLinkMsg         = "Multiset rewriting rules" ++
                           if null(theoryRestrictions thy) then "" else " and restrictions"
-    tacticLink          = overview "Tactic" (text "") TheoryTactic
+    tacticLink          = overview "Tactic(s)" (text "") TheoryTactic
 
     reqCasesLink name k = overview name (casesInfo k) (TheorySource k 0 0)
 
@@ -893,7 +893,7 @@ messageSnippet thy = vcat
 
 -- | Build the Html document showing the message theory.
 tacticSnippet :: HtmlDocument d => ClosedTheory -> d
-tacticSnippet thy = ppSection "Tactic" (map prettyTactic $ get thyTactic thy)
+tacticSnippet thy = ppSection "Tactic(s)" (map prettyTactic $ get thyTactic thy)
   where
     ppSection header s =
       withTag "h2" [] (text header) $$ withTag "p"

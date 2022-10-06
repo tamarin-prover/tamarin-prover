@@ -30,7 +30,7 @@ import           Data.Either
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 --import           Data.Char
-import qualified Data.Map                   as M
+--import qualified Data.Map                   as M
 import           Control.Applicative        hiding (empty, many, optional)
 import           Control.Monad
 import qualified Control.Monad.Catch        as Catch
@@ -50,7 +50,6 @@ import Data.Label.Mono (Lens)
 import Theory.Sapic
 import qualified Data.Functor
 
-import Debug.Trace
 
 
  -- Describes the mapping between Maude Signatures and the builtin Name

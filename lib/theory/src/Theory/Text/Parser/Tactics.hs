@@ -33,7 +33,6 @@ import           Theory.Text.Parser.Token
 import           Text.Parsec                hiding ((<|>))
 import           Text.Regex.PCRE
 
-import Debug.Trace
 
 --Tactic
 tacticName :: Parser String
@@ -65,47 +64,56 @@ functionValue = many $ noneOf "\"" --forbid using " char in parameter
 
 
 --Fonction (fonction, pretty printing)
-function :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
+function :: HighlightDocument d => Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
 function = do
     f <- identifier
     param <- many1 $ doubleQuoted functionValue
-    return $ (nameToFunction (f,param),f++" \""++intercalate "\" \"" param++"\"")
+    return $ (nameToFunction (f,param), f++" \""++intercalate "\" \"" param++"\"", text (f++" \""++intercalate "\" \"" param++"\""))
 
-functionNot :: ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String)
-functionNot (f,s) = (not . f, "not "++s)
+functionNot :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
+functionNot (f,s,d) = (not . f, "not "++s, operator_ "not " <> d)
 
-functionAnd :: ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String)
-functionAnd (f,s1) (g,s2) = ((\x -> and [f x, g x]),s1++" & "++s2)
+functionAnd :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d ) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
+functionAnd (f,s1,d1) (g,s2,d2) = ((\x -> and [f x, g x]),s1++" & "++s2, d1 <> operator_ " & " <> d2)
 
-functionOr :: ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String)
-functionOr (f,s1) (g,s2) = ((\x -> or [f x, g x]),s1++" | "++s2)
+functionOr :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
+functionOr (f,s1,d1) (g,s2,d2) = ((\x -> or [f x, g x]),s1++" | "++s2, d1 <> operator_ " | " <> d2)
 
 -- | Parse a negation.
-negation :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
+negation :: HighlightDocument d => Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
 negation = opLNot *> (functionNot <$> function) <|> function
 
 -- | Parse a left-associative sequence of conjunctions.
-conjuncts :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
+conjuncts :: HighlightDocument d => Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
 conjuncts = chainl1 negation (functionAnd <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
-disjuncts :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
+disjuncts :: HighlightDocument d => Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
 disjuncts = try $ (chainl1 conjuncts (functionOr <$ opLOr))
 
+fst_ :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> (AnnotatedGoal, ProofContext, System) -> Bool
+fst_ (f,_,_) = f
+
+snd_ :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> String
+snd_ (_,s,_) = s
+
+thd :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> d
+thd (_,_,txt) = txt
+
 --Parsing prio
-prio :: Parser (Prio ProofContext)
+prio :: HighlightDocument d => Parser (Prio ProofContext d)
 prio = do
     ranking <- symbol "prio" *> colon *> option "id" (braced identifier) -- if none use default ranking
     -- _ <- newline
     fs <- many1 disjuncts --
-    return $ Prio (nameToRanking ranking) ranking (map fst fs) (map snd fs)
+    return $ Prio (nameToRanking ranking) ranking (map fst_ fs) (map snd_ fs) (map thd fs)
 
 --Parsing deprio
-deprio :: Parser (Deprio ProofContext)
+deprio :: HighlightDocument d => Parser (Deprio ProofContext d)
 deprio = do
     ranking <- symbol "deprio" *> colon *> option "id" (braced identifier)
     fs <- many1 disjuncts
-    return $ Deprio (nameToRanking ranking) ranking (map fst fs) (map snd fs)
+    return $ Deprio (nameToRanking ranking) ranking (map fst_ fs) (map snd_ fs) (map thd fs)
 
 
 tactic :: Bool -> Parser (Tactic ProofContext)
@@ -144,7 +152,7 @@ tacticFunctions = M.fromList
             isSubset = and $ map ((flip elem) ["Ku","inv"]) functions
 
             retrieveFun :: String -> [String]
-            retrieveFun pgoal = map init $ map tail $ getAllTextMatches $ pgoal=~ functionsDetection
+            retrieveFun pgoal_ = map init $ map tail $ getAllTextMatches $ pgoal_ =~ functionsDetection
 
             safenoncePattern = "(~n|" ++ intercalate "|" (map show $ concat (map (checkFormula $ head param) (S.toList $ L.get sFormulas sys)))++")(?![.0-9a-zA-Z])"
             hasSafeNonces = not (pg =~ safenoncePattern)
@@ -198,11 +206,11 @@ tacticFunctions = M.fromList
           matchReveal s = s =~ "Reveal"
 
           getFormulaTerms :: LNGuarded -> [VTerm Name (BVar LVar)]
-          getFormulaTerms (GGuarded _ _ [Action t fa] _ ) = getFactTerms fa
+          getFormulaTerms (GGuarded _ _ [Action _ fa] _ ) = getFactTerms fa
           getFormulaTerms _ = []
 
           getFormulaTermsCore :: LNGuarded -> [[LVar]]
-          getFormulaTermsCore (GGuarded _ _ [Action t fa] _ ) = map (map getCore) (map varsVTerm (getFactTerms fa))
+          getFormulaTermsCore (GGuarded _ _ [Action _ fa] _ ) = map (map getCore) (map varsVTerm (getFactTerms fa))
 
               where 
                 getCore (Free v) = v

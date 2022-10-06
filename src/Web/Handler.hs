@@ -67,7 +67,7 @@ import           Theory                       (
     sorryDiffProver, runAutoDiffProver,
     prettyClosedTheory, prettyOpenTheory,
     openDiffTheory,
-    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas, thySignature, thyTactic, diffThySignature, toSignatureWithMaude
+    prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas, thySignature, diffThySignature, toSignatureWithMaude
   )
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
 import           Text.PrettyPrint.Html

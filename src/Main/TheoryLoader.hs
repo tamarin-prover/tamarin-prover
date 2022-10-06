@@ -47,7 +47,7 @@ import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
 import           Data.Label
-import           Data.List                           (isPrefixOf,intersperse, intercalate, find)
+import           Data.List                           (isPrefixOf, intercalate, find)
 
 import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
@@ -70,8 +70,6 @@ import           Main.Environment
 import           Text.Parsec                hiding ((<|>),try,parse)
 import           Safe
 
-import           Debug.Trace
-
 import qualified Theory.Text.Pretty as Pretty
 import           Items.LemmaItem (HasLemmaName, HasLemmaAttributes)
 import           Control.Monad.Except
@@ -81,7 +79,7 @@ import           qualified Data.Label as L
 import           Theory.Text.Parser.Token (parseString)
 import           Data.Bifunctor (Bifunctor(bimap))
 import           Data.Bitraversable (Bitraversable(bitraverse))
-import           Control.Monad.Catch (MonadCatch, onException, handle)
+import           Control.Monad.Catch (MonadCatch)
 import qualified Accountability as Acc
 import qualified Accountability.Generation as Acc
 import GHC.Records (HasField(getField))
@@ -240,8 +238,8 @@ mkTheoryLoadOptions as = TheoryLoadOptions
         Just []                -> throwError $ ArgumentError "heuristic: at least one ranking must be given"
         _                      -> return Nothing
 
-    toGoalRanking | argExists "diff" as = stringToGoalRankingDiff
-                  | otherwise           = stringToGoalRanking
+    --toGoalRanking | argExists "diff" as = stringToGoalRankingDiff
+    --              | otherwise           = stringToGoalRanking
 
     partialEvaluation = case map toLower <$> findArg "partial-evaluation" as of
       Just "summary" -> return $ Just Summary
@@ -289,8 +287,8 @@ lemmaSelectorByModule thyOpt lem = case lemmaModules of
         lemmaModules = concat [ m | LemmaModule m <- getField @"lAttributes" lem]
 
 -- | quiet flag in the argument
-quiet :: Arguments -> [String]
-quiet as = if (argExists "quiet" as) then ["quiet"] else []
+--quiet :: Arguments -> [String]
+--quiet as = if (argExists "quiet" as) then ["quiet"] else []
 
 -- | Select lemmas for proving
 lemmaSelector :: HasLemmaName l => TheoryLoadOptions -> l -> Bool
