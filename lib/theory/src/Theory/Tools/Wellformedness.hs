@@ -1,5 +1,6 @@
 {-# LANGUAGE ViewPatterns     #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TupleSections    #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -45,6 +46,8 @@
 --        [TODO] change parser to ensure this and pretty printer to show this.
 --
 --     12. (diff only) No rule uses a fact starting with 'DiffProto' or 'DiffIntr'
+--
+--     13. LSortNat is well typed
 --
 --   [security properties]
 --
@@ -93,6 +96,7 @@ import           Theory.Tools.RuleVariants
 import           Safe                        (lastMay)
 import           Items.OptionItem            (lemmasToProve)
 import           TheoryObject                (diffThyOptions)
+import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -177,6 +181,51 @@ ruleSortsReport thy = do
     ru <- thyProtoRules thy
     sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++
                      " clashing sorts, casings, or multiplicities:") ru
+
+natWellSortedReport :: OpenTranslatedTheory -> WfErrorReport
+natWellSortedReport thy = map ("natSorts",) sortErrors
+  where
+    itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get thyItems thy
+    sortErrors = [ prettyLNTerm err <> text " in term " <> prettyLNTerm t <> text " must be of sort nat" | t <- itemsTerms, err <- nonWellSorted t]
+
+    bTermToLTermStupid :: BLTerm -> LNTerm
+    bTermToLTermStupid = fmapTerm (fmap (foldBVar (LVar "boundVar" LSortMsg) id))
+
+    boundTerms :: [(Integer,LVar)] -> LNGuarded -> [BLTerm]
+    boundTerms l (substBound l -> GAto a) = atomTerms a
+    boundTerms l (GDisj disj)             = concatMap (boundTerms l) disj
+    boundTerms l (GConj conj)             = concatMap (boundTerms l) conj
+    boundTerms l (GGuarded _ ss _ gf)     = boundTerms extendedVarAssignment gf
+      where
+        extendedVarAssignment = zip [0..] [LVar name sort 0 | (name, sort) <- reverse ss] ++ l
+
+    formulaToGuardedTyped :: LNFormula -> Either Doc LNGuarded
+    formulaToGuardedTyped = formulaToGuarded
+
+    getItemTerms :: TheoryItem OpenProtoRule ProofSkeleton () -> [BLTerm]
+    getItemTerms (RuleItem (get oprRuleE -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    getItemTerms (LemmaItem (formulaToGuardedTyped . get lFormula -> Right f)) = boundTerms [] f
+    getItemTerms (RestrictionItem (formulaToGuardedTyped . get rstrFormula -> Right f)) = boundTerms [] f
+    getItemTerms (PredicateItem (formulaToGuardedTyped . get pFormula -> Right p)) = boundTerms [] p
+    getItemTerms _ = []
+
+
+
+    nonWellSorted :: LNTerm -> [LNTerm]
+    nonWellSorted (viewTerm2 -> FNatPlus list) = concatMap notOnlyNat list
+    nonWellSorted (viewTerm2 -> NatOne) = []
+    nonWellSorted (viewTerm -> Lit _) = []
+    nonWellSorted (viewTerm -> FApp _ ts) = concatMap nonWellSorted ts
+
+
+    notOnlyNat :: LNTerm -> [LNTerm]
+    notOnlyNat (viewTerm2 -> FNatPlus list) = concatMap notOnlyNat list
+    notOnlyNat (viewTerm2 -> NatOne) = []
+    notOnlyNat t | isNatVar t = []
+    notOnlyNat t = [t]
+    -- TODO: nat let's are only nats (%x = h(n) is forbidden) (unimportant)
+
+
 
 --- | Check that the protocol rule variants are correct.
 variantsCheck :: MaudeHandle -> String -> OpenProtoRule -> WfErrorReport
@@ -651,18 +700,19 @@ formulaFacts =
     atomFacts (Less _ _)      = mempty
     atomFacts (Last _)        = mempty
 
+atomTerms :: ProtoAtom s t -> [t]
+atomTerms (Action i fa)        = i : factTerms fa
+atomTerms (Syntactic _)       = []
+-- atomTerms (Syntactic (Pred p)) = factTerms p
+atomTerms (EqE t s)            = [t, s]
+atomTerms (Subterm i j)        = [i, j]
+atomTerms (Less i j)           = [i, j]
+atomTerms (Last i)             = [i]
+
 -- | Gather all terms referenced in a formula.
 formulaTerms :: Formula s c v -> [VTerm c (BVar v)]
 formulaTerms =
     foldFormula atomTerms (const mempty) id (const mappend) (const $ const id)
-  where
-    atomTerms (Action i fa)        = i : factTerms fa
-    atomTerms (Syntactic _)       = []
-    -- atomTerms (Syntactic (Pred p)) = factTerms p
-    atomTerms (EqE t s)            = [t, s]
-    atomTerms (Subterm i j)        = [i, j]
-    atomTerms (Less i j)           = [i, j]
-    atomTerms (Last i)             = [i]
 
 -- TODO: Perhaps a lot of errors would be captured when making the signature
 -- of facts, term, and atom constructors explicit.
@@ -1057,5 +1107,6 @@ checkWellformedness thy sig = concatMap ($ thy)
     , formulaReports
     , lemmaAttributeReport
     , multRestrictedReport
+    , natWellSortedReport
     ]
 
