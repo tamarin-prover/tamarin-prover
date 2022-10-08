@@ -182,25 +182,48 @@ ruleSortsReport thy = do
     sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++
                      " clashing sorts, casings, or multiplicities:") ru
 
+
+-- | bind quantified variables with substBound and return all terms from a formula
+boundTerms :: [(Integer,LVar)] -> LNGuarded -> [BLTerm]
+boundTerms l (substBound l -> GAto a) = atomTerms a
+boundTerms l (GDisj disj)             = concatMap (boundTerms l) disj
+boundTerms l (GConj conj)             = concatMap (boundTerms l) conj
+boundTerms l (GGuarded _ ss _ gf)     = boundTerms extendedVarAssignment gf
+  where
+    extendedVarAssignment = zip [0..] [LVar name sort 0 | (name, sort) <- reverse ss] ++ l
+boundTerms _ _                        = [] --cannot happen
+
+-- | check nat-Sorting (i.e., below + is only nat)
+nonWellSorted :: LNTerm -> [LNTerm]
+nonWellSorted (viewTerm2 -> FNatPlus list) = concatMap notOnlyNat list
+  where
+    notOnlyNat :: LNTerm -> [LNTerm]
+    notOnlyNat (viewTerm2 -> FNatPlus l) = concatMap notOnlyNat l
+    notOnlyNat (viewTerm2 -> NatOne) = []
+    notOnlyNat t | isNatVar t = []
+    notOnlyNat t = [t]
+nonWellSorted (viewTerm2 -> NatOne) = []
+nonWellSorted (viewTerm -> Lit _) = []
+nonWellSorted (viewTerm -> FApp _ ts) = concatMap nonWellSorted ts
+-- TODO: nat let's are only nats (%x = h(n) is forbidden) (unimportant)
+
+-- | safe version of bTermToLTerm if variables are not important
+bTermToLTermStupid :: BLTerm -> LNTerm
+bTermToLTermStupid = fmapTerm (fmap (foldBVar (LVar "boundVar" LSortMsg) id))
+
+-- | typed version of formulaToGuarded
+formulaToGuardedTyped :: LNFormula -> Either Doc LNGuarded
+formulaToGuardedTyped = formulaToGuarded
+
+-- | generate nat sort errors
+natSortErrors :: [LNTerm] -> WfErrorReport
+natSortErrors itemsTerms = [ ("natSorts", prettyLNTerm err <> text " in term " <> prettyLNTerm t <> text " must be of sort nat") | t <- itemsTerms, err <- nonWellSorted t]
+
+-- | check nat-Sorting (i.e., below + is only nat)
 natWellSortedReport :: OpenTranslatedTheory -> WfErrorReport
-natWellSortedReport thy = map ("natSorts",) sortErrors
+natWellSortedReport thy = trace (show ("natReport", [(t, err)| t <- itemsTerms, err <- nonWellSorted t])) $ natSortErrors itemsTerms
   where
     itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get thyItems thy
-    sortErrors = [ prettyLNTerm err <> text " in term " <> prettyLNTerm t <> text " must be of sort nat" | t <- itemsTerms, err <- nonWellSorted t]
-
-    bTermToLTermStupid :: BLTerm -> LNTerm
-    bTermToLTermStupid = fmapTerm (fmap (foldBVar (LVar "boundVar" LSortMsg) id))
-
-    boundTerms :: [(Integer,LVar)] -> LNGuarded -> [BLTerm]
-    boundTerms l (substBound l -> GAto a) = atomTerms a
-    boundTerms l (GDisj disj)             = concatMap (boundTerms l) disj
-    boundTerms l (GConj conj)             = concatMap (boundTerms l) conj
-    boundTerms l (GGuarded _ ss _ gf)     = boundTerms extendedVarAssignment gf
-      where
-        extendedVarAssignment = zip [0..] [LVar name sort 0 | (name, sort) <- reverse ss] ++ l
-
-    formulaToGuardedTyped :: LNFormula -> Either Doc LNGuarded
-    formulaToGuardedTyped = formulaToGuarded
 
     getItemTerms :: TheoryItem OpenProtoRule ProofSkeleton () -> [BLTerm]
     getItemTerms (RuleItem (get oprRuleE -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
@@ -209,21 +232,18 @@ natWellSortedReport thy = map ("natSorts",) sortErrors
     getItemTerms (PredicateItem (formulaToGuardedTyped . get pFormula -> Right p)) = boundTerms [] p
     getItemTerms _ = []
 
+-- | check nat-Sorting (i.e., below + is only nat)
+natWellSortedReportDiff :: OpenDiffTheory -> WfErrorReport
+natWellSortedReportDiff thy = trace (show ("natReportDiff", [(t, err)| t <- itemsTerms, err <- nonWellSorted t])) $ natSortErrors itemsTerms
+  where
+    itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get diffThyItems thy
 
-
-    nonWellSorted :: LNTerm -> [LNTerm]
-    nonWellSorted (viewTerm2 -> FNatPlus list) = concatMap notOnlyNat list
-    nonWellSorted (viewTerm2 -> NatOne) = []
-    nonWellSorted (viewTerm -> Lit _) = []
-    nonWellSorted (viewTerm -> FApp _ ts) = concatMap nonWellSorted ts
-
-
-    notOnlyNat :: LNTerm -> [LNTerm]
-    notOnlyNat (viewTerm2 -> FNatPlus list) = concatMap notOnlyNat list
-    notOnlyNat (viewTerm2 -> NatOne) = []
-    notOnlyNat t | isNatVar t = []
-    notOnlyNat t = [t]
-    -- TODO: nat let's are only nats (%x = h(n) is forbidden) (unimportant)
+    getItemTerms :: DiffTheoryItem DiffProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> [BLTerm]
+    getItemTerms (DiffRuleItem (get dprRule -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    getItemTerms (EitherRuleItem (_, get oprRuleE -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    getItemTerms (EitherLemmaItem (_, formulaToGuardedTyped . get lFormula -> Right f)) = boundTerms [] f
+    getItemTerms (EitherRestrictionItem (_, formulaToGuardedTyped . get rstrFormula -> Right f)) = boundTerms [] f
+    getItemTerms _ = []
 
 
 
@@ -1090,6 +1110,7 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , formulaReportsDiff
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
+    , natWellSortedReportDiff
     ]
 
 
