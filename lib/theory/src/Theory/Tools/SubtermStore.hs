@@ -305,9 +305,8 @@ splitSubterm reducible noRecurse subterm = S.toList <$> (if noRecurse then singl
     eqOrSubterm :: LNTerm -> LNTerm -> S.Set SubtermSplit
     eqOrSubterm s t = S.fromList [SubtermD (s, t), EqualD (s, t)]  -- the unifiers for the equation
 
--- | returns the triple @(nSmall, nBig, newVar)@
+-- | returns the triple @(nSmall, nBig)@
 -- @nSmall@, @nBig@ are @small@, @big@ where terms are removed that were on both sides
--- @newVar@ is for the CR-rule S_neg-ac-recurse
 -- If the subterm is trivially true or false, a corresponding boolean is returned
 processACSubterm :: ACSym -> (LNTerm, LNTerm) -> Either (LNTerm, LNTerm) Bool
 processACSubterm f (small, big) =
