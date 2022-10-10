@@ -442,6 +442,11 @@ freshOrdering = do
   if isSapic then
     return Unchanged
   else do
+    ctxt <- ask
+    sys <- gets id
+    let runMaude = (`runReader` get pcMaudeHandle ctxt)
+    let nonUnifiableNodes i j = maybe False (not . runMaude) $ unifiableRuleACInsts <$> M.lookup i (get sNodes sys) <*> M.lookup j (get sNodes sys)
+  
     rawSubterms <- rawSubtermRel <$> getM sSubtermStore
     el <- elemNotBelowReducible . reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
     route <- getRoute <$> getM sNodes <*> getM sEdges
@@ -451,23 +456,17 @@ freshOrdering = do
     let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms  -- graph that has subterms (s,t) as nodes and edges (s,t) -> (u,v) if t `el` u
     let termsContaining = [(nid, map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]  -- (freshNodeId, t) for all terms t that have to contain x. So also the ones transitively connected by ⊏ to x
     let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r]  -- new ordering constraints that can be added (or enhanced and then added)
-    let enhancedLesses = [(last r, j, tail r) | (i, j) <- newLesses, (frI, _) <- freshVars, i == frI, r <- [route frI], j `notElem` r, length r > 1]  -- improved orderings according to routeOfFreshVar
-    let newFormulas = [gdisj (less i j : [eqe x j | x <- tl]) | (i, j, tl) <- enhancedLesses]
+    let enhancedLesses = [(last rs, j) | (i, j) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
+    let allLesses = newLesses ++ enhancedLesses
   
     oldLesses <- gets (get sLessAtoms)
-    oldFormulas <- S.union <$> getM sFormulas <*> getM sSolvedFormulas
-    mapM_ (uncurry insertLess) newLesses
-    mapM_ insertFormula newFormulas
-    --modify dropEntailedOrdConstraints -- way faster without this
+    mapM_ (uncurry insertLess) allLesses
     modifiedLesses <- gets (get sLessAtoms)
-    return $ if oldLesses == modifiedLesses && all (`elem` oldFormulas) newFormulas
+    return $ if oldLesses == modifiedLesses
       then Unchanged
       else Changed
   
       where
-        less i j = GAto (Less (varTerm $ Free i) (varTerm $ Free j))
-        eqe x j = GAto (EqE (varTerm $ Free x) (varTerm $ Free j))
-  
         -- returns all (i,~x) where Fr(~x) is a premise of a node at position i
         getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
         getFreshVars (idx, get rPrems -> prems) = mapMaybe (\prem -> case factTag prem of
