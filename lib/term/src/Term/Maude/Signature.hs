@@ -83,14 +83,14 @@ data MaudeSig = MaudeSig
     , enableNat          :: Bool
     , enableXor          :: Bool
     , enableDiff         :: Bool
-    , stFunSyms          :: S.Set NoEqSym -- ^ function signature for subterm theory TODO-MY: change to Set FunSym
+    , stFunSyms          :: S.Set NoEqSym     -- ^ function signature for subterm theory
     , stRules            :: S.Set CtxtStRule  -- ^ rewriting rules for subterm theory
 
-    , funSyms            :: FunSig        -- ^ function signature including the
-                                          -- function symbols for DH, BP, and Multiset
-                                          -- can be computed from enableX and stFunSyms
-    , irreducibleFunSyms :: FunSig        -- ^ irreducible function symbols (can be computed)
-    , reducibleFunSyms   :: FunSig        -- ^ function symbols @f@ that have a rewriting rule @l→r∈R@ with @root(l)=f@
+    , funSyms            :: FunSig            -- ^ function signature including the
+                                              -- function symbols for DH, BP, and Multiset
+                                              -- can be computed from enableX and stFunSyms
+    , irreducibleFunSyms :: FunSig            -- ^ irreducible function symbols (can be computed)
+    , reducibleFunSyms   :: FunSig            -- ^ function symbols @f@ that have a rewriting rule @l→r∈R@ with @root(l)=f@
     }
     deriving (Ord, Show, Eq, Generic, NFData, Binary)
 

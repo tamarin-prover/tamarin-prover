@@ -57,6 +57,7 @@ import System.Process
 import System.IO
 
 import Utils.Misc
+import Debug.Trace (trace)
 -- import Extension.Data.Monoid
 
 -- import Debug.Trace

@@ -212,7 +212,7 @@ ppTheory msig = BC.unlines $
     (if enableNat msig
        then
        [ theoryOpEq "tone : -> TamNat"
-       , theoryOpEq "tplus : TamNat TamNat -> TamNat [comm assoc]" ]
+       , theoryOpAC "tplus : TamNat TamNat -> TamNat [comm assoc]" ]
        else [])
     ++
     map theoryFunSym (S.toList $ stFunSyms msig)

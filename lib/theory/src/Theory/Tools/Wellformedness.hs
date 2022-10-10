@@ -221,7 +221,7 @@ natSortErrors itemsTerms = [ ("natSorts", prettyLNTerm err <> text " in term " <
 
 -- | check nat-Sorting (i.e., below + is only nat)
 natWellSortedReport :: OpenTranslatedTheory -> WfErrorReport
-natWellSortedReport thy = trace (show ("natReport", [(t, err)| t <- itemsTerms, err <- nonWellSorted t])) $ natSortErrors itemsTerms
+natWellSortedReport thy = natSortErrors itemsTerms
   where
     itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get thyItems thy
 
@@ -234,7 +234,7 @@ natWellSortedReport thy = trace (show ("natReport", [(t, err)| t <- itemsTerms, 
 
 -- | check nat-Sorting (i.e., below + is only nat)
 natWellSortedReportDiff :: OpenDiffTheory -> WfErrorReport
-natWellSortedReportDiff thy = trace (show ("natReportDiff", [(t, err)| t <- itemsTerms, err <- nonWellSorted t])) $ natSortErrors itemsTerms
+natWellSortedReportDiff thy = natSortErrors itemsTerms
   where
     itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get diffThyItems thy
 
