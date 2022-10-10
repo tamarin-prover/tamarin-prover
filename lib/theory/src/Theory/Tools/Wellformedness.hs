@@ -855,7 +855,7 @@ formulaReportsDiff thy = do
       where
         binders    = foldFormula (const mempty) (const mempty) id (const mappend)
                          (\_ binder rest -> binder : rest) fm
-        disallowed = filter (not . (`elem` [LSortMsg, LSortNode]) . snd) binders
+        disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
 
     -- check that only bound variables and public names are used
     checkTerms header fm
