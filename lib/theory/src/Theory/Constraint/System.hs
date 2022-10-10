@@ -749,7 +749,7 @@ impliedFormulas hnd sys gf0 = res
     gf = skolemizeGuarded gf0
 
     prepare (Action i fa) = Left  (GAction i fa)
-    prepare (EqE s t)     = Left  (GEqE s t)  --TODO-SUBTERM
+    prepare (EqE s t)     = Left  (GEqE s t)
     prepare ato           = Right (fmap (fmapTerm (fmap Free)) ato)
 
     sysActions = do (i, fa) <- allActions sys
@@ -789,7 +789,7 @@ impliedFormulasAndSystems hnd sys gf = res
       _ -> []
 
     prepare (Action i fa) = Left  (GAction i fa)
-    prepare (EqE s t)     = Left  (GEqE s t)  --TODO-SUBTERM
+    prepare (EqE s t)     = Left  (GEqE s t)
     prepare ato           = Right (fmap (fmapTerm (fmap Free)) ato)
 
     sysActions = allActions sys
@@ -910,7 +910,7 @@ normDG ctxt sys = L.set sNodes normalizedNodes sys
 getMirrorDG :: DiffProofContext -> Side -> System -> [System]
 getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshNatAndPubConstrRules, sys))) $-} fmap (normDG $ eitherProofContext ctxt side) $ unifyInstances $ evalFreshAvoiding newNodes (freshNatAndPubConstrRules, sys)
   where
-    (freshNatAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule) || (isNatConstrRule rule)) (L.get sNodes sys))  --TODO-UNCERTAIN do we need isNatConstrRule here (like isPubConstrRule)
+    (freshNatAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule) || (isNatConstrRule rule)) (L.get sNodes sys))
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)
     newNodes = (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (return [freshNatAndPubConstrRules]) newProtoRules) otherRules)
 

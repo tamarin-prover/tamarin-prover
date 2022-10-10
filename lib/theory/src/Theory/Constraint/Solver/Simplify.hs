@@ -446,7 +446,7 @@ freshOrdering = do
     sys <- gets id
     let runMaude = (`runReader` get pcMaudeHandle ctxt)
     let nonUnifiableNodes i j = maybe False (not . runMaude) $ unifiableRuleACInsts <$> M.lookup i (get sNodes sys) <*> M.lookup j (get sNodes sys)
-  
+
     rawSubterms <- rawSubtermRel <$> getM sSubtermStore
     el <- elemNotBelowReducible . reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
     route <- getRoute <$> getM sNodes <*> getM sEdges
@@ -458,14 +458,14 @@ freshOrdering = do
     let newLesses = [(i,j) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r]  -- new ordering constraints that can be added (or enhanced and then added)
     let enhancedLesses = [(last rs, j) | (i, j) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
     let allLesses = newLesses ++ enhancedLesses
-  
+
     oldLesses <- gets (get sLessAtoms)
     mapM_ (uncurry insertLess) allLesses
     modifiedLesses <- gets (get sLessAtoms)
     return $ if oldLesses == modifiedLesses
       then Unchanged
       else Changed
-  
+
       where
         -- returns all (i,~x) where Fr(~x) is a premise of a node at position i
         getFreshVars :: (NodeId, RuleACInst) -> [(NodeId, LNTerm)]
@@ -473,24 +473,24 @@ freshOrdering = do
             FreshFact -> Just (idx, head $ factTerms prem)
             _         -> Nothing
           ) prems
-  
+
         -- the route function as described in the documentation of freshOrdering
         getRoute :: M.Map NodeId RuleACInst -> S.Set Edge -> NodeId -> [NodeId]  -- also needs nodes and edges
         getRoute nodeMap edges nid = plainRoute nid
           where
             edgeMap :: M.Map NodeConc NodeId
             edgeMap = M.fromList [(eSrc edge, fst $ eTgt edge) | edge <- S.toList edges]
-  
+
             plainRoute :: NodeId -> [NodeId]
             plainRoute i = case i `M.lookup` nodeMap of
               Just (enumConcs -> [(concIdx, fact)]) | isLinearFact fact -> i : maybe [] plainRoute ((i,concIdx) `M.lookup` edgeMap)
               _ -> [i]
-  
+
         floodFill :: M.Map LNTerm [(LNTerm, LNTerm)] -> S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> S.Set (LNTerm, LNTerm)
         floodFill graph visited (s,x)
           | (s,x) `S.member` visited = visited
           | otherwise                = foldl (floodFill graph) (S.insert (s,x) visited) (M.findWithDefault [] x graph)
-  
+
         connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [(NodeId, [LNTerm])] -> RuleACInst -> [NodeId]
         connectNodeToFreshes _ [] _ = []
         connectNodeToFreshes el ((nid, containing):xs) r@(get rPrems -> prems) =
@@ -535,7 +535,7 @@ simpSubterms = do
     forM_ formulas insertFormula
     let changedFormulas = not $ all (`S.member` allFormulas) formulas
     return $ if changedStore || changedGoals || changedFormulas then Changed else Unchanged
-    -- TODO-BIG take care acFormulas are not inserted twice with different newVar's !!!!!!!
+    -- TODO take care acFormulas are not inserted twice with different newVar's (didn't happen so far)
     --          if z ⊏ x+y is substituted to z ⊏ x+y'+y'' then
     --          the formula ∀newVar... in the LNGuarded formulas is updated automatically correctly.
     --          We only have to add z ⊏ y', z ⊏ y'' and could remove z ⊏ y'+y'' (formerly z ⊏ y)

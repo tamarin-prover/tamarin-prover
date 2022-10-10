@@ -587,7 +587,7 @@ opSeq = symbol_ ";"
 
 -- | operator for non-deterministic choice in processes
 opNDC :: Parser()
-opNDC = symbol_ "+"  --TODO-MY-PARSER
+opNDC = symbol_ "+"
 
 -- | Operator for 0-process (terminator of sequence)
 opNull :: Parser()

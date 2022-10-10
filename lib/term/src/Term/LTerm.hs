@@ -260,7 +260,7 @@ sortOfName (Name NatName   _) = LSortNat
 
 -- | Is a term a public constant?
 isPubConst :: LNTerm -> Bool
-isPubConst (viewTerm -> Lit (Con v)) = (sortOfName v == LSortPub)  --TODO-MY understand how this is used
+isPubConst (viewTerm -> Lit (Con v)) = (sortOfName v == LSortPub)
 isPubConst _                         = False
 
 
@@ -320,7 +320,7 @@ isMsgVar _                         = False
 -- | Is a term a public variable?
 isPubVar :: LNTerm -> Bool
 isPubVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortPub)
-isPubVar _                         = False  --TODO-MY understand how this is used
+isPubVar _                         = False
 
 -- | Is a term a number variable?
 isNatVar :: LNTerm -> Bool
@@ -347,7 +347,7 @@ getMsgVar _                                                    = Nothing
 -------------------------------------------
 
 -- | The non-inverse factors of a term.
-niFactors :: LNTerm -> [LNTerm]  --TODO-MY pay special attention to this!!
+niFactors :: LNTerm -> [LNTerm]
 niFactors t = case viewTerm2 t of
                 FMult ts -> concatMap niFactors ts
                 FInv t1  -> niFactors t1

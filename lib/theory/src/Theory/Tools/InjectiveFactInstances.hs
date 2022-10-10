@@ -72,7 +72,6 @@ instance Show MonotonicBehaviour where
 --
 -- Positions can also be inside tuples if these tuples are always explicitly used in the rules.
 --
--- TODO-MY: extend this to capture pairs, e.g., use [Int] as description of the position in the pair-tree
 --   intersection-merge should be done with [4,1] representing [4,1,0] as well (as a kind of hierarchy)
 --   i.e., { [4,1] } ∩ { [4,1,2] } = { [4,1,2] }
 --   well, that intersection style probably does not work for subterms interfering with the pairs...

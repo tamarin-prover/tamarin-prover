@@ -116,10 +116,10 @@ rawSubtermRel sst = S.toList (L.get posSubterms sst)
 addSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 addSubterm st sst = if st `elem` L.get solvedSubterms sst
                       then sst
-                      else modify posSubterms (S.insert st) sst  --TODO-BIG do apply stuff as in eqStore???
+                      else modify posSubterms (S.insert st) sst
 
 addNegSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
-addNegSubterm st = modify negSubterms (S.insert st)  --TODO-BIG do apply stuff as in eqStore???
+addNegSubterm st = modify negSubterms (S.insert st)
 
 
 

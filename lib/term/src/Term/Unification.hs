@@ -285,7 +285,7 @@ instance Monoid MatchFailure where
 
 -- | Ensure that the computed substitution @sigma@ satisfies
 -- @t ==_AC apply sigma p@ after the delayed equations are solved.
-matchRaw :: IsConst c  --TODO-MY-UNCERTAIN: adapt matching in same way as unification?
+matchRaw :: IsConst c
          => (c -> LSort)
          -> LTerm c -- ^ Term @t@
          -> LTerm c -- ^ Pattern @p@.
