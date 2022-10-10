@@ -20,6 +20,7 @@ module TheoryObject (
   , thyCache
   , thyItems
   , thyOptions
+  , thyIsSapic
   , diffThyName
   , diffThyItems
   , diffThySignature
@@ -28,6 +29,7 @@ module TheoryObject (
   , diffThyDiffCacheLeft
   , diffThyDiffCacheRight
   , diffThyOptions
+  , diffThyIsSapic
   , thyHeuristic
   , diffThyHeuristic
   , DiffLemma(..)
@@ -168,6 +170,7 @@ data Theory sig c r p s = Theory {
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p s]
        , _thyOptions   :: Option
+       , _thyIsSapic   :: Bool
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -185,6 +188,7 @@ data DiffTheory sig c r r2 p p2 = DiffTheory {
        , _diffThyDiffCacheRight :: c
        , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
        , _diffThyOptions        :: Option
+       , _diffThyIsSapic        :: Bool
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''DiffTheory])
@@ -478,11 +482,11 @@ addDiffLemma l thy = do
 
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
 addHeuristic :: [GoalRanking] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
-addHeuristic h (Theory n [] sig c i o) = Just (Theory n h sig c i o)
+addHeuristic h (Theory n [] sig c i o sapic) = Just (Theory n h sig c i o sapic)
 addHeuristic _ _ = Nothing
 
 addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
-addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i opt) = Just (DiffTheory n h sig cl cr dcl dcr i opt)
+addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i opt sapic) = Just (DiffTheory n h sig cl cr dcl dcr i opt sapic)
 addDiffHeuristic _ _ = Nothing
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.

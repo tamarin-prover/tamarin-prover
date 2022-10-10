@@ -107,6 +107,7 @@ getProofContext l thy = ProofContext
     False
     (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
     (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
+    (L.get thyIsSapic thy)
   where
     kind    = lemmaSourceKind l
     cases   = case kind of RawSource     -> crcRawSources
@@ -142,6 +143,7 @@ getProofContextDiff s l thy = case s of
             False
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
+            (L.get diffThyIsSapic thy)
   RHS -> ProofContext
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyCacheRight)           thy)
@@ -156,6 +158,7 @@ getProofContextDiff s l thy = case s of
             False
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
+            (L.get diffThyIsSapic thy)
   where
     kind    = lemmaSourceKind l
     cases   = case kind of RawSource     -> crcRawSources
@@ -206,6 +209,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
+            (L.get diffThyIsSapic thy)
         RHS -> ProofContext
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyDiffCacheRight)           thy)
@@ -220,6 +224,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
+            (L.get diffThyIsSapic thy)
 
     specifiedHeuristic = case lattr of
         Just lh -> Just lh
@@ -361,7 +366,8 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
             ,_thySignature=(L.get thySignature thy)
             ,_thyCache=(L.get thyCache thy)
             ,_thyItems = mergedRules
-            ,_thyOptions =(L.get thyOptions thy)}
+            ,_thyOptions =(L.get thyOptions thy)
+            ,_thyIsSapic = (L.get thyIsSapic thy)}
     ppInjectiveFactInsts crc =
         case S.toList $ L.get crcInjectiveFactInsts crc of
             []   -> emptyDoc
@@ -401,7 +407,8 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
             ,_diffThyDiffCacheLeft=(L.get diffThyDiffCacheLeft thy)
             ,_diffThyDiffCacheRight=(L.get diffThyDiffCacheRight thy)
             ,_diffThyItems = mergedRules
-            ,_diffThyOptions =(L.get diffThyOptions thy)}
+            ,_diffThyOptions =(L.get diffThyOptions thy)
+            ,_diffThyIsSapic = (L.get diffThyIsSapic thy)}
     ppInjectiveFactInsts crc =
         case S.toList $ L.get crcInjectiveFactInsts crc of
             []   -> emptyDoc

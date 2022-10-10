@@ -47,6 +47,7 @@ module Theory.Constraint.System (
   , pcDiffContext
   , pcTrueSubterm
   , pcConstantRHS
+  , pcIsSapic
   , dpcPCLeft
   , dpcPCRight
   , dpcProtoRules
@@ -393,6 +394,7 @@ data ProofContext = ProofContext
        , _pcDiffContext        :: Bool -- true if diff proof
        , _pcTrueSubterm        :: Bool -- true if in all rules the RHS is a subterm of the LHS
        , _pcConstantRHS        :: Bool -- true if there are rules with a constant RHS
+       , _pcIsSapic            :: Bool -- true if the model was originally a sapic process
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 

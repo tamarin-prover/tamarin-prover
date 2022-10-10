@@ -122,8 +122,9 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> Bool               -- ^ Diff or not
+               -> Bool               -- ^ isSapic or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
@@ -132,6 +133,7 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] isdiff
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
+        isSapic
 
     -- Maude handle
     hnd = L.get sigmMaudeHandle sig

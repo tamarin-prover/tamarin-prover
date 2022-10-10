@@ -39,6 +39,7 @@ module Theory (
   , forcedInjectiveFacts
   , setforcedInjectiveFacts
   , thyOptions
+  , thyIsSapic
   , setOption
   , Option
   -- * Predicates
