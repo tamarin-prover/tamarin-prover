@@ -59,8 +59,7 @@ import           Theory hiding (transReport, closeTheory)
 import           Theory.Text.Parser                  (parseIntruderRules, theory, diffTheory)
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
-                                                     , multisetIntruderRules, xorIntruderRules
-                                                     , natIntruderRules)
+                                                     , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
 import qualified Sapic as Sapic
 import           Main.Console                        (argExists, findArg, addEmptyArg, updateArg, Arguments)
@@ -457,7 +456,6 @@ addMessageDeductionRuleVariants thy0
     rules        = subtermIntruderRules False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
-                   ++ (if enableNat msig then natIntruderRules else [])
     thy          = addIntrRuleACsAfterTranslate rules thy0
     addIntruderVariants mkRuless = addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
 
@@ -475,7 +473,6 @@ addMessageDeductionRuleVariantsDiff thy0
     rules diff'  = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
                     ++ (if enableMSet msig then multisetIntruderRules else [])
                     ++ (if enableXor msig then xorIntruderRules else [])
-                    ++ (if enableNat msig then natIntruderRules else [])
     thy          = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
     addIntruderVariantsDiff mkRuless =
         addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)
