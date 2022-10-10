@@ -1,6 +1,5 @@
 /*
- * Protocol:   Modified DP-3T design 1 following CWA proposal with Google/Apple-style keys;
- *             authorisation scheme 3 (device bound authorisation)
+ * Protocol:   German Corona-Warn App (CWA)
  * Modeler:    Robert Künnemann, Kevin Morio, and Dennis Jackson
  * Date:       April 2021
  * Status:     working
@@ -16,7 +15,7 @@ theory CWA
 
 begin
 
-heuristic: o "./oracle-cwa"
+heuristic: o "./oracles/oracle-cwa"
 
 functions:
     hkdf/2

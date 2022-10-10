@@ -1,5 +1,5 @@
 /*
- * Protocol:    DP-3T design 3 with authorisation scheme 3 (device bound authorisation)
+ * Protocol:    DP3T (Decentralized Privacy-Preserving Proximity Tracing) design 3
  * Modeler:     Robert Künnemann, Kevin Morio and Dennis Jackson
  * Date:        April 2021
  * Status:      working
@@ -9,12 +9,11 @@
  * Invocation:  tamarin-prover --prove dp3t.spthy
  */
 
-
 theory DP3T
 
 begin
 
-heuristic: o "./oracle-dp3t"
+heuristic: o "./oracles/oracle-dp3t"
 
 functions:
     prg/2
