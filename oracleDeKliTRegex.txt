@@ -1,9 +1,0 @@
-lemma: uniqueness
-
-    prio:
-        regex ReceiverKeySimple
-    prio:
-        regex senc\(xsimple
-        regex senc\(~xsimple
-    prio:
-        regex KU\( ~key
