@@ -416,71 +416,69 @@ data Oracle = Oracle {
 -- | True for a goal, it is considered recognized by the all priority. Prio also holds an other 
 -- | function that will order the recognized goals based on some arbitrary criteria such as size...
 -- | The goals recognized by a Prio will be treated earlier than the others.
-data Prio a d = Prio {
+data Prio a = Prio {
        rankingPrio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -- An optional function to order the recognized goals
      , stringRankingPrio :: String                               -- The name of the function for pretty printing
      , functionsPrio :: [(AnnotatedGoal, a, System) -> Bool]     -- The main list of function
      , stringsPrio :: [String]                                   -- The name of the function for pretty printing
-     , docsPrio :: [d]
     }
     --deriving Show
     deriving( Generic )
 
-instance Show (Prio a d) where
+instance Show (Prio a) where
     show p = (stringRankingPrio p) ++ " _ " ++ intercalate ", " (stringsPrio p)
 
-instance Eq (Prio a d) where
+instance Eq (Prio a) where
     (==) _ _ = True
 
-instance Ord (Prio a d) where
+instance Ord (Prio a) where
     compare _ _ = EQ
     (<=) _ _ = True
 
-instance NFData (Prio a d) where
+instance NFData (Prio a) where
     rnf _ = ()
 
-instance Binary (Prio a d) where
+instance Binary (Prio a) where
     put p = put $ show p
-    get = return (Prio Nothing "" [] [] []) 
+    get = return (Prio Nothing "" [] []) 
 
 -- | Derio keeps a list of function that aim at recognizing some goals based on the state of the 
 -- | System, the ProofContext and the Annotated Goal considered. If one of the function returns 
 -- | True for a goal, it is considered recognized by the all priority. Prio also holds an other 
 -- | function that will order the recognized goals based on some arbitrary criteria such as size...
 -- | Deprio works as Prio but the goals it recognizes will be treated later than the others.
-data Deprio a d = Deprio {
+data Deprio a = Deprio {
        rankingDeprio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -- An optional function to order the recognized goals
      , stringRankingDeprio :: String                               -- The name of the function for pretty printing
      , functionsDeprio :: [(AnnotatedGoal, a, System) -> Bool]     -- The main list of function
      , stringsDeprio :: [String]                                        -- The name of the function for pretty printing
-     , docsDeprio :: [d]                                        -- The name of the function for pretty printing
     }
     deriving ( Generic )
 
-instance Show (Deprio a d) where
+instance Show (Deprio a) where
     show d = (stringRankingDeprio d) ++ " _ " ++ intercalate ", " (map show $ stringsDeprio d)
 
-instance Eq (Deprio a d) where
+instance Eq (Deprio a) where
     (==) _ _ = True
 
-instance Ord (Deprio a d) where
+instance Ord (Deprio a) where
     compare _ _ = EQ
     (<=) _ _ = True
 
-instance NFData (Deprio a d) where
+instance NFData (Deprio a) where
     rnf _ = ()
 
-instance Binary (Deprio a d) where
+instance Binary (Deprio a) where
     put d = put $ show d
-    get = return (Deprio Nothing "" [] [] [])
+    get = return (Deprio Nothing "" [] [])
 
 
 -- | The object that record a user written tactic. 
 data Tactic a = Tactic{
       _name :: String,                  -- The name of the tactic
       _presort :: GoalRanking a,        -- The default strategy to order recognized goals in a tactic 
-      _prios :: [Prio a Doc],               -- The list of priorities, the higher in the list the priority, the earlier its recognized goals will be treated
-      _deprios :: [Deprio a Doc]            -- The list of depriorities, the higher in the list the priority, the earlier its recognized goals will be treated 
+      _prios :: [Prio a],               -- The list of priorities, the higher in the list the priority, the earlier its recognized goals will be treated
+      _deprios :: [Deprio a]            -- The list of depriorities, the higher in the list the priority, the earlier its recognized goals will be treated 
                                         -- (but still after all the goals recognized by the priorities and not recognized has been treated).
     }
     deriving (Eq, Ord, Show, Generic, NFData, Binary )

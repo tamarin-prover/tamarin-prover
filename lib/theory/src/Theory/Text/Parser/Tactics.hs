@@ -64,56 +64,47 @@ functionValue = many $ noneOf "\"" --forbid using " char in parameter
 
 
 --Fonction (fonction, pretty printing)
-function :: HighlightDocument d => Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
+function :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
 function = do
     f <- identifier
     param <- many1 $ doubleQuoted functionValue
-    return $ (nameToFunction (f,param), f++" \""++intercalate "\" \"" param++"\"", text (f++" \""++intercalate "\" \"" param++"\""))
+    return $ (nameToFunction (f,param), f++" \""++intercalate "\" \"" param++"\"")
 
-functionNot :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
-functionNot (f,s,d) = (not . f, "not "++s, operator_ "not " <> d)
+functionNot :: ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String)
+functionNot (f,s) = (not . f, "not "++s)
 
-functionAnd :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d ) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
-functionAnd (f,s1,d1) (g,s2,d2) = ((\x -> and [f x, g x]),s1++" & "++s2, d1 <> operator_ " & " <> d2)
+functionAnd :: ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String)
+functionAnd (f,s1) (g,s2) = ((\x -> and [f x, g x]),s1++" & "++s2)
 
-functionOr :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
-functionOr (f,s1,d1) (g,s2,d2) = ((\x -> or [f x, g x]),s1++" | "++s2, d1 <> operator_ " | " <> d2)
+functionOr :: ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String) -> ((AnnotatedGoal, ProofContext, System) -> Bool, String)
+functionOr (f,s1) (g,s2) = ((\x -> or [f x, g x]),s1++" | "++s2)
 
 -- | Parse a negation.
-negation :: HighlightDocument d => Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
+negation :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
 negation = opLNot *> (functionNot <$> function) <|> function
 
 -- | Parse a left-associative sequence of conjunctions.
-conjuncts :: HighlightDocument d => Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
+conjuncts :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
 conjuncts = chainl1 negation (functionAnd <$ opLAnd)
 
 -- | Parse a left-associative sequence of disjunctions.
-disjuncts :: HighlightDocument d => Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String, d)
+disjuncts :: Parser ((AnnotatedGoal, ProofContext, System) -> Bool, String)
 disjuncts = try $ (chainl1 conjuncts (functionOr <$ opLOr))
 
-fst_ :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> (AnnotatedGoal, ProofContext, System) -> Bool
-fst_ (f,_,_) = f
-
-snd_ :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> String
-snd_ (_,s,_) = s
-
-thd :: HighlightDocument d => ((AnnotatedGoal, ProofContext, System) -> Bool, String, d) -> d
-thd (_,_,txt) = txt
-
 --Parsing prio
-prio :: HighlightDocument d => Parser (Prio ProofContext d)
+prio :: Parser (Prio ProofContext)
 prio = do
     ranking <- symbol "prio" *> colon *> option "id" (braced identifier) -- if none use default ranking
     -- _ <- newline
     fs <- many1 disjuncts --
-    return $ Prio (nameToRanking ranking) ranking (map fst_ fs) (map snd_ fs) (map thd fs)
+    return $ Prio (nameToRanking ranking) ranking (map fst fs) (map snd fs) 
 
 --Parsing deprio
-deprio :: HighlightDocument d => Parser (Deprio ProofContext d)
+deprio :: Parser (Deprio ProofContext)
 deprio = do
     ranking <- symbol "deprio" *> colon *> option "id" (braced identifier)
     fs <- many1 disjuncts
-    return $ Deprio (nameToRanking ranking) ranking (map fst_ fs) (map snd_ fs) (map thd fs)
+    return $ Deprio (nameToRanking ranking) ranking (map fst fs) (map snd fs)
 
 
 tactic :: Bool -> Parser (Tactic ProofContext)
