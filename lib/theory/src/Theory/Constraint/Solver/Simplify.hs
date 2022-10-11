@@ -75,6 +75,8 @@ simplifySystem = do
         exploitUniqueMsgOrder
         -- Remove equation split goals that do not exist anymore
         removeSolvedSplitGoals
+        -- Add ordering constraint from injective facts
+        addNonInjectiveFactInstances
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -100,7 +102,6 @@ simplifySystem = do
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
-              c12 <- addNonInjectiveFactInstances
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -115,7 +116,6 @@ simplifySystem = do
                     , ("orderings for ~vars (S_fresh-order)",             c9)
                     , ("simplification of SubtermStore",                  c10)
                     , ("equations and monotonicity from injective Facts", c11)
-                    , ("time constraints from injective Facts",           c12)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -138,7 +138,6 @@ simplifySystem = do
               c9 <- freshOrdering
               c10 <- simpSubterms
               c11 <- simpInjectiveFactEqMon
-              c12 <- addNonInjectiveFactInstances
 
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
@@ -153,7 +152,6 @@ simplifySystem = do
                     , ("orderings for ~vars (S_fresh-order)",             c9)
                     , ("simplification of SubtermStore",                  c10)
                     , ("equations and monotonicity from injective Facts", c11)
-                    , ("time constraints from injective Facts",           c12)
                     ]
                   traceIfLooping
                     | n <= 10   = id
@@ -693,15 +691,15 @@ nonInjectiveFactInstances ctxt se = do
         (unifiableRuleACInsts) <$> M.lookup i (get sNodes se)
                                <*> M.lookup j (get sNodes se)
 
-addNonInjectiveFactInstances :: Reduction ChangeIndicator
+addNonInjectiveFactInstances :: Reduction ()
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
-  oldLesses <- gets (get sLessAtoms)
+  --oldLesses <- gets (get sLessAtoms)
   let list = nonInjectiveFactInstances ctxt se
   mapM_ (uncurry insertLess) list
-  modifiedLesses <- gets (get sLessAtoms)
+  {-modifiedLesses <- gets (get sLessAtoms)
   return $ if oldLesses == modifiedLesses
     then Unchanged
-    else Changed
+    else Changed-}
 
