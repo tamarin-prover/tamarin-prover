@@ -277,7 +277,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -287,7 +287,7 @@ analyzing: examples/loops/JCS12_Typing_Example.spthy
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          examples/loops/JCS12_Typing_Example.spthy.tmp
-  processing time: 0.184225647s
+  processing time: 0.20621475s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)
@@ -301,7 +301,7 @@ summary of summaries:
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          examples/loops/JCS12_Typing_Example.spthy.tmp
-  processing time: 0.184225647s
+  processing time: 0.20621475s
   typing_assertion (all-traces): verified (16 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
   Client_session_key_secrecy (all-traces): verified (4 steps)

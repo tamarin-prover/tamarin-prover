@@ -139,7 +139,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -149,7 +149,7 @@ analyzing: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.132081147s
+  processing time: 0.061994159s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ summary of summaries:
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.132081147s
+  processing time: 0.061994159s
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ==============================================================================

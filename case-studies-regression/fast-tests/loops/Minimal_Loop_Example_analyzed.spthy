@@ -156,7 +156,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -166,7 +166,7 @@ analyzing: examples/loops/Minimal_Loop_Example.spthy
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.040483153s
+  processing time: 0.040462244s
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)
@@ -181,7 +181,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.040483153s
+  processing time: 0.040462244s
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)

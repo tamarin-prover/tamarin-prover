@@ -480,7 +480,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -490,7 +490,7 @@ analyzing: examples/csf18-xor/KCL07.spthy
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.48656652s
+  processing time: 2.346477232s
   recentalive_tag (all-traces): verified (113 steps)
   executable (exists-trace): verified (17 steps)
 
@@ -502,7 +502,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 1.48656652s
+  processing time: 2.346477232s
   recentalive_tag (all-traces): verified (113 steps)
   executable (exists-trace): verified (17 steps)
 

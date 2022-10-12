@@ -126,7 +126,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -136,7 +136,7 @@ analyzing: examples/post17/denning_sacco_symmetric_cbc.spthy
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
-  processing time: 0.354847721s
+  processing time: 0.32278501s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 
@@ -148,7 +148,7 @@ summary of summaries:
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
-  processing time: 0.354847721s
+  processing time: 0.32278501s
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 

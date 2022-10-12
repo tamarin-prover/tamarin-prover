@@ -589,7 +589,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -599,7 +599,7 @@ analyzing: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 2.166438715s
+  processing time: 3.526877598s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ------------------------------------------------------------------------------
@@ -610,7 +610,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 2.166438715s
+  processing time: 3.526877598s
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ==============================================================================

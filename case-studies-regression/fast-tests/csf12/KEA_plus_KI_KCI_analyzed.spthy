@@ -282,7 +282,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -292,7 +292,7 @@ analyzing: examples/csf12/KEA_plus_KI_KCI.spthy
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
-  processing time: 0.416272964s
+  processing time: 0.590799974s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 
@@ -304,7 +304,7 @@ summary of summaries:
 analyzed: examples/csf12/KEA_plus_KI_KCI.spthy
 
   output:          examples/csf12/KEA_plus_KI_KCI.spthy.tmp
-  processing time: 0.416272964s
+  processing time: 0.590799974s
   keaplus_initiator_key (all-traces): verified (13 steps)
   keaplus_responder_key (all-traces): verified (13 steps)
 

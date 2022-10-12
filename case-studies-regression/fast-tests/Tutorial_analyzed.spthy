@@ -236,7 +236,7 @@ qed
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 
@@ -246,7 +246,7 @@ analyzing: examples/Tutorial.spthy
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.150023088s
+  processing time: 0.293417705s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)
@@ -260,7 +260,7 @@ summary of summaries:
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.150023088s
+  processing time: 0.293417705s
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)
