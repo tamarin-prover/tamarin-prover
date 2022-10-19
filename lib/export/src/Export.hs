@@ -34,10 +34,12 @@ import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
+import         Sapic.Exceptions
 
 import         RuleTranslation
 
 import           Control.Monad.Fresh
+import           Control.Exception
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Set as S
@@ -1052,7 +1054,9 @@ loadHeaders tc thy typeEnv = do
     headerBuiltins =
       foldl
         ( \y x -> case List.lookup x builtins of
-            Nothing -> y
+            Nothing -> if (x == "multiset") || (x == "bilinear-pairing")
+                         then throw (UnsupportedBuiltins x :: ExportException)
+                         else y
             Just t -> y `S.union` t
         )
         S.empty

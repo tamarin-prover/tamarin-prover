@@ -31,8 +31,10 @@ import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
+import         Sapic.Exceptions
 
 import           Control.Monad.Fresh
+import           Control.Exception
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Set as S
@@ -54,7 +56,7 @@ loadRules thy = case theoryRules thy of
   [] -> ([text ""], text "", ([],[],[],[],[]))
   rules -> (ruleDocs, ruleComb, headers)
            where
-            (ruleDocs, destructors) = foldl (\(docs, destrs) r -> let (doc, destrs') = translateOpenProtoRule r destrs in (docs++[doc], destrs')) ([], M.empty) rules
+            (ruleDocs, destructors) = foldl (\(docs, destrs) r -> let (doc, destrs') = translateOpenProtoRule r thy destrs in (docs++[doc], destrs')) ([], M.empty) rules
             headers = (baseHeaders, desHeaders, frHeaders, tblHeaders, evHeaders)
             baseHeaders = [("free", "publicChannel", ":channel", [])]
             desHeaders = map makeDestructorHeader $ M.toList destructors
@@ -114,8 +116,36 @@ makeEventHeaders acts =
     allFactInfos = S.toList $ S.fromList (map getFactInfo acts)
     headers = map (\(t,n) -> (t, "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ")")) allFactInfos
 
-translateOpenProtoRule :: HighlightDocument d => OpenProtoRule -> M.Map (String, String) String -> (d, M.Map (String, String) String)
-translateOpenProtoRule (OpenProtoRule ruE _) de = translateProtoRule ruE de
+translateOpenProtoRule :: HighlightDocument d => OpenProtoRule -> OpenTheory -> M.Map (String, String) String -> (d, M.Map (String, String) String)
+translateOpenProtoRule (OpenProtoRule ruE _) thy de = translateProtoRule (checkTypes ruE thy) de
+
+checkTypes :: Rule ProtoRuleEInfo -> OpenTheory -> Rule ProtoRuleEInfo
+checkTypes ru thy = case length incorrectFunctionUsages of
+  0 -> ru
+  1 -> throw (UnsupportedTypes ("The function " ++ (incorrectFunctionUsages !! 0) ++ ", which is declared with a user-defined type, appears in a rewrite rule. ") :: ExportException)
+  _ -> let functions_string = List.intercalate ", " incorrectFunctionUsages
+       in
+        throw (UnsupportedTypes ("The functions " ++ functions_string ++ ", which are declared with user-defined types, appear in a rewrite rule. ") :: ExportException)
+  where
+    acts             = filter isNotDiffAnnotation (L.get rActs ru)
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
+    facts proj     = L.get proj ru
+    allFacts = (facts rPrems) ++ acts ++ (facts rConcs)
+    allTerms = foldl (\acc (Fact _ _ ts) -> acc ++ ts) [] allFacts
+    incorrectFunctionUsages = S.toList . S.fromList $ foldl (\acc t -> acc ++ incorrectTermTypes thy t) [] allTerms
+
+incorrectTermTypes :: (Show l) => OpenTheory -> Term l -> [String]
+incorrectTermTypes thy t = case viewTerm t of
+    Lit l                 -> []
+    FApp (NoEq (f, _)) ts -> (checkFun $ BC.unpack f) ++ (foldl (\acc x -> acc ++ incorrectTermTypes thy x) [] ts)
+    FApp _             ts -> foldl (\acc x -> acc ++ incorrectTermTypes thy x) [] ts
+    where
+      functionInfo = theoryFunctionTypingInfos thy
+      checkFun name = foldl (\acc ((f, _), inTypes, outType) -> acc ++ (if (BC.unpack f) == name then typeChecker name inTypes outType else [])) [] functionInfo
+      typeChecker name _ (Just _)             = [name]
+      typeChecker name [] _                   = []
+      typeChecker name (Nothing : ts) outType = typeChecker name ts outType
+      typeChecker name (Just _ : ts) _        = [name]
 
 translateProtoRule :: (HighlightDocument d)
                 => Rule ProtoRuleEInfo -> M.Map (String, String) String -> (d, M.Map (String, String) String)
