@@ -403,14 +403,14 @@ getAtoms t = case viewTerm t of
 
 makeDestructorExpression :: (Document d, Show l) => S.Set String -> M.Map String String -> M.Map (String, String) String -> Term l -> String -> (d, M.Map (String, String) String)
 makeDestructorExpression vars helperVars destructors t a = if (S.member a vars) || (head a == '\'')
-                                      then (ifDoc, newDestructors)
-                                      else (letDoc, newDestructors)
+                                      then (oldVarDoc, newDestructors)
+                                      else (newVarDoc, newDestructors)
                                       where
                                         (var, _) = makeVariable t helperVars
                                         (destr, newDestructors) = makeDestructorName destructors t a
-                                        ifDoc = text "if" <-> (text $ showAtom a) <->
-                                                text "=" <-> text destr <> 
-                                                text "(" <> text var <> text ") then"
-                                        letDoc = text "let" <-> (text $ showAtom a) <->
+                                        oldVarDoc = text "let (=" <> (text $ showAtom a) <>
+                                                text ") =" <-> text destr <> 
+                                                text "(" <> text var <> text ") in"
+                                        newVarDoc = text "let" <-> (text $ showAtom a) <->
                                                  text "=" <-> text destr <> 
                                                  text "(" <> text var <> text ") in"
