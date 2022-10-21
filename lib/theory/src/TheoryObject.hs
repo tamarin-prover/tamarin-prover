@@ -716,8 +716,8 @@ prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic)
    where 
 
         -- pretty print for a prio block
-        ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map prettify (map words xs))
-        ppTab "deprio" (rankingName,xs) = kwDeprio <> colon <> space <> (text rankingName) $-$ (nest 2 $ vcat $ map prettify (map words xs))
+        ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> braces (text rankingName) $-$ (nest 2 $ vcat $ map prettify (map words xs))
+        ppTab "deprio" (rankingName,xs) = kwDeprio <> colon <> space <> braces (text rankingName) $-$ (nest 2 $ vcat $ map prettify (map words xs))
         ppTab _ _ = emptyDoc
 
         ppTabTab _ _ [] = emptyDoc
@@ -725,17 +725,7 @@ prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic)
 
         prettify :: HighlightDocument d => [String] -> d
         prettify []    = emptyDoc
-        --prettify (s:t) = (operator_ s) <> prettify t
         prettify ("|":t) = (operator_ " | ") <> prettify t-- if (s == "|") || (s == "&") || (s == "not") then (operator_ s) <> prettify t else text s <> prettify t
         prettify ("&":t) = (operator_ " & ") <> prettify t
         prettify ("not":t) = (operator_ "not ") <> prettify t
         prettify (s:t) = text s <> prettify t
-
-        --mimou :: [Doc]
-        --mimou = map stringRankingPrio $ _prios tactic
-
-        --moumi :: [[Doc]]
-        --moumi = map stringsPrio $ _prios tactic
-
-        --tarace :: ((Doc, [Doc]) -> Doc) -> [(Doc, [Doc])] -> [Doc]
-        --tarace fun tab = map fun tab
