@@ -1034,8 +1034,8 @@ proveSystemDFS heuristic tactics ctxt d0 sys0 =
     prove d0 sys0
   where
     prove !depth sys = case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
-          []                         -> trace "Hello" node Solved M.empty
-          (method, (cases, _expl)):_ -> trace ((show method) ++ " " ++ (show cases)) node method cases
+          []                         -> node Solved M.empty
+          (method, (cases, _expl)):_ -> node method cases
       where
 
         node method cases =

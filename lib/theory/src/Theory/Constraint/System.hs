@@ -742,11 +742,6 @@ $(mkLabels [''ProofContext, ''DiffProofContext, ''Source])
 pcMaudeHandle :: ProofContext :-> MaudeHandle
 pcMaudeHandle = sigmMaudeHandle . pcSignature
 
--- | Retrieves the usefull informations to create a ProofContextLight (usefull for tactics)
---ctxt2light :: ProofContext -> ProofContextLight
---ctxt2light (ProofContext _pcSignature _pcRules _pcInjectiveFactInsts _pcSourceKind _pcSources _pcUseInduction _ _ _pcTraceQuantifier _pcLemmaName  , _pcHiddenLemmas _pcDiffContext  _pcTrueSubterm _pcConstantRHS) = 
---    ProofContextLight _pcSignature _pcRules _pcInjectiveFactInsts _pcSourceKind _pcSources _pcUseInduction _ _ _pcTraceQuantifier _pcLemmaName  , _pcHiddenLemmas _pcDiffContext  _pcTrueSubterm _pcConstantRHS
-
 -- | Returns the LHS or RHS proof-context of a diff proof context.
 eitherProofContext :: DiffProofContext -> Side -> ProofContext
 eitherProofContext ctxt s = if s==LHS then L.get dpcPCLeft ctxt else L.get dpcPCRight ctxt
@@ -1592,7 +1587,7 @@ isLast sys i = Just i == L.get sLastAtom sys
 -- | Pretty print a sequent
 prettySystem :: HighlightDocument d => System -> d
 prettySystem se = vcat $
-    map combine
+    map combine_
       [ ("nodes",          vcat $ map prettyNode $ M.toList $ L.get sNodes se)
       , ("actions",        fsepList ppActionAtom $ unsolvedActionAtoms se)
       , ("edges",          fsepList prettyEdge   $ S.toList $ L.get sEdges se)
@@ -1601,13 +1596,13 @@ prettySystem se = vcat $
       ]
     ++ [prettyNonGraphSystem se]
   where
-    combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
+    combine_ (header, d) = fsep [keyword_ header <> colon, nest 2 d]
     ppActionAtom (i, fa) = prettyNAtom (Action (varTerm i) fa)
 
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
 prettyNonGraphSystem :: HighlightDocument d => System -> d
-prettyNonGraphSystem se = vsep $ map combine -- text $ show se
+prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
   [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
   , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
@@ -1622,12 +1617,12 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 --   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-- $ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
-    combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+    combine_ (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
 
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
 prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSystem -> d
-prettyNonGraphSystemDiff ctxt se = vsep $ map combine
+prettyNonGraphSystemDiff ctxt se = vsep $ map combine_
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
@@ -1641,7 +1636,7 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
   ]
   where
-    combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+    combine_ (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
 --     help :: Maybe [LNGuarded]
 --     help = do
 --       side <- L.get dsSide se
@@ -1737,9 +1732,9 @@ prettyGoals solved sys = vsep $ do
 prettySource :: HighlightDocument d => Source -> d
 prettySource th = vcat $
    [ prettyGoal $ L.get cdGoal th ]
-   ++ map combine (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
+   ++ map combine_ (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
   where
-    combine (i, sys) = fsep [keyword_ ("Case " ++ show i) <> colon, nest 2 (prettySystem sys)]
+    combine_ (i, sys) = fsep [keyword_ ("Case " ++ show i) <> colon, nest 2 (prettySystem sys)]
 
 
 -- Additional instances

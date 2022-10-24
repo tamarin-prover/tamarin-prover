@@ -127,7 +127,9 @@ tacticFunctions = M.fromList
                       ]
   where
     regex' :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
-    regex' (regex:_) (agoal,_,_) = pg =~ regex
+    regex' l (agoal,_,_) = case l of 
+        (regex:_) -> pg =~ regex
+        _     -> False
         where
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
             pg = concat . lines . render $ pgoal agoal
@@ -176,13 +178,13 @@ tacticFunctions = M.fromList
         where
             oracleType = head param
 
-            nonces = map show (getFactTerms goal)
+            nonces = map show (getFactTerms_ goal)
 
             -- reasonableNonces is designed to mimic reasonable_nonces from oracle.py of Vacarme,
             -- therefore it is meant to be used with regex "!KU\( *~.*\)", limiting the type of possible goals
-            getFactTerms :: AnnotatedGoal -> [LNTerm]
-            getFactTerms (ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = ft }), _ ) = ft
-            getFactTerms _ = []
+            getFactTerms_ :: AnnotatedGoal -> [LNTerm]
+            getFactTerms_ (ActionG _ (Fact { factTag = _ ,factAnnotations =  _ , factTerms = ft }), _ ) = ft
+            getFactTerms_ _ = []
 
             sysPattern = "~n":(map show $ concat (map (checkFormula oracleType) (S.toList $ L.get sFormulas sys)))
 
