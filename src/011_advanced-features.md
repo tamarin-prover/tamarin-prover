@@ -166,13 +166,16 @@ presort: C
 
 Then we will start to write the priorities following which we want to order the goals. Everey priority, announced by the `prio`  keywords, is composed of functions that will try to recognize caracteristics in the goals given by the Tamarin proofs. If a goal is recognized by a function in a priority, it will be be ranked as such, ie the higher the priority in the tactic, the higher the goals it recognizes will be ranked. The particularity recaognized by every function will be detailled in a paragraph below. The tactic language authorizes to combine functions using `|`, `&` and `not`. 
 Even if the option is not necessary for the proof of the lemma uniqueness, let's now explore the `deprio` keyword. It works as the `prio` one but with the opposite goal since it allows the user to put the recognized goals at the bottom of the ranking. In case several `deprio` are written, the first one will be ranked higher than the last ones. If a goal is recognized by two or more 'priorities' or 'depriorities', only the first one (ie the higher rank possible) will be taken into account for the final ranking.
+The order of the goals recognized by the same priority is usually predetermined by the presort. However, if this order is not appropriate for one priority, the user can call a 'preranking function'. This function will reorder the goals inside the priority given a criteria. If no preranking function is determined, Tamarin will use the identity. For now, the only other option is `smallest`, a function that will order the goals by increasing size of their prettyprinted strings.
+
 ```
 prio:
     isFactName "ReceiverKeySimple"
 prio: 
     regex "senc\(xsimple" | regex "senc\(~xsimple"
-prio:
+prio: {smallest}
     regex "KU\( ~key"
+}
 ```
 
 

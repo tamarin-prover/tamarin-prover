@@ -59,8 +59,8 @@ The tactics allow the user to write their own heuristics based on the lemmas the
     tactic                := 'tactic' ':' ident
                              [presort]
                              (prio)+ (deprio)* | (prio)* (deprio)+
-    presort               := 'presort' ':' standard_goal_ranking
-    prio                  := 'prio' ':' [pre_ranking]
+    presort               := 'presort' ':' 'standard_goal_ranking
+    prio                  := 'prio' ':' ['{'pre_ranking'}']
                                  (function)+
     deprio                := 'deprio' ':' [pre_ranking]
                                  (function)+
