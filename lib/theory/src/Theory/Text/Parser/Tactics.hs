@@ -192,6 +192,9 @@ tacticFunctions = M.fromList
     checkFormula oracleType f = if rev && expG then concat $ getFormulaTermsCore f else []
 
         where
+          getCore (Free v) = v
+          getCore _ = error "It should really not happend"
+
           rev = or $ map matchReveal (map factTagName $ guardFactTags f)
           expG = if oracleType == "curve" then show (getFormulaTerms f) =~ "grpid,exp\\('g'" else show (getFormulaTerms f) =~ "exp\\('g'"
 
@@ -204,9 +207,8 @@ tacticFunctions = M.fromList
 
           getFormulaTermsCore :: LNGuarded -> [[LVar]]
           getFormulaTermsCore (GGuarded _ _ [Action _ fa] _ ) = map (map getCore) (map varsVTerm (getFactTerms fa))
+          getFormulaTermsCore _ = []
 
-              where 
-                getCore (Free v) = v
 
     isFactName :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
     isFactName (s:_) (((PremiseG _ Fact {factTag = ProtoFact Linear test _, factAnnotations = _ , factTerms = _ }), (_,_)), _, _ ) = test == s
