@@ -60,12 +60,12 @@ The tactics allow the user to write their own heuristics based on the lemmas the
                              [presort]
                              (prio)+ (deprio)* | (prio)* (deprio)+
     presort               := 'presort' ':' 'standard_goal_ranking
-    prio                  := 'prio' ':' ['{'pre_ranking'}']
+    prio                  := 'prio' ':' ['{'post_ranking'}']
                                  (function)+
-    deprio                := 'deprio' ':' [pre_ranking]
+    deprio                := 'deprio' ':' ['{'post_ranking'}']
                                  (function)+
     standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's' 
-    preranking            := 'smallest' | 'id'                   
+    post_ranking          := 'smallest' | 'id'                   
     function              := and_function [ '|' and_function]*
     and_function          := not_function [ '&' not_function]*
     not_function          := (not)? function_name ['"' param '"']*
