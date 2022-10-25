@@ -55,7 +55,7 @@ The goal rankings are as follows.
 `C`:
 : is like 'c' but without delaying loop breakers.
 
-`i`: 
+`i`:
 : is a ranking developed to be well-suited to injective stateful protocols.
   The priority of goals is similar to the 'S' ranking, but instead of a
   strict priority hierarchy, the fact, action, and knowledge goals are
@@ -65,7 +65,7 @@ The goal rankings are as follows.
   run. This ranking will prioritize existing fact, action, and knowledge goals
   before following up on the fact goal of that previous run. In contrast the 'S'
   ranking would prioritize this new fact goal ahead of any existing action or
-  knowledge goal, although solving the new goal may create yet another 
+  knowledge goal, although solving the new goal may create yet another
   earlier fact goal and so on, preventing termination.
 
 `I`:
@@ -263,12 +263,12 @@ rule receive:
  ]
  --[ Unique(<xcomplicated,xsimple>) ]->
  [  ]
- 
+
 //this restriction artificially complicates an occurrence of an event Complicated(x)
 restriction complicate:
  "All x #i. Complicated(x)@i
    ==> (Ex y #j. Complicated(y)@j & #j < #i) | (Ex y #j. Simpleunique(y)@j & #j < #i)"
- 
+
 lemma uniqueness:
  "All #i #j x. Unique(x)@i & Unique(x)@j ==> #i=#j"
 
@@ -353,13 +353,13 @@ and the messages that he can construct from messages he knows.
 The adversary's control over the communication network is
 modeled with the following two built-in rules:
 
-1.  
+1.
 ```
 rule irecv:
    [ Out( x ) ] --> [ !KD( x ) ]
 ```
 
-2.  
+2.
 ```
 rule isend:
    [ !KU( x ) ] --[ K( x ) ]-> [ In( x ) ]
@@ -379,7 +379,7 @@ communication channels by specifying channel rules, which model channels
 with intrinsic security properties.
 In the following,
 we illustrate the modelling of confidential, authentic, and secure
-channels. Consider for this purpose the following protocol, where an initiator generates a 
+channels. Consider for this purpose the following protocol, where an initiator generates a
 fresh nonce and sends it to a receiver.
 
 ~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=5 upper=6}
@@ -390,12 +390,12 @@ We can model this protocol as follows.
 ~~~~ {.tamarin slice="code/ChannelExample.spthy" lower=10 upper=31}
 ~~~~
 
-We state the nonce secrecy property for the 
+We state the nonce secrecy property for the
 initiator and responder with the `nonce_secret_initiator` and the
 `nonce_secret_receiver` lemma, respectively. The lemma
 `message_authentication` specifies a [message
 authentication](007_property-specification.html#sec:message-authentication)
-property for the responder role. 
+property for the responder role.
 
 If we analyze the protocol with insecure channels, none of the
 properties hold because the adversary can learn the nonce sent by the
@@ -412,12 +412,12 @@ on this channel.
 ~~~~
 
 The first three rules denote the channel rules for a confidential channel.
-They specify that whenever a message `x` is sent on a confidential channel 
-from `$A` to `$B`, a fact `!Conf($B,x)` can be derived. This fact binds the 
+They specify that whenever a message `x` is sent on a confidential channel
+from `$A` to `$B`, a fact `!Conf($B,x)` can be derived. This fact binds the
 receiver `$B` to the  message `x`, because only he will be able to read
 the message. The rule `ChanIn_C` models that at the incoming end of a
 confidential channel, there must be a `!Conf($B,x)` fact, but any apparent
-sender `$A` from the adversary knowledge can be added. This models 
+sender `$A` from the adversary knowledge can be added. This models
 that a confidential channel is not authentic, and anybody could have sent the message.
 
 Note that `!Conf($B,x)` is a persistent fact. With this, we model that a
@@ -427,10 +427,10 @@ The last rule, `ChanIn_CAdv`, denotes that the adversary can also directly
 send a message from his knowledge on a confidential channel.
 
 Finally, we need to give protocol rules specifying that the message `~n` is
-sent and received on a confidential channel. We do this by changing the `Out` 
+sent and received on a confidential channel. We do this by changing the `Out`
 and `In` facts to the `Out_C` and `In_C` facts, respectively.
 
-In this modified protocol, the lemma `nonce_secret_initiator` holds. 
+In this modified protocol, the lemma `nonce_secret_initiator` holds.
 As the initiator sends the nonce on a confidential channel, only the intended
 receiver can read the message, and the adversary cannot learn it.
 
@@ -439,31 +439,31 @@ receiver can read the message, and the adversary cannot learn it.
 Unlike a confidential channel, an adversary can read messages sent on an
 authentic channel. However, on an authentic channel, the adversary cannot
 modify the messages or their sender.
-We modify the protocol again to use an authentic channel for sending the 
+We modify the protocol again to use an authentic channel for sending the
 message.
 
 ~~~~ {.tamarin slice="code/ChannelExample_auth.spthy" lower=11 upper=33}
 ~~~~
 
-The first channel rule binds a sender `$A` to a message `x` by the 
+The first channel rule binds a sender `$A` to a message `x` by the
 fact `!Auth($A,x)`. Additionally, the rule produces an `Out` fact that models
 that the adversary can learn everything sent on an authentic channel.
 The second rule says that whenever there is a fact `!Auth($A,x)`, the message
-can be sent to any receiver `$B`. This fact is again persistent, which means 
-that the adversary can replay it multiple times, possibly to different 
+can be sent to any receiver `$B`. This fact is again persistent, which means
+that the adversary can replay it multiple times, possibly to different
 receivers.
 
-Again, if we want the nonce in the protocol to be sent over the authentic 
+Again, if we want the nonce in the protocol to be sent over the authentic
 channel, the corresponding `Out` and `In` facts in the protocol rules must
 be changed to `Out_A` and `In_A`, respectively.
-In the resulting protocol, the lemma `message_authentication` is proven 
-by Tamarin. The adversary can neither change the sender of the message nor 
-the message itself. For this reason, the receiver can be sure that the agent in 
+In the resulting protocol, the lemma `message_authentication` is proven
+by Tamarin. The adversary can neither change the sender of the message nor
+the message itself. For this reason, the receiver can be sure that the agent in
 the initiator role indeed sent it.
 
 #### Secure Channel Rules
 
-The final kind of channel that we consider in detail are secure 
+The final kind of channel that we consider in detail are secure
 channels. Secure channels have the property of being both
 confidential and authentic. Hence
 an adversary can neither modify nor learn messages that are sent over a
@@ -478,7 +478,7 @@ follows.
 ~~~~
 
 The channel rules bind both the sender `$A` and the receiver `$B` to the
-message `x` by the fact `!Sec($A,$B,x)`, which cannot be modified by the 
+message `x` by the fact `!Sec($A,$B,x)`, which cannot be modified by the
 adversary.
 As `!Sec($A,$B,x)` is a persistent fact, it can be reused several times as the
 premise of the rule `ChanIn_S`. This models that an adversary can replay
@@ -496,7 +496,7 @@ sent by the agent who he believes to be in the initiator role.
 Similarly, one can define other channels with other properties.
 For example, we can model a secure channel with the additional property
 that it does not allow for replay. This could be done by changing the secure
-channel rules above by chaining `!Sec($A,$B,x)` to be a linear fact 
+channel rules above by chaining `!Sec($A,$B,x)` to be a linear fact
 `Sec($A,$B,x)`. Consequently, this fact can only be consumed once and not be
 replayed by the adversary at a later point in time.
 In a similar manner, the other channel properties can be changed and additional
@@ -543,8 +543,9 @@ Integrated Preprocessor {#sec:integrated-preprocessor}
 
 Tamarin's integrated preprocessor can be used to include or exclude
 parts of your file.  You can use this, for example, to restrict your
-focus to just some subset of lemmas. This is done by putting the relevant part of
-your file within an `#ifdef` block with a keyword `KEYWORD`
+focus to just some subset of lemmas, or enable different behaviors
+in the modeling. This is done by putting the relevant part of your
+file within an `#ifdef` block with a keyword `KEYWORD`
 
 ```
 #ifdef KEYWORD
@@ -553,6 +554,21 @@ your file within an `#ifdef` block with a keyword `KEYWORD`
 ```
 
 and then running Tamarin with the option `-DKEYWORD` to have this part included.
+In addition, a keyword can also be set to true with
+```
+#define KEYWORD
+```
+
+Boolean formulas in the conditional are also allowed as well as else branches
+
+```
+#ifdef (KEYWORD1 & KEYWORD2) | KEYWORD3
+...
+#else
+...
+#endif
+```
+
 
 If you use this feature to exclude source lemmas, your case
 distinctions will change, and you may no longer be able to construct
@@ -571,11 +587,21 @@ At the same time this would be excluded:
 ~~~~ {.tamarin slice="code/TimingExample.spthy" lower=26 upper=30}
 ~~~~
 
+The preprocessor also allows to include another file inside your main file.
+
+```
+#include "path/to/myfile.spthy"
+```
+
+The path can be absolute or relative to the main file. Included files can
+themselves contain other preprocessing flags, and the include behavior is
+recursive.
+
 
 How to Time Proofs in Tamarin
 -----------------------------
 
-If you want to measure the time taken to verify 
+If you want to measure the time taken to verify
 a particular lemma you can use the previously described preprocessor to mark
 each lemma, and only include the one you wish to time. This can be
 done, for example, by  wrapping
@@ -602,7 +628,7 @@ Tamarin uses multi-threading to speed up the proof search. By default,
 Haskell automatically counts the number of cores available on the machine
 and uses the same number of threads.
 
-Using the options of Haskell's run-time system this number can be manually 
+Using the options of Haskell's run-time system this number can be manually
 configured. To use x threads, add the parameters
 
 ```
