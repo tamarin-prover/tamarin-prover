@@ -1,0 +1,604 @@
+/*
+ * Protocol:    DP-3T design 3 with authorisation scheme 3 (device bound authorisation)
+ * Modeler:     Robert Künnemann, Kevin Morio and Dennis Jackson
+ * Date:        April 2021
+ * Status:      working
+ *
+ * Source:      https://github.com/DP-3T/documents
+ *
+ * Invocation:  tamarin-prover --prove dp3t.spthy
+ */
+
+
+theory DP3T
+
+begin
+
+heuristic: o "./oracle-dp3t"
+
+functions:
+    prg/2
+  , prf/2
+  , h/1
+  , true/0
+  , pk/1
+  , sk/1
+  , sign/2
+  , verify/3
+
+equations:
+    verify(pk(k), sign(sk(k), m), m) = true()
+
+
+/*
+**********************************************
+Time Section
+**********************************************
+*/
+
+restriction timeDay:
+    "All d #t1 #t3. Day(d)@t1
+                  & Day(d)@t3
+                  & #t1 < #t3
+                    ==> ( All dp #t2. Day(dp)@t2
+                                    & #t1 < #t2
+                                    & #t2 < #t3 ==> dp = d )"
+
+restriction timeEpochInDates:
+    "All e d dp #t1 #t3.
+        Interval(e)@t1 & Day(d)@t1
+      & Interval(e)@t3 & Day(dp)@t3
+        ==> d = dp"
+
+predicate:
+    EarlierDayP(d1, d2)      <=> (All #t1 #t2. Day(d1)@t1     & Day(d2)@t2     ==> #t1 < #t2)
+  , EarlierDayEqP(ts1, ts2)  <=> (All #t1 #t2. Day(ts1)@t1    & Day(ts2)@t2    ==> ts1 = ts2 | (not(ts1 = ts2) & #t1 < #t2))
+  , EarlierIntervalEqP(i, j) <=> (All #t1 #t2. Interval(i)@t1 & Interval(j)@t2 ==> i = j | (not(i = j) & #t1 < #t2))
+
+restriction interval_ealier_eq:
+    "All #t x y. EarlierIntervalEq(x, y)@t ==> EarlierIntervalEqP(x, y)"
+
+restriction earlier_day:
+    "All #t x y. EarlierDay(x, y)@t ==> EarlierDayP(x, y)"
+
+restriction earlier_day_eq:
+    "All #t x y. EarlierDayEq(x, y)@t ==> EarlierDayEqP(x, y)"
+
+
+
+/*
+**********************************************
+Bluetooth
+**********************************************
+
+Broadcast channel, anyone (including the adversary) at some $place and day $d can share and receive messages.
+
+**********************************************
+*/
+
+rule BLEwr [color=#FF6699]:
+    [ In(eph) ]
+  --[ Day($d)
+    , Interval($i)
+    , BLEwr($i, $place, eph) ]->
+    [ !SpaceTime($place, $i, eph) ]
+
+rule BLErd [color=#FF6699]:
+    [ !SpaceTime($place, $i, eph) ]
+  --[ Day($d)
+    , Interval($i)
+    , BLErd($i, $place, eph) ]->
+    [ Out(eph) ]
+
+
+
+/*
+**********************************************
+Phone
+**********************************************
+*/
+
+rule PhoneSetup[color=#33FF33]:
+    [ Fr(id) ]
+  --[ PhoneInit(id, $CC) ]->
+    [ !Phone(id, $CC) ]
+
+rule PhoneDayStart:
+    [ !Phone(id, $CC)
+    , Fr(k) ]
+  --[ Day($d)
+    , Interval($i)
+    , CreateKey(id, $d, k) ]->
+    [ !PhoneKey(id, $d, k) ]
+
+rule GenSendEph[color=#0066ff]:
+    let
+        eph = prg(prf(k, 'DP3T_HYBRID'), $ctr)
+    in
+    [ !PhoneKey(id, $d, k) ]
+  --[ Day($d)
+    , Interval($i)
+    , IsAt(id, $place, $i)
+    , GenSendEph(id, $d, $i, eph)
+    , UseKey(id, k) ]->
+    [ !SpaceTime($place, $i, eph) ]
+
+rule RecvEph[color=#00ff99]:
+    [ !Phone(id, $CC)
+    , !SpaceTime($place, $i, eph) ]
+  --[ Day($d)
+    , Interval($i)
+    , IsAt(id, $place, $i)
+    , Received(id, eph) ]->
+    [ !PhoneReceived(id, $d, $i, eph) ]
+
+rule AtRisk[color=#ffcc00]:
+  let
+      entry = <$CC, k, $dayKey, $iRelease>
+      mPublic  = <entry, sigEntry>
+  in
+   // Phones check for any records published by their own backend.
+    [ In(mPublic)
+    , !Phone(idR, $CC)
+    , !PhoneReceived(idR, $dayClose, $iClose, eph)
+    , !BackendPubKey($CC, pkB) ]
+  --[ Day($day)
+    , PClaimAtRisk(idR, $dayClose, $iClose)
+    , ReceiveInfected(idR, k, $iClose)
+   // No restrictions on $ctr to reflect randomisation of broadcast order in DP3T.
+    , _restrict(eph = prg(prf(k, 'DP3T_HYBRID'), $ctr))
+    , _restrict(verify(pkB, sigEntry, entry) = true())
+    , _restrict($dayClose = $dayKey)
+   // Only keep the last 14 days of keys.
+    , Within14Days($dayClose, $day)
+    , EarlierIntervalEq($iClose, $iRelease) ]->
+    [ ]
+
+
+
+/*
+**********************************************
+Phone corruption
+**********************************************
+
+* Disclose key
+* Disclose received eph
+* Send message from phone to any party over !Chan
+* Receive message from any party and output message
+* Store arbitrary values in !PhoneTestDB
+
+**********************************************
+*/
+
+rule CorruptPhoneKey [color=#fc5386]:
+    [ !PhoneKey(id, $d, k) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneKey', k) ]->
+    [ Out(k) ]
+
+rule CorruptPhoneReceived [color=#fc5386]:
+    [ !PhoneReceived(id, $day, $i, eph) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneReceived', eph) ]->
+    [ Out(eph) ]
+
+rule CorruptPhoneSend [color=#fc5386]:
+    [ In(m)
+    , !Phone(id, $CC) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneSend', m) ]->
+    [ !Chan(<'P', id>, <$type, $party>, m) ]
+
+rule CorruptPhoneReceive [color=#fc5386]:
+    [ !Chan(<$type, $party>, <'P', id>, m)
+    , !Phone(id, $CC) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneReceive', m) ]->
+    [ Out(m) ]
+
+rule CorruptPhoneTestDBRead [color=#fc5386]:
+    [ !PhoneTestDB(id, r, $i)
+    , !Phone(id, $CC) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneTestDBRead', <r, $i>) ]->
+    [ Out(<r, $i>) ]
+
+rule CorruptPhoneTestDBWrite [color=#fc5386]:
+    [ In(<r, $i>)
+    , !Phone(id, $CC) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneTestDBWrite', <r, $i>) ]->
+    [ !PhoneTestDB(id, r, $i) ]
+
+
+
+/*
+**********************************************
+Health authority, testing, and key upload
+**********************************************
+
+* Initialize health authority (key pair)
+* Test user
+* Claim user as infected and determine tContag
+* Health authority sends notification to backend
+* Phone uploads key (one at a time)
+* Backend verifies received messages and outputs released key
+
+**********************************************
+*/
+
+rule HealthAuthorityInit:
+    [ Fr(~x) ]
+  --[ HAInit($CC, ~x) ]->
+    [ !HA($CC, ~x)
+    , !HAPubKey($CC, pk(~x))
+    , Out(<$CC, pk(~x)>) ]
+
+/*
+ * NOTES:
+ * - The authentication scheme for design 3 is described in appendix 2 of the authorisation document.
+ * - Instead of providing the tester with all keys from the last 14 days, one key at a time is provided.
+*/
+rule PTest [color=#6600ff]:
+    let
+        H_t = h(<k, $dayKey, r, 'test'>)
+    in
+    [ Fr(r)
+    , !Phone(id, $phoneCC)
+    , !HAPubKey($haCC, pkHA)
+    , !PhoneKey(id, $dayKey, k) ]
+  --[ Day($dayTest)
+    , Interval($iTest)
+    , EarlierDay($dayKey, $dayTest)
+   // Phones can only get tested by their own national authority.
+    , _restrict($haCC = $phoneCC)
+   // Used to ensure that id is only tested at the time $dayTest.
+    , Tested(id, $dayTest) ]->
+  [// Send to tester who stores this data in P's medical record.
+   // Shared across all health authorities of a country.
+      !Chan(<'P', id>, <'HA', $haCC>, <'testdata', $dayTest, r, H_t, $dayKey>)
+    , !PhoneTestDB(id, r, $dayKey) ]
+
+/*
+ * NOTES:
+ * - Once tested positive, the health authority communicates with the user to determine tContag.
+ * - $dayContag ∈ [$dayKey, $dayTest]
+ * - In contrast to ROBERT, the contagious period is from dayContag to test time instead of being chosen by HA.
+ */
+
+rule HATestPositive:
+    [ !Chan(<'P', id>, <'HA', $haCC>, <'testdata', $dayTest, r, H_t, $dayKey>) ]
+  --[ // $dayContag <= $dayKey < $dayTest
+      EarlierDayEq($dayContag, $dayKey)
+    , EarlierDay($dayKey, $dayTest)
+    , TestPositive(id, $dayTest)
+   // $dayKey ∈ [$dayTest - 14, $dayTest)
+    , Within14Days($dayContag, $dayTest)
+    , HAClaimInfected(id, $dayContag, $dayTest)
+    , HAContPeriod(id, $dayContag, $dayTest) ]->
+    [ HADB($haCC, id, $dayContag, $dayTest, r, H_t, $dayKey) ]
+
+rule HATestNotification:
+    let
+        mAC = <$haCC, $dayKey, H, 'postest'>
+        AC = sign(sk(~x), mAC)
+    in
+    [ !HA($haCC, ~x)
+    , HADB($haCC, id, $dayContag, $dayTest, r, H, $dayKey) ]
+  --[ EarlierDayEq($dayContag, $dayKey)
+    , EarlierDay($dayKey, $dayTest) ]->
+   // Health authority communicates with backend from the same country.
+    [ !Chan(<'HA', $haCC>, <'P', id>, <'positive', AC, H, $dayContag, $dayTest>) ]
+
+/*
+ * NOTES:
+ * - Allows the phone to upload keys for time windows $dayKey ∈ [$dayContag, $dayTest].
+ * - For each key the phone wants to upload, it chooses a new random value r.
+ */
+rule PhoneReleaseKey:
+    let
+        mBA = <k, $dayKey, r>
+    in
+    [ !Phone(id, $CC)
+   // User can decide to give key for later point in time $dayKey.
+    , !PhoneKey(id, $dayKey, k)
+    , !PhoneTestDB(id, r, $dayKey)
+    , !Chan(<'HA', $haCC>, <'P', id>, <'positive', AC, H, $dayContag, $dayTest>) ]
+  --[ // $dayContag <= $dayKey < $dayTest
+      EarlierDayEq($dayContag, $dayKey)
+    , EarlierDay($dayKey, $dayTest)
+    , ReleaseKey(id, $dayKey, k) ]->
+    [ !Chan(<'P', id>, <'B', $CC>, <AC, H, mBA>) ]
+
+rule BackendInit:
+    [ Fr(~x) ]
+  --[ BackendInit($CC, ~x) ]->
+    [ !Backend($CC, ~x)
+    , !BackendPubKey($CC, pk(~x))
+    , Out(pk(~x)) ]
+
+/*
+ * NOTES:
+ * - The backend receives messages from a user's phone and an health authority of the same country.
+ *   The output can also be signed by a backend with a different country code.
+ *   This models the forwarding implicitely.
+ */
+rule Backend:
+    let
+     // From phone
+        mBA = <k, $dayKey, r>
+        Hp = h(<k, $dayKey, r, 'test'>)
+
+     // To other users
+        entry = <$CCp, k, $dayKey, $i>
+        mPublic  = <entry, sign(sk(~x), entry)>
+    in
+    [ !Chan(<'P', id>, <'B', $CC>, <AC, H, mBA>)
+    , !HAPubKey($CC, pkHA)
+    , !Backend($CCp, ~x) ]
+  --[ BackendReleaseKey($CCp, k)
+    , BackendForward($CC, $CCp)
+    , Day($d)
+    , Interval($i)
+    , BackendReleaseKeyWithTime($CCp, k, $dayKey)
+    , _restrict(Hp = H)
+    , _restrict(verify(pkHA, AC, <$CC, $dayKey, H, 'postest'>) = true()) ]->
+    [ Out(mPublic) ]
+
+
+
+/*
+**********************************************
+Health authority, backend corruption
+**********************************************
+
+* Disclose HA's secret key
+* Allow HA to send messages to any other party over !Chan
+* Store arbitrary terms in the HA's database
+* Disclose the backend's secret key
+* Allow the backend to receive any message over !Chan and output it
+
+**********************************************
+*/
+
+rule CorruptHAState [color=#fc5386]:
+    [ !HA($CC, ~x) ]
+  --[ Corrupt(<'HA', $CC>, 'CorruptHAState', sk(~x)) ]->
+    [ Out(sk(~x)) ]
+
+// Channel corruptions (specific to HA)
+rule CorruptHASend [color=#fc5386]:
+    [ In(m)
+    , !Phone(id, $CC)
+    , !HA($CC, ~x) ]
+  --[ Corrupt(<'HA', $CC>, 'CorruptHASend', m) ]->
+    [ !Chan(<'HA', $CC>, <'P', id>, m) ]
+
+// Rule CorruptHAReceive:  not needed: none sends anything to the HA.
+
+// Corruption rules (specific to B)
+rule CorruptBState [color=#fc5386]:
+    [ !Backend($CC, ~x) ]
+  --[ Corrupt(<'B', $CC>, 'CorruptBState', sk(~x))]->
+    [ Out(sk(~x)) ]
+
+// Channel corruptions (specific to B)
+rule CorruptBReceive [color=#fc5386]:
+    [ !Chan(<$type, $party>, <'B', $CC>, m) ]
+  --[ Corrupt(<'B', $CC>, 'CorruptBReceive', m) ]->
+    [ Out(m) ]
+
+
+
+/*
+**********************************************
+Enforcing behavior
+**********************************************
+*/
+
+// One key per day.
+restriction one_key_per_day:
+  "All id d k1 k2 #i #j. CreateKey(id, d, k1)@i
+                      &  CreateKey(id, d, k2)@j ==> k1 = k2"
+
+// One health authority key per country
+restriction one_ha_key_per_country:
+  "All cc k1 k2 #i #j. HAInit(cc, k1)@i
+                    &  HAInit(cc, k2)@j ==> k1 = k2"
+
+// Each individual tested at one timepoint.
+restriction test_postive_once:
+  "All id tt1 tt2 #i #j. TestPositive(id, tt1)@i
+                      &  TestPositive(id, tt2)@j ==> tt1 = tt2"
+
+// Honest phones release their key only once.
+restriction phone_release_key_once:
+   "All id t k #i #j. ReleaseKey(id, t, k)@i
+                    & ReleaseKey(id, t, k)@j ==> #i = #j"
+
+// A backend has to check whether an uploaded key has already been uploaded to a backend of a different country with
+// a different time and in that case discard the upload.
+// Otherwise, an adversary may send an already released key by a backend server of country A to the backend server
+// of country B (with a corrupted HA) but with a different time.
+restriction backend_key_with_same_time:
+  "All cc1 cc2 k t1 t2 #i #j. BackendReleaseKeyWithTime(cc1, k, t1)@i
+                            & BackendReleaseKeyWithTime(cc2, k, t2)@j ==> t1 = t2"
+
+// This restriction means we treat users-post-positive test as no longer being capable of being at risk.
+restriction positive_means_stop:
+  "All id tsTest day tsClose #t1 #t2.
+       TestPositive(id, tsTest)@t1
+     & PClaimAtRisk(id, day, tsClose)@t2
+     & #t1 < t2 ==> F"
+
+
+
+predicate:
+  MaliciousUpload(idC, k) <=>
+         // CASE: Compromise \emph{these} $n$ phones and $1$ health authority\anycc (\ref{at:dptt-upload-other}, \ref{at:dptt-upload-self})
+            (Ex cc x #t1 #t2.
+            Corrupt(<'P', idC>, 'CorruptPhoneKey', k)@t1
+          & Corrupt(<'HA', cc>, 'CorruptHAState', sk(x))@t2
+          & (
+            // Notes: The phone id can be any phone, not necessarily idC.
+            // The day of the key can be changed by the compromised phone id.
+                (Ex id d r #t2.
+                    Corrupt(<'P', id>, 'CorruptPhoneSend',
+                            <sign(sk(x), <cc, d, h(<k, d, r, 'test'>), 'postest'>), h(<k, d, r, 'test'>), k, d, r>)@t2
+                )
+            // Alternatively: obtain r and send forged positive test result notification to idC which then uploads its key.
+            |(Ex ty d dc dt r #t21 #t22.
+                 Corrupt(<'P', idC>, ty, <r, d>)@t21
+               & (ty = 'CorruptPhoneTestDBWrite' | ty = 'CorruptPhoneTestDBRead')
+               & Corrupt(<'HA', cc>, 'CorruptHASend', <'positive', sign(sk(x), <cc, d, h(<k, d, r, 'test'>), 'postest'>), h(<k, d, r, 'test'>), dc, dt>)@t22)
+               ))
+        // CASE: Compromise \emph{these} $n$ phones and let $n$ compromised infected phones upload their keys (\ref{at:dppt-upload-other-compromised})
+          | (Ex idV dayTestV #t5 payload #t6.
+                TestPositive(idV, dayTestV)@t5
+              & Corrupt(<'P', idV>, 'CorruptPhoneSend', payload)@t6
+              & #t6 < #t5
+              & not (idV = idC)),
+
+  // Same as MaliciousUpload but with a forged key.
+  MaliciousUploadForged(idC, k) <=>
+            (Ex cc x #t1 #t2.
+            KU(k)@t1
+          & (not Ex id d #t. CreateKey(id, d, k)@t & #t < #t1)
+
+          & Corrupt(<'HA', cc>, 'CorruptHAState', sk(x))@t2
+
+          // The phone id can be any phone, not necessarily idC.
+          // The day of the key can be changed by the compromised phone id.
+          & ((Ex id d r #t2. Corrupt(<'P', id>, 'CorruptPhoneSend', <sign(sk(x), <cc, d, h(<k, d, r, 'test'>), 'postest'>), h(<k, d, r, 'test'>), k, d, r>)@t2)
+          // Obtain r and send forged positive test result notification to idC which then uploads its key.
+            |(Ex ty d dc dt r #t21 #t22. Corrupt(<'P', idC>, ty, <r, d>)@t21
+                                    & (ty = 'CorruptPhoneTestDBWrite' | ty = 'CorruptPhoneTestDBRead')
+                                    & Corrupt(<'HA', cc>, 'CorruptHASend', <'positive', sign(sk(x), <cc, d, h(<k, d, r, 'test'>), 'postest'>), h(<k, d, r, 'test'>), dc, dt>)@t22)))
+          | (Ex idV dayTestV #t5 payload #t6.
+                TestPositive(idV, dayTestV)@t5
+              & Corrupt(<'P', idV>, 'CorruptPhoneSend', payload)@t6
+              & #t6 < #t5
+              & not (idV = idC)),
+
+  UploadAuth(idC) <=> ( All ccB k #t1 #t2 daykey.
+       BackendReleaseKey(ccB, k)@t1
+     & CreateKey(idC, daykey, k)@t2
+       ==> // That phone tested positive
+           (Ex dayTestC #t3. TestPositive(idC, dayTestC)@t3 & #t3 < #t1) )
+
+
+lemma upload_auth:
+   // When a key is released that was created by a particular phone
+  "All ccB idC k #t1 #t2 daykey.
+       BackendReleaseKey(ccB, k)@t1
+     & CreateKey(idC, daykey, k)@t2
+       ==> // That phone tested positive
+              (Ex dayTestC #t3 . TestPositive(idC, dayTestC)@t3 & #t3 < #t1)
+           // or the TEK has been uploaded malicously
+            | MaliciousUpload(idC, k)"
+
+lemma soundness:
+    "All idR instClose dayClose tsRisk #tRisk. PClaimAtRisk(idR, dayClose, instClose)@tRisk & Day(tsRisk)@tRisk
+        // Phone was exposed to a positive patient (no misbehaviour)
+     ==> ( Ex idI place dayContag dayTest #t1 #t2 #t3 #t4 #t5 #tClaim.
+             IsAt(idR, place, instClose)@t1
+           & IsAt(idI, place, instClose)@t2
+           & HAClaimInfected(idI, dayContag, dayTest)@tClaim
+           & EarlierDayEq(dayContag, dayClose)@t3
+           & EarlierDay(dayClose, dayTest)@t4
+           & Within14Days(dayContag, dayTest)@t5
+           & not (idR = idI)
+           & (All idC cc #t1. PhoneInit(idC, cc)@t1 ==> UploadAuth(idC)))
+        /* CASE: Compromise $1$ (or many) infected phones and, during the last $14$ days\outsidef, place in proximity to all $n$ phones (\ref{at:dptt-mal-upload})
+         *
+         * The key of the infected phone is maliciously uploaded to the backend.
+         */
+       | ( Ex idI place dayKey k dayContag dayTest #t1 #t2 #t3 #t5 #tClaim.
+              IsAt(idR, place, instClose)@t1
+            & IsAt(idI, place, instClose)@t2
+            & HAClaimInfected(idI, dayContag, dayTest)@tClaim
+            & CreateKey(idI, dayKey, k)@t3
+            & MaliciousUpload(idI, k)
+            & Within14Days(dayContag, dayTest)@t5
+            & not (idR = idI)
+            & (All idC cc #t1. PhoneInit(idC, cc)@t1 ==> UploadAuth(idC)))
+         /* CASE: Compromise $1$ infected phone and, within contagious period, reach all $n$ phones via Bluetooth (\ref{at:dptt-window})
+          *
+          * Similar to honest case but with BLEwr
+          */
+       | ( Ex idI place k ctr dayContag dayContag2 dayTest #t1 #t2 #t3 #t4 #t5 #t6 #tClaim.
+              IsAt(idR, place, instClose)@t1
+            & HAClaimInfected(idI, dayContag, dayTest) @tClaim
+            & Within14Days(dayContag, dayTest)@t2
+            & EarlierDayEq(dayContag2, dayClose)@t3
+            & EarlierDay(dayClose, dayTest)@t4
+            & BLEwr(instClose, place, prg(prf(k, 'DP3T_HYBRID'), ctr))@t5
+            & Corrupt(<'P', idI>, 'CorruptPhoneKey', k)@t6
+            & not (idR = idI)
+            & (All idC cc #t1. PhoneInit(idC, cc)@t1 ==> UploadAuth(idC)))
+        /* CASE: Relay $1$ infected ephemerals\dayf to $n$ phone(s)\anycc (\ref{at:dptt-relay})
+         *
+         * The adversary broadcast an ephemeral nearby which was previously broadcast
+         * by an infected patient. The adversary learnt the ephemeral either through
+         * direct reception or corrupting a phone which observed the ephemeral.
+         * The replay does not necessarily have to happen in the same time interval
+         */
+       | ( Ex tRecRelay day place1 place2 eph idV tsContag tsTest  #t1 #t2 #t4 #t5 .
+              IsAt(idR, place1, instClose)@t1
+            & IsAt(idV, place2, tRecRelay) @t4
+            & HAClaimInfected(idV, tsContag, tsTest) @t5
+            & GenSendEph(idV, day, tRecRelay, eph) @t4
+            & BLEwr(instClose, place1, eph)@t2
+            & ((Ex #t31. BLErd(tRecRelay, place2, eph)@t31)
+                 | (Ex id #t32. Corrupt(id, 'CorruptPhoneReceived', eph)@t32))
+            & not (idR = idV)
+            & (All idC cc #t1. PhoneInit(idC, cc)@t1 ==> UploadAuth(idC)))
+        /* CASE: Compromise $1$ phone and $1$ health authority\anycc and, before malicious upload, reach all $n$ phones via Bluetooth (\ref{at:dptt-forge-daily}, \ref{at:dptt-leak-and-relay-daily})
+         *
+         * Adversary forges key which was broadcasted to idR and uploaded to the backend.
+         */
+       | ( Ex place k ctr idI cc #t1 #t2 #t3.
+              IsAt(idR, place, instClose)@t1
+           // BLEwr is needed if the key is forged
+            & BLEwr(instClose, place, prg(prf(k, 'DP3T_HYBRID'), ctr))@t2
+            & PhoneInit(idI, cc)@t3
+            & MaliciousUploadForged(idI, k) // comment out for quick checks, doubles verification time
+           // If the key is forged, MarkPostive always holds.
+            & (All idC cc #t1. PhoneInit(idC, cc)@t1 ==> UploadAuth(idC)))
+        /* C-A-S-E: compromise $1$ phone and $1$ health authority\anycc and, before malicious upload, place in proximity to all $n$ phones
+         *
+         * Adversary uploads leaked key to backend.
+         * The ephemeral might be replayed at a different place and time.
+         */
+       | ( Ex place k idI #t1 #t2.
+              IsAt(idR, place, instClose)@t1
+            & Corrupt(<'P', idI>, 'CorruptPhoneKey', k)@t2
+            & MaliciousUpload(idI, k))
+       /* C-A-S-E: compromise $1$ phone and $1$ backend\samecc and, before upload, be in proximity to each phone
+        *
+        * The adversary compromised phone V who was near the patient and let compromised backend declare the key infected.
+        */
+       | ( Ex place k idV cc x #t1 #t2 #t3 #t4.
+              IsAt(idR, place, instClose)@t1
+            & IsAt(idV, place, instClose)@t2
+            & Corrupt(<'P', idV>, 'CorruptPhoneKey', k)@t3
+            & Corrupt(<'B', cc>, 'CorruptBState', sk(x))@t4
+            & (All idC cc #t1. PhoneInit(idC, cc)@t1 ==> UploadAuth(idC)))
+        /* CASE: Compromise $1$ back end\samecc and, before upload, reach each phone via Bluetooth (\ref{at:dptt-backend-sign}, \ref{at:dptt-backend-forge-ephs})
+         *
+         * Backend forges and distributes key of untested honest phone.
+         * No other entity needs to be corrupted.
+         */
+       | ( Ex place k ctr cc x #t1 #t2 #t3.
+              IsAt(idR, place, instClose)@t1
+            & BLEwr(instClose, place, prg(prf(k, 'DP3T_HYBRID'), ctr))@t2
+            & Corrupt(<'B', cc>, 'CorruptBState', sk(x))@t3
+            & (All idC cc #t1. PhoneInit(idC, cc)@t1 ==> UploadAuth(idC)))"
+
+/*
+==============================================================================
+summary of summaries:
+
+analyzed: dp3t.spthy
+
+  upload_auth (all-traces): verified (75 steps)
+  soundness (all-traces): verified (31561 steps)
+
+==============================================================================
+*/
+
+end
