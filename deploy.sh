@@ -15,15 +15,15 @@ function doCompile {
 }
 
 # Pull requests and commits to other branches shouldn't try to deploy, just build to verify
-if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "$SOURCE_BRANCH" ]; then
-    echo "Skipping deploy; not the right kind of build."
-    exit 0
-fi
+#if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "$SOURCE_BRANCH" ]; then
+#    echo "Skipping deploy; not the right kind of build."
+#    exit 0
+#fi
 
 # Clone the existing gh-pages for this repo into a temporary folder $CHECKOUT.
 CHECKOUT=`mktemp -d`
 git clone $REPO $CHECKOUT
-git -C $CHECKOUT config user.name "Travis CI"
+git -C $CHECKOUT config user.name "GitHub Actions"
 git -C $CHECKOUT config user.email "$COMMIT_AUTHOR_EMAIL"
 # Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deploy).
 git -C $CHECKOUT checkout $TARGET_BRANCH || git -C $CHECKOUT checkout --orphan $TARGET_BRANCH
@@ -49,11 +49,7 @@ fi
 git -C $CHECKOUT add \*
 git -C $CHECKOUT commit -m "Deploy to GitHub Pages: ${SHA}"
 
-# Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc.
-ENCRYPTED_KEY_VAR="encrypted_${ENCRYPTION_LABEL}_key"
-ENCRYPTED_IV_VAR="encrypted_${ENCRYPTION_LABEL}_iv"
-ENCRYPTED_KEY=${!ENCRYPTED_KEY_VAR}
-ENCRYPTED_IV=${!ENCRYPTED_IV_VAR}
+# Get the deploy key by using Githubs's stored variables to decrypt deploy_key.enc.
 openssl enc -nosalt -aes-256-cbc -d -in deploy_key.enc -out deploy_key -base64 -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV
 chmod 600 deploy_key
 eval `ssh-agent -s`
