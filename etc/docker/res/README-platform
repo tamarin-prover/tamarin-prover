@@ -1,8 +1,8 @@
-Hi! This is the protocolplatform Docker image. You can now:
+Hi! This is the sapicplusplatform Docker image. You can now:
 
 1. Browse the image interactively:
 
-docker run -it protocolplatform/protocolplatform:latest bash
+docker run -it robertkuennemann/sapicplusplatform:latest bash
 
 You should obtain a shell that reads like that: `root@976d3bce69f8:/opt/protocolplatform#`.
 
@@ -54,7 +54,7 @@ We refer to `examples/README.md` for details about the case studies and some usa
 - set up the following alias to give the image access to your host's current working
   dir (at the time of calling) and forward port 3001:
 
-alias pp='docker run -p 3001:3001 -v "$PWD:$PWD" -w "$PWD" protocolplatform/protocolplatform'
+alias pp='docker run -p 3001:3001 -v "$PWD:$PWD" -w "$PWD" robertkuennemann/sapicplusplatform'
 
 - run, e.g., "pp tamarin-prover" to run tamarin-prover from the docker
 - remember to use the "-i" flag in tamarin's interactive mode to accept clients

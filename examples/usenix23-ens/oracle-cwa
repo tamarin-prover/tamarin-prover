@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import sys
+
+oracle_default = [ ["∃"]
+               , ["Corrupt"]
+               , ["TestConducted", "PhoneRequestRegistrationToken"]
+               , ["VSGenerateTAN", "VSTanRepository"]
+               , ["!Chan"]
+               , ["!KU( sk(", "!KU( prg(", "!KU( prf("]
+               , ["!Phone( "]
+               , ["IsAt("]
+               , ["!PhoneRPIK( ", "!PhoneAEMK( ", "!PhoneTEK"]
+               , ["!Positive"]
+               , ["!FTested"]
+               , ["!Backend", "!BackendPubKey" ]
+               , ["!VSAppSession", "TRSTestResult" ]
+               , ["!SpaceTime"]
+               , ["IsAt"]
+               , ["!KU"]
+               , ["!PhoneReceived( "]
+               , ["Day", "Interval"]
+               , ["Earlier"]
+               , ["($i = $j)"]]
+
+soundness = [     [("∀", "Day")]
+                , ["!Chan"]
+                , [("!KU( ~t", "tele")]
+                , ["!KU( ~x"]
+                , ["!KU( sk(~x) )"]
+                , ["!Phone(", "!BackendPubKey("]
+                , ["!PhoneReceive"]
+                , ["!KU( tan"]
+                , ["!KU( ~n "]
+                , ["!KU( sign", "!KU( hkdf", ]
+                , ["!KU( aes"]
+                , [("!KU( ~", "~guid"), "!KU( reg", "!KU( h"]
+                , ["!KU( ~guid"]
+                , ["!Backend("]
+                , ["∃"]
+                , ["!KU( "]
+                , ["VSTanRepository"]
+                , ["Corrupt"]
+                , ["($dayClose", "($dayContag"]
+                , ["$dTest"]
+                , ["#t1 ="]
+                , ["($d"]
+                , [" = "]
+                , ["Day"]]
+
+oracles = {
+    "default": oracle_default,
+    "secret_tan": [["!KU( tan(~n) )"], ["!KU( ~n )"]],
+    "soundness": soundness,
+    "upload_auth": soundness,
+}
+
+lines = sys.stdin.readlines()
+lemma = sys.argv[1]
+oracle = oracles[lemma] if lemma in oracles else oracles["default"]
+
+results = []
+for current in oracle:
+    for line in list(lines): # local copy
+        for guess in current:
+            if len(guess) == 2:
+                matched = guess[0] in line and guess[1] not in line
+            else:
+                matched = guess in line
+            if matched:
+                num = line.split(":")[0]
+                results.append(num)
+                lines.remove(line)
+                break
+
+not_matched = [l.split(":")[0] for l in lines if l.split(":")[0] not in results]
+
+for num in results:
+    print(num)
+for num in reversed(not_matched):
+   print(num)

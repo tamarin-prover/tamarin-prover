@@ -71,21 +71,28 @@ import           Safe
 import qualified Theory.Text.Pretty as Pretty
 import           Items.LemmaItem (HasLemmaName, HasLemmaAttributes)
 import           Control.Monad.Except
-import           Text.Read (readEither)
+import           Text.Read (readEither, readMaybe)
 import           Theory.Module (ModuleType (ModuleSpthy, ModuleMsr))
 import           qualified Data.Label as L
 import           Theory.Text.Parser.Token (parseString)
 import           Data.Bifunctor (Bifunctor(bimap))
 import           Data.Bitraversable (Bitraversable(bitraverse))
-import           Control.Monad.Catch (MonadCatch)
+import           Control.Monad.Catch (MonadCatch, onException, handle)
 import qualified Accountability as Acc
 import qualified Accountability.Generation as Acc
 import GHC.Records (HasField(getField))
+
+import           TheoryObject                        (diffThyOptions)
+import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve)
+import Data.Maybe (fromMaybe)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
 ------------------------------------------------------------------------------
 
+-----------------------------------------------
+-- Flags
+-----------------------------------------------
 
 -- | Flags for loading a theory.
 theoryLoadFlags :: [Flag Arguments]
@@ -124,7 +131,21 @@ theoryLoadFlags =
 
   , flagOpt (oraclePath defaultOracle) ["oraclename"] (updateArg "oraclename") "FILE"
       ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "')")
+
+  , flagOpt "10" ["open-chains","c"] (updateArg "OpenChainsLimit" ) "PositiveInteger"
+      "Limits the number of open chains to be resoled during precomputations (default 10)"
+
+  , flagOpt "5" ["saturation","s"] (updateArg "SaturationLimit" ) "PositiveInteger"
+      "Limits the number of saturations during precomputations (default 5)"
+
+
+--  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
+--      "Turn on observational equivalence (default OFF)."
   ]
+
+-----------------------------------------------
+-- TheoryLoadOptions
+-----------------------------------------------
 
 data TheoryLoadOptions = TheoryLoadOptions {
     _oProveMode         :: Bool
@@ -140,6 +161,8 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oOutputModule      :: Maybe ModuleType -- Note: This flag is only used for batch mode.
   , _oMaudePath         :: FilePath -- FIXME: Other functions defined in Environment.hs
   , _oParseOnlyMode     :: Bool
+  , _oOpenChain         :: Integer
+  , _oSaturation        :: Integer
 } deriving Show
 $(mkLabels [''TheoryLoadOptions])
 
@@ -158,6 +181,8 @@ defaultTheoryLoadOptions = TheoryLoadOptions {
   , _oOutputModule      = Nothing
   , _oMaudePath         = "maude"
   , _oParseOnlyMode     = False
+  , _oOpenChain         = 10
+  , _oSaturation        = 5
 }
 
 toParserFlags :: TheoryLoadOptions -> [String]
@@ -183,6 +208,8 @@ mkTheoryLoadOptions as = TheoryLoadOptions
                          <*> outputModule
                          <*> (return $ maudePath as)
                          <*> parseOnlyMode
+                         <*> openchain
+                         <*> saturation
   where
     proveMode  = return $ argExists "prove" as
     lemmaNames = return $ findArg "prove" as ++ findArg "lemma" as
@@ -228,7 +255,21 @@ mkTheoryLoadOptions as = TheoryLoadOptions
      | otherwise   = throwError $ ArgumentError "output mode not supported."
 
     -- NOTE: Output mode implicitly activates parse-only mode
-    parseOnlyMode = return $ argExists "parseOnly" as || argExists "outputMode" as
+    parseOnlyMode = return $ argExists "parseOnly" as || argExists "outModule" as
+
+    chain = findArg "OpenChainsLimit" as
+    chainDefault = L.get oOpenChain defaultTheoryLoadOptions
+    openchain = if not (null chain) 
+                  then return (fromMaybe chainDefault (readMaybe (head chain) ::Maybe Integer))
+                  else return chainDefault
+    -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
+
+    sat = findArg "SaturationLimit" as
+    satDefault = L.get oSaturation defaultTheoryLoadOptions
+    saturation = if not (null sat)
+                   then return (fromMaybe satDefault (readMaybe (head sat) ::Maybe Integer))
+                   else return satDefault
+    -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
 
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
 lemmaSelectorByModule thyOpt lem = case lemmaModules of
@@ -268,7 +309,8 @@ instance Show TheoryLoadError
 loadTheory :: MonadCatch m => TheoryLoadOptions -> String -> FilePath -> ExceptT TheoryLoadError m (Either OpenTheory OpenDiffTheory)
 loadTheory thyOpts input inFile = do
     thy <- withExceptT ParserError $ liftEither $ unwrapError $ bimap parse parse thyParser
-    withTheory translate thy
+    let thy' = addParamsOptions thyOpts thy
+    withTheory translate thy'
   where
     thyParser | isDiffMode = Right $ diffTheory $ Just inFile
               | otherwise  = Left  $ theory     $ Just inFile
@@ -290,8 +332,8 @@ loadTheory thyOpts input inFile = do
 
     withTheory     f t = bitraverse f return t
 
-closeTheory :: MonadError TheoryLoadError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
-closeTheory thyOpts sig srcThy = do
+closeTheory :: MonadError TheoryLoadError m => String -> TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
+closeTheory version thyOpts sig srcThy = do
   let preReport = either (\t -> (Sapic.checkWellformedness t ++ Acc.checkWellformedness t))
                          (const []) srcThy
 
@@ -315,7 +357,10 @@ closeTheory thyOpts sig srcThy = do
                            (return . (maybe id (\s -> applyPartialEvaluationDiff s autoSources) partialStyle)) closedThy
   provedThy  <- bitraverse (\t -> return $ proveTheory     (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover t)
                            (\t -> return $ proveDiffTheory (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover diffProver t) partialThy
-  return (report, provedThy)
+  provedThyWithVersion <- bitraverse (return . addComment (Pretty.text version))
+                           (return . addDiffComment (Pretty.text version) )  provedThy
+
+  return (report, provedThyWithVersion)
 
   where
     autoSources   = L.get oAutoSources thyOpts
@@ -347,6 +392,29 @@ constructAutoProver thyOpts =
     AutoProver (L.get oHeuristic thyOpts)
                (L.get oProofBound thyOpts)
                (L.get oStopOnTrace thyOpts)
+
+-----------------------------------------------
+-- Add Options parameters in an OpenTheory
+-----------------------------------------------
+
+-- | Add parameters in the OpenTheory, here openchain and saturation in the options
+addParamsOptions :: TheoryLoadOptions -> Either OpenTheory OpenDiffTheory -> Either OpenTheory OpenDiffTheory
+addParamsOptions opt = addSatArg . addChainsArg . addLemmaToProve
+
+    where
+      -- Add Open Chain Limit parameters in the Options
+      chain = L.get oOpenChain opt
+      addChainsArg (Left thy) = Left $ set (openChainsLimit.thyOptions) chain thy
+      addChainsArg (Right diffThy) = Right $ set (openChainsLimit.diffThyOptions) chain diffThy
+      -- Add Saturation Limit parameters in the Options
+      sat = L.get oSaturation opt
+      addSatArg (Left thy) = Left $ set (saturationLimit.thyOptions) sat thy
+      addSatArg (Right diffThy) = Right $ set (saturationLimit.diffThyOptions) sat diffThy
+      -- Add lemmas to Prove in the Options
+      lem = L.get oLemmaNames opt
+      addLemmaToProve (Left thy) = Left $ set (lemmasToProve.thyOptions) lem thy
+      addLemmaToProve (Right diffThy) = Right $ set (lemmasToProve.diffThyOptions) lem diffThy
+
 
 ------------------------------------------------------------------------------
 -- Message deduction variants cached in files
@@ -408,3 +476,5 @@ addMessageDeductionRuleVariantsDiff thy0
     thy          = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
     addIntruderVariantsDiff mkRuless =
         addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)
+
+

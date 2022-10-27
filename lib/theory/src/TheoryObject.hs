@@ -27,6 +27,7 @@ module TheoryObject (
   , diffThyCacheRight
   , diffThyDiffCacheLeft
   , diffThyDiffCacheRight
+  , diffThyOptions
   , thyHeuristic
   , diffThyHeuristic
   , DiffLemma(..)
@@ -183,6 +184,7 @@ data DiffTheory sig c r r2 p p2 = DiffTheory {
        , _diffThyDiffCacheLeft  :: c
        , _diffThyDiffCacheRight :: c
        , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
+       , _diffThyOptions        :: Option
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''DiffTheory])
@@ -480,7 +482,7 @@ addHeuristic h (Theory n [] sig c i o) = Just (Theory n h sig c i o)
 addHeuristic _ _ = Nothing
 
 addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
-addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i) = Just (DiffTheory n h sig cl cr dcl dcr i)
+addDiffHeuristic h (DiffTheory n [] sig cl cr dcl dcr i opt) = Just (DiffTheory n h sig cl cr dcl dcr i opt)
 addDiffHeuristic _ _ = Nothing
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
@@ -590,6 +592,11 @@ isRuleItem _            = False
 itemToRule :: TheoryItem r p s -> Maybe r
 itemToRule (RuleItem r) = Just r
 itemToRule _            = Nothing
+
+
+------------------------------------------------------------------------------
+-- Pretty Print
+------------------------------------------------------------------------------
 
 --Pretty print a theory
 prettyTheory :: HighlightDocument d

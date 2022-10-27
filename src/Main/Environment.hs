@@ -11,7 +11,7 @@ module Main.Environment where
 
 import           Data.Char                       (isSpace, toLower)
 import           Data.List
-import           Data.Maybe                      (fromMaybe)
+import           Data.Maybe                      (fromMaybe, isNothing, isJust)
 
 import           Control.Exception               as E
 
@@ -23,6 +23,30 @@ import           System.Process
 
 import           Main.Console
 
+-- For tamarin, git version, compile time... 
+import Data.Version (showVersion)
+import Paths_tamarin_prover (version)
+
+------------------------------------------------------------------------------
+-- Versions String
+------------------------------------------------------------------------------
+
+-- | Get Version String by adding maude version
+getVersionIO :: String -> IO String
+getVersionIO maudeVersion = do
+              let tamarinVersion = showVersion version
+              let versionExport = "Generated from:\nTamarin version " ++ tamarinVersion
+                        ++  "\nMaude version " ++ maudeVersion ++ gitVersion
+                        ++ "\n" ++ compileTime
+              return versionExport
+
+ensureMaudeAndGetVersion :: Arguments -> IO String
+ensureMaudeAndGetVersion as = do
+          -- Ensure Maude version and get Maude version 
+          maybeMaudeVersion <- ensureMaude as
+          let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
+          -- Get String for version and put it in the arguments __version__
+          getVersionIO maudeVersion
 
 ------------------------------------------------------------------------------
 -- Retrieving the paths to required tools.
@@ -91,7 +115,7 @@ testProcess
   -> String         -- ^ Stdin
   -> Bool           -- ^ Whether to ignore ExitFailure
   -> Bool           -- ^ Whether Maude is being tested - hard fail for exceptions on Maude.
-  -> IO Bool        -- ^ True, if test was successful
+  -> IO (Maybe String)    -- ^ String with the process output, if test was successful
 testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = do
     putStr testName
     hFlush stdout
@@ -104,12 +128,12 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
                 putStrLn $ " stdin:   " ++ inp
                 putStrLn $ " stdout:  " ++ out
                 putStrLn $ " stderr:  " ++ err
-                return False
+                return Nothing
 
         let check' = case check out err of
                       Left msg     -> errMsg msg
                       Right msg    -> do putStrLn msg
-                                         return True
+                                         return (Just out)
 
         if not ignoreExitCode
            then case exitCode of
@@ -119,21 +143,21 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
            else check'
 
   where
-    handler :: IOException -> IO Bool
+    handler :: IOException -> IO (Maybe String)
     handler _ = do putStrLn "caught exception while executing:"
                    putStrLn $ commandLine prog args
                    putStrLn $ "with input: " ++ inp
                    if maudeTest then
                      error "Maude is not installed. Ensure Maude is available and on the path."
                      else putStrLn ""
-                   return False
+                   return Nothing
 
 -- | Ensure a suitable version of the Graphviz dot tool is installed.
-ensureGraphVizDot :: Arguments -> IO Bool
+ensureGraphVizDot :: Arguments -> IO (Maybe String)
 ensureGraphVizDot as = do
     putStrLn $ "GraphViz tool: '" ++ dot ++ "'"
     dotExists <- testProcess (check "graphviz" "") errMsg1 " checking version: " dot ["-V"] "" False False
-    if dotExists 
+    if isJust dotExists 
        then testProcess (check "png" "OK.") errMsg2 " checking PNG support: " dot ["-T?"] "" True False
        else return dotExists
   where
@@ -161,7 +185,7 @@ ensureGraphVizDot as = do
       ]
 
 -- | Check whether a the graph rendering command supplied is pointing to an existing file
-ensureGraphCommand :: Arguments -> IO Bool
+ensureGraphCommand :: Arguments -> IO (Maybe String)
 ensureGraphCommand as = do
     putStrLn $ "Graph rendering command: " ++ cmd
     testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False False
@@ -173,13 +197,13 @@ ensureGraphCommand as = do
     errMsg = unlines
       [ "Command not found" ]
 
--- | Ensure a suitable version of Maude is installed.
-ensureMaude :: Arguments -> IO Bool
+-- | Ensure a suitable version of Maude is installed. If it is the case, send back the version otherwise Nothing.
+ensureMaude :: Arguments -> IO (Maybe String)
 ensureMaude as = do
     putStrLn $ "maude tool: '" ++ maude ++ "'"
     t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" False True
     t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" False True
-    return (t1 && t2)
+    return (if isNothing t1 || isNothing t2 then Nothing else t1)
   where
     maude = maudePath as
     checkVersion out _
