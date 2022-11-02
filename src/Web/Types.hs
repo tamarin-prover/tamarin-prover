@@ -76,6 +76,9 @@ import           Yesod.Core
 import           Yesod.Static
 
 import           Theory
+import Control.Monad.Except (ExceptT)
+import Main.TheoryLoader
+import Theory.Tools.Wellformedness (WfErrorReport)
 
 
 ------------------------------------------------------------------------------
@@ -121,13 +124,12 @@ data WebUI = WebUI
     -- ^ The caching directory (for storing rendered graphs).
   , workDir            :: FilePath
     -- ^ The working directory (for storing/loading theories).
-  -- , parseThy    :: MonadIO m => String -> GenericHandler m ClosedTheory
-  , parseThy           :: String -> IO (Either String (ClosedTheory))
+  , thyOpts            :: TheoryLoadOptions
+    -- ^ Options for loading theories
+  , loadThy            :: String -> FilePath -> ExceptT TheoryLoadError IO (Either OpenTheory OpenDiffTheory)
+    -- ^ Load a theory according to command-line arguments.
+  , closeThy           :: SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> ExceptT TheoryLoadError IO (WfErrorReport, Either ClosedTheory ClosedDiffTheory)
     -- ^ Close an open theory according to command-line arguments.
-  , diffParseThy       :: String -> IO (Either String (ClosedDiffTheory))
-    -- ^ Close an open theory according to command-line arguments.
-  , thyWf              :: String -> IO String
-    -- ^ Report on the wellformedness of a theory according to command-line arguments.
   , theoryVar          :: MVar (TheoryMap)
     -- ^ MVar that holds the theory map
   , threadVar          :: MVar ThreadMap
@@ -141,8 +143,6 @@ data WebUI = WebUI
   , defaultAutoProver  :: AutoProver
     -- ^ The default prover to use for automatic proving.
   , debug              :: Bool
-    -- ^ Output debug messages
-  , isDiffTheory       :: Bool
     -- ^ Output debug messages
   }
 

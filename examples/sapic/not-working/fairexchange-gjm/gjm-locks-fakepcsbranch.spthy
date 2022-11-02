@@ -8,7 +8,7 @@ section{* Garay-Jakobsson-MacKenzie contract signing protocol *}
  * Modeler:     Robert Kunnemann
  * Date:        Jul 2016
  *
- * Status:      open // TODO need to adapt to new syntax
+ * Status:      Broken --- cannot use "pat_" variables for patterns anymore.
  * 
  *
  * Juan A. Garay, Markus Jakobsson, and Philip D. MacKenzie. Abuse-free

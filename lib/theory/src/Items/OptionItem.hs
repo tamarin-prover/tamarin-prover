@@ -28,8 +28,10 @@ data Option = Option
         , _asynchronousChannels       :: Bool
         , _compressEvents       :: Bool
         , _forcedInjectiveFacts :: S.Set FactTag
+        , _lemmasToProve        :: [String]
+        , _openChainsLimit      :: Integer
+        , _saturationLimit      :: Integer
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''Option])
 -- generate accessors for Option data structure records
-
