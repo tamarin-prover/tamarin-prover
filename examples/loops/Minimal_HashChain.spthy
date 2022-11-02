@@ -79,11 +79,13 @@ lemma Loop_charn [use_induction]:
   "All lid k kOrig #i. Loop(lid, k, kOrig) @ i ==>
      Ex #j. Loop(lid, kOrig, kOrig) @ j"
 
-// Not yet provable: the problem is that we cannot express the relation
-// between the keys on two different segments of the same loop.
-// @BS: Do you have an idea on how we could use multisets to formulate a
-// strong enough invariant?
-lemma Loop_and_success [use_induction]:
+lemma Helper_Loop_and_success[use_induction,reuse]:
+  "All lid kOrig k1 k2 #x #y #z.
+      Loop(lid, k1, kOrig) @ #x & Loop(lid, k2, kOrig) @ #y & #y < #x
+      & ChainKey(k1) @ #z
+    ==> Ex #t. ChainKey(k2) @ #t"
+
+lemma Loop_and_success:
   "All lid k kOrig1 kOrig2 #i #j.
        Loop(lid, k, kOrig1) @ i
      & Success(lid, kOrig2) @ j
@@ -91,8 +93,11 @@ lemma Loop_and_success [use_induction]:
      (Ex #j. ChainKey(k) @ j)
   "
 
-// The ultimate goal! A successful check implies that the starting key is a
-// key of the chain.
+lemma Helper_Success_charn[use_induction,reuse]:
+  "All lid k kOrig #x #y.
+      ChainKey(k) @ #x & Loop(lid, k, kOrig) @ #y
+    ==> Ex #z. ChainKey(kOrig) @ #z"
+
 lemma Success_charn:
   "All lid k #i. Success(lid, k) @ i ==>
     Ex #j. ChainKey(k) @ j"
