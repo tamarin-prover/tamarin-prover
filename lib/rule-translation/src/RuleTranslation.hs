@@ -327,15 +327,13 @@ printTerm vars checkEq t = case viewTerm t of
     FApp (AC Mult)     ts                           -> printAC "mult" ts
     FApp (AC Union)    ts                           -> printAC "union" ts
     FApp (AC Xor)      ts                           -> printAC "xor" ts
-    FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> "(" ++ printPair ts ++ ")"
+    FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printPair ts
     FApp (NoEq (f, _)) ts                           -> (showFunction $ BC.unpack f) ++ printList ts
     FApp (C EMap)      ts                           -> "em" ++ printList ts
     FApp List          ts                           -> printList ts
     where
       printList ts = "(" ++ (intercalate ", " $ map (printTerm vars checkEq) ts) ++ ")"
-      printPair [t1,t2] = case viewTerm t2 of
-        FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printTerm vars checkEq t1 ++ ", " ++ printPair ts
-        _                                               -> printTerm vars checkEq t1 ++ ", " ++ printTerm vars checkEq t2
+      printPair [t1,t2] = "(" ++ printTerm vars checkEq t1 ++ ", " ++ printTerm vars checkEq t2 ++ ")"
       printAC op [t1,t2] = op ++ "(" ++ printTerm vars checkEq t1 ++ ", " ++ printTerm vars checkEq t2 ++ ")"
       printAC op (t:ts) = op ++ "(" ++ printTerm vars checkEq t ++ ", " ++ printAC op ts ++ ")"
 
@@ -345,15 +343,13 @@ printTerm2 t = case viewTerm t of
     FApp (AC Mult)     ts                           -> printAC "mult" ts
     FApp (AC Union)    ts                           -> printAC "union" ts
     FApp (AC Xor)      ts                           -> printAC "xor" ts
-    FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> "(" ++ printPair ts ++ ")"
+    FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printPair ts
     FApp (NoEq (f, _)) ts                           -> (showFunction $ BC.unpack f) ++ printList ts
     FApp (C EMap)      ts                           -> "em" ++ printList ts
     FApp List          ts                           -> printList ts
     where
       printList ts = "(" ++ (intercalate ", " $ map printTerm2 ts) ++ ")"
-      printPair [t1,t2] = case viewTerm t2 of
-        FApp (NoEq (f, _)) ts | (BC.unpack f == "pair") -> printTerm2 t1 ++ ", " ++ printPair ts
-        _                                               -> printTerm2 t1 ++ ", " ++ printTerm2 t2
+      printPair [t1,t2] = "(" ++ printTerm2 t1 ++ ", " ++ printTerm2 t2 ++ ")"
       printAC op [t1,t2] = op ++ "(" ++ printTerm2 t1 ++ ", " ++ printTerm2 t2 ++ ")"
       printAC op (t:ts) = op ++ "(" ++ printTerm2 t ++ ", " ++ printAC op ts ++ ")"
 
