@@ -260,8 +260,8 @@ translateNonPatterns facts factType filterFunction vars =
                                               checkForNewIDs = if atoms `S.isSubsetOf` vs
                                                                  then False
                                                                  else foldl (\acc a -> acc || ((head a) == '$')) False $ S.difference atoms vs
-                                              idConstructor = newExp . S.toList $ S.difference atoms vs
-                                              newExp as = vcat . map (\a -> text "new " <> (text $ showAtom a) <> text ": bitstring;") . filter (\a -> (head a) == '$') $ as
+                                              idConstructor = idExp . S.toList $ S.difference atoms vs
+                                              idExp as = vcat . map (\a -> text "in(publicChannel, " <> (text $ showAtom a) <> text ": bitstring);") . filter (\a -> (head a) == '$') $ as
 
 
 translateFact :: Document d => LNFact -> String -> S.Set String -> d
