@@ -796,9 +796,10 @@ typeVarsEvent TypingEnvironment {events = ev} tag ts =
     Nothing -> M.empty
 
 ppProtoAtom :: (HighlightDocument d, Ord k, Show k, Show c) => TypingEnvironment -> Bool -> (s (Term (Lit c k)) -> d) -> (Term (Lit c k) -> d) -> ProtoAtom s (Term (Lit c k)) -> (d, M.Map k SapicType)
-ppProtoAtom te _ _ ppT (Action v (Fact tag _ ts))
+ppProtoAtom te _ _ ppT (Action v f@(Fact tag _ ts))
   | factTagArity tag /= length ts = (ppFactL ("MALFORMED-" ++ show tag) ts, M.empty)
-  | tag == KUFact = (ppFactL ("attacker") ts <> opAction <> ppT v, M.empty)
+  | (tag == KUFact) || isKLogFact f  -- treat KU() and K() facts the same
+      = (ppFactL ("attacker") ts <> opAction <> ppT v, M.empty)
   | otherwise =
     ( text "event(" <> ppFactL (showFactTag tag) ts <> text ")" <> opAction <> ppT v,
       typeVarsEvent te tag ts
