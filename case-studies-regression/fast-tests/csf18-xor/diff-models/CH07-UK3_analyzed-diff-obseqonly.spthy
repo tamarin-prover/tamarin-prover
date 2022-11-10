@@ -186,7 +186,12 @@ guarded formula characterizing all satisfying traces:
 */
 by sorry
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Check presence of the --prove/--lemma arguments in theory:
+  --> 'Observational_equivalence' from arguments do(es) not correspond to a specified lemma in the theory 
+*/
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -252,29 +257,19 @@ rule-equivalence
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
+Compiled at: 2022-11-09 11:41:33.798849 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/CH07-UK3.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
-
-  output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 221.187728865s
-  RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
-  LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
-  RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
-  LHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
-  RHS :  executable (exists-trace): analysis incomplete (1 steps)
-  LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (22 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -282,7 +277,11 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 221.187728865s
+  processing time: 0.032883s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)

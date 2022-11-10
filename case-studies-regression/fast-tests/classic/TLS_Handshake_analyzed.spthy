@@ -738,27 +738,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
+Compiled at: 2022-11-09 11:41:33.798849 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/classic/TLS_Handshake.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/classic/TLS_Handshake.spthy
-
-  output:          examples/classic/TLS_Handshake.spthy.tmp
-  processing time: 6.431475568s
-  session_key_secrecy (all-traces): verified (95 steps)
-  injective_agree (all-traces): verified (44 steps)
-  session_key_setup_possible (exists-trace): verified (11 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -766,7 +760,8 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          examples/classic/TLS_Handshake.spthy.tmp
-  processing time: 6.431475568s
+  processing time: 0.033059s
+  
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)
   session_key_setup_possible (exists-trace): verified (11 steps)

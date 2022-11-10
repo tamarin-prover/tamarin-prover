@@ -3759,29 +3759,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
+Compiled at: 2022-11-09 11:41:33.798849 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
-
-  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 17.171069702s
-  Login_reachable (exists-trace): verified (12 steps)
-  slightly_weaker_invariant (all-traces): verified (1141 steps)
-  no_replay (all-traces): verified (4 steps)
-  injective_correspondance (all-traces): verified (23 steps)
-  Login_invalidates_smaller_counters (all-traces): verified (4 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -3789,7 +3781,8 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 17.171069702s
+  processing time: 0.045294s
+  
   Login_reachable (exists-trace): verified (12 steps)
   slightly_weaker_invariant (all-traces): verified (1141 steps)
   no_replay (all-traces): verified (4 steps)
