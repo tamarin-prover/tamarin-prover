@@ -24,12 +24,13 @@ We distinguish between two types of constants:
 
 * *Public constants* model publicly known atomic messages such as agent
   identities and labels. We use the notation `'ident'` to denote public
-  constants in Tamarin.
-* *Fresh constants* model random values such as secret keys or random
-  nonces. We use the notation `~'ident'` to denote fresh
-  constants in Tamarin. Note that fresh *constants* are rarely used
-  in protocol specifications. A fresh *variable* is almost always the
-  right choice.
+  constants in Tamarin. Such constants are of sort `pub` and can hence be
+  unified with public variables. They are always known by the adversary.
+* *Functions* of arity 0 (see below). A function is always of sort `msg`, and
+  hence cannot be unified with a public variable. By default the function is
+  public and known by the adversary. If the function is declared private, it is
+  not known by the adversary. However, *fresh* values are usually a more
+  appropriate modeling of secret values.
 
 Function Symbols
 ----------------
