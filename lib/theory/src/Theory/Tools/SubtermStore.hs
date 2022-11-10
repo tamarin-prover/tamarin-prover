@@ -27,12 +27,14 @@ module Theory.Tools.SubtermStore (
   , isContradictory
   , oldNegSubterms
   , emptySubtermStore
+  , conjoinSubtermStores
   , isNatSubterm
   , rawSubtermRel
 
   -- ** Accessors
   , addNegSubterm
   , addSubterm
+  , hasReducibleOperatorsOnTop
   , simpSubtermStore
 
   -- ** Computation
@@ -92,7 +94,6 @@ data SubtermStore = SubtermStore {
     , _solvedSubterms  :: S.Set (LNTerm, LNTerm)  -- subterms that have been split
     , _isContradictory :: Bool
     , _oldNegSubterms  :: S.Set (LNTerm, LNTerm)  -- copy of negSubterms that is not changed by apply/HasFrees/add[Neg]Subterm
-    --TODO: evaluate wether oldNegSubterms helps at all
     }
   deriving( Eq, Ord, Generic )
 
@@ -104,6 +105,10 @@ $(mkLabels [''SubtermStore])
 -- | @emptyEqStore@ is the empty equation store.
 emptySubtermStore :: SubtermStore
 emptySubtermStore = SubtermStore S.empty S.empty S.empty False S.empty
+
+conjoinSubtermStores :: SubtermStore -> SubtermStore -> SubtermStore
+conjoinSubtermStores (SubtermStore a1 b1 c1 d1 e1) (SubtermStore a2 b2 c2 d2 e2)
+  = SubtermStore (a1 `S.union` a2) (b1 `S.union` b2) (c1 `S.union` c2) (d1 || d2) (e1 `S.union` e2)
 
 isNatSubterm :: (LNTerm, LNTerm) -> Bool
 isNatSubterm (small, big) = (sortOfLNTerm small == LSortNat || isMsgVar small) && sortOfLNTerm big == LSortNat
@@ -121,14 +126,22 @@ addSubterm st sst = if st `elem` L.get solvedSubterms sst
 addNegSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 addNegSubterm st = modify negSubterms (S.insert st)
 
-
+-- | returns true if any of the subterms has a reducible operator on the top of the right side.
+-- If this is the case when rankProofMethods is empty (i.e., no goals to solve) then the proof cannot be finished
+hasReducibleOperatorsOnTop :: FunSig -> SubtermStore -> Bool
+hasReducibleOperatorsOnTop reducible sst = all (topIsNotReducible . snd) allSubterms
+  where
+    allSubterms = S.toList (L.get posSubterms sst `S.union` L.get negSubterms sst `S.union` L.get solvedSubterms sst)
+    topIsNotReducible term = case viewTerm term of
+                                  FApp f _ -> f `S.notMember` reducible
+                                  _        -> True
 
 
 
 -- Simplification
 ------------
 
--- does some "cleaning up" as well, i.e., generating goals and new equations
+-- | simplifies the subterm store and returns a list of goals and equations to insert into the system
 simpSubtermStore :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LNGuarded], [Goal])
 simpSubtermStore reducible sst = do
     let sst0 = modify posSubterms (`S.difference` L.get solvedSubterms sst) sst  -- when a subterm gets substituted to one which is already solved
@@ -137,17 +150,7 @@ simpSubtermStore reducible sst = do
     let (sst3, newNegEqs) = negativeSubtermVars sst2  -- CR-rule S_neg
     let sst4 = modify isContradictory (|| hasSubtermCycle reducible sst3) sst3  -- CR-rule S_chain
     let (sst5, newNatEqs) = simpNatCycles sst4
-
-    let allSubterms = S.toList (L.get posSubterms sst5 `S.union` L.get negSubterms sst5 `S.union` L.get solvedSubterms sst5)
-    let topIsNotReducible term = case viewTerm term of
-                                      FApp f _ -> f `S.notMember` reducible
-                                      _        -> True
-    let allSound = all (topIsNotReducible . snd) allSubterms
-    
-    if allSound
-      then return (sst5, newFormulas ++ arity1Equations ++ newNegEqs ++ newNatEqs, goals)
-      else error "there are some reducible operators on the right side of a subterm"
-
+    return (sst5, newFormulas ++ arity1Equations ++ newNegEqs ++ newNatEqs, goals)
     -- NOT resolve constants (already done by splitting)
     -- split negSubterms (returning equations - and ∀x.x+a=b formulas?)
     -- split level 1 of subterms (Advantage: goals do not need to be updated but only added)

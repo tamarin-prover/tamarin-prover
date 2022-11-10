@@ -669,6 +669,8 @@ conjoinSystem sys = do
     eqs <- getM sEqStore
     let (eqs',splitIds) = (mapAccumL addDisj eqs (map snd . getConj $ get sConjDisjEqs sys))
     setM sEqStore eqs'
+    -- conjoin subterm store
+    modM sSubtermStore (conjoinSubtermStores (get sSubtermStore sys))
     -- add split-goals for all disjunctions of sys
     mapM_  (`insertGoal` False) $ SplitG <$> splitIds
     void (solveSubstEqs SplitNow $ get sSubst sys)

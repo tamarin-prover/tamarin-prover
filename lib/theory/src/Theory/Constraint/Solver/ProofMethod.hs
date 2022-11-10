@@ -26,6 +26,7 @@ module Theory.Constraint.Solver.ProofMethod (
 
   , roundRobinHeuristic
   , useHeuristic
+  , finishedSubterms
 
   -- ** Pretty Printing
   , prettyProofMethod
@@ -183,6 +184,7 @@ type CaseName = String
 data ProofMethod =
     Sorry (Maybe String)                 -- ^ Proof was not completed
   | Solved                               -- ^ An attack was found.
+  | Unfinishable                         -- ^ The proof cannot be finished (due to reducible operators in subterms)
   | Simplify                             -- ^ A simplification step.
   | SolveGoal Goal                       -- ^ A goal that was solved.
   | Contradiction (Maybe Contradiction)  -- ^ A contradiction could be
@@ -200,7 +202,7 @@ data DiffProofMethod =
   | DiffRuleEquivalence                      -- ^ Consider all rules
   | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
   | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
-  deriving( Eq, Ord, Show, Generic, NFData, Binary )
+  deriving( Eq, Ord, Show, Generic, NFData, Binary )    --TODO-PHILIP-YELLOW-DIFF: do we need to add DiffUnfinishable here?
 
   
 instance HasFrees ProofMethod where
@@ -237,18 +239,23 @@ execProofMethod :: ProofContext
                 -> ProofMethod -> System -> Maybe (M.Map CaseName System)
 execProofMethod ctxt method sys =
       case method of
-        Sorry _                  -> return M.empty
+        Sorry _                                -> return M.empty
         Solved
-          | null (openGoals sys) -> return M.empty
-          | otherwise                 -> Nothing 
+          | null (openGoals sys)
+            && finishedSubterms ctxt sys       -> return M.empty
+          | otherwise                          -> Nothing
+        Unfinishable
+          | null (openGoals sys)
+            && not (finishedSubterms ctxt sys) -> return M.empty
+          | otherwise                          -> Nothing
         SolveGoal goal
-          | goal `M.member` L.get sGoals sys -> execSolveGoal goal
-          | otherwise                        -> Nothing
-        Simplify                 -> singleCase simplifySystem
-        Induction                -> M.map cleanupSystem <$> execInduction
+          | goal `M.member` L.get sGoals sys   -> execSolveGoal goal
+          | otherwise                          -> Nothing
+        Simplify                               -> singleCase simplifySystem
+        Induction                              -> M.map cleanupSystem <$> execInduction
         Contradiction _
-          | null (contradictions ctxt sys) -> Nothing
-          | otherwise                      -> Just M.empty
+          | null (contradictions ctxt sys)     -> Nothing
+          | otherwise                          -> Just M.empty
   where
     -- at this point it is safe to remove the free substitution, as all
     -- systems have it fully applied (by the virtue of a call to
@@ -410,7 +417,14 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
 
     isSolved :: Side -> System -> Bool
-    isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+    isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == []
+                      && finishedSubterms (eitherProofContext ctxt s) sys' -- checks if the system is solved
+
+
+-- | returns True if there are no reducible operators on top of a right side of a subterm in the subterm store
+finishedSubterms :: ProofContext -> System -> Bool
+finishedSubterms pc sys = hasReducibleOperatorsOnTop (reducibleFunSyms $ mhMaudeSig $ L.get pcMaudeHandle pc) (L.get sSubtermStore sys)
+
 
 ------------------------------------------------------------------------------
 -- Heuristics
@@ -479,7 +493,7 @@ rankDiffProofMethods ranking ctxt sys = do
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
                   (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step"))
                                           $ filter (\x -> not $ fst x == Induction)
-                                          $ rankProofMethods ranking (eitherProofContext ctxt s) sys'
+                                          $ rankProofMethods ranking (eitherProofContext ctxt s) sys'  --TODO-PHILIP-YELLOW-DIFF non changed rankProofMethods
                   (_     , _        ) -> [])
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
@@ -1060,6 +1074,7 @@ smartDiffRanking ctxt sys =
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
     Solved               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
+    Unfinishable         -> keyword_ "Unfinishable" <-> lineComment_ "reducible operator in subterm"
     Induction            -> keyword_ "induction"
     Sorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc closedComment_ reason]
