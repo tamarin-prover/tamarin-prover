@@ -82,6 +82,7 @@ proofMethod = asum
   , symbol "solve"         *> (SolveGoal <$> parens goal)
   , symbol "contradiction" *> pure (Contradiction Nothing)
   , symbol "induction"     *> pure Induction
+  , symbol "UNFINISHABLE"  *> pure Unfinishable
   ]
 
 -- | Start parsing a proof skeleton.
@@ -122,6 +123,7 @@ diffProofMethod = asum
   , symbol "backward-search"  *> pure DiffBackwardSearch
   , symbol "step"             *> (DiffBackwardSearchStep <$> parens proofMethod)
   , symbol "ATTACK"           *> pure DiffAttack
+  , symbol "UNFINISHABLEdiff" *> pure DiffUnfinishable
   ]
 
 -- | Parse a diff proof skeleton.

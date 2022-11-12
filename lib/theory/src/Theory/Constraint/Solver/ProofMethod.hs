@@ -199,10 +199,11 @@ data DiffProofMethod =
     DiffSorry (Maybe String)                 -- ^ Proof was not completed
   | DiffMirrored                             -- ^ No attack was found
   | DiffAttack                               -- ^ A potential attack was found
+  | DiffUnfinishable                         -- ^ The backward search is complete but there are
   | DiffRuleEquivalence                      -- ^ Consider all rules
   | DiffBackwardSearch                       -- ^ Do the backward search starting from a rule
   | DiffBackwardSearchStep ProofMethod       -- ^ A step in the backward search starting from a rule
-  deriving( Eq, Ord, Show, Generic, NFData, Binary )    --TODO-PHILIP-YELLOW-DIFF: do we need to add DiffUnfinishable here?
+  deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
   
 instance HasFrees ProofMethod where
@@ -347,18 +348,42 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
+        DiffUnfinishable
+          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+                                                                      (Just _, Just s, Just sys') -> let mirrorSyss = getMirrorDG ctxt s sys'
+                                                                                                         mirrorCtxt = eitherProofContext ctxt (opposite s)
+                                                                                                         allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
+                                                                                                     in if isSolved s sys'
+                                                                                                        && not allSubtermsFinished
+                                                                                                        then return M.empty
+                                                                                                        else Nothing
+                                                                      (_ , _ , _)                 -> Nothing
+          | otherwise                                         -> Nothing
         DiffMirrored
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if ((isTrivial sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TTrue))
-                                                                                                        then return M.empty 
+                                                                      (Just _, Just s, Just sys') -> let mirrorSyss = getMirrorDG ctxt s sys'
+                                                                                                         mirrorCtxt = eitherProofContext ctxt (opposite s)
+                                                                                                         allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
+                                                                                                     in if isTrivial sys'
+                                                                                                        && allSubtermsFinished
+                                                                                                        && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TTrue)
+                                                                                                        then return M.empty
                                                                                                         else Nothing
                                                                       (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffAttack
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse)
+                                                                      (Just _, Just s, Just sys') -> let mirrorSyss = getMirrorDG ctxt s sys'
+                                                                                                         mirrorCtxt = eitherProofContext ctxt (opposite s)
+                                                                                                         allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
+                                                                                                     in if (isSolved s sys')
+                                                                                                        && allSubtermsFinished
+                                                                                                        && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse)
                                                                                                         then return M.empty
-                                                                                                        else if (not (contradictorySystem (eitherProofContext ctxt s) sys')) && (isTrivial sys') && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse) then
+                                                                                                        else if (not (contradictorySystem (eitherProofContext ctxt s) sys'))
+                                                                                                             && allSubtermsFinished
+                                                                                                             && (isTrivial sys')
+                                                                                                             && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse) then
                                                                                                         -- here the system is trivial, has no mirror and restrictions do not get in the way.
                                                                                                         -- If we solve arbitrarily the last remaining trivial goals,
                                                                                                         -- then there will be an attack.
@@ -417,8 +442,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                            Just cases -> Just $ M.map (\x -> L.set dsSystem (Just x) sys) cases
 
     isSolved :: Side -> System -> Bool
-    isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == []
-                      && finishedSubterms (eitherProofContext ctxt s) sys' -- checks if the system is solved
+    isSolved s sys' = rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys' == [] -- checks if the system is solved
 
 
 -- | returns True if there are no reducible operators on top of a right side of a subterm in the subterm store
@@ -489,11 +513,12 @@ rankDiffProofMethods ranking ctxt sys = do
             [(DiffRuleEquivalence, "Prove equivalence using rule equivalence")]
         <|> [(DiffMirrored, "Backward search completed")]
         <|> [(DiffAttack, "Found attack")]
+        <|> [(DiffUnfinishable, "Proof cannot be finished")]
         <|> [(DiffBackwardSearch, "Do backward search from rule")]
         <|> (case (L.get dsSide sys, L.get dsSystem sys) of
                   (Just s, Just sys') -> map (\x -> (DiffBackwardSearchStep (fst x), "Do backward search step"))
                                           $ filter (\x -> not $ fst x == Induction)
-                                          $ rankProofMethods ranking (eitherProofContext ctxt s) sys'  --TODO-PHILIP-YELLOW-DIFF non changed rankProofMethods
+                                          $ rankProofMethods ranking (eitherProofContext ctxt s) sys'
                   (_     , _        ) -> [])
     case execDiffProofMethod ctxt m sys of
       Just cases -> return (m, (cases, expl))
@@ -1074,7 +1099,7 @@ smartDiffRanking ctxt sys =
 prettyProofMethod :: HighlightDocument d => ProofMethod -> d
 prettyProofMethod method = case method of
     Solved               -> keyword_ "SOLVED" <-> lineComment_ "trace found"
-    Unfinishable         -> keyword_ "Unfinishable" <-> lineComment_ "reducible operator in subterm"
+    Unfinishable         -> keyword_ "UNFINISHABLE" <-> lineComment_ "reducible operator in subterm"
     Induction            -> keyword_ "induction"
     Sorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc closedComment_ reason]
@@ -1091,6 +1116,7 @@ prettyDiffProofMethod :: HighlightDocument d => DiffProofMethod -> d
 prettyDiffProofMethod method = case method of
     DiffMirrored             -> keyword_ "MIRRORED"
     DiffAttack               -> keyword_ "ATTACK" <-> lineComment_ "trace found"
+    DiffUnfinishable         -> keyword_ "UNFINISHABLEdiff" <-> lineComment_ "reducible operators in subterms"
     DiffSorry reason         ->
         fsep [keyword_ "sorry", maybe emptyDoc lineComment_ reason]
 -- MERGED with solved.

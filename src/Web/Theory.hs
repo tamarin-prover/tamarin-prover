@@ -148,7 +148,8 @@ applyDiffMethodAtPath thy lemmaName proofPath prover i = do
       (oneStepDiffProver method                        `mappend`
        replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify)) `mappend`
        replaceDiffSorryProver (contradictionDiffProver)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)  --TODO-PHILIP-YELLOW-DIFF check if it is not unfinishable - also do a search over all Mirrored
+       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)    `mappend`
+       replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
@@ -711,9 +712,12 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         ] ++
         subCases
   where
-    prettyApplicableDiffProofMethods sys = case diffProofMethods sys of
-        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]  --TODO-PHILIP-YELLOW-DIFF check that it is not unfinishable!
-        pms ->
+    prettyApplicableDiffProofMethods sys = case (diffProofMethods sys, get dsSide sys, get dsSystem sys) of
+        ([], Nothing, _)                                                                  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], _, Nothing)                                                                  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], Just side, Just sys') | finishedSubterms (eitherProofContext ctxt side) sys' -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], _, _)                                                                           -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
+        (pms, _, _) ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
@@ -731,12 +735,17 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
            then [ text "", withTag "h3" [] (text "mirror:") ] ++
                 [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
                 [ text "" ]
-           else if dpsMethod (root prf) == DiffAttack
-                then [ text "", withTag "h3" [] (text "attack:") ] ++
-                        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
-                        [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirror graphs violates a restriction, this graph is shown.)" ] ++
-                        [ text "" ]
-                else []
+        else if dpsMethod (root prf) == DiffAttack
+           then [ text "", withTag "h3" [] (text "attack:") ] ++
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirror graphs violates a restriction, this graph is shown.)" ] ++
+                [ text "" ]
+        else if dpsMethod (root prf) == DiffUnfinishable
+           then [ text "", withTag "h3" [] (text "mirror:") ] ++
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "The proof cannot be finished as there are reducible operators at the top of subterms in the subterm store." ] ++
+                [ text "" ]
+           else []
 
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
@@ -1408,12 +1417,12 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
           then do
             lem <- lookupDiffLemma lemma thy
             let ctxt = getDiffProofContext lem thy
-            side <- get dsSide diffSequent
-            let isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == []
-                                  && finishedSubterms (eitherProofContext ctxt s) sys' -- checks if the system is solved
+            sideCtxt <- eitherProofContext ctxt <$> get dsSide diffSequent
+            let isSolved sys' = (rankProofMethods GoalNrRanking sideCtxt sys') == []
+                                  && finishedSubterms sideCtxt sys' -- checks if the system is solved
             nsequent <- get dsSystem diffSequent
             -- Here we can potentially get Nothing if there is no mirror DG
-            let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
+            let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved nsequent)
             if null sequentList then Nothing else return $ compact $ head sequentList
           else do
             sequent <- get dsSystem diffSequent

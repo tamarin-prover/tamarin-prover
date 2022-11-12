@@ -418,10 +418,12 @@ proofStepStatus (ProofStep _            (Just _)) = CompleteProof
 
 -- | The status of a 'DiffProofStep'.
 diffProofStepStatus :: DiffProofStep (Maybe a) -> ProofStatus
-diffProofStepStatus (DiffProofStep _             Nothing ) = UndeterminedProof
-diffProofStepStatus (DiffProofStep DiffAttack    (Just _)) = TraceFound
-diffProofStepStatus (DiffProofStep (DiffSorry _) (Just _)) = IncompleteProof
-diffProofStepStatus (DiffProofStep _             (Just _)) = CompleteProof  --TODO-PHILIP-YELLOW-DIFF: do we need to add Unfinishable here?
+diffProofStepStatus (DiffProofStep _                Nothing ) = UndeterminedProof
+diffProofStepStatus (DiffProofStep DiffAttack       (Just _)) = TraceFound
+diffProofStepStatus (DiffProofStep (DiffSorry _)    (Just _)) = IncompleteProof
+diffProofStepStatus (DiffProofStep DiffUnfinishable (Just _)) = UnfinishableProof
+diffProofStepStatus (DiffProofStep _                (Just _)) = CompleteProof
+
 
 {- TODO: Test and probably improve
 
@@ -968,7 +970,7 @@ cutOnSolvedBFS =
         case S.runState (checkLevel l prf) CompleteProof of
           (_, UndeterminedProof) -> error "cutOnSolvedBFS: impossible"
           (_, CompleteProof)     -> prf
-          (_, UnfinishableProof) -> prf  --TODO-PHILIP not sure
+          (_, UnfinishableProof) -> prf
           (_, IncompleteProof)   -> go (l+1) prf
           (prf', TraceFound)     ->
               trace ("attack found at depth: " ++ show l) prf'
@@ -998,7 +1000,7 @@ cutOnSolvedBFSDiff =
         case S.runState (checkLevel l prf) CompleteProof of
           (_, UndeterminedProof) -> error "cutOnSolvedBFS: impossible"
           (_, CompleteProof)     -> prf
-          (_, UnfinishableProof) -> prf  --TODO-PHILIP not sure
+          (_, UnfinishableProof) -> prf
           (_, IncompleteProof)   -> go (l+1) prf
           (prf', TraceFound)     ->
               trace ("attack found at depth: " ++ show l) prf'
@@ -1050,8 +1052,8 @@ proveDiffSystemDFS heuristic ctxt d0 sys0 =
   where
     prove !depth sys =
         case rankDiffProofMethods (useHeuristic heuristic depth) ctxt sys of
-          []                         -> node (DiffSorry (Just "Cannot prove")) M.empty  --TODO-PHILIP-YELLOW-DIFF check that
-          (method, (cases, _expl)):_ -> node method cases
+          []                            -> node (DiffSorry (Just "Cannot prove")) M.empty
+          (method, (cases, _expl)):_    -> node method cases
       where
         node method cases =
           LNode (DiffProofStep method ()) (M.map (prove (succ depth)) cases)
