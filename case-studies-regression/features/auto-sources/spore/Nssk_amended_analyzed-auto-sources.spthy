@@ -859,7 +859,7 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -1651,29 +1651,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Nssk_amended.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Nssk_amended.spthy
-
-  output:          examples/features/auto-sources/spore/Nssk_amended.spthy.tmp
-  processing time: 19.510202226s
-  executability (exists-trace): verified (14 steps)
-  Secrecy (all-traces): verified (10 steps)
-  injectiveagreement_B (all-traces): verified (31 steps)
-  agreement_B (all-traces): verified (27 steps)
-  injectiveagreement_A (all-traces): verified (80 steps)
-  agreement_A (all-traces): verified (52 steps)
-  AUTO_typing (all-traces): verified (181 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1681,7 +1671,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Nssk_amended.spthy
 
   output:          examples/features/auto-sources/spore/Nssk_amended.spthy.tmp
-  processing time: 19.510202226s
+  processing time: 0.097309793s
+  
   executability (exists-trace): verified (14 steps)
   Secrecy (all-traces): verified (10 steps)
   injectiveagreement_B (all-traces): verified (31 steps)

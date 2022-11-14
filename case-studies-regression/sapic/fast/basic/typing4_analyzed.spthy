@@ -59,25 +59,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/typing4.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/typing4.spthy
-
-  output:          examples/sapic/fast/basic/typing4.spthy.tmp
-  processing time: 0.021697052s
-  sanity (exists-trace): verified (3 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -85,7 +81,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing4.spthy
 
   output:          examples/sapic/fast/basic/typing4.spthy.tmp
-  processing time: 0.021697052s
+  processing time: 0.063845465s
+  
   sanity (exists-trace): verified (3 steps)
 
 ==============================================================================

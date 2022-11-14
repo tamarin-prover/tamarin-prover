@@ -267,28 +267,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/CCITT_X509_1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
-
-  output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
-  processing time: 3.281590302s
-  Secrecy (all-traces): verified (15 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (14 steps)
-  agreement_B (all-traces): verified (7 steps)
-  Session_key_honest_setup (exists-trace): verified (12 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -296,7 +289,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
-  processing time: 3.281590302s
+  processing time: 0.096406804s
+  
   Secrecy (all-traces): verified (15 steps)
   injectiveagreement_B (all-traces): falsified - found trace (14 steps)
   agreement_B (all-traces): verified (7 steps)

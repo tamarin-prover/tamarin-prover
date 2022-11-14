@@ -1805,26 +1805,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/bilinear/Scott.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/bilinear/Scott.spthy
-
-  output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 19.741494243s
-  key_agreement_reachable (exists-trace): verified (10 steps)
-  key_secrecy (all-traces): verified (518 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1832,7 +1827,8 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 19.741494243s
+  processing time: 0.07872552s
+  
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (518 steps)
 

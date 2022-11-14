@@ -50,11 +50,11 @@ rule (modulo E) I_Complete:
    ]
   --[
   Complete( <'UM3', $A, $B, 
-             (<'1', 'g'^~ex>+
+             (<'1', 'g'^~ex>++
               <'2', Y, 
                MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
                    <'I', $A, $B, 'g'^~ex, Y>)
-              >+
+              >++
               <'3', 
                MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
                    <'R', $B, $A, Y, 'g'^~ex>)
@@ -65,11 +65,11 @@ rule (modulo E) I_Complete:
   ),
   SidUpdated( <'UM3', $A, $B, '1', 'g'^~ex> ),
   Sid( <'UM3', $A, $B, 
-        (<'1', 'g'^~ex>+
+        (<'1', 'g'^~ex>++
          <'2', Y, 
           MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
               <'I', $A, $B, 'g'^~ex, Y>)
-         >+
+         >++
          <'3', 
           MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
               <'R', $B, $A, Y, 'g'^~ex>)
@@ -80,11 +80,11 @@ rule (modulo E) I_Complete:
   ]->
    [
    I_Comp( <'UM3', $A, $B, 
-            (<'1', 'g'^~ex>+
+            (<'1', 'g'^~ex>++
              <'2', Y, 
               MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
                   <'I', $A, $B, 'g'^~ex, Y>)
-             >+
+             >++
              <'3', 
               MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
                   <'R', $B, $A, Y, 'g'^~ex>)
@@ -96,11 +96,11 @@ rule (modulo E) I_Complete:
             <'R', $B, $A, Y, 'g'^~ex>)
    ),
    !SessionKey( <'UM3', $A, $B, 
-                 (<'1', 'g'^~ex>+
+                 (<'1', 'g'^~ex>++
                   <'2', Y, 
                    MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
                        <'I', $A, $B, 'g'^~ex, Y>)
-                  >+
+                  >++
                   <'3', 
                    MAC(first(h(<Y^~ex, 'g'^~eb^~ea, $A, $B, 'g'^~ex, Y>)),
                        <'R', $B, $A, Y, 'g'^~ex>)
@@ -124,11 +124,11 @@ rule (modulo E) I_Complete:
      ]
     --[
     Complete( <'UM3', $A, $B, 
-               (<'1', 'g'^~ex>+
+               (<'1', 'g'^~ex>++
                 <'2', Y, 
                  MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                      <'I', $A, $B, 'g'^~ex, Y>)
-                >+
+                >++
                 <'3', 
                  MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                      <'R', $B, $A, Y, 'g'^~ex>)
@@ -139,11 +139,11 @@ rule (modulo E) I_Complete:
     ),
     SidUpdated( <'UM3', $A, $B, '1', 'g'^~ex> ),
     Sid( <'UM3', $A, $B, 
-          (<'1', 'g'^~ex>+
+          (<'1', 'g'^~ex>++
            <'2', Y, 
             MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                 <'I', $A, $B, 'g'^~ex, Y>)
-           >+
+           >++
            <'3', 
             MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                 <'R', $B, $A, Y, 'g'^~ex>)
@@ -154,11 +154,11 @@ rule (modulo E) I_Complete:
     ]->
      [
      I_Comp( <'UM3', $A, $B, 
-              (<'1', 'g'^~ex>+
+              (<'1', 'g'^~ex>++
                <'2', Y, 
                 MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                     <'I', $A, $B, 'g'^~ex, Y>)
-               >+
+               >++
                <'3', 
                 MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                     <'R', $B, $A, Y, 'g'^~ex>)
@@ -170,11 +170,11 @@ rule (modulo E) I_Complete:
               <'R', $B, $A, Y, 'g'^~ex>)
      ),
      !SessionKey( <'UM3', $A, $B, 
-                   (<'1', 'g'^~ex>+
+                   (<'1', 'g'^~ex>++
                     <'2', Y, 
                      MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                          <'I', $A, $B, 'g'^~ex, Y>)
-                    >+
+                    >++
                     <'3', 
                      MAC(first(h(<z, 'g'^(~ea*~x), $A, $B, 'g'^~ex, Y>)),
                          <'R', $B, $A, Y, 'g'^~ex>)
@@ -219,7 +219,7 @@ rule (modulo E) R_Activate:
    [ Fr( ~ey ), In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~ea ) ]
   --[
   Activate( <'UM3', $B, $A, 
-             (<'1', X>+
+             (<'1', X>++
               <'2', 'g'^~ey, 
                MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                    <'I', $A, $B, X, 'g'^~ey>)
@@ -228,7 +228,7 @@ rule (modulo E) R_Activate:
             >
   ),
   Sid( <'UM3', $B, $A, 
-        (<'1', X>+
+        (<'1', X>++
          <'2', 'g'^~ey, 
           MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
               <'I', $A, $B, X, 'g'^~ey>)
@@ -246,7 +246,7 @@ rule (modulo E) R_Activate:
    ),
    R_Act( ~ey, $B, $A, X ),
    !SessionState( <'UM3', $B, $A, 
-                   (<'1', X>+
+                   (<'1', X>++
                     <'2', 'g'^~ey, 
                      MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                          <'I', $A, $B, X, 'g'^~ey>)
@@ -262,7 +262,7 @@ rule (modulo E) R_Activate:
      [ Fr( ~ey ), In( X ), !Ltk( $B, ~eb ), !Pk( $A, 'g'^~x ) ]
     --[
     Activate( <'UM3', $B, $A, 
-               (<'1', X>+
+               (<'1', X>++
                 <'2', 'g'^~ey, 
                  MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                      <'I', $A, $B, X, 'g'^~ey>)
@@ -271,7 +271,7 @@ rule (modulo E) R_Activate:
               >
     ),
     Sid( <'UM3', $B, $A, 
-          (<'1', X>+
+          (<'1', X>++
            <'2', 'g'^~ey, 
             MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                 <'I', $A, $B, X, 'g'^~ey>)
@@ -289,7 +289,7 @@ rule (modulo E) R_Activate:
      ),
      R_Act( ~ey, $B, $A, X ),
      !SessionState( <'UM3', $B, $A, 
-                     (<'1', X>+
+                     (<'1', X>++
                       <'2', 'g'^~ey, 
                        MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                            <'I', $A, $B, X, 'g'^~ey>)
@@ -335,11 +335,11 @@ rule (modulo E) R_Complete:
    ]
   --[
   Complete( <'UM3', $B, $A, 
-             (<'1', X>+
+             (<'1', X>++
               <'2', 'g'^~ey, 
                MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                    <'I', $A, $B, X, 'g'^~ey>)
-              >+
+              >++
               <'3', 
                MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                    <'R', $B, $A, 'g'^~ey, X>)
@@ -349,7 +349,7 @@ rule (modulo E) R_Complete:
             'R', second(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>))
   ),
   SidUpdated( <'UM3', $B, $A, 
-               (<'1', X>+
+               (<'1', X>++
                 <'2', 'g'^~ey, 
                  MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                      <'I', $A, $B, X, 'g'^~ey>)
@@ -358,11 +358,11 @@ rule (modulo E) R_Complete:
               >
   ),
   Sid( <'UM3', $B, $A, 
-        (<'1', X>+
+        (<'1', X>++
          <'2', 'g'^~ey, 
           MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
               <'I', $A, $B, X, 'g'^~ey>)
-         >+
+         >++
          <'3', 
           MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
               <'R', $B, $A, 'g'^~ey, X>)
@@ -373,11 +373,11 @@ rule (modulo E) R_Complete:
   ]->
    [
    R_Comp( <'UM3', $B, $A, 
-            (<'1', X>+
+            (<'1', X>++
              <'2', 'g'^~ey, 
               MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                   <'I', $A, $B, X, 'g'^~ey>)
-             >+
+             >++
              <'3', 
               MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                   <'R', $B, $A, 'g'^~ey, X>)
@@ -386,11 +386,11 @@ rule (modulo E) R_Complete:
            >
    ),
    !SessionKey( <'UM3', $B, $A, 
-                 (<'1', X>+
+                 (<'1', X>++
                   <'2', 'g'^~ey, 
                    MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                        <'I', $A, $B, X, 'g'^~ey>)
-                  >+
+                  >++
                   <'3', 
                    MAC(first(h(<X^~ey, 'g'^~ea^~eb, $A, $B, X, 'g'^~ey>)),
                        <'R', $B, $A, 'g'^~ey, X>)
@@ -412,11 +412,11 @@ rule (modulo E) R_Complete:
      ]
     --[
     Complete( <'UM3', $B, $A, 
-               (<'1', X>+
+               (<'1', X>++
                 <'2', 'g'^~ey, 
                  MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                      <'I', $A, $B, X, 'g'^~ey>)
-                >+
+                >++
                 <'3', 
                  MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                      <'R', $B, $A, 'g'^~ey, X>)
@@ -426,7 +426,7 @@ rule (modulo E) R_Complete:
               'R', second(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>))
     ),
     SidUpdated( <'UM3', $B, $A, 
-                 (<'1', X>+
+                 (<'1', X>++
                   <'2', 'g'^~ey, 
                    MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                        <'I', $A, $B, X, 'g'^~ey>)
@@ -435,11 +435,11 @@ rule (modulo E) R_Complete:
                 >
     ),
     Sid( <'UM3', $B, $A, 
-          (<'1', X>+
+          (<'1', X>++
            <'2', 'g'^~ey, 
             MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                 <'I', $A, $B, X, 'g'^~ey>)
-           >+
+           >++
            <'3', 
             MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                 <'R', $B, $A, 'g'^~ey, X>)
@@ -450,11 +450,11 @@ rule (modulo E) R_Complete:
     ]->
      [
      R_Comp( <'UM3', $B, $A, 
-              (<'1', X>+
+              (<'1', X>++
                <'2', 'g'^~ey, 
                 MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                     <'I', $A, $B, X, 'g'^~ey>)
-               >+
+               >++
                <'3', 
                 MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                     <'R', $B, $A, 'g'^~ey, X>)
@@ -463,11 +463,11 @@ rule (modulo E) R_Complete:
              >
      ),
      !SessionKey( <'UM3', $B, $A, 
-                   (<'1', X>+
+                   (<'1', X>++
                     <'2', 'g'^~ey, 
                      MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                          <'I', $A, $B, X, 'g'^~ey>)
-                    >+
+                    >++
                     <'3', 
                      MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey>)),
                          <'R', $B, $A, 'g'^~ey, X>)
@@ -737,7 +737,7 @@ lemma CK_secure_UM3:
       (∃ #l ms matchingComm.
         ((((Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
            (ms = <'UM3', B, A, matchingComm>)) ∧
-          ((∃ rest. (matchingComm+rest) = comm) ∨ (matchingComm = comm))) ∧
+          ((∃ rest. (matchingComm++rest) = comm) ∨ (matchingComm = comm))) ∧
          (¬(∃ #v. SidUpdated( ms ) @ #v))) ∧
         (((∃ #k.1. SessionKeyReveal( ms ) @ #k.1) ∨
           (∃ #k.1.
@@ -748,7 +748,7 @@ lemma CK_secure_UM3:
            ((∃ #l.1. Corrupt( A ) @ #l.1) ∨ (∃ #l.1. Corrupt( B ) @ #l.1)))))) ∨
      ((¬(∃ #l matchingComm.
           ((Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
-           ((∃ rest. (matchingComm+rest) = comm) ∨ (matchingComm = comm))) ∧
+           ((∃ rest. (matchingComm++rest) = comm) ∨ (matchingComm = comm))) ∧
           (¬(∃ #v. SidUpdated( <'UM3', B, A, matchingComm> ) @ #v)))) ∧
       (∃ #k.1.
         (Corrupt( B ) @ #k.1) ∧ (¬(∃ #l. (Expire( s ) @ #l) ∧ (#l < #k.1))))))"
@@ -769,7 +769,7 @@ guarded formula characterizing all counter-examples:
     (Sid( <'UM3', B, A, matchingComm> ) @ #l) ∧
     (ms = <'UM3', B, A, matchingComm>)
    ⇒
-    (((∀ rest. ((matchingComm+rest) = comm) ⇒ ⊥) ∧
+    (((∀ rest. ((matchingComm++rest) = comm) ⇒ ⊥) ∧
       (¬(matchingComm = comm))) ∨
      (∃ #v. (SidUpdated( ms ) @ #v)) ∨
      ((∀ #k.1. (SessionKeyReveal( ms ) @ #k.1) ⇒ ⊥) ∧
@@ -783,7 +783,7 @@ guarded formula characterizing all counter-examples:
   (((∃ #l matchingComm.
       (Sid( <'UM3', B, A, matchingComm> ) @ #l)
      ∧
-      (((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm))) ∧
+      (((∃ rest. ((matchingComm++rest) = comm)) ∨ (matchingComm = comm))) ∧
       (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥)) ∨
     (∀ #k.1. (Corrupt( B ) @ #k.1) ⇒ ∃ #l. (Expire( s ) @ #l) ∧ #l < #k.1)))"
 */
@@ -791,7 +791,7 @@ simplify
 solve( (∃ #l matchingComm.
          (Sid( <'UM3', B, A, matchingComm> ) @ #l)
         ∧
-         (((∃ rest. ((matchingComm+rest) = comm)) ∨ (matchingComm = comm))) ∧
+         (((∃ rest. ((matchingComm++rest) = comm)) ∨ (matchingComm = comm))) ∧
          (∀ #v. (SidUpdated( <'UM3', B, A, matchingComm> ) @ #v) ⇒ ⊥))  ∥
        (∀ #k.
          (Corrupt( B ) @ #k)
@@ -841,26 +841,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/dh/UM_three_pass_combined.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/dh/UM_three_pass_combined.spthy
-
-  output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 33.41183278s
-  key_agreement_reachable (exists-trace): verified (14 steps)
-  CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -868,7 +863,8 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 33.41183278s
+  processing time: 0.0969455s
+  
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)
 

@@ -14,7 +14,7 @@ rule (modulo E) setup:
   --[ OnlyOnce( 'setup' ) ]->
    [
    Transcript( <~k1, ~id1>, 'learning' ),
-   Reader( (<~k1, ~id1>+<~k2, ~id2>), 'guessing' ),
+   Reader( (<~k1, ~id1>++<~k2, ~id2>), 'guessing' ),
    TagRun( diff(<~k1, ~id1>, <~k2, ~id2>), 'guessing' )
    ]
 
@@ -28,7 +28,7 @@ rule (modulo E) transcript:
    ]
 
 rule (modulo E) initiatereader:
-   [ Reader( (d1+d2), phase ), Fr( ~r0 ) ]
+   [ Reader( (d1++d2), phase ), Fr( ~r0 ) ]
   --[ Phase( phase ) ]->
    [ ReaderRun( d1, phase ) ]
 
@@ -116,7 +116,7 @@ solve( Response( x, 'Tag' ) @ #j )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -1514,7 +1514,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case reader1
       by step( contradiction /* impossible chain */ )
     next
@@ -1554,7 +1554,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case reader1
       by step( contradiction /* impossible chain */ )
     next
@@ -12595,7 +12595,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( Reader( (d1+d2), phase ) ▶₀ #i ) )
+    step( solve( Reader( (d1++d2), phase ) ▶₀ #i ) )
       case setup_case_1
       MIRRORED
     next
@@ -12605,7 +12605,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( Reader( (d1+d2), phase ) ▶₀ #i ) )
+    step( solve( Reader( (d1++d2), phase ) ▶₀ #i ) )
       case setup_case_1
       MIRRORED
     next
@@ -17985,25 +17985,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/CH07-UK2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
-
-  output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 334.441658118s
-  RHS :  executable (exists-trace): verified (5 steps)
-  LHS :  executable (exists-trace): verified (5 steps)
-  DiffLemma:  Observational_equivalence : verified (5973 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -18011,7 +18005,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 334.441658118s
+  processing time: 0.135439155s
+  
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (5973 steps)

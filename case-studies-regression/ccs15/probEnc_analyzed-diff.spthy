@@ -19,7 +19,7 @@ rule (modulo E) enc:
   -->
    [ Out( diff(~r1, penc(x, pk(k), ~r2)) ) ]
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -218,23 +218,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ccs15/probEnc.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ccs15/probEnc.spthy
-
-  output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.248409172s
-  DiffLemma:  Observational_equivalence : verified (75 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -242,7 +238,8 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.248409172s
+  processing time: 0.071534108s
+  
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

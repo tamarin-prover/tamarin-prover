@@ -308,7 +308,7 @@ solve( StateB2( A, $B, ~kbs, ~nb, msg ) ▶₁ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -552,27 +552,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
-
-  output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 2.208744232s
-  executability (exists-trace): verified (10 steps)
-  Secrecy (all-traces): verified (10 steps)
-  injectiveagreement_B (all-traces): verified (17 steps)
-  agreement_B (all-traces): verified (13 steps)
-  AUTO_typing (all-traces): verified (48 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -580,7 +572,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 2.208744232s
+  processing time: 0.096507694s
+  
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)
   injectiveagreement_B (all-traces): verified (17 steps)

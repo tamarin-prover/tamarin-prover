@@ -94,17 +94,17 @@ rule (modulo E) outxloly_0_1112111111[color=#6c8040,
   */
 
 rule (modulo E) outxloly_0_11121111111[color=#6c8040,
-                                       process="out((x.1:lol+y.1));"]:
+                                       process="out((x.1:lol++y.1));"]:
    [ State_11121111111( a.1, n.1, x.1, y.1 ) ]
   -->
-   [ State_111211111111( a.1, n.1, x.1, y.1 ), Out( (x.1+y.1) ) ]
+   [ State_111211111111( a.1, n.1, x.1, y.1 ), Out( (x.1++y.1) ) ]
 
   /*
   rule (modulo AC) outxloly_0_11121111111[color=#6c8040,
-                                          process="out((x.1:lol+y.1));"]:
+                                          process="out((x.1:lol++y.1));"]:
      [ State_11121111111( a, n, x, y ) ]
     -->
-     [ State_111211111111( a, n, x, y ), Out( (x+y) ) ]
+     [ State_111211111111( a, n, x, y ), Out( (x++y) ) ]
   */
 
 rule (modulo E) outfxloly_0_111211111111[color=#6c8040,
@@ -191,25 +191,26 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Wellformedness-error in Process:
+  Variable bound twice: a.1:lol.
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/typing.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/typing.spthy
-
-  output:          examples/sapic/fast/basic/typing.spthy.tmp
-  processing time: 0.022682473s
-
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -217,8 +218,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing.spthy
 
   output:          examples/sapic/fast/basic/typing.spthy.tmp
-  processing time: 0.022682473s
-
+  processing time: 0.078148907s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
 
 ==============================================================================
 */

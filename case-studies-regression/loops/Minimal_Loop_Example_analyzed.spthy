@@ -95,7 +95,7 @@ next
     case Start
     solve( A( ~n ) ▶₀ #i )
       case Loop
-      by contradiction /* cyclic */
+      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -151,29 +151,21 @@ induction
   SOLVED // trace found
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/loops/Minimal_Loop_Example.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/Minimal_Loop_Example.spthy
-
-  output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.03833018s
-  Start_before_Loop (all-traces): verified (8 steps)
-  Start_before_Stop (all-traces): verified (4 steps)
-  Loop_before_Stop (all-traces): verified (9 steps)
-  Stop_unique (all-traces): verified (12 steps)
-  Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -181,7 +173,8 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.03833018s
+  processing time: 0.052316381s
+  
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)

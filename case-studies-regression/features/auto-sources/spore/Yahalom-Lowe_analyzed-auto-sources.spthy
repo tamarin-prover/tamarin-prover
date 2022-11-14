@@ -586,7 +586,7 @@ solve( StateA1( A, B, na ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -1051,29 +1051,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
-
-  output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 7.985186781s
-  executability (exists-trace): verified (14 steps)
-  secrecy (all-traces): verified (22 steps)
-  noninjectiveagreement_B (all-traces): verified (33 steps)
-  noninjectiveagreement_A (all-traces): verified (10 steps)
-  injectiveagreement_B (all-traces): verified (37 steps)
-  injectiveagreement_A (all-traces): verified (14 steps)
-  AUTO_typing (all-traces): verified (93 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1081,7 +1071,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 7.985186781s
+  processing time: 0.106379941s
+  
   executability (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): verified (33 steps)

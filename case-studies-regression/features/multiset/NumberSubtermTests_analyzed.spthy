@@ -199,8 +199,8 @@ by contradiction /* from formulas */
 Generated from:
 Tamarin version 1.7.1
 Maude version 2.7.1
-Git revision: 928607f6978ad2f9c181ca4e1a0b1fbfbf61f04f, branch: subterm-new
-Compiled at: 2022-10-11 14:37:10.040569 UTC
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
 */
 
 end
@@ -215,7 +215,7 @@ summary of summaries:
 analyzed: examples/features//multiset/NumberSubtermTests.spthy
 
   output:          examples/features//multiset/NumberSubtermTests.spthy.tmp
-  processing time: 0.037957s
+  processing time: 0.082584725s
   
   SnatChain (all-traces): verified (2 steps)
   SnegRecurse (all-traces): verified (2 steps)

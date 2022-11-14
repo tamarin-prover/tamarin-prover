@@ -12,25 +12,21 @@ rule (modulo E) foo[color=#f5b7b1]:
 
   /* has exactly the trivial AC variant */
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/regression/trace/issue310.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/trace/issue310.spthy
-
-  output:          examples/regression/trace/issue310.spthy.tmp
-  processing time: 0.00633036s
-
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -38,8 +34,8 @@ summary of summaries:
 analyzed: examples/regression/trace/issue310.spthy
 
   output:          examples/regression/trace/issue310.spthy.tmp
-  processing time: 0.00633036s
-
+  processing time: 0.053897349s
+  
 
 ==============================================================================
 */

@@ -13,11 +13,11 @@ rule (modulo E) Setup:
   --[ Setup( ), Roles( $H1, $H2, $D1, $D2 ) ]->
    [
    AgSt_H1v( diff($H2, $H1), diff($D2, $D1), ~v1 ),
-   ShuffleAgents( (<$H1, $D1>+<$H2, $D2>) )
+   ShuffleAgents( (<$H1, $D1>++<$H2, $D2>) )
    ]
 
 rule (modulo E) shuffleVoters:
-   [ ShuffleAgents( (x+y) ) ] --> [ AgSt_S0( x ), AgSt_S0( y ) ]
+   [ ShuffleAgents( (x++y) ) ] --> [ AgSt_S0( x ), AgSt_S0( y ) ]
 
 rule (modulo E) H_vote:
    [ AgSt_H1v( $H, $D, vote ) ]
@@ -56,7 +56,7 @@ restriction notSameRole [left]:
      (¬(D1 = D2)))"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -86,11 +86,11 @@ next
   backward-search
     case LHS
     step( simplify )
-    by step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    by step( solve( !KD( (x++y) ) ▶₀ #i ) )
   next
     case RHS
     step( simplify )
-    by step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    by step( solve( !KD( (x++y) ) ▶₀ #i ) )
   qed
 next
   case Rule_Equality
@@ -254,7 +254,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( ShuffleAgents( (x+y) ) ▶₀ #i ) )
+    step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
       case Setup_case_1
       by sorry // Cannot prove
     next
@@ -264,7 +264,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( ShuffleAgents( (x+y) ) ▶₀ #i ) )
+    step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
       case Setup_case_1
       by sorry // Cannot prove
     next
@@ -274,23 +274,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/regression/diff/issue198-2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/diff/issue198-2.spthy
-
-  output:          examples/regression/diff/issue198-2.spthy.tmp
-  processing time: 1.160144834s
-  DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -298,7 +294,8 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-2.spthy
 
   output:          examples/regression/diff/issue198-2.spthy.tmp
-  processing time: 1.160144834s
+  processing time: 0.073116769s
+  
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 
 ==============================================================================

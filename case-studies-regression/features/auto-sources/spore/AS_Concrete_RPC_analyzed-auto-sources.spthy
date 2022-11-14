@@ -458,30 +458,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
-
-  output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 27.543285445s
-  secrecy (all-traces): verified (65 steps)
-  injectiveagreement_A (all-traces): falsified - found trace (6 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (7 steps)
-  noninjectiveagreement_A (all-traces): falsified - found trace (6 steps)
-  noninjectiveagreement_B (all-traces): falsified - found trace (7 steps)
-  Session_key_honest_setup (exists-trace): verified (11 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -489,7 +480,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 27.543285445s
+  processing time: 0.090966606s
+  
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

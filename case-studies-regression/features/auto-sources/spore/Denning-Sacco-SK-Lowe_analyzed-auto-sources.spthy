@@ -612,7 +612,7 @@ solve( StateA2( A, B, xkab ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -701,29 +701,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
-
-  output:          examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy.tmp
-  processing time: 7.48200313s
-  executability (exists-trace): verified (9 steps)
-  secrecy (all-traces): verified (38 steps)
-  noninjectiveagreement_B (all-traces): verified (28 steps)
-  noninjectiveagreement_A (all-traces): verified (26 steps)
-  injectiveagreement_B (all-traces): verified (32 steps)
-  injectiveagreement_A (all-traces): falsified - found trace (9 steps)
-  AUTO_typing (all-traces): verified (21 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -731,7 +721,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy.tmp
-  processing time: 7.48200313s
+  processing time: 0.100118855s
+  
   executability (exists-trace): verified (9 steps)
   secrecy (all-traces): verified (38 steps)
   noninjectiveagreement_B (all-traces): verified (28 steps)

@@ -1004,7 +1004,7 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -1162,31 +1162,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy
-
-  output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy.tmp
-  processing time: 9.191718805s
-  executability (exists-trace): verified (16 steps)
-  Secrecy (all-traces): verified (30 steps)
-  injectiveagreement_B (all-traces): verified (102 steps)
-  agreement_B (all-traces): verified (42 steps)
-  injectiveagreement_S (all-traces): falsified - found trace (9 steps)
-  agreement_S (all-traces): verified (7 steps)
-  injectiveagreement_A (all-traces): verified (30 steps)
-  agreement_A (all-traces): verified (24 steps)
-  AUTO_typing (all-traces): verified (32 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1194,7 +1182,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy.tmp
-  processing time: 9.191718805s
+  processing time: 0.081290406s
+  
   executability (exists-trace): verified (16 steps)
   Secrecy (all-traces): verified (30 steps)
   injectiveagreement_B (all-traces): verified (102 steps)

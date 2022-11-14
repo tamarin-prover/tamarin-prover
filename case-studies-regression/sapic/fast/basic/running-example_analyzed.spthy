@@ -153,51 +153,12 @@ next
                         case insertkeyhk_0_1111111
                         solve( State_1111111( h1, ~n.1 ) ▶₀ #t2.3 )
                           case newh_0_1111
-                          solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3)  ∥ (#vr.10 < #t2.1) )
+                          solve( (#t2.3 < #t2.1)  ∥ (#t2.3 = #t2.1) )
                             case case_1
                             by contradiction /* from formulas */
                           next
                             case case_2
                             by solve( Insert( <'att', ~n.2>, 'wrap' ) @ #t2.1 )
-                          next
-                            case case_3
-                            solve( Insert( <'att', ~n.2>, 'wrap' ) @ #t2.3 )
-                              case inh_0_1112
-                              solve( State_1112( ) ▶₀ #t2.3 )
-                                case p_1_
-                                solve( !KU( ~n.2 ) @ #vk.2 )
-                                  case eventWrapkk_0_1211111
-                                  solve( !KU( ~n.3 ) @ #vk.4 )
-                                    case eventWrapkk_0_1211111
-                                    solve( Insert( <'key', h2>, k2 ) @ #t2.4 )
-                                      case insertkeyhk_0_1111111
-                                      solve( State_1111111( h2, k2 ) ▶₀ #t2.4 )
-                                        case newh_0_1111
-                                        by solve( (#vr.19, 0) ~~> (#vk.1, 0) )
-                                      qed
-                                    qed
-                                  next
-                                    case ifSencSuccck_0_1121111
-                                    by contradiction /* from formulas */
-                                  next
-                                    case insertatthdec_0_11111111
-                                    solve( Insert( <'key', h2>, k2 ) @ #t2.4 )
-                                      case insertkeyhk_0_1111111
-                                      solve( State_1111111( h2, k2 ) ▶₀ #t2.4 )
-                                        case newh_0_1111
-                                        by solve( (#vr.19, 0) ~~> (#vk.1, 0) )
-                                      qed
-                                    qed
-                                  qed
-                                next
-                                  case ifSencSuccck_0_1121111
-                                  by contradiction /* from formulas */
-                                next
-                                  case insertatthdec_0_11111111
-                                  by contradiction /* cyclic */
-                                qed
-                              qed
-                            qed
                           qed
                         qed
                       qed
@@ -665,29 +626,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/running-example.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/running-example.spthy
-
-  output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 4.643746574s
-  can_create_key (exists-trace): verified (3 steps)
-  can_obtain_wrapping (exists-trace): verified (11 steps)
-  dec_limits (all-traces): verified (47 steps)
-  cannot_obtain_key_ind (all-traces): verified (22 steps)
-  cannot_obtain_key (all-traces): verified (2 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -695,10 +648,11 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 4.643746574s
+  processing time: 0.048258942s
+  
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
-  dec_limits (all-traces): verified (47 steps)
+  dec_limits (all-traces): verified (34 steps)
   cannot_obtain_key_ind (all-traces): verified (22 steps)
   cannot_obtain_key (all-traces): verified (2 steps)
 

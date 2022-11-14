@@ -54,13 +54,10 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
         case case_2
         solve( Unlock_0( '0', ~n.1, 's' ) @ #t2.1 )
           case unlocks_0_111
-          by solve( State_111( ~n.1, v ) ▶₀ #t2.1 )
+          by contradiction /* cyclic */
         next
           case unlocks_0_11211
-          solve( State_11211( ~n.1 ) ▶₀ #t2.1 )
-            case insertvisiteds_0_1121
-            by contradiction /* cyclic */
-          qed
+          by contradiction /* cyclic */
         qed
       next
         case case_3
@@ -93,13 +90,10 @@ next
         case case_1
         solve( Unlock_0( '0', ~n, 's' ) @ #t2.1 )
           case unlocks_0_111
-          by solve( State_111( ~n, v ) ▶₀ #t2.1 )
+          by contradiction /* cyclic */
         next
           case unlocks_0_11211
-          solve( State_11211( ~n ) ▶₀ #t2.1 )
-            case insertvisiteds_0_1121
-            by contradiction /* cyclic */
-          qed
+          by contradiction /* cyclic */
         qed
       next
         case case_2
@@ -219,25 +213,21 @@ restriction locking_0:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/design-choices.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/design-choices.spthy
-
-  output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.287655687s
-  visit_once (all-traces): verified (26 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -245,8 +235,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.287655687s
-  visit_once (all-traces): verified (26 steps)
+  processing time: 0.045735684s
+  
+  visit_once (all-traces): verified (24 steps)
 
 ==============================================================================
 */

@@ -435,26 +435,21 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
-
-  output:          examples/csf12/JKL_TS2_2008_KI_wPFS.spthy.tmp
-  processing time: 1.492265415s
-  JKL2008_2_initiator_key (all-traces): verified (40 steps)
-  JKL2008_2_responder_key (all-traces): verified (37 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -462,7 +457,8 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          examples/csf12/JKL_TS2_2008_KI_wPFS.spthy.tmp
-  processing time: 1.492265415s
+  processing time: 0.062621379s
+  
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (37 steps)
 

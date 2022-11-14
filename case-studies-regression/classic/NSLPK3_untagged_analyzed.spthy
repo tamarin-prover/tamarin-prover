@@ -695,27 +695,21 @@ solve( Secret( A, B, s ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/classic/NSLPK3_untagged.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/classic/NSLPK3_untagged.spthy
-
-  output:          examples/classic/NSLPK3_untagged.spthy.tmp
-  processing time: 3.9124968s
-  types (all-traces): verified (37 steps)
-  nonce_secrecy (all-traces): verified (133 steps)
-  session_key_setup_possible (exists-trace): verified (9 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -723,7 +717,8 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          examples/classic/NSLPK3_untagged.spthy.tmp
-  processing time: 3.9124968s
+  processing time: 0.085433858s
+  
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)

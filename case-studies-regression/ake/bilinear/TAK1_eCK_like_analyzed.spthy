@@ -41,7 +41,7 @@ rule (modulo E) Reveal_sessk:
 
 rule (modulo E) Proto1:
    [ Fr( ~ex ) ]
-  --[ Origin( ~ex, pmult(~ex, 'P') ), Participants( ($A+$B+$C) ) ]->
+  --[ Origin( ~ex, pmult(~ex, 'P') ), Participants( ($A++$B++$C) ) ]->
    [ PState1( ~ex, $A, $B, $C ), Out( pmult(~ex, 'P') ), !EphKey( ~ex ) ]
 
   /* has exactly the trivial AC variant */
@@ -257,16 +257,16 @@ rule (modulo E) Proto3:
    ]
   --[
   Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
-          kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A+$B+$C), 
-               (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+          kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A++$B++$C), 
+               (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
   ),
-  Match( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> ),
-  Sid( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> )
+  Match( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> ),
+  Sid( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> )
   ]->
    [
    !SessKey( ~ex,
-             kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A+$B+$C), 
-                  (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+             kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A++$B++$C), 
+                  (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
    )
    ]
 
@@ -278,16 +278,16 @@ rule (modulo E) Proto3:
      ]
     --[
     Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
-            kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
-                 (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+            kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
+                 (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
     ),
-    Match( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> ),
-    Sid( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> )
+    Match( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> ),
+    Sid( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> )
     ]->
      [
      !SessKey( ~ex,
-               kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
-                    (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+               kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
+                    (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
      )
      ]
     variants (modulo AC)
@@ -471,8 +471,8 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
             solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #i )
               case Register_pk
               solve( !KU( kdf(<em('P', 'P')^(~ex*~ex.1*~ex.2), 
-                               em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
-                               (tag(pmult(~ex, 'P'))+tag(pmult(~ex.1, 'P'))+tag(pmult(~ex.2, 'P')))>)
+                               em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
+                               (tag(pmult(~ex, 'P'))++tag(pmult(~ex.1, 'P'))++tag(pmult(~ex.2, 'P')))>)
                      ) @ #vk )
                 case c_kdf
                 solve( !KU( tag(pmult(~ex, 'P')) ) @ #vk.13 )
@@ -524,26 +524,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/bilinear/TAK1_eCK_like.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
-
-  output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 128.789111454s
-  session_key_establish (exists-trace): verified (17 steps)
-  Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -551,7 +546,8 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 128.789111454s
+  processing time: 0.086042559s
+  
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 

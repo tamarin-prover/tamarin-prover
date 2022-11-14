@@ -1069,29 +1069,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-xor/CH07.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-xor/CH07.spthy
-
-  output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 4.111748472s
-  recentalive_tag_attack (exists-trace): verified (10 steps)
-  recentalive_reader (all-traces): verified (24 steps)
-  noninjectiveagreement_tag (all-traces): verified (78 steps)
-  noninjectiveagreement_reader (all-traces): verified (22 steps)
-  executable (exists-trace): verified (11 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1099,7 +1091,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 4.111748472s
+  processing time: 0.080467863s
+  
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)
   noninjectiveagreement_tag (all-traces): verified (78 steps)

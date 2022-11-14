@@ -184,18 +184,13 @@ next
                       case p_1_
                       solve( Unlock_1( '1', ~n, ~n.1 ) @ #t2.2 )
                         case unlocks_0_1111112121111111
-                        solve( State_1111112121111111( ~n, ~n.1, sk, x, y.1, status ) ▶₀ #t2.2 )
-                          case eventAccessx_0_11111121211111
-                          by contradiction /* cyclic */
-                        qed
+                        by contradiction /* cyclic */
                       next
                         case unlocks_0_11111121211112111
-                        by solve( State_11111121211112111( ~n, ~n.1, sk, x, y.1, status
-                                  ) ▶₀ #t2.2 )
+                        by contradiction /* cyclic */
                       next
                         case unlocks_0_111111212111122
-                        by solve( State_111111212111122( ~n, ~n.1, sk, x, y.1, status
-                                  ) ▶₀ #t2.2 )
+                        by contradiction /* cyclic */
                       qed
                     qed
                   qed
@@ -335,18 +330,13 @@ next
                       case p_1_
                       solve( Unlock_1( '1', ~n, ~n.1 ) @ #t2.2 )
                         case unlocks_0_1111112121111111
-                        by solve( State_1111112121111111( ~n, ~n.1, sk, x.1, y, status
-                                  ) ▶₀ #t2.2 )
+                        by contradiction /* cyclic */
                       next
                         case unlocks_0_11111121211112111
-                        solve( State_11111121211112111( ~n, ~n.1, sk, x.1, y, status ) ▶₀ #t2.2 )
-                          case eventAccessy_0_111111212111121
-                          by contradiction /* cyclic */
-                        qed
+                        by contradiction /* cyclic */
                       next
                         case unlocks_0_111111212111122
-                        by solve( State_111111212111122( ~n, ~n.1, sk, x.1, y, status
-                                  ) ▶₀ #t2.2 )
+                        by contradiction /* cyclic */
                       qed
                     qed
                   qed
@@ -799,18 +789,13 @@ solve( !Semistate_111121( s, sk ) ▶₀ #i )
                 case p_1_
                 solve( Unlock_1( '1', ~n.7, ~n.5 ) @ #t2.2 )
                   case unlocks_0_1111112121111111
-                  solve( State_1111112121111111( ~n.7, ~n.5, sk, x, y, status ) ▶₀ #t2.2 )
-                    case eventAccessx_0_11111121211111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case unlocks_0_11111121211112111
-                  by solve( State_11111121211112111( ~n.7, ~n.5, sk, x, y, status
-                            ) ▶₀ #t2.2 )
+                  by contradiction /* cyclic */
                 next
                   case unlocks_0_111111212111122
-                  by solve( State_111111212111122( ~n.7, ~n.5, sk, x, y, status
-                            ) ▶₀ #t2.2 )
+                  by contradiction /* cyclic */
                 qed
               qed
             qed
@@ -888,19 +873,13 @@ solve( !Semistate_111121( s, sk ) ▶₀ #i )
                                     case p_1_
                                     solve( Unlock_1( '1', ~n.11, ~n.9 ) @ #t2.5 )
                                       case unlocks_0_1111112121111111
-                                      solve( State_1111112121111111( ~n.11, ~n.9, sk, x, y.1, status
-                                             ) ▶₀ #t2.5 )
-                                        case eventAccessx_0_11111121211111
-                                        by contradiction /* cyclic */
-                                      qed
+                                      by contradiction /* cyclic */
                                     next
                                       case unlocks_0_11111121211112111
-                                      by solve( State_11111121211112111( ~n.11, ~n.9, sk, x, y.1, status
-                                                ) ▶₀ #t2.5 )
+                                      by contradiction /* cyclic */
                                     next
                                       case unlocks_0_111111212111122
-                                      by solve( State_111111212111122( ~n.11, ~n.9, sk, x, y.1, status
-                                                ) ▶₀ #t2.5 )
+                                      by contradiction /* cyclic */
                                     qed
                                   qed
                                 qed
@@ -1013,19 +992,13 @@ solve( !Semistate_111121( s, sk ) ▶₀ #i )
                                     case p_1_
                                     solve( Unlock_1( '1', ~n.11, ~n.9 ) @ #t2.5 )
                                       case unlocks_0_1111112121111111
-                                      by solve( State_1111112121111111( ~n.11, ~n.9, sk, x, y.1, status
-                                                ) ▶₀ #t2.5 )
+                                      by contradiction /* cyclic */
                                     next
                                       case unlocks_0_11111121211112111
-                                      solve( State_11111121211112111( ~n.11, ~n.9, sk, x, y.1, status
-                                             ) ▶₀ #t2.5 )
-                                        case eventAccessy_0_111111212111121
-                                        by contradiction /* cyclic */
-                                      qed
+                                      by contradiction /* cyclic */
                                     next
                                       case unlocks_0_111111212111122
-                                      by solve( State_111111212111122( ~n.11, ~n.9, sk, x, y.1, status
-                                                ) ▶₀ #t2.5 )
+                                      by contradiction /* cyclic */
                                     qed
                                   qed
                                 qed
@@ -1166,18 +1139,13 @@ solve( !Semistate_111121( s, sk ) ▶₀ #i )
                 case p_1_
                 solve( Unlock_1( '1', ~n.7, ~n.5 ) @ #t2.2 )
                   case unlocks_0_1111112121111111
-                  by solve( State_1111112121111111( ~n.7, ~n.5, sk, x, y, status
-                            ) ▶₀ #t2.2 )
+                  by contradiction /* cyclic */
                 next
                   case unlocks_0_11111121211112111
-                  solve( State_11111121211112111( ~n.7, ~n.5, sk, x, y, status ) ▶₀ #t2.2 )
-                    case eventAccessy_0_111111212111121
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case unlocks_0_111111212111122
-                  by solve( State_111111212111122( ~n.7, ~n.5, sk, x, y, status
-                            ) ▶₀ #t2.2 )
+                  by contradiction /* cyclic */
                 qed
               qed
             qed
@@ -1259,19 +1227,13 @@ solve( !Semistate_111121( s, sk ) ▶₀ #i )
                                     case p_1_
                                     solve( Unlock_1( '1', ~n.11, ~n.9 ) @ #t2.5 )
                                       case unlocks_0_1111112121111111
-                                      solve( State_1111112121111111( ~n.11, ~n.9, sk, x.1, y, status
-                                             ) ▶₀ #t2.5 )
-                                        case eventAccessx_0_11111121211111
-                                        by contradiction /* cyclic */
-                                      qed
+                                      by contradiction /* cyclic */
                                     next
                                       case unlocks_0_11111121211112111
-                                      by solve( State_11111121211112111( ~n.11, ~n.9, sk, x.1, y, status
-                                                ) ▶₀ #t2.5 )
+                                      by contradiction /* cyclic */
                                     next
                                       case unlocks_0_111111212111122
-                                      by solve( State_111111212111122( ~n.11, ~n.9, sk, x.1, y, status
-                                                ) ▶₀ #t2.5 )
+                                      by contradiction /* cyclic */
                                     qed
                                   qed
                                 qed
@@ -1378,19 +1340,13 @@ solve( !Semistate_111121( s, sk ) ▶₀ #i )
                                     case p_1_
                                     solve( Unlock_1( '1', ~n.11, ~n.9 ) @ #t2.5 )
                                       case unlocks_0_1111112121111111
-                                      by solve( State_1111112121111111( ~n.11, ~n.9, sk, x.1, y, status
-                                                ) ▶₀ #t2.5 )
+                                      by contradiction /* cyclic */
                                     next
                                       case unlocks_0_11111121211112111
-                                      solve( State_11111121211112111( ~n.11, ~n.9, sk, x.1, y, status
-                                             ) ▶₀ #t2.5 )
-                                        case eventAccessy_0_111111212111121
-                                        by contradiction /* cyclic */
-                                      qed
+                                      by contradiction /* cyclic */
                                     next
                                       case unlocks_0_111111212111122
-                                      by solve( State_111111212111122( ~n.11, ~n.9, sk, x.1, y, status
-                                                ) ▶₀ #t2.5 )
+                                      by contradiction /* cyclic */
                                     qed
                                   qed
                                 qed
@@ -1958,28 +1914,21 @@ restriction locking_1:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
-
-  output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 11.093962963s
-  source (all-traces): verified (122 steps)
-  reachability_left (exists-trace): verified (14 steps)
-  reachability_right (exists-trace): verified (14 steps)
-  secrecy (all-traces): verified (192 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1987,11 +1936,12 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 11.093962963s
-  source (all-traces): verified (122 steps)
+  processing time: 0.082947363s
+  
+  source (all-traces): verified (120 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)
-  secrecy (all-traces): verified (192 steps)
+  secrecy (all-traces): verified (186 steps)
 
 ==============================================================================
 */

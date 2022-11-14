@@ -44,12 +44,13 @@ guarded formula characterizing all satisfying traces:
 "∃ pka k #t1. (SessionV( pka, k ) @ #t1)"
 */
 simplify
-solve( State_1111111111111111( cu, cypher, pc, pw, share, k, signed, skV
+solve( State_1111111111212111111( cu, pc, pw, share, skV, cypher, k,
+                                  signed
        ) ▶₀ #t1 )
-  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111111111
-  solve( !KU( shared(<aenc(k, pk(~n.1)), rep(aenc(k, pk(~n.1)), 'loc')>)
+  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111121211111
+  solve( !KU( shared(<aenc(k, pk(~n.3)), rep(aenc(k, pk(~n.3)), 'loc')>)
          ) @ #vk )
-    case p_1_1111111111212
+    case newsharedk_0_11111111112111
     SOLVED // trace found
   qed
 qed
@@ -64,19 +65,19 @@ simplify
 solve( State_1111111( cu, pc, pw, k ) ▶₀ #t1 )
   case eventChanpcchannel_0_11111
   solve( !KU( ~n.3 ) @ #t2 )
-    case eventProvUcode_0_111111111121111
-    solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.5 )
-      case inpcchannelcode_0_11111111112111_case_1
-      by solve( (#vr.4, 0) ~~> (#t2, 0) )
-    next
-      case inpcchannelcode_0_11111111112111_case_2
+    case eventProvUcode_0_1111111111111
+    solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.3 )
+      case inpcchannelcode_1_111111111111_case_1
       solve( (#vr.4, 0) ~~> (#t2, 0) )
         case d_0_fst
-        by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.11 )
+        by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.9 )
       next
         case d_0_snd
-        by solve( (#vr.12, 0) ~~> (#t2, 0) )
+        by solve( (#vr.10, 0) ~~> (#t2, 0) )
       qed
+    next
+      case inpcchannelcode_1_111111111111_case_2
+      by solve( (#vr.4, 0) ~~> (#t2, 0) )
     qed
   qed
 qed
@@ -94,51 +95,52 @@ guarded formula characterizing all counter-examples:
   ∀ #t2. (SessionP( pka, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-solve( State_1111111111111111( cu, cypher, pc, pw, share, k, signed, skV
+solve( State_1111111111212111111( cu, pc, pw, share, skV, cypher, k,
+                                  signed
        ) ▶₀ #t1 )
-  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111111111
-  solve( !KU( shared(<aenc(k, pk(~n.1)), rep(aenc(k, pk(~n.1)), 'loc')>)
+  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111121211111
+  solve( !KU( shared(<aenc(k, pk(~n.3)), rep(aenc(k, pk(~n.3)), 'loc')>)
          ) @ #vk )
     case c_shared
-    solve( !KU( rep(aenc(k, pk(~n.1)), 'loc') ) @ #vk.3 )
+    solve( !KU( rep(aenc(k, pk(~n.3)), 'loc') ) @ #vk.3 )
       case ReportRule
       by contradiction /* from formulas */
     next
-      case eventProvUcode_0_111111111121111
-      solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.12 )
-        case inpcchannelcode_0_11111111112111_case_1
-        by contradiction /* impossible chain */
-      next
-        case inpcchannelcode_0_11111111112111_case_2
-        solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+      case eventProvUcode_0_1111111111111
+      solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.11 )
+        case inpcchannelcode_1_111111111111_case_1
+        solve( (#vr.12, 0) ~~> (#vk.1, 0) )
           case d_0_fst
-          by solve( Let_111111111121111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.18 )
+          by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.17 )
         next
           case d_0_snd
           by contradiction /* impossible chain */
         qed
+      next
+        case inpcchannelcode_1_111111111111_case_2
+        by contradiction /* impossible chain */
       qed
     next
-      case p_1_1111111111212
+      case newsharedk_0_11111111112111
       by contradiction /* from formulas */
     qed
   next
-    case eventProvUcode_0_111111111121111
-    solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.12 )
-      case inpcchannelcode_0_11111111112111_case_1
-      by contradiction /* impossible chain */
-    next
-      case inpcchannelcode_0_11111111112111_case_2
-      solve( (#vr.11, 0) ~~> (#vk, 0) )
+    case eventProvUcode_0_1111111111111
+    solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.11 )
+      case inpcchannelcode_1_111111111111_case_1
+      solve( (#vr.12, 0) ~~> (#vk, 0) )
         case d_0_fst
-        by solve( Let_111111111121111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.18 )
+        by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.17 )
       next
         case d_0_snd
         by contradiction /* impossible chain */
       qed
+    next
+      case inpcchannelcode_1_111111111111_case_2
+      by contradiction /* impossible chain */
     qed
   next
-    case p_1_1111111111212
+    case newsharedk_0_11111111112111
     by contradiction /* from formulas */
   qed
 qed
@@ -151,31 +153,32 @@ guarded formula characterizing all counter-examples:
 "∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2)"
 */
 simplify
-solve( State_1111111111111111( cu, cypher, pc, pw, share, ~n, signed, skV
+solve( State_1111111111212111111( cu, pc, pw, share, skV, cypher, ~n,
+                                  signed
        ) ▶₀ #t1 )
-  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111111111
-  solve( !Semistate_11111111112121( cu, pc, pw, ~n.2 ) ▶₀ #t2 )
+  case ifaencsharedkpkskVcheckrepsignedloc_0_111111111121211111
+  solve( State_11111111112111( cu, pc, pw, ~n.4 ) ▶₀ #t2 )
     case p_1_11111111112
-    solve( !KU( ~n.1 ) @ #t2.1 )
-      case eventProvUcode_0_111111111121111
-      solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.14 )
-        case inpcchannelcode_0_11111111112111_case_1
-        by solve( (#vr.13, 0) ~~> (#t2.1, 0) )
-      next
-        case inpcchannelcode_0_11111111112111_case_2
-        solve( (#vr.13, 0) ~~> (#t2.1, 0) )
+    solve( !KU( ~n.3 ) @ #t2.1 )
+      case eventProvUcode_0_1111111111111
+      solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.13 )
+        case inpcchannelcode_1_111111111111_case_1
+        solve( (#vr.14, 0) ~~> (#t2.1, 0) )
           case d_0_fst
-          by solve( Let_111111111121111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.20 )
+          by solve( State_1111111111111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.19 )
         next
           case d_0_snd
-          by solve( (#vr.21, 0) ~~> (#t2.1, 0) )
+          by solve( (#vr.20, 0) ~~> (#t2.1, 0) )
         qed
+      next
+        case inpcchannelcode_1_111111111111_case_2
+        by solve( (#vr.14, 0) ~~> (#t2.1, 0) )
       qed
     next
-      case p_1_1111111111212_case_1
+      case newsharedk_0_11111111112111_case_1
       by contradiction /* from formulas */
     next
-      case p_1_1111111111212_case_2
+      case newsharedk_0_11111111112111_case_2
       by contradiction /* from formulas */
     qed
   qed
@@ -203,187 +206,187 @@ guarded formula characterizing all counter-examples:
   (Ask( pw, chal, fr, k ) @ #t1) ∧ (!KU( chal ) @ #t2)"
 */
 simplify
-solve( State_111111111121211111111111111( cdcode, cu, pc, pw, skV,
-                                          skosenc, chal, cypher, fr, kOTP, k
+solve( State_11111111112111111111111111( cdcode, chal, cu, cypher, kOTP,
+                                         pc, pw, k, skV, skosenc, fr
        ) ▶₀ #t1 )
-  case letchallengesdeccyphersharedk_1_11111111112121111111111111
-  solve( Let_111111111121111( code, ~n, pc, ~n.2, skV ) ▶₀ #vr.9 )
-    case inpcchannelcode_0_11111111112111_case_1
-    solve( !Semistate_11111111112121( cu, pc, pw, ~n.3 ) ▶₀ #t2 )
+  case letchallengesdeccyphersharedk_1_1111111111211111111111111
+  solve( State_1111111111111( code, ~n, pc, ~n.3, skV ) ▶₀ #vr.7 )
+    case inpcchannelcode_1_111111111111_case_1
+    by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.21 )
+  next
+    case inpcchannelcode_1_111111111111_case_2
+    solve( State_11111111112111( cu, pc, pw, ~n.4 ) ▶₀ #t2 )
       case p_1_11111111112
       solve( splitEqs(1) )
         case split_case_1
-        solve( !KU( senc(chal, ~n.4) ) @ #vk )
+        solve( !KU( senc(chal, ~n.1) ) @ #vk )
           case c_senc
-          solve( !KU( ~n.4 ) @ #vk.4 )
-            case eventProvUcode_0_111111111121111
-            solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.32 )
-              case inpcchannelcode_0_11111111112111_case_1
-              by solve( (#vr.31, 0) ~~> (#vk.1, 0) )
-            next
-              case inpcchannelcode_0_11111111112111_case_2
+          solve( !KU( ~n.1 ) @ #vk.4 )
+            case eventProvUcode_0_1111111111111
+            solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.30 )
+              case inpcchannelcode_1_111111111111_case_1
               solve( (#vr.31, 0) ~~> (#vk.1, 0) )
                 case d_0_fst
-                by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.38 )
+                by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.36 )
               next
                 case d_0_snd
-                by solve( (#vr.39, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.37, 0) ~~> (#vk.1, 0) )
               qed
+            next
+              case inpcchannelcode_1_111111111111_case_2
+              by solve( (#vr.31, 0) ~~> (#vk.1, 0) )
             qed
           next
-            case p_1_1111111111212_case_1
+            case newsharedk_0_11111111112111_case_1
             by contradiction /* from formulas */
           next
-            case p_1_1111111111212_case_2
+            case newsharedk_0_11111111112111_case_2
             by contradiction /* from formulas */
           qed
         next
-          case eventProvScode_0_1111111111111111111111
-          solve( !KU( ~n.5 ) @ #t2.1 )
-            case eventProvScode_0_1111111111111111111111
+          case eventProvScode_0_1111111111212111111111111
+          solve( !KU( ~n ) @ #t2.1 )
+            case eventProvScode_0_1111111111212111111111111
             by contradiction /* from formulas */
           next
-            case eventProvUcode_0_111111111121111
-            solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.47 )
-              case inpcchannelcode_0_11111111112111_case_1
-              by solve( (#vr.46, 0) ~~> (#t2.1, 0) )
-            next
-              case inpcchannelcode_0_11111111112111_case_2
+            case eventProvUcode_0_1111111111111
+            solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+              case inpcchannelcode_1_111111111111_case_1
               solve( (#vr.46, 0) ~~> (#t2.1, 0) )
                 case d_0_fst
-                by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.53 )
+                by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.51 )
               next
                 case d_0_snd
-                by solve( (#vr.54, 0) ~~> (#t2.1, 0) )
+                by solve( (#vr.52, 0) ~~> (#t2.1, 0) )
               qed
+            next
+              case inpcchannelcode_1_111111111111_case_2
+              by solve( (#vr.46, 0) ~~> (#t2.1, 0) )
             qed
           qed
         next
-          case eventProvUcode_0_111111111121111
-          solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.32 )
-            case inpcchannelcode_0_11111111112111_case_1
-            by contradiction /* impossible chain */
-          next
-            case inpcchannelcode_0_11111111112111_case_2
+          case eventProvUcode_0_1111111111111
+          solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.30 )
+            case inpcchannelcode_1_111111111111_case_1
             solve( (#vr.31, 0) ~~> (#vk, 0) )
               case d_0_fst
-              by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.38 )
+              by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.36 )
             next
               case d_0_snd
               by contradiction /* impossible chain */
             qed
+          next
+            case inpcchannelcode_1_111111111111_case_2
+            by contradiction /* impossible chain */
           qed
         next
-          case p_1_1111111111111111111111111
-          solve( !KU( ~n.5 ) @ #t2.1 )
-            case eventProvUcode_0_111111111121111
-            solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.47 )
-              case inpcchannelcode_0_11111111112111_case_1
-              by solve( (#vr.46, 0) ~~> (#t2.1, 0) )
-            next
-              case inpcchannelcode_0_11111111112111_case_2
+          case p_1_1111111111212111111111111111
+          solve( !KU( ~n ) @ #t2.1 )
+            case eventProvUcode_0_1111111111111
+            solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+              case inpcchannelcode_1_111111111111_case_1
               solve( (#vr.46, 0) ~~> (#t2.1, 0) )
                 case d_0_fst
-                by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.53 )
+                by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.51 )
               next
                 case d_0_snd
-                by solve( (#vr.54, 0) ~~> (#t2.1, 0) )
+                by solve( (#vr.52, 0) ~~> (#t2.1, 0) )
               qed
+            next
+              case inpcchannelcode_1_111111111111_case_2
+              by solve( (#vr.46, 0) ~~> (#t2.1, 0) )
             qed
           next
-            case p_1_1111111111111111111111111
+            case p_1_1111111111212111111111111111
             by contradiction /* from formulas */
           qed
         qed
       next
         case split_case_2
-        solve( !KU( senc(chal, ~n.4) ) @ #vk )
+        solve( !KU( senc(chal, ~n.1) ) @ #vk )
           case c_senc
-          solve( !KU( ~n.4 ) @ #vk.4 )
-            case eventProvUcode_0_111111111121111
-            solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.32 )
-              case inpcchannelcode_0_11111111112111_case_1
-              by solve( (#vr.31, 0) ~~> (#vk.1, 0) )
-            next
-              case inpcchannelcode_0_11111111112111_case_2
+          solve( !KU( ~n.1 ) @ #vk.4 )
+            case eventProvUcode_0_1111111111111
+            solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.30 )
+              case inpcchannelcode_1_111111111111_case_1
               solve( (#vr.31, 0) ~~> (#vk.1, 0) )
                 case d_0_fst
-                by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.38 )
+                by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.36 )
               next
                 case d_0_snd
-                by solve( (#vr.39, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.37, 0) ~~> (#vk.1, 0) )
               qed
+            next
+              case inpcchannelcode_1_111111111111_case_2
+              by solve( (#vr.31, 0) ~~> (#vk.1, 0) )
             qed
           next
-            case p_1_1111111111212_case_1
+            case newsharedk_0_11111111112111_case_1
             by contradiction /* from formulas */
           next
-            case p_1_1111111111212_case_2
+            case newsharedk_0_11111111112111_case_2
             by contradiction /* from formulas */
           qed
         next
-          case eventProvScode_0_1111111111111111111111
-          solve( !KU( ~n.5 ) @ #t2.1 )
-            case eventProvScode_0_1111111111111111111111
+          case eventProvScode_0_1111111111212111111111111
+          solve( !KU( ~n ) @ #t2.1 )
+            case eventProvScode_0_1111111111212111111111111
             by contradiction /* from formulas */
           next
-            case eventProvUcode_0_111111111121111
-            solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.47 )
-              case inpcchannelcode_0_11111111112111_case_1
-              by solve( (#vr.46, 0) ~~> (#t2.1, 0) )
-            next
-              case inpcchannelcode_0_11111111112111_case_2
+            case eventProvUcode_0_1111111111111
+            solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+              case inpcchannelcode_1_111111111111_case_1
               solve( (#vr.46, 0) ~~> (#t2.1, 0) )
                 case d_0_fst
-                by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.53 )
+                by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.51 )
               next
                 case d_0_snd
-                by solve( (#vr.54, 0) ~~> (#t2.1, 0) )
+                by solve( (#vr.52, 0) ~~> (#t2.1, 0) )
               qed
+            next
+              case inpcchannelcode_1_111111111111_case_2
+              by solve( (#vr.46, 0) ~~> (#t2.1, 0) )
             qed
           qed
         next
-          case eventProvUcode_0_111111111121111
-          solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.32 )
-            case inpcchannelcode_0_11111111112111_case_1
-            by contradiction /* impossible chain */
-          next
-            case inpcchannelcode_0_11111111112111_case_2
+          case eventProvUcode_0_1111111111111
+          solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.30 )
+            case inpcchannelcode_1_111111111111_case_1
             solve( (#vr.31, 0) ~~> (#vk, 0) )
               case d_0_fst
-              by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.38 )
+              by solve( State_1111111111111( code, ~n.2, pc, pw, skV ) ▶₀ #vr.36 )
             next
               case d_0_snd
               by contradiction /* impossible chain */
             qed
+          next
+            case inpcchannelcode_1_111111111111_case_2
+            by contradiction /* impossible chain */
           qed
         next
-          case p_1_1111111111111111111111111
-          solve( !KU( ~n.5 ) @ #t2.1 )
-            case eventProvUcode_0_111111111121111
-            solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.47 )
-              case inpcchannelcode_0_11111111112111_case_1
-              by solve( (#vr.46, 0) ~~> (#t2.1, 0) )
-            next
-              case inpcchannelcode_0_11111111112111_case_2
+          case p_1_1111111111212111111111111111
+          solve( !KU( ~n ) @ #t2.1 )
+            case eventProvUcode_0_1111111111111
+            solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.45 )
+              case inpcchannelcode_1_111111111111_case_1
               solve( (#vr.46, 0) ~~> (#t2.1, 0) )
                 case d_0_fst
-                by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.53 )
+                by solve( State_1111111111111( code, ~n.3, pc, pw, skV ) ▶₀ #vr.51 )
               next
                 case d_0_snd
-                by solve( (#vr.54, 0) ~~> (#t2.1, 0) )
+                by solve( (#vr.52, 0) ~~> (#t2.1, 0) )
               qed
+            next
+              case inpcchannelcode_1_111111111111_case_2
+              by solve( (#vr.46, 0) ~~> (#t2.1, 0) )
             qed
           next
-            case p_1_1111111111111111111111111
+            case p_1_1111111111212111111111111111
             by contradiction /* from formulas */
           qed
         qed
       qed
     qed
-  next
-    case inpcchannelcode_0_11111111112111_case_2
-    by solve( Let_111111111121111( code, ~n.1, pc, pw, skV ) ▶₀ #vr.23 )
   qed
 qed
 
@@ -402,165 +405,165 @@ guarded formula characterizing all counter-examples:
    (Ask( pw, ch, fr, k ) @ #t2) ∧ (AskU( pw, fr ) @ #t3) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-solve( State_1111111111111111111111111111111( ch, code, codeb, cu,
-                                              cypher, hashed, kOTP, pc, pw, sccypher, share, shared_k, signed,
-                                              skV
+solve( State_1111111111212111111111111111111111( codeb, cu, hashed, pc,
+                                                 pw, sccypher, share, skV, ch, cypher, kOTP, shared_k, signed,
+                                                 code
        ) ▶₀ #t1 )
-  case ifhashedhpwhashkOTPchallenge_0_111111111111111111111111111111
-  solve( !Semistate_11111111112121( cu, pc, pw, ~n.4 ) ▶₀ #t2 )
+  case ifhashedhpwhashkOTPchallenge_0_111111111121211111111111111111111
+  solve( State_11111111112111( cu, pc, pw, ~n.7 ) ▶₀ #t2 )
     case p_1_11111111112
-    solve( !KU( h(~n.5) ) @ #vk.1 )
+    solve( !KU( h(~n.2) ) @ #vk.1 )
       case c_h
-      solve( !KU( hash(~n.6, ~n) ) @ #vk.2 )
+      solve( !KU( hash(~n.3, ~n.4) ) @ #vk.2 )
         case c_hash
-        solve( !KU( ~n.6 ) @ #vk.6 )
-          case eventProvScode_0_1111111111111111111111
+        solve( !KU( ~n.3 ) @ #vk.6 )
+          case eventProvScode_0_1111111111212111111111111
           by contradiction /* from formulas */
         next
-          case eventProvUcode_0_111111111121111
-          solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
-            case inpcchannelcode_0_11111111112111_case_1
-            by solve( (#vr.24, 0) ~~> (#vk.2, 0) )
-          next
-            case inpcchannelcode_0_11111111112111_case_2
+          case eventProvUcode_0_1111111111111
+          solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.23 )
+            case inpcchannelcode_1_111111111111_case_1
             solve( (#vr.24, 0) ~~> (#vk.2, 0) )
               case d_0_fst
-              by solve( Let_111111111121111( code, ~n.7, pc, pw, skV ) ▶₀ #vr.31 )
+              by solve( State_1111111111111( code, ~n.5, pc, pw, skV ) ▶₀ #vr.29 )
             next
               case d_0_snd
-              by solve( (#vr.32, 0) ~~> (#vk.2, 0) )
+              by solve( (#vr.30, 0) ~~> (#vk.2, 0) )
             qed
+          next
+            case inpcchannelcode_1_111111111111_case_2
+            by solve( (#vr.24, 0) ~~> (#vk.2, 0) )
           qed
         qed
       next
-        case eventAskpwchallengefrsharedk_0_111111111121211111111111111
+        case eventAskpwchallengefrsharedk_0_11111111112111111111111111
         by contradiction /* from formulas */
       next
-        case eventProvUcode_0_111111111121111
-        solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
-          case inpcchannelcode_0_11111111112111_case_1
-          by contradiction /* impossible chain */
-        next
-          case inpcchannelcode_0_11111111112111_case_2
+        case eventProvUcode_0_1111111111111
+        solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.23 )
+          case inpcchannelcode_1_111111111111_case_1
           solve( (#vr.24, 0) ~~> (#vk.1, 0) )
             case d_0_fst
-            by solve( Let_111111111121111( code, ~n.7, pc, pw, skV ) ▶₀ #vr.31 )
+            by solve( State_1111111111111( code, ~n.5, pc, pw, skV ) ▶₀ #vr.29 )
           next
             case d_0_snd
             by contradiction /* impossible chain */
           qed
+        next
+          case inpcchannelcode_1_111111111111_case_2
+          by contradiction /* impossible chain */
         qed
       qed
     next
-      case eventAskpwchallengefrsharedk_0_111111111121211111111111111
-      solve( Let_111111111121111( code, ~n.2, pc, ~n.5, skV ) ▶₀ #vr.34 )
-        case inpcchannelcode_0_11111111112111_case_1
-        solve( !Semistate_11111111112121( cu, pc, pw, ~n.4 ) ▶₀ #t2.1 )
+      case eventAskpwchallengefrsharedk_0_11111111112111111111111111
+      solve( State_1111111111111( code, ~n.1, pc, ~n.2, skV ) ▶₀ #vr.32 )
+        case inpcchannelcode_1_111111111111_case_1
+        by solve( State_1111111111111( code, ~n.5, pc, pw, skV ) ▶₀ #vr.42 )
+      next
+        case inpcchannelcode_1_111111111111_case_2
+        solve( State_11111111112111( cu, pc, pw, ~n.7 ) ▶₀ #t2.1 )
           case p_1_11111111112
           solve( splitEqs(2) )
             case split_case_1
-            solve( !KU( hash(~n.6, ~n) ) @ #vk.2 )
+            solve( !KU( hash(~n.3, ~n.4) ) @ #vk.2 )
               case c_hash
-              solve( !KU( ~n.6 ) @ #vk.9 )
-                case eventProvScode_0_1111111111111111111111
+              solve( !KU( ~n.3 ) @ #vk.9 )
+                case eventProvScode_0_1111111111212111111111111
                 by contradiction /* from formulas */
               next
-                case eventProvUcode_0_111111111121111
-                solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.53 )
-                  case inpcchannelcode_0_11111111112111_case_1
-                  by solve( (#vr.52, 0) ~~> (#vk.2, 0) )
-                next
-                  case inpcchannelcode_0_11111111112111_case_2
+                case eventProvUcode_0_1111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.51 )
+                  case inpcchannelcode_1_111111111111_case_1
                   solve( (#vr.52, 0) ~~> (#vk.2, 0) )
                     case d_0_fst
-                    by solve( Let_111111111121111( code, ~n.7, pc, pw, skV ) ▶₀ #vr.59 )
+                    by solve( State_1111111111111( code, ~n.5, pc, pw, skV ) ▶₀ #vr.57 )
                   next
                     case d_0_snd
-                    by solve( (#vr.60, 0) ~~> (#vk.2, 0) )
+                    by solve( (#vr.58, 0) ~~> (#vk.2, 0) )
                   qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by solve( (#vr.52, 0) ~~> (#vk.2, 0) )
                 qed
               qed
             next
-              case eventAskpwchallengefrsharedk_0_111111111121211111111111111
+              case eventAskpwchallengefrsharedk_0_11111111112111111111111111
               by contradiction /* from formulas */
             next
-              case eventProvUcode_0_111111111121111
-              solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.53 )
-                case inpcchannelcode_0_11111111112111_case_1
-                by contradiction /* impossible chain */
-              next
-                case inpcchannelcode_0_11111111112111_case_2
+              case eventProvUcode_0_1111111111111
+              solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.51 )
+                case inpcchannelcode_1_111111111111_case_1
                 solve( (#vr.52, 0) ~~> (#vk.1, 0) )
                   case d_0_fst
-                  by solve( Let_111111111121111( code, ~n.7, pc, pw, skV ) ▶₀ #vr.59 )
+                  by solve( State_1111111111111( code, ~n.5, pc, pw, skV ) ▶₀ #vr.57 )
                 next
                   case d_0_snd
                   by contradiction /* impossible chain */
                 qed
+              next
+                case inpcchannelcode_1_111111111111_case_2
+                by contradiction /* impossible chain */
               qed
             qed
           next
             case split_case_2
-            solve( !KU( hash(~n.6, ~n) ) @ #vk.2 )
+            solve( !KU( hash(~n.3, ~n.4) ) @ #vk.2 )
               case c_hash
-              solve( !KU( ~n.6 ) @ #vk.9 )
-                case eventProvScode_0_1111111111111111111111
+              solve( !KU( ~n.3 ) @ #vk.9 )
+                case eventProvScode_0_1111111111212111111111111
                 by contradiction /* from formulas */
               next
-                case eventProvUcode_0_111111111121111
-                solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.53 )
-                  case inpcchannelcode_0_11111111112111_case_1
-                  by solve( (#vr.52, 0) ~~> (#vk.2, 0) )
-                next
-                  case inpcchannelcode_0_11111111112111_case_2
+                case eventProvUcode_0_1111111111111
+                solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.51 )
+                  case inpcchannelcode_1_111111111111_case_1
                   solve( (#vr.52, 0) ~~> (#vk.2, 0) )
                     case d_0_fst
-                    by solve( Let_111111111121111( code, ~n.7, pc, pw, skV ) ▶₀ #vr.59 )
+                    by solve( State_1111111111111( code, ~n.5, pc, pw, skV ) ▶₀ #vr.57 )
                   next
                     case d_0_snd
-                    by solve( (#vr.60, 0) ~~> (#vk.2, 0) )
+                    by solve( (#vr.58, 0) ~~> (#vk.2, 0) )
                   qed
+                next
+                  case inpcchannelcode_1_111111111111_case_2
+                  by solve( (#vr.52, 0) ~~> (#vk.2, 0) )
                 qed
               qed
             next
-              case eventAskpwchallengefrsharedk_0_111111111121211111111111111
+              case eventAskpwchallengefrsharedk_0_11111111112111111111111111
               by contradiction /* from formulas */
             next
-              case eventProvUcode_0_111111111121111
-              solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.53 )
-                case inpcchannelcode_0_11111111112111_case_1
-                by contradiction /* impossible chain */
-              next
-                case inpcchannelcode_0_11111111112111_case_2
+              case eventProvUcode_0_1111111111111
+              solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.51 )
+                case inpcchannelcode_1_111111111111_case_1
                 solve( (#vr.52, 0) ~~> (#vk.1, 0) )
                   case d_0_fst
-                  by solve( Let_111111111121111( code, ~n.7, pc, pw, skV ) ▶₀ #vr.59 )
+                  by solve( State_1111111111111( code, ~n.5, pc, pw, skV ) ▶₀ #vr.57 )
                 next
                   case d_0_snd
                   by contradiction /* impossible chain */
                 qed
+              next
+                case inpcchannelcode_1_111111111111_case_2
+                by contradiction /* impossible chain */
               qed
             qed
           qed
         qed
-      next
-        case inpcchannelcode_0_11111111112111_case_2
-        by solve( Let_111111111121111( code, ~n.7, pc, pw, skV ) ▶₀ #vr.44 )
       qed
     next
-      case eventProvUcode_0_111111111121111
-      solve( Let_111111111121111( code, cu, pc, pw, skV ) ▶₀ #vr.25 )
-        case inpcchannelcode_0_11111111112111_case_1
-        by contradiction /* impossible chain */
-      next
-        case inpcchannelcode_0_11111111112111_case_2
+      case eventProvUcode_0_1111111111111
+      solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.23 )
+        case inpcchannelcode_1_111111111111_case_1
         solve( (#vr.24, 0) ~~> (#vk, 0) )
           case d_0_fst
-          by solve( Let_111111111121111( code, ~n.7, pc, pw, skV ) ▶₀ #vr.31 )
+          by solve( State_1111111111111( code, ~n.5, pc, pw, skV ) ▶₀ #vr.29 )
         next
           case d_0_snd
           by contradiction /* impossible chain */
         qed
+      next
+        case inpcchannelcode_1_111111111111_case_2
+        by contradiction /* impossible chain */
       qed
     qed
   qed
@@ -581,27 +584,27 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
   case case_1
-  solve( State_111111111121211111111111111( cdcode, cu, pc, pw, skV,
-                                            skosenc, ch, cypher, fr, kOTP, k
+  solve( State_11111111112111111111111111( cdcode, ch, cu, cypher, kOTP,
+                                           pc, pw, k, skV, skosenc, fr
          ) ▶₀ #t1 )
-    case letchallengesdeccyphersharedk_1_11111111112121111111111111
-    solve( State_111111111121211111111111111( cdcode.1, cu, pc, ~n.2, skV,
-                                              skosenc, ch, cypher, ~n.5, kOTP.1, ~n.4
+    case letchallengesdeccyphersharedk_1_1111111111211111111111111
+    solve( State_11111111112111111111111111( cdcode.1, ch, cu, cypher,
+                                             kOTP.1, pc, ~n.3, ~n.1, skV, skosenc, ~n.5
            ) ▶₀ #t2 )
-      case letchallengesdeccyphersharedk_1_11111111112121111111111111
+      case letchallengesdeccyphersharedk_1_1111111111211111111111111
       by contradiction /* cyclic */
     qed
   qed
 next
   case case_2
-  solve( State_111111111121211111111111111( cdcode, cu, pc, pw, skV,
-                                            skosenc, ch, cypher, fr, kOTP, k
+  solve( State_11111111112111111111111111( cdcode, ch, cu, cypher, kOTP,
+                                           pc, pw, k, skV, skosenc, fr
          ) ▶₀ #t1 )
-    case letchallengesdeccyphersharedk_1_11111111112121111111111111
-    solve( State_111111111121211111111111111( cdcode.1, cu, pc, ~n.2, skV,
-                                              skosenc, ch, cypher, ~n.5, kOTP.1, ~n.4
+    case letchallengesdeccyphersharedk_1_1111111111211111111111111
+    solve( State_11111111112111111111111111( cdcode.1, ch, cu, cypher,
+                                             kOTP.1, pc, ~n.3, ~n.1, skV, skosenc, ~n.5
            ) ▶₀ #t2 )
-      case letchallengesdeccyphersharedk_1_11111111112121111111111111
+      case letchallengesdeccyphersharedk_1_1111111111211111111111111
       by contradiction /* cyclic */
     qed
   qed
@@ -718,507 +721,73 @@ rule (modulo E) eventKeyskV_0_1111111[color=#ffffff,
      [ !Semistate_1111111111( cu, pc, pw, skV ), Out( pk(skV) ) ]
   */
 
-rule (modulo E) inshare_0_111111111111[color=#658040,
-                                       process="in(share.1);"]:
-   [ State_111111111111( cu.1, pc.1, pw.1, skV.1 ), In( share.1 ) ]
+rule (modulo E) inpcchannelcode_0_111111111111[color=#504080,
+                                               process="in(pc.1:channel,code.1);"]:
+   [ State_111111111111( cu.1, pc.1, pw.1, skV.1 ), Message( pc.1, x.2 ) ]
   -->
-   [
-   Let_11111111111111( dshared(share.1), cu.1, pc.1, pw.1, share.1, skV.1 )
-   ]
+   [ Let_1111111111111( x.2, cu.1, pc.1, pw.1, skV.1 ), Ack( pc.1, x.2 ) ]
 
   /*
-  rule (modulo AC) inshare_0_111111111111[color=#658040,
-                                          process="in(share.1);"]:
-     [ State_111111111111( cu, pc, pw, skV ), In( share ) ]
+  rule (modulo AC) inpcchannelcode_0_111111111111[color=#504080,
+                                                  process="in(pc.1:channel,code.1);"]:
+     [ State_111111111111( cu, pc, pw, skV ), Message( pc, x ) ]
     -->
-     [ Let_11111111111111( z, cu, pc, pw, share, skV ) ]
-    variants (modulo AC)
-    1. share = share.8
-       z     = dshared(share.8)
-    
-    2. share = shared(x.8)
-       z     = x.8
+     [ Let_1111111111111( x, cu, pc, pw, skV ), Ack( pc, x ) ]
   */
 
-rule (modulo E) letcyphersigneddsharedshare_1_1111111111111[color=#ffffff,
-                                                            process="let <cypher.1, signed.1>=dshared(share.1)"]:
-   [
-   Let_11111111111111( <cypher.1, signed.1>, cu.1, pc.1, pw.1, share.1,
-                       skV.1
-   )
-   ]
+rule (modulo E) inpcchannelcode_1_111111111111[color=#504080,
+                                               process="in(pc.1:channel,code.1);"]:
+   [ Let_1111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ) ]
   -->
-   [
-   State_11111111111111( cu.1, cypher.1, pc.1, pw.1, share.1, signed.1,
-                         skV.1
-   )
-   ]
+   [ State_1111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ) ]
 
   /*
-  rule (modulo AC) letcyphersigneddsharedshare_1_1111111111111[color=#ffffff,
-                                                               process="let <cypher.1, signed.1>=dshared(share.1)"]:
-     [ Let_11111111111111( <cypher, signed>, cu, pc, pw, share, skV ) ]
+  rule (modulo AC) inpcchannelcode_1_111111111111[color=#504080,
+                                                  process="in(pc.1:channel,code.1);"]:
+     [ Let_1111111111111( code, cu, pc, pw, skV ) ]
     -->
-     [ State_11111111111111( cu, cypher, pc, pw, share, signed, skV ) ]
+     [ State_1111111111111( code, cu, pc, pw, skV ) ]
   */
 
-rule (modulo E) letsharedkadeccypherskV_0_11111111111111[color=#ffffff,
-                                                         process="let shared_k.1=adec(cypher.1, skV.1)"]:
+rule (modulo E) eventProvUcode_0_1111111111111[color=#504080,
+                                               process="event ProvU( code.1 );"]:
+   [ State_1111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ) ]
+  --[ ProvU( code.1 ) ]->
    [
-   State_11111111111111( cu.1, cypher.1, pc.1, pw.1, share.1, signed.1,
-                         skV.1
-   )
+   !Semistate_1111111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ),
+   Out( cde(code.1) )
    ]
-  -->
+
+  // loop breaker: [0]
+  /*
+  rule (modulo AC) eventProvUcode_0_1111111111111[color=#504080,
+                                                  process="event ProvU( code.1 );"]:
+     [ State_1111111111111( code, cu, pc, pw, skV ) ]
+    --[ ProvU( code ) ]->
+     [ !Semistate_1111111111111111( code, cu, pc, pw, skV ), Out( cde(code) )
+     ]
+    // loop breaker: [0]
+  */
+
+rule (modulo E) p_1_111111111111111[color=#504080, process="!"]:
    [
-   Let_111111111111111( <cypher.1, skV.1>, cu.1, cypher.1, pc.1, pw.1,
-                        share.1, signed.1, skV.1
-   )
+   !Semistate_1111111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ),
+   Fr( fr.1 )
+   ]
+  --[ AskU( pw.1, fr.1 ) ]->
+   [
+   Message( cu.1, <pw.1, fr.1> ),
+   Semistate_1111111111111111111( code.1, cu.1, fr.1, pc.1, pw.1, skV.1 )
    ]
 
   /*
-  rule (modulo AC) letsharedkadeccypherskV_0_11111111111111[color=#ffffff,
-                                                            process="let shared_k.1=adec(cypher.1, skV.1)"]:
-     [ State_11111111111111( cu, cypher, pc, pw, share, signed, skV ) ]
-    -->
+  rule (modulo AC) p_1_111111111111111[color=#504080, process="!"]:
+     [ !Semistate_1111111111111111( code, cu, pc, pw, skV ), Fr( fr ) ]
+    --[ AskU( pw, fr ) ]->
      [
-     Let_111111111111111( <cypher, skV>, cu, cypher, pc, pw, share, signed,
-                          skV
-     )
+     Message( cu, <pw, fr> ),
+     Semistate_1111111111111111111( code, cu, fr, pc, pw, skV )
      ]
-  */
-
-rule (modulo E) letsharedkadeccypherskV_1_11111111111111[color=#ffffff,
-                                                         process="let shared_k.1=adec(cypher.1, skV.1)"]:
-   [
-   Let_111111111111111( <aenc(shared_k.1, pk(x.2)), x.2>, cu.1, cypher.1,
-                        pc.1, pw.1, share.1, signed.1, skV.1
-   )
-   ]
-  -->
-   [
-   State_111111111111111( cu.1, cypher.1, pc.1, pw.1, share.1, shared_k.1,
-                          signed.1, skV.1
-   )
-   ]
-
-  /*
-  rule (modulo AC) letsharedkadeccypherskV_1_11111111111111[color=#ffffff,
-                                                            process="let shared_k.1=adec(cypher.1, skV.1)"]:
-     [
-     Let_111111111111111( <aenc(shared_k, pk(x)), x>, cu, cypher, pc, pw,
-                          share, signed, skV
-     )
-     ]
-    -->
-     [
-     State_111111111111111( cu, cypher, pc, pw, share, shared_k, signed, skV )
-     ]
-  */
-
-rule (modulo E) ifaencsharedkpkskVcheckrepsignedloc_0_111111111111111[color=#658040,
-                                                                      process="if aenc(shared_k.1, pk(skV.1))=check_rep(signed.1, 'loc')"]:
-   [
-   State_111111111111111( cu.1, cypher.1, pc.1, pw.1, share.1, shared_k.1,
-                          signed.1, skV.1
-   )
-   ]
-  --[ Pred_Eq( aenc(shared_k.1, pk(skV.1)), check_rep(signed.1, 'loc') )
-  ]->
-   [
-   State_1111111111111111( cu.1, cypher.1, pc.1, pw.1, share.1, shared_k.1,
-                           signed.1, skV.1
-   )
-   ]
-
-  /*
-  rule (modulo AC) ifaencsharedkpkskVcheckrepsignedloc_0_111111111111111[color=#658040,
-                                                                         process="if aenc(shared_k.1, pk(skV.1))=check_rep(signed.1, 'loc')"]:
-     [
-     State_111111111111111( cu, cypher, pc, pw, share, shared_k, signed, skV )
-     ]
-    --[ Pred_Eq( aenc(shared_k, pk(skV)), z ) ]->
-     [
-     State_1111111111111111( cu, cypher, pc, pw, share, shared_k, signed, skV
-     )
-     ]
-    variants (modulo AC)
-    1. signed
-             = signed.11
-       z     = check_rep(signed.11, 'loc')
-    
-    2. signed
-             = rep(x.11, 'loc')
-       z     = x.11
-  */
-
-rule (modulo E) eventSessionVpkskVsharedk_0_1111111111111111[color=#658040,
-                                                             process="event SessionV( pk(skV.1), shared_k.1 );"]:
-   [
-   State_1111111111111111( cu.1, cypher.1, pc.1, pw.1, share.1, shared_k.1,
-                           signed.1, skV.1
-   ),
-   Fr( code.1 )
-   ]
-  --[ SessionV( pk(skV.1), shared_k.1 ) ]->
-   [
-   Message( pc.1, code.1 ),
-   Semistate_1111111111111111111( code.1, cu.1, cypher.1, pc.1, pw.1,
-                                  share.1, shared_k.1, signed.1, skV.1
-   )
-   ]
-
-  /*
-  rule (modulo AC) eventSessionVpkskVsharedk_0_1111111111111111[color=#658040,
-                                                                process="event SessionV( pk(skV.1), shared_k.1 );"]:
-     [
-     State_1111111111111111( cu, cypher, pc, pw, share, shared_k, signed, skV
-     ),
-     Fr( code )
-     ]
-    --[ SessionV( pk(skV), shared_k ) ]->
-     [
-     Message( pc, code ),
-     Semistate_1111111111111111111( code, cu, cypher, pc, pw, share, shared_k,
-                                    signed, skV
-     )
-     ]
-  */
-
-rule (modulo E) outpcchannelcode_1_111111111111111111[color=#658040,
-                                                      process="out(pc.1:channel,code.1);"]:
-   [
-   Semistate_1111111111111111111( code.1, cu.1, cypher.1, pc.1, pw.1,
-                                  share.1, shared_k.1, signed.1, skV.1
-   ),
-   Ack( pc.1, code.1 ), In( sccypher.1 )
-   ]
-  -->
-   [
-   Let_111111111111111111111( <dscode(sccypher.1), shared_k.1>, code.1,
-                              cu.1, cypher.1, pc.1, pw.1, sccypher.1, share.1, shared_k.1, signed.1,
-                              skV.1
-   )
-   ]
-
-  /*
-  rule (modulo AC) outpcchannelcode_1_111111111111111111[color=#658040,
-                                                         process="out(pc.1:channel,code.1);"]:
-     [
-     Semistate_1111111111111111111( code, cu, cypher, pc, pw, share, shared_k,
-                                    signed, skV
-     ),
-     Ack( pc, code ), In( sccypher )
-     ]
-    -->
-     [
-     Let_111111111111111111111( <z, shared_k>, code, cu, cypher, pc, pw,
-                                sccypher, share, shared_k, signed, skV
-     )
-     ]
-    variants (modulo AC)
-    1. sccypher
-             = sccypher.13
-       z     = dscode(sccypher.13)
-    
-    2. sccypher
-             = scode(x.13)
-       z     = x.13
-  */
-
-rule (modulo E) letcodebsdecdscodesccyphersharedk_1_11111111111111111111[color=#ffffff,
-                                                                         process="let codeb.1=sdec(dscode(sccypher.1), shared_k.1)"]:
-   [
-   Let_111111111111111111111( <senc(codeb.1, x.2), x.2>, code.1, cu.1,
-                              cypher.1, pc.1, pw.1, sccypher.1, share.1, shared_k.1, signed.1, skV.1
-   )
-   ]
-  -->
-   [
-   State_111111111111111111111( code.1, codeb.1, cu.1, cypher.1, pc.1, pw.1,
-                                sccypher.1, share.1, shared_k.1, signed.1, skV.1
-   )
-   ]
-
-  /*
-  rule (modulo AC) letcodebsdecdscodesccyphersharedk_1_11111111111111111111[color=#ffffff,
-                                                                            process="let codeb.1=sdec(dscode(sccypher.1), shared_k.1)"]:
-     [
-     Let_111111111111111111111( <senc(codeb, x), x>, code, cu, cypher, pc, pw,
-                                sccypher, share, shared_k, signed, skV
-     )
-     ]
-    -->
-     [
-     State_111111111111111111111( code, codeb, cu, cypher, pc, pw, sccypher,
-                                  share, shared_k, signed, skV
-     )
-     ]
-  */
-
-rule (modulo E) ifcodebcode_0_111111111111111111111[color=#658040,
-                                                    process="if codeb.1=code.1"]:
-   [
-   State_111111111111111111111( code.1, codeb.1, cu.1, cypher.1, pc.1, pw.1,
-                                sccypher.1, share.1, shared_k.1, signed.1, skV.1
-   )
-   ]
-  --[ Pred_Eq( codeb.1, code.1 ) ]->
-   [
-   State_1111111111111111111111( code.1, codeb.1, cu.1, cypher.1, pc.1,
-                                 pw.1, sccypher.1, share.1, shared_k.1, signed.1, skV.1
-   )
-   ]
-
-  /*
-  rule (modulo AC) ifcodebcode_0_111111111111111111111[color=#658040,
-                                                       process="if codeb.1=code.1"]:
-     [
-     State_111111111111111111111( code, codeb, cu, cypher, pc, pw, sccypher,
-                                  share, shared_k, signed, skV
-     )
-     ]
-    --[ Pred_Eq( codeb, code ) ]->
-     [
-     State_1111111111111111111111( code, codeb, cu, cypher, pc, pw, sccypher,
-                                   share, shared_k, signed, skV
-     )
-     ]
-  */
-
-rule (modulo E) eventProvScode_0_1111111111111111111111[color=#658040,
-                                                        process="event ProvS( code.1 );"]:
-   [
-   State_1111111111111111111111( code.1, codeb.1, cu.1, cypher.1, pc.1,
-                                 pw.1, sccypher.1, share.1, shared_k.1, signed.1, skV.1
-   ),
-   Fr( kOTP.1 )
-   ]
-  --[ ProvS( code.1 ) ]->
-   [
-   !Semistate_11111111111111111111111111( code.1, codeb.1, cu.1, cypher.1,
-                                          kOTP.1, pc.1, pw.1, sccypher.1, share.1, shared_k.1, signed.1, skV.1
-   ),
-   Out( sko(senc(kOTP.1, shared_k.1)) )
-   ]
-
-  /*
-  rule (modulo AC) eventProvScode_0_1111111111111111111111[color=#658040,
-                                                           process="event ProvS( code.1 );"]:
-     [
-     State_1111111111111111111111( code, codeb, cu, cypher, pc, pw, sccypher,
-                                   share, shared_k, signed, skV
-     ),
-     Fr( kOTP )
-     ]
-    --[ ProvS( code ) ]->
-     [
-     !Semistate_11111111111111111111111111( code, codeb, cu, cypher, kOTP, pc,
-                                            pw, sccypher, share, shared_k, signed, skV
-     ),
-     Out( sko(senc(kOTP, shared_k)) )
-     ]
-  */
-
-rule (modulo E) p_1_1111111111111111111111111[color=#658040,
-                                              process="!"]:
-   [
-   !Semistate_11111111111111111111111111( code.1, codeb.1, cu.1, cypher.1,
-                                          kOTP.1, pc.1, pw.1, sccypher.1, share.1, shared_k.1, signed.1, skV.1
-   ),
-   Fr( challenge.1 )
-   ]
-  --[ Chall( challenge.1, shared_k.1 ) ]->
-   [
-   State_11111111111111111111111111111( challenge.1, code.1, codeb.1, cu.1,
-                                        cypher.1, kOTP.1, pc.1, pw.1, sccypher.1, share.1, shared_k.1,
-                                        signed.1, skV.1
-   ),
-   Out( senc(challenge.1, shared_k.1) )
-   ]
-
-  /*
-  rule (modulo AC) p_1_1111111111111111111111111[color=#658040,
-                                                 process="!"]:
-     [
-     !Semistate_11111111111111111111111111( code, codeb, cu, cypher, kOTP, pc,
-                                            pw, sccypher, share, shared_k, signed, skV
-     ),
-     Fr( challenge )
-     ]
-    --[ Chall( challenge, shared_k ) ]->
-     [
-     State_11111111111111111111111111111( challenge, code, codeb, cu, cypher,
-                                          kOTP, pc, pw, sccypher, share, shared_k, signed, skV
-     ),
-     Out( senc(challenge, shared_k) )
-     ]
-  */
-
-rule (modulo E) inhashed_0_11111111111111111111111111111[color=#658040,
-                                                         process="in(hashed.1);"]:
-   [
-   State_11111111111111111111111111111( challenge.1, code.1, codeb.1, cu.1,
-                                        cypher.1, kOTP.1, pc.1, pw.1, sccypher.1, share.1, shared_k.1,
-                                        signed.1, skV.1
-   ),
-   In( hashed.1 )
-   ]
-  -->
-   [
-   State_111111111111111111111111111111( challenge.1, code.1, codeb.1, cu.1,
-                                         cypher.1, hashed.1, kOTP.1, pc.1, pw.1, sccypher.1, share.1,
-                                         shared_k.1, signed.1, skV.1
-   )
-   ]
-
-  /*
-  rule (modulo AC) inhashed_0_11111111111111111111111111111[color=#658040,
-                                                            process="in(hashed.1);"]:
-     [
-     State_11111111111111111111111111111( challenge, code, codeb, cu, cypher,
-                                          kOTP, pc, pw, sccypher, share, shared_k, signed, skV
-     ),
-     In( hashed )
-     ]
-    -->
-     [
-     State_111111111111111111111111111111( challenge, code, codeb, cu, cypher,
-                                           hashed, kOTP, pc, pw, sccypher, share, shared_k, signed, skV
-     )
-     ]
-  */
-
-rule (modulo E) ifhashedhpwhashkOTPchallenge_0_111111111111111111111111111111[color=#658040,
-                                                                              process="if hashed.1=<h(pw.1), hash(kOTP.1, challenge.1)>"]:
-   [
-   State_111111111111111111111111111111( challenge.1, code.1, codeb.1, cu.1,
-                                         cypher.1, hashed.1, kOTP.1, pc.1, pw.1, sccypher.1, share.1,
-                                         shared_k.1, signed.1, skV.1
-   )
-   ]
-  --[ Pred_Eq( hashed.1, <h(pw.1), hash(kOTP.1, challenge.1)> ) ]->
-   [
-   State_1111111111111111111111111111111( challenge.1, code.1, codeb.1,
-                                          cu.1, cypher.1, hashed.1, kOTP.1, pc.1, pw.1, sccypher.1, share.1,
-                                          shared_k.1, signed.1, skV.1
-   )
-   ]
-
-  /*
-  rule (modulo AC) ifhashedhpwhashkOTPchallenge_0_111111111111111111111111111111[color=#658040,
-                                                                                 process="if hashed.1=<h(pw.1), hash(kOTP.1, challenge.1)>"]:
-     [
-     State_111111111111111111111111111111( challenge, code, codeb, cu, cypher,
-                                           hashed, kOTP, pc, pw, sccypher, share, shared_k, signed, skV
-     )
-     ]
-    --[ Pred_Eq( hashed, <h(pw), hash(kOTP, challenge)> ) ]->
-     [
-     State_1111111111111111111111111111111( challenge, code, codeb, cu,
-                                            cypher, hashed, kOTP, pc, pw, sccypher, share, shared_k, signed,
-                                            skV
-     )
-     ]
-  */
-
-rule (modulo E) eventAcceptpwchallenge_0_1111111111111111111111111111111[color=#658040,
-                                                                         process="event Accept( pw.1, challenge.1 );"]:
-   [
-   State_1111111111111111111111111111111( challenge.1, code.1, codeb.1,
-                                          cu.1, cypher.1, hashed.1, kOTP.1, pc.1, pw.1, sccypher.1, share.1,
-                                          shared_k.1, signed.1, skV.1
-   )
-   ]
-  --[ Accept( pw.1, challenge.1 ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) eventAcceptpwchallenge_0_1111111111111111111111111111111[color=#658040,
-                                                                            process="event Accept( pw.1, challenge.1 );"]:
-     [
-     State_1111111111111111111111111111111( challenge, code, codeb, cu,
-                                            cypher, hashed, kOTP, pc, pw, sccypher, share, shared_k, signed,
-                                            skV
-     )
-     ]
-    --[ Accept( pw, challenge ) ]->
-     [ ]
-  */
-
-rule (modulo E) ifhashedhpwhashkOTPchallenge_1_111111111111111111111111111111[color=#658040,
-                                                                              process="if hashed.1=<h(pw.1), hash(kOTP.1, challenge.1)>"]:
-   [
-   State_111111111111111111111111111111( challenge.1, code.1, codeb.1, cu.1,
-                                         cypher.1, hashed.1, kOTP.1, pc.1, pw.1, sccypher.1, share.1,
-                                         shared_k.1, signed.1, skV.1
-   )
-   ]
-  --[ Pred_Not_Eq( hashed.1, <h(pw.1), hash(kOTP.1, challenge.1)> ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) ifhashedhpwhashkOTPchallenge_1_111111111111111111111111111111[color=#658040,
-                                                                                 process="if hashed.1=<h(pw.1), hash(kOTP.1, challenge.1)>"]:
-     [
-     State_111111111111111111111111111111( challenge, code, codeb, cu, cypher,
-                                           hashed, kOTP, pc, pw, sccypher, share, shared_k, signed, skV
-     )
-     ]
-    --[ Pred_Not_Eq( hashed, <h(pw), hash(kOTP, challenge)> ) ]->
-     [ ]
-  */
-
-rule (modulo E) ifcodebcode_1_111111111111111111111[color=#658040,
-                                                    process="if codeb.1=code.1"]:
-   [
-   State_111111111111111111111( code.1, codeb.1, cu.1, cypher.1, pc.1, pw.1,
-                                sccypher.1, share.1, shared_k.1, signed.1, skV.1
-   )
-   ]
-  --[ Pred_Not_Eq( codeb.1, code.1 ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) ifcodebcode_1_111111111111111111111[color=#658040,
-                                                       process="if codeb.1=code.1"]:
-     [
-     State_111111111111111111111( code, codeb, cu, cypher, pc, pw, sccypher,
-                                  share, shared_k, signed, skV
-     )
-     ]
-    --[ Pred_Not_Eq( codeb, code ) ]->
-     [ ]
-  */
-
-rule (modulo E) ifaencsharedkpkskVcheckrepsignedloc_1_111111111111111[color=#658040,
-                                                                      process="if aenc(shared_k.1, pk(skV.1))=check_rep(signed.1, 'loc')"]:
-   [
-   State_111111111111111( cu.1, cypher.1, pc.1, pw.1, share.1, shared_k.1,
-                          signed.1, skV.1
-   )
-   ]
-  --[
-  Pred_Not_Eq( aenc(shared_k.1, pk(skV.1)), check_rep(signed.1, 'loc') )
-  ]->
-   [ ]
-
-  /*
-  rule (modulo AC) ifaencsharedkpkskVcheckrepsignedloc_1_111111111111111[color=#658040,
-                                                                         process="if aenc(shared_k.1, pk(skV.1))=check_rep(signed.1, 'loc')"]:
-     [
-     State_111111111111111( cu, cypher, pc, pw, share, shared_k, signed, skV )
-     ]
-    --[ Pred_Not_Eq( aenc(shared_k, pk(skV)), z ) ]->
-     [ ]
-    variants (modulo AC)
-    1. signed
-             = signed.11
-       z     = check_rep(signed.11, 'loc')
-    
-    2. signed
-             = rep(x.11, 'loc')
-       z     = x.11
   */
 
 rule (modulo E) p_1_111111111[color=#ffffff, process="!"]:
@@ -1239,74 +808,301 @@ rule (modulo E) p_1_111111111[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) inpcchannelcode_0_11111111112111[color=#504080,
-                                                 process="in(pc.1:channel,code.2);"]:
-   [ State_11111111112111( cu.1, pc.1, pw.1, skV.1 ), Message( pc.1, x.2 ) ]
-  -->
-   [ Let_111111111121111( x.2, cu.1, pc.1, pw.1, skV.1 ), Ack( pc.1, x.2 ) ]
-
-  /*
-  rule (modulo AC) inpcchannelcode_0_11111111112111[color=#504080,
-                                                    process="in(pc.1:channel,code.2);"]:
-     [ State_11111111112111( cu, pc, pw, skV ), Message( pc, x ) ]
-    -->
-     [ Let_111111111121111( x, cu, pc, pw, skV ), Ack( pc, x ) ]
-  */
-
-rule (modulo E) inpcchannelcode_1_11111111112111[color=#504080,
-                                                 process="in(pc.1:channel,code.2);"]:
-   [ Let_111111111121111( code.2, cu.1, pc.1, pw.1, skV.1 ) ]
-  -->
-   [ State_111111111121111( cu.1, pc.1, pw.1, skV.1, code.2 ) ]
-
-  // loop breaker: [0]
-  /*
-  rule (modulo AC) inpcchannelcode_1_11111111112111[color=#504080,
-                                                    process="in(pc.1:channel,code.2);"]:
-     [ Let_111111111121111( code, cu, pc, pw, skV ) ]
-    -->
-     [ State_111111111121111( cu, pc, pw, skV, code ) ]
-    // loop breaker: [0]
-  */
-
-rule (modulo E) eventProvUcode_0_111111111121111[color=#504080,
-                                                 process="event ProvU( code.2 );"]:
-   [ State_111111111121111( cu.1, pc.1, pw.1, skV.1, code.2 ) ]
-  --[ ProvU( code.2 ) ]->
+rule (modulo E) newsharedk_0_11111111112111[color=#80407b,
+                                            process="new shared_k.1;"]:
+   [ State_11111111112111( cu.1, pc.1, pw.1, skV.1 ), Fr( shared_k.1 ) ]
+  --[ SessionP( pk(skV.1), shared_k.1 ) ]->
    [
-   !Semistate_111111111121111111( cu.1, pc.1, pw.1, skV.1, code.2 ),
-   Out( cde(code.2) )
+   State_11111111112111111( cu.1, pc.1, pw.1, shared_k.1, skV.1 ),
+   Out( shared(<aenc(shared_k.1, pk(skV.1)), 
+                rep(aenc(shared_k.1, pk(skV.1)), 'loc')>)
+   )
    ]
 
   /*
-  rule (modulo AC) eventProvUcode_0_111111111121111[color=#504080,
-                                                    process="event ProvU( code.2 );"]:
-     [ State_111111111121111( cu, pc, pw, skV, code ) ]
-    --[ ProvU( code ) ]->
+  rule (modulo AC) newsharedk_0_11111111112111[color=#80407b,
+                                               process="new shared_k.1;"]:
+     [ State_11111111112111( cu, pc, pw, skV ), Fr( shared_k ) ]
+    --[ SessionP( pk(skV), shared_k ) ]->
      [
-     !Semistate_111111111121111111( cu, pc, pw, skV, code ), Out( cde(code) )
+     State_11111111112111111( cu, pc, pw, shared_k, skV ),
+     Out( shared(<aenc(shared_k, pk(skV)), rep(aenc(shared_k, pk(skV)), 'loc')
+                 >)
+     )
      ]
   */
 
-rule (modulo E) p_1_11111111112111111[color=#504080, process="!"]:
+rule (modulo E) incdcode_0_11111111112111111[color=#80407b,
+                                             process="in(cdcode.1);"]:
    [
-   !Semistate_111111111121111111( cu.1, pc.1, pw.1, skV.1, code.2 ),
-   Fr( fr.1 )
+   State_11111111112111111( cu.1, pc.1, pw.1, shared_k.1, skV.1 ),
+   In( cdcode.1 )
    ]
-  --[ AskU( pw.1, fr.1 ) ]->
+  --[ ProvE( dcde(cdcode.1) ) ]->
    [
-   Message( cu.1, <pw.1, fr.1> ),
-   Semistate_111111111121111111111( cu.1, fr.1, pc.1, pw.1, skV.1, code.2 )
+   State_11111111112111111111( cdcode.1, cu.1, pc.1, pw.1, shared_k.1, skV.1
+   ),
+   Out( dscode(senc(dcde(cdcode.1), shared_k.1)) )
    ]
 
   /*
-  rule (modulo AC) p_1_11111111112111111[color=#504080, process="!"]:
-     [ !Semistate_111111111121111111( cu, pc, pw, skV, code ), Fr( fr ) ]
-    --[ AskU( pw, fr ) ]->
+  rule (modulo AC) incdcode_0_11111111112111111[color=#80407b,
+                                                process="in(cdcode.1);"]:
+     [ State_11111111112111111( cu, pc, pw, shared_k, skV ), In( cdcode ) ]
+    --[ ProvE( z ) ]->
      [
-     Message( cu, <pw, fr> ),
-     Semistate_111111111121111111111( cu, fr, pc, pw, skV, code )
+     State_11111111112111111111( cdcode, cu, pc, pw, shared_k, skV ),
+     Out( dscode(senc(z, shared_k)) )
      ]
+    variants (modulo AC)
+    1. cdcode
+             = cdcode.13
+       z     = dcde(cdcode.13)
+    
+    2. cdcode
+             = cde(z.13)
+       z     = z.13
+  */
+
+rule (modulo E) inskosenc_0_11111111112111111111[color=#80407b,
+                                                 process="in(skosenc.1);"]:
+   [
+   State_11111111112111111111( cdcode.1, cu.1, pc.1, pw.1, shared_k.1, skV.1
+   ),
+   In( skosenc.1 )
+   ]
+  -->
+   [
+   Let_1111111111211111111111( <dsko(skosenc.1), shared_k.1>, cdcode.1,
+                               cu.1, pc.1, pw.1, shared_k.1, skV.1, skosenc.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) inskosenc_0_11111111112111111111[color=#80407b,
+                                                    process="in(skosenc.1);"]:
+     [
+     State_11111111112111111111( cdcode, cu, pc, pw, shared_k, skV ),
+     In( skosenc )
+     ]
+    -->
+     [
+     Let_1111111111211111111111( <z, shared_k>, cdcode, cu, pc, pw, shared_k,
+                                 skV, skosenc
+     )
+     ]
+    variants (modulo AC)
+    1. skosenc
+             = skosenc.10
+       z     = dsko(skosenc.10)
+    
+    2. skosenc
+             = sko(x.10)
+       z     = x.10
+  */
+
+rule (modulo E) letkOTPsdecdskoskosencsharedk_1_111111111121111111111[color=#ffffff,
+                                                                      process="let kOTP.1=sdec(dsko(skosenc.1), shared_k.1)"]:
+   [
+   Let_1111111111211111111111( <senc(kOTP.1, x.2), x.2>, cdcode.1, cu.1,
+                               pc.1, pw.1, shared_k.1, skV.1, skosenc.1
+   )
+   ]
+  -->
+   [
+   State_1111111111211111111111( cdcode.1, cu.1, kOTP.1, pc.1, pw.1,
+                                 shared_k.1, skV.1, skosenc.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) letkOTPsdecdskoskosencsharedk_1_111111111121111111111[color=#ffffff,
+                                                                         process="let kOTP.1=sdec(dsko(skosenc.1), shared_k.1)"]:
+     [
+     Let_1111111111211111111111( <senc(kOTP, x), x>, cdcode, cu, pc, pw,
+                                 shared_k, skV, skosenc
+     )
+     ]
+    -->
+     [
+     State_1111111111211111111111( cdcode, cu, kOTP, pc, pw, shared_k, skV,
+                                   skosenc
+     )
+     ]
+  */
+
+rule (modulo E) p_0_1111111111211111111111[color=#80407b, process="!"]:
+   [
+   State_1111111111211111111111( cdcode.1, cu.1, kOTP.1, pc.1, pw.1,
+                                 shared_k.1, skV.1, skosenc.1
+   )
+   ]
+  -->
+   [
+   !Semistate_11111111112111111111111( cdcode.1, cu.1, kOTP.1, pc.1, pw.1,
+                                       shared_k.1, skV.1, skosenc.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) p_0_1111111111211111111111[color=#80407b, process="!"]:
+     [
+     State_1111111111211111111111( cdcode, cu, kOTP, pc, pw, shared_k, skV,
+                                   skosenc
+     )
+     ]
+    -->
+     [
+     !Semistate_11111111112111111111111( cdcode, cu, kOTP, pc, pw, shared_k,
+                                         skV, skosenc
+     )
+     ]
+  */
+
+rule (modulo E) p_1_1111111111211111111111[color=#80407b, process="!"]:
+   [
+   !Semistate_11111111112111111111111( cdcode.1, cu.1, kOTP.1, pc.1, pw.1,
+                                       shared_k.1, skV.1, skosenc.1
+   ),
+   Message( cu.1, x.2 )
+   ]
+  -->
+   [
+   Let_111111111121111111111111( x.2, cdcode.1, cu.1, kOTP.1, pc.1, pw.1,
+                                 shared_k.1, skV.1, skosenc.1
+   ),
+   Ack( cu.1, x.2 )
+   ]
+
+  /*
+  rule (modulo AC) p_1_1111111111211111111111[color=#80407b, process="!"]:
+     [
+     !Semistate_11111111112111111111111( cdcode, cu, kOTP, pc, pw, shared_k,
+                                         skV, skosenc
+     ),
+     Message( cu, x )
+     ]
+    -->
+     [
+     Let_111111111121111111111111( x, cdcode, cu, kOTP, pc, pw, shared_k, skV,
+                                   skosenc
+     ),
+     Ack( cu, x )
+     ]
+  */
+
+rule (modulo E) incuchannelpwfr_1_11111111112111111111111[color=#80407b,
+                                                          process="in(cu.1:channel,<=pw.1, fr.2>);"]:
+   [
+   Let_111111111121111111111111( <pw.1, fr.2>, cdcode.1, cu.1, kOTP.1, pc.1,
+                                 pw.1, shared_k.1, skV.1, skosenc.1
+   )
+   ]
+  -->
+   [
+   State_111111111121111111111111( cdcode.1, cu.1, kOTP.1, pc.1, pw.1,
+                                   shared_k.1, skV.1, skosenc.1, fr.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) incuchannelpwfr_1_11111111112111111111111[color=#80407b,
+                                                             process="in(cu.1:channel,<=pw.1, fr.2>);"]:
+     [
+     Let_111111111121111111111111( <pw, fr>, cdcode, cu, kOTP, pc, pw,
+                                   shared_k, skV, skosenc
+     )
+     ]
+    -->
+     [
+     State_111111111121111111111111( cdcode, cu, kOTP, pc, pw, shared_k, skV,
+                                     skosenc, fr
+     )
+     ]
+  */
+
+rule (modulo E) incypher_0_111111111121111111111111[color=#80407b,
+                                                    process="in(cypher.1);"]:
+   [
+   State_111111111121111111111111( cdcode.1, cu.1, kOTP.1, pc.1, pw.1,
+                                   shared_k.1, skV.1, skosenc.1, fr.2
+   ),
+   In( cypher.1 )
+   ]
+  -->
+   [
+   Let_11111111112111111111111111( <cypher.1, shared_k.1>, cdcode.1, cu.1,
+                                   cypher.1, kOTP.1, pc.1, pw.1, shared_k.1, skV.1, skosenc.1, fr.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) incypher_0_111111111121111111111111[color=#80407b,
+                                                       process="in(cypher.1);"]:
+     [
+     State_111111111121111111111111( cdcode, cu, kOTP, pc, pw, shared_k, skV,
+                                     skosenc, fr
+     ),
+     In( cypher )
+     ]
+    -->
+     [
+     Let_11111111112111111111111111( <cypher, shared_k>, cdcode, cu, cypher,
+                                     kOTP, pc, pw, shared_k, skV, skosenc, fr
+     )
+     ]
+  */
+
+rule (modulo E) letchallengesdeccyphersharedk_1_1111111111211111111111111[color=#ffffff,
+                                                                          process="let challenge.1=sdec(cypher.1, shared_k.1)"]:
+   [
+   Let_11111111112111111111111111( <senc(challenge.1, x.2), x.2>, cdcode.1,
+                                   cu.1, cypher.1, kOTP.1, pc.1, pw.1, shared_k.1, skV.1, skosenc.1, fr.2
+   )
+   ]
+  -->
+   [
+   State_11111111112111111111111111( cdcode.1, challenge.1, cu.1, cypher.1,
+                                     kOTP.1, pc.1, pw.1, shared_k.1, skV.1, skosenc.1, fr.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) letchallengesdeccyphersharedk_1_1111111111211111111111111[color=#ffffff,
+                                                                             process="let challenge.1=sdec(cypher.1, shared_k.1)"]:
+     [
+     Let_11111111112111111111111111( <senc(challenge, x), x>, cdcode, cu,
+                                     cypher, kOTP, pc, pw, shared_k, skV, skosenc, fr
+     )
+     ]
+    -->
+     [
+     State_11111111112111111111111111( cdcode, challenge, cu, cypher, kOTP,
+                                       pc, pw, shared_k, skV, skosenc, fr
+     )
+     ]
+  */
+
+rule (modulo E) eventAskpwchallengefrsharedk_0_11111111112111111111111111[color=#80407b,
+                                                                          process="event Ask( pw.1, challenge.1, fr.2, shared_k.1 );"]:
+   [
+   State_11111111112111111111111111( cdcode.1, challenge.1, cu.1, cypher.1,
+                                     kOTP.1, pc.1, pw.1, shared_k.1, skV.1, skosenc.1, fr.2
+   )
+   ]
+  --[ Ask( pw.1, challenge.1, fr.2, shared_k.1 ) ]->
+   [ Out( <h(pw.1), hash(kOTP.1, challenge.1)> ) ]
+
+  /*
+  rule (modulo AC) eventAskpwchallengefrsharedk_0_11111111112111111111111111[color=#80407b,
+                                                                             process="event Ask( pw.1, challenge.1, fr.2, shared_k.1 );"]:
+     [
+     State_11111111112111111111111111( cdcode, challenge, cu, cypher, kOTP,
+                                       pc, pw, shared_k, skV, skosenc, fr
+     )
+     ]
+    --[ Ask( pw, challenge, fr, shared_k ) ]->
+     [ Out( <h(pw), hash(kOTP, challenge)> ) ]
   */
 
 rule (modulo E) p_1_11111111112[color=#ffffff, process="!"]:
@@ -1328,301 +1124,518 @@ rule (modulo E) p_1_11111111112[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) p_1_1111111111212[color=#ffffff, process="!"]:
-   [ !Semistate_11111111112121( cu.1, pc.1, pw.1, skV.1 ), Fr( shared_k.2 )
-   ]
-  --[ SessionP( pk(skV.1), shared_k.2 ) ]->
+   [ !Semistate_11111111112121( cu.1, pc.1, pw.1, skV.1 ), In( share.1 ) ]
+  -->
    [
-   State_111111111121211111( cu.1, pc.1, pw.1, skV.1, shared_k.2 ),
-   Out( shared(<aenc(shared_k.2, pk(skV.1)), 
-                rep(aenc(shared_k.2, pk(skV.1)), 'loc')>)
+   Let_11111111112121111( dshared(share.1), cu.1, pc.1, pw.1, share.1, skV.1
    )
    ]
 
   /*
   rule (modulo AC) p_1_1111111111212[color=#ffffff, process="!"]:
-     [ !Semistate_11111111112121( cu, pc, pw, skV ), Fr( shared_k ) ]
-    --[ SessionP( pk(skV), shared_k ) ]->
+     [ !Semistate_11111111112121( cu, pc, pw, skV ), In( share ) ]
+    -->
+     [ Let_11111111112121111( z, cu, pc, pw, share, skV ) ]
+    variants (modulo AC)
+    1. share = share.8
+       z     = dshared(share.8)
+    
+    2. share = shared(x.8)
+       z     = x.8
+  */
+
+rule (modulo E) letcyphersigneddsharedshare_1_1111111111212111[color=#ffffff,
+                                                               process="let <cypher.2, signed.2>=dshared(share.1)"]:
+   [
+   Let_11111111112121111( <cypher.2, signed.2>, cu.1, pc.1, pw.1, share.1,
+                          skV.1
+   )
+   ]
+  -->
+   [
+   State_11111111112121111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
+                            signed.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) letcyphersigneddsharedshare_1_1111111111212111[color=#ffffff,
+                                                                  process="let <cypher.2, signed.2>=dshared(share.1)"]:
+     [ Let_11111111112121111( <cypher, signed>, cu, pc, pw, share, skV ) ]
+    -->
+     [ State_11111111112121111( cu, pc, pw, share, skV, cypher, signed ) ]
+  */
+
+rule (modulo E) letsharedkadeccypherskV_0_11111111112121111[color=#ffffff,
+                                                            process="let shared_k.2=adec(cypher.2, skV.1)"]:
+   [
+   State_11111111112121111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
+                            signed.2
+   )
+   ]
+  -->
+   [
+   Let_111111111121211111( <cypher.2, skV.1>, cu.1, pc.1, pw.1, share.1,
+                           skV.1, cypher.2, signed.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) letsharedkadeccypherskV_0_11111111112121111[color=#ffffff,
+                                                               process="let shared_k.2=adec(cypher.2, skV.1)"]:
+     [ State_11111111112121111( cu, pc, pw, share, skV, cypher, signed ) ]
+    -->
      [
-     State_111111111121211111( cu, pc, pw, skV, shared_k ),
-     Out( shared(<aenc(shared_k, pk(skV)), rep(aenc(shared_k, pk(skV)), 'loc')
-                 >)
+     Let_111111111121211111( <cypher, skV>, cu, pc, pw, share, skV, cypher,
+                             signed
      )
      ]
   */
 
-rule (modulo E) incdcode_0_111111111121211111[color=#80407b,
-                                              process="in(cdcode.1);"]:
+rule (modulo E) letsharedkadeccypherskV_1_11111111112121111[color=#ffffff,
+                                                            process="let shared_k.2=adec(cypher.2, skV.1)"]:
    [
-   State_111111111121211111( cu.1, pc.1, pw.1, skV.1, shared_k.2 ),
-   In( cdcode.1 )
+   Let_111111111121211111( <aenc(shared_k.2, pk(x.2)), x.2>, cu.1, pc.1,
+                           pw.1, share.1, skV.1, cypher.2, signed.2
+   )
    ]
-  --[ ProvE( dcde(cdcode.1) ) ]->
+  -->
    [
-   State_111111111121211111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                shared_k.2
-   ),
-   Out( dscode(senc(dcde(cdcode.1), shared_k.2)) )
+   State_111111111121211111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
+                             shared_k.2, signed.2
+   )
    ]
 
   /*
-  rule (modulo AC) incdcode_0_111111111121211111[color=#80407b,
-                                                 process="in(cdcode.1);"]:
-     [ State_111111111121211111( cu, pc, pw, skV, shared_k ), In( cdcode ) ]
-    --[ ProvE( z ) ]->
+  rule (modulo AC) letsharedkadeccypherskV_1_11111111112121111[color=#ffffff,
+                                                               process="let shared_k.2=adec(cypher.2, skV.1)"]:
      [
-     State_111111111121211111111( cdcode, cu, pc, pw, skV, shared_k ),
-     Out( dscode(senc(z, shared_k)) )
+     Let_111111111121211111( <aenc(shared_k, pk(x)), x>, cu, pc, pw, share,
+                             skV, cypher, signed
+     )
+     ]
+    -->
+     [
+     State_111111111121211111( cu, pc, pw, share, skV, cypher, shared_k,
+                               signed
+     )
+     ]
+  */
+
+rule (modulo E) ifaencsharedkpkskVcheckrepsignedloc_0_111111111121211111[color=#658040,
+                                                                         process="if aenc(shared_k.2, pk(skV.1))=check_rep(signed.2, 'loc')"]:
+   [
+   State_111111111121211111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
+                             shared_k.2, signed.2
+   )
+   ]
+  --[ Pred_Eq( aenc(shared_k.2, pk(skV.1)), check_rep(signed.2, 'loc') )
+  ]->
+   [
+   State_1111111111212111111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
+                              shared_k.2, signed.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifaencsharedkpkskVcheckrepsignedloc_0_111111111121211111[color=#658040,
+                                                                            process="if aenc(shared_k.2, pk(skV.1))=check_rep(signed.2, 'loc')"]:
+     [
+     State_111111111121211111( cu, pc, pw, share, skV, cypher, shared_k,
+                               signed
+     )
+     ]
+    --[ Pred_Eq( aenc(shared_k, pk(skV)), z ) ]->
+     [
+     State_1111111111212111111( cu, pc, pw, share, skV, cypher, shared_k,
+                                signed
+     )
      ]
     variants (modulo AC)
-    1. cdcode
-             = cdcode.14
-       z     = dcde(cdcode.14)
+    1. signed
+             = signed.13
+       z     = check_rep(signed.13, 'loc')
     
-    2. cdcode
-             = cde(z.14)
-       z     = z.14
+    2. signed
+             = rep(x.12, 'loc')
+       z     = x.12
   */
 
-rule (modulo E) inskosenc_0_111111111121211111111[color=#80407b,
-                                                  process="in(skosenc.1);"]:
+rule (modulo E) eventSessionVpkskVsharedk_0_1111111111212111111[color=#658040,
+                                                                process="event SessionV( pk(skV.1), shared_k.2 );"]:
    [
-   State_111111111121211111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                shared_k.2
+   State_1111111111212111111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
+                              shared_k.2, signed.2
    ),
-   In( skosenc.1 )
+   Fr( code.3 )
    ]
-  -->
+  --[ SessionV( pk(skV.1), shared_k.2 ) ]->
    [
-   Let_11111111112121111111111( <dsko(skosenc.1), shared_k.2>, cdcode.1,
-                                cu.1, pc.1, pw.1, skV.1, skosenc.1, shared_k.2
+   Message( pc.1, code.3 ),
+   Semistate_1111111111212111111111( cu.1, pc.1, pw.1, share.1, skV.1,
+                                     cypher.2, shared_k.2, signed.2, code.3
    )
    ]
 
   /*
-  rule (modulo AC) inskosenc_0_111111111121211111111[color=#80407b,
-                                                     process="in(skosenc.1);"]:
+  rule (modulo AC) eventSessionVpkskVsharedk_0_1111111111212111111[color=#658040,
+                                                                   process="event SessionV( pk(skV.1), shared_k.2 );"]:
      [
-     State_111111111121211111111( cdcode, cu, pc, pw, skV, shared_k ),
-     In( skosenc )
+     State_1111111111212111111( cu, pc, pw, share, skV, cypher, shared_k,
+                                signed
+     ),
+     Fr( code )
+     ]
+    --[ SessionV( pk(skV), shared_k ) ]->
+     [
+     Message( pc, code ),
+     Semistate_1111111111212111111111( cu, pc, pw, share, skV, cypher,
+                                       shared_k, signed, code
+     )
+     ]
+  */
+
+rule (modulo E) outpcchannelcode_1_111111111121211111111[color=#658040,
+                                                         process="out(pc.1:channel,code.3);"]:
+   [
+   Semistate_1111111111212111111111( cu.1, pc.1, pw.1, share.1, skV.1,
+                                     cypher.2, shared_k.2, signed.2, code.3
+   ),
+   Ack( pc.1, code.3 ), In( sccypher.1 )
+   ]
+  -->
+   [
+   Let_111111111121211111111111( <dscode(sccypher.1), shared_k.2>, cu.1,
+                                 pc.1, pw.1, sccypher.1, share.1, skV.1, cypher.2, shared_k.2, signed.2,
+                                 code.3
+   )
+   ]
+
+  /*
+  rule (modulo AC) outpcchannelcode_1_111111111121211111111[color=#658040,
+                                                            process="out(pc.1:channel,code.3);"]:
+     [
+     Semistate_1111111111212111111111( cu, pc, pw, share, skV, cypher,
+                                       shared_k, signed, code
+     ),
+     Ack( pc, code ), In( sccypher )
      ]
     -->
      [
-     Let_11111111112121111111111( <z, shared_k>, cdcode, cu, pc, pw, skV,
-                                  skosenc, shared_k
+     Let_111111111121211111111111( <z, shared_k>, cu, pc, pw, sccypher, share,
+                                   skV, cypher, shared_k, signed, code
      )
      ]
     variants (modulo AC)
-    1. skosenc
-             = skosenc.11
-       z     = dsko(skosenc.11)
+    1. sccypher
+             = sccypher.15
+       z     = dscode(sccypher.15)
     
-    2. skosenc
-             = sko(x.11)
-       z     = x.11
+    2. sccypher
+             = scode(x.15)
+       z     = x.15
   */
 
-rule (modulo E) letkOTPsdecdskoskosencsharedk_1_1111111111212111111111[color=#ffffff,
-                                                                       process="let kOTP.2=sdec(dsko(skosenc.1), shared_k.2)"]:
+rule (modulo E) letcodebsdecdscodesccyphersharedk_1_11111111112121111111111[color=#ffffff,
+                                                                            process="let codeb.1=sdec(dscode(sccypher.1), shared_k.2)"]:
    [
-   Let_11111111112121111111111( <senc(kOTP.2, x.2), x.2>, cdcode.1, cu.1,
-                                pc.1, pw.1, skV.1, skosenc.1, shared_k.2
+   Let_111111111121211111111111( <senc(codeb.1, x.2), x.2>, cu.1, pc.1,
+                                 pw.1, sccypher.1, share.1, skV.1, cypher.2, shared_k.2, signed.2, code.3
    )
    ]
   -->
    [
-   State_11111111112121111111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                  skosenc.1, kOTP.2, shared_k.2
+   State_111111111121211111111111( codeb.1, cu.1, pc.1, pw.1, sccypher.1,
+                                   share.1, skV.1, cypher.2, shared_k.2, signed.2, code.3
    )
    ]
 
   /*
-  rule (modulo AC) letkOTPsdecdskoskosencsharedk_1_1111111111212111111111[color=#ffffff,
-                                                                          process="let kOTP.2=sdec(dsko(skosenc.1), shared_k.2)"]:
+  rule (modulo AC) letcodebsdecdscodesccyphersharedk_1_11111111112121111111111[color=#ffffff,
+                                                                               process="let codeb.1=sdec(dscode(sccypher.1), shared_k.2)"]:
      [
-     Let_11111111112121111111111( <senc(kOTP, x), x>, cdcode, cu, pc, pw, skV,
-                                  skosenc, shared_k
+     Let_111111111121211111111111( <senc(codeb, x), x>, cu, pc, pw, sccypher,
+                                   share, skV, cypher, shared_k, signed, code
      )
      ]
     -->
      [
-     State_11111111112121111111111( cdcode, cu, pc, pw, skV, skosenc, kOTP,
-                                    shared_k
+     State_111111111121211111111111( codeb, cu, pc, pw, sccypher, share, skV,
+                                     cypher, shared_k, signed, code
      )
      ]
   */
 
-rule (modulo E) p_0_11111111112121111111111[color=#80407b, process="!"]:
+rule (modulo E) ifcodebcode_0_111111111121211111111111[color=#658040,
+                                                       process="if codeb.1=code.3"]:
    [
-   State_11111111112121111111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                  skosenc.1, kOTP.2, shared_k.2
+   State_111111111121211111111111( codeb.1, cu.1, pc.1, pw.1, sccypher.1,
+                                   share.1, skV.1, cypher.2, shared_k.2, signed.2, code.3
    )
    ]
-  -->
+  --[ Pred_Eq( codeb.1, code.3 ) ]->
    [
-   !Semistate_111111111121211111111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                        skosenc.1, kOTP.2, shared_k.2
+   State_1111111111212111111111111( codeb.1, cu.1, pc.1, pw.1, sccypher.1,
+                                    share.1, skV.1, cypher.2, shared_k.2, signed.2, code.3
    )
    ]
 
   /*
-  rule (modulo AC) p_0_11111111112121111111111[color=#80407b, process="!"]:
+  rule (modulo AC) ifcodebcode_0_111111111121211111111111[color=#658040,
+                                                          process="if codeb.1=code.3"]:
      [
-     State_11111111112121111111111( cdcode, cu, pc, pw, skV, skosenc, kOTP,
-                                    shared_k
+     State_111111111121211111111111( codeb, cu, pc, pw, sccypher, share, skV,
+                                     cypher, shared_k, signed, code
      )
      ]
-    -->
+    --[ Pred_Eq( codeb, code ) ]->
      [
-     !Semistate_111111111121211111111111( cdcode, cu, pc, pw, skV, skosenc,
-                                          kOTP, shared_k
+     State_1111111111212111111111111( codeb, cu, pc, pw, sccypher, share, skV,
+                                      cypher, shared_k, signed, code
      )
      ]
   */
 
-rule (modulo E) p_1_11111111112121111111111[color=#80407b, process="!"]:
+rule (modulo E) eventProvScode_0_1111111111212111111111111[color=#658040,
+                                                           process="event ProvS( code.3 );"]:
    [
-   !Semistate_111111111121211111111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                        skosenc.1, kOTP.2, shared_k.2
+   State_1111111111212111111111111( codeb.1, cu.1, pc.1, pw.1, sccypher.1,
+                                    share.1, skV.1, cypher.2, shared_k.2, signed.2, code.3
    ),
-   Message( cu.1, x.3 )
+   Fr( kOTP.2 )
    ]
-  -->
+  --[ ProvS( code.3 ) ]->
    [
-   Let_1111111111212111111111111( x.3, cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                  skosenc.1, kOTP.2, shared_k.2
+   !Semistate_11111111112121111111111111111( codeb.1, cu.1, pc.1, pw.1,
+                                             sccypher.1, share.1, skV.1, cypher.2, kOTP.2, shared_k.2,
+                                             signed.2, code.3
    ),
-   Ack( cu.1, x.3 )
+   Out( sko(senc(kOTP.2, shared_k.2)) )
    ]
 
   /*
-  rule (modulo AC) p_1_11111111112121111111111[color=#80407b, process="!"]:
+  rule (modulo AC) eventProvScode_0_1111111111212111111111111[color=#658040,
+                                                              process="event ProvS( code.3 );"]:
      [
-     !Semistate_111111111121211111111111( cdcode, cu, pc, pw, skV, skosenc,
-                                          kOTP, shared_k
+     State_1111111111212111111111111( codeb, cu, pc, pw, sccypher, share, skV,
+                                      cypher, shared_k, signed, code
      ),
-     Message( cu, x )
+     Fr( kOTP )
      ]
-    -->
+    --[ ProvS( code ) ]->
      [
-     Let_1111111111212111111111111( x, cdcode, cu, pc, pw, skV, skosenc, kOTP,
-                                    shared_k
+     !Semistate_11111111112121111111111111111( codeb, cu, pc, pw, sccypher,
+                                               share, skV, cypher, kOTP, shared_k, signed, code
      ),
-     Ack( cu, x )
+     Out( sko(senc(kOTP, shared_k)) )
      ]
   */
 
-rule (modulo E) incuchannelpwfr_1_111111111121211111111111[color=#80407b,
-                                                           process="in(cu.1:channel,<=pw.1, fr.2>);"]:
+rule (modulo E) p_1_1111111111212111111111111111[color=#658040,
+                                                 process="!"]:
    [
-   Let_1111111111212111111111111( <pw.1, fr.2>, cdcode.1, cu.1, pc.1, pw.1,
-                                  skV.1, skosenc.1, kOTP.2, shared_k.2
-   )
-   ]
-  -->
-   [
-   State_1111111111212111111111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                    skosenc.1, fr.2, kOTP.2, shared_k.2
-   )
-   ]
-
-  /*
-  rule (modulo AC) incuchannelpwfr_1_111111111121211111111111[color=#80407b,
-                                                              process="in(cu.1:channel,<=pw.1, fr.2>);"]:
-     [
-     Let_1111111111212111111111111( <pw, fr>, cdcode, cu, pc, pw, skV,
-                                    skosenc, kOTP, shared_k
-     )
-     ]
-    -->
-     [
-     State_1111111111212111111111111( cdcode, cu, pc, pw, skV, skosenc, fr,
-                                      kOTP, shared_k
-     )
-     ]
-  */
-
-rule (modulo E) incypher_0_1111111111212111111111111[color=#80407b,
-                                                     process="in(cypher.2);"]:
-   [
-   State_1111111111212111111111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                    skosenc.1, fr.2, kOTP.2, shared_k.2
+   !Semistate_11111111112121111111111111111( codeb.1, cu.1, pc.1, pw.1,
+                                             sccypher.1, share.1, skV.1, cypher.2, kOTP.2, shared_k.2,
+                                             signed.2, code.3
    ),
-   In( cypher.2 )
+   Fr( challenge.2 )
    ]
-  -->
+  --[ Chall( challenge.2, shared_k.2 ) ]->
    [
-   Let_111111111121211111111111111( <cypher.2, shared_k.2>, cdcode.1, cu.1,
-                                    pc.1, pw.1, skV.1, skosenc.1, cypher.2, fr.2, kOTP.2, shared_k.2
-   )
+   State_11111111112121111111111111111111( codeb.1, cu.1, pc.1, pw.1,
+                                           sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2,
+                                           shared_k.2, signed.2, code.3
+   ),
+   Out( senc(challenge.2, shared_k.2) )
    ]
 
   /*
-  rule (modulo AC) incypher_0_1111111111212111111111111[color=#80407b,
-                                                        process="in(cypher.2);"]:
+  rule (modulo AC) p_1_1111111111212111111111111111[color=#658040,
+                                                    process="!"]:
      [
-     State_1111111111212111111111111( cdcode, cu, pc, pw, skV, skosenc, fr,
-                                      kOTP, shared_k
+     !Semistate_11111111112121111111111111111( codeb, cu, pc, pw, sccypher,
+                                               share, skV, cypher, kOTP, shared_k, signed, code
      ),
-     In( cypher )
+     Fr( challenge )
      ]
-    -->
+    --[ Chall( challenge, shared_k ) ]->
      [
-     Let_111111111121211111111111111( <cypher, shared_k>, cdcode, cu, pc, pw,
-                                      skV, skosenc, cypher, fr, kOTP, shared_k
-     )
+     State_11111111112121111111111111111111( codeb, cu, pc, pw, sccypher,
+                                             share, skV, challenge, cypher, kOTP, shared_k, signed, code
+     ),
+     Out( senc(challenge, shared_k) )
      ]
   */
 
-rule (modulo E) letchallengesdeccyphersharedk_1_11111111112121111111111111[color=#ffffff,
-                                                                           process="let challenge.2=sdec(cypher.2, shared_k.2)"]:
+rule (modulo E) inhashed_0_11111111112121111111111111111111[color=#658040,
+                                                            process="in(hashed.1);"]:
    [
-   Let_111111111121211111111111111( <senc(challenge.2, x.2), x.2>, cdcode.1,
-                                    cu.1, pc.1, pw.1, skV.1, skosenc.1, cypher.2, fr.2, kOTP.2, shared_k.2
-   )
+   State_11111111112121111111111111111111( codeb.1, cu.1, pc.1, pw.1,
+                                           sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2,
+                                           shared_k.2, signed.2, code.3
+   ),
+   In( hashed.1 )
    ]
   -->
    [
-   State_111111111121211111111111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                      skosenc.1, challenge.2, cypher.2, fr.2, kOTP.2, shared_k.2
+   State_111111111121211111111111111111111( codeb.1, cu.1, hashed.1, pc.1,
+                                            pw.1, sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2,
+                                            shared_k.2, signed.2, code.3
    )
    ]
 
   /*
-  rule (modulo AC) letchallengesdeccyphersharedk_1_11111111112121111111111111[color=#ffffff,
-                                                                              process="let challenge.2=sdec(cypher.2, shared_k.2)"]:
+  rule (modulo AC) inhashed_0_11111111112121111111111111111111[color=#658040,
+                                                               process="in(hashed.1);"]:
      [
-     Let_111111111121211111111111111( <senc(challenge, x), x>, cdcode, cu, pc,
-                                      pw, skV, skosenc, cypher, fr, kOTP, shared_k
-     )
+     State_11111111112121111111111111111111( codeb, cu, pc, pw, sccypher,
+                                             share, skV, challenge, cypher, kOTP, shared_k, signed, code
+     ),
+     In( hashed )
      ]
     -->
      [
-     State_111111111121211111111111111( cdcode, cu, pc, pw, skV, skosenc,
-                                        challenge, cypher, fr, kOTP, shared_k
+     State_111111111121211111111111111111111( codeb, cu, hashed, pc, pw,
+                                              sccypher, share, skV, challenge, cypher, kOTP, shared_k, signed,
+                                              code
      )
      ]
   */
 
-rule (modulo E) eventAskpwchallengefrsharedk_0_111111111121211111111111111[color=#80407b,
-                                                                           process="event Ask( pw.1, challenge.2, fr.2, shared_k.2 );"]:
+rule (modulo E) ifhashedhpwhashkOTPchallenge_0_111111111121211111111111111111111[color=#658040,
+                                                                                 process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>"]:
    [
-   State_111111111121211111111111111( cdcode.1, cu.1, pc.1, pw.1, skV.1,
-                                      skosenc.1, challenge.2, cypher.2, fr.2, kOTP.2, shared_k.2
+   State_111111111121211111111111111111111( codeb.1, cu.1, hashed.1, pc.1,
+                                            pw.1, sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2,
+                                            shared_k.2, signed.2, code.3
    )
    ]
-  --[ Ask( pw.1, challenge.2, fr.2, shared_k.2 ) ]->
-   [ Out( <h(pw.1), hash(kOTP.2, challenge.2)> ) ]
+  --[ Pred_Eq( hashed.1, <h(pw.1), hash(kOTP.2, challenge.2)> ) ]->
+   [
+   State_1111111111212111111111111111111111( codeb.1, cu.1, hashed.1, pc.1,
+                                             pw.1, sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2,
+                                             shared_k.2, signed.2, code.3
+   )
+   ]
 
   /*
-  rule (modulo AC) eventAskpwchallengefrsharedk_0_111111111121211111111111111[color=#80407b,
-                                                                              process="event Ask( pw.1, challenge.2, fr.2, shared_k.2 );"]:
+  rule (modulo AC) ifhashedhpwhashkOTPchallenge_0_111111111121211111111111111111111[color=#658040,
+                                                                                    process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>"]:
      [
-     State_111111111121211111111111111( cdcode, cu, pc, pw, skV, skosenc,
-                                        challenge, cypher, fr, kOTP, shared_k
+     State_111111111121211111111111111111111( codeb, cu, hashed, pc, pw,
+                                              sccypher, share, skV, challenge, cypher, kOTP, shared_k, signed,
+                                              code
      )
      ]
-    --[ Ask( pw, challenge, fr, shared_k ) ]->
-     [ Out( <h(pw), hash(kOTP, challenge)> ) ]
+    --[ Pred_Eq( hashed, <h(pw), hash(kOTP, challenge)> ) ]->
+     [
+     State_1111111111212111111111111111111111( codeb, cu, hashed, pc, pw,
+                                               sccypher, share, skV, challenge, cypher, kOTP, shared_k,
+                                               signed, code
+     )
+     ]
+  */
+
+rule (modulo E) eventAcceptpwchallenge_0_1111111111212111111111111111111111[color=#658040,
+                                                                            process="event Accept( pw.1, challenge.2 );"]:
+   [
+   State_1111111111212111111111111111111111( codeb.1, cu.1, hashed.1, pc.1,
+                                             pw.1, sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2,
+                                             shared_k.2, signed.2, code.3
+   )
+   ]
+  --[ Accept( pw.1, challenge.2 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventAcceptpwchallenge_0_1111111111212111111111111111111111[color=#658040,
+                                                                               process="event Accept( pw.1, challenge.2 );"]:
+     [
+     State_1111111111212111111111111111111111( codeb, cu, hashed, pc, pw,
+                                               sccypher, share, skV, challenge, cypher, kOTP, shared_k,
+                                               signed, code
+     )
+     ]
+    --[ Accept( pw, challenge ) ]->
+     [ ]
+  */
+
+rule (modulo E) ifhashedhpwhashkOTPchallenge_1_111111111121211111111111111111111[color=#658040,
+                                                                                 process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>"]:
+   [
+   State_111111111121211111111111111111111( codeb.1, cu.1, hashed.1, pc.1,
+                                            pw.1, sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2,
+                                            shared_k.2, signed.2, code.3
+   )
+   ]
+  --[ Pred_Not_Eq( hashed.1, <h(pw.1), hash(kOTP.2, challenge.2)> ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) ifhashedhpwhashkOTPchallenge_1_111111111121211111111111111111111[color=#658040,
+                                                                                    process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>"]:
+     [
+     State_111111111121211111111111111111111( codeb, cu, hashed, pc, pw,
+                                              sccypher, share, skV, challenge, cypher, kOTP, shared_k, signed,
+                                              code
+     )
+     ]
+    --[ Pred_Not_Eq( hashed, <h(pw), hash(kOTP, challenge)> ) ]->
+     [ ]
+  */
+
+rule (modulo E) ifcodebcode_1_111111111121211111111111[color=#658040,
+                                                       process="if codeb.1=code.3"]:
+   [
+   State_111111111121211111111111( codeb.1, cu.1, pc.1, pw.1, sccypher.1,
+                                   share.1, skV.1, cypher.2, shared_k.2, signed.2, code.3
+   )
+   ]
+  --[ Pred_Not_Eq( codeb.1, code.3 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) ifcodebcode_1_111111111121211111111111[color=#658040,
+                                                          process="if codeb.1=code.3"]:
+     [
+     State_111111111121211111111111( codeb, cu, pc, pw, sccypher, share, skV,
+                                     cypher, shared_k, signed, code
+     )
+     ]
+    --[ Pred_Not_Eq( codeb, code ) ]->
+     [ ]
+  */
+
+rule (modulo E) ifaencsharedkpkskVcheckrepsignedloc_1_111111111121211111[color=#658040,
+                                                                         process="if aenc(shared_k.2, pk(skV.1))=check_rep(signed.2, 'loc')"]:
+   [
+   State_111111111121211111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
+                             shared_k.2, signed.2
+   )
+   ]
+  --[
+  Pred_Not_Eq( aenc(shared_k.2, pk(skV.1)), check_rep(signed.2, 'loc') )
+  ]->
+   [ ]
+
+  /*
+  rule (modulo AC) ifaencsharedkpkskVcheckrepsignedloc_1_111111111121211111[color=#658040,
+                                                                            process="if aenc(shared_k.2, pk(skV.1))=check_rep(signed.2, 'loc')"]:
+     [
+     State_111111111121211111( cu, pc, pw, share, skV, cypher, shared_k,
+                               signed
+     )
+     ]
+    --[ Pred_Not_Eq( aenc(shared_k, pk(skV)), z ) ]->
+     [ ]
+    variants (modulo AC)
+    1. signed
+             = signed.13
+       z     = check_rep(signed.13, 'loc')
+    
+    2. signed
+             = rep(x.12, 'loc')
+       z     = x.12
   */
 
 restriction predicate_eq:
@@ -1637,32 +1650,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-locations/OTP.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-locations/OTP.spthy
-
-  output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 11.930861027s
-  reachV (exists-trace): verified (4 steps)
-  secrecy_key (all-traces): verified (8 steps)
-  key_ex (all-traces): verified (17 steps)
-  secrecy_ex (all-traces): verified (11 steps)
-  unic (all-traces): verified (2 steps)
-  secrecy_chall (all-traces): verified (62 steps)
-  valid (all-traces): verified (55 steps)
-  unic_2 (all-traces): verified (8 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1670,7 +1672,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 11.930861027s
+  processing time: 0.097947106s
+  
   reachV (exists-trace): verified (4 steps)
   secrecy_key (all-traces): verified (8 steps)
   key_ex (all-traces): verified (17 steps)
