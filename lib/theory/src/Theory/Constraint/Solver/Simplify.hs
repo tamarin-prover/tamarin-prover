@@ -290,8 +290,8 @@ enforceEdgeConstraints = do
                   let runMaude = (`runReader` get pcMaudeHandle ctxt)
                   let unifiable = maybe True runMaude $ unifiableRuleACInsts <$> M.lookup i nodes <*> M.lookup j nodes  -- if i and j might be the same
                   if unifiable then
-                    insertFormula $ gnotAtom $ Less (lTermToBTerm $ varTerm j) (lTermToBTerm $ varTerm i) -- then insert i≤j by inserting ¬j<i
-                  else insertLess i j                                                                     -- else insert i<j
+                      insertFormula $ gnot $ GAto $ Less (varTerm $ Free j) (varTerm $ Free i) -- then insert i≤j by inserting ¬j<i
+                    else insertLess i j                                                        -- else insert i<j
                   return Changed
               )
       return $ foldl (<>) Unchanged changes
