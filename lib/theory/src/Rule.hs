@@ -46,16 +46,6 @@ equalOpenRuleUpToDiffAnnotation (OpenProtoRule ruE1 ruAC1) (OpenProtoRule ruE2 r
   equalRuleUpToDiffAnnotationSym ruE1 ruE2 && length ruAC1 == length ruAC2 &&
   all (uncurry equalRuleUpToDiffAnnotationSym) (zip ruAC1 ruAC2)
 
-detectReadOnly :: Rule i -> Rule i
-detectReadOnly r@(Rule info prem conc act vars) = Rule info prem' conc' act vars
-  where
-    concSet = S.fromList conc
-    premSet = S.fromList prem
-    makeReadonly (Fact (ProtoFact _ name arity) ann terms) = (Fact (ProtoFact ReadOnly name arity) ann terms)
-    makeReadonly f = f
-    prem' = [if p `S.member` concSet then makeReadonly p else p | p <- prem]
-    conc' = [c | c <- conc, c `S.notMember` premSet]
-
 
 -- Relation between open and closed rule sets
 ---------------------------------------------

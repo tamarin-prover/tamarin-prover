@@ -34,7 +34,7 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
-import           Data.Maybe                         (mapMaybe, listToMaybe, maybeToList)
+import           Data.Maybe                         (mapMaybe, listToMaybe, maybeToList, fromJust)
 import           Data.Bifunctor                     (bimap)
 import           Safe                               (atMay, headMay)
 
@@ -267,19 +267,32 @@ enforceEdgeConstraints = do
         merge _    []            = error "exploitEdgeProps: impossible"
         merge proj (keep:remove) = map (Equal (proj keep) . proj) remove
 
+    -- | DG5 (a value has to be read before it is consumed):
+    --   (k,w) ↣ (i,u), (k,w) ↣ (j,v), k:rk, i:ri, j:rj
+    --   -- insert --
+    --   i≤j
+    -- if prems(ri)u is read-only
+    -- if prems(rj)v is consuming
     readBeforeConsume :: Reduction ChangeIndicator
     readBeforeConsume = do
       nodes <- getM sNodes
-      consumeEdges <- (filter (isConsumeEdge nodes) . S.toList) <$> getM sEdges
-      readOnlyEdges <- (filter (not . isConsumeEdge nodes) . S.toList) <$> getM sEdges
-      let readOnlyEdgeMap = M.fromListWith (++) [(a,[i]) | (Edge a (i, _)) <- readOnlyEdges]
-      let getConsumeOrd m (Edge src (j, _)) = [(i,j) | i <- concat $ M.lookup src m]
-      let orderings = concatMap (getConsumeOrd readOnlyEdgeMap) consumeEdges
-      changes <- forM orderings $ (\(i,j) -> do
-              before <- alwaysBefore <$> gets id
+      consumeEdges <- filter (isConsumeEdge nodes) . S.toList <$> getM sEdges
+      readOnlyEdges <- filter (not . isConsumeEdge nodes) . S.toList <$> getM sEdges
+      let readOnlyEdgeMap = M.fromListWith (++) [(a,[i]) | (Edge a (i, _)) <- readOnlyEdges]  -- a map giving for a node all nodeId's to which a read-only edge points
+      let getConsumeOrd (Edge src (j, _)) = [(i,j) | i <- concat $ M.lookup src readOnlyEdgeMap]  -- for a consume-Edge k↣j: find all nodeId's i which read from the same fact
+      let orderings = concatMap getConsumeOrd consumeEdges  -- all orderings i≤j that have to be inserted
+      changes <- forM orderings $ (\(i,j) -> do  -- for all such orderings
+              before <- gets alwaysBefore  -- the ordering relation as is
               if i `before` j
-                then return Unchanged
-                else insertLess i j >> return Changed
+                then return Unchanged  -- if i<j already holds, nothing is to be done
+                else do
+                  ctxt <- ask
+                  let runMaude = (`runReader` get pcMaudeHandle ctxt)
+                  let unifiable = maybe True runMaude $ unifiableRuleACInsts <$> M.lookup i nodes <*> M.lookup j nodes  -- if i and j might be the same
+                  if unifiable then
+                    insertFormula $ gnotAtom $ Less (lTermToBTerm $ varTerm j) (lTermToBTerm $ varTerm i) -- then insert i≤j by inserting ¬j<i
+                  else insertLess i j                                                                     -- else insert i<j
+                  return Changed
               )
       return $ foldl (<>) Unchanged changes
 

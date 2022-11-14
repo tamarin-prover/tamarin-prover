@@ -152,20 +152,19 @@ liftedAddCaseTest thy cTest =
 --        imported we do not check if they have _restrict annotations
 --        (but they should not, as they will not be exported)
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m OpenTheory
-liftedAddProtoRule thy ru@(OpenProtoRule ruE ruAC)
+liftedAddProtoRule thy ru
     | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
-        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru')
+        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
         thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
         thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
         return thy''
     | otherwise = Catch.throwM TryingToAddFreshRule
             where
-                ru' = OpenProtoRule (detectReadOnly ruE) (map detectReadOnly ruAC)
                 rfacts = get (preRestriction . rInfo)
                 addExpandedRestriction thy' xrstr = liftMaybeToEx
                                                      (DuplicateItem $ RestrictionItem xrstr)
                                                      (addRestriction xrstr thy')
-                addActions   rname rformulas = modify (rActs . oprRuleE) (++ actions rname rformulas) ru'
+                addActions   rname rformulas = modify (rActs . oprRuleE) (++ actions rname rformulas) ru
 
                 restrictions rname rformulas =  map (fst . fromRuleRestriction' rname) (counter rformulas)
                 actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
