@@ -63,7 +63,7 @@ instance Show MonotonicBehaviour where
 -- for each occurrence of the fact-tag in a rule:
 -- there is no other occurrence with the same first term and
 --   (a) either there is a Fr-fact of the first term as a premise
---   (b) or there is exactly one fact-tag with the same first term in a premise
+--   (b) or there is exactly one consume fact-tag with the same first term in a premise
 --
 -- Additionally, we determine the term positions that are
 -- - Constant
