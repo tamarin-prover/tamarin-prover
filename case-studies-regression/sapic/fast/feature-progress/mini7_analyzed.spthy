@@ -224,29 +224,21 @@ restriction Progress_11_to_1111_or_11211:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-progress/mini7.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-progress/mini7.spthy
-
-  output:          examples/sapic/fast/feature-progress/mini7.spthy.tmp
-  processing time: 0.093616557s
-  A_possible (exists-trace): verified (5 steps)
-  B_possible (exists-trace): verified (8 steps)
-  C_possible (exists-trace): verified (8 steps)
-  A_B_possible (exists-trace): verified (10 steps)
-  A_forced (all-traces): verified (2 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -254,7 +246,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini7.spthy
 
   output:          examples/sapic/fast/feature-progress/mini7.spthy.tmp
-  processing time: 0.093616557s
+  processing time: 0.065791184s
+  
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (8 steps)
   C_possible (exists-trace): verified (8 steps)

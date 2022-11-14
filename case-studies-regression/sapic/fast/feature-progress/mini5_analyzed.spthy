@@ -296,27 +296,21 @@ restriction Progress__to_12111_or_12121_or_1221:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-progress/mini5.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-progress/mini5.spthy
-
-  output:          examples/sapic/fast/feature-progress/mini5.spthy.tmp
-  processing time: 0.248448523s
-  A_possible (exists-trace): verified (9 steps)
-  B_impossible (all-traces): verified (3 steps)
-  C_possible (exists-trace): verified (7 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -324,7 +318,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini5.spthy
 
   output:          examples/sapic/fast/feature-progress/mini5.spthy.tmp
-  processing time: 0.248448523s
+  processing time: 0.066484956s
+  
   A_possible (exists-trace): verified (9 steps)
   B_impossible (all-traces): verified (3 steps)
   C_possible (exists-trace): verified (7 steps)

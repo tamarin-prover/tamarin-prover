@@ -60,10 +60,10 @@ rule (modulo E) V_2_sync:
    St_V_sync( 'v1', pkA, $vote1, ~r1 ), St_V_sync( 'v2', pkA, $vote2, ~r2 )
    ]
   --[ V_2_sync( ) ]->
-   [ Shuffle( (<'v1', pkA, $vote1, ~r1>+<'v2', pkA, $vote2, ~r2>) ) ]
+   [ Shuffle( (<'v1', pkA, $vote1, ~r1>++<'v2', pkA, $vote2, ~r2>) ) ]
 
 rule (modulo E) shuffle_Vote:
-   [ Shuffle( (x+y) ) ] --> [ St_V_2( x ), St_V_2( y ) ]
+   [ Shuffle( (x++y) ) ] --> [ St_V_2( x ), St_V_2( y ) ]
 
 rule (modulo E) V_3:
    [ St_V_2( <V, pk(~ltkA), $vote, ~r> ), !AdminPk( A, pk(~ltkA) ) ]
@@ -164,7 +164,7 @@ solve( (#i < #j)  ∥ (#j < #i) )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -6730,7 +6730,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -6815,7 +6815,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -21618,7 +21618,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( Shuffle( (x+y) ) ▶₀ #i ) )
+    step( solve( Shuffle( (x++y) ) ▶₀ #i ) )
       case V_2_sync_case_1
       step( solve( !KU( sign(blind(commit($vote1, ~r1), ~b), ~ltkA)
                    ) @ #vk.3 ) )
@@ -21752,7 +21752,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( Shuffle( (x+y) ) ▶₀ #i ) )
+    step( solve( Shuffle( (x++y) ) ▶₀ #i ) )
       case V_2_sync_case_1
       step( solve( !KU( sign(blind(commit($vote1, ~r1), ~b), ~ltkA)
                    ) @ #vk.3 ) )
@@ -21886,25 +21886,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/post17/foo_vote_privacy.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/post17/foo_vote_privacy.spthy
-
-  output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 517.789299278s
-  RHS :  exec (exists-trace): verified (12 steps)
-  LHS :  exec (exists-trace): verified (12 steps)
-  DiffLemma:  Observational_equivalence : verified (7204 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -21912,7 +21906,8 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 517.789299278s
+  processing time: 0.089396059s
+  
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)

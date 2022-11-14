@@ -37,13 +37,13 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( State_1211( ~prog_, ~prog_121, m, k ) ▶₀ #t )
+solve( State_1211( ~prog_, ~prog_121, k, m ) ▶₀ #t )
   case outcm_0_121
   solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
     solve( State_( ~prog_ ) ▶₀ #t.3 )
       case Init
-      solve( State_1211( ~prog_.1, ~prog_121, m.1, k ) ▶₀ #t.3 )
+      solve( State_1211( ~prog_.1, ~prog_121, k, m.1 ) ▶₀ #t.3 )
         case outcm_0_121
         solve( State_( ~prog_ ) ▶₀ #t.3 )
           case Init
@@ -120,51 +120,52 @@ rule (modulo E) p_0_1111[color=#ffffff, process="0"]:
      [ State_1111( ~prog_, ~prog_111, k, m ) ] --> [ ]
   */
 
-rule (modulo E) inrm_0_12[color=#ffffff, process="in('r',=m);"]:
+rule (modulo E) inrm_0_12[color=#ffffff, process="in('r',m.2);"]:
    [
-   Fr( ~prog_121 ), State_1( ~prog_, k.1 ), In( m ), MID_Receiver( ~mid_12 )
+   Fr( ~prog_121 ), State_1( ~prog_, k.1 ), In( m.2 ),
+   MID_Receiver( ~mid_12 )
    ]
-  --[ ProgressFrom_121( ~prog_121 ), Receive( ~mid_12, m ) ]->
-   [ State_121( ~prog_, ~prog_121, m, k.1 ) ]
+  --[ ProgressFrom_121( ~prog_121 ), Receive( ~mid_12, m.2 ) ]->
+   [ State_121( ~prog_, ~prog_121, k.1, m.2 ) ]
 
   /*
-  rule (modulo AC) inrm_0_12[color=#ffffff, process="in('r',=m);"]:
+  rule (modulo AC) inrm_0_12[color=#ffffff, process="in('r',m.2);"]:
      [ Fr( ~prog_121 ), State_1( ~prog_, k ), In( m ), MID_Receiver( ~mid_12 )
      ]
     --[ ProgressFrom_121( ~prog_121 ), Receive( ~mid_12, m ) ]->
-     [ State_121( ~prog_, ~prog_121, m, k ) ]
+     [ State_121( ~prog_, ~prog_121, k, m ) ]
   */
 
-rule (modulo E) outcm_0_121[color=#ffffff, process="out('c',m);"]:
-   [ State_121( ~prog_, ~prog_121, m, k.1 ), In( 'c' ) ]
+rule (modulo E) outcm_0_121[color=#ffffff, process="out('c',m.2);"]:
+   [ State_121( ~prog_, ~prog_121, k.1, m.2 ), In( 'c' ) ]
   --[ ChannelIn( 'c' ) ]->
-   [ State_1211( ~prog_, ~prog_121, m, k.1 ), Out( m ) ]
+   [ State_1211( ~prog_, ~prog_121, k.1, m.2 ), Out( m.2 ) ]
 
   /*
-  rule (modulo AC) outcm_0_121[color=#ffffff, process="out('c',m);"]:
-     [ State_121( ~prog_, ~prog_121, m, k ), In( 'c' ) ]
+  rule (modulo AC) outcm_0_121[color=#ffffff, process="out('c',m.2);"]:
+     [ State_121( ~prog_, ~prog_121, k, m ), In( 'c' ) ]
     --[ ChannelIn( 'c' ) ]->
-     [ State_1211( ~prog_, ~prog_121, m, k ), Out( m ) ]
+     [ State_1211( ~prog_, ~prog_121, k, m ), Out( m ) ]
   */
 
 rule (modulo E) eventB_0_1211[color=#ffffff, process="event B( );"]:
-   [ State_1211( ~prog_, ~prog_121, m, k.1 ) ]
+   [ State_1211( ~prog_, ~prog_121, k.1, m.2 ) ]
   --[ ProgressTo_12111( ~prog_121 ), B( ) ]->
-   [ State_12111( ~prog_, ~prog_121, m, k.1 ) ]
+   [ State_12111( ~prog_, ~prog_121, k.1, m.2 ) ]
 
   /*
   rule (modulo AC) eventB_0_1211[color=#ffffff, process="event B( );"]:
-     [ State_1211( ~prog_, ~prog_121, m, k ) ]
+     [ State_1211( ~prog_, ~prog_121, k, m ) ]
     --[ ProgressTo_12111( ~prog_121 ), B( ) ]->
-     [ State_12111( ~prog_, ~prog_121, m, k ) ]
+     [ State_12111( ~prog_, ~prog_121, k, m ) ]
   */
 
 rule (modulo E) p_0_12111[color=#ffffff, process="0"]:
-   [ State_12111( ~prog_, ~prog_121, m, k.1 ) ] --> [ ]
+   [ State_12111( ~prog_, ~prog_121, k.1, m.2 ) ] --> [ ]
 
   /*
   rule (modulo AC) p_0_12111[color=#ffffff, process="0"]:
-     [ State_12111( ~prog_, ~prog_121, m, k ) ] --> [ ]
+     [ State_12111( ~prog_, ~prog_121, k, m ) ] --> [ ]
   */
 
 restriction single_session:
@@ -188,26 +189,21 @@ restriction Progress_121_to_12111:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-progress/mini2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-progress/mini2.spthy
-
-  output:          examples/sapic/fast/feature-progress/mini2.spthy.tmp
-  processing time: 0.1040641s
-  A_impossible (all-traces): verified (2 steps)
-  B_possible (exists-trace): verified (7 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -215,7 +211,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini2.spthy
 
   output:          examples/sapic/fast/feature-progress/mini2.spthy.tmp
-  processing time: 0.1040641s
+  processing time: 0.043117309s
+  
   A_impossible (all-traces): verified (2 steps)
   B_possible (exists-trace): verified (7 steps)
 

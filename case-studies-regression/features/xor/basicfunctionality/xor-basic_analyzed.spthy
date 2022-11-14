@@ -194,25 +194,21 @@ solve( splitEqs(0) )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/xor/basicfunctionality/xor-basic.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/xor/basicfunctionality/xor-basic.spthy
-
-  output:          examples/features/xor/basicfunctionality/xor-basic.spthy.tmp
-  processing time: 2.39003941s
-  secrecybroken (all-traces): falsified - found trace (19 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -220,7 +216,8 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor-basic.spthy
 
   output:          examples/features/xor/basicfunctionality/xor-basic.spthy.tmp
-  processing time: 2.39003941s
+  processing time: 0.055262689s
+  
   secrecybroken (all-traces): falsified - found trace (19 steps)
 
 ==============================================================================

@@ -291,8 +291,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 2.7.1
-Git revision: f3ae6fbb1ed6cb576d08b2f3aa47fd62575ca299, branch: subterm-new
-Compiled at: 2022-10-11 15:54:59.2639144 UTC
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
 */
 
 end
@@ -307,7 +307,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issueX-translation-crash.spthy
 
   output:          examples/sapic/fast/regression-tests/issueX-translation-crash.spthy.tmp
-  processing time: 0.07236968s
+  processing time: 0.05005441s
   
 
 ==============================================================================

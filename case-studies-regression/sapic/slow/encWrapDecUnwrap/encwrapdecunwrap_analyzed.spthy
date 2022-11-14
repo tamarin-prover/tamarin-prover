@@ -379,10 +379,7 @@ next
                           ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                      (#vr.10 < #vr.4) )
                 case case_1
-                solve( State_1111211111111( c, m.1, ~n, v, L_h ) ▶₀ #t2.1 )
-                  case eventDecUsingkeyvm_0_11112111111
-                  by contradiction /* cyclic */
-                qed
+                by contradiction /* cyclic */
               next
                 case case_2
                 solve( State_111112111111( ~n.1, v, L_h ) ▶₀ #t2.1 )
@@ -467,10 +464,7 @@ next
                           ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                      (#vr.17 < #vr.4) )
                 case case_1
-                solve( State_1111211111111( c, m.1, ~n, v, L_h ) ▶₀ #t2.1 )
-                  case eventDecUsingkeyvm_0_11112111111
-                  by contradiction /* cyclic */
-                qed
+                by contradiction /* cyclic */
               next
                 case case_2
                 solve( State_111112111111( ~n.1, v, L_h ) ▶₀ #t2.1 )
@@ -545,10 +539,7 @@ next
                           ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                      (#vr.18 < #vr.4) )
                 case case_1
-                solve( State_1111211111111( c, m.1, ~n, v, L_h ) ▶₀ #t2.1 )
-                  case eventDecUsingkeyvm_0_11112111111
-                  by contradiction /* cyclic */
-                qed
+                by contradiction /* cyclic */
               next
                 case case_2
                 solve( State_111112111111( ~n.1, v, L_h ) ▶₀ #t2.1 )
@@ -583,10 +574,7 @@ next
                                         ((#t0 < #vr.13) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                    (#vr.28 < #vr.13) )
                               case case_1
-                              solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.4 ) ▶₀ #t2.4 )
-                                case eventWrapkeyvkeyv_0_112111111
-                                by contradiction /* cyclic */
-                              qed
+                              by contradiction /* cyclic */
                             next
                               case case_2
                               solve( State_11111121111111( ~n.3, v, L_h1 ) ▶₀ #t2.4 )
@@ -649,10 +637,7 @@ next
                                         ((#t0 < #vr.13) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                    (#vr.29 < #vr.13) )
                               case case_1
-                              solve( State_11211111111( L_h1, L_h2, v1, v2, ~n.5 ) ▶₀ #t2.4 )
-                                case eventWrapkeyvkeyv_0_112111111
-                                by contradiction /* cyclic */
-                              qed
+                              by contradiction /* cyclic */
                             next
                               case case_2
                               solve( State_11111121111111( ~n.4, v, L_h1 ) ▶₀ #t2.4 )
@@ -804,11 +789,7 @@ next
                                                             ((#t0 < #vr.24) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                        (#vr.53 < #vr.24) )
                                                   case case_1
-                                                  solve( State_12111111111( L_h2.2, k.1, m.1, v, L_h, ~n.5
-                                                         ) ▶₀ #t2.8 )
-                                                    case insertLhmwrap_0_121111111
-                                                    by contradiction /* cyclic */
-                                                  qed
+                                                  by contradiction /* cyclic */
                                                 next
                                                   case case_2
                                                   solve( State_11111121111111( ~n.9, v, L_h ) ▶₀ #t2.8 )
@@ -876,11 +857,7 @@ next
                                                                (#t2 = #t0)))))  ∥
                                                          (#vr.45 < #vr.24) )
                                                     case case_1
-                                                    solve( State_12111111111( L_h2.1, k.1, m.1, v, L_h, ~n.5
-                                                           ) ▶₀ #t2.8 )
-                                                      case insertLhmwrap_0_121111111
-                                                      by contradiction /* cyclic */
-                                                    qed
+                                                    by contradiction /* cyclic */
                                                   next
                                                     case case_2
                                                     solve( State_11111121111111( ~n.9, v, L_h ) ▶₀ #t2.8 )
@@ -996,11 +973,7 @@ next
                                                             ((#t0 < #vr.24) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                        (#vr.54 < #vr.24) )
                                                   case case_1
-                                                  solve( State_12111111111( L_h2.2, k.1, m.1, v, L_h, ~n.5
-                                                         ) ▶₀ #t2.8 )
-                                                    case insertLhmwrap_0_121111111
-                                                    by contradiction /* cyclic */
-                                                  qed
+                                                  by contradiction /* cyclic */
                                                 next
                                                   case case_2
                                                   solve( State_11111121111111( ~n.9, v, L_h ) ▶₀ #t2.8 )
@@ -1068,11 +1041,7 @@ next
                                                                (#t2 = #t0)))))  ∥
                                                          (#vr.46 < #vr.24) )
                                                     case case_1
-                                                    solve( State_12111111111( L_h2.1, k.1, m.1, v, L_h, ~n.5
-                                                           ) ▶₀ #t2.8 )
-                                                      case insertLhmwrap_0_121111111
-                                                      by contradiction /* cyclic */
-                                                    qed
+                                                    by contradiction /* cyclic */
                                                   next
                                                     case case_2
                                                     solve( State_11111121111111( ~n.9, v, L_h ) ▶₀ #t2.8 )
@@ -2126,10 +2095,7 @@ next
                             ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                        (#vr.9 < #vr.3) )
                   case case_1
-                  solve( State_12111111111( L_h2, k.2, m, v, L_h, ~n.1 ) ▶₀ #t2.2 )
-                    case insertLhmwrap_0_121111111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case case_2
                   solve( State_11111121111111( ~n.2, v, L_h ) ▶₀ #t2.2 )
@@ -2256,10 +2222,7 @@ next
                             ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                        (#vr.14 < #vr.3) )
                   case case_1
-                  solve( State_12111111111( L_h2, k.2, m, v, L_h, ~n.1 ) ▶₀ #t2.2 )
-                    case insertLhmwrap_0_121111111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case case_2
                   solve( State_11111121111111( ~n.2, v, L_h ) ▶₀ #t2.2 )
@@ -2354,10 +2317,7 @@ next
                             ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                        (#vr.16 < #vr.3) )
                   case case_1
-                  solve( State_12111111111( L_h2.1, k.2, m, v, L_h, ~n.1 ) ▶₀ #t2.2 )
-                    case insertLhmwrap_0_121111111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case case_2
                   solve( State_11111121111111( ~n.2, v, L_h ) ▶₀ #t2.2 )
@@ -2392,10 +2352,7 @@ next
                                           ((#t0 < #vr.11) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                      (#vr.27 < #vr.11) )
                                 case case_1
-                                solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.5 ) ▶₀ #t2.5 )
-                                  case eventWrapkeyvkeyv_0_112111111
-                                  by contradiction /* cyclic */
-                                qed
+                                by contradiction /* cyclic */
                               next
                                 case case_2
                                 solve( State_11111121111111( ~n.4, v, L_h1 ) ▶₀ #t2.5 )
@@ -2584,10 +2541,7 @@ next
                                           ((#t0 < #vr.11) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                      (#vr.33 < #vr.11) )
                                 case case_1
-                                solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.10 ) ▶₀ #t2.4 )
-                                  case eventWrapkeyvkeyv_0_112111111
-                                  by contradiction /* cyclic */
-                                qed
+                                by contradiction /* cyclic */
                               next
                                 case case_2
                                 solve( State_11111121111111( ~n.9, v, L_h1 ) ▶₀ #t2.4 )
@@ -2739,11 +2693,7 @@ next
                                                         ((#t0 < #vr.17) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                    (#vr.54 < #vr.17) )
                                               case case_1
-                                              solve( State_12111111111( L_h2.3, k.2, m, v, L_h, ~n.7
-                                                     ) ▶₀ #t2.6 )
-                                                case insertLhmwrap_0_121111111
-                                                by contradiction /* cyclic */
-                                              qed
+                                              by contradiction /* cyclic */
                                             next
                                               case case_2
                                               solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -2879,11 +2829,7 @@ next
                                                           ((#t0 < #vr.17) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                      (#vr.46 < #vr.17) )
                                                 case case_1
-                                                solve( State_12111111111( L_h2.2, k.2, m, v, L_h, ~n.7
-                                                       ) ▶₀ #t2.6 )
-                                                  case insertLhmwrap_0_121111111
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* cyclic */
                                               next
                                                 case case_2
                                                 solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -3073,11 +3019,7 @@ next
                                                         ((#t0 < #vr.17) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                    (#vr.55 < #vr.17) )
                                               case case_1
-                                              solve( State_12111111111( L_h2.3, k.2, m, v, L_h, ~n.7
-                                                     ) ▶₀ #t2.6 )
-                                                case insertLhmwrap_0_121111111
-                                                by contradiction /* cyclic */
-                                              qed
+                                              by contradiction /* cyclic */
                                             next
                                               case case_2
                                               solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -3213,11 +3155,7 @@ next
                                                           ((#t0 < #vr.17) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                      (#vr.47 < #vr.17) )
                                                 case case_1
-                                                solve( State_12111111111( L_h2.2, k.2, m, v, L_h, ~n.7
-                                                       ) ▶₀ #t2.6 )
-                                                  case insertLhmwrap_0_121111111
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* cyclic */
                                               next
                                                 case case_2
                                                 solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -3503,11 +3441,7 @@ next
                                                         ((#t0 < #vr.17) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                    (#vr.58 < #vr.17) )
                                               case case_1
-                                              solve( State_12111111111( L_h2.3, k.3, m, v, L_h, ~n.8
-                                                     ) ▶₀ #t2.5 )
-                                                case insertLhmwrap_0_121111111
-                                                by contradiction /* cyclic */
-                                              qed
+                                              by contradiction /* cyclic */
                                             next
                                               case case_2
                                               solve( State_11111121111111( ~n.12, v, L_h ) ▶₀ #t2.5 )
@@ -3643,11 +3577,7 @@ next
                                                           ((#t0 < #vr.17) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                      (#vr.50 < #vr.17) )
                                                 case case_1
-                                                solve( State_12111111111( L_h2.2, k.3, m, v, L_h, ~n.8
-                                                       ) ▶₀ #t2.5 )
-                                                  case insertLhmwrap_0_121111111
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* cyclic */
                                               next
                                                 case case_2
                                                 solve( State_11111121111111( ~n.12, v, L_h ) ▶₀ #t2.5 )
@@ -3838,11 +3768,7 @@ next
                                                         ((#t0 < #vr.17) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                    (#vr.59 < #vr.17) )
                                               case case_1
-                                              solve( State_12111111111( L_h2.3, k.3, m, v, L_h, ~n.8
-                                                     ) ▶₀ #t2.5 )
-                                                case insertLhmwrap_0_121111111
-                                                by contradiction /* cyclic */
-                                              qed
+                                              by contradiction /* cyclic */
                                             next
                                               case case_2
                                               solve( State_11111121111111( ~n.12, v, L_h ) ▶₀ #t2.5 )
@@ -3978,11 +3904,7 @@ next
                                                           ((#t0 < #vr.17) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                      (#vr.51 < #vr.17) )
                                                 case case_1
-                                                solve( State_12111111111( L_h2.2, k.3, m, v, L_h, ~n.8
-                                                       ) ▶₀ #t2.5 )
-                                                  case insertLhmwrap_0_121111111
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* cyclic */
                                               next
                                                 case case_2
                                                 solve( State_11111121111111( ~n.12, v, L_h ) ▶₀ #t2.5 )
@@ -4184,10 +4106,7 @@ next
                             ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                        (#vr.17 < #vr.3) )
                   case case_1
-                  solve( State_12111111111( L_h2.1, k.2, m, v, L_h, ~n.1 ) ▶₀ #t2.2 )
-                    case insertLhmwrap_0_121111111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case case_2
                   solve( State_11111121111111( ~n.2, v, L_h ) ▶₀ #t2.2 )
@@ -4222,10 +4141,7 @@ next
                                           ((#t0 < #vr.12) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                      (#vr.28 < #vr.12) )
                                 case case_1
-                                solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.5 ) ▶₀ #t2.5 )
-                                  case eventWrapkeyvkeyv_0_112111111
-                                  by contradiction /* cyclic */
-                                qed
+                                by contradiction /* cyclic */
                               next
                                 case case_2
                                 solve( State_11111121111111( ~n.4, v, L_h1 ) ▶₀ #t2.5 )
@@ -4396,10 +4312,7 @@ next
                                           ((#t0 < #vr.12) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                      (#vr.34 < #vr.12) )
                                 case case_1
-                                solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.10 ) ▶₀ #t2.4 )
-                                  case eventWrapkeyvkeyv_0_112111111
-                                  by contradiction /* cyclic */
-                                qed
+                                by contradiction /* cyclic */
                               next
                                 case case_2
                                 solve( State_11111121111111( ~n.9, v, L_h1 ) ▶₀ #t2.4 )
@@ -4551,11 +4464,7 @@ next
                                                         ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                    (#vr.55 < #vr.18) )
                                               case case_1
-                                              solve( State_12111111111( L_h2.3, k.2, m, v, L_h, ~n.7
-                                                     ) ▶₀ #t2.6 )
-                                                case insertLhmwrap_0_121111111
-                                                by contradiction /* cyclic */
-                                              qed
+                                              by contradiction /* cyclic */
                                             next
                                               case case_2
                                               solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -4691,11 +4600,7 @@ next
                                                           ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                      (#vr.47 < #vr.18) )
                                                 case case_1
-                                                solve( State_12111111111( L_h2.2, k.2, m, v, L_h, ~n.7
-                                                       ) ▶₀ #t2.6 )
-                                                  case insertLhmwrap_0_121111111
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* cyclic */
                                               next
                                                 case case_2
                                                 solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -4885,11 +4790,7 @@ next
                                                         ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                    (#vr.56 < #vr.18) )
                                               case case_1
-                                              solve( State_12111111111( L_h2.3, k.2, m, v, L_h, ~n.7
-                                                     ) ▶₀ #t2.6 )
-                                                case insertLhmwrap_0_121111111
-                                                by contradiction /* cyclic */
-                                              qed
+                                              by contradiction /* cyclic */
                                             next
                                               case case_2
                                               solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -5025,11 +4926,7 @@ next
                                                           ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                      (#vr.48 < #vr.18) )
                                                 case case_1
-                                                solve( State_12111111111( L_h2.2, k.2, m, v, L_h, ~n.7
-                                                       ) ▶₀ #t2.6 )
-                                                  case insertLhmwrap_0_121111111
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* cyclic */
                                               next
                                                 case case_2
                                                 solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -6174,10 +6071,7 @@ next
                             ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                        (#vr.9 < #vr.3) )
                   case case_1
-                  solve( State_12111111111( L_h2, k.2, m, v, L_h, ~n.1 ) ▶₀ #t2.2 )
-                    case insertLhmwrap_0_121111111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case case_2
                   solve( State_11111121111111( ~n.2, v, L_h ) ▶₀ #t2.2 )
@@ -6304,10 +6198,7 @@ next
                             ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                        (#vr.14 < #vr.3) )
                   case case_1
-                  solve( State_12111111111( L_h2, k.2, m, v, L_h, ~n.1 ) ▶₀ #t2.2 )
-                    case insertLhmwrap_0_121111111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case case_2
                   solve( State_11111121111111( ~n.2, v, L_h ) ▶₀ #t2.2 )
@@ -6402,10 +6293,7 @@ next
                             ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                        (#vr.16 < #vr.3) )
                   case case_1
-                  solve( State_12111111111( L_h2.1, k.2, m, v, L_h, ~n.1 ) ▶₀ #t2.2 )
-                    case insertLhmwrap_0_121111111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case case_2
                   solve( State_11111121111111( ~n.2, v, L_h ) ▶₀ #t2.2 )
@@ -6640,10 +6528,7 @@ next
                             ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                        (#vr.17 < #vr.3) )
                   case case_1
-                  solve( State_12111111111( L_h2.1, k.2, m, v, L_h, ~n.1 ) ▶₀ #t2.2 )
-                    case insertLhmwrap_0_121111111
-                    by contradiction /* cyclic */
-                  qed
+                  by contradiction /* cyclic */
                 next
                   case case_2
                   solve( State_11111121111111( ~n.2, v, L_h ) ▶₀ #t2.2 )
@@ -6678,10 +6563,7 @@ next
                                           ((#t0 < #vr.12) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                      (#vr.28 < #vr.12) )
                                 case case_1
-                                solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.5 ) ▶₀ #t2.5 )
-                                  case eventWrapkeyvkeyv_0_112111111
-                                  by contradiction /* cyclic */
-                                qed
+                                by contradiction /* cyclic */
                               next
                                 case case_2
                                 solve( State_11111121111111( ~n.4, v, L_h1 ) ▶₀ #t2.5 )
@@ -6852,10 +6734,7 @@ next
                                           ((#t0 < #vr.12) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                      (#vr.34 < #vr.12) )
                                 case case_1
-                                solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.10 ) ▶₀ #t2.4 )
-                                  case eventWrapkeyvkeyv_0_112111111
-                                  by contradiction /* cyclic */
-                                qed
+                                by contradiction /* cyclic */
                               next
                                 case case_2
                                 solve( State_11111121111111( ~n.9, v, L_h1 ) ▶₀ #t2.4 )
@@ -7007,11 +6886,7 @@ next
                                                         ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                    (#vr.55 < #vr.18) )
                                               case case_1
-                                              solve( State_12111111111( L_h2.3, k.2, m, v, L_h, ~n.7
-                                                     ) ▶₀ #t2.6 )
-                                                case insertLhmwrap_0_121111111
-                                                by contradiction /* cyclic */
-                                              qed
+                                              by contradiction /* cyclic */
                                             next
                                               case case_2
                                               solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -7147,11 +7022,7 @@ next
                                                           ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                      (#vr.47 < #vr.18) )
                                                 case case_1
-                                                solve( State_12111111111( L_h2.2, k.2, m, v, L_h, ~n.7
-                                                       ) ▶₀ #t2.6 )
-                                                  case insertLhmwrap_0_121111111
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* cyclic */
                                               next
                                                 case case_2
                                                 solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -7341,11 +7212,7 @@ next
                                                         ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                    (#vr.56 < #vr.18) )
                                               case case_1
-                                              solve( State_12111111111( L_h2.3, k.2, m, v, L_h, ~n.7
-                                                     ) ▶₀ #t2.6 )
-                                                case insertLhmwrap_0_121111111
-                                                by contradiction /* cyclic */
-                                              qed
+                                              by contradiction /* cyclic */
                                             next
                                               case case_2
                                               solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -7481,11 +7348,7 @@ next
                                                           ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                      (#vr.48 < #vr.18) )
                                                 case case_1
-                                                solve( State_12111111111( L_h2.2, k.2, m, v, L_h, ~n.7
-                                                       ) ▶₀ #t2.6 )
-                                                  case insertLhmwrap_0_121111111
-                                                  by contradiction /* cyclic */
-                                                qed
+                                                by contradiction /* cyclic */
                                               next
                                                 case case_2
                                                 solve( State_11111121111111( ~n.11, v, L_h ) ▶₀ #t2.6 )
@@ -8640,10 +8503,7 @@ next
                       qed
                     next
                       case case_2
-                      solve( State_11111121111111( ~n.3, v, ~n.2 ) ▶₀ #t2.3 )
-                        case eventWrapHandleLh_0_1111112111111
-                        by contradiction /* from formulas */
-                      qed
+                      by contradiction /* node #t2 after last node #t3 */
                     qed
                   qed
                 qed
@@ -8685,10 +8545,7 @@ next
                                 ((#t0 < #vr.2) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                            (#vr.7 < #vr.2) )
                       case case_1
-                      solve( State_111112111111( ~n, v, ~n.2 ) ▶₀ #t2.3 )
-                        case insertLhkeyvdec_0_11111211111
-                        by contradiction /* from formulas */
-                      qed
+                      by contradiction /* node #t3 after last node #t2 */
                     next
                       case case_2
                       solve( State_11111121111111( ~n.3, v, ~n.2 ) ▶₀ #t2.3 )
@@ -12952,10 +12809,7 @@ next
                               ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                          (#vr.19 < #vr.9) )
                     case case_1
-                    solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.5 ) ▶₀ #t2.2 )
-                      case eventWrapkeyvkeyv_0_112111111
-                      by contradiction /* cyclic */
-                    qed
+                    by contradiction /* cyclic */
                   next
                     case case_2
                     solve( State_11111121111111( ~n.4, v, L_h1 ) ▶₀ #t2.2 )
@@ -13075,10 +12929,7 @@ next
                                       ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                  (#vr.24 < #vr.9) )
                             case case_1
-                            solve( State_11211111111( L_h1, L_h2, v1, v2, ~n.7 ) ▶₀ #t2.2 )
-                              case eventWrapkeyvkeyv_0_112111111
-                              by contradiction /* cyclic */
-                            qed
+                            by contradiction /* cyclic */
                           next
                             case case_2
                             solve( State_11111121111111( ~n.6, v, L_h1 ) ▶₀ #t2.2 )
@@ -13201,10 +13052,7 @@ next
                                                     ((#t0 < #vr.15) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                (#vr.45 < #vr.15) )
                                           case case_1
-                                          solve( State_12111111111( L_h2.2, k.1, m, v, L_h, ~n.5 ) ▶₀ #t2.4 )
-                                            case insertLhmwrap_0_121111111
-                                            by contradiction /* cyclic */
-                                          qed
+                                          by contradiction /* cyclic */
                                         next
                                           case case_2
                                           solve( State_11111121111111( ~n.7, v, L_h ) ▶₀ #t2.4 )
@@ -13319,11 +13167,7 @@ next
                                                       ((#t0 < #vr.15) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                  (#vr.37 < #vr.15) )
                                             case case_1
-                                            solve( State_12111111111( L_h2.1, k.1, m, v, L_h, ~n.5
-                                                   ) ▶₀ #t2.4 )
-                                              case insertLhmwrap_0_121111111
-                                              by contradiction /* cyclic */
-                                            qed
+                                            by contradiction /* cyclic */
                                           next
                                             case case_2
                                             solve( State_11111121111111( ~n.7, v, L_h ) ▶₀ #t2.4 )
@@ -13478,10 +13322,7 @@ next
                                                     ((#t0 < #vr.15) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                (#vr.46 < #vr.15) )
                                           case case_1
-                                          solve( State_12111111111( L_h2.2, k.1, m, v, L_h, ~n.5 ) ▶₀ #t2.4 )
-                                            case insertLhmwrap_0_121111111
-                                            by contradiction /* cyclic */
-                                          qed
+                                          by contradiction /* cyclic */
                                         next
                                           case case_2
                                           solve( State_11111121111111( ~n.7, v, L_h ) ▶₀ #t2.4 )
@@ -13596,11 +13437,7 @@ next
                                                       ((#t0 < #vr.15) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
                                                  (#vr.38 < #vr.15) )
                                             case case_1
-                                            solve( State_12111111111( L_h2.1, k.1, m, v, L_h, ~n.5
-                                                   ) ▶₀ #t2.4 )
-                                              case insertLhmwrap_0_121111111
-                                              by contradiction /* cyclic */
-                                            qed
+                                            by contradiction /* cyclic */
                                           next
                                             case case_2
                                             solve( State_11111121111111( ~n.7, v, L_h ) ▶₀ #t2.4 )
@@ -13756,399 +13593,16 @@ next
           by contradiction /* from formulas */
         next
           case eventDecUsingkeyvm_0_11112111111_case_2
-          solve( ((∃ h1 #t1. (NewKey( h1, k2 ) @ #t1) ∧ #t1 < #t2) ∧
-                  (∃ hp #t0.
-                    (WrapKey( hp, k2 ) @ #t0)
-                   ∧
-                    (((#t0 = #t2) ∨ (#t0 < #t2))) ∧
-                    (∀ hpp #t1. (Unwrapped( hpp, k2 ) @ #t1) ⇒ #t0 < #t1)))  ∥
-                 (∃ h k2 #t1 #t0.
-                   (NewKey( h, k2 ) @ #t0) ∧ (!KU( k2 ) @ #t1)
-                  ∧
-                   (#t1 < #t2) ∧ (#t0 < #t2))  ∥
-                 (∃ #t0 #t1 h1 h2 k.
-                   (WrapKey( h2, k ) @ #t0) ∧ (DecKey( h1, k ) @ #t1)
-                  ∧
-                   (#t0 < #t2) ∧ (#t1 < #t2))  ∥
-                 (∃ #t0 #t1 h1 h2 k.
-                   (Unwrapped( h2, k ) @ #t0) ∧ (DecKey( h1, k ) @ #t1)
-                  ∧
-                   (#t0 < #t2) ∧ (#t1 < #t2)) )
-            case case_1
-            by contradiction /* from formulas */
-          next
-            case case_2
-            by contradiction /* from formulas */
-          next
-            case case_3
-            solve( ((#t1.1 < #t0) ∧ (#t0.1 < #t0))  ∥
-                   ((#t1.1 < #t1) ∧ (#t0.1 < #t1)) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              by contradiction /* from formulas */
-            qed
-          next
-            case case_4
-            solve( ((∃ h1 #t1. (NewKey( h1, k.2 ) @ #t1) ∧ #t1 < #t0) ∧
-                    (∃ hp #t0.1.
-                      (WrapKey( hp, k.2 ) @ #t0.1)
-                     ∧
-                      (((#t0.1 = #t0) ∨ (#t0.1 < #t0))) ∧
-                      (∀ hpp #t1. (Unwrapped( hpp, k.2 ) @ #t1) ⇒ #t0.1 < #t1)))  ∥
-                   (∃ h k2 #t1 #t0.1.
-                     (NewKey( h, k2 ) @ #t0.1) ∧ (!KU( k2 ) @ #t1)
-                    ∧
-                     (#t1 < #t0) ∧ (#t0.1 < #t0))  ∥
-                   (∃ #t0.1 #t1 h1 h2 k.
-                     (WrapKey( h2, k ) @ #t0.1) ∧ (DecKey( h1, k ) @ #t1)
-                    ∧
-                     (#t0.1 < #t0) ∧ (#t1 < #t0))  ∥
-                   (∃ #t0.1 #t1 h1 h2 k.
-                     (Unwrapped( h2, k ) @ #t0.1) ∧ (DecKey( h1, k ) @ #t1)
-                    ∧
-                     (#t0.1 < #t0) ∧ (#t1 < #t0)) )
-              case case_1
-              solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                     ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                case case_1
-                by contradiction /* from formulas */
-              next
-                case case_2
-                by contradiction /* from formulas */
-              qed
-            next
-              case case_2
-              by contradiction /* from formulas */
-            next
-              case case_3
-              solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                     ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                case case_1
-                by contradiction /* from formulas */
-              next
-                case case_2
-                by contradiction /* from formulas */
-              qed
-            next
-              case case_4
-              solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                     ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                case case_1
-                by contradiction /* from formulas */
-              next
-                case case_2
-                by contradiction /* from formulas */
-              qed
-            qed
-          qed
+          by contradiction /* node #j after last node #i */
         next
           case eventDecUsingkeyvm_0_11112111111_case_3
-          solve( ((#t1 < #t2) ∧ (#t0 < #t2))  ∥ ((#t1 < #t3) ∧ (#t0 < #t3)) )
-            case case_1
-            by contradiction /* from formulas */
-          next
-            case case_2
-            by contradiction /* from formulas */
-          qed
+          by contradiction /* node #j after last node #i */
         next
           case eventDecUsingkeyvm_0_11112111111_case_4
-          solve( ((∃ h1 #t1. (NewKey( h1, k2 ) @ #t1) ∧ #t1 < #t2) ∧
-                  (∃ hp #t0.
-                    (WrapKey( hp, k2 ) @ #t0)
-                   ∧
-                    (((#t0 = #t2) ∨ (#t0 < #t2))) ∧
-                    (∀ hpp #t1. (Unwrapped( hpp, k2 ) @ #t1) ⇒ #t0 < #t1)))  ∥
-                 (∃ h k2 #t1 #t0.
-                   (NewKey( h, k2 ) @ #t0) ∧ (!KU( k2 ) @ #t1)
-                  ∧
-                   (#t1 < #t2) ∧ (#t0 < #t2))  ∥
-                 (∃ #t0 #t1 h1 h2 k.
-                   (WrapKey( h2, k ) @ #t0) ∧ (DecKey( h1, k ) @ #t1)
-                  ∧
-                   (#t0 < #t2) ∧ (#t1 < #t2))  ∥
-                 (∃ #t0 #t1 h1 h2 k.
-                   (Unwrapped( h2, k ) @ #t0) ∧ (DecKey( h1, k ) @ #t1)
-                  ∧
-                   (#t0 < #t2) ∧ (#t1 < #t2)) )
-            case case_1
-            solve( ((#t1.1 < #t2) ∧ (#t0 < #t2))  ∥ ((#t1.1 < #t3) ∧ (#t0 < #t3)) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              by contradiction /* from formulas */
-            qed
-          next
-            case case_2
-            by contradiction /* from formulas */
-          next
-            case case_3
-            solve( ((#t1.1 < #t2) ∧ (#t0 < #t2))  ∥ ((#t1.1 < #t3) ∧ (#t0 < #t3)) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              by contradiction /* from formulas */
-            qed
-          next
-            case case_4
-            solve( ((#t1.1 < #t2) ∧ (#t0 < #t2))  ∥ ((#t1.1 < #t3) ∧ (#t0 < #t3)) )
-              case case_1
-              by contradiction /* from formulas */
-            next
-              case case_2
-              by contradiction /* from formulas */
-            qed
-          qed
+          by contradiction /* node #j after last node #i */
         next
           case eventWrapkeyvkeyv_0_112111111
-          solve( Insert( L_h2, <z, 'wrap'> ) @ #t2 )
-            case insertLhkeyvwrap_0_111111211111
-            solve( State_111111211111( lock, v, L_h2 ) ▶₀ #t2 )
-              case eventWrapKeyLhkeyv_0_11111121111
-              solve( Insert( L_h1, <z.1, 'wrap'> ) @ #t2.1 )
-                case insertLhkeyvwrap_0_111111211111
-                solve( State_111111211111( lock, v, L_h1 ) ▶₀ #t2.1 )
-                  case eventWrapKeyLhkeyv_0_11111121111
-                  solve( ((#vr.9 < #vr.19) ∧
-                          (∃ #t2.
-                            (Unlock_5( '5', ~n.5, L_h1 ) @ #t2)
-                           ∧
-                            (#vr.9 < #t2) ∧
-                            (#t2 < #vr.19) ∧
-                            (∀ #t0 pp. (Unlock( pp, ~n.5, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
-                            (∀ pp lpp #t0.
-                              (Lock( pp, lpp, L_h1 ) @ #t0)
-                             ⇒
-                              ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
-                            (∀ pp lpp #t0.
-                              (Unlock( pp, lpp, L_h1 ) @ #t0)
-                             ⇒
-                              ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                         (#vr.19 < #vr.9) )
-                    case case_1
-                    solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.5 ) ▶₀ #t2.2 )
-                      case eventWrapkeyvkeyv_0_112111111
-                      by contradiction /* cyclic */
-                    qed
-                  next
-                    case case_2
-                    solve( State_11111121111111( ~n.4, v, L_h1 ) ▶₀ #t2.2 )
-                      case eventWrapHandleLh_0_1111112111111
-                      solve( (#t2.4 < #t2.5)  ∥ (#t2.4 = #t2.5) )
-                        case case_1
-                        by contradiction /* from formulas */
-                      next
-                        case case_2
-                        solve( Insert( L_h2, <z, 'init'> ) @ #t2.3 )
-                          case insertLhkinit_0_111111111111
-                          solve( State_111111111111( lock, L_h2, z ) ▶₀ #t2.3 )
-                            case eventNewKeyLhk_0_11111111111
-                            solve( (#vr.4, 0) ~~> (#j, 0) )
-                              case Var_fresh_4_n
-                              by contradiction /* from formulas */
-                            qed
-                          qed
-                        qed
-                      qed
-                    qed
-                  qed
-                qed
-              next
-                case insertLhmwrap_0_121111111
-                solve( State_121111111( L_h1, k, z.1, v, L_h, lock ) ▶₀ #t2.1 )
-                  case eventUnwrappedLhm_0_12111111
-                  solve( ((∃ h1 #t1. (NewKey( h1, z.1 ) @ #t1) ∧ #t1 < #vr.16) ∧
-                          (∃ hp #t0.
-                            (WrapKey( hp, z.1 ) @ #t0)
-                           ∧
-                            (((#t0 = #vr.16) ∨ (#t0 < #vr.16))) ∧
-                            (∀ hpp #t1. (Unwrapped( hpp, z.1 ) @ #t1) ⇒ #t0 < #t1)))  ∥
-                         (∃ h k2 #t1 #t0.
-                           (NewKey( h, k2 ) @ #t0) ∧ (!KU( k2 ) @ #t1)
-                          ∧
-                           (#t1 < #vr.16) ∧ (#t0 < #vr.16))  ∥
-                         (∃ #t0 #t1 h1 h2 k.
-                           (WrapKey( h2, k ) @ #t0) ∧ (DecKey( h1, k ) @ #t1)
-                          ∧
-                           (#t0 < #vr.16) ∧ (#t1 < #vr.16))  ∥
-                         (∃ #t0 #t1 h1 h2 k.
-                           (Unwrapped( h2, k ) @ #t0) ∧ (DecKey( h1, k ) @ #t1)
-                          ∧
-                           (#t0 < #vr.16) ∧ (#t1 < #vr.16)) )
-                    case case_1
-                    by contradiction /* from formulas */
-                  next
-                    case case_2
-                    by contradiction /* from formulas */
-                  next
-                    case case_3
-                    solve( ((#t1.1 < #t0) ∧ (#t0.1 < #t0))  ∥
-                           ((#t1.1 < #t1) ∧ (#t0.1 < #t1)) )
-                      case case_1
-                      by contradiction /* from formulas */
-                    next
-                      case case_2
-                      by contradiction /* from formulas */
-                    qed
-                  next
-                    case case_4
-                    solve( ((∃ h1 #t1. (NewKey( h1, k.2 ) @ #t1) ∧ #t1 < #t0) ∧
-                            (∃ hp #t0.1.
-                              (WrapKey( hp, k.2 ) @ #t0.1)
-                             ∧
-                              (((#t0.1 = #t0) ∨ (#t0.1 < #t0))) ∧
-                              (∀ hpp #t1. (Unwrapped( hpp, k.2 ) @ #t1) ⇒ #t0.1 < #t1)))  ∥
-                           (∃ h k2 #t1 #t0.1.
-                             (NewKey( h, k2 ) @ #t0.1) ∧ (!KU( k2 ) @ #t1)
-                            ∧
-                             (#t1 < #t0) ∧ (#t0.1 < #t0))  ∥
-                           (∃ #t0.1 #t1 h1 h2 k.
-                             (WrapKey( h2, k ) @ #t0.1) ∧ (DecKey( h1, k ) @ #t1)
-                            ∧
-                             (#t0.1 < #t0) ∧ (#t1 < #t0))  ∥
-                           (∃ #t0.1 #t1 h1 h2 k.
-                             (Unwrapped( h2, k ) @ #t0.1) ∧ (DecKey( h1, k ) @ #t1)
-                            ∧
-                             (#t0.1 < #t0) ∧ (#t1 < #t0)) )
-                      case case_1
-                      solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                             ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                        case case_1
-                        by contradiction /* from formulas */
-                      next
-                        case case_2
-                        by contradiction /* from formulas */
-                      qed
-                    next
-                      case case_2
-                      by contradiction /* from formulas */
-                    next
-                      case case_3
-                      solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                             ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                        case case_1
-                        by contradiction /* from formulas */
-                      next
-                        case case_2
-                        by contradiction /* from formulas */
-                      qed
-                    next
-                      case case_4
-                      solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                             ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                        case case_1
-                        by contradiction /* from formulas */
-                      next
-                        case case_2
-                        by contradiction /* from formulas */
-                      qed
-                    qed
-                  qed
-                qed
-              qed
-            qed
-          next
-            case insertLhmwrap_0_121111111
-            solve( State_121111111( L_h2, k, z, v, L_h, lock ) ▶₀ #t2 )
-              case eventUnwrappedLhm_0_12111111
-              solve( ((∃ h1 #t1. (NewKey( h1, z ) @ #t1) ∧ #t1 < #vr.11) ∧
-                      (∃ hp #t0.
-                        (WrapKey( hp, z ) @ #t0)
-                       ∧
-                        (((#t0 = #vr.11) ∨ (#t0 < #vr.11))) ∧
-                        (∀ hpp #t1. (Unwrapped( hpp, z ) @ #t1) ⇒ #t0 < #t1)))  ∥
-                     (∃ h k2 #t1 #t0.
-                       (NewKey( h, k2 ) @ #t0) ∧ (!KU( k2 ) @ #t1)
-                      ∧
-                       (#t1 < #vr.11) ∧ (#t0 < #vr.11))  ∥
-                     (∃ #t0 #t1 h1 h2 k.
-                       (WrapKey( h2, k ) @ #t0) ∧ (DecKey( h1, k ) @ #t1)
-                      ∧
-                       (#t0 < #vr.11) ∧ (#t1 < #vr.11))  ∥
-                     (∃ #t0 #t1 h1 h2 k.
-                       (Unwrapped( h2, k ) @ #t0) ∧ (DecKey( h1, k ) @ #t1)
-                      ∧
-                       (#t0 < #vr.11) ∧ (#t1 < #vr.11)) )
-                case case_1
-                solve( State_11111111111( lock, h1, z ) ▶₀ #t1 )
-                  case increate_0_1111111
-                  solve( (#vr.4, 0) ~~> (#j, 0) )
-                    case Var_fresh_3_n
-                    by contradiction /* from formulas */
-                  qed
-                qed
-              next
-                case case_2
-                by contradiction /* from formulas */
-              next
-                case case_3
-                solve( ((#t1.1 < #t0) ∧ (#t0.1 < #t0))  ∥
-                       ((#t1.1 < #t1) ∧ (#t0.1 < #t1)) )
-                  case case_1
-                  by contradiction /* from formulas */
-                next
-                  case case_2
-                  by contradiction /* from formulas */
-                qed
-              next
-                case case_4
-                solve( ((∃ h1 #t1. (NewKey( h1, k.2 ) @ #t1) ∧ #t1 < #t0) ∧
-                        (∃ hp #t0.1.
-                          (WrapKey( hp, k.2 ) @ #t0.1)
-                         ∧
-                          (((#t0.1 = #t0) ∨ (#t0.1 < #t0))) ∧
-                          (∀ hpp #t1. (Unwrapped( hpp, k.2 ) @ #t1) ⇒ #t0.1 < #t1)))  ∥
-                       (∃ h k2 #t1 #t0.1.
-                         (NewKey( h, k2 ) @ #t0.1) ∧ (!KU( k2 ) @ #t1)
-                        ∧
-                         (#t1 < #t0) ∧ (#t0.1 < #t0))  ∥
-                       (∃ #t0.1 #t1 h1 h2 k.
-                         (WrapKey( h2, k ) @ #t0.1) ∧ (DecKey( h1, k ) @ #t1)
-                        ∧
-                         (#t0.1 < #t0) ∧ (#t1 < #t0))  ∥
-                       (∃ #t0.1 #t1 h1 h2 k.
-                         (Unwrapped( h2, k ) @ #t0.1) ∧ (DecKey( h1, k ) @ #t1)
-                        ∧
-                         (#t0.1 < #t0) ∧ (#t1 < #t0)) )
-                  case case_1
-                  solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                         ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                    case case_1
-                    by contradiction /* from formulas */
-                  next
-                    case case_2
-                    by contradiction /* from formulas */
-                  qed
-                next
-                  case case_2
-                  by contradiction /* from formulas */
-                next
-                  case case_3
-                  solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                         ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                    case case_1
-                    by contradiction /* from formulas */
-                  next
-                    case case_2
-                    by contradiction /* from formulas */
-                  qed
-                next
-                  case case_4
-                  solve( ((#t1.2 < #t0) ∧ (#t0.1 < #t0))  ∥
-                         ((#t1.2 < #t1) ∧ (#t0.1 < #t1)) )
-                    case case_1
-                    by contradiction /* from formulas */
-                  next
-                    case case_2
-                    by contradiction /* from formulas */
-                  qed
-                qed
-              qed
-            qed
-          qed
+          by contradiction /* node #j after last node #i */
         qed
       qed
     qed
@@ -15897,29 +15351,21 @@ restriction locking_6:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
-
-  output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 270.052537099s
-  dec_limits (all-traces): verified (290 steps)
-  wrap_key_origins (all-traces): verified (1140 steps)
-  no_key_is_wrap_and_dec_ind (all-traces): verified (140 steps)
-  no_key_is_wrap_and_dec_ind2 (all-traces): verified (540 steps)
-  cannot_obtain_key_ind (all-traces): verified (395 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -15927,12 +15373,13 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 270.052537099s
-  dec_limits (all-traces): verified (290 steps)
-  wrap_key_origins (all-traces): verified (1140 steps)
-  no_key_is_wrap_and_dec_ind (all-traces): verified (140 steps)
+  processing time: 0.112403032s
+  
+  dec_limits (all-traces): verified (281 steps)
+  wrap_key_origins (all-traces): verified (1110 steps)
+  no_key_is_wrap_and_dec_ind (all-traces): verified (138 steps)
   no_key_is_wrap_and_dec_ind2 (all-traces): verified (540 steps)
-  cannot_obtain_key_ind (all-traces): verified (395 steps)
+  cannot_obtain_key_ind (all-traces): verified (310 steps)
 
 ==============================================================================
 */

@@ -43,84 +43,82 @@ simplify
 solve( State_111121212111111( signed, signed2, sk1, skT, ct, pk2
        ) ▶₀ #i )
   case ifctpkskpkcheckgetmsgsignedpksk_0_11112121211111
-  solve( !Semistate_111121212121( skT ) ▶₀ #j )
-    case p_1_111121212
-    solve( !KU( sign(<sign(ct, sk1.1), sign(ct, sk2)>, ~n.1) ) @ #vk )
+  solve( State_11112121212111111( skT, xsig, xsig1, xsig2, pk1, pk2.1
+         ) ▶₀ #j )
+    case ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111
+    solve( !KU( sign(<<pk(x), pk(sk1), pk2>, sign(<pk(x), pk(sk1), pk2>, sk1)
+                     >,
+                     ~n)
+           ) @ #vk )
       case c_sign
-      solve( !KU( sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, ~n)
-             ) @ #vk.1 )
+      solve( !KU( sign(<sign(pk(x), x), sign(pk(x), x.1)>, ~n.1) ) @ #vk.2 )
         case c_sign
-        by solve( !KU( ~n.1 ) @ #vk.3 )
+        by solve( !KU( ~n ) @ #vk.8 )
       next
-        case unlockct_0_111111111211
-        by solve( !KU( ~n.1 ) @ #vk.3 )
-      qed
-    next
-      case unlockct_0_1111211111111211
-      solve( !KU( pcs(sign(ct, sk1.1), pk(sk2), pk(~n.1)) ) @ #vk.11 )
-        case c_pcs
-        solve( !KU( sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, ~n)
-               ) @ #vk.2 )
-          case c_sign
-          by solve( !KU( ~n ) @ #vk.17 )
-        next
-          case unlockct_0_111111111211
-          solve( ((#vr.18 < #vr.29) ∧
-                  (∃ #t2.
-                    (Unlock_1( '1', ~n.2, ct ) @ #t2)
-                   ∧
-                    (#vr.18 < #t2) ∧
-                    (#t2 < #vr.29) ∧
-                    (∀ #t0 pp. (Unlock( pp, ~n.2, ct ) @ #t0) ⇒ #t0 = #t2) ∧
-                    (∀ pp lpp #t0.
-                      (Lock( pp, lpp, ct ) @ #t0)
-                     ⇒
-                      ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
-                    (∀ pp lpp #t0.
-                      (Unlock( pp, lpp, ct ) @ #t0)
-                     ⇒
-                      ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                 (#vr.29 < #vr.18) )
-            case case_1
-            by contradiction /* cyclic */
-          next
-            case case_2
-            by contradiction /* cyclic */
-          qed
+        case unlockct_0_1111211111111211
+        solve( !KU( pcs(sign(pk(x), x), pk(x.1), pk(~n.1)) ) @ #vk.19 )
+          case c_pcs
+          by solve( !KU( ~n ) @ #vk.13 )
+        qed
+      next
+        case unlockct_0_111121211111111211
+        solve( !KU( pcs(sign(pk(x), x.1), pk(x), pk(~n.1)) ) @ #vk.20 )
+          case c_pcs
+          by solve( !KU( ~n ) @ #vk.13 )
         qed
       qed
     next
-      case unlockct_0_111121211111111211
-      solve( !KU( pcs(sign(ct, sk2), pk(sk1.1), pk(~n.1)) ) @ #vk.12 )
-        case c_pcs
-        solve( !KU( sign(<<ct, pk(sk1), pk2>, sign(<ct, pk(sk1), pk2>, sk1)>, ~n)
-               ) @ #vk.2 )
-          case c_sign
-          by solve( !KU( ~n ) @ #vk.17 )
+      case unlockct_0_111111111211
+      solve( !KU( sign(<sign(pk(x), x), sign(pk(x), x.1)>, ~n.1) ) @ #vk.2 )
+        case c_sign
+        by solve( !KU( ~n.1 ) @ #vk.15 )
+      next
+        case unlockct_0_1111211111111211
+        solve( ((#vr.22 < #vr.30) ∧
+                (∃ #t2.
+                  (Unlock_0( '0', ~n.2, pk(x) ) @ #t2)
+                 ∧
+                  (#vr.22 < #t2) ∧
+                  (#t2 < #vr.30) ∧
+                  (∀ #t0 pp. (Unlock( pp, ~n.2, pk(x) ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp lpp #t0.
+                    (Lock( pp, lpp, pk(x) ) @ #t0)
+                   ⇒
+                    ((#t0 < #vr.22) ∨ (#t0 = #vr.22) ∨ (#t2 < #t0))) ∧
+                  (∀ pp lpp #t0.
+                    (Unlock( pp, lpp, pk(x) ) @ #t0)
+                   ⇒
+                    ((#t0 < #vr.22) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+               (#vr.30 < #vr.22) )
+          case case_1
+          by contradiction /* cyclic */
         next
-          case unlockct_0_111111111211
-          solve( ((#vr.18 < #vr.30) ∧
-                  (∃ #t2.
-                    (Unlock_2( '2', ~n.2, ct ) @ #t2)
-                   ∧
-                    (#vr.18 < #t2) ∧
-                    (#t2 < #vr.30) ∧
-                    (∀ #t0 pp. (Unlock( pp, ~n.2, ct ) @ #t0) ⇒ #t0 = #t2) ∧
-                    (∀ pp lpp #t0.
-                      (Lock( pp, lpp, ct ) @ #t0)
-                     ⇒
-                      ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
-                    (∀ pp lpp #t0.
-                      (Unlock( pp, lpp, ct ) @ #t0)
-                     ⇒
-                      ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                 (#vr.30 < #vr.18) )
-            case case_1
-            by contradiction /* cyclic */
-          next
-            case case_2
-            by contradiction /* cyclic */
-          qed
+          case case_2
+          by contradiction /* cyclic */
+        qed
+      next
+        case unlockct_0_111121211111111211
+        solve( ((#vr.22 < #vr.30) ∧
+                (∃ #t2.
+                  (Unlock_0( '0', ~n.2, pk(x) ) @ #t2)
+                 ∧
+                  (#vr.22 < #t2) ∧
+                  (#t2 < #vr.30) ∧
+                  (∀ #t0 pp. (Unlock( pp, ~n.2, pk(x) ) @ #t0) ⇒ #t0 = #t2) ∧
+                  (∀ pp lpp #t0.
+                    (Lock( pp, lpp, pk(x) ) @ #t0)
+                   ⇒
+                    ((#t0 < #vr.22) ∨ (#t0 = #vr.22) ∨ (#t2 < #t0))) ∧
+                  (∀ pp lpp #t0.
+                    (Unlock( pp, lpp, pk(x) ) @ #t0)
+                   ⇒
+                    ((#t0 < #vr.22) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+               (#vr.30 < #vr.22) )
+          case case_1
+          by contradiction /* cyclic */
+        next
+          case case_2
+          by contradiction /* cyclic */
         qed
       qed
     qed
@@ -175,21 +173,22 @@ guarded formula characterizing all satisfying traces:
  (∀ ct #i. (Resolve2( ct ) @ #i) ⇒ ⊥)"
 */
 simplify
-solve( !Semistate_111121212121( skT ) ▶₀ #i )
-  case p_1_111121212
-  solve( !KU( sign(<sign(ct, sk1), sign(ct, sk2)>, ~n) ) @ #vk )
+solve( State_11112121212111111( skT, xsig, xsig1, xsig2, pk1, pk2
+       ) ▶₀ #i )
+  case ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111
+  solve( !KU( sign(<sign(pk(x), x), sign(pk(x), x.1)>, ~n) ) @ #vk.1 )
     case unlockct_0_111121211111111211
-    solve( !KU( pcs(sign(ct, sk2), pk(sk1), pk(~n)) ) @ #vk.11 )
+    solve( !KU( pcs(sign(pk(x), x.1), pk(x), pk(~n)) ) @ #vk.12 )
       case c_pcs
-      solve( !KU( pk(sk1) ) @ #vk.7 )
+      solve( !KU( pk(x) ) @ #vk.4 )
         case c_pk
-        solve( !KU( pk(sk2) ) @ #vk.10 )
+        solve( !KU( pk(x.1) ) @ #vk.9 )
           case c_pk
-          solve( !KU( sign(ct, sk1) ) @ #vk.11 )
+          solve( !KU( sign(pk(x), x) ) @ #vk.12 )
             case c_sign
-            solve( !KU( sign(ct, sk2) ) @ #vk.12 )
+            solve( !KU( sign(pk(x), x.1) ) @ #vk.13 )
               case c_sign
-              solve( !KU( pk(~n) ) @ #vk.13 )
+              solve( !KU( pk(~n) ) @ #vk.14 )
                 case p_1_
                 SOLVED // trace found
               qed
@@ -217,21 +216,22 @@ guarded formula characterizing all satisfying traces:
    (Resolve2( ct1 ) @ #i1) ∧ (Resolve2( ct2 ) @ #i2) ⇒ #i1 = #i2)"
 */
 simplify
-solve( !Semistate_111121212121( skT ) ▶₀ #i )
-  case p_1_111121212
-  solve( !KU( sign(<sign(ct, sk1), sign(ct, sk2)>, ~n) ) @ #vk )
+solve( State_11112121212111111( skT, xsig, xsig1, xsig2, pk1, pk2
+       ) ▶₀ #i )
+  case ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111
+  solve( !KU( sign(<sign(pk(x), x), sign(pk(x), x.1)>, ~n) ) @ #vk.1 )
     case unlockct_0_1111211111111211
-    solve( !KU( pcs(sign(ct, sk1), pk(sk2), pk(~n)) ) @ #vk.10 )
+    solve( !KU( pcs(sign(pk(x), x), pk(x.1), pk(~n)) ) @ #vk.11 )
       case c_pcs
-      solve( !KU( pk(sk1) ) @ #vk.7 )
+      solve( !KU( pk(x) ) @ #vk.4 )
         case c_pk
-        solve( !KU( pk(sk2) ) @ #vk.10 )
+        solve( !KU( pk(x.1) ) @ #vk.9 )
           case c_pk
-          solve( !KU( sign(ct, sk2) ) @ #vk.11 )
+          solve( !KU( sign(pk(x), x.1) ) @ #vk.12 )
             case c_sign
-            solve( !KU( sign(ct, sk1) ) @ #vk.12 )
+            solve( !KU( sign(pk(x), x) ) @ #vk.13 )
               case c_sign
-              solve( !KU( pk(~n) ) @ #vk.13 )
+              solve( !KU( pk(~n) ) @ #vk.14 )
                 case p_1_
                 SOLVED // trace found
               qed
@@ -242,6 +242,8 @@ solve( !Semistate_111121212121( skT ) ▶₀ #i )
     qed
   qed
 qed
+
+
 
 
 
@@ -1281,21 +1283,216 @@ rule (modulo E) p_1_111121212[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) p_1_11112121212[color=#ffffff, process="!"]:
+   [ !Semistate_111121212121( skT.1 ), In( <xsig.1, pk1.4, pk2.5> ) ]
+  -->
    [
-   !Semistate_111121212121( skT.1 ),
-   In( sign(<sign(ct, sk1.2), sign(ct, sk2.1)>, skT.1) )
+   Let_111121212121111( check_getmsg(xsig.1, pk(skT.1)), skT.1, xsig.1,
+                        pk1.4, pk2.5
+   )
    ]
-  --[ ResolveCert( ct ) ]->
-   [ ]
 
   /*
   rule (modulo AC) p_1_11112121212[color=#ffffff, process="!"]:
-     [
-     !Semistate_111121212121( skT ),
-     In( sign(<sign(ct, sk1), sign(ct, sk2)>, skT) )
-     ]
-    --[ ResolveCert( ct ) ]->
+     [ !Semistate_111121212121( skT ), In( <xsig, pk1, pk2> ) ]
+    -->
+     [ Let_111121212121111( z, skT, xsig, pk1, pk2 ) ]
+    variants (modulo AC)
+    1. skT   = skT.11
+       xsig  = xsig.11
+       z     = check_getmsg(xsig.11, pk(skT.11))
+    
+    2. skT   = x.11
+       xsig  = sign(x.12, x.11)
+       z     = x.12
+  */
+
+rule (modulo E) letxsigxsigcheckgetmsgxsigpkskT_1_11112121212111[color=#ffffff,
+                                                                 process="let <xsig1.1, xsig2.1>=check_getmsg(xsig.1, pk(skT.1))"]:
+   [ Let_111121212121111( <xsig1.1, xsig2.1>, skT.1, xsig.1, pk1.4, pk2.5 )
+   ]
+  -->
+   [ State_111121212121111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
+   ]
+
+  /*
+  rule (modulo AC) letxsigxsigcheckgetmsgxsigpkskT_1_11112121212111[color=#ffffff,
+                                                                    process="let <xsig1.1, xsig2.1>=check_getmsg(xsig.1, pk(skT.1))"]:
+     [ Let_111121212121111( <xsig1, xsig2>, skT, xsig, pk1, pk2 ) ]
+    -->
+     [ State_111121212121111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
+  */
+
+rule (modulo E) ifverifyxsigpkcheckgetmsgxsigpktrue_0_111121212121111[color=#40805f,
+                                                                      process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true"]:
+   [ State_111121212121111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
+   ]
+  --[ Pred_Eq( verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4)), true )
+  ]->
+   [ State_1111212121211111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
+   ]
+
+  /*
+  rule (modulo AC) ifverifyxsigpkcheckgetmsgxsigpktrue_0_111121212121111[color=#40805f,
+                                                                         process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true"]:
+     [ State_111121212121111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
+    --[ Pred_Eq( z, true ) ]->
+     [ State_1111212121211111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
+    variants (modulo AC)
+    1. pk1   = pk1.16
+       xsig1 = xsig1.13
+       z     = verify(xsig1.13, pk1.16, check_getmsg(xsig1.13, pk1.16))
+    
+    2. pk1   = pk(x.14)
+       xsig1 = sign(x.13, x.14)
+       z     = verify(sign(x.13, x.14), pk(x.14), x.13)
+    
+    3. pk1   = pk(x.13)
+       xsig1 = sign(pk(x.13), x.13)
+       z     = true
+  */
+
+rule (modulo E) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111[color=#40805f,
+                                                                        process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)"]:
+   [ State_1111212121211111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
+   ]
+  --[ Pred_Eq( check_getmsg(xsig1.1, pk1.4), check_getmsg(xsig2.1, pk2.5) )
+  ]->
+   [
+   State_11112121212111111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
+   ]
+
+  /*
+  rule (modulo AC) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111[color=#40805f,
+                                                                           process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)"]:
+     [ State_1111212121211111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
+    --[ Pred_Eq( z, z.1 ) ]->
+     [ State_11112121212111111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
+    variants (modulo AC)
+    1. pk1   = pk1.17
+       pk2   = pk2.18
+       xsig1 = xsig1.14
+       xsig2 = xsig2.14
+       z     = check_getmsg(xsig1.14, pk1.17)
+       z.1   = check_getmsg(xsig2.14, pk2.18)
+    
+    2. pk1   = pk1.19
+       pk2   = pk(x.15)
+       xsig1 = xsig1.16
+       xsig2 = sign(x.14, x.15)
+       z     = check_getmsg(xsig1.16, pk1.19)
+       z.1   = x.14
+    
+    3. pk1   = pk(x.15)
+       pk2   = pk2.20
+       xsig1 = sign(x.14, x.15)
+       xsig2 = xsig2.16
+       z     = x.14
+       z.1   = check_getmsg(xsig2.16, pk2.20)
+    
+    4. pk1   = pk(x.15)
+       pk2   = pk(x.17)
+       xsig1 = sign(x.14, x.15)
+       xsig2 = sign(x.16, x.17)
+       z     = x.14
+       z.1   = x.16
+  */
+
+rule (modulo E) eventResolveCertcheckgetmsgxsigpk_0_11112121212111111[color=#40805f,
+                                                                      process="event ResolveCert( check_getmsg(xsig1.1, pk1.4) );"]:
+   [
+   State_11112121212111111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
+   ]
+  --[ ResolveCert( check_getmsg(xsig1.1, pk1.4) ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventResolveCertcheckgetmsgxsigpk_0_11112121212111111[color=#40805f,
+                                                                         process="event ResolveCert( check_getmsg(xsig1.1, pk1.4) );"]:
+     [ State_11112121212111111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
+    --[ ResolveCert( z ) ]->
      [ ]
+    variants (modulo AC)
+    1. pk1   = pk1.16
+       xsig1 = xsig1.13
+       z     = check_getmsg(xsig1.13, pk1.16)
+    
+    2. pk1   = pk(x.14)
+       xsig1 = sign(x.13, x.14)
+       z     = x.13
+  */
+
+rule (modulo E) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_1_1111212121211111[color=#40805f,
+                                                                        process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)"]:
+   [ State_1111212121211111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
+   ]
+  --[
+  Pred_Not_Eq( check_getmsg(xsig1.1, pk1.4), check_getmsg(xsig2.1, pk2.5) )
+  ]->
+   [ ]
+
+  /*
+  rule (modulo AC) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_1_1111212121211111[color=#40805f,
+                                                                           process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)"]:
+     [ State_1111212121211111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
+    --[ Pred_Not_Eq( z, z.1 ) ]->
+     [ ]
+    variants (modulo AC)
+    1. pk1   = pk1.17
+       pk2   = pk2.18
+       xsig1 = xsig1.14
+       xsig2 = xsig2.14
+       z     = check_getmsg(xsig1.14, pk1.17)
+       z.1   = check_getmsg(xsig2.14, pk2.18)
+    
+    2. pk1   = pk1.19
+       pk2   = pk(x.15)
+       xsig1 = xsig1.16
+       xsig2 = sign(x.14, x.15)
+       z     = check_getmsg(xsig1.16, pk1.19)
+       z.1   = x.14
+    
+    3. pk1   = pk(x.15)
+       pk2   = pk2.20
+       xsig1 = sign(x.14, x.15)
+       xsig2 = xsig2.16
+       z     = x.14
+       z.1   = check_getmsg(xsig2.16, pk2.20)
+    
+    4. pk1   = pk(x.15)
+       pk2   = pk(x.17)
+       xsig1 = sign(x.14, x.15)
+       xsig2 = sign(x.16, x.17)
+       z     = x.14
+       z.1   = x.16
+  */
+
+rule (modulo E) ifverifyxsigpkcheckgetmsgxsigpktrue_1_111121212121111[color=#40805f,
+                                                                      process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true"]:
+   [ State_111121212121111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
+   ]
+  --[
+  Pred_Not_Eq( verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4)), true )
+  ]->
+   [ ]
+
+  /*
+  rule (modulo AC) ifverifyxsigpkcheckgetmsgxsigpktrue_1_111121212121111[color=#40805f,
+                                                                         process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true"]:
+     [ State_111121212121111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
+    --[ Pred_Not_Eq( z, true ) ]->
+     [ ]
+    variants (modulo AC)
+    1. pk1   = pk1.16
+       xsig1 = xsig1.13
+       z     = verify(xsig1.13, pk1.16, check_getmsg(xsig1.13, pk1.16))
+    
+    2. pk1   = pk(x.14)
+       xsig1 = sign(x.13, x.14)
+       z     = verify(sign(x.13, x.14), pk(x.14), x.13)
+    
+    3. pk1   = pk(x.13)
+       xsig1 = sign(pk(x.13), x.13)
+       z     = true
   */
 
 restriction set_in:
@@ -1371,28 +1568,21 @@ restriction locking_2:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/GJM-contract/contract.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/GJM-contract/contract.spthy
-
-  output:          examples/sapic/fast/GJM-contract/contract.spthy.tmp
-  processing time: 7.876769792s
-  aborted_and_resolved_exclusive (all-traces): verified (19 steps)
-  aborted_contract_reachable (exists-trace): verified (6 steps)
-  resolved1_contract_reachable (exists-trace): verified (10 steps)
-  resolved2_contract_reachable (exists-trace): verified (10 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1400,8 +1590,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/GJM-contract/contract.spthy
 
   output:          examples/sapic/fast/GJM-contract/contract.spthy.tmp
-  processing time: 7.876769792s
-  aborted_and_resolved_exclusive (all-traces): verified (19 steps)
+  processing time: 0.132154733s
+  
+  aborted_and_resolved_exclusive (all-traces): verified (18 steps)
   aborted_contract_reachable (exists-trace): verified (6 steps)
   resolved1_contract_reachable (exists-trace): verified (10 steps)
   resolved2_contract_reachable (exists-trace): verified (10 steps)

@@ -13,19 +13,21 @@ rule (modulo E) Setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( ) ]->
    [
-   Reader( ('1'+diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>)))
+   Reader( ('1'++
+            diff((<~k1, ~id1>++<~k2, ~id2>), (<~k1, ~id1>++<~k1, ~id1>)))
    ),
-   Tag( ('1'+diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>))) )
+   Tag( ('1'++diff((<~k1, ~id1>++<~k2, ~id2>), (<~k1, ~id1>++<~k1, ~id1>)))
+   )
    ]
 
 rule (modulo E) select_tag:
-   [ Tag( (z+<~k, ~id>) ) ]
-  --[ Tag( (z+<~k, ~id>) ) ]->
+   [ Tag( (z++<~k, ~id>) ) ]
+  --[ Tag( (z++<~k, ~id>) ) ]->
    [ TagRun( ~k, ~id ), Tag( z ) ]
 
 rule (modulo E) select_reader:
-   [ Reader( (z+<~k, ~id>) ) ]
-  --[ Reader( (z+<~k, ~id>) ) ]->
+   [ Reader( (z++<~k, ~id>) ) ]
+  --[ Reader( (z++<~k, ~id>) ) ]->
    [ ReaderRun( ~k, ~id ), Reader( z ) ]
 
 rule (modulo E) reader1:
@@ -65,19 +67,19 @@ restriction equality [left]:
   // safety formula
 
 restriction max_number_of_tags_tag [right]:
-  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Tag( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag [left]:
-  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Tag( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag_reader [right]:
-  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag_reader [left]:
-  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction unique [right]:
@@ -186,7 +188,12 @@ guarded formula characterizing all satisfying traces:
 */
 by sorry
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Check presence of the --prove/--lemma arguments in theory:
+  --> 'Observational_equivalence' from arguments do(es) not correspond to a specified lemma in the theory 
+*/
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -204,15 +211,15 @@ rule-equivalence
             case select_reader
             step( solve( !KU( lh((h(z)⊕rot(~id, h(z)))) ) @ #vk.3 ) )
               case tag1
-              step( solve( Reader( (z.1+<~k, ~id>) ) ▶₀ #vr.2 ) )
+              step( solve( Reader( (z.1++<~k, ~id>) ) ▶₀ #vr.2 ) )
                 case Setup
-                step( solve( Tag( (z.1+<~k.1, ~id>) ) ▶₀ #vr.5 ) )
+                step( solve( Tag( (z.1++<~k.1, ~id>) ) ▶₀ #vr.5 ) )
                   case Setup
                   step( solve( !KU( rh((h(z)⊕rot(~id, h(z)))) ) @ #vk.2 ) )
                     case reader2
-                    step( solve( Reader( (z.1+<~k.1, ~id>) ) ▶₀ #vr.9 ) )
+                    step( solve( Reader( (z.1++<~k.1, ~id>) ) ▶₀ #vr.9 ) )
                       case select_reader
-                      step( solve( Reader( (z.1+<~k.1, ~id>+<~k.2, ~id.1>) ) ▶₀ #vr.10 ) )
+                      step( solve( Reader( (z.1++<~k.1, ~id>++<~k.2, ~id.1>) ) ▶₀ #vr.10 ) )
                         case Setup
                         step( solve( splitEqs(0) ) )
                           case split_case_3
@@ -252,29 +259,19 @@ rule-equivalence
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/CH07-UK3.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
-
-  output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 372.043568197s
-  RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
-  LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
-  RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
-  LHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
-  RHS :  executable (exists-trace): analysis incomplete (1 steps)
-  LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (22 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -282,7 +279,11 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 372.043568197s
+  processing time: 0.076130535s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)

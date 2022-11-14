@@ -518,26 +518,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/bilinear/RYY.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/bilinear/RYY.spthy
-
-  output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 7.663440743s
-  key_agreement_reachable (exists-trace): verified (11 steps)
-  key_secrecy_WPFS (all-traces): verified (53 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -545,7 +540,8 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 7.663440743s
+  processing time: 0.051995722s
+  
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)
 

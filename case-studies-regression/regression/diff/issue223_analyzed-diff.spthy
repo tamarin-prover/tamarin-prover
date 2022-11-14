@@ -22,7 +22,7 @@ rule (modulo E) Attack3:
    Out( fake(~ni1, ~rnd1, ~ltkV1, ~ni1) ), Out( ~ltkV1 )
    ]
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -3234,23 +3234,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/regression/diff/issue223.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/diff/issue223.spthy
-
-  output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 8.343639432s
-  DiffLemma:  Observational_equivalence : verified (1082 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -3258,7 +3254,8 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 8.343639432s
+  processing time: 0.06311954s
+  
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ==============================================================================

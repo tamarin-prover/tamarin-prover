@@ -36,8 +36,8 @@ rule (modulo E) Proto1:
    [ Fr( ~ekA ), !Ltk( $A, ltkA ) ]
   -->
    [
-   PState( $A, ($B+$C), ~ekA ),
-   Out( <pmult(~ekA, 'P'), sign(<$A, ($B+$C), pmult(~ekA, 'P')>, ltkA)> ),
+   PState( $A, ($B++$C), ~ekA ),
+   Out( <pmult(~ekA, 'P'), sign(<$A, ($B++$C), pmult(~ekA, 'P')>, ltkA)> ),
    !Ephk( ~ekA )
    ]
 
@@ -45,21 +45,21 @@ rule (modulo E) Proto1:
 
 rule (modulo E) Proto2:
    [
-   PState( $A, ($B+$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
-   In( <XB, sign(<$B, ($A+$C), XB>, ltkB)> ),
-   In( <XC, sign(<$C, ($A+$B), XC>, ltkC)> )
+   PState( $A, ($B++$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
+   In( <XB, sign(<$B, ($A++$C), XB>, ltkB)> ),
+   In( <XC, sign(<$C, ($A++$B), XC>, ltkC)> )
    ]
-  --[ SessionKey( $A, ($B+$C), em(XB, XC)^~ekA ) ]->
+  --[ SessionKey( $A, ($B++$C), em(XB, XC)^~ekA ) ]->
    [ ]
 
   /*
   rule (modulo AC) Proto2:
      [
-     PState( $A, ($B+$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
-     In( <XB, sign(<$B, ($A+$C), XB>, ltkB)> ),
-     In( <XC, sign(<$C, ($A+$B), XC>, ltkC)> )
+     PState( $A, ($B++$C), ~ekA ), !Pk( $B, pk(ltkB) ), !Pk( $C, pk(ltkC) ),
+     In( <XB, sign(<$B, ($A++$C), XB>, ltkB)> ),
+     In( <XC, sign(<$C, ($A++$B), XC>, ltkC)> )
      ]
-    --[ SessionKey( $A, ($B+$C), z ) ]->
+    --[ SessionKey( $A, ($B++$C), z ) ]->
      [ ]
     variants (modulo AC)
       1. ~ekA  = ~ekA.10
@@ -871,9 +871,9 @@ rule (modulo E) EphkRev:
 lemma session_key_establish:
   exists-trace
   "∃ A B C #ia #ib #ic k.
-    ((((((((SessionKey( A, (B+C), k ) @ #ia) ∧
-           (SessionKey( B, (A+C), k ) @ #ib)) ∧
-          (SessionKey( C, (A+B), k ) @ #ic)) ∧
+    ((((((((SessionKey( A, (B++C), k ) @ #ia) ∧
+           (SessionKey( B, (A++C), k ) @ #ib)) ∧
+          (SessionKey( C, (A++B), k ) @ #ic)) ∧
          (¬(A = B))) ∧
         (¬(B = C))) ∧
        (¬(A = C))) ∧
@@ -883,9 +883,9 @@ lemma session_key_establish:
 /*
 guarded formula characterizing all satisfying traces:
 "∃ A B C #ia #ib #ic k.
-  (SessionKey( A, (B+C), k ) @ #ia) ∧
-  (SessionKey( B, (A+C), k ) @ #ib) ∧
-  (SessionKey( C, (A+B), k ) @ #ic)
+  (SessionKey( A, (B++C), k ) @ #ia) ∧
+  (SessionKey( B, (A++C), k ) @ #ib) ∧
+  (SessionKey( C, (A++B), k ) @ #ic)
  ∧
   (¬(A = B)) ∧
   (¬(B = C)) ∧
@@ -895,41 +895,41 @@ guarded formula characterizing all satisfying traces:
   (∀ #j. (LtkReveal( C ) @ #j) ⇒ ⊥)"
 */
 simplify
-solve( SessionKey( A, (B+C), k ) @ #ia )
+solve( SessionKey( A, (B++C), k ) @ #ia )
   case Proto2_case_1
-  solve( PState( $A, ($B+$C), ~ekA ) ▶₀ #ia )
+  solve( PState( $A, ($B++$C), ~ekA ) ▶₀ #ia )
     case Proto1
     solve( !Pk( $B, pk(ltkB) ) ▶₁ #ia )
       case Register_pk
       solve( !Pk( $C, pk(ltkC) ) ▶₂ #ia )
         case Register_pk
-        solve( SessionKey( $B, ($A+$C), k ) @ #ib )
+        solve( SessionKey( $B, ($A++$C), k ) @ #ib )
           case Proto2_case_1
-          solve( PState( $B, ($A+$C), ~ekA.1 ) ▶₀ #ib )
+          solve( PState( $B, ($A++$C), ~ekA.1 ) ▶₀ #ib )
             case Proto1
             solve( !Pk( $A, pk(ltkB) ) ▶₁ #ib )
               case Register_pk
               solve( !Pk( $C, pk(ltkC) ) ▶₂ #ib )
                 case Register_pk
-                solve( SessionKey( $C, ($A+$B), k ) @ #ic )
+                solve( SessionKey( $C, ($A++$B), k ) @ #ic )
                   case Proto2_case_1
-                  solve( PState( $C, ($A+$B), ~ekA.2 ) ▶₀ #ic )
+                  solve( PState( $C, ($A++$B), ~ekA.2 ) ▶₀ #ic )
                     case Proto1
                     solve( !Pk( $A, pk(ltkB) ) ▶₁ #ic )
                       case Register_pk
                       solve( !Pk( $B, pk(ltkC) ) ▶₂ #ic )
                         case Register_pk
-                        solve( !KU( sign(<$B, ($A+$C), XB>, ~ltk) ) @ #vk.2 )
+                        solve( !KU( sign(<$B, ($A++$C), XB>, ~ltk) ) @ #vk.2 )
                           case Proto1
-                          solve( !KU( sign(<$C, ($A+$B), XC>, ~ltk.1) ) @ #vk.5 )
+                          solve( !KU( sign(<$C, ($A++$B), XC>, ~ltk.1) ) @ #vk.5 )
                             case Proto1
-                            solve( !KU( sign(<$A, ($B+$C), XB>, ~ltk.2) ) @ #vk.8 )
+                            solve( !KU( sign(<$A, ($B++$C), XB>, ~ltk.2) ) @ #vk.8 )
                               case Proto1
-                              solve( !KU( sign(<$C, ($A+$B), pmult(x, 'P')>, ~ltk.3) ) @ #vk.11 )
+                              solve( !KU( sign(<$C, ($A++$B), pmult(x, 'P')>, ~ltk.3) ) @ #vk.11 )
                                 case Proto1
-                                solve( !KU( sign(<$A, ($B+$C), XB>, ~ltk.4) ) @ #vk.14 )
+                                solve( !KU( sign(<$A, ($B++$C), XB>, ~ltk.4) ) @ #vk.14 )
                                   case Proto1
-                                  solve( !KU( sign(<$B, ($A+$C), pmult(x, 'P')>, ~ltk.5) ) @ #vk.17 )
+                                  solve( !KU( sign(<$B, ($A++$C), pmult(x, 'P')>, ~ltk.5) ) @ #vk.17 )
                                     case Proto1
                                     solve( splitEqs(3) )
                                       case split_case_3
@@ -978,7 +978,7 @@ qed
 lemma Session_Key_Secrecy_PFS:
   all-traces
   "∀ A B C sessKey #i #k.
-    ((SessionKey( A, (B+C), sessKey ) @ #i) ∧ (K( sessKey ) @ #k)) ⇒
+    ((SessionKey( A, (B++C), sessKey ) @ #i) ∧ (K( sessKey ) @ #k)) ⇒
     ((((∃ #l. (LtkReveal( A ) @ #l) ∧ (#l < #i)) ∨
        (∃ #l. (LtkReveal( B ) @ #l) ∧ (#l < #i))) ∨
       (∃ #l. (LtkReveal( C ) @ #l) ∧ (#l < #i))) ∨
@@ -986,7 +986,7 @@ lemma Session_Key_Secrecy_PFS:
 /*
 guarded formula characterizing all counter-examples:
 "∃ A B C sessKey #i #k.
-  (SessionKey( A, (B+C), sessKey ) @ #i) ∧ (K( sessKey ) @ #k)
+  (SessionKey( A, (B++C), sessKey ) @ #i) ∧ (K( sessKey ) @ #k)
  ∧
   (∀ #l. (LtkReveal( A ) @ #l) ⇒ ¬(#l < #i)) ∧
   (∀ #l. (LtkReveal( B ) @ #l) ⇒ ¬(#l < #i)) ∧
@@ -994,17 +994,17 @@ guarded formula characterizing all counter-examples:
   (∀ #l x. (EphkReveal( x ) @ #l) ⇒ ¬(#l < #i))"
 */
 simplify
-solve( SessionKey( A, (B+C), sessKey ) @ #i )
+solve( SessionKey( A, (B++C), sessKey ) @ #i )
   case Proto2
-  solve( PState( $A, ($B+$C), ~ekA ) ▶₀ #i )
+  solve( PState( $A, ($B++$C), ~ekA ) ▶₀ #i )
     case Proto1
     solve( !Pk( $C, pk(ltkB) ) ▶₁ #i )
       case Register_pk
       solve( !Pk( $B, pk(ltkC) ) ▶₂ #i )
         case Register_pk
-        solve( !KU( sign(<$C, ($A+$B), XB>, ~ltk) ) @ #vk.3 )
+        solve( !KU( sign(<$C, ($A++$B), XB>, ~ltk) ) @ #vk.3 )
           case Proto1
-          solve( !KU( sign(<$B, ($A+$C), XC>, ~ltk.1) ) @ #vk.6 )
+          solve( !KU( sign(<$B, ($A++$C), XC>, ~ltk.1) ) @ #vk.6 )
             case Proto1
             solve( !KU( em('P', 'P')^(~ekA*~ekA.1*~ekA.2) ) @ #vk.3 )
               case Proto1_case_4
@@ -1032,26 +1032,21 @@ solve( SessionKey( A, (B+C), sessKey ) @ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/bilinear/Joux_EphkRev.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/bilinear/Joux_EphkRev.spthy
-
-  output:          examples/ake/bilinear/Joux_EphkRev.spthy.tmp
-  processing time: 28.081048642s
-  session_key_establish (exists-trace): verified (28 steps)
-  Session_Key_Secrecy_PFS (all-traces): falsified - found trace (14 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1059,7 +1054,8 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux_EphkRev.spthy
 
   output:          examples/ake/bilinear/Joux_EphkRev.spthy.tmp
-  processing time: 28.081048642s
+  processing time: 0.052346875s
+  
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): falsified - found trace (14 steps)
 

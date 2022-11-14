@@ -12,7 +12,7 @@ rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( 'setup' ) ]->
    [
-   Transcript( <~k1, ~id1> ), Reader( (<~k1, ~id1>+<~k2, ~id2>) ),
+   Transcript( <~k1, ~id1> ), Reader( (<~k1, ~id1>++<~k2, ~id2>) ),
    TagRun( diff(<~k1, ~id1>, <~k2, ~id2>) )
    ]
 
@@ -22,7 +22,7 @@ rule (modulo E) transcript:
    [ Out( ~r1 ), Out( <~r2, (~id⊕~r2), (~r2⊕h(<~r1, ~k>))> ) ]
 
 rule (modulo E) initiatereader:
-   [ Reader( (d1+d2) ), Fr( ~r0 ) ] --> [ ReaderRun( d1 ) ]
+   [ Reader( (d1++d2) ), Fr( ~r0 ) ] --> [ ReaderRun( d1 ) ]
 
 rule (modulo E) reader1:
    [ Fr( ~r1 ) ]
@@ -57,7 +57,7 @@ restriction equality [left]:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -102,23 +102,19 @@ rule-equivalence
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/KCL07-UK2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
-
-  output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 254.812917271s
-  DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -126,7 +122,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 254.812917271s
+  processing time: 0.102268167s
+  
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ==============================================================================

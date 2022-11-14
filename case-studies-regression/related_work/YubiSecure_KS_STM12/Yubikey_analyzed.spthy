@@ -193,7 +193,7 @@ next
       case case_1
       solve( Server( pid, sid, otc1 ) ▶₀ #t1 )
         case BuyANewYubikey
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -486,7 +486,7 @@ next
         qed
       next
         case Server_ReceiveOTP_NewSession_case_1
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -637,7 +637,7 @@ next
         qed
       next
         case Server_ReceiveOTP_NewSession_case_2
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -896,7 +896,7 @@ next
         qed
       next
         case Server_ReceiveOTP_NewSession_case_3
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -1047,7 +1047,7 @@ next
         qed
       next
         case Server_ReceiveOTP_NewSession_case_4
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -3759,29 +3759,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
-
-  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 15.349304339s
-  Login_reachable (exists-trace): verified (12 steps)
-  slightly_weaker_invariant (all-traces): verified (1141 steps)
-  no_replay (all-traces): verified (4 steps)
-  injective_correspondance (all-traces): verified (23 steps)
-  Login_invalidates_smaller_counters (all-traces): verified (4 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -3789,7 +3781,8 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 15.349304339s
+  processing time: 0.105907869s
+  
   Login_reachable (exists-trace): verified (12 steps)
   slightly_weaker_invariant (all-traces): verified (1141 steps)
   no_replay (all-traces): verified (4 steps)

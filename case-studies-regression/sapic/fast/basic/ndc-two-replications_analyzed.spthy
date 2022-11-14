@@ -159,29 +159,21 @@ restriction Progress_21_to_211:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/ndc-two-replications.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/ndc-two-replications.spthy
-
-  output:          examples/sapic/fast/basic/ndc-two-replications.spthy.tmp
-  processing time: 0.043962286s
-  A_possible (exists-trace): verified (4 steps)
-  B_possible (exists-trace): verified (4 steps)
-  no_progress_possible (exists-trace): verified (2 steps)
-  A_exclusive (all-traces): verified (3 steps)
-  B_exclusive (all-traces): verified (3 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -189,7 +181,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-two-replications.spthy
 
   output:          examples/sapic/fast/basic/ndc-two-replications.spthy.tmp
-  processing time: 0.043962286s
+  processing time: 0.049835337s
+  
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)
   no_progress_possible (exists-trace): verified (2 steps)

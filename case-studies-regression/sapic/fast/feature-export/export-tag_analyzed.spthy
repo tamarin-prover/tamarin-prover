@@ -11,25 +11,21 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-export/export-tag.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-export/export-tag.spthy
-
-  output:          examples/sapic/fast/feature-export/export-tag.spthy.tmp
-  processing time: 0.001401361s
-
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -37,8 +33,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-export/export-tag.spthy
 
   output:          examples/sapic/fast/feature-export/export-tag.spthy.tmp
-  processing time: 0.001401361s
-
+  processing time: 0.048153896s
+  
 
 ==============================================================================
 */

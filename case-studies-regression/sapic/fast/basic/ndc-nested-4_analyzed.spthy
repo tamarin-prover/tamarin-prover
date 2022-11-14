@@ -185,28 +185,21 @@ restriction Progress__to_11_or_2111_or_2211:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
+Compiled at: 2022-10-27 12:37:48.599599113 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/ndc-nested-4.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/ndc-nested-4.spthy
-
-  output:          examples/sapic/fast/basic/ndc-nested-4.spthy.tmp
-  processing time: 0.062958572s
-  A_possible (exists-trace): verified (5 steps)
-  B_possible (exists-trace): verified (5 steps)
-  C_possible (exists-trace): verified (5 steps)
-  oneEventAlways (all-traces): verified (5 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -214,7 +207,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-4.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-4.spthy.tmp
-  processing time: 0.062958572s
+  processing time: 0.049922618s
+  
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)
   C_possible (exists-trace): verified (5 steps)
