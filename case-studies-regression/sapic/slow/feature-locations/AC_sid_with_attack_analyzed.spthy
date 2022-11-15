@@ -706,7 +706,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 0.074928334s
+  processing time: 0.074732734s
   
   attested_comput (exists-trace): verified (31 steps)
 

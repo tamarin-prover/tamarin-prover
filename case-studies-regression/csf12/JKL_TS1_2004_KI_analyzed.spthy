@@ -188,7 +188,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2004_KI.spthy.tmp
-  processing time: 0.047418788s
+  processing time: 0.083276091s
   
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)

@@ -47,7 +47,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let-blocks3.spthy
 
   output:          examples/sapic/fast/basic/let-blocks3.spthy.tmp
-  processing time: 0.055915857s
+  processing time: 0.062042964s
   
 
 ==============================================================================

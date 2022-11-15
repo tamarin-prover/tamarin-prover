@@ -289,7 +289,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
-  processing time: 0.096406804s
+  processing time: 0.076848322s
   
   Secrecy (all-traces): verified (15 steps)
   injectiveagreement_B (all-traces): falsified - found trace (14 steps)

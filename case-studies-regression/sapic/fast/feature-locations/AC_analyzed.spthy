@@ -396,7 +396,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.076912565s
+  processing time: 0.077632441s
   
   can_run_v (exists-trace): verified (8 steps)
   simp (all-traces): verified (7 steps)

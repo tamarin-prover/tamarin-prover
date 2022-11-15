@@ -215,7 +215,7 @@ summary of summaries:
 analyzed: examples/features//multiset/NumberSubtermTests.spthy
 
   output:          examples/features//multiset/NumberSubtermTests.spthy.tmp
-  processing time: 0.082584725s
+  processing time: 0.078564965s
   
   SnatChain (all-traces): verified (2 steps)
   SnegRecurse (all-traces): verified (2 steps)

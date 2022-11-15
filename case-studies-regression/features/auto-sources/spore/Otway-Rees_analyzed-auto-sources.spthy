@@ -3378,7 +3378,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
 
   output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
-  processing time: 0.094441059s
+  processing time: 0.126021447s
   
   Secrecy (all-traces): verified (40 steps)
   injectiveagreement_B (all-traces): verified (50 steps)

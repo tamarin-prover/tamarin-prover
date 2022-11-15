@@ -717,7 +717,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          examples/classic/NSLPK3_untagged.spthy.tmp
-  processing time: 0.085433858s
+  processing time: 0.076955756s
   
   types (all-traces): verified (37 steps)
   nonce_secrecy (all-traces): verified (133 steps)

@@ -1936,7 +1936,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 0.082947363s
+  processing time: 0.082916502s
   
   source (all-traces): verified (120 steps)
   reachability_left (exists-trace): verified (14 steps)

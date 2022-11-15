@@ -70,7 +70,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.053870994s
+  processing time: 0.063226332s
   
   semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
 

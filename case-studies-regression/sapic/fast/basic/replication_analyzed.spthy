@@ -64,7 +64,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.044814321s
+  processing time: 0.046658682s
   
   onlyOneSecret (exists-trace): verified (4 steps)
 

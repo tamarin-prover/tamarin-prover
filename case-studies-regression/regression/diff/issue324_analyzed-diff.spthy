@@ -157,7 +157,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue324.spthy
 
   output:          examples/regression/diff/issue324.spthy.tmp
-  processing time: 0.063433099s
+  processing time: 0.063637355s
   
   DiffLemma:  Observational_equivalence : analysis incomplete (47 steps)
 

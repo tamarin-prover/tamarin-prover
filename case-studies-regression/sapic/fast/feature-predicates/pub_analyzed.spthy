@@ -165,7 +165,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/pub.spthy
 
   output:          examples/sapic/fast/feature-predicates/pub.spthy.tmp
-  processing time: 0.068633939s
+  processing time: 0.051089623s
   
 
 ==============================================================================

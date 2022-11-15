@@ -42,7 +42,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issue332-const-fun-clash.spthy
 
   output:          examples/sapic/fast/regression-tests/issue332-const-fun-clash.spthy.tmp
-  processing time: 0.060510406s
+  processing time: 0.05745166s
   
 
 ==============================================================================

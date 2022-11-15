@@ -193,7 +193,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Create_Use_Destroy.spthy
 
   output:          examples/loops/Minimal_Create_Use_Destroy.spthy.tmp
-  processing time: 0.068416856s
+  processing time: 0.048485855s
   
   Use_charn (all-traces): verified (8 steps)
   Destroy_charn (all-traces): verified (28 steps)

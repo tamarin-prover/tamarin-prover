@@ -92,7 +92,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
 
   output:          examples/sapic/fast/feature-ass-immediate/test-channelin.spthy.tmp
-  processing time: 0.048293141s
+  processing time: 0.061838447s
   
   intuitiveTest (all-traces): verified (3 steps)
 

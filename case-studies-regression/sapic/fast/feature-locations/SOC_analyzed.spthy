@@ -1022,7 +1022,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 0.086834253s
+  processing time: 0.090091967s
   
   secrecy (all-traces): verified (5 steps)
   Reach (exists-trace): verified (6 steps)

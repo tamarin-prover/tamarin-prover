@@ -1514,7 +1514,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 0.048194308s
+  processing time: 0.076695776s
   
   coins (all-traces): verified (322 steps)
   exec (exists-trace): verified (8 steps)

@@ -916,7 +916,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant.spthy.tmp
-  processing time: 0.050993677s
+  processing time: 0.058037299s
   
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)

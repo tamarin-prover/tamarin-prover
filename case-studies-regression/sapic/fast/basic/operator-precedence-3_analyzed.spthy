@@ -112,7 +112,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.045726007s
+  processing time: 0.066384707s
   
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 

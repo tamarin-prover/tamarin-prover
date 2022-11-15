@@ -348,7 +348,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 0.07717248s
+  processing time: 0.074233864s
   
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)

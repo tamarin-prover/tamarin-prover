@@ -320,6 +320,10 @@ rule (modulo E) Proto3:
        emXBXC
              = x.962^(x.963*inv((~ex.486*x.964)))
        z     = x.962^(x.963*inv(x.964))
+    
+    7. emXBXC
+             = DH_neutral
+       z     = DH_neutral
   */
 
 lemma session_key_establish:
@@ -546,7 +550,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 0.086042559s
+  processing time: 0.079188786s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)

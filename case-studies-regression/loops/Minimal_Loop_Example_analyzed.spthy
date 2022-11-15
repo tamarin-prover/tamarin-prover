@@ -173,7 +173,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.052316381s
+  processing time: 0.056970005s
   
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)

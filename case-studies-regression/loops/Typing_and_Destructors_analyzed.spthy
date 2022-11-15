@@ -291,7 +291,7 @@ summary of summaries:
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          examples/loops/Typing_and_Destructors.spthy.tmp
-  processing time: 0.100906886s
+  processing time: 0.051007208s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

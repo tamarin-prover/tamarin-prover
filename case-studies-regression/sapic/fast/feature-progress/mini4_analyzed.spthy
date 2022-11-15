@@ -178,7 +178,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini4.spthy
 
   output:          examples/sapic/fast/feature-progress/mini4.spthy.tmp
-  processing time: 0.050174573s
+  processing time: 0.062986597s
   
   A_possible (exists-trace): verified (5 steps)
   B_impossible (all-traces): verified (4 steps)

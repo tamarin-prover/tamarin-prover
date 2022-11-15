@@ -247,7 +247,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-2.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-2.spthy.tmp
-  processing time: 0.060521773s
+  processing time: 0.048410199s
   
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)

@@ -379,7 +379,7 @@ summary of summaries:
 analyzed: examples/classic/NSPK3.spthy
 
   output:          examples/classic/NSPK3.spthy.tmp
-  processing time: 0.085950634s
+  processing time: 0.048072808s
   
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)

@@ -155,7 +155,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.053834836s
+  processing time: 0.071017476s
   
   not_secret (exists-trace): verified (4 steps)
   internal_comm (exists-trace): verified (3 steps)

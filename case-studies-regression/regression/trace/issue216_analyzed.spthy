@@ -4463,7 +4463,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue216.spthy
 
   output:          examples/regression/trace/issue216.spthy.tmp
-  processing time: 0.10459981s
+  processing time: 0.087103093s
   
   ClientAuth (exists-trace): verified (16 steps)
   Client_Auth_Both_Responds_Or_Either_Revealed (all-traces): verified (481 steps)

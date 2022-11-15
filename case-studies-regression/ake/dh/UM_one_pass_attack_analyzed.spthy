@@ -104,6 +104,9 @@ rule (modulo E) R_Complete:
     6. ~eb   = ~eb.139
        X     = x.271^(x.272*inv((~eb.139*x.273)))
        z     = x.271^(x.272*inv(x.273))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) R_Expire:
@@ -345,7 +348,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 0.084680845s
+  processing time: 0.08241981s
   
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)

@@ -1216,7 +1216,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 0.122103212s
+  processing time: 0.069768763s
   
   secrecy_enc (all-traces): verified (18 steps)
   init_server (all-traces): verified (42 steps)

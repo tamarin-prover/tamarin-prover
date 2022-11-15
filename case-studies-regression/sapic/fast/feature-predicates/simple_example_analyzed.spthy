@@ -73,7 +73,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.069386835s
+  processing time: 0.06502656s
   
   bogus_exists (exists-trace): verified (3 steps)
 

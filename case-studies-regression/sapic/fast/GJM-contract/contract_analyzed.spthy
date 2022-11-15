@@ -1590,7 +1590,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/GJM-contract/contract.spthy
 
   output:          examples/sapic/fast/GJM-contract/contract.spthy.tmp
-  processing time: 0.132154733s
+  processing time: 0.093186896s
   
   aborted_and_resolved_exclusive (all-traces): verified (18 steps)
   aborted_contract_reachable (exists-trace): verified (6 steps)

@@ -1672,7 +1672,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 0.097947106s
+  processing time: 0.107539359s
   
   reachV (exists-trace): verified (4 steps)
   secrecy_key (all-traces): verified (8 steps)

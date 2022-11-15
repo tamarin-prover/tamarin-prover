@@ -529,7 +529,7 @@ summary of summaries:
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          examples/loops/RFID_Simple.spthy.tmp
-  processing time: 0.072187317s
+  processing time: 0.047019856s
   
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)

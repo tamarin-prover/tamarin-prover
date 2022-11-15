@@ -8431,7 +8431,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-secret-channel/U2F.spthy
 
   output:          examples/sapic/fast/feature-secret-channel/U2F.spthy.tmp
-  processing time: 0.084358007s
+  processing time: 0.079770696s
   
   auth (all-traces): verified (2302 steps)
 

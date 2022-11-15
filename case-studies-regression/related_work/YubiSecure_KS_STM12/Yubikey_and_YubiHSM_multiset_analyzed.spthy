@@ -1250,7 +1250,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 0.113444945s
+  processing time: 0.054289554s
   
   transitivity (all-traces): verified (2 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)

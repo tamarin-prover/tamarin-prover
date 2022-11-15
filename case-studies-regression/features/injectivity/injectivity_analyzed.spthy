@@ -85,7 +85,7 @@ summary of summaries:
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.051522322s
+  processing time: 0.059412758s
   
   injectivity_check (all-traces): verified (9 steps)
 

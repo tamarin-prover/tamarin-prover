@@ -363,7 +363,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.068897201s
+  processing time: 0.062505378s
   
   can_run_p (exists-trace): verified (3 steps)
   can_run_v (exists-trace): verified (5 steps)

@@ -81,7 +81,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.06295111s
+  processing time: 0.063390643s
   
   crworks (exists-trace): verified (6 steps)
 

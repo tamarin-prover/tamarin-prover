@@ -497,7 +497,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 0.059082484s
+  processing time: 0.070243857s
   
   recentalive_tag (all-traces): verified (113 steps)
   executable (exists-trace): verified (17 steps)

@@ -1511,7 +1511,7 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          examples/ccs15/rfid-feldhofer.spthy.tmp
-  processing time: 0.07962553s
+  processing time: 0.09952167s
   
   RHS :  types (all-traces): verified (26 steps)
   LHS :  types (all-traces): verified (26 steps)

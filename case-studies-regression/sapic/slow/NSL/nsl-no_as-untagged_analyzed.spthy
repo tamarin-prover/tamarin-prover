@@ -1526,7 +1526,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 0.065414222s
+  processing time: 0.064457867s
   
   sanity1 (all-traces): falsified - found trace (7 steps)
   sanity2 (all-traces): falsified - found trace (8 steps)

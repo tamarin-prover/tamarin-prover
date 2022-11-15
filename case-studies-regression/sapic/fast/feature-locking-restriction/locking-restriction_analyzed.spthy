@@ -99,7 +99,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.071465309s
+  processing time: 0.06904456s
   
   ANotReachable (all-traces): verified (2 steps)
 

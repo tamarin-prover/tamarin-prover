@@ -238,7 +238,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.071534108s
+  processing time: 0.049182267s
   
   DiffLemma:  Observational_equivalence : verified (75 steps)
 

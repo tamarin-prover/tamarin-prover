@@ -208,6 +208,9 @@ rule (modulo E) I_Complete:
     6. ~ex   = ~ex.437
        Y     = x.866^(x.867*inv((~ex.437*x.868)))
        z     = x.866^(x.867*inv(x.868))
+    
+    7. Y     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) I_Expire:
@@ -323,6 +326,9 @@ rule (modulo E) R_Activate:
     6. ~ey   = ~ey.335
        X     = x.662^(x.663*inv((~ey.335*x.664)))
        z     = x.662^(x.663*inv(x.664))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) R_Complete:
@@ -501,6 +507,9 @@ rule (modulo E) R_Complete:
     6. ~ey   = ~ey.423
        X     = x.838^(x.839*inv((~ey.423*x.840)))
        z     = x.838^(x.839*inv(x.840))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) R_Expire:
@@ -600,6 +609,9 @@ rule (modulo E) UM1_R_Complete:
     6. ~eb   = ~eb.226
        X     = x.445^(x.446*inv((~eb.226*x.447)))
        z     = x.445^(x.446*inv(x.447))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) UM1_R_Expire:
@@ -863,7 +875,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 0.0969455s
+  processing time: 0.084554618s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)

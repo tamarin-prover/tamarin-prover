@@ -122,7 +122,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor3.spthy
 
   output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
-  processing time: 0.066292977s
+  processing time: 0.059061455s
   
   secrecybroken (all-traces): falsified - found trace (12 steps)
 

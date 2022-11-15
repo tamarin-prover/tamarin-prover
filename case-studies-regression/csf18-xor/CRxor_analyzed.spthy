@@ -537,7 +537,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.062021472s
+  processing time: 0.069809534s
   
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)

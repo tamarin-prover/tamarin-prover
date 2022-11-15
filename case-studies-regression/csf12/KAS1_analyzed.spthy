@@ -275,7 +275,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS1.spthy
 
   output:          examples/csf12/KAS1.spthy.tmp
-  processing time: 0.061536006s
+  processing time: 0.067027718s
   
   KAS1_key_secrecy (all-traces): verified (38 steps)
 

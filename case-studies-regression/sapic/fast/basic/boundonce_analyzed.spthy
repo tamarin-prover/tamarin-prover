@@ -40,7 +40,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/boundonce.spthy
 
   output:          examples/sapic/fast/basic/boundonce.spthy.tmp
-  processing time: 0.038305226s
+  processing time: 0.061225925s
   
 
 ==============================================================================

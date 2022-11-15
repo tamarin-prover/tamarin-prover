@@ -921,7 +921,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 0.057763939s
+  processing time: 0.089108062s
   
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)

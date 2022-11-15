@@ -1671,7 +1671,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Nssk_amended.spthy
 
   output:          examples/features/auto-sources/spore/Nssk_amended.spthy.tmp
-  processing time: 0.097309793s
+  processing time: 0.083935168s
   
   executability (exists-trace): verified (14 steps)
   Secrecy (all-traces): verified (10 steps)

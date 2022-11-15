@@ -166,7 +166,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Typing_Example.spthy
 
   output:          examples/loops/Minimal_Typing_Example.spthy.tmp
-  processing time: 0.095093424s
+  processing time: 0.069324035s
   
   sources_assertion (all-traces): verified (13 steps)
   Responder_secrecy (all-traces): verified (8 steps)

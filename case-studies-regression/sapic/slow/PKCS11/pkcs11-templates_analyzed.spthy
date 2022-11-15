@@ -22395,7 +22395,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 0.327879626s
+  processing time: 0.166424676s
   
   dec_limits (all-traces): verified (1397 steps)
   bad_keys (all-traces): verified (311 steps)

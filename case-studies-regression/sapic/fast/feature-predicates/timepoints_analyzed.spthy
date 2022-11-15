@@ -56,7 +56,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/timepoints.spthy
 
   output:          examples/sapic/fast/feature-predicates/timepoints.spthy.tmp
-  processing time: 0.060800312s
+  processing time: 0.058324313s
   
   hi (exists-trace): verified (2 steps)
   ho (exists-trace): verified (2 steps)

@@ -52,6 +52,9 @@ rule (modulo E) Step2:
     6. ~x    = ~x.9
        Y     = x.7^x.8
        z     = x.7^(x.8*~x.9)
+    
+    7. Y     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) RevealKey:
@@ -148,7 +151,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.066688304s
+  processing time: 0.074332198s
   
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)

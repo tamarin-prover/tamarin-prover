@@ -169,7 +169,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/reliable-channel.spthy
 
   output:          examples/sapic/fast/basic/reliable-channel.spthy.tmp
-  processing time: 0.04607113s
+  processing time: 0.064920581s
   
   A_possible (exists-trace): verified (3 steps)
   B_possible (exists-trace): verified (3 steps)

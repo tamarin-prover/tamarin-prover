@@ -8711,7 +8711,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 0.07373171s
+  processing time: 0.081462793s
   
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)

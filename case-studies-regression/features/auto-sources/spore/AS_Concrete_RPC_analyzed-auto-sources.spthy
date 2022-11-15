@@ -480,7 +480,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 0.090966606s
+  processing time: 0.083641518s
   
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)

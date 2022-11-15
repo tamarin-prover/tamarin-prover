@@ -529,7 +529,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 0.070402021s
+  processing time: 0.078068358s
   
   attested_comput_second_step (all-traces): falsified - found trace (15 steps)
 

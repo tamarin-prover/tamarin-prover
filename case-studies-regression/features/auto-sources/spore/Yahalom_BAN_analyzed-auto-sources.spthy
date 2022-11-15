@@ -395,7 +395,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 0.094676098s
+  processing time: 0.067621826s
   
   executability (exists-trace): verified (15 steps)
   secrecy (all-traces): verified (22 steps)

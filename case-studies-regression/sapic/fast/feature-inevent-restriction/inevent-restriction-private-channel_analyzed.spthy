@@ -105,7 +105,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.047093146s
+  processing time: 0.073513836s
   
   test (all-traces): verified (5 steps)
 

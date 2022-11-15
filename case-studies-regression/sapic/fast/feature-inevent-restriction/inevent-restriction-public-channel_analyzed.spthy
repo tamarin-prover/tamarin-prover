@@ -90,7 +90,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.056428348s
+  processing time: 0.063994933s
   
   test (all-traces): verified (4 steps)
 

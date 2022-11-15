@@ -253,7 +253,7 @@ summary of summaries:
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.06955784s
+  processing time: 0.049959003s
   
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)

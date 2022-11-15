@@ -1549,7 +1549,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_RPC.spthy.tmp
-  processing time: 0.067977803s
+  processing time: 0.08131433s
   
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (16 steps)

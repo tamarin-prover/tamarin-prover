@@ -572,7 +572,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 0.096507694s
+  processing time: 0.083220764s
   
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)

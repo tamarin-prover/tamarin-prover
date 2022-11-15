@@ -1071,7 +1071,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 0.106379941s
+  processing time: 0.063939006s
   
   executability (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (22 steps)

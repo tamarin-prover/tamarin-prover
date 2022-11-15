@@ -237,7 +237,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.054053188s
+  processing time: 0.062484474s
   
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)

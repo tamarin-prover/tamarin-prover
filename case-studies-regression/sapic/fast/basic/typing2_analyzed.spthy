@@ -55,7 +55,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing2.spthy
 
   output:          examples/sapic/fast/basic/typing2.spthy.tmp
-  processing time: 0.038428803s
+  processing time: 0.038280888s
   
 
 ==============================================================================

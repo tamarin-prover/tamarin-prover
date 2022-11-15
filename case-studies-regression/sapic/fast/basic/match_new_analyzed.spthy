@@ -89,7 +89,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/match_new.spthy
 
   output:          examples/sapic/fast/basic/match_new.spthy.tmp
-  processing time: 0.046695441s
+  processing time: 0.058702458s
   
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)

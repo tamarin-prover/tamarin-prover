@@ -65,7 +65,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing3.spthy
 
   output:          examples/sapic/fast/basic/typing3.spthy.tmp
-  processing time: 0.054863187s
+  processing time: 0.06027598s
   
 
 ==============================================================================

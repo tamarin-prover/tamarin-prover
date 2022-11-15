@@ -33,7 +33,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-export/export-tag.spthy
 
   output:          examples/sapic/fast/feature-export/export-tag.spthy.tmp
-  processing time: 0.048153896s
+  processing time: 0.058115933s
   
 
 ==============================================================================

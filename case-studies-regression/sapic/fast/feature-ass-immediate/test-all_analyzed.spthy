@@ -132,7 +132,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-ass-immediate/test-all.spthy
 
   output:          examples/sapic/fast/feature-ass-immediate/test-all.spthy.tmp
-  processing time: 0.06700428s
+  processing time: 0.060008958s
   
   intuitiveTest (all-traces): verified (5 steps)
 
