@@ -288,12 +288,22 @@ translatePatternFact (Fact tag _ ts) factType vars helperVars =
 
 showAtom :: String -> String
 showAtom a = case head a of
-  '~'  -> replaceDots $ tail a
-  '$'  -> replaceDots $ tail a
+  '~'  -> sanitizeAtom . replaceDots $ tail a
+  '$'  -> sanitizeAtom . replaceDots $ tail a
   '\'' -> 's' : (replaceDots . init $ tail a)
-  _    -> replaceDots a
+  _    -> sanitizeAtom $ replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
+    reserved_words = ["among", "axiom", "channel", "choice", "clauses", "const", "def", "diff",
+      "do", "elimtrue", "else", "equation", "equivalence", "event", "expand", "fail", "for",
+      "forall", "foreach", "free", "fun", "get", "if", "implementation", "in", "inj-event",
+      "insert", "lemma", "let", "letfun", "letproba", "new", "noninterf", "noselect", "not",
+      "nounif", "or", "otherwise", "out", "param", "phase", "pred", "proba", "process",
+      "proof", "public_vars", "putbegin", "query", "reduc", "restriction", "secret", "select",
+      "set", "suchthat", "sync", "table", "then", "type", "weaksecret", "yield"]
+    sanitizeAtom a = if a `List.elem` reserved_words
+                       then 'a' : a
+                       else a
 
 showAtom2 :: String -> String
 showAtom2 a = case head a of
