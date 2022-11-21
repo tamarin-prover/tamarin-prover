@@ -38,7 +38,7 @@ quantifyFrees :: ((String, LSort) -> LVar -> SyntacticLNFormula -> SyntacticLNFo
 quantifyFrees quan fm = quantifyVars quan (frees fm) fm
 
 protoFactFormula :: String -> [VTerm Name (BVar LVar)] -> VTerm Name (BVar LVar) -> SyntacticLNFormula
-protoFactFormula name terms at = Ato $ Action at $ protoFact Linear name terms
+protoFactFormula name terms at = Ato $ Action at $ protoFact Consume name terms
 
 tempTerm :: String -> VTerm Name (BVar LVar)
 tempTerm name = varTerm $ Free $ LVar name LSortNode 0

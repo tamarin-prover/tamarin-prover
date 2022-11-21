@@ -114,7 +114,7 @@ mergeRules compEvents leftrules rightrules =
   -- Given a fact and an msr, compress the msr with respect to this fact, and return the new msr, and the new facts (facts reachable in one step from the fact) that we may try to compress
 compressOne :: Bool -> Fact LNTerm -> [Rule ProtoRuleEInfo] -> ([Rule ProtoRuleEInfo], S.Set (Fact LNTerm))
 compressOne compEvents fact msr
-  | isPersistentFact fact =  (msr, new_facts)
+  | isReadOnlyFact fact =  (msr, new_facts)
   | otherwise =  (msr3 ++ new_rules, new_facts)
   where (prem_rules,msr2) = getPremRules fact msr
         (concs_rules,msr3) =  getConcsRules fact msr2

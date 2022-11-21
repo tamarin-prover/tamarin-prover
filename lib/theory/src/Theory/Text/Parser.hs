@@ -43,6 +43,7 @@ import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 import           Theory
 import           Theory.Text.Parser.Token
+import           Rule
 
 import           Theory.Text.Parser.Accountability
 import           Theory.Text.Parser.Lemma
