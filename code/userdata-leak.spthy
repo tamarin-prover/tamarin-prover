@@ -1,0 +1,58 @@
+/*
+ * Protocol: UerDataLeak (Example showcasing accountability lemmas)
+ * Modeler:  Kevin Morio
+ * Date:     April 2022
+ * Source:
+ * Status:   working
+ */
+theory UserDataLeak
+begin
+
+rule Database:
+    [ Fr(~userData) ]
+  --[ Database(~userData) ]->
+    [ !DB(~userData) ]
+
+rule RegisterManager:
+    [ In($x) ]
+  --[ IsManager($x)
+    , _restrict( not Ex #i. IsEmployee($x)@i ) ]->
+    [ !Manager($x) ]
+
+rule RegisterEmployee:
+    [ In($x) ]
+  --[ IsEmployee($x)
+    , _restrict( not Ex #i. IsManager($x)@i ) ]->
+    [ !Employee($x) ]
+
+rule ManagerLeak:
+    [ !Manager($x)
+    , !DB(~userData) ]
+  --[ LeakManager($x, ~userData)
+    , LeakData(~userData)
+    , Corrupted($x) ]->
+    [ Out(~userData) ]
+
+rule EmployeesLeak:
+   [ !Employee($x)
+   , !Employee($y)
+   , !DB(~userData) ]
+ --[ LeakEmployees($x, $y, ~userData)
+   , LeakData(~userData)
+   , Corrupted($x)
+   , Corrupted($y)
+   , _restrict( not ($x = $y) ) ]->
+   [ Out(~userData) ]
+
+test leak_manager:
+  "Ex data #i. LeakManager(m, data)@i"
+
+test leak_employees:
+  "Ex data #i. LeakEmployees(x, y, data)@i"
+
+lemma acc:
+  leak_manager, leak_employees account for
+    "All data #i. Database(data)@i ==> not Ex #j. LeakData(data)@j"
+
+
+end
