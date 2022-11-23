@@ -2,9 +2,9 @@
 Initial Example for the Tamarin Manual
 ======================================
 
-Authors: 	Simon Meier, Benedikt Schmidt
-Updated by: 	Jannik Dreier, Ralf Sasse
-Date: 	        June 2016
+Authors:    Simon Meier, Benedikt Schmidt
+Updated by: Jannik Dreier, Ralf Sasse, Philip Lukert
+Date:       July 2022
 
 This file is documented in the Tamarin user manual.
 
@@ -19,7 +19,7 @@ builtins: hashing, asymmetric-encryption
 rule Register_pk:
     [ Fr(~ltk) ]
   -->
-    [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+    [ Ltk($A, ~ltk), Pk($A, pk(~ltk)) ]
 
 rule Get_pk:
     [ !Pk(A, pubkey) ]

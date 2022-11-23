@@ -158,43 +158,37 @@ fresh rule that produces unique `Fr(...)` facts, and there is a set of rules for
 adversary knowledge derivation, which consume `Out(...)` facts and produce
 `In(...)` facts.
 
-### Linear versus persistent facts
+### Reading versus consuming a fact
 
-The facts mentioned above are called 'linear facts'. They are not only
-produced by rules, they also can be consumed by rules.
-Hence they might appear in one state
-but not in the next.
+In general when using a fact, in a rule, this can have four different effects:
 
-In contrast, some facts in our models will never be removed from the state once
-they are introduced. Modeling this using linear facts would
-require that every rule that has such a fact in
-the left-hand-side, also has an exact copy of this fact in the right-hand
-side. While there is no fundamental problem with this modeling in theory, it is
-inconvenient for the user and it also might lead Tamarin to explore rule
-instantiations that are irrelevant for tracing such facts in practice, which
-may even lead to non-termination.
+- `tracing` by adding it as an action fact
+- `inserting` it into the state by adding it as a conclusion
+- `consuming` it from the state by adding it as a premise
+- `reading` it from the state by adding it as a premise and prefixing with `!`
 
-For the above two reasons, we now introduce 'persistent facts', which
-are never removed from the state. We denote these facts by prefixing
-them with a bang (`!`).
+The two effects `consuming` and `reading` both require that the fact is present in the state (a multiset of facts). The difference is that a `consuming` access removes the fact from the state^[In earlier versions of Tamarin, Facts were split in the two categories `linear` and `persistent` - the latter annotated with a `!`. At that time, it was not possible to mix `consuming` (linear) and `reading` (persistent) accesses of facts. So Tamarin became strictly more expressive while retaining backwards compatibility, i.e., writing facts in the old style still has the same semantics.].
 
-Facts always start with an upper-case letter and need not  be
+If a rule consumes and inserts the same fact, it is more efficient to use it with a `!` in the premise only (which is the main reason we introduce read-only accesses). For example, the following should be rewritten:
+
+```
+rule Leak: [F(x)] --> [F(x), Out(x)]
+
+rule BetterLeak: [!F(x)] --> [Out(x)]  //more efficient
+```
+
+There are some interesting corner cases to play with: The same Fact can be read twice in the same rule. I.e., if the fact `F` is only once in the state, then the rule `[!F(), !F()] --> []` can still trigger. If this behaviour is not wanted, we can consume the facts and insert them again: `[F(), F()] --> [F(), F()]`. Lastly, reading and consuming can happen at the same time. I.e., `[F(), !F()] --> []` triggers even if `F` is only once in the state.
+
+Sometimes, we have facts where we know that we will always use them in a `read-only` way (formerly called `persistent` facts). To highlight these facts, we can (voluntarily) use them with `!` notation in conclusions as well. Doing so will result in a warning if the fact is used without `!` at any other place.
+
+In general, facts always start with an upper-case letter and need not to be
 declared explicitly. If their name is prefixed with an exclamation mark `!`,
-then they are persistent. Otherwise, they are linear. Note that every
+then they are read-only. Note that every
 fact name must be used consistently; i.e., it must always be used with
-the same arity, case, persistence, and multiplicity. Otherwise, Tamarin complains
+the same arity and case. Otherwise, Tamarin complains
 that the theory is not well-formed.
 
-Comparing linear and persistent fact behaviour we note that if there is a
-persistent fact in some rule's premise, then Tamarin will consider all rules that
-produce this persistent fact in their conclusion as the source. Usually though,
-there are few such rules (most often just a single one), which simplifies the
-reasoning. For linear facts, particularly those that are used in many rules
-(and kept static), obviously there are many rules with the fact in their
-conclusion (all of them!). Thus, when looking for a source in any premise,
-all such rules need to be considered, which is clearly less efficient and
-non-termination-prone as mentioned above. Hence, when trying to model facts that
-are never consumed, the use of persistent facts is preferred.
+
 
 ### Embedded restrictions{#sec:embeddedrestrictions}
 
@@ -236,7 +230,7 @@ protocol rules to retrieve them. For the public key, we commonly use the `Pk`
 fact, and for the corresponding long-term private key we use the `Ltk` fact.
 Since these
 facts will only be used by other rules to retrieve the keys, but never updated,
-we model them as persistent facts. We use the abstract function `pk(x)` to
+we model them as read-only facts. We use the abstract function `pk(x)` to
 denote the public key corresponding to the private key `x`, leading to the
 following rule. Note that we also directly give all public keys to the attacker,
 modeled by the `Out` on the right-hand side.
@@ -294,7 +288,7 @@ side of a rule. To model the generation of a fresh value, we require it to be
 generated by the built-in fresh rule.
 
 Finally, the rule depends on the actor's long-term
-private key, which we can obtain from the persistent fact generated by the
+private key, which we can obtain from the fact generated by the
 `Generate_DH_key_pair` rule presented previously.
 
 The response message is an exponentiation of `g` to the power of a computed

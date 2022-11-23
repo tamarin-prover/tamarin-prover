@@ -185,8 +185,7 @@ the function definition.
                  | msg_var                                // 'msg' sort
 
 Facts do not have to be defined up-front. This will probably change once we
-implement user-defined sorts. Facts prefixed with `!` are persistent facts.
-All other facts are linear. There are six reserved fact symbols: In, Out, KU,
+implement user-defined sorts. Facts prefixed with `!` are used read-only. There are six reserved fact symbols: In, Out, KU,
 KD, and K. KU and KD facts are used for construction and deconstruction
 rules. KU-facts also log the messages deduced by construction rules. Note that
 KU-facts have arity 2. Their first argument is used to track the
