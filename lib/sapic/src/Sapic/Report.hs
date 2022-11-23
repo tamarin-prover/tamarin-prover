@@ -41,8 +41,8 @@ reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
         var s = LVar s LSortMsg 0
         x = var "x"
         loc = var "loc"
-        -- protFact =  Syntactic . Pred $ (protoFact Consume "Report" [varTerm x, varTerm loc])
-        protFact =  Syntactic . Pred $ (protoFact Consume "Report" [varTerm (Free x), varTerm (Free loc)])
+        -- protFact =  Syntactic . Pred $ (protoFact Linear "Report" [varTerm x, varTerm loc])
+        protFact =  Syntactic . Pred $ (protoFact Linear "Report" [varTerm (Free x), varTerm (Free loc)])
 
 -- | This rules use the builtin restriction system to bind the Report predicate (which must be defined by the user), to this rule.
 opt_loc :: Maybe SapicTerm -> ProcessAnnotation v -> Maybe SapicTerm

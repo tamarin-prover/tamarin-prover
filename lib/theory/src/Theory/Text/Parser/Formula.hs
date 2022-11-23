@@ -35,7 +35,7 @@ smallerp varp = do
     unless mset (fail "Need builtins: multiset to use multiset comparisson operator.")
     a <- try (termp <* opLessTerm)
     b <- termp
-    return $ (Syntactic . Pred) $ protoFact Consume "Smaller" [a,b]
+    return $ (Syntactic . Pred) $ protoFact Linear "Smaller" [a,b]
   where
     termp =  msetterm False (vlit varp)
 

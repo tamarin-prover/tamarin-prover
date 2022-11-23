@@ -154,4 +154,4 @@ fromRuleRestriction rname f =
                 getBVarTerms =  map (varTerm . Free) . L.delete varNow . freesList
                 getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
                 -- produce fact from set of terms
-                mkFact = protoFactAnn Consume (restrPrefix ++ rname) S.empty
+                mkFact = protoFactAnn Linear (restrPrefix ++ rname) S.empty

@@ -39,11 +39,11 @@ factAnnotation = asum
 -- | Parse a fact that does not necessarily have a term in it.
 fact' :: Parser t -> Parser (Fact t)
 fact' pterm = try (
-    do multi <- option Consume (opBang *> pure ReadOnly)
+    do multi <- option Linear (opBang *> pure Persistent)
        i     <- identifier
        case i of
          []                -> fail "empty identifier"
-         (c:_) | isUpper c -> if (map toUpper i == "FR") && multi == ReadOnly then fail "fresh facts are not classified as ReadOnly or Consume" else return ()
+         (c:_) | isUpper c -> if (map toUpper i == "FR") && multi == Persistent then fail "fresh facts cannot be persistent" else return ()
                | otherwise -> fail "facts must start with upper-case letters"
        ts    <- parens (commaSep pterm)
        ann   <- option [] $ list factAnnotation

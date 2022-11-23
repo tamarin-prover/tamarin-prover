@@ -278,16 +278,16 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
               return (rout, fout))
 
         -- construct action facts for the rule annotations and formula
-        inputFactTerm pos ru terms var = Fact {factTag = ProtoFact Consume
+        inputFactTerm pos ru terms var = Fact {factTag = ProtoFact Linear
               ("AUTO_IN_TERM_" ++ printPosition pos ++ "_" ++ getRuleName (L.get cprRuleAC ru)) (1 + length terms),
               factAnnotations = S.empty, factTerms = terms ++[var]}
-        inputFactFact pos ru terms = Fact {factTag = ProtoFact Consume
+        inputFactFact pos ru terms = Fact {factTag = ProtoFact Linear
               ("AUTO_IN_FACT_" ++ printFactPosition pos ++ "_" ++ getRuleName (L.get cprRuleAC ru)) (length terms),
               factAnnotations = S.empty, factTerms = terms}
-        outputFactTerm pos ru terms = Fact {factTag = ProtoFact Consume
+        outputFactTerm pos ru terms = Fact {factTag = ProtoFact Linear
               ("AUTO_OUT_TERM_" ++ printPosition pos ++ "_" ++ getRuleName (L.get cprRuleAC ru)) (length terms),
               factAnnotations = S.empty, factTerms = terms}
-        outputFactFact pos ru terms = Fact {factTag = ProtoFact Consume
+        outputFactFact pos ru terms = Fact {factTag = ProtoFact Linear
               ("AUTO_OUT_FACT_" ++ printFactPosition pos ++ "_" ++ getRuleName (L.get cprRuleAC ru)) (length terms),
               factAnnotations = S.empty, factTerms = terms}
 
