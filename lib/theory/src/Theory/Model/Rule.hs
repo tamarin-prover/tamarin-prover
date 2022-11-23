@@ -960,7 +960,7 @@ someRuleACInstAvoidingFixing r s subst =
 addDiffLabel :: Rule a -> String -> Rule a
 addDiffLabel (Rule info prems concs acts nvs) name =
   Rule info prems concs
-    (acts ++ [Fact {factTag = ProtoFact Consume name 0,
+    (acts ++ [Fact {factTag = ProtoFact Linear name 0,
                     factAnnotations = S.empty, factTerms = []}]) nvs
 
 -- | Remove the diff label from a rule
@@ -969,7 +969,7 @@ removeDiffLabel (Rule info prems concs acts nvs) name =
     Rule info prems concs (filter isNotDiffAnnotation acts) nvs
   where
     isNotDiffAnnotation fa =
-      fa /= Fact {factTag = ProtoFact Consume name 0,
+      fa /= Fact {factTag = ProtoFact Linear name 0,
                   factAnnotations = S.empty, factTerms = []}
 
 -- | Add an action label to a rule
@@ -1030,7 +1030,7 @@ equalRuleUpToDiffAnnotation ru1@(Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac
   rn1 == rn2 && pr1 == pr2 && co1 == co2 && nvs1 == nvs2 &&
   ac1 == filter isNotDiffAnnotation ac2
   where
-    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Consume ("Diff" ++ getRuleNameDiff ru1) 0, factAnnotations = S.empty, factTerms = []})
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru1) 0, factAnnotations = S.empty, factTerms = []})
 
 -- | Are these two rule instances equal up to an added diff annotation in @ac2@ or @ac1@?
 equalRuleUpToDiffAnnotationSym :: (HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
@@ -1067,6 +1067,8 @@ equalRuleUpToDiffAnnotationSym ru1 ru2 = equalRuleUpToDiffAnnotation ru1 ru2
 -- A Fr fact is described
 --
 -- We track which symbols are not globally fresh.
+--
+-- All persistent facts are not globally fresh.
 --
 -- Adding a rule ru.
 --   All fact symbols that occur twice in the conclusion
@@ -1178,7 +1180,7 @@ prettyNamedRule prefix ppInfo ru =
     nest 2 (ppInfo $ L.get rInfo ru) --- $-$
     where
     acts             = filter isNotDiffAnnotation (L.get rActs ru)
-    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Consume ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
+    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
     facts proj     = L.get proj ru
     ppAttributes = case ruleAttributes ru of
         []    -> text ""

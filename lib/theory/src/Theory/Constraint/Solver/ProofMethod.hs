@@ -113,7 +113,7 @@ msgPremise (ActionG _ fa) = do (UpK, m) <- kFactView fa; return m
 msgPremise _              = Nothing
 
 isProgressFact :: Fact t -> Bool
-isProgressFact (factTag -> ProtoFact Consume name 1) = isPrefixOf "ProgressTo_" name
+isProgressFact (factTag -> ProtoFact Linear name 1) = isPrefixOf "ProgressTo_" name
 isProgressFact _ = False
 
 isProgressDisj :: Goal -> Bool
@@ -380,7 +380,7 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
       $ L.set dsProofType (Just RuleEquivalence) sys
       
     formula :: String -> LNFormula
-    formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact (ProtoFact Consume ("Diff" ++ rulename) 0) S.empty [])))
+    formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact (ProtoFact Linear ("Diff" ++ rulename) 0) S.empty [])))
     
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
     ruleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m

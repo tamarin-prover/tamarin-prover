@@ -42,7 +42,7 @@ $(mkLabels [''Predicate])
 smallerFact :: t -> t -> Fact t
 smallerFact t1 t2 =
   Fact
-    { factTag = ProtoFact Consume "Smaller" 2,
+    { factTag = ProtoFact Linear "Smaller" 2,
       factAnnotations = S.empty,
       factTerms = [t1, t2]
     }

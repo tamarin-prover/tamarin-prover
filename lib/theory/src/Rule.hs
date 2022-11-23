@@ -46,7 +46,6 @@ equalOpenRuleUpToDiffAnnotation (OpenProtoRule ruE1 ruAC1) (OpenProtoRule ruE2 r
   equalRuleUpToDiffAnnotationSym ruE1 ruE2 && length ruAC1 == length ruAC2 &&
   all (uncurry equalRuleUpToDiffAnnotationSym) (zip ruAC1 ruAC2)
 
-
 -- Relation between open and closed rule sets
 ---------------------------------------------
 

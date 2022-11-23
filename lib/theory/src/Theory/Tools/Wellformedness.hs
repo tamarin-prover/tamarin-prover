@@ -1,6 +1,5 @@
 {-# LANGUAGE ViewPatterns     #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TupleSections #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -91,7 +90,6 @@ import           Theory
 import           Theory.Text.Pretty
 import           Theory.Sapic
 import           Theory.Tools.RuleVariants
-import           Utils.Misc
 import           Safe                        (lastMay)
 import           Items.OptionItem            (lemmasToProve)
 import           TheoryObject                (diffThyOptions)
@@ -362,7 +360,7 @@ unboundReportDiff thy = do
 -- | Report on facts usage.
 factReports :: OpenTranslatedTheory -> WfErrorReport
 factReports thy = concat
-    [ reservedReport, freshFactArguments, specialFactsUsage, readOnlyUsage
+    [ reservedReport, freshFactArguments, specialFactsUsage
     , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
@@ -387,8 +385,6 @@ factReports thy = concat
              return $ (,) ("Lemma " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormula l)
                  return $ (text (show fa), factInfo fa)
-    
-    userConcFacts = [snd fact | RuleItem ru <- get thyItems thy, fact <- enumConcs $ get oprRuleE ru]
 
     -- we must compute all important information up-front in order to
     -- mangle facts with terms with bound variables and such without them
@@ -435,28 +431,18 @@ factReports thy = concat
        msum [ check "uses disallowed facts on left-hand-side:"  lhsf
             , check "uses disallowed facts on right-hand-side:" rhsf ]
 
-    -- Check that a fact which uses ReadOnly in a conclusion uses ReadOnly everywhere ("Read-Only fact missmatch")
-    readOnlyUsage = map (("Read-Only fact missmatch", ) .
-      (\(orig, fact) -> text ("In rule " ++ orig ++ ", fact " ++ fact ++ "is used as Consume (without !) while it was marked to be ReadOnly in a Conclusion."))) $ 
-      S.toList $ S.fromList [ (origin, showFactTag tag) |
-      concFact <- userConcFacts,
-      isReadOnlyFact concFact,
-      (origin, facts) <- theoryFacts,
-      (doc, (tag, _, Consume)) <- facts,
-      tag == factTag concFact
-      ]
-    
-    -- Check for facts with equal name modulo capitalization, but different arity. 
+    -- Check for facts with equal name modulo capitalization, but different
+    -- multiplicity or arity.
     factUsage = do
-       clash <- clashesOn factIdentifier ((\(a,b,c) -> (a,b)) . snd . snd) theoryFacts'
-       return $ (,) "Fact arity different" $ numbered' $ do
+       clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
+       return $ (,) "Fact usage" $ numbered' $ do
            (origin, (ppFa, info@(tag, _, _))) <- clash
            return $ text (origin ++
                           ", fact " ++ show (map toLower $ factTagName tag) ++
                           ": " ++ showInfo info)
                     $-$ nest 2 ppFa
       where
-        showInfo (tag, k, _) = show $ (factTagName tag, k)
+        showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
 
@@ -499,7 +485,7 @@ factReports thy = concat
 -- | Report on facts usage.
 factReportsDiff :: OpenDiffTheory -> WfErrorReport
 factReportsDiff thy = concat
-    [ reservedReport, reservedPrefixReport, freshFactArguments, specialFactsUsage, readOnlyUsage
+    [ reservedReport, reservedPrefixReport, freshFactArguments, specialFactsUsage
     , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
@@ -530,8 +516,6 @@ factReportsDiff thy = concat
              return $ (,) ("Lemma " ++ show s ++ " " ++ quote (get lName l)) $ do
                  fa <- formulaFacts (get lFormula l)
                  return (text (show fa), factInfo fa)
-    
-    userConcFacts = [snd fact | DiffRuleItem ru <- get diffThyItems thy, fact <- enumConcs $ get dprRule ru]
 
     -- we must compute all important information up-front in order to
     -- mangle facts with terms with bound variables and such without them
@@ -593,18 +577,8 @@ factReportsDiff thy = concat
        msum [ check "uses disallowed facts on left-hand-side of rule:"  lhsf
             , check "uses disallowed facts on right-hand-side of rule:" rhsf ]
 
-    -- Check that a fact which uses ReadOnly in a conclusion uses ReadOnly everywhere ("Read-Only fact missmatch")
-    readOnlyUsage = map (("Read-Only fact missmatch", ) .
-      (\(orig, fact) -> text ("In rule " ++ orig ++ ", fact " ++ fact ++ "is used as Consume (without !) while it was marked to be ReadOnly in a Conclusion."))) $ 
-      S.toList $ S.fromList [ (origin, showFactTag tag) |
-      concFact <- userConcFacts,
-      isReadOnlyFact concFact,
-      (origin, facts) <- theoryFacts,
-      (doc, (tag, _, Consume)) <- facts,
-      tag == factTag concFact
-      ]
-    
-    -- Check for facts with equal name modulo capitalization, but different arity. 
+    -- Check for facts with equal name modulo capitalization, but different
+    -- multiplicity or arity.
     factUsage = do
        clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
        return $ (,) "Fact usage" $ numbered' $ do
@@ -614,7 +588,7 @@ factReportsDiff thy = concat
                           ": " ++ showInfo info)
                     $-$ nest 2 ppFa
       where
-        showInfo (tag, k, _) = show $ (factTagName tag, k)
+        showInfo (tag, k, multipl) = show (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
 
@@ -625,18 +599,18 @@ factReportsDiff thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do DiffRuleItem ruO <- get diffThyItems thy; let ru = get dprRule ruO in Fact {factTag = ProtoFact Consume ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        : (do DiffRuleItem ruO <- get diffThyItems thy; let ru = get dprRule ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do
           DiffRuleItem ruO <- get diffThyItems thy
           case get dprLeftRight ruO of
             Nothing -> []
-            Just (OpenProtoRule lr lrAC, OpenProtoRule rr rrAC) -> get rActs lr ++ get rActs rr ++ concatMap (\x -> Fact {factTag = ProtoFact Consume ("DiffProto" ++ getRuleName x) 0, factAnnotations = S.empty, factTerms = []} : get rActs x) (lrAC ++ rrAC))
-        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; let ru = get oprRuleE ruO in Fact {factTag = ProtoFact Consume ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; ru <- get oprRuleAC ruO; Fact {factTag = ProtoFact Consume ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do ru <- get diffThyCacheRight thy; Fact {factTag = ProtoFact Consume ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Consume ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Consume ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-        ++ (do ru <- get diffThyDiffCacheLeft thy; Fact {factTag = ProtoFact Consume ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+            Just (OpenProtoRule lr lrAC, OpenProtoRule rr rrAC) -> get rActs lr ++ get rActs rr ++ concatMap (\x -> Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName x) 0, factAnnotations = S.empty, factTerms = []} : get rActs x) (lrAC ++ rrAC))
+        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; let ru = get oprRuleE ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do EitherRuleItem (_, ruO) <- get diffThyItems thy; ru <- get oprRuleAC ruO; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        ++ (do ru <- get diffThyDiffCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
 
     inexistentActions = do
         EitherLemmaItem (s, l) <- {-trace ("Caches: " ++ show ((get diffThyCacheRight thy) ++ (get diffThyDiffCacheRight thy) ++ (get diffThyCacheLeft thy) ++ (get diffThyDiffCacheLeft thy))) $-} get diffThyItems thy
@@ -647,10 +621,8 @@ factReportsDiff thy = concat
           then []
           else return $ (,) "Lemma actions" $
                  text (show s ++ " lemma " ++ quote name ++ " references action ") $-$
-                 nest 2 (text $ showInfo info) $-$
+                 nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
-      where
-        showInfo (tag, k, _) = show $ (factTagName tag, k)
 
     inexistentActionsRestrictions = do
         EitherRestrictionItem (s, l) <- get diffThyItems thy
@@ -661,10 +633,8 @@ factReportsDiff thy = concat
           then []
           else return $ (,) "Restriction actions" $
                  text (show s ++ "restriction " ++ quote name ++ " references action ") $-$
-                 nest 2 (text $ showInfo info) $-$
+                 nest 2 (text $ show info) $-$
                  text "but no rule has such an action."
-      where
-        showInfo (tag, k, _) = show $ (factTagName tag, k)
 
 -- | Gather all facts referenced in a formula.
 formulaFacts :: Formula s c v -> [Fact (VTerm c (BVar v))]
