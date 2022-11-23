@@ -84,24 +84,24 @@ detailed error messages.
 	WARNING: the following wellformedness checks failed!
 
 	fact usage:
-  	1. rule `setup', fact "agst": ("AgSt",3,Linear)
+  	1. rule `setup', fact "agst": ("AgSt",3)
        		AgSt( $I, ~k, ~m )
   
-  	2. rule `setup', fact "agst": ("AgSt",2,Linear)
+  	2. rule `setup', fact "agst": ("AgSt",2)
        		AgSt( $R, ~k )
   
-  	3. rule `I_1', fact "agst": ("AgSt",2,Linear)
+  	3. rule `I_1', fact "agst": ("AgSt",2)
        		AgSt( $I, <~k, ~m> )
   
-  	4. rule `R_1', fact "agst": ("AgSt",2,Linear)
+  	4. rule `R_1', fact "agst": ("AgSt",2)
        		AgSt( $R, ~k )
 	*/
 
 The problem lists all the fact usages of fact `AgSt`.
-The statement `1. rule 'setup', fact "agst":("AgSt",3,Linear)` means that
-in the rule `setup` the fact `AgSt` is used as a linear fact with 3 arguments.
+The statement `1. rule 'setup', fact "agst":("AgSt",3)` means that
+in the rule `setup` the fact `AgSt` is used with 3 arguments.
 This is not consistent with its use in other rules. For example 
-`2. rule 'setup', fact "agst": ("AgSt",2,Linear)` indicates that it is also 
+`2. rule 'setup', fact "agst": ("AgSt",2)` indicates that it is also 
 used with 2 arguments in the `setup` rule.
 To solve this problem we must ensure that we only use the same fact with 
 the same number of arguments.
@@ -172,7 +172,7 @@ We get the following warning:
 
 	lemma actions:
 	  lemma `nonce_secret' references action 
-	    (ProtoFact Linear "Secr" 2,2,Linear)
+	    ("Secr", 2)
 	  but no rule has such an action.
 	*/
 
