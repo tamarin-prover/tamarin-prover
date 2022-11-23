@@ -360,7 +360,7 @@ confidential channel, there must be a `!Conf($B,x)` fact, but any apparent
 sender `$A` from the adversary knowledge can be added. This models
 that a confidential channel is not authentic, and anybody could have sent the message.
 
-Note that `!Conf($B,x)` is always used in a read-only way. With this, we model that a
+Note that `!Conf($B,x)` is a persistent fact. With this, we model that a
 message that was sent confidentially to `$B` can be replayed by the adversary at
 a later point in time.
 The last rule, `ChanIn_CAdv`, denotes that the adversary can also directly
@@ -389,7 +389,7 @@ The first channel rule binds a sender `$A` to a message `x` by the
 fact `!Auth($A,x)`. Additionally, the rule produces an `Out` fact that models
 that the adversary can learn everything sent on an authentic channel.
 The second rule says that whenever there is a fact `!Auth($A,x)`, the message
-can be sent to any receiver `$B`. This fact is again used read-only, which means
+can be sent to any receiver `$B`. This fact is again persistent, which means
 that the adversary can replay it multiple times, possibly to different
 receivers.
 
@@ -420,7 +420,8 @@ follows.
 The channel rules bind both the sender `$A` and the receiver `$B` to the
 message `x` by the fact `!Sec($A,$B,x)`, which cannot be modified by the
 adversary.
-As `!Sec($A,$B,x)` is used read-only in `ChanIn_S`, the rule can trigger multiple times. This models that an adversary can replay
+As `!Sec($A,$B,x)` is a persistent fact, it can be reused several times as the
+premise of the rule `ChanIn_S`. This models that an adversary can replay
 such a message block arbitrary many times.
 
 For the protocol sending the message over a secure channel, Tamarin
@@ -435,7 +436,7 @@ sent by the agent who he believes to be in the initiator role.
 Similarly, one can define other channels with other properties.
 For example, we can model a secure channel with the additional property
 that it does not allow for replay. This could be done by changing the secure
-channel rules above by using `Sec` not in a consuming way `!Sec($A,$B,x)` but instead in a reading way
+channel rules above by chaining `!Sec($A,$B,x)` to be a linear fact
 `Sec($A,$B,x)`. Consequently, this fact can only be consumed once and not be
 replayed by the adversary at a later point in time.
 In a similar manner, the other channel properties can be changed and additional
@@ -589,7 +590,7 @@ We say that a fact symbol `f` has *injective instances* with respect to a
 multiset rewriting system `R`, if there is no reachable state of
 the multiset rewriting system `R` with more than one instance of an `f`-fact
 with the same term as a first argument. Injective facts typically arise from
-modeling databases. An example of a fact with injective
+modeling databases using linear facts. An example of a fact with injective
 instances is the `Store`-fact in the following multiset rewriting system.
 
 ```
@@ -614,19 +615,20 @@ variables ordered according to
 ```
 
 and let there be an edge from `(i,u)` to `(k,w)` for some indices `u` and `v`.
-Then, we have a contradiction, if the premise `(k,w)` consumes a fact `F(t,...)`
-and there is a premise `(j,v)` consuming a fact `F(t,...)`. These two premises
+Then, we have a contradiction, if the premise `(k,w)` requires a fact `f(t,...)`
+and there is a premise `(j,v)` requiring a fact `f(t,...)`.  These two premises
 must be merged because the edge `(i,u) >-> (k,w)` crosses `j` and the state at
-`j` therefore contains `F(t,...)`. This merging is not possible due to the
-ordering constraints `i < j < k`. Similarly, this holds for facts in conclusions.
+`j` therefore contains `f(t,...)`. This merging is not possible due to the
+ordering constraints `i < j < k`.
 
 Note that computing the set of fact symbols with injective instances is
 undecidable in general. We therefore compute an under-approximation to this
 set using the following simple heuristic. A fact tag is guaranteed to have
 injective instance, if
 
-1. every introduction of such a fact is protected by a `Fr`-fact of the first term, and
-2. every rule has at most one copy of this fact-tag in the conclusion and the first term arguments agree.
+1. the fact-symbol is linear, and
+2. every introduction of such a fact is protected by a `Fr`-fact of the first term, and
+3. every rule has at most one copy of this fact-tag in the conclusion and the first term arguments agree.
 
 We exclude facts that are not copied in a rule, as they are already handled
 properly by the naive backwards reasoning.

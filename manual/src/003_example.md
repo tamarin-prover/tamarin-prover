@@ -112,14 +112,16 @@ variables of sort `temporal` are unconnected.
 The above rule can therefore be read as follows. First, generate
 a fresh name `~ltk` (of sort fresh), which is the new private key, and
 non-deterministically choose a public name `A`, for the agent for whom we
-are generating the key-pair.  Afterward, generate the fact `Ltk($A, ~ltk)`, which
+are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
+(the exclamation mark `!` denotes that the fact is persistent, i.e., it
+can be consumed arbitrarily often), which
 denotes the association between agent `A` and its private key `~ltk`,
-and generate the fact `Pk($A, pk(~ltk))`, which associates
+and generate the fact `!Pk($A, pk(~ltk))`, which associates
 agent `A` and its public key `pk(~ltk)`.
 
 In the example, we allow the adversary to retrieve any public key
 using the following rule. Essentially, it reads a public-key database
-entry (the `!` denotes the `read-only` action where the fact `Pk` is not removed from the state) and sends the public key to the network using the built-in fact
+entry and sends the public key to the network using the built-in fact
 `Out`, which denotes sending a message to the network (see the section on 
 [Model Specification](005_protocol-specification-rules.html#sec:model-specification)
 for more information).
@@ -159,8 +161,7 @@ both receiving the message and responding in one single rule.
 
 Several explanations are in order. First, Tamarin uses C-style comments, so 
 everything between  `/*` and `*/` or the line following `//` is a comment. 
-Also note that in the second rule, `Client_1` has no `!` attached to denote that it will be removed from the state when executing the rule.
-Lastly, we log the session-key setup requests received by servers using an 
+Second, we log the session-key setup requests received by servers using an 
 action to allow the formalization of the authentication property for the
 client later.
 
@@ -297,12 +298,12 @@ Just below come the *Construction rules*. These rules describe the functions
 that the adversary can apply. Consider, for example, the following rule:
 
     rule (modulo AC) ch:
-     [ !KU( x ) ] --[ KU( h(x) ) ]-> [ KU( h(x) ) ]
+     [ !KU( x ) ] --[ !KU( h(x) ) ]-> [ !KU( h(x) ) ]
 
 Intuitively, this rule expresses that if the adversary knows `x` (represented by
-the fact `KU(x)` in the premise), then he can compute `h(x)` (represented by
-the fact `KU(h(x))` in the conclusion), i.e., the hash of `x`. The action fact
-`KU(h(x))` in the label also records this for reasoning purposes.
+the fact `!KU(x)` in the premise), then he can compute `h(x)` (represented by
+the fact `!KU(h(x))` in the conclusion), i.e., the hash of `x`. The action fact
+`!KU(h(x))` in the label also records this for reasoning purposes.
 
 Finally, there are the *Deconstruction rules*. These rules
 describe which terms the 
@@ -310,13 +311,13 @@ adversary can extract from larger terms by applying functions. Consider for
 example the following rule:
 
     rule (modulo AC) dfst:
-     [ !KD( <x.1, x.2> ) ] --> [ KD( x.1 ) ]
+     [ !KD( <x.1, x.2> ) ] --> [ !KD( x.1 ) ]
 
 In a nutshell, this rule says that if the adversary knows the pair `<x.1, x.2>` 
-(represented by the fact `KD( <x.1, x.2> )`), then he can extract the first 
-value `x.1` (represented by the fact `KD( x.1 )`) from it. This results from 
+(represented by the fact `!KD( <x.1, x.2> )`), then he can extract the first 
+value `x.1` (represented by the fact `!KD( x.1 )`) from it. This results from 
 applying `fst` to the pair and then using the equation 
-`fst(<x.1, x.2>) = x.1`. The precise difference between `KD( )` and `KU( )` 
+`fst(<x.1, x.2>) = x.1`. The precise difference between `!KD( )` and `!KU( )` 
 facts is not important for now, and will be explained below. As a first 
 approximation, both represent the adversary's knowledge and the distinction is 
 only used to make the tool's reasoning more efficient.
@@ -332,10 +333,10 @@ rewriting rules, plus two additional rules:  `isend` and `irecv`^[The 'i'
 historically stems from "intruder", but here we use "adversary".].
 These two extra rules provide an interface between the protocol's output and input
 and the adversary deduction.
-The rule `isend` takes a fact `KU(x)`, i.e., a value `x` that the adversary knows, 
+The rule `isend` takes a fact `!KU(x)`, i.e., a value `x` that the adversary knows, 
 and passes it to a protocol input `In(x)`. The rule `irecv` takes a protocol 
 output `Out(x)` and passes it to the adversary knowledge, represented by the 
-`KD(x)` fact. Note that the rule `Serv_1` from the protocol has two 
+`!KD(x)` fact. Note that the rule `Serv_1` from the protocol has two 
 *variants (modulo AC)*. The precise meaning of this is unimportant right now 
 (it stems from the way Tamarin deals with equations) and will be explained in 
 the 
@@ -361,10 +362,10 @@ used to avoid repeatedly computing the same things. On the right hand
 side is the result of the precomputations for our FirstExample theory.
 
 For example, here Tamarin tells us that there is one possible source of the 
-fact `Ltk( t.1, t.2 )`, namely the rule `Register_pk`. The image shows the 
+fact `!Ltk( t.1, t.2 )`, namely the rule `Register_pk`. The image shows the 
 (incomplete) graph representing the execution. The green box symbolizes the 
 instance of the `Register_pk` rule, and the trapezoid on the bottom stands for 
-the "sink" of the `Ltk( t.1, t.2 )` fact. Here the case distinction consists 
+the "sink" of the `!Ltk( t.1, t.2 )` fact. Here the case distinction consists 
 of only one rule instance, but there can be potentially multiple rule 
 instances, and multiple cases inside the case distinction, as in the following 
 images.
@@ -378,9 +379,9 @@ resolved.
 3](../images/tamarin-tutorial-case-distinctions-1.jpg 
  "FirstExample Case Distinctions 1 of 3"){width=60%}\
  
-Here the fact `KU( ~t.1 )` has three sources, the first one is the rule 
+Here the fact `!KU( ~t.1 )` has three sources, the first one is the rule 
 `Reveal_ltk`, which requires an instance of the rule `Register_pk` to create 
-the necessary `Ltk` fact. The other two sources are given below.
+the necessary `!Ltk` fact. The other two sources are given below.
  
 ![FirstExample Case Distinctions 2 of 
 3](../images/tamarin-tutorial-case-distinctions-2.jpg 
