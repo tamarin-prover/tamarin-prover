@@ -95,7 +95,7 @@ proverifTemplate headers queries process macroproc ruleproc lemmas =
 prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO (Doc)
 prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd `S.union` ruleHeaders
+  headers2 <- checkDuplicates $ (S.toList . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd) ++ (S.toList $ filterHeaders ruleHeaders)
   let hd = attribHeaders tc headers2
   return $ proverifTemplate hd queries proc' macroproc ruleproc lemmas
   where
