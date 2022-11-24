@@ -82,9 +82,9 @@ import qualified Accountability as Acc
 import qualified Accountability.Generation as Acc
 import GHC.Records (HasField(getField))
 
-import           TheoryObject                        (diffThyOptions)
+import           TheoryObject                        (diffThyOptions, diffTheoryConfigBlock, theoryConfigBlock)
 import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isNothing)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -129,8 +129,8 @@ theoryLoadFlags =
   , flagNone ["auto-sources"] (addEmptyArg "auto-sources")
       "Try to auto-generate sources lemmas"
 
-  , flagOpt (oraclePath defaultOracle) ["oraclename"] (updateArg "oraclename") "FILE"
-      ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "')")
+  , flagOpt "" ["oraclename"] (updateArg "oraclename") "FILE"
+      ("Path to the oracle heuristic (default '" ++ "theory_filename.oracle" ++ "')")
 
   , flagOpt "10" ["open-chains","c"] (updateArg "OpenChainsLimit" ) "PositiveInteger"
       "Limits the number of open chains to be resoled during precomputations (default 10)"
@@ -150,7 +150,7 @@ theoryLoadFlags =
 data TheoryLoadOptions = TheoryLoadOptions {
     _oProveMode         :: Bool
   , _oLemmaNames        :: [String]
-  , _oStopOnTrace       :: SolutionExtractor
+  , _oStopOnTrace       :: Maybe SolutionExtractor
   , _oProofBound        :: Maybe Int
   , _oHeuristic         :: Maybe Heuristic
   , _oPartialEvaluation :: Maybe EvaluationStyle
@@ -170,7 +170,7 @@ defaultTheoryLoadOptions :: TheoryLoadOptions
 defaultTheoryLoadOptions = TheoryLoadOptions {
     _oProveMode         = False
   , _oLemmaNames        = []
-  , _oStopOnTrace       = CutDFS
+  , _oStopOnTrace       = Nothing
   , _oProofBound        = Nothing
   , _oHeuristic         = Nothing
   , _oPartialEvaluation = Nothing
@@ -197,7 +197,7 @@ mkTheoryLoadOptions :: MonadError ArgumentError m => Arguments -> m TheoryLoadOp
 mkTheoryLoadOptions as = TheoryLoadOptions
                          <$> proveMode
                          <*> lemmaNames
-                         <*> stopOnTrace
+                         <*> (stopOnTrace as)
                          <*> proofBound
                          <*> heuristic
                          <*> partialEvaluation
@@ -213,14 +213,6 @@ mkTheoryLoadOptions as = TheoryLoadOptions
   where
     proveMode  = return $ argExists "prove" as
     lemmaNames = return $ findArg "prove" as ++ findArg "lemma" as
-
-    stopOnTrace = case map toLower <$> findArg "stop-on-trace" as of
-      Nothing       -> return CutDFS
-      Just "dfs"    -> return CutDFS
-      Just "none"   -> return CutNothing
-      Just "bfs"    -> return CutBFS
-      Just "seqdfs" -> return CutSingleThreadDFS
-      Just unknown  -> throwError $ ArgumentError ("unknown stop-on-trace method: " ++ unknown)
 
     proofBound = case maybe (Right Nothing) readEither (findArg "bound" as) of
       Left _ -> throwError $ ArgumentError "bound: invalid bound given"
@@ -270,6 +262,15 @@ mkTheoryLoadOptions as = TheoryLoadOptions
                    then return (fromMaybe satDefault (readMaybe (head sat) ::Maybe Integer))
                    else return satDefault
     -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
+
+stopOnTrace :: MonadError ArgumentError m => Arguments -> m (Maybe SolutionExtractor)
+stopOnTrace as = case map toLower <$> findArg "stop-on-trace" as of
+  Just "dfs"    -> return $ Just CutDFS
+  Just "none"   -> return $ Just CutNothing
+  Just "bfs"    -> return $ Just CutBFS
+  Just "seqdfs" -> return $ Just CutSingleThreadDFS
+  Just unknown  -> throwError $ ArgumentError ("unknown stop-on-trace method: " ++ unknown)
+  Nothing       -> return Nothing
 
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
 lemmaSelectorByModule thyOpt lem = case lemmaModules of
@@ -333,7 +334,7 @@ loadTheory thyOpts input inFile = do
     withTheory     f t = bitraverse f return t
 
 closeTheory :: MonadError TheoryLoadError m => String -> TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
-closeTheory version thyOpts sig srcThy = do
+closeTheory version loadedThyOptions sig srcThy = do
   let preReport = either (\t -> (Sapic.checkWellformedness t ++ Acc.checkWellformedness t))
                          (const []) srcThy
 
@@ -382,6 +383,32 @@ closeTheory version thyOpts sig srcThy = do
     withTheory     f t = bitraverse f return t
     withDiffTheory f t = bitraverse return f t
 
+    -- | Update command line arguments with arguments taken from the configuration block.
+    -- | Set the default oraclename if needed.
+    thyOpts = (thyHeurDefOracle . configStopOnTrace . configAutoSources) loadedThyOptions
+
+    configStopOnTrace = 
+      if isNothing loadedStopOnTrace
+        then L.set oStopOnTrace (either (\(ArgumentError e) -> error e) id $ stopOnTrace srcThyConfigBlockArgs)
+        else id
+
+    configAutoSources = L.set oAutoSources (argExists "auto-sources" srcThyConfigBlockArgs || loadedAutoSources)
+    thyHeurDefOracle  = L.set oHeuristic (defaultOracleNames loadedHeuristic srcThyInFileName)
+    
+    loadedAutoSources = L.get oAutoSources loadedThyOptions
+    loadedStopOnTrace = L.get oStopOnTrace loadedThyOptions
+    loadedHeuristic   = L.get oHeuristic loadedThyOptions
+ 
+    srcThyInFileName = either (L.get thyInFile) (L.get diffThyInFile) srcThy
+    srcThyConfigBlockArgs = argsConfigString $ either theoryConfigBlock diffTheoryConfigBlock srcThy
+
+    argsConfigString =
+      processValue (mode "configuration block arguments" [] "" (flagArg (updateArg "") "") theoryConfFlags) <$> splitArgs
+
+    theoryConfFlags =
+      [flagOpt "dfs" ["stop-on-trace"] (updateArg "stop-on-trace") "" ""
+     , flagNone ["auto-sources"] (addEmptyArg "auto-sources") ""]
+
 (&&&) :: (t -> Bool) -> (t -> Bool) -> t -> Bool
 (&&&) f g x = f x && g x
 
@@ -391,7 +418,7 @@ constructAutoProver :: TheoryLoadOptions -> AutoProver
 constructAutoProver thyOpts =
     AutoProver (L.get oHeuristic thyOpts)
                (L.get oProofBound thyOpts)
-               (L.get oStopOnTrace thyOpts)
+               (fromMaybe CutDFS $ L.get oStopOnTrace thyOpts)
 
 -----------------------------------------------
 -- Add Options parameters in an OpenTheory

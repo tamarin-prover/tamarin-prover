@@ -97,10 +97,12 @@ module Theory (
   , TheoryItem(..)
   , DiffTheoryItem(..)
   , thyName
+  , thyInFile
   , thySignature
   , thyCache
   , thyItems
   , diffThyName
+  , diffThyInFile
   , diffThySignature
   , diffThyCacheLeft
   , diffThyCacheRight

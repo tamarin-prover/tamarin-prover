@@ -207,10 +207,14 @@ theory inFile = do
     when ("diff" `S.member` flags0) $ modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    thy' <- symbol_ "begin"
-        *> addItems inFile (set thyName thyId (defaultOpenTheory ("diff" `S.member` flags0)))
-        <* symbol "end"
-    return thy'
+    let defThy = defaultOpenTheory ("diff" `S.member` flags0)
+    block <- try (symbol "configuration" <* colon) <|> symbol "begin" <?> "configuration or begin"
+    if block == "configuration"
+        then do
+            fileArgs <- stringLiteral <* symbol_ "begin"
+            addItems inFile (set thyInFile (fromMaybe "" inFile) $ set thyName thyId (modify thyItems (++ [ConfigBlockItem fileArgs]) defThy)) <* symbol_ "end"
+        else do
+            addItems inFile (set thyInFile (fromMaybe "" inFile) $ set thyName thyId defThy) <* symbol_ "end"
   where
     addItems :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     addItems inFile0 thy = asum
@@ -346,10 +350,13 @@ diffTheory inFile = do
     modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    thy' <- symbol_ "begin"
-        *> addItems inFile (set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0)))
-        <* symbol "end"
-    return thy'
+    block <- try (symbol "configuration" <* colon) <|> symbol "begin" <?> "configuration or begin"
+    if block == "configuration"
+        then do
+            fileArgs <- stringLiteral <* symbol_ "begin"
+            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (modify diffThyItems (++ [DiffConfigBlockItem fileArgs]) (defaultOpenDiffTheory ("diff" `S.member` flags0)))) <* symbol_ "end"
+        else do
+            addItems inFile (set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0))) <* symbol "end"
   where
     addItems :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems inFile0 thy = asum

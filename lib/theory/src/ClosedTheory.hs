@@ -115,10 +115,10 @@ getProofContext l thy = ProofContext
 
     -- Heuristic specified for the lemma > globally specified heuristic > default heuristic
     specifiedHeuristic = case lattr of
-        Just lh -> Just lh
         Nothing  -> case L.get thyHeuristic thy of
                     [] -> Nothing
-                    gh -> Just (Heuristic gh)
+                    gh -> Just . Heuristic $ map (defaultOracleName (L.get thyInFile thy)) gh
+        lh -> defaultOracleNames lh (L.get thyInFile thy)
       where
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lAttributes l])
@@ -163,10 +163,10 @@ getProofContextDiff s l thy = case s of
       | otherwise                                                        = AvoidInduction
     -- Heuristic specified for the lemma > globally specified heuristic > default heuristic
     specifiedHeuristic = case lattr of
-        Just lh -> Just lh
         Nothing  -> case L.get diffThyHeuristic thy of
                     [] -> Nothing
-                    gh -> Just (Heuristic gh)
+                    gh -> Just . Heuristic $ map (defaultOracleName (L.get diffThyInFile thy)) gh
+        lh -> defaultOracleNames lh (L.get diffThyInFile thy)
       where
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lAttributes l])
@@ -220,10 +220,10 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
 
     specifiedHeuristic = case lattr of
-        Just lh -> Just lh
         Nothing  -> case L.get diffThyHeuristic thy of
                     [] -> Nothing
-                    gh -> Just (Heuristic gh)
+                    gh -> Just . Heuristic $ map (defaultOracleName (L.get diffThyInFile thy)) gh
+        lh -> defaultOracleNames lh (L.get diffThyInFile thy)
       where
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lDiffAttributes l])
@@ -355,6 +355,7 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
     mergedRules = mergeOpenProtoRules $ map (mapTheoryItem openProtoRule id) items
     thy' :: Theory SignatureWithMaude ClosedRuleCache OpenProtoRule IncrementalProof ()
     thy' = Theory {_thyName=(L.get thyName thy)
+            ,_thyInFile=(L.get thyInFile thy)
             ,_thyHeuristic=(L.get thyHeuristic thy)
             ,_thySignature=(L.get thySignature thy)
             ,_thyCache=(L.get thyCache thy)
@@ -392,6 +393,7 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
        map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) id id) items
     thy' :: DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule OpenProtoRule IncrementalDiffProof IncrementalProof
     thy' = DiffTheory {_diffThyName=(L.get diffThyName thy)
+            ,_diffThyInFile=(L.get diffThyInFile thy)
             ,_diffThyHeuristic=(L.get diffThyHeuristic thy)
             ,_diffThySignature=(L.get diffThySignature thy)
             ,_diffThyCacheLeft=(L.get diffThyCacheLeft thy)
