@@ -51,7 +51,7 @@ import Data.Data
 -- MSR Translation
 ------------------------------------------------------------------------------
 
-loadRules :: OpenTheory -> ([Doc], Doc, ([(String, String, String, [String])], [(String, String, String)], [(String, String, String, [String])], [(String, String)], [(String, String)]))
+loadRules :: OpenTheory -> ([Doc], Doc, ([(String, String, String, [String])], [(String, String, String, String)], [(String, String, String, [String])], [(String, String)], [(String, String)]))
 loadRules thy = case theoryRules thy of
   [] -> ([text ""], text "", ([],[],[],[],[]))
   rules -> (ruleDocs, ruleComb, headers)
@@ -65,11 +65,11 @@ loadRules thy = case theoryRules thy of
             ruleNames = map (\(OpenProtoRule ruE _) -> showRuleName . L.get preName $ L.get rInfo ruE) rules
             ruleComb = text ("( " ++ (intercalate " | " . map (++")") $ map ("!("++) ruleNames) ++ " )")
 
-makeDestructorHeader :: ((String, String), String) -> (String, String, String)
+makeDestructorHeader :: ((String, String), String) -> (String, String, String, String)
 makeDestructorHeader ((dDef, atom), dName) =
   let (s1,s2) = break (=='#') dDef
   in
-    ("reduc", s1, dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom2 atom) ++ " [private]")
+    ("reduc", s1, (dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom2 atom)), "[private]")
 
 makeHeadersFromRule:: OpenProtoRule -> ([(String, String, String, [String])], [(String, String)], [(String, String)])
 makeHeadersFromRule (OpenProtoRule ruE _) = makeHeadersFromProtoRule ruE
