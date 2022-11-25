@@ -20,7 +20,6 @@ module Export (
     prettyDeepSecTheory
 
 ) where
-
 import         Term.Builtin.Rules
 import         Term.SubtermRule
 
@@ -127,7 +126,7 @@ data ProVerifHeader
   | Fun String String Int String [String] -- symbol declaration, (symkind,name,arity,types,attr)
   | HEvent String String
   | Table String String
-  | Eq String String String -- eqtype, quantif, equation
+  | Eq String String String String -- eqtype, quantif, equation pub/priv
   deriving (Ord, Show, Eq)
 
 state_headers :: S.Set ProVerifHeader
@@ -145,7 +144,7 @@ builtins =
     [ ( "diffie-hellman",
         [ Sym "const" "g" ":bitstring" [],
           Fun "fun" "exp" 2 "(bitstring,bitstring):bitstring" [],
-          Eq "equation" "forall a:bitstring,b:bitstring;" "exp( exp(g,a),b) = exp(exp(g,b),a)"
+          Eq "equation" "forall a:bitstring,b:bitstring;" "exp( exp(g,a),b) = exp(exp(g,b),a)" ""
         ]
       ),
       ( "locations-report",
@@ -1095,6 +1094,9 @@ headersOfRule tc typeEnv r | (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
       prefix = case viewTerm lhs of
         FApp (NoEq (_, (_, _, Destructor))) _ -> "reduc"
         _ -> "equation"
+      suffix = case viewTerm lhs of
+        FApp (NoEq (_, (_, Private, Destructor))) _ -> " [private]"
+        _ -> ""
       freesr = List.union (frees lhs) (frees rhs)
       freesrTyped = map (\v -> (v, M.lookup v $ vars tye)) freesr
       hrule =
@@ -1110,6 +1112,7 @@ headersOfRule tc typeEnv r | (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
                   text "=" <-> prhs
                 ]
           )
+          suffix
 
   return $ (S.singleton hrule) `S.union` lsh `S.union` rsh
   where
@@ -1120,7 +1123,7 @@ prettyProVerifHeader :: ProVerifHeader -> Doc
 prettyProVerifHeader (Type s) = text "type " <> text s <> text "."
 prettyProVerifHeader (HEvent s ty) = text "event " <> text s <> text ty <> text "."
 prettyProVerifHeader (Table s ty) = text "table " <> text s <> text ty <> text "."
-prettyProVerifHeader (Eq eqtype quant eq) = text eqtype <> text " " <> text quant <> text " " <> text eq <> text "."
+prettyProVerifHeader (Eq eqtype quant eq pub) = text eqtype <> text " " <> text quant <> text " " <> text eq <> text pub <> text "."
 prettyProVerifHeader (Sym symkind name symtype []) = text symkind <> text " " <> text name <> text symtype <> text "."
 prettyProVerifHeader (Sym symkind name symtype attr) = text symkind <> text " " <> text name <> text symtype <> text "[" <> fsep (punctuate comma (map text attr)) <> text "]" <> text "."
 prettyProVerifHeader (Fun "" _ _ _ _) = text ""
@@ -1130,7 +1133,7 @@ prettyProVerifHeader (Fun fkind name _ symtype attr) =
 
 prettyDeepSecHeader :: ProVerifHeader -> Doc
 prettyDeepSecHeader (Type _) = text "" -- no types in deepsec
-prettyDeepSecHeader (Eq eqtype _ eq) = text eqtype <> text " " <> text eq <> text "."
+prettyDeepSecHeader (Eq eqtype _ eq _) = text eqtype <> text " " <> text eq <> text "."
 prettyDeepSecHeader (HEvent _ _) = text ""
 prettyDeepSecHeader (Table _ _) = text ""
 -- drop symtypes in symbol declarations
@@ -1168,7 +1171,7 @@ attribHeaders tc hd =
     splitHeaders (x : xs)
       | Sym _ _ _ _ <- x = (e1, f1, (pph x) : s1)
       | Fun _ _ _ _ _ <- x = (e1, (pph x) : f1, s1)
-      | Eq _ _ _ <- x = ((pph x) : e1, f1, s1)
+      | Eq _ _ _ _ <- x = ((pph x) : e1, f1, s1)
       | HEvent _ _ <- x = ((pph x) : e1, f1, s1)
       | Table _ _ <- x = ((pph x) : e1, f1, s1)
       | Type _ <- x = (e1, f1, (pph x) : s1)
