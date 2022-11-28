@@ -351,7 +351,7 @@ ppLNTerm tc = pppLNTerm tc False
 ppFact :: TranslationContext -> Fact SapicTerm -> (Doc, S.Set ProVerifHeader)
 ppFact tc (Fact tag _ ts)
   | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
-  | otherwise = sppFact (showFactTag tag) ts
+  | otherwise = sppFact (factTagName tag) ts
   where
     sppFact name ts2 =
       (nestShort' (name ++ "(") ")" . fsep . punctuate comma $ pts, sh)
@@ -800,7 +800,7 @@ ppProtoAtom te _ _ ppT (Action v (Fact tag _ ts))
   | factTagArity tag /= length ts = (ppFactL ("MALFORMED-" ++ show tag) ts, M.empty)
   | tag == KUFact = (ppFactL ("attacker") ts <> opAction <> ppT v, M.empty)
   | otherwise =
-    ( text "event(" <> ppFactL (showFactTag tag) ts <> text ")" <> opAction <> ppT v,
+    ( text "event(" <> ppFactL (factTagName tag) ts <> text ")" <> opAction <> ppT v,
       typeVarsEvent te tag ts
     )
   where
@@ -1019,7 +1019,7 @@ loadHeaders tc thy typeEnv = do
     typedHeaderOfFunSym = foldl (\y x -> headerOfFunSym x `S.union` y) S.empty userDeclaredFunctions
 
     -- events headers
-    eventHeaders = M.foldrWithKey (\tag types acc -> HEvent (showFactTag tag) ("(" ++ make_argtypes types ++ ")") `S.insert` acc) S.empty (events typeEnv)
+    eventHeaders = M.foldrWithKey (\tag types acc -> HEvent (factTagName tag) ("(" ++ make_argtypes types ++ ")") `S.insert` acc) S.empty (events typeEnv)
     -- generating headers for equations
     sigRules = stRules sig
 
