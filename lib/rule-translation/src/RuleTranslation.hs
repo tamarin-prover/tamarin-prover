@@ -61,7 +61,7 @@ loadRules thy = case theoryRules thy of
             baseHeaders = [("free", "publicChannel", ":channel", [])]
             desHeaders = map makeDestructorHeader $ M.toList destructors
             (frHeaders, tblHeaders, evHeaders) =
-              foldl (\(fr, tbl, ev) ru -> let (fr', tbl', ev') = makeHeadersFromRule ru in (fr ++ fr', tbl ++ tbl', ev ++ ev')) ([], [], []) rules
+              foldl (\(fr, tbl, ev) ru -> let (fr', tbl', ev') = makeHeadersFromRule ru thy in (fr ++ fr', tbl ++ tbl', ev ++ ev')) ([], [], []) rules
             ruleNames = map (\(OpenProtoRule ruE _) -> showRuleName . L.get preName $ L.get rInfo ruE) rules
             ruleComb = text ("( " ++ (intercalate " | " . map (++")") $ map ("!("++) ruleNames) ++ " )")
 
@@ -71,33 +71,44 @@ makeDestructorHeader ((dDef, atom), dName) =
   in
     ("reduc", s1, (dName ++ "(" ++ tail s2 ++ ") = " ++ (showAtom2 atom)), "[private]")
 
-makeHeadersFromRule:: OpenProtoRule -> ([(String, String, String, [String])], [(String, String)], [(String, String)])
-makeHeadersFromRule (OpenProtoRule ruE _) = makeHeadersFromProtoRule ruE
+makeHeadersFromRule :: OpenProtoRule -> OpenTheory -> ([(String, String, String, [String])], [(String, String)], [(String, String)])
+makeHeadersFromRule (OpenProtoRule ruE _) thy = makeHeadersFromProtoRule ruE thy
 
-makeHeadersFromProtoRule :: Rule ProtoRuleEInfo -> ([(String, String, String, [String])], [(String, String)], [(String, String)])
-makeHeadersFromProtoRule ru = 
+makeHeadersFromProtoRule :: Rule ProtoRuleEInfo -> OpenTheory -> ([(String, String, String, [String])], [(String, String)], [(String, String)])
+makeHeadersFromProtoRule ru thy = 
   (frees, tables, events)
     where
     acts             = filter isNotDiffAnnotation (L.get rActs ru)
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0, factAnnotations = S.empty, factTerms = []})
     facts proj     = L.get proj ru
-    frees = makeFreeHeaders (facts rPrems) acts (facts rConcs)
+    frees = makeFreeHeaders (facts rPrems) acts (facts rConcs) thy
     tables = makeTableHeaders (facts rPrems) (facts rConcs)
     events = makeEventHeaders acts
 
-makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> [(String, String, String, [String])]
-makeFreeHeaders prems acts concls = 
+makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> OpenTheory -> [(String, String, String, [String])]
+makeFreeHeaders prems acts concls thy = 
   headers
   where
     getTerms (Fact _ _ ts) = ts
     allTerms = (concat $ map getTerms prems) ++ (concat $ map getTerms acts) ++ (concat $ map getTerms concls)
-    bitstrings = foldl (\acc t -> S.union acc $ searchForBitstrings t) (S.empty) (S.toList $ S.fromList allTerms)
+    term_bitstrings = foldl (\acc t -> S.union acc $ searchTermForBitstrings t) (S.empty) (S.toList $ S.fromList allTerms)
+    lemmas = map (L.get lFormula) (theoryLemmas thy)
+    lemma_bitstrings = foldl (\acc l -> S.union acc $ searchLemmaForBitstrings l) (S.empty) lemmas
+    bitstrings = S.union term_bitstrings lemma_bitstrings
     headers = map (\b -> ("free", b, ":bitstring", [])) $ S.toList bitstrings
 
-searchForBitstrings :: (Show l) => Term l -> S.Set String
-searchForBitstrings t = case viewTerm t of
+searchLemmaForBitstrings :: ProtoFormula Unit2 (String, LSort) Name LVar -> S.Set String
+searchLemmaForBitstrings (Ato (Action _ (Fact _ _ ts))) = foldl (\acc t -> S.union acc $ searchTermForBitstrings t) (S.empty) ts
+searchLemmaForBitstrings (Ato _) = S.empty
+searchLemmaForBitstrings (TF _) = S.empty
+searchLemmaForBitstrings (Not fm) = searchLemmaForBitstrings fm
+searchLemmaForBitstrings (Conn _ fml fmr) = (searchLemmaForBitstrings fml) `S.union` (searchLemmaForBitstrings fmr)
+searchLemmaForBitstrings (Qua _ _ fm) = searchLemmaForBitstrings fm
+
+searchTermForBitstrings :: (Show l) => Term l -> S.Set String
+searchTermForBitstrings t = case viewTerm t of
     Lit l     -> if (head $ show l) == '\'' && (last $ show l) == '\'' then S.fromList [showAtom $ show l] else S.empty
-    FApp _ ts -> foldl (\acc t -> S.union acc $ searchForBitstrings t) (S.empty) ts
+    FApp _ ts -> foldl (\acc t -> S.union acc $ searchTermForBitstrings t) (S.empty) ts
 
 makeTableHeaders :: [LNFact] -> [LNFact] -> [(String, String)]
 makeTableHeaders prems concls =
@@ -301,7 +312,7 @@ showAtom a = case head a of
       "nounif", "or", "otherwise", "out", "param", "phase", "pred", "proba", "process",
       "proof", "public_vars", "putbegin", "query", "reduc", "restriction", "secret", "select",
       "set", "suchthat", "sync", "table", "then", "type", "weaksecret", "yield"]
-    sanitizeAtom a = if a `List.elem` reserved_words
+    sanitizeAtom a = if (a `List.elem` reserved_words) || (Data.Char.isDigit $ head a)
                        then 'a' : a
                        else a
 
@@ -309,7 +320,7 @@ showAtom2 :: String -> String
 showAtom2 a = case head a of
   '~'  -> "var_" ++ (replaceDots $ tail a)
   '$'  -> "var_" ++ (replaceDots $ tail a)
-  '\'' -> "var_" ++ (map toLower . replaceDots . init $ tail a)
+  '\'' -> "var_" ++ 's' : (replaceDots . init $ tail a)
   _    -> "var_" ++ replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
