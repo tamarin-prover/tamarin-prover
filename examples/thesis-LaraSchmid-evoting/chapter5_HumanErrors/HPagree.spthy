@@ -90,22 +90,22 @@ Untrained human rules
 ===================== */
 
 rule H_Fresh:
-    [ Fr(~x) ] --[ Fresh($H,$t,~x), !HK($H,$t,~x), Untrained($H) ]-> [ !HK($H,$t,~x) ]
+    [ Fr(~x) ] --[ Fresh($H,$t,~x), HK_event($H,$t,~x), Untrained($H) ]-> [ !HK($H,$t,~x) ]
 
 rule H_Send_I:
     [ !HK($H,$t,x) ] --[ Send($H,$A,<$t,x>), Untrained($H) ]-> [ Out(<$t,x>) ]
 
 rule H_Receive_I:
-    [ In(<$t,x>) ] --[ Receive($A,$H,<$t,x>), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+    [ In(<$t,x>) ] --[ Receive($A,$H,<$t,x>), HK_event($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
 
 rule H_Send_S:
     [ !HK($H,$t,x) ] --[ Send($H,$A,<$t,x>), To($A), Untrained($H) ]-> [ Out_S($H,$A,<$t,x>) ]
 
 rule H_Receive_S:
-    [ In_S($A,$H,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+    [ In_S($A,$H,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), HK_event($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
 
 rule H_Receive_A:
-    [ In_A($A,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+    [ In_A($A,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), HK_event($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
 
 rule H_Claim:
     [  ] --[ Claim($H,$goal), Untrained($H) ]-> [  ]
@@ -136,7 +136,7 @@ rule Setup:
   	--[ 	Setup(),
 		Human($H),
 		Goal($H,'running',<<'P','m'>,<$P,~m>>),
-		!HK($H,'P',$P), !HK($H,'m',~m),
+		HK_event($H,'P',$P), HK_event($H,'m',~m),
 	
 		//rule-based human:
 		InitK($H,'P',$P), InitK($H,'m',~m)
@@ -178,7 +178,7 @@ RESTRICTIONS MODELING RULE-BASED HUMAN's GUIDELINES
 
 // do not overwrite an already known term with the tag 'tag' by another term.
 restriction NoOverwrite:
-	"All tag m n #s #i #j. NoOverwrite('H1',tag) @s & !HK('H1',tag,m) @i & !HK('H1',tag,n) @j ==> m = n"
+	"All tag m n #s #i #j. NoOverwrite('H1',tag) @s & HK_event('H1',tag,m) @i & HK_event('H1',tag,n) @j ==> m = n"
 
 // make a claim 'running' before sending the message with tag 'tag'
 restriction DoClaimBeforeSend:
