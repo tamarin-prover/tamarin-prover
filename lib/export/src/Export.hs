@@ -172,6 +172,8 @@ builtins =
       ),
       ( "revealing-signing",
         [ Fun "fun" "revealSign" 2 "(bitstring,bitstring):bitstring" [],
+          Fun "fun" "revealVerify" 3 "(bitstring,bitstring,bitstring):bitstring" [],
+          Fun "fun" "getMessage" 1 "(bitstring):bitstring" [],
           Fun "fun" "pk" 1 "(bitstring):bitstring" [],
           Fun "fun" "okay" 0 "():bitstring" []
         ]
