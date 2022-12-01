@@ -152,7 +152,8 @@ builtins =
         ]
       ),
       ( "xor",
-        [ Fun "fun" "xor" 2 "(bitstring,bitstring):bitstring" []
+        [ Fun "fun" "xor" 2 "(bitstring,bitstring):bitstring" [],
+          Fun "fun" "zero" 0 "():bitstring" []
         ]
       ),
       ( "hashing",
@@ -301,8 +302,8 @@ loadRequests thy =
 ------------------------------------------------------------------------------
 
 ppLVar :: LVar -> Doc
-ppLVar (LVar n _ 0) = text n
-ppLVar (LVar n _ i) = text $ n <> "_" <> (show i)
+ppLVar (LVar n _ 0) = text $ sanitizeSymbol 'a' n
+ppLVar (LVar n _ i) = text . sanitizeSymbol 'a' $ n <> "_" <> (show i)
 
 ppUnTypeVar :: SapicLVar -> Doc
 ppUnTypeVar (SapicLVar lvar _) = ppLVar lvar
@@ -318,7 +319,10 @@ ppTypeVar tc v@(SapicLVar lvar ty) = case trans tc of
 
 ppTypeLit :: (Show c) => TranslationContext -> Lit c SapicLVar -> Doc
 ppTypeLit tc (Var v) = ppTypeVar tc v
-ppTypeLit _ (Con c) = text $ show c
+ppTypeLit _ (Con c) = text . sanitizeSymbol 'a' $ show c
+
+ppFunSym :: BC.ByteString -> String
+ppFunSym f = replaceTrueFalse . sanitizeSymbol 'f' $ BC.unpack f
 
 auxppTerm :: Show v => (Lit Name v -> Doc) -> VTerm Name v -> (Doc, S.Set ProVerifHeader)
 auxppTerm ppLit t = (ppTerm t, getHdTerm t)
@@ -330,9 +334,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       FApp (NoEq s) [t1, t2] | s == expSym -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
       FApp (NoEq s) [t1, t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
       FApp (NoEq _) [t1, t2] | isPair tm -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-      FApp (NoEq (f, _)) [] -> if BC.unpack f == "true"
-                                 then text "okay"
-                                 else text (BC.unpack f)
+      FApp (NoEq (f, _)) [] -> text $ ppFunSym f
       FApp (NoEq (f, _)) ts -> ppFun f ts
       FApp (C EMap) ts -> ppFun emapSymString ts
       FApp List ts -> ppFun (BC.pack "LIST") ts
@@ -351,7 +353,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
         . map ppTerm
         $ ts
     ppFun f ts =
-      text (BC.unpack f ++ "(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
+      text (ppFunSym f ++ "(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
     getHdTerm tm = case viewTerm tm of
       Lit (Con (Name PubName n)) ->
         if List.elem (show n) ["g", "one", "zero"]
@@ -367,14 +369,14 @@ auxppSapicTerm :: TranslationContext -> S.Set LVar -> Bool -> SapicTerm -> (Doc,
 auxppSapicTerm tc mVars isPattern t = auxppTerm ppLit t
   where
     ppLit v = case v of
-      Con (Name FreshName n) -> (text $ show n)
+      Con (Name FreshName n) -> (text . sanitizeSymbol 'a' $ show n)
       Con (Name PubName n) | isPattern -> text "=" <> (text $ "s" ++ show n)
       Con (Name PubName n) -> ppPubName n
       Var (SapicLVar (lvar) _)
         | S.member lvar mVars -> text "=" <> ppLVar lvar
       l | isPattern -> ppTypeLit tc l
       Var (SapicLVar (lvar) _) -> ppLVar lvar
-      l -> (text $ show l)
+      l -> (text . sanitizeSymbol 'a' $ show l)
 
 ppSapicTerm :: TranslationContext -> SapicTerm -> (Doc, S.Set ProVerifHeader)
 ppSapicTerm tc = auxppSapicTerm tc S.empty False
@@ -385,11 +387,11 @@ pppLNTerm :: TranslationContext -> Bool -> LNTerm -> (Doc, S.Set ProVerifHeader)
 pppLNTerm _ b t = auxppTerm ppLit t
   where
     ppLit v = case v of
-      Con (Name FreshName n) -> text $ show n
+      Con (Name FreshName n) -> text . sanitizeSymbol 'a' $ show n
       Con (Name PubName n) -> ppPubName n
-      tm2 | b -> text $ show tm2 <> ":bitstring"
+      tm2 | b -> text $ (sanitizeSymbol 'a' $ show tm2) <> ":bitstring"
       Var (lvar) -> ppLVar lvar
-      tm2 -> text $ show tm2
+      tm2 -> text . sanitizeSymbol 'a' $ show tm2
 
 ppLNTerm :: TranslationContext -> LNTerm -> (Doc, S.Set ProVerifHeader)
 ppLNTerm tc = pppLNTerm tc False
@@ -1037,7 +1039,7 @@ headersOfType types =
 
 headerOfFunSym :: SapicFunSym -> S.Set ProVerifHeader
 headerOfFunSym ((f, (k, pub, Constructor)), inTypes, outType) =
-  Fun "fun" (replaceTrue $ BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert` headersOfType (outType : inTypes)
+  Fun "fun" (ppFunSym f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert` headersOfType (outType : inTypes)
   where
     priv_or_pub Public = []
     priv_or_pub Private = ["private"]
@@ -1237,6 +1239,21 @@ makeAnnotations thy p = res
         then pr
         else translateTermsReport pr
 
-replaceTrue :: String -> String
-replaceTrue "true" = "okay"
-replaceTrue s = s
+replaceTrueFalse :: String -> String
+replaceTrueFalse "true" = "okay"
+replaceTrueFalse "false" = "notokay"
+replaceTrueFalse s = s
+
+sanitizeSymbol :: Char -> String -> String
+sanitizeSymbol pre s = 
+  if (s `List.elem` reserved_words) || (Data.Char.isDigit $ head s)
+                       then pre : s
+                       else s
+  where
+    reserved_words = ["among", "axiom", "channel", "choice", "clauses", "const", "def", "diff",
+      "do", "elimtrue", "else", "equation", "equivalence", "event", "expand", "fail", "for",
+      "forall", "foreach", "free", "fun", "get", "if", "implementation", "in", "inj-event",
+      "insert", "lemma", "let", "letfun", "letproba", "new", "noninterf", "noselect", "not",
+      "nounif", "or", "otherwise", "out", "param", "phase", "pred", "proba", "process",
+      "proof", "public_vars", "putbegin", "query", "reduc", "restriction", "secret", "select",
+      "set", "suchthat", "sync", "table", "then", "type", "weaksecret", "yield"]

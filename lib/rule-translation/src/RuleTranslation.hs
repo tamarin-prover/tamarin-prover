@@ -297,6 +297,17 @@ translatePatternFact (Fact tag _ ts) factType vars helperVars =
         "IN"  -> text "in(publicChannel," <-> (head doclist) <> text ": bitstring);"
         _     -> text "" --should never happen
 
+isReserved :: String -> Bool
+isReserved s = s `List.elem` reserved_words
+  where
+    reserved_words = ["among", "axiom", "channel", "choice", "clauses", "const", "def", "diff",
+      "do", "elimtrue", "else", "equation", "equivalence", "event", "expand", "fail", "for",
+      "forall", "foreach", "free", "fun", "get", "if", "implementation", "in", "inj-event",
+      "insert", "lemma", "let", "letfun", "letproba", "new", "noninterf", "noselect", "not",
+      "nounif", "or", "otherwise", "out", "param", "phase", "pred", "proba", "process",
+      "proof", "public_vars", "putbegin", "query", "reduc", "restriction", "secret", "select",
+      "set", "suchthat", "sync", "table", "then", "type", "weaksecret", "yield"]
+
 showAtom :: String -> String
 showAtom a = case head a of
   '~'  -> sanitizeAtom . replaceDots $ tail a
@@ -305,14 +316,7 @@ showAtom a = case head a of
   _    -> sanitizeAtom $ replaceDots a
   where
     replaceDots a = map (\c -> if c == '.' then '_' else c) a
-    reserved_words = ["among", "axiom", "channel", "choice", "clauses", "const", "def", "diff",
-      "do", "elimtrue", "else", "equation", "equivalence", "event", "expand", "fail", "for",
-      "forall", "foreach", "free", "fun", "get", "if", "implementation", "in", "inj-event",
-      "insert", "lemma", "let", "letfun", "letproba", "new", "noninterf", "noselect", "not",
-      "nounif", "or", "otherwise", "out", "param", "phase", "pred", "proba", "process",
-      "proof", "public_vars", "putbegin", "query", "reduc", "restriction", "secret", "select",
-      "set", "suchthat", "sync", "table", "then", "type", "weaksecret", "yield"]
-    sanitizeAtom a = if (a `List.elem` reserved_words) || (Data.Char.isDigit $ head a)
+    sanitizeAtom a = if (isReserved a) || (Data.Char.isDigit $ head a)
                        then 'a' : a
                        else a
 
@@ -327,8 +331,11 @@ showAtom2 a = case head a of
 
 showFunction :: String -> String
 showFunction f
-  | f == "true" = "okay"
-  | otherwise   = f
+  | f == "true"  = "okay"
+  | f == "false" = "notokay"
+  | otherwise    = if isReserved f
+                     then 'f' : f
+                     else f
 
 showFactName :: FactTag -> String
 showFactName tag = if factTagName tag `List.elem` ["Fr", "In", "Out"]
