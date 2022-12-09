@@ -14,7 +14,7 @@ theory ROBERT
 
 begin
 
-heuristic: o "./oracle-robert"
+heuristic: o "./oracles/oracle-robert"
 
 builtins: diffie-hellman
 
@@ -652,7 +652,7 @@ predicates:
                                                  | (Ex id #i #j #k.
                                                        Send(idR, <hello, t>)@i
                                                      & Received(id, <hello, t>)@j
-                                                     & Corrupt(<'P', id>, 'CorruptPhoneReceive', <hello, t>)@k
+                                                     & Corrupt(<'P', id>, 'CorruptPhoneReceived', <hello, t>)@k
                                                      /* & not(id = idI) */
                                                      )
                                                    // ... or the prehello message from the backend to idR is captured.
