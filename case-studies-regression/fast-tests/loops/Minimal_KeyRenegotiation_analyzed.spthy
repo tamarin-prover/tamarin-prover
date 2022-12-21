@@ -126,26 +126,21 @@ next
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
+Compiled at: 2022-11-09 11:41:33.798849 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/loops/Minimal_KeyRenegotiation.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
-
-  output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.071918046s
-  Secret_reachable (exists-trace): verified (5 steps)
-  secrecy (all-traces): verified (23 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -153,7 +148,8 @@ summary of summaries:
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.071918046s
+  processing time: 0.032707s
+  
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 

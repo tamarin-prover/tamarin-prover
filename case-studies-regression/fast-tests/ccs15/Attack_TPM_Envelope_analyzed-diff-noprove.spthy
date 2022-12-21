@@ -390,33 +390,21 @@ next
   by sorry
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
+Compiled at: 2022-11-09 11:41:33.798849 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ccs15/Attack_TPM_Envelope.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
-
-  output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.620680073s
-  RHS :  types (all-traces): analysis incomplete (1 steps)
-  LHS :  types (all-traces): analysis incomplete (1 steps)
-  RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
-  LHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
-  RHS :  executable (exists-trace): analysis incomplete (1 steps)
-  LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  RHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  LHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (75 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -424,7 +412,8 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.620680073s
+  processing time: 0.034623s
+  
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
