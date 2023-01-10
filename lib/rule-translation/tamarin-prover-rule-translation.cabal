@@ -10,7 +10,7 @@ author:             Julian Biehl <s8jubieh@stud.uni-saarland.de>
 maintainer:         Julian Biehl <s8jubieh@stud.uni-saarland.de>
 copyright:          Julian Biehl, Universität des Saarlandes, 2022
 
-synopsis:           Library for the translation of multiset rewrite rules to the Proverif calculus
+synopsis:           Library for the translation of multiset rewrite rules to the ProVerif calculus
 
 description:        This is an internal library of the Tamarin prover for
                     security protocol verification

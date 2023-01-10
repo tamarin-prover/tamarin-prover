@@ -12,7 +12,7 @@
 -- Maintainer  : Julian Biehl <s8jubieh@stud.uni-saarland.de>
 -- Portability : GHC only
 --
--- Translation from multiset rewrite rules to Proverif
+-- Translation from multiset rewrite rules to ProVerif
 
 module RuleTranslation (
     loadRules
@@ -47,10 +47,9 @@ import qualified Data.Functor.Identity
 import Data.Char
 import Data.Data
 
-------------------------------------------------------------------------------
--- MSR Translation
-------------------------------------------------------------------------------
-
+-- This is the function which is called from the export module. It returns a list
+-- of process declarations for translated rules, a process which executes them all
+-- in parallel, and the headers we need for the translation
 loadRules :: OpenTheory -> ([Doc], Doc, ([(String, String, String, [String])], [(String, String, String, String)], [(String, String, String, [String])], [(String, String)], [(String, String)]))
 loadRules thy = case theoryRules thy of
   [] -> ([text ""], text "", ([],[],[],[],[]))
@@ -64,6 +63,10 @@ loadRules thy = case theoryRules thy of
               foldl (\(fr, tbl, ev) ru -> let (fr', tbl', ev') = makeHeadersFromRule ru thy in (fr ++ fr', tbl ++ tbl', ev ++ ev')) ([], [], []) rules
             ruleNames = map (\(OpenProtoRule ruE _) -> showRuleName . L.get preName $ L.get rInfo ruE) rules
             ruleComb = text ("( " ++ (intercalate " | " . map (++")") $ map ("!("++) ruleNames) ++ " )")
+
+------------------------------------------------------------------------------
+-- Header generation
+------------------------------------------------------------------------------
 
 makeDestructorHeader :: ((String, String), String) -> (String, String, String, String)
 makeDestructorHeader ((dDef, atom), dName) =
@@ -127,9 +130,15 @@ makeEventHeaders acts =
     allFactInfos = S.toList $ S.fromList (map getFactInfo acts)
     headers = map (\(t,n) -> (t, "(" ++ (intercalate ", " $ replicate n "bitstring") ++ ")")) allFactInfos
 
+------------------------------------------------------------------------------
+-- Rule translation
+------------------------------------------------------------------------------
+
 translateOpenProtoRule :: HighlightDocument d => OpenProtoRule -> OpenTheory -> M.Map (String, String) String -> (d, M.Map (String, String) String)
 translateOpenProtoRule (OpenProtoRule ruE _) thy de = translateProtoRule (checkTypes ruE thy) de
 
+-- Functions with user-defined types cannot be used in rewrite rules, they
+-- are currently written such that everything is treated as a bitstring
 checkTypes :: Rule ProtoRuleEInfo -> OpenTheory -> Rule ProtoRuleEInfo
 checkTypes ru thy = case length incorrectFunctionUsages of
   0 -> ru
