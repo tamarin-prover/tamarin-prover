@@ -20,7 +20,7 @@ restriction secrecy [left]:
   "¬(∃ #i1 #i2 k. (A( k ) @ #i1) ∧ (!KU( k ) @ #i2))"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -113,23 +113,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
+Compiled at: 2022-11-09 11:41:33.798849 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/regression/diff/issue331.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/diff/issue331.spthy
-
-  output:          examples/regression/diff/issue331.spthy.tmp
-  processing time: 0.23827286s
-  DiffLemma:  Observational_equivalence : verified (37 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -137,7 +133,8 @@ summary of summaries:
 analyzed: examples/regression/diff/issue331.spthy
 
   output:          examples/regression/diff/issue331.spthy.tmp
-  processing time: 0.23827286s
+  processing time: 0.031165s
+  
   DiffLemma:  Observational_equivalence : verified (37 steps)
 
 ==============================================================================

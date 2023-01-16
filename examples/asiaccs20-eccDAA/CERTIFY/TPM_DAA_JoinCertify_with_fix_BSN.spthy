@@ -40,7 +40,7 @@ SP1 - Correctness
 SP7 - Authentication
 
   oracle_auth_aliveness_host_very_weak (all-traces): verified (4 steps)
-  oracle_auth_aliveness_host (all-traces): verified (1114 steps)
+  oracle_auth_aliveness_host (all-traces): verified (307 steps)
   oracle_auth_aliveness_issuer (all-traces): verified (4 steps)
   oracle_auth_weak_agreement_host (all-traces): verified (1789 steps)
   oracle_auth_non_injective_agreement_host_issuer (all-traces): verified (1790 steps)
@@ -75,9 +75,8 @@ functions:  accept/0, MAC/2, KDF_AES/1, KDF_EK/1,KDF_a/3, QPub/2, QName/2, certD
     	 BSN/1, F1/1, F2/1, H_p/1,PointG1/2, Message/1, Q_K/1, certify/1, publicData/1
     	 
 
-equations:  
-    	
-    	calcE( 
+equations:
+      calcE( 
         minus(
         	multp(
             	plus(
@@ -522,7 +521,7 @@ prio:
     regex "\!KU\( KDF_AES\(~TPM"
 
 
-
+// Protocol Restrictions (Axioms)
 
 restriction equality: 	     "All #i    x y    .  Eq( x, y ) @ i ==> x = y"
 
@@ -908,7 +907,7 @@ rule TPM2_ActivateCredential:
 	Q_N_rec=<'1', 'SHA256',H_SHA256(Q_PD)>    	//calculate Q_N_rec which should be the same as Q_N
 	k_e_rec=KDF_a(<'1', s_rec>,'STORAGE',Q_N_rec)    //calculate k_e_1 which should be the same as k_e	
 	k_h_rec=KDF_a(<'1', s_rec>,'INTEGRITY','NULL')    //calculate k_h_1 which should be the same as k_h
-	//recalculate the MAC
+	//recalculate the MACvpn.inria.fr/all
 	curlyH_rec=MAC(<'1', len16(curlyK_hat),curlyK_hat,Q_N_rec>,k_h_rec)
 	//retrieve the challenge curlyK
 	curlyK_1_rec=snd(sdec(curlyK_hat,k_e_rec))
@@ -1293,7 +1292,7 @@ rule Host_JoinComplete:
     , Honest ( pk(KDF_EK(~TPM_EK_Seed)) )
     , Honest ( I )
     , OnlyOnce('Host_JoinComplete')
-    ]->
+    ]->vpn.inria.fr/all
 	 
 	 [
 	  !Host_State_RNDCreds($PS, $AS, pk(KDF_EK(~TPM_EK_Seed)), A, B, C, D)
@@ -1503,7 +1502,7 @@ rule Create_Generic_DAA_Key:
     , CertifyOnlyOnce('Create_Generic_DAA_Key')
 	  ]->
 	
-	[
+	[vpn.inria.fr/all
 	 TPM_Created_DAA_Key($PS, $AS,< kID, Qk_SD,Qk_PD, 'createdGenericDAAKey'>)
 	 , TPM_Generic_DAA_SK($PS, Qk_PD)
 	]
@@ -1691,7 +1690,7 @@ rule Verifier_Check_TPM_Certificate:
 
     //generic checks
     check1=verifyCre3(R,pkY,S,'P2')
-    check2=verifyCre4(R,W,pkX,T,'P2')
+    check2=verifyCre4(R,W,pkX,T,'P2')vpn.inria.fr/all
     
     //certificate check
     c_dash=H_k_9(credData, R, S, T, W, J_v, K, L_dash, E_dash)
@@ -1811,7 +1810,7 @@ lemma auto_restricition_pke_comes_from_tpm:
 
 //we only want one Issuer 'Issuer' to keep the model simple. This should
 //be relaxed in a future model to see whether it makes a difference.
-lemma auto_restriction_single_issuer:
+lemma auto_restriction_single_issuer:vpn.inria.fr/all
 	"All I1 I2 #i #j . (Issuer_Init(I1) @ i & Issuer_Init(I2) @ j) ==> (I1=I2)"
 
 	

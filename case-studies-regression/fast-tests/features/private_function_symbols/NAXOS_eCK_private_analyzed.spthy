@@ -584,25 +584,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
+Compiled at: 2022-11-09 11:41:33.798849 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
-
-  output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 3.526877598s
-  eCK_key_secrecy (all-traces): verified (89 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -610,7 +606,8 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 3.526877598s
+  processing time: 0.033722s
+  
   eCK_key_secrecy (all-traces): verified (89 steps)
 
 ==============================================================================

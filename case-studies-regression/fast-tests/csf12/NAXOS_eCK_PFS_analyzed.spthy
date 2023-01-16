@@ -351,25 +351,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
+Compiled at: 2022-11-09 11:41:33.798849 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf12/NAXOS_eCK_PFS.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
-
-  output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 5.756405421s
-  eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -377,7 +373,8 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 5.756405421s
+  processing time: 0.034919s
+  
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 
 ==============================================================================
