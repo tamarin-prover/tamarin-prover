@@ -72,5 +72,8 @@ anaconda-mode/
 
 # End of https://www.gitignore.io/api/emacs
 
+# MacOS
+.DS_Store
+
 # tag file
 tags

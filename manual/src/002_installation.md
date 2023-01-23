@@ -2,8 +2,10 @@
 Installation {#sec:installation}
 ============
 
-The easiest way to install Tamarin on Mac or Linux is to use
-[Homebrew](http://brew.sh/)/[Linuxbrew](https://github.com/Linuxbrew/brew#install-linuxbrew):
+## Installation on macOS or Linux {#sec:maclinux}
+
+The easiest way to install Tamarin on macOS or Linux is to use
+[Homebrew](http://brew.sh/):
 
   * `brew install tamarin-prover/tap/tamarin-prover`
 
@@ -14,14 +16,23 @@ It's separately packaged for
   - NixOS: add `tamarin-prover` to your `environment.systemPackages`.
 
 You can also [download binaries directly from GitHub](https://github.com/tamarin-prover/tamarin-prover/releases)
-and manually install dependencies yourself (see below).
-  
+and [manually install dependencies yourself](#sec:dependencies), or [compile from source](#sec:LinuxSrcInstall).
+
+## Installation on Windows 10 {#sec:windows}
+
+You can install Tamarin (with GUI) under Windows 10 using the [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/install-win10).
+For performance and compatibility reasons, we recommend using WSL2 with Ubuntu.
+Once you have WSL and Ubuntu installed, start the Ubuntu app and install Tamarin following the [installation instructions for Linux](#sec:maclinux) above.
+You can then run Tamarin inside the the Ubuntu app using the usual command.
+To use the interactive mode, start Tamarin inside the app and connect your usual Windows-run browser to [http://127.0.0.1:3001](http://127.0.0.1:3001).
+Your Windows files are accessible inside the Ubuntu app via, e.g., `/mnt/c` for files on drive `C:`.
+
 ## Compiling from source {#sec:LinuxSrcInstall}
 
 You don't need to compile Tamarin from source unless you are developing a new feature for it or you
 want to use an unreleased feature. However, if you do want to install it from source:
 
-### Manually install dependencies
+### Manually install dependencies {#sec:dependencies}
 
 Tamarin requires Haskell Stack to build and GraphViz and Maude 2.7.1 (or newer) to run. The easiest way to
 install these is
@@ -160,13 +171,6 @@ highlighting for Atom. To install it, run `apm install language-tamarin`.
 
 FAQ
 ---
-
-#### Why is Windows not supported?
-
-To the best of our knowledge, there is not a current GraphViz version available for Windows and
-there is no Maude binary for Windows 10. Therefore only the command-line parts of the tool are
-functional anyway for Windows systems prior to Windows 10. Moreover, few users actually run Tamarin
-on Windows.
 
 #### How do I uninstall Tamarin using Homebrew?
 
