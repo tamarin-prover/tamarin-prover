@@ -68,11 +68,17 @@ Cedric Staub contributed to the graphical user interface.
 Jannik Dreier and Ralf Sasse developed the extension to handle Observational 
 Equivalence.
 
+Robert Künnemann ported the SAPIC preprocessor to Tamarin, which was originally
+developed by him and Steve Kremer.
+
+Charlie Jacomme contributed to the newer version of SAPIC, SAPIC+ and
+implemented the translations to ProVerif, GSVerif and DeepSec.
+
 Other contributers to the code include: Katriel Cohn-Gordon, Kevin
 Milner, Dominik Schoop, Sam Scott, Jorden Whitefield, Ognjen Maric, and
 many others.
 
 This manual was initially written by David Basin, Cas Cremers, Jannik 
-Dreier, Sasa Radomirovic, Ralf Sasse, Lara Schmid, and Benedikt Schmidt. It 
+Dreier, Sasa Radomirovic, Ralf Sasse, Lara Schmid, Benedikt Schmidt and Robert Künnemann. It 
 includes part of a  tutorial initially written by Simon Meier and Benedikt Schmidt.
 
