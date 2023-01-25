@@ -5,7 +5,7 @@ begin
 heuristic:S
 
 
-builtins: asymmetric-encryption, symmetric-encryption, locations-report
+builtins: dest-pairing, dest-asymmetric-encryption, dest-symmetric-encryption, locations-report
 
 functions: prog/2, list/2, hash/2,h/1,cde/1,dcde/1,shared/1,dshared/1,scode/1,dscode/1,sko/1,dsko/1,
 chall/1,dchall/1,chall2/1,dchall2/1

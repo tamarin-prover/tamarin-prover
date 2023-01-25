@@ -4,7 +4,7 @@ theory AC_counter
 
 begin
 
-builtins: locations-report
+builtins: dest-pairing, locations-report
 
 functions: prog/3,null/0,succ/1,list/2
 
