@@ -37,7 +37,7 @@ pkSym, hashSym, extractMessageSym, getRepSym, reportSym :: NoEqSym
 pkSym =  ("pk",(1, Public, Constructor))
 hashSym = ("h",(1, Public, Constructor))
 extractMessageSym = ("getMessage",(1, Public, Constructor))
-getRepSym = ("get_rep",(1, Public,Constructor))
+getRepSym = ("get_rep",(1, Public,Destructor))
 reportSym = ("report",(1, Public,Constructor))
 
 -- | Nullary builtin function symbols.
