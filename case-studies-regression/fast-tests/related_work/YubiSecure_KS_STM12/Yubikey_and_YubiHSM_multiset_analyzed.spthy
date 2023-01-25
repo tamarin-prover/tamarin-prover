@@ -3,9 +3,9 @@ theory YubikeyHSMmultiset begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: demac/2, dexor1/2, dexor2/2, fst/1[destructor], keystream/2,
-           keystream_kh/1, keystream_n/1, mac/2, pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor], xorc/2
+functions: demac/2, dexor1/2, dexor2/2, fst/1, keystream/2,
+           keystream_kh/1, keystream_n/1, mac/2, pair/2, sdec/2, senc/2, snd/1,
+           xorc/2
 equations:
     demac(mac(m, k), k) = m,
     dexor1(xorc(a, b), a) = b,
@@ -1231,15 +1231,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
-Compiled at: 2022-11-09 11:41:33.798849 UTC
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -1248,7 +1248,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 0.034119s
+  processing time: 7.87s
   
   transitivity (all-traces): verified (2 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)

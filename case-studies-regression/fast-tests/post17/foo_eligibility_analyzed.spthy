@@ -2,8 +2,8 @@ theory FOO_Eligibility begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, commit/2, fst/1[destructor], open/2,
-           pair/2, pk/1, sign/2, snd/1[destructor], unblind/2
+functions: blind/2, checksign/2, commit/2, fst/1, open/2, pair/2, pk/1,
+           sign/2, snd/1, unblind/2
 equations:
     checksign(sign(m, k), pk(k)) = m,
     fst(<x.1, x.2>) = x.1,
@@ -331,15 +331,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
-Compiled at: 2022-11-09 11:41:33.798849 UTC
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -348,7 +348,7 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 0.03219s
+  processing time: 1.81s
   
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)

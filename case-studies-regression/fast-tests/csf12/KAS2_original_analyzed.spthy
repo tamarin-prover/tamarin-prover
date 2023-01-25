@@ -2,8 +2,7 @@ theory KAS2_original begin
 
 // Function signature and definition of the equational theory E
 
-functions: KDF/1, MAC/2, adec/2[destructor], aenc/2, fst/1[destructor],
-           h/1, pair/2, pk/1, snd/1[destructor]
+functions: KDF/1, MAC/2, adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -334,12 +333,24 @@ solve( (∃ ss #i4 #i5 C D ms.
                         case c_KDF
                         solve( !KU( ~m1 ) @ #vk.16 )
                           case Ephk_reveal
-                          by solve( !KU( adec(aenc(~m2, pk(~ltkA)), ~lkI) ) @ #vk.18 )
+                          solve( !KU( adec(aenc(~m2, pk(~ltkA)), ~lkI) ) @ #vk.18 )
+                            case c_adec
+                            solve( !KU( ~lkI ) @ #vk.19 )
+                              case Ltk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
                         next
                           case Init_1
                           solve( !KU( ~lkR ) @ #vk.19 )
                             case Ltk_reveal
-                            by solve( !KU( adec(aenc(~m2, pk(~ltkA)), ~lkI) ) @ #vk.19 )
+                            solve( !KU( adec(aenc(~m2, pk(~ltkA)), ~lkI) ) @ #vk.19 )
+                              case c_adec
+                              solve( !KU( ~lkI ) @ #vk.20 )
+                                case Ltk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
                           qed
                         qed
                       qed
@@ -360,12 +371,24 @@ solve( (∃ ss #i4 #i5 C D ms.
                         case c_KDF
                         solve( !KU( ~m1 ) @ #vk.16 )
                           case Ephk_reveal
-                          by solve( !KU( adec(aenc(~m2, pk(~ltkA.1)), ~lkI) ) @ #vk.18 )
+                          solve( !KU( adec(aenc(~m2, pk(~ltkA.1)), ~lkI) ) @ #vk.18 )
+                            case c_adec
+                            solve( !KU( ~lkI ) @ #vk.19 )
+                              case Ltk_reveal
+                              by contradiction /* from formulas */
+                            qed
+                          qed
                         next
                           case Init_1
                           solve( !KU( ~ltkA ) @ #vk.19 )
                             case Ltk_reveal
-                            by solve( !KU( adec(aenc(~m2, pk(~ltkA.1)), ~lkI) ) @ #vk.19 )
+                            solve( !KU( adec(aenc(~m2, pk(~ltkA.1)), ~lkI) ) @ #vk.19 )
+                              case c_adec
+                              solve( !KU( ~lkI ) @ #vk.20 )
+                                case Ltk_reveal
+                                by contradiction /* from formulas */
+                              qed
+                            qed
                           qed
                         qed
                       qed
@@ -501,12 +524,24 @@ solve( (∃ ss #i4 #i5 C D ms.
                     case c_KDF
                     solve( !KU( ~m2 ) @ #vk.14 )
                       case Ephk_reveal
-                      by solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.14 )
+                      solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.14 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.15 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
+                      qed
                     next
                       case Resp_1
                       solve( !KU( ~ltkA.1 ) @ #vk.15 )
                         case Ltk_reveal
-                        by solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.15 )
+                        solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.15 )
+                          case c_adec
+                          solve( !KU( ~lkR ) @ #vk.16 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
+                        qed
                       qed
                     qed
                   qed
@@ -541,68 +576,24 @@ solve( (∃ ss #i4 #i5 C D ms.
                   case c_KDF
                   solve( !KU( ~m2 ) @ #vk.18 )
                     case Ephk_reveal
-                    solve( !KU( MAC(KDF(<~m1, z, $I, $R, aenc(~m1, pk(~ltkA)), 
-                                         aenc(z, pk(~lkI))>),
-                                    <'Resp', $R, $I, aenc(z, pk(~lkI)), aenc(~m1, pk(~ltkA))>)
-                           ) @ #vk.9 )
-                      case Resp_1
-                      by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m2.1, pk(~lkI))>, ~lkR)
-                                ) @ #vk.18 )
-                    next
-                      case c_MAC
-                      solve( !KU( aenc(z, pk(~lkI)) ) @ #vk.11 )
-                        case Init_1
-                        by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m1.1, pk(~lkI))>, ~lkR)
-                                  ) @ #vk.22 )
-                      next
-                        case Resp_1
-                        solve( splitEqs(6) )
-                          case split_case_1
-                          by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m2.1, pk(~lkI))>, ~lkR)
-                                    ) @ #vk.22 )
-                        next
-                          case split_case_2
-                          by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m2.1, pk(~lkI))>, ~lkR)
-                                    ) @ #vk.22 )
-                        qed
-                      next
-                        case c_aenc
-                        by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR)
-                                  ) @ #vk.22 )
+                    solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR)
+                           ) @ #vk.18 )
+                      case c_adec
+                      solve( !KU( ~lkR ) @ #vk.19 )
+                        case Ltk_reveal
+                        by contradiction /* from formulas */
                       qed
                     qed
                   next
                     case Resp_1
                     solve( !KU( ~ltkA.1 ) @ #vk.19 )
                       case Ltk_reveal
-                      solve( !KU( MAC(KDF(<~m1, z, $I, $R, aenc(~m1, pk(~ltkA)), 
-                                           aenc(z, pk(~lkI))>),
-                                      <'Resp', $R, $I, aenc(z, pk(~lkI)), aenc(~m1, pk(~ltkA))>)
-                             ) @ #vk.13 )
-                        case Resp_1
-                        by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m2.1, pk(~lkI))>, ~lkR)
-                                  ) @ #vk.19 )
-                      next
-                        case c_MAC
-                        solve( !KU( aenc(z, pk(~lkI)) ) @ #vk.14 )
-                          case Init_1
-                          by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m1.1, pk(~lkI))>, ~lkR)
-                                    ) @ #vk.23 )
-                        next
-                          case Resp_1
-                          solve( splitEqs(6) )
-                            case split_case_1
-                            by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m2.1, pk(~lkI))>, ~lkR)
-                                      ) @ #vk.23 )
-                          next
-                            case split_case_2
-                            by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(~m2.1, pk(~lkI))>, ~lkR)
-                                      ) @ #vk.23 )
-                          qed
-                        next
-                          case c_aenc
-                          by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR)
-                                    ) @ #vk.23 )
+                      solve( !KU( adec(<aenc(~m1, pk(~ltkA)), aenc(z, pk(~lkI))>, ~lkR)
+                             ) @ #vk.19 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.20 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
                         qed
                       qed
                     qed
@@ -625,23 +616,23 @@ solve( (∃ ss #i4 #i5 C D ms.
                   case c_KDF
                   solve( !KU( ~m2 ) @ #vk.18 )
                     case Ephk_reveal
-                    solve( !KU( MAC(KDF(<~m1, adec(c2, ~lkI), $I, $R, aenc(~m1, pk(~ltkA)), 
-                                         c2>),
-                                    <'Resp', $R, $I, c2, aenc(~m1, pk(~ltkA))>)
-                           ) @ #vk.9 )
-                      case c_MAC
-                      by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), c2>, ~lkR) ) @ #vk.21 )
+                    solve( !KU( adec(<aenc(~m1, pk(~ltkA)), c2>, ~lkR) ) @ #vk.18 )
+                      case c_adec
+                      solve( !KU( ~lkR ) @ #vk.19 )
+                        case Ltk_reveal
+                        by contradiction /* from formulas */
+                      qed
                     qed
                   next
                     case Resp_1
                     solve( !KU( ~ltkA.1 ) @ #vk.19 )
                       case Ltk_reveal
-                      solve( !KU( MAC(KDF(<~m1, adec(c2, ~lkI), $I, $R, aenc(~m1, pk(~ltkA)), 
-                                           c2>),
-                                      <'Resp', $R, $I, c2, aenc(~m1, pk(~ltkA))>)
-                             ) @ #vk.13 )
-                        case c_MAC
-                        by solve( !KU( adec(<aenc(~m1, pk(~ltkA)), c2>, ~lkR) ) @ #vk.22 )
+                      solve( !KU( adec(<aenc(~m1, pk(~ltkA)), c2>, ~lkR) ) @ #vk.19 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.20 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
                       qed
                     qed
                   qed
@@ -762,23 +753,23 @@ solve( (∃ ss #i4 #i5 C D ms.
                     case c_KDF
                     solve( !KU( ~m2 ) @ #vk.16 )
                       case Ephk_reveal
-                      solve( !KU( MAC(KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~ltkA)), 
-                                           aenc(~m2, pk(~lkI))>),
-                                      <'Resp', $R, $I, aenc(~m2, pk(~lkI)), aenc(~m1, pk(~ltkA))>)
-                             ) @ #vk.9 )
-                        case c_MAC
-                        by solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.19 )
+                      solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.16 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.17 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
                       qed
                     next
                       case Resp_1
                       solve( !KU( ~lkI ) @ #vk.17 )
                         case Ltk_reveal
-                        solve( !KU( MAC(KDF(<~m1, ~m2, $I, $R, aenc(~m1, pk(~ltkA)), 
-                                             aenc(~m2, pk(~lkI))>),
-                                        <'Resp', $R, $I, aenc(~m2, pk(~lkI)), aenc(~m1, pk(~ltkA))>)
-                               ) @ #vk.12 )
-                          case c_MAC
-                          by solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.20 )
+                        solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.17 )
+                          case c_adec
+                          solve( !KU( ~lkR ) @ #vk.18 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
                         qed
                       qed
                     qed
@@ -800,23 +791,23 @@ solve( (∃ ss #i4 #i5 C D ms.
                     case c_KDF
                     solve( !KU( ~m2 ) @ #vk.16 )
                       case Ephk_reveal
-                      solve( !KU( MAC(KDF(<~m1, adec(aenc(~m2, pk(~ltkA.1)), ~lkI), $I, $R, 
-                                           aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>),
-                                      <'Resp', $R, $I, aenc(~m2, pk(~ltkA.1)), aenc(~m1, pk(~ltkA))>)
-                             ) @ #vk.9 )
-                        case c_MAC
-                        by solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.19 )
+                      solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.16 )
+                        case c_adec
+                        solve( !KU( ~lkR ) @ #vk.17 )
+                          case Ltk_reveal
+                          by contradiction /* from formulas */
+                        qed
                       qed
                     next
                       case Resp_1
                       solve( !KU( ~ltkA.1 ) @ #vk.17 )
                         case Ltk_reveal
-                        solve( !KU( MAC(KDF(<~m1, adec(aenc(~m2, pk(~ltkA.1)), ~lkI), $I, $R, 
-                                             aenc(~m1, pk(~ltkA)), aenc(~m2, pk(~ltkA.1))>),
-                                        <'Resp', $R, $I, aenc(~m2, pk(~ltkA.1)), aenc(~m1, pk(~ltkA))>)
-                               ) @ #vk.12 )
-                          case c_MAC
-                          by solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.20 )
+                        solve( !KU( adec(aenc(~m1, pk(~ltkA)), ~lkR) ) @ #vk.17 )
+                          case c_adec
+                          solve( !KU( ~lkR ) @ #vk.18 )
+                            case Ltk_reveal
+                            by contradiction /* from formulas */
+                          qed
                         qed
                       qed
                     qed
@@ -1052,15 +1043,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
-Compiled at: 2022-11-09 11:41:33.798849 UTC
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -1069,9 +1060,9 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_original.spthy
 
   output:          examples/csf12/KAS2_original.spthy.tmp
-  processing time: 0.037373s
+  processing time: 8.96s
   
-  KAS_key_secrecy (all-traces): verified (246 steps)
+  KAS_key_secrecy (all-traces): verified (254 steps)
 
 ==============================================================================
 */
