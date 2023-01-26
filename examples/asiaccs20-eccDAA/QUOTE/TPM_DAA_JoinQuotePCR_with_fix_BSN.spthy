@@ -41,7 +41,7 @@ SP1 - Correctness
 SP7 - Authentication
   
   oracle_auth_aliveness_host_very_weak (all-traces): verified (4 steps)
-  oracle_auth_aliveness_host (all-traces): verified (611 steps)
+  oracle_auth_aliveness_host (all-traces): verified (213 steps)
   oracle_auth_aliveness_issuer (all-traces): verified (4 steps)
   oracle_auth_weak_agreement_host (all-traces): verified (1789 steps)
   oracle_auth_non_injective_agreement_host_issuer (all-traces): verified (1790 steps)
@@ -183,7 +183,7 @@ equations:
 								
 			verifyCre2(
 				multp(r,P1), 			//A
-				multp(multp(~r,y),multp(f,P1)), 	//D
+				multp(multp(r,y),multp(f,P1)), 	//D
 				PkX(x,P2),				//X
 				plus(multp(x,multp(r,P1)),multp(multp(multp(r,x),y),multp(f,P1))),//C
 				P2)=accept
