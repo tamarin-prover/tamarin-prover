@@ -305,7 +305,7 @@ solveChain :: [RuleAC]              -- ^ All destruction rules.
            -> Reduction String      -- ^ Case name to use.
 solveChain rules (c, p) = do
     faConc  <- gets $ nodeConcFact c
-    (do -- solve it by a direct edge
+    do -- solve it by a direct edge
         cRule <- gets $ nodeRule (nodeConcNode c)
         pRule <- gets $ nodeRule (nodePremNode p)
         faPrem <- gets $ nodePremFact p
@@ -313,7 +313,7 @@ solveChain rules (c, p) = do
         insertEdges [(c, faConc, faPrem, p)]
         let mPrem = case kFactView faConc of
                       Just (DnK, m') -> m'
-                      _              -> error $ "solveChain: impossible"
+                      _              -> error "solveChain: impossible"
             caseName (viewTerm -> FApp o _)    = showFunSymName o
             caseName (viewTerm -> Lit l)       = showLitName l
         contradictoryIf (illegalCoerce pRule mPrem)
@@ -326,7 +326,7 @@ solveChain rules (c, p) = do
                 -- compute the applicable destruction rules directly.
                 i <- freshLVar "vr" LSortNode
                 let rus = map (ruleACIntrToRuleACInst . mkDUnionRule args)
-                              (filter (not . isMsgVar) args)
+                              args
                 -- NOTE: We rely on the check that the chain is open here.
                 ru <- disjunctionOfList rus
                 modM sNodes (M.insert i ru)
@@ -349,7 +349,6 @@ solveChain rules (c, p) = do
                 (v, faPrem) <- disjunctionOfList $ take 1 $ enumPrems ru
                 extendAndMark i ru v faPrem faConc
          _ -> error "solveChain: not a down fact"
-     )
   where
     extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact
       -> Control.Monad.Trans.State.Lazy.StateT System
