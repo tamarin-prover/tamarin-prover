@@ -1,0 +1,1230 @@
+theory Yubikey begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+/* looping facts with injective instances: L_CellLocked/2, L_PureState/2
+*/
+
+section{* The Yubikey-Protocol *}
+
+
+
+
+
+
+
+
+
+
+
+lemma secrecy_enc [sources, reuse]:
+  all-traces "∀ k #i. (Sec( k ) @ #i) ⇒ (¬(∃ #j. !KU( k ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k #i. (Sec( k ) @ #i) ∧ ∃ #j. (!KU( k ) @ #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ k #i.
+           (Sec( k ) @ #i) ⇒ ((last(#i)) ∨ (∀ #j. (!KU( k ) @ #j) ⇒ last(#j))))  ∥
+         (∃ pid k tc1 tc2 #t1 #t2.
+           (Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)
+          ∧
+           (¬(last(#t2))) ∧
+           (¬(last(#t1))) ∧
+           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+           (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
+           (¬(#t1 = #t2)))  ∥
+         (∃ x #NOW x.1.
+           (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
+          ∧
+           (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#i))  ∥ (∀ #j. (!KU( ~n ) @ #j) ⇒ last(#j)) )
+      case case_1
+      solve( State_111111112( StateChannel, L_pid, SL_pid, StateChannel.1,
+                              YL_pid
+             ) ▶₀ #i )
+        case p_1_1111111
+        solve( !KU( ~n.5 ) @ #j )
+          case insc_0_111111112111111111211
+          by contradiction /* node #j after last node #i */
+        qed
+      qed
+    next
+      case case_2
+      solve( State_111111112( StateChannel, L_pid, SL_pid, StateChannel.1,
+                              YL_pid
+             ) ▶₀ #i )
+        case p_1_1111111
+        solve( !KU( ~n.5 ) @ #j )
+          case insc_0_111111112111111111211
+          by contradiction /* cyclic */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        by contradiction /* from formulas */
+      qed
+    qed
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma init_server [sources]:
+  all-traces
+  "∀ pid sid k tuple otc tc #i.
+    (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i) ⇒
+    ((tuple = <sid, k, otc>) ∧
+     (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (#j < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sid k tuple otc tc #i.
+  (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i)
+ ∧
+  ((¬(tuple = <sid, k, otc>)) ∨
+   (∀ #j. (YubiInit( pid, sid, k ) @ #j) ⇒ ¬(#j < #i)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (¬(tuple = <sid, k, otc>))  ∥
+         (∀ #j. (YubiInit( pid, sid, k ) @ #j) ⇒ ¬(#j < #i)) )
+    case case_1
+    solve( (∀ pid sid k tuple otc tc #i.
+             (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i)
+            ⇒
+             ((last(#i)) ∨
+              ((tuple = <sid, k, otc>) ∧
+               (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)))))  ∥
+           (∃ pid k tc1 tc2 #t1 #t2.
+             (Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)
+            ∧
+             (¬(last(#t2))) ∧
+             (¬(last(#t1))) ∧
+             (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+             (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
+             (¬(#t1 = #t2)))  ∥
+           (∃ x #NOW x.1.
+             (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
+            ∧
+             (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+      case case_1
+      solve( (last(#i))  ∥
+             ((tuple = <sid, k, otc>) ∧
+              (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
+        case case_1
+        solve( State_111111111111111( StateChannel, lock, pid, SL_pid,
+                                      StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), tuple
+               ) ▶₀ #i )
+          case iftuplesecretidkotc_0_11111111111111
+          by contradiction /* from formulas */
+        qed
+      next
+        case case_2
+        by contradiction /* from formulas */
+      qed
+    next
+      case case_2
+      solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        by contradiction /* from formulas */
+      next
+        case case_3
+        solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+          case case_1
+          by contradiction /* from formulas */
+        next
+          case case_2
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case case_3
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (∀ pid sid k tuple otc tc #i.
+             (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i)
+            ⇒
+             ((last(#i)) ∨
+              ((tuple = <sid, k, otc>) ∧
+               (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i)))))  ∥
+           (∃ pid k tc1 tc2 #t1 #t2.
+             (Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)
+            ∧
+             (¬(last(#t2))) ∧
+             (¬(last(#t1))) ∧
+             (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+             (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
+             (¬(#t1 = #t2)))  ∥
+           (∃ x #NOW x.1.
+             (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
+            ∧
+             (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+      case case_1
+      solve( (last(#i))  ∥
+             ((tuple = <sid, k, otc>) ∧
+              (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
+        case case_1
+        solve( State_111111111111111( StateChannel, lock, pid, SL_pid,
+                                      StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), tuple
+               ) ▶₀ #i )
+          case iftuplesecretidkotc_0_11111111111111
+          solve( State_11111111111111( StateChannel, lock, pid, SL_pid,
+                                       StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), <sid, k, otc>
+                 ) ▶₀ #vr )
+            case inotc_0_1111111111111_case_1
+            solve( State_11111111211111( StateChannel.2, L_pid, SL_pid,
+                                         StateChannel.3, YL_pid.1, k, sid
+                   ) ▶₀ #j )
+              case newk_0_111111112
+              solve( State_11111111111111( StateChannel, lock, ~n.9, ~n.3,
+                                           StateChannel.1, YL_pid, ~n.6, nonce.1, npr.1, otc, ~n.7, (otc+z),
+                                           <~n.7, ~n.6, otc>
+                     ) ▶₀ #vr.8 )
+                case inotc_0_1111111111111_case_1
+                by contradiction /* from formulas */
+              next
+                case inotc_0_1111111111111_case_2
+                by contradiction /* from formulas */
+              qed
+            qed
+          next
+            case inotc_0_1111111111111_case_2
+            solve( !KU( ~n.2 ) @ #vk.2 )
+              case insc_0_111111112111111111211_case_1
+              solve( !KU( senc(<~n.7, ('zero'+z), npr>, ~n.6) ) @ #vk.5 )
+                case c_senc
+                by contradiction /* from formulas */
+              next
+                case insc_0_111111112111111111211_case_1
+                by contradiction /* from formulas */
+              next
+                case insc_0_111111112111111111211_case_2
+                by contradiction /* from formulas */
+              qed
+            next
+              case insc_0_111111112111111111211_case_2
+              by contradiction /* from formulas */
+            next
+              case p_1_
+              solve( !KU( senc(<~n.7, ('zero'+z), npr>, ~n.6) ) @ #vk.5 )
+                case c_senc
+                by contradiction /* from formulas */
+              next
+                case insc_0_111111112111111111211_case_1
+                by contradiction /* from formulas */
+              next
+                case insc_0_111111112111111111211_case_2
+                by contradiction /* from formulas */
+              qed
+            qed
+          qed
+        qed
+      next
+        case case_2
+        by contradiction /* from formulas */
+      qed
+    next
+      case case_2
+      solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        by contradiction /* from formulas */
+      next
+        case case_3
+        solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+          case case_1
+          by contradiction /* from formulas */
+        next
+          case case_2
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case case_3
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma init_server_secrecy [use_induction, reuse]:
+  all-traces
+  "∀ pid sid k tuple otc tc #i.
+    (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i) ⇒
+    (¬(∃ #j. !KU( k ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid sid k tuple otc tc #i.
+  (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i) ∧ ∃ #j. (!KU( k ) @ #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ pid sid k tuple otc tc #i.
+           (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i)
+          ⇒
+           ((last(#i)) ∨ (∀ #j. (!KU( k ) @ #j) ⇒ last(#j))))  ∥
+         (∃ pid k tc1 tc2 #t1 #t2.
+           (Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)
+          ∧
+           (¬(last(#t2))) ∧
+           (¬(last(#t1))) ∧
+           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+           (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
+           (¬(#t1 = #t2)))  ∥
+         (∃ x #NOW x.1.
+           (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
+          ∧
+           (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#i))  ∥ (∀ #j. (!KU( k ) @ #j) ⇒ last(#j)) )
+      case case_1
+      solve( State_111111111111111( StateChannel, lock, pid, SL_pid,
+                                    StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), tuple
+             ) ▶₀ #i )
+        case iftuplesecretidkotc_0_11111111111111
+        solve( State_11111111111111( StateChannel, lock, pid, SL_pid,
+                                     StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), <sid, k, otc>
+               ) ▶₀ #vr )
+          case inotc_0_1111111111111_case_1
+          by contradiction /* from formulas */
+        next
+          case inotc_0_1111111111111_case_2
+          by contradiction /* from formulas */
+        qed
+      qed
+    next
+      case case_2
+      solve( State_111111111111111( StateChannel, lock, pid, SL_pid,
+                                    StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), tuple
+             ) ▶₀ #i )
+        case iftuplesecretidkotc_0_11111111111111
+        solve( State_11111111111111( StateChannel, lock, pid, SL_pid,
+                                     StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), <sid, k, otc>
+               ) ▶₀ #vr )
+          case inotc_0_1111111111111_case_1
+          by contradiction /* from formulas */
+        next
+          case inotc_0_1111111111111_case_2
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      solve( (#t2 = #t1)  ∥ (#t1 < #t2) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        by contradiction /* from formulas */
+      qed
+    qed
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
+restriction slightly_weaker_invariant:
+  "∀ pid k tc1 tc2 #t1 #t2.
+    ((Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)) ⇒
+    ((((#t1 < #t2) ∧ (∃ z. (tc1+z) = tc2)) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
+
+lemma Login_reachable:
+  exists-trace "∃ #i pid k. Login( pid, k, ('one'+'zero') ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i pid k. (Login( pid, k, ('one'+'zero') ) @ #i)"
+*/
+simplify
+solve( Login( pid, k, ('one'+'zero') ) @ #i )
+  case eventLoginLpidktc_0_11111111111111111
+  solve( State_11111111111111111( StateChannel, lock, pid, SL_pid,
+                                  StateChannel.1, YL_pid, k, nonce, npr, otc, secretid, ('one'+'zero'),
+                                  tuple
+         ) ▶₀ #i )
+    case ifSmallerotctc_0_111111111111111_case_2
+    solve( State_11111111111111( StateChannel, lock, ~n, SL_pid,
+                                 StateChannel.1, YL_pid, ~n.1, nonce, npr, 'zero', ~n.2, ('one'+'zero'),
+                                 <~n.2, ~n.1, 'zero'>
+           ) ▶₀ #vr.1 )
+      case inotc_0_1111111111111
+      solve( !KU( ~n.2 ) @ #vk.2 )
+        case insc_0_111111112111111111211
+        solve( !KU( senc(<~n.7, ('one'+'zero'), npr>, ~n.6) ) @ #vk.5 )
+          case insc_0_111111112111111111211
+          solve( L_CellLocked( ~n.3, ~n.1 ) ▶₁ #i )
+            case inLpidnoncesencsecretidtcnprk_0_1111111111
+            solve( L_CellLocked( ~n.5, ~n.14 ) ▶₄ #vr.9 )
+              case lookupYLpidastc_0_11111111211111111121
+              solve( L_PureState( ~n.5, tc ) ▶₁ #vr.11 )
+                case insc_0_111111112111111111111
+                solve( L_CellLocked( ~n.5, ~n.15 ) ▶₄ #vr.17 )
+                  case lookupYLpidastc_0_11111111211111111121
+                  solve( L_PureState( ~n.5, ('one'+'zero') ) ▶₁ #vr.20 )
+                    case newk_0_111111112
+                    solve( L_CellLocked( ~n.5, ~n.16 ) ▶₂ #vr.23 )
+                      case lookupYLpidassc_0_11111111211111111111
+                      solve( L_PureState( ~n.5, sc ) ▶₁ #vr.24 )
+                        case insc_0_111111112111111111111
+                        solve( L_CellLocked( ~n.5, ~n.21 ) ▶₂ #vr.32 )
+                          case lookupYLpidassc_0_11111111211111111111
+                          solve( L_PureState( ~n.5, sc ) ▶₁ #vr.33 )
+                            case newk_0_111111112
+                            SOLVED // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma Login_reachable_two:
+  exists-trace "∃ #i pid k. Login( pid, k, ('one'+'one'+'zero') ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i pid k. (Login( pid, k, ('one'+'one'+'zero') ) @ #i)"
+*/
+simplify
+solve( Login( pid, k, ('one'+'one'+'zero') ) @ #i )
+  case eventLoginLpidktc_0_11111111111111111
+  solve( State_11111111111111111( StateChannel, lock, pid, SL_pid,
+                                  StateChannel.1, YL_pid, k, nonce, npr, otc, secretid,
+                                  ('one'+'one'+'zero'), tuple
+         ) ▶₀ #i )
+    case ifSmallerotctc_0_111111111111111_case_2
+    solve( State_11111111111111( StateChannel, lock, ~n, SL_pid,
+                                 StateChannel.1, YL_pid, ~n.1, nonce, npr, 'zero', ~n.2,
+                                 ('one'+'one'+'zero'), <~n.2, ~n.1, 'zero'>
+           ) ▶₀ #vr.1 )
+      case inotc_0_1111111111111
+      solve( !KU( ~n.2 ) @ #vk.2 )
+        case insc_0_111111112111111111211
+        solve( !KU( senc(<~n.7, ('one'+'one'+'zero'), npr>, ~n.6) ) @ #vk.5 )
+          case insc_0_111111112111111111211
+          solve( L_CellLocked( ~n.3, ~n.1 ) ▶₁ #i )
+            case inLpidnoncesencsecretidtcnprk_0_1111111111
+            solve( L_CellLocked( ~n.5, ~n.14 ) ▶₄ #vr.9 )
+              case lookupYLpidastc_0_11111111211111111121
+              solve( L_PureState( ~n.5, tc ) ▶₁ #vr.11 )
+                case insc_0_111111112111111111111
+                solve( L_CellLocked( ~n.5, ~n.15 ) ▶₄ #vr.17 )
+                  case lookupYLpidastc_0_11111111211111111121
+                  solve( L_PureState( ~n.5, ('one'+'one'+'zero') ) ▶₁ #vr.20 )
+                    case insc_0_111111112111111111111
+                    solve( L_CellLocked( ~n.5, ~n.16 ) ▶₂ #vr.23 )
+                      case lookupYLpidassc_0_11111111211111111111
+                      solve( L_PureState( ~n.5, sc ) ▶₁ #vr.24 )
+                        case newk_0_111111112
+                        solve( L_CellLocked( ~n.5, ~n.19 ) ▶₂ #vr.30 )
+                          case lookupYLpidassc_0_11111111211111111111
+                          solve( L_PureState( ~n.5, ('one'+'zero') ) ▶₁ #vr.31 )
+                            case newk_0_111111112
+                            SOLVED // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma one_count_foreach_login [reuse, use_induction,
+                               heuristic=O "oracle"]:
+  all-traces
+  "∀ pid k x #t2.
+    (Login( pid, k, x ) @ #t2) ⇒
+    (∃ #t1 sid. (YubiPress( pid, sid, k, x ) @ #t1) ∧ (#t1 < #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid k x #t2.
+  (Login( pid, k, x ) @ #t2)
+ ∧
+  ∀ #t1 sid. (YubiPress( pid, sid, k, x ) @ #t1) ⇒ ¬(#t1 < #t2)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ pid k x #t2.
+           (Login( pid, k, x ) @ #t2)
+          ⇒
+           ((last(#t2)) ∨
+            (∃ #t1 sid.
+              (YubiPress( pid, sid, k, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2))))  ∥
+         (∃ pid k tc1 tc2 #t1 #t2.
+           (Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)
+          ∧
+           (¬(last(#t2))) ∧
+           (¬(last(#t1))) ∧
+           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+           (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
+           (¬(#t1 = #t2)))  ∥
+         (∃ x #NOW x.1.
+           (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
+          ∧
+           (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+    case case_1
+    solve( (last(#t2))  ∥
+           (∃ #t1 sid.
+             (YubiPress( pid, sid, k, x ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2)) )
+      case case_1
+      solve( State_11111111111111111( StateChannel, lock, pid, SL_pid,
+                                      StateChannel.1, YL_pid, k, nonce, npr, otc, secretid, x, tuple
+             ) ▶₀ #t2 )
+        case ifSmallerotctc_0_111111111111111
+        solve( State_11111111111111( StateChannel, lock, ~n, SL_pid,
+                                     StateChannel.1, YL_pid, ~n.1, nonce, npr, otc, ~n.2, (otc+z),
+                                     <~n.2, ~n.1, otc>
+               ) ▶₀ #vr.1 )
+          case inotc_0_1111111111111_case_1
+          solve( !KU( senc(<~n.6, (otc+z+z.1), npr>, ~n.5) ) @ #vk.5 )
+            case c_senc
+            by contradiction /* from formulas */
+          next
+            case insc_0_111111112111111111211
+            by contradiction /* from formulas */
+          qed
+        next
+          case inotc_0_1111111111111_case_2
+          solve( !KU( senc(<~n.6, ('zero'+z), npr>, ~n.5) ) @ #vk.5 )
+            case c_senc
+            by contradiction /* from formulas */
+          next
+            case insc_0_111111112111111111211
+            by contradiction /* from formulas */
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    solve( (#t1 = #t2.1)  ∥ (#t2.1 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    next
+      case case_3
+      solve( (#t2.1 = #t1)  ∥ (#t1 < #t2.1) )
+        case case_1
+        by contradiction /* from formulas */
+      next
+        case case_2
+        by contradiction /* from formulas */
+      qed
+    qed
+  next
+    case case_3
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma no_replay [reuse]:
+  all-traces
+  "¬(∃ #i #j pid k x.
+      ((Login( pid, k, x ) @ #i) ∧ (Login( pid, k, x ) @ #j)) ∧ (¬(#i = #j)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j pid k x.
+  (Login( pid, k, x ) @ #i) ∧ (Login( pid, k, x ) @ #j) ∧ ¬(#i = #j)"
+*/
+simplify
+by solve( (#i < #j)  ∥ (#j < #i) )
+
+lemma injective_correspondance [use_induction]:
+  all-traces
+  "∀ pid k x #t2.
+    (Login( pid, k, x ) @ #t2) ⇒
+    ((∃ #t1 sid. (YubiPress( pid, sid, k, x ) @ #t1) ∧ (#t1 < #t2)) ∧
+     (∀ #t3. (Login( pid, k, x ) @ #t3) ⇒ (#t3 = #t2)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid k x #t2.
+  (Login( pid, k, x ) @ #t2)
+ ∧
+  ((∀ #t1 sid. (YubiPress( pid, sid, k, x ) @ #t1) ⇒ ¬(#t1 < #t2)) ∨
+   (∃ #t3. (Login( pid, k, x ) @ #t3) ∧ ¬(#t3 = #t2)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  simplify
+  solve( (∀ #t1 sid. (YubiPress( pid, sid, k, x ) @ #t1) ⇒ ¬(#t1 < #t2))  ∥
+         (∃ #t3. (Login( pid, k, x ) @ #t3) ∧ ¬(#t3 = #t2)) )
+    case case_1
+    by contradiction /* from formulas */
+  next
+    case case_2
+    by contradiction /* from formulas */
+  qed
+qed
+
+lemma Login_invalidates_smaller_counters:
+  all-traces
+  "∀ pid k tc1 tc2 #t1 #t2.
+    (((Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)) ∧
+     (∃ z. (tc1+z) = tc2)) ⇒
+    (#t1 < #t2)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pid k tc1 tc2 #t1 #t2.
+  (Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)
+ ∧
+  (∃ z. ((tc1+z) = tc2)) ∧ (¬(#t1 < #t2))"
+*/
+simplify
+solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
+  case case_1
+  solve( State_11111111111111111( StateChannel, lock, pid, SL_pid,
+                                  StateChannel.1, YL_pid, k, nonce, npr, otc, secretid, tc1, tuple
+         ) ▶₀ #t1 )
+    case ifSmallerotctc_0_111111111111111
+    solve( State_111111112111111111211( StateChannel.2, ~n, SL_pid.1,
+                                        StateChannel.3, YL_pid.1, ~n.1, lock.1, sid, (otc+z)
+           ) ▶₀ #t1.1 )
+      case lookupYLpidastc_0_11111111211111111121
+      solve( State_111111112111111111211( StateChannel.2, ~n.1, SL_pid.1,
+                                          StateChannel.3, YL_pid.1, ~n.5, lock.1, sid, (otc+z)
+             ) ▶₀ #t1.2 )
+        case lookupYLpidastc_0_11111111211111111121
+        by solve( Login( ~n.1, ~n.5, (otc+z+z.1) ) @ #t1 )
+      qed
+    qed
+  qed
+qed
+
+
+
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [
+   !Semistate_1( ), Fr( SL_pid.1 ), Fr( StateChannel ), Fr( YL_pid.1 ),
+   Fr( StateChannel.1 ), Fr( L_pid.1 )
+   ]
+  -->
+   [
+   !Semistate_11111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
+                        YL_pid.1
+   ),
+   Out( L_pid.1 )
+   ]
+
+  /*
+  rule (modulo AC) p_1_[color=#ffffff, process="!"]:
+     [
+     !Semistate_1( ), Fr( SL_pid ), Fr( StateChannel ), Fr( YL_pid ),
+     Fr( StateChannel.1 ), Fr( L_pid )
+     ]
+    -->
+     [
+     !Semistate_11111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid
+     ),
+     Out( L_pid )
+     ]
+  */
+
+rule (modulo E) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
+                                                           process="in(<=L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)>);"]:
+   [
+   State_1111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
+                     YL_pid.1
+   ),
+   In( <L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)> ),
+   L_PureState( SL_pid.1, tuple.1 ), Fr( lock )
+   ]
+  -->
+   [
+   State_1111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                        StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, secretid.1, tc.1, tuple.1
+   ),
+   L_CellLocked( SL_pid.1, lock )
+   ]
+
+  /*
+  rule (modulo AC) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
+                                                              process="in(<=L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)>);"]:
+     [
+     State_1111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ),
+     In( <L_pid, nonce, senc(<secretid, tc, npr>, k)> ),
+     L_PureState( SL_pid, tuple ), Fr( lock )
+     ]
+    -->
+     [
+     State_1111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
+                          YL_pid, k, nonce, npr, secretid, tc, tuple
+     ),
+     L_CellLocked( SL_pid, lock )
+     ]
+  */
+
+rule (modulo E) inotc_0_1111111111111[color=#806040,
+                                      process="in(otc.1);"]:
+   [
+   State_1111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                        StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, secretid.1, tc.1, tuple.1
+   ),
+   In( otc.1 )
+   ]
+  -->
+   [
+   State_11111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                         StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, otc.1, secretid.1, tc.1,
+                         tuple.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) inotc_0_1111111111111[color=#806040,
+                                         process="in(otc.1);"]:
+     [
+     State_1111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
+                          YL_pid, k, nonce, npr, secretid, tc, tuple
+     ),
+     In( otc )
+     ]
+    -->
+     [
+     State_11111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
+                           YL_pid, k, nonce, npr, otc, secretid, tc, tuple
+     )
+     ]
+  */
+
+rule (modulo E) iftuplesecretidkotc_0_11111111111111[color=#806040,
+                                                     process="if tuple.1=<secretid.1, k.1, otc.1>"]:
+   [
+   State_11111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                         StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, otc.1, secretid.1, tc.1,
+                         tuple.1
+   )
+   ]
+  --[ Pred_Eq( tuple.1, <secretid.1, k.1, otc.1> ) ]->
+   [
+   State_111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                          StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, otc.1, secretid.1, tc.1,
+                          tuple.1
+   )
+   ]
+
+  // loop breaker: [0]
+  /*
+  rule (modulo AC) iftuplesecretidkotc_0_11111111111111[color=#806040,
+                                                        process="if tuple.1=<secretid.1, k.1, otc.1>"]:
+     [
+     State_11111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
+                           YL_pid, k, nonce, npr, otc, secretid, tc, tuple
+     )
+     ]
+    --[ Pred_Eq( tuple, <secretid, k, otc> ) ]->
+     [
+     State_111111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
+                            YL_pid, k, nonce, npr, otc, secretid, tc, tuple
+     )
+     ]
+    // loop breaker: [0]
+  */
+
+restriction Restr_ifSmallerotctc_0_111111111111111_1:
+  "∀ x #NOW x.1.
+    (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW) ⇒
+    (∃ z. x = (z+x.1))"
+
+rule (modulo E) ifSmallerotctc_0_111111111111111[color=#806040,
+                                                 process="if Smaller( otc.1, tc.1 )"]:
+   [
+   State_111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                          StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, otc.1, secretid.1, tc.1,
+                          tuple.1
+   )
+   ]
+  --[
+  InitStuff( L_pid.1, secretid.1, k.1, tuple.1, otc.1, tc.1 ),
+  Restr_ifSmallerotctc_0_111111111111111_1( tc.1, otc.1 )
+  ]->
+   [
+   State_11111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                            StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, otc.1, secretid.1, tc.1,
+                            tuple.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifSmallerotctc_0_111111111111111[color=#806040,
+                                                    process="if Smaller( otc.1, tc.1 )"]:
+     [
+     State_111111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
+                            YL_pid, k, nonce, npr, otc, secretid, tc, tuple
+     )
+     ]
+    --[
+    InitStuff( L_pid, secretid, k, tuple, otc, tc ),
+    Restr_ifSmallerotctc_0_111111111111111_1( tc, otc )
+    ]->
+     [
+     State_11111111111111111( StateChannel, lock, L_pid, SL_pid,
+                              StateChannel.1, YL_pid, k, nonce, npr, otc, secretid, tc, tuple
+     )
+     ]
+  */
+
+rule (modulo E) eventLoginLpidktc_0_11111111111111111[color=#806040,
+                                                      process="event Login( L_pid.1, k.1, tc.1 );"]:
+   [
+   State_11111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                            StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, otc.1, secretid.1, tc.1,
+                            tuple.1
+   ),
+   L_CellLocked( SL_pid.1, lock )
+   ]
+  --[ Login( L_pid.1, k.1, tc.1 ) ]->
+   [ L_PureState( SL_pid.1, <secretid.1, k.1, tc.1> ) ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) eventLoginLpidktc_0_11111111111111111[color=#806040,
+                                                         process="event Login( L_pid.1, k.1, tc.1 );"]:
+     [
+     State_11111111111111111( StateChannel, lock, L_pid, SL_pid,
+                              StateChannel.1, YL_pid, k, nonce, npr, otc, secretid, tc, tuple
+     ),
+     L_CellLocked( SL_pid, lock )
+     ]
+    --[ Login( L_pid, k, tc ) ]->
+     [ L_PureState( SL_pid, <secretid, k, tc> ) ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) iftuplesecretidkotc_1_11111111111111[color=#806040,
+                                                     process="if tuple.1=<secretid.1, k.1, otc.1>"]:
+   [
+   State_11111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
+                         StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, otc.1, secretid.1, tc.1,
+                         tuple.1
+   )
+   ]
+  --[ Pred_Not_Eq( tuple.1, <secretid.1, k.1, otc.1> ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) iftuplesecretidkotc_1_11111111111111[color=#806040,
+                                                        process="if tuple.1=<secretid.1, k.1, otc.1>"]:
+     [
+     State_11111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
+                           YL_pid, k, nonce, npr, otc, secretid, tc, tuple
+     )
+     ]
+    --[ Pred_Not_Eq( tuple, <secretid, k, otc> ) ]->
+     [ ]
+  */
+
+rule (modulo E) p_1_1111111[color=#ffffff, process="!"]:
+   [
+   !Semistate_11111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
+                        YL_pid.1
+   )
+   ]
+  -->
+   [
+   State_1111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
+                     YL_pid.1
+   ),
+   State_111111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
+                    YL_pid.1
+   )
+   ]
+
+  /*
+  rule (modulo AC) p_1_1111111[color=#ffffff, process="!"]:
+     [
+     !Semistate_11111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid
+     )
+     ]
+    -->
+     [
+     State_1111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ),
+     State_111111112( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid )
+     ]
+  */
+
+rule (modulo E) newk_0_111111112[color=#ffffff, process="new k.2;"]:
+   [
+   State_111111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
+                    YL_pid.1
+   ),
+   Fr( k.2 ), Fr( secretid.2 )
+   ]
+  --[ Sec( k.2 ) ]->
+   [
+   State_11111111211111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
+                         YL_pid.1, k.2, secretid.2
+   ),
+   L_PureState( YL_pid.1, ('one'+'zero') ),
+   L_PureState( SL_pid.1, <secretid.2, k.2, 'zero'> )
+   ]
+
+  /*
+  rule (modulo AC) newk_0_111111112[color=#ffffff, process="new k.2;"]:
+     [
+     State_111111112( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ),
+     Fr( k ), Fr( secretid )
+     ]
+    --[ Sec( k ) ]->
+     [
+     State_11111111211111( StateChannel, L_pid, SL_pid, StateChannel.1,
+                           YL_pid, k, secretid
+     ),
+     L_PureState( YL_pid, ('one'+'zero') ),
+     L_PureState( SL_pid, <secretid, k, 'zero'> )
+     ]
+  */
+
+rule (modulo E) eventYubiInitLpidsecretidk_0_11111111211111[color=#ffffff,
+                                                            process="event YubiInit( L_pid.1, secretid.2, k.2 );"]:
+   [
+   State_11111111211111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
+                         YL_pid.1, k.2, secretid.2
+   )
+   ]
+  --[ YubiInit( L_pid.1, secretid.2, k.2 ) ]->
+   [
+   !Semistate_1111111121111111( StateChannel, L_pid.1, SL_pid.1,
+                                StateChannel.1, YL_pid.1, k.2, secretid.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventYubiInitLpidsecretidk_0_11111111211111[color=#ffffff,
+                                                               process="event YubiInit( L_pid.1, secretid.2, k.2 );"]:
+     [
+     State_11111111211111( StateChannel, L_pid, SL_pid, StateChannel.1,
+                           YL_pid, k, secretid
+     )
+     ]
+    --[ YubiInit( L_pid, secretid, k ) ]->
+     [
+     !Semistate_1111111121111111( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                  YL_pid, k, secretid
+     )
+     ]
+  */
+
+rule (modulo E) p_1_111111112111111[color=#ffffff, process="!"]:
+   [
+   !Semistate_1111111121111111( StateChannel, L_pid.1, SL_pid.1,
+                                StateChannel.1, YL_pid.1, k.2, secretid.2
+   )
+   ]
+  -->
+   [
+   !Semistate_111111112111111111( StateChannel, L_pid.1, SL_pid.1,
+                                  StateChannel.1, YL_pid.1, k.2, secretid.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) p_1_111111112111111[color=#ffffff, process="!"]:
+     [
+     !Semistate_1111111121111111( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                  YL_pid, k, secretid
+     )
+     ]
+    -->
+     [
+     !Semistate_111111112111111111( StateChannel, L_pid, SL_pid,
+                                    StateChannel.1, YL_pid, k, secretid
+     )
+     ]
+  */
+
+rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#805140,
+                                                       process="lookup YL_pid.1 as sc.1"]:
+   [
+   State_11111111211111111111( StateChannel, L_pid.1, SL_pid.1,
+                               StateChannel.1, YL_pid.1, k.2, secretid.2
+   ),
+   L_PureState( YL_pid.1, sc.1 ), Fr( lock.1 )
+   ]
+  -->
+   [
+   State_111111112111111111111( StateChannel, L_pid.1, SL_pid.1,
+                                StateChannel.1, YL_pid.1, lock.1, sc.1, k.2, secretid.2
+   ),
+   L_CellLocked( YL_pid.1, lock.1 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) lookupYLpidassc_0_11111111211111111111[color=#805140,
+                                                          process="lookup YL_pid.1 as sc.1"]:
+     [
+     State_11111111211111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                 YL_pid, k, secretid
+     ),
+     L_PureState( YL_pid, sc ), Fr( lock )
+     ]
+    -->
+     [
+     State_111111112111111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                  YL_pid, lock, sc, k, secretid
+     ),
+     L_CellLocked( YL_pid, lock )
+     ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) insc_0_111111112111111111111[color=#805140,
+                                             process="in(=sc.1);"]:
+   [
+   State_111111112111111111111( StateChannel, L_pid.1, SL_pid.1,
+                                StateChannel.1, YL_pid.1, lock.1, sc.1, k.2, secretid.2
+   ),
+   In( sc.1 ), L_CellLocked( YL_pid.1, lock.1 )
+   ]
+  -->
+   [ L_PureState( YL_pid.1, ('one'+sc.1) ) ]
+
+  // loop breaker: [2]
+  /*
+  rule (modulo AC) insc_0_111111112111111111111[color=#805140,
+                                                process="in(=sc.1);"]:
+     [
+     State_111111112111111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                  YL_pid, lock, sc, k, secretid
+     ),
+     In( sc ), L_CellLocked( YL_pid, lock )
+     ]
+    -->
+     [ L_PureState( YL_pid, ('one'+sc) ) ]
+    // loop breaker: [2]
+  */
+
+rule (modulo E) p_1_11111111211111111[color=#805140, process="!"]:
+   [
+   !Semistate_111111112111111111( StateChannel, L_pid.1, SL_pid.1,
+                                  StateChannel.1, YL_pid.1, k.2, secretid.2
+   )
+   ]
+  -->
+   [
+   State_11111111211111111121( StateChannel, L_pid.1, SL_pid.1,
+                               StateChannel.1, YL_pid.1, k.2, secretid.2
+   ),
+   State_11111111211111111111( StateChannel, L_pid.1, SL_pid.1,
+                               StateChannel.1, YL_pid.1, k.2, secretid.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) p_1_11111111211111111[color=#805140, process="!"]:
+     [
+     !Semistate_111111112111111111( StateChannel, L_pid, SL_pid,
+                                    StateChannel.1, YL_pid, k, secretid
+     )
+     ]
+    -->
+     [
+     State_11111111211111111121( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                 YL_pid, k, secretid
+     ),
+     State_11111111211111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                 YL_pid, k, secretid
+     )
+     ]
+  */
+
+rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#805140,
+                                                       process="lookup YL_pid.1 as tc.2"]:
+   [
+   State_11111111211111111121( StateChannel, L_pid.1, SL_pid.1,
+                               StateChannel.1, YL_pid.1, k.2, secretid.2
+   ),
+   L_PureState( YL_pid.1, tc.2 ), Fr( lock.2 )
+   ]
+  -->
+   [
+   State_111111112111111111211( StateChannel, L_pid.1, SL_pid.1,
+                                StateChannel.1, YL_pid.1, k.2, lock.2, secretid.2, tc.2
+   ),
+   L_CellLocked( YL_pid.1, lock.2 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) lookupYLpidastc_0_11111111211111111121[color=#805140,
+                                                          process="lookup YL_pid.1 as tc.2"]:
+     [
+     State_11111111211111111121( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                 YL_pid, k, secretid
+     ),
+     L_PureState( YL_pid, tc ), Fr( lock )
+     ]
+    -->
+     [
+     State_111111112111111111211( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                  YL_pid, k, lock, secretid, tc
+     ),
+     L_CellLocked( YL_pid, lock )
+     ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) insc_0_111111112111111111211[color=#805140,
+                                             process="in(sc.2);"]:
+   [
+   State_111111112111111111211( StateChannel, L_pid.1, SL_pid.1,
+                                StateChannel.1, YL_pid.1, k.2, lock.2, secretid.2, tc.2
+   ),
+   In( sc.2 ), Fr( nonce.2 ), Fr( npr.2 ), L_CellLocked( YL_pid.1, lock.2 )
+   ]
+  --[ YubiPress( L_pid.1, secretid.2, k.2, tc.2 ) ]->
+   [
+   L_PureState( YL_pid.1, ('one'+tc.2) ),
+   Out( <L_pid.1, nonce.2, senc(<secretid.2, tc.2, npr.2>, k.2)> )
+   ]
+
+  // loop breaker: [4]
+  /*
+  rule (modulo AC) insc_0_111111112111111111211[color=#805140,
+                                                process="in(sc.2);"]:
+     [
+     State_111111112111111111211( StateChannel, L_pid, SL_pid, StateChannel.1,
+                                  YL_pid, k, lock, secretid, tc
+     ),
+     In( sc ), Fr( nonce ), Fr( npr ), L_CellLocked( YL_pid, lock )
+     ]
+    --[ YubiPress( L_pid, secretid, k, tc ) ]->
+     [
+     L_PureState( YL_pid, ('one'+tc) ),
+     Out( <L_pid, nonce, senc(<secretid, tc, npr>, k)> )
+     ]
+    // loop breaker: [4]
+  */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
+
+  output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
+  processing time: 10.10s
+  
+  secrecy_enc (all-traces): verified (18 steps)
+  init_server (all-traces): verified (42 steps)
+  init_server_secrecy (all-traces): verified (20 steps)
+  Login_reachable (exists-trace): verified (16 steps)
+  Login_reachable_two (exists-trace): verified (16 steps)
+  one_count_foreach_login (all-traces): verified (21 steps)
+  no_replay (all-traces): verified (2 steps)
+  injective_correspondance (all-traces): verified (6 steps)
+  Login_invalidates_smaller_counters (all-traces): verified (6 steps)
+
+==============================================================================
+*/

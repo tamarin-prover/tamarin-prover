@@ -7043,10 +7043,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_2
-              MIRRORED
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case DDH_case_3
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              MIRRORED
             next
               case DDH_case_4
               by step( solve( !KU( ~x ) @ #vk.2 ) )
@@ -7105,10 +7105,10 @@ next
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
               next
                 case DDH_case_4
-                MIRRORED
+                by step( solve( !KU( ~y ) @ #vk.3 ) )
               next
                 case DDH_case_5
-                by step( solve( !KU( ~y ) @ #vk.3 ) )
+                MIRRORED
               next
                 case DDH_case_6
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
@@ -7165,10 +7165,10 @@ next
                 by step( solve( !KU( ~z ) @ #vk.2 ) )
               next
                 case DDH_case_6
-                MIRRORED
+                by step( solve( !KU( ~z ) @ #vk.3 ) )
               next
                 case DDH_case_7
-                by step( solve( !KU( ~z ) @ #vk.3 ) )
+                MIRRORED
               next
                 case c_exp
                 by step( solve( !KU( ~z ) @ #vk.4 ) )
@@ -7251,10 +7251,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_2
-              MIRRORED
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case DDH_case_3
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              MIRRORED
             next
               case DDH_case_4
               by step( solve( !KU( ~x ) @ #vk.2 ) )
@@ -7269,10 +7269,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_8
-              by step( solve( !KU( ~y ) @ #vk.3 ) )
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case DDH_case_9
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              by step( solve( !KU( ~y ) @ #vk.3 ) )
             next
               case c_exp
               by step( solve( !KU( ~x ) @ #vk.4 ) )
@@ -7319,10 +7319,10 @@ next
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
               next
                 case DDH_case_4
-                MIRRORED
+                by step( solve( !KU( ~y ) @ #vk.3 ) )
               next
                 case DDH_case_5
-                by step( solve( !KU( ~y ) @ #vk.3 ) )
+                MIRRORED
               next
                 case DDH_case_6
                 by step( solve( !KU( ~x ) @ #vk.1 ) )
@@ -7391,19 +7391,19 @@ next
                 by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
                 case DDH_case_08
-                by step( solve( !KU( ~x ) @ #vk.1 ) )
-              next
-                case DDH_case_09
-                by step( solve( !KU( ~y ) @ #vk.1 ) )
-              next
-                case DDH_case_10
-                MIRRORED
-              next
-                case DDH_case_11
                 by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
-                case DDH_case_12
+                case DDH_case_09
+                by step( solve( !KU( ~x ) @ #vk.1 ) )
+              next
+                case DDH_case_10
                 by step( solve( !KU( ~x ) @ #vk.2 ) )
+              next
+                case DDH_case_11
+                by step( solve( !KU( ~y ) @ #vk.1 ) )
+              next
+                case DDH_case_12
+                MIRRORED
               next
                 case DDH_case_13
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
@@ -7556,15 +7556,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 3.0
-Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
-Compiled at: 2023-01-25 13:14:18.712098538 UTC
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -7573,7 +7573,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 14.18s
+  processing time: 6.35s
   
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 

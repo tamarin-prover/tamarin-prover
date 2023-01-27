@@ -1,0 +1,713 @@
+theory AC_sid begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
+           pair/2, prog/3, rep/2[private,destructor], report/1, snd/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+
+
+predicate: Report( x, y )<=>¬(y = 'l')
+
+
+
+
+
+
+
+lemma attested_comput:
+  exists-trace
+  "¬(∀ #t1 h.
+      (Voutput( h ) @ #t1) ⇒ (∃ #t2. (Poutput( h ) @ #t2) ∧ (#t2 < #t1)))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t1 h.
+  (Voutput( h ) @ #t1) ∧ ∀ #t2. (Poutput( h ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+solve( State_1121111111111111( init, lock, signedios, ip, ipo, o, r_sid,
+                               sid, state
+       ) ▶₀ #t1 )
+  case ifoipsidcheckrepsignediosl_0_112111111111111
+  solve( (#vr.5 < #t2)  ∥ (#vr.5 = #t2) )
+    case case_1
+    solve( (#vr.13 < #t2.1)  ∥ (#vr.13 = #t2.1) )
+      case case_1
+      solve( Insert( ~n.4, ipo.1 ) @ #t2 )
+        case insertstateolistipipo_0_11211111111111111
+        solve( State_11211111111111111( init, lock, signedios, ip.1, ipo.1, o,
+                                        r_sid, sid, ~n.4
+               ) ▶₀ #t2 )
+          case eventVoutputoipipo_0_1121111111111111
+          solve( ((#vr.2 < #vr.18) ∧
+                  (∃ #t2.
+                    (Unlock_1( '1', ~n.1, ~n.5 ) @ #t2)
+                   ∧
+                    (#vr.2 < #t2) ∧
+                    (#t2 < #vr.18) ∧
+                    (∀ #t0 pp. (Unlock( pp, ~n.1, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
+                    (∀ pp lpp #t0.
+                      (Lock( pp, lpp, ~n.5 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t0 = #vr.2) ∨ (#t2 < #t0))) ∧
+                    (∀ pp lpp #t0.
+                      (Unlock( pp, lpp, ~n.5 ) @ #t0)
+                     ⇒
+                      ((#t0 < #vr.2) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                 (#vr.18 < #vr.2)  ∥ (#vr.2 = #vr.18) )
+            case case_2
+            solve( (#vr.5 < #t2.3)  ∥ (#vr.5 = #t2.3) )
+              case case_2
+              solve( (#vr.25 < #t2.4)  ∥ (#vr.25 = #t2.4) )
+                case case_2
+                solve( State_112111111111111111( init, ~n.6, signedios, ip.2, ipo.3, o,
+                                                 r_sid, sid, ~n.5
+                       ) ▶₀ #t2.1 )
+                  case insertstateolistipipo_0_11211111111111111
+                  solve( (#t2.2 < #t2.5)  ∥ (#t2.2 = #t2.5) )
+                    case case_2
+                    solve( (#t2.3 < #t2.5)  ∥ (#t2.3 = #t2.5) )
+                      case case_2
+                      solve( Insert( ~n.10, ipo ) @ #t2.4 )
+                        case insertstateprogripipolistipipo_0_1111111111111111
+                        solve( State_1111111111111111( lock, init, ip.1, ipo, r, sid, ~n.9
+                               ) ▶₀ #t2.4 )
+                          case eventPoutputprogripipoipipo_0_11111111111111
+                          solve( ((#vr.10 < #vr.28) ∧
+                                  (∃ #t2.
+                                    (Unlock_0( '0', ~n.13, ~n.12 ) @ #t2)
+                                   ∧
+                                    (#vr.10 < #t2) ∧
+                                    (#t2 < #vr.28) ∧
+                                    (∀ #t0 pp. (Unlock( pp, ~n.13, ~n.12 ) @ #t0) ⇒ #t0 = #t2) ∧
+                                    (∀ pp lpp #t0.
+                                      (Lock( pp, lpp, ~n.12 ) @ #t0)
+                                     ⇒
+                                      ((#t0 < #vr.10) ∨ (#t0 = #vr.10) ∨ (#t2 < #t0))) ∧
+                                    (∀ pp lpp #t0.
+                                      (Unlock( pp, lpp, ~n.12 ) @ #t0)
+                                     ⇒
+                                      ((#t0 < #vr.10) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                 (#vr.28 < #vr.10)  ∥ (#vr.10 = #vr.28) )
+                            case case_2
+                            solve( (#vr.12 < #t2.6)  ∥ (#vr.12 = #t2.6) )
+                              case case_2
+                              solve( State_11111111111111111( ~n.10, init, ip.3, ipo.3, r, sid, ~n.12
+                                     ) ▶₀ #t2.5 )
+                                case insertstateprogripipolistipipo_0_1111111111111111
+                                solve( (#t2.6 < #t2.7)  ∥ (#t2.6 = #t2.7) )
+                                  case case_2
+                                  solve( Insert( ~n.6, ipo.2 ) @ #t2.2 )
+                                    case p_1_112
+                                    solve( Insert( ~n.9, ipo.1 ) @ #t2.3 )
+                                      case newstate_0_111
+                                      solve( Insert( ~n.12, ipo ) @ #t2.6 )
+                                        case newstate_0_111
+                                        solve( !KU( rep(~n.4, 'l') ) @ #vk.8 )
+                                          case p_1_11111
+                                          solve( !KU( rep(~n.8, 'l') ) @ #vk.13 )
+                                            case p_1_11111
+                                            solve( !KU( prog(~n.2, ip, <prog(~n.3, ip.1, ~n), list(ip.1, ~n)>)
+                                                   ) @ #vk.8 )
+                                              case eventPoutputprogripipoipipo_0_11111111111111_case_1
+                                              solve( (#t2.6 < #t2.7)  ∥ (#t2.6 = #t2.7) )
+                                                case case_1
+                                                solve( (#t2.4 < #t2.7)  ∥ (#t2.4 = #t2.7) )
+                                                  case case_2
+                                                  solve( !KU( ~n.4 ) @ #vk.10 )
+                                                    case p_1_11111_case_1
+                                                    solve( !KU( prog(~n.5, ip.2, ~n) ) @ #vk.12 )
+                                                      case eventPoutputprogripipoipipo_0_11111111111111_case_1
+                                                      solve( (#t2.3 < #t2.7)  ∥ (#t2.3 = #t2.7) )
+                                                        case case_2
+                                                        solve( !KU( ~n.8 ) @ #vk.13 )
+                                                          case p_1_11111_case_1
+                                                          SOLVED // trace found
+                                                        qed
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          qed
+                                        qed
+                                      qed
+                                    qed
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'l'))"
+  // safety formula
+
+rule (modulo E) ReportRule[color=#ffffff, process="new init.1;"]:
+   [ In( <x, loc> ) ]
+  --[ Restr_ReportRule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="new init.1;"]:
+   [ Fr( init.1 ) ] --[ Init( ) ]-> [ !Semistate_11( init.1 ) ]
+
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="new init.1;"]:
+     [ Fr( init ) ] --[ Init( ) ]-> [ !Semistate_11( init ) ]
+  */
+
+rule (modulo E) newstate_0_111[color=#ffffff, process="new state.1;"]:
+   [ State_111( init.1 ), Fr( state.1 ) ]
+  --[ Insert( state.1, init.1 ) ]->
+   [ !Semistate_111111( init.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) newstate_0_111[color=#ffffff, process="new state.1;"]:
+     [ State_111( init ), Fr( state ) ]
+    --[ Insert( state, init ) ]->
+     [ !Semistate_111111( init, state ) ]
+  */
+
+rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
+   [ !Semistate_111111( init.1, state.1 ), Fr( sid.1 ) ]
+  -->
+   [
+   !Semistate_1111111111( init.1, sid.1, state.1 ),
+   Out( <sid.1, rep(sid.1, 'l')> )
+   ]
+
+  /*
+  rule (modulo AC) p_1_11111[color=#ffffff, process="!"]:
+     [ !Semistate_111111( init, state ), Fr( sid ) ]
+    -->
+     [ !Semistate_1111111111( init, sid, state ), Out( <sid, rep(sid, 'l')> )
+     ]
+  */
+
+rule (modulo E) p_1_111111111[color=#405280, process="!"]:
+   [ !Semistate_1111111111( init.1, sid.1, state.1 ), Fr( lock ) ]
+  --[ Lock_0( '0', lock, state.1 ), Lock( '0', lock, state.1 ) ]->
+   [ State_11111111111( lock, init.1, sid.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_111111111[color=#405280, process="!"]:
+     [ !Semistate_1111111111( init, sid, state ), Fr( lock ) ]
+    --[ Lock_0( '0', lock, state ), Lock( '0', lock, state ) ]->
+     [ State_11111111111( lock, init, sid, state ) ]
+  */
+
+rule (modulo E) lookupstateasipo_0_11111111111[color=#405280,
+                                               process="lookup state.1 as ipo.1"]:
+   [
+   State_11111111111( lock, init.1, sid.1, state.1 ), In( ip.1 ), Fr( r.1 )
+   ]
+  --[ IsIn( state.1, ipo.1 ) ]->
+   [ State_11111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
+   ]
+
+  /*
+  rule (modulo AC) lookupstateasipo_0_11111111111[color=#405280,
+                                                  process="lookup state.1 as ipo.1"]:
+     [ State_11111111111( lock, init, sid, state ), In( ip ), Fr( r ) ]
+    --[ IsIn( state, ipo ) ]->
+     [ State_11111111111111( lock, init, ip, ipo, r, sid, state ) ]
+  */
+
+rule (modulo E) eventPoutputprogripipoipipo_0_11111111111111[color=#405280,
+                                                             process="event Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> );"]:
+   [ State_11111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
+   ]
+  --[ Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> ) ]->
+   [
+   State_1111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 ),
+   Out( <prog(r.1, ip.1, ipo.1), 
+         rep(<prog(r.1, ip.1, ipo.1), ip.1, sid.1>, 'l')>
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventPoutputprogripipoipipo_0_11111111111111[color=#405280,
+                                                                process="event Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> );"]:
+     [ State_11111111111111( lock, init, ip, ipo, r, sid, state ) ]
+    --[ Poutput( <prog(r, ip, ipo), ip, ipo> ) ]->
+     [
+     State_1111111111111111( lock, init, ip, ipo, r, sid, state ),
+     Out( <prog(r, ip, ipo), rep(<prog(r, ip, ipo), ip, sid>, 'l')> )
+     ]
+  */
+
+rule (modulo E) insertstateprogripipolistipipo_0_1111111111111111[color=#405280,
+                                                                  process="insert state.1,<prog(r.1, ip.1, ipo.1), list(ip.1, ipo.1)>;"]:
+   [
+   State_1111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
+   ]
+  --[ Insert( state.1, <prog(r.1, ip.1, ipo.1), list(ip.1, ipo.1)> ) ]->
+   [
+   State_11111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
+   ]
+
+  /*
+  rule (modulo AC) insertstateprogripipolistipipo_0_1111111111111111[color=#405280,
+                                                                     process="insert state.1,<prog(r.1, ip.1, ipo.1), list(ip.1, ipo.1)>;"]:
+     [ State_1111111111111111( lock, init, ip, ipo, r, sid, state ) ]
+    --[ Insert( state, <prog(r, ip, ipo), list(ip, ipo)> ) ]->
+     [ State_11111111111111111( lock, init, ip, ipo, r, sid, state ) ]
+  */
+
+rule (modulo E) unlockstate_0_11111111111111111[color=#405280,
+                                                process="unlock state.1;"]:
+   [
+   State_11111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
+   ]
+  --[ Unlock_0( '0', lock, state.1 ), Unlock( '0', lock, state.1 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) unlockstate_0_11111111111111111[color=#405280,
+                                                   process="unlock state.1;"]:
+     [ State_11111111111111111( lock, init, ip, ipo, r, sid, state ) ]
+    --[ Unlock_0( '0', lock, state ), Unlock( '0', lock, state ) ]->
+     [ ]
+  */
+
+rule (modulo E) lookupstateasipo_1_11111111111[color=#405280,
+                                               process="lookup state.1 as ipo.1"]:
+   [ State_11111111111( lock, init.1, sid.1, state.1 ) ]
+  --[ IsNotSet( state.1 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) lookupstateasipo_1_11111111111[color=#405280,
+                                                  process="lookup state.1 as ipo.1"]:
+     [ State_11111111111( lock, init, sid, state ) ]
+    --[ IsNotSet( state ) ]->
+     [ ]
+  */
+
+rule (modulo E) p_1_1[color=#ffffff, process="!"]:
+   [ !Semistate_11( init.1 ) ]
+  -->
+   [ !Semistate_1121( init.1 ), State_111( init.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_1[color=#ffffff, process="!"]:
+     [ !Semistate_11( init ) ]
+    -->
+     [ !Semistate_1121( init ), State_111( init ) ]
+  */
+
+rule (modulo E) p_1_112[color=#ffffff, process="!"]:
+   [ !Semistate_1121( init.1 ), Fr( state.2 ) ]
+  --[ Insert( state.2, init.1 ) ]->
+   [ !Semistate_1121111( init.1, state.2 ) ]
+
+  /*
+  rule (modulo AC) p_1_112[color=#ffffff, process="!"]:
+     [ !Semistate_1121( init ), Fr( state ) ]
+    --[ Insert( state, init ) ]->
+     [ !Semistate_1121111( init, state ) ]
+  */
+
+rule (modulo E) p_1_112111[color=#ffffff, process="!"]:
+   [ !Semistate_1121111( init.1, state.2 ), In( <sid.2, r_sid.2> ) ]
+  -->
+   [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
+
+  /*
+  rule (modulo AC) p_1_112111[color=#ffffff, process="!"]:
+     [ !Semistate_1121111( init, state ), In( <sid, r_sid> ) ]
+    -->
+     [ State_112111111( init, r_sid, sid, state ) ]
+  */
+
+rule (modulo E) ifsidcheckreprsidl_0_112111111[color=#658040,
+                                               process="if sid.2=check_rep(r_sid.2, 'l')"]:
+   [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
+  --[ Pred_Eq( sid.2, check_rep(r_sid.2, 'l') ) ]->
+   [ !Semistate_11211111111( init.1, r_sid.2, sid.2, state.2 ) ]
+
+  /*
+  rule (modulo AC) ifsidcheckreprsidl_0_112111111[color=#658040,
+                                                  process="if sid.2=check_rep(r_sid.2, 'l')"]:
+     [ State_112111111( init, r_sid, sid, state ) ]
+    --[ Pred_Eq( sid, z ) ]->
+     [ !Semistate_11211111111( init, r_sid, sid, state ) ]
+    variants (modulo AC)
+    1. r_sid = r_sid.9
+       z     = check_rep(r_sid.9, 'l')
+    
+    2. r_sid = rep(x.8, 'l')
+       z     = x.8
+  */
+
+rule (modulo E) p_1_1121111111[color=#658040, process="!"]:
+   [ !Semistate_11211111111( init.1, r_sid.2, sid.2, state.2 ), Fr( lock.1 )
+   ]
+  --[ Lock_1( '1', lock.1, state.2 ), Lock( '1', lock.1, state.2 ) ]->
+   [ State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
+
+  /*
+  rule (modulo AC) p_1_1121111111[color=#658040, process="!"]:
+     [ !Semistate_11211111111( init, r_sid, sid, state ), Fr( lock ) ]
+    --[ Lock_1( '1', lock, state ), Lock( '1', lock, state ) ]->
+     [ State_112111111111( init, lock, r_sid, sid, state ) ]
+  */
+
+rule (modulo E) lookupstateasipo_0_112111111111[color=#658040,
+                                                process="lookup state.2 as ipo.2"]:
+   [
+   State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ),
+   In( ip.2 ), In( <o.2, signedios.1> )
+   ]
+  --[ IsIn( state.2, ipo.2 ) ]->
+   [
+   State_112111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                          r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) lookupstateasipo_0_112111111111[color=#658040,
+                                                   process="lookup state.2 as ipo.2"]:
+     [
+     State_112111111111( init, lock, r_sid, sid, state ), In( ip ),
+     In( <o, signedios> )
+     ]
+    --[ IsIn( state, ipo ) ]->
+     [
+     State_112111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                            state
+     )
+     ]
+  */
+
+rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#658040,
+                                                             process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')"]:
+   [
+   State_112111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                          r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Pred_Eq( <o.2, ip.2, sid.2>, check_rep(signedios.1, 'l') ) ]->
+   [
+   State_1121111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                           r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifoipsidcheckrepsignediosl_0_112111111111111[color=#658040,
+                                                                process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')"]:
+     [
+     State_112111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                            state
+     )
+     ]
+    --[ Pred_Eq( <o, ip, sid>, z ) ]->
+     [
+     State_1121111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                             state
+     )
+     ]
+    variants (modulo AC)
+    1. signedios
+             = signedios.13
+       z     = check_rep(signedios.13, 'l')
+    
+    2. signedios
+             = rep(x.13, 'l')
+       z     = x.13
+  */
+
+rule (modulo E) eventVoutputoipipo_0_1121111111111111[color=#658040,
+                                                      process="event Voutput( <o.2, ip.2, ipo.2> );"]:
+   [
+   State_1121111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                           r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Voutput( <o.2, ip.2, ipo.2> ) ]->
+   [
+   State_11211111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                            r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventVoutputoipipo_0_1121111111111111[color=#658040,
+                                                         process="event Voutput( <o.2, ip.2, ipo.2> );"]:
+     [
+     State_1121111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                             state
+     )
+     ]
+    --[ Voutput( <o, ip, ipo> ) ]->
+     [
+     State_11211111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                              state
+     )
+     ]
+  */
+
+rule (modulo E) insertstateolistipipo_0_11211111111111111[color=#658040,
+                                                          process="insert state.2,<o.2, list(ip.2, ipo.2)>;"]:
+   [
+   State_11211111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                            r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Insert( state.2, <o.2, list(ip.2, ipo.2)> ) ]->
+   [
+   State_112111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                             r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) insertstateolistipipo_0_11211111111111111[color=#658040,
+                                                             process="insert state.2,<o.2, list(ip.2, ipo.2)>;"]:
+     [
+     State_11211111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                              state
+     )
+     ]
+    --[ Insert( state, <o, list(ip, ipo)> ) ]->
+     [
+     State_112111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                               state
+     )
+     ]
+  */
+
+rule (modulo E) unlockstate_0_112111111111111111[color=#658040,
+                                                 process="unlock state.2;"]:
+   [
+   State_112111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                             r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Unlock_1( '1', lock.1, state.2 ), Unlock( '1', lock.1, state.2 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) unlockstate_0_112111111111111111[color=#658040,
+                                                    process="unlock state.2;"]:
+     [
+     State_112111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                               state
+     )
+     ]
+    --[ Unlock_1( '1', lock, state ), Unlock( '1', lock, state ) ]->
+     [ ]
+  */
+
+rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#658040,
+                                                             process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')"]:
+   [
+   State_112111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                          r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Pred_Not_Eq( <o.2, ip.2, sid.2>, check_rep(signedios.1, 'l') ) ]->
+   [
+   State_1121111111111112( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                           r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifoipsidcheckrepsignediosl_1_112111111111111[color=#658040,
+                                                                process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')"]:
+     [
+     State_112111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                            state
+     )
+     ]
+    --[ Pred_Not_Eq( <o, ip, sid>, z ) ]->
+     [
+     State_1121111111111112( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                             state
+     )
+     ]
+    variants (modulo AC)
+    1. signedios
+             = signedios.13
+       z     = check_rep(signedios.13, 'l')
+    
+    2. signedios
+             = rep(x.13, 'l')
+       z     = x.13
+  */
+
+rule (modulo E) eventFail_0_1121111111111112[color=#658040,
+                                             process="event Fail( );"]:
+   [
+   State_1121111111111112( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                           r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Fail( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventFail_0_1121111111111112[color=#658040,
+                                                process="event Fail( );"]:
+     [
+     State_1121111111111112( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                             state
+     )
+     ]
+    --[ Fail( ) ]->
+     [ ]
+  */
+
+rule (modulo E) lookupstateasipo_1_112111111111[color=#658040,
+                                                process="lookup state.2 as ipo.2"]:
+   [ State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
+  --[ IsNotSet( state.2 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) lookupstateasipo_1_112111111111[color=#658040,
+                                                   process="lookup state.2 as ipo.2"]:
+     [ State_112111111111( init, lock, r_sid, sid, state ) ]
+    --[ IsNotSet( state ) ]->
+     [ ]
+  */
+
+rule (modulo E) ifsidcheckreprsidl_1_112111111[color=#658040,
+                                               process="if sid.2=check_rep(r_sid.2, 'l')"]:
+   [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
+  --[ Pred_Not_Eq( sid.2, check_rep(r_sid.2, 'l') ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) ifsidcheckreprsidl_1_112111111[color=#658040,
+                                                  process="if sid.2=check_rep(r_sid.2, 'l')"]:
+     [ State_112111111( init, r_sid, sid, state ) ]
+    --[ Pred_Not_Eq( sid, z ) ]->
+     [ ]
+    variants (modulo AC)
+    1. r_sid = r_sid.9
+       z     = check_rep(r_sid.9, 'l')
+    
+    2. r_sid = rep(x.8, 'l')
+       z     = x.8
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction locking_0:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+restriction locking_1:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
+
+  output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
+  processing time: 27.21s
+  
+  attested_comput (exists-trace): verified (31 steps)
+
+==============================================================================
+*/

@@ -1231,15 +1231,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 3.0
-Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
-Compiled at: 2023-01-25 13:14:18.712098538 UTC
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -1248,7 +1248,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 7.87s
+  processing time: 3.40s
   
   transitivity (all-traces): verified (2 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (72 steps)
