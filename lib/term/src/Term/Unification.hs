@@ -56,6 +56,10 @@ module Term.Unification (
   , symEncMaudeSig
   , asymEncMaudeSig
   , signatureMaudeSig
+  , pairDestMaudeSig
+  , symEncDestMaudeSig
+  , asymEncDestMaudeSig
+  , signatureDestMaudeSig  
   , locationReportMaudeSig
   , revealSignatureMaudeSig
   , hashMaudeSig

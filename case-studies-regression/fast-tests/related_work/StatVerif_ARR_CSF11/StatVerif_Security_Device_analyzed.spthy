@@ -2,8 +2,7 @@ theory StatVerif_Security_Device begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, fst/1[destructor], pair/2, pk/1,
-           snd/1[destructor]
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -276,15 +275,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
-Compiled at: 2022-11-09 11:41:33.798849 UTC
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.0. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -293,7 +292,7 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
-  processing time: 0.033685s
+  processing time: 0.48s
   
   types (all-traces): verified (32 steps)
   reachability_left (exists-trace): verified (5 steps)

@@ -46,6 +46,8 @@ theory privpass
 
 begin
 
+builtins: dest-pairing
+
 functions: pkV/1,MVBlind/2,rVBlind/2,VEvaluate/3, VUnblind/4, VFinalize/4 [destructor], H2/1,F/2
 
 equations: VFinalize(x, pkV(sk),
