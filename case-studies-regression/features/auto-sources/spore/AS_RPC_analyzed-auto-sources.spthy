@@ -2,8 +2,7 @@ theory AndrewSecureRPC begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, pred/1, sdec/2[destructor], senc/2,
-           snd/1[destructor], succ/1
+functions: fst/1, pair/2, pred/1, sdec/2, senc/2, snd/1, succ/1
 equations:
     fst(<x.1, x.2>) = x.1,
     pred(succ(x)) = x,
@@ -889,7 +888,7 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -1529,29 +1528,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/AS_RPC.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
-
-  output:          examples/features/auto-sources/spore/AS_RPC.spthy.tmp
-  processing time: 104.08537812s
-  secrecy (all-traces): verified (187 steps)
-  injectiveagreement_A (all-traces): falsified - found trace (16 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (7 steps)
-  noninjectiveagreement_A (all-traces): falsified - found trace (10 steps)
-  noninjectiveagreement_B (all-traces): falsified - found trace (7 steps)
-  Session_key_honest_setup (exists-trace): verified (15 steps)
-  AUTO_typing (all-traces): verified (146 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1559,7 +1548,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_RPC.spthy.tmp
-  processing time: 104.08537812s
+  processing time: 30.93s
+  
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (16 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

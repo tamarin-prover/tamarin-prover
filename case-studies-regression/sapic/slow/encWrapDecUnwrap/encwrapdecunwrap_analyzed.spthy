@@ -2,8 +2,8 @@ theory EncWrapDecUnwrap begin
 
 // Function signature and definition of the equational theory E
 
-functions: attC/1, fst/1[destructor], key/1, pair/2, sdec/2[destructor],
-           senc/2, sencSucc/2, snd/1[destructor], true/0
+functions: attC/1, fst/1, key/1, pair/2, sdec/2, senc/2, sencSucc/2,
+           snd/1, true/0
 equations:
     attC(<k, a>) = a,
     fst(<x.1, x.2>) = x.1,
@@ -354,33 +354,33 @@ next
             ∧
              (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #t1) ∧ (#t3 < #t1)) )
       case case_1
-      solve( State_11112111111( c, m, lock, v, L_h ) ▶₀ #t1 )
-        case letmsdecckeyv_1_1111211111
+      solve( State_1111211111( c, lock, v, L_h ) ▶₀ #t1 )
+        case ifsencSuccckeyvtrue_0_111121111
         solve( !KU( senc(m, k) ) @ #vk.2 )
           case c_senc
           solve( Insert( L_h, <k, 'dec'> ) @ #t2 )
             case insertLhkeyvdec_0_11111211111
             solve( State_11111211111( lock, v, L_h ) ▶₀ #t2 )
               case eventDecKeyLhkeyv_0_1111121111
-              solve( ((#vr.4 < #vr.10) ∧
+              solve( ((#vr.3 < #vr.9) ∧
                       (∃ #t2.
                         (Unlock_3( '3', ~n, L_h ) @ #t2)
                        ∧
-                        (#vr.4 < #t2) ∧
-                        (#t2 < #vr.10) ∧
+                        (#vr.3 < #t2) ∧
+                        (#t2 < #vr.9) ∧
                         (∀ #t0 pp. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, L_h ) @ #t0)
                          ⇒
-                          ((#t0 < #vr.4) ∨ (#t0 = #vr.4) ∨ (#t2 < #t0))) ∧
+                          ((#t0 < #vr.3) ∨ (#t0 = #vr.3) ∨ (#t2 < #t0))) ∧
                         (∀ pp lpp #t0.
                           (Unlock( pp, lpp, L_h ) @ #t0)
                          ⇒
-                          ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                     (#vr.10 < #vr.4) )
+                          ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                     (#vr.9 < #vr.3) )
                 case case_1
-                solve( State_1111211111111( c, m.1, ~n, v, L_h ) ▶₀ #t2.1 )
-                  case eventDecUsingkeyvm_0_11112111111
+                solve( State_111121111111( c, ~n, v, L_h ) ▶₀ #t2.1 )
+                  case eventDecUsingkeyvsdecckeyv_0_1111211111
                   by contradiction /* cyclic */
                 qed
               next
@@ -405,24 +405,24 @@ next
             qed
           qed
         next
-          case eventDecUsingkeyvm_0_11112111111
+          case eventDecUsingkeyvsdecckeyv_0_1111211111
           solve( (∃ h2 k2 #t2 #t3.
                    (NewKey( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
                   ∧
-                   (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.7) ∧ (#t3 < #vr.7))  ∥
-                 (∃ #t2. (EncUsing( z, t ) @ #t2) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.7))  ∥
+                   (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.6) ∧ (#t3 < #vr.6))  ∥
+                 (∃ #t2. (EncUsing( z, t ) @ #t2) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.6))  ∥
                  (∃ h2 k2 #t2 #t3.
                    (Unwrapped( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
                   ∧
-                   (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.7) ∧ (#t3 < #vr.7))  ∥
+                   (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.6) ∧ (#t3 < #vr.6))  ∥
                  (∃ #t2 #t3 h1 h2 k2.
                    (WrapKey( h2, k2 ) @ #t2) ∧ (DecKey( h1, k2 ) @ #t3)
                   ∧
-                   (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.7) ∧ (#t3 < #vr.7))  ∥
+                   (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.6) ∧ (#t3 < #vr.6))  ∥
                  (∃ #t2 #t3 h1 h2 k2.
                    (Unwrapped( h2, k2 ) @ #t2) ∧ (DecKey( h1, k2 ) @ #t3)
                   ∧
-                   (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.7) ∧ (#t3 < #vr.7)) )
+                   (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #vr.6) ∧ (#t3 < #vr.6)) )
             case case_1
             by contradiction /* from formulas */
           next
@@ -450,25 +450,25 @@ next
             case insertLhkeyvdec_0_11111211111
             solve( State_11111211111( lock, v, L_h ) ▶₀ #t2 )
               case eventDecKeyLhkeyv_0_1111121111
-              solve( ((#vr.4 < #vr.17) ∧
+              solve( ((#vr.3 < #vr.16) ∧
                       (∃ #t2.
                         (Unlock_3( '3', ~n, L_h ) @ #t2)
                        ∧
-                        (#vr.4 < #t2) ∧
-                        (#t2 < #vr.17) ∧
+                        (#vr.3 < #t2) ∧
+                        (#t2 < #vr.16) ∧
                         (∀ #t0 pp. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, L_h ) @ #t0)
                          ⇒
-                          ((#t0 < #vr.4) ∨ (#t0 = #vr.4) ∨ (#t2 < #t0))) ∧
+                          ((#t0 < #vr.3) ∨ (#t0 = #vr.3) ∨ (#t2 < #t0))) ∧
                         (∀ pp lpp #t0.
                           (Unlock( pp, lpp, L_h ) @ #t0)
                          ⇒
-                          ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                     (#vr.17 < #vr.4) )
+                          ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                     (#vr.16 < #vr.3) )
                 case case_1
-                solve( State_1111211111111( c, m.1, ~n, v, L_h ) ▶₀ #t2.1 )
-                  case eventDecUsingkeyvm_0_11112111111
+                solve( State_111121111111( c, ~n, v, L_h ) ▶₀ #t2.1 )
+                  case eventDecUsingkeyvsdecckeyv_0_1111211111
                   by contradiction /* cyclic */
                 qed
               next
@@ -528,25 +528,25 @@ next
             case insertLhkeyvdec_0_11111211111
             solve( State_11111211111( lock, v, L_h ) ▶₀ #t2 )
               case eventDecKeyLhkeyv_0_1111121111
-              solve( ((#vr.4 < #vr.18) ∧
+              solve( ((#vr.3 < #vr.17) ∧
                       (∃ #t2.
                         (Unlock_3( '3', ~n, L_h ) @ #t2)
                        ∧
-                        (#vr.4 < #t2) ∧
-                        (#t2 < #vr.18) ∧
+                        (#vr.3 < #t2) ∧
+                        (#t2 < #vr.17) ∧
                         (∀ #t0 pp. (Unlock( pp, ~n, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                         (∀ pp lpp #t0.
                           (Lock( pp, lpp, L_h ) @ #t0)
                          ⇒
-                          ((#t0 < #vr.4) ∨ (#t0 = #vr.4) ∨ (#t2 < #t0))) ∧
+                          ((#t0 < #vr.3) ∨ (#t0 = #vr.3) ∨ (#t2 < #t0))) ∧
                         (∀ pp lpp #t0.
                           (Unlock( pp, lpp, L_h ) @ #t0)
                          ⇒
-                          ((#t0 < #vr.4) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                     (#vr.18 < #vr.4) )
+                          ((#t0 < #vr.3) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                     (#vr.17 < #vr.3) )
                 case case_1
-                solve( State_1111211111111( c, m.1, ~n, v, L_h ) ▶₀ #t2.1 )
-                  case eventDecUsingkeyvm_0_11112111111
+                solve( State_111121111111( c, ~n, v, L_h ) ▶₀ #t2.1 )
+                  case eventDecUsingkeyvsdecckeyv_0_1111211111
                   by contradiction /* cyclic */
                 qed
               next
@@ -566,22 +566,22 @@ next
                           case insertLhkeyvwrap_0_111111211111
                           solve( State_111111211111( lock, v, L_h1 ) ▶₀ #t2.3 )
                             case eventWrapKeyLhkeyv_0_11111121111
-                            solve( ((#vr.13 < #vr.28) ∧
+                            solve( ((#vr.12 < #vr.27) ∧
                                     (∃ #t2.
                                       (Unlock_5( '5', ~n.4, L_h1 ) @ #t2)
                                      ∧
-                                      (#vr.13 < #t2) ∧
-                                      (#t2 < #vr.28) ∧
+                                      (#vr.12 < #t2) ∧
+                                      (#t2 < #vr.27) ∧
                                       (∀ #t0 pp. (Unlock( pp, ~n.4, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                       (∀ pp lpp #t0.
                                         (Lock( pp, lpp, L_h1 ) @ #t0)
                                        ⇒
-                                        ((#t0 < #vr.13) ∨ (#t0 = #vr.13) ∨ (#t2 < #t0))) ∧
+                                        ((#t0 < #vr.12) ∨ (#t0 = #vr.12) ∨ (#t2 < #t0))) ∧
                                       (∀ pp lpp #t0.
                                         (Unlock( pp, lpp, L_h1 ) @ #t0)
                                        ⇒
-                                        ((#t0 < #vr.13) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                   (#vr.28 < #vr.13) )
+                                        ((#t0 < #vr.12) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                   (#vr.27 < #vr.12) )
                               case case_1
                               solve( State_11211111111( L_h1, L_h2.1, v1, v2, ~n.4 ) ▶₀ #t2.4 )
                                 case eventWrapkeyvkeyv_0_112111111
@@ -632,22 +632,22 @@ next
                           case insertLhkeyvwrap_0_111111211111
                           solve( State_111111211111( lock, v, L_h1 ) ▶₀ #t2.3 )
                             case eventWrapKeyLhkeyv_0_11111121111
-                            solve( ((#vr.13 < #vr.29) ∧
+                            solve( ((#vr.12 < #vr.28) ∧
                                     (∃ #t2.
                                       (Unlock_5( '5', ~n.5, L_h1 ) @ #t2)
                                      ∧
-                                      (#vr.13 < #t2) ∧
-                                      (#t2 < #vr.29) ∧
+                                      (#vr.12 < #t2) ∧
+                                      (#t2 < #vr.28) ∧
                                       (∀ #t0 pp. (Unlock( pp, ~n.5, L_h1 ) @ #t0) ⇒ #t0 = #t2) ∧
                                       (∀ pp lpp #t0.
                                         (Lock( pp, lpp, L_h1 ) @ #t0)
                                        ⇒
-                                        ((#t0 < #vr.13) ∨ (#t0 = #vr.13) ∨ (#t2 < #t0))) ∧
+                                        ((#t0 < #vr.12) ∨ (#t0 = #vr.12) ∨ (#t2 < #t0))) ∧
                                       (∀ pp lpp #t0.
                                         (Unlock( pp, lpp, L_h1 ) @ #t0)
                                        ⇒
-                                        ((#t0 < #vr.13) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                   (#vr.29 < #vr.13) )
+                                        ((#t0 < #vr.12) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                   (#vr.28 < #vr.12) )
                               case case_1
                               solve( State_11211111111( L_h1, L_h2, v1, v2, ~n.5 ) ▶₀ #t2.4 )
                                 case eventWrapkeyvkeyv_0_112111111
@@ -672,39 +672,39 @@ next
                                           case c_senc
                                           by contradiction /* cyclic */
                                         next
-                                          case eventDecUsingkeyvm_0_11112111111
+                                          case eventDecUsingkeyvsdecckeyv_0_1111211111
                                           solve( (∃ h2 k2 #t2 #t3.
                                                    (NewKey( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
                                                   ∧
                                                    (¬(last(#t3))) ∧
                                                    (¬(last(#t2))) ∧
-                                                   (#t2 < #vr.35) ∧
-                                                   (#t3 < #vr.35))  ∥
+                                                   (#t2 < #vr.34) ∧
+                                                   (#t3 < #vr.34))  ∥
                                                  (∃ #t2.
                                                    (EncUsing( z.2, t ) @ #t2)
                                                   ∧
-                                                   (¬(last(#t2))) ∧ (#t2 < #vr.35))  ∥
+                                                   (¬(last(#t2))) ∧ (#t2 < #vr.34))  ∥
                                                  (∃ h2 k2 #t2 #t3.
                                                    (Unwrapped( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
                                                   ∧
                                                    (¬(last(#t3))) ∧
                                                    (¬(last(#t2))) ∧
-                                                   (#t2 < #vr.35) ∧
-                                                   (#t3 < #vr.35))  ∥
+                                                   (#t2 < #vr.34) ∧
+                                                   (#t3 < #vr.34))  ∥
                                                  (∃ #t2 #t3 h1 h2 k2.
                                                    (WrapKey( h2, k2 ) @ #t2) ∧ (DecKey( h1, k2 ) @ #t3)
                                                   ∧
                                                    (¬(last(#t3))) ∧
                                                    (¬(last(#t2))) ∧
-                                                   (#t2 < #vr.35) ∧
-                                                   (#t3 < #vr.35))  ∥
+                                                   (#t2 < #vr.34) ∧
+                                                   (#t3 < #vr.34))  ∥
                                                  (∃ #t2 #t3 h1 h2 k2.
                                                    (Unwrapped( h2, k2 ) @ #t2) ∧ (DecKey( h1, k2 ) @ #t3)
                                                   ∧
                                                    (¬(last(#t3))) ∧
                                                    (¬(last(#t2))) ∧
-                                                   (#t2 < #vr.35) ∧
-                                                   (#t3 < #vr.35)) )
+                                                   (#t2 < #vr.34) ∧
+                                                   (#t3 < #vr.34)) )
                                             case case_1
                                             by contradiction /* from formulas */
                                           next
@@ -729,7 +729,199 @@ next
                                         next
                                           case eventWrapkeyvkeyv_0_112111111_case_1
                                           solve( !KU( ~n.4 ) @ #vk.9 )
-                                            case eventDecUsingkeyvm_0_11112111111
+                                            case eventDecUsingkeyvsdecckeyv_0_1111211111
+                                            solve( (∃ h2 k2 #t2 #t3.
+                                                     (NewKey( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
+                                                    ∧
+                                                     (¬(last(#t3))) ∧
+                                                     (¬(last(#t2))) ∧
+                                                     (#t2 < #vr.41) ∧
+                                                     (#t3 < #vr.41))  ∥
+                                                   (∃ #t2.
+                                                     (EncUsing( z.2, t ) @ #t2)
+                                                    ∧
+                                                     (¬(last(#t2))) ∧ (#t2 < #vr.41))  ∥
+                                                   (∃ h2 k2 #t2 #t3.
+                                                     (Unwrapped( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
+                                                    ∧
+                                                     (¬(last(#t3))) ∧
+                                                     (¬(last(#t2))) ∧
+                                                     (#t2 < #vr.41) ∧
+                                                     (#t3 < #vr.41))  ∥
+                                                   (∃ #t2 #t3 h1 h2 k2.
+                                                     (WrapKey( h2, k2 ) @ #t2) ∧ (DecKey( h1, k2 ) @ #t3)
+                                                    ∧
+                                                     (¬(last(#t3))) ∧
+                                                     (¬(last(#t2))) ∧
+                                                     (#t2 < #vr.41) ∧
+                                                     (#t3 < #vr.41))  ∥
+                                                   (∃ #t2 #t3 h1 h2 k2.
+                                                     (Unwrapped( h2, k2 ) @ #t2) ∧ (DecKey( h1, k2 ) @ #t3)
+                                                    ∧
+                                                     (¬(last(#t3))) ∧
+                                                     (¬(last(#t2))) ∧
+                                                     (#t2 < #vr.41) ∧
+                                                     (#t3 < #vr.41)) )
+                                              case case_1
+                                              by contradiction /* from formulas */
+                                            next
+                                              case case_2
+                                              solve( State_11121111( t, lock, v, L_h.2 ) ▶₀ #t2.7 )
+                                                case ifattCvdec_0_1112111
+                                                by contradiction /* cyclic */
+                                              qed
+                                            next
+                                              case case_3
+                                              by contradiction /* from formulas */
+                                            next
+                                              case case_4
+                                              by contradiction /* from formulas */
+                                            next
+                                              case case_5
+                                              by contradiction /* from formulas */
+                                            qed
+                                          next
+                                            case eventWrapkeyvkeyv_0_112111111
+                                            solve( Insert( L_h, <k, 'wrap'> ) @ #t2.7 )
+                                              case insertLhkeyvwrap_0_111111211111
+                                              solve( State_111111211111( lock, v, L_h ) ▶₀ #t2.7 )
+                                                case eventWrapKeyLhkeyv_0_11111121111
+                                                solve( ((#vr.23 < #vr.52) ∧
+                                                        (∃ #t2.
+                                                          (Unlock_6( '6', ~n.5, L_h ) @ #t2)
+                                                         ∧
+                                                          (#vr.23 < #t2) ∧
+                                                          (#t2 < #vr.52) ∧
+                                                          (∀ #t0 pp.
+                                                            (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                                                          (∀ pp lpp #t0.
+                                                            (Lock( pp, lpp, L_h ) @ #t0)
+                                                           ⇒
+                                                            ((#t0 < #vr.23) ∨ (#t0 = #vr.23) ∨ (#t2 < #t0))) ∧
+                                                          (∀ pp lpp #t0.
+                                                            (Unlock( pp, lpp, L_h ) @ #t0)
+                                                           ⇒
+                                                            ((#t0 < #vr.23) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                                       (#vr.52 < #vr.23) )
+                                                  case case_1
+                                                  solve( State_12111111111( L_h2.2, k.1, m.1, v, L_h, ~n.5
+                                                         ) ▶₀ #t2.8 )
+                                                    case insertLhmwrap_0_121111111
+                                                    by contradiction /* cyclic */
+                                                  qed
+                                                next
+                                                  case case_2
+                                                  solve( State_11111121111111( ~n.9, v, L_h ) ▶₀ #t2.8 )
+                                                    case eventWrapHandleLh_0_1111112111111
+                                                    solve( (#t2.14 < #t2.15)  ∥ (#t2.14 = #t2.15) )
+                                                      case case_1
+                                                      by contradiction /* from formulas */
+                                                    next
+                                                      case case_2
+                                                      solve( Insert( L_h1, <z.1, 'init'> ) @ #t2.9 )
+                                                        case insertLhkinit_0_111111111111
+                                                        solve( State_111111111111( lock, L_h1, z.1
+                                                               ) ▶₀ #t2.9 )
+                                                          case eventNewKeyLhk_0_11111111111
+                                                          by contradiction /* from formulas */
+                                                        qed
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              qed
+                                            next
+                                              case insertLhmwrap_0_121111111
+                                              solve( State_121111111( L_h, k.1, k, v, L_h.1, lock ) ▶₀ #t2.7 )
+                                                case eventUnwrappedLhm_0_12111111
+                                                solve( Insert( L_h1, <z.1, 'init'> ) @ #t2.8 )
+                                                  case insertLhkinit_0_111111111111
+                                                  solve( State_111111111111( lock, L_h1, z.1 ) ▶₀ #t2.8 )
+                                                    case eventNewKeyLhk_0_11111111111
+                                                    by contradiction /* from formulas */
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          next
+                                            case insertLhmwrap_0_121111111
+                                            solve( (#t2.7 < #t2.11)  ∥ (#t2.7 = #t2.11) )
+                                              case case_1
+                                              by contradiction /* from formulas */
+                                            next
+                                              case case_2
+                                              solve( Insert( L_h, <k, 'wrap'> ) @ #t2.7 )
+                                                case insertLhkeyvwrap_0_111111211111
+                                                solve( State_111111211111( lock, v, L_h ) ▶₀ #t2.7 )
+                                                  case eventWrapKeyLhkeyv_0_11111121111
+                                                  solve( ((#vr.23 < #vr.44) ∧
+                                                          (∃ #t2.
+                                                            (Unlock_6( '6', ~n.5, L_h ) @ #t2)
+                                                           ∧
+                                                            (#vr.23 < #t2) ∧
+                                                            (#t2 < #vr.44) ∧
+                                                            (∀ #t0 pp.
+                                                              (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
+                                                            (∀ pp lpp #t0.
+                                                              (Lock( pp, lpp, L_h ) @ #t0)
+                                                             ⇒
+                                                              ((#t0 < #vr.23) ∨
+                                                               (#t0 = #vr.23) ∨
+                                                               (#t2 < #t0))) ∧
+                                                            (∀ pp lpp #t0.
+                                                              (Unlock( pp, lpp, L_h ) @ #t0)
+                                                             ⇒
+                                                              ((#t0 < #vr.23) ∨
+                                                               (#t2 < #t0) ∨
+                                                               (#t2 = #t0)))))  ∥
+                                                         (#vr.44 < #vr.23) )
+                                                    case case_1
+                                                    solve( State_12111111111( L_h2.1, k.1, m.1, v, L_h, ~n.5
+                                                           ) ▶₀ #t2.8 )
+                                                      case insertLhmwrap_0_121111111
+                                                      by contradiction /* cyclic */
+                                                    qed
+                                                  next
+                                                    case case_2
+                                                    solve( State_11111121111111( ~n.9, v, L_h ) ▶₀ #t2.8 )
+                                                      case eventWrapHandleLh_0_1111112111111
+                                                      solve( (#t2.12 < #t2.13)  ∥ (#t2.12 = #t2.13) )
+                                                        case case_1
+                                                        by contradiction /* from formulas */
+                                                      next
+                                                        case case_2
+                                                        solve( Insert( L_h1, <z.1, 'init'> ) @ #t2.9 )
+                                                          case insertLhkinit_0_111111111111
+                                                          solve( State_111111111111( lock, L_h1, z.1
+                                                                 ) ▶₀ #t2.9 )
+                                                            case eventNewKeyLhk_0_11111111111
+                                                            by contradiction /* from formulas */
+                                                          qed
+                                                        qed
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              next
+                                                case insertLhmwrap_0_121111111
+                                                solve( State_121111111( L_h, k.1, k, v, L_h.1, lock
+                                                       ) ▶₀ #t2.7 )
+                                                  case eventUnwrappedLhm_0_12111111
+                                                  solve( Insert( L_h1, <z.1, 'init'> ) @ #t2.8 )
+                                                    case insertLhkinit_0_111111111111
+                                                    solve( State_111111111111( lock, L_h1, z.1 ) ▶₀ #t2.8 )
+                                                      case eventNewKeyLhk_0_11111111111
+                                                      by contradiction /* from formulas */
+                                                    qed
+                                                  qed
+                                                qed
+                                              qed
+                                            qed
+                                          qed
+                                        next
+                                          case eventWrapkeyvkeyv_0_112111111_case_2
+                                          solve( !KU( ~n.4 ) @ #vk.9 )
+                                            case eventDecUsingkeyvsdecckeyv_0_1111211111
                                             solve( (∃ h2 k2 #t2 #t3.
                                                      (NewKey( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
                                                     ∧
@@ -738,7 +930,7 @@ next
                                                      (#t2 < #vr.42) ∧
                                                      (#t3 < #vr.42))  ∥
                                                    (∃ #t2.
-                                                     (EncUsing( z.2, t ) @ #t2)
+                                                     (EncUsing( z.4, t ) @ #t2)
                                                     ∧
                                                      (¬(last(#t2))) ∧ (#t2 < #vr.42))  ∥
                                                    (∃ h2 k2 #t2 #t3.
@@ -786,23 +978,23 @@ next
                                               case insertLhkeyvwrap_0_111111211111
                                               solve( State_111111211111( lock, v, L_h ) ▶₀ #t2.7 )
                                                 case eventWrapKeyLhkeyv_0_11111121111
-                                                solve( ((#vr.24 < #vr.53) ∧
+                                                solve( ((#vr.23 < #vr.53) ∧
                                                         (∃ #t2.
                                                           (Unlock_6( '6', ~n.5, L_h ) @ #t2)
                                                          ∧
-                                                          (#vr.24 < #t2) ∧
+                                                          (#vr.23 < #t2) ∧
                                                           (#t2 < #vr.53) ∧
                                                           (∀ #t0 pp.
                                                             (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                           (∀ pp lpp #t0.
                                                             (Lock( pp, lpp, L_h ) @ #t0)
                                                            ⇒
-                                                            ((#t0 < #vr.24) ∨ (#t0 = #vr.24) ∨ (#t2 < #t0))) ∧
+                                                            ((#t0 < #vr.23) ∨ (#t0 = #vr.23) ∨ (#t2 < #t0))) ∧
                                                           (∀ pp lpp #t0.
                                                             (Unlock( pp, lpp, L_h ) @ #t0)
                                                            ⇒
-                                                            ((#t0 < #vr.24) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                                       (#vr.53 < #vr.24) )
+                                                            ((#t0 < #vr.23) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                                                       (#vr.53 < #vr.23) )
                                                   case case_1
                                                   solve( State_12111111111( L_h2.2, k.1, m.1, v, L_h, ~n.5
                                                          ) ▶₀ #t2.8 )
@@ -854,219 +1046,27 @@ next
                                                 case insertLhkeyvwrap_0_111111211111
                                                 solve( State_111111211111( lock, v, L_h ) ▶₀ #t2.7 )
                                                   case eventWrapKeyLhkeyv_0_11111121111
-                                                  solve( ((#vr.24 < #vr.45) ∧
+                                                  solve( ((#vr.23 < #vr.45) ∧
                                                           (∃ #t2.
                                                             (Unlock_6( '6', ~n.5, L_h ) @ #t2)
                                                            ∧
-                                                            (#vr.24 < #t2) ∧
+                                                            (#vr.23 < #t2) ∧
                                                             (#t2 < #vr.45) ∧
                                                             (∀ #t0 pp.
                                                               (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
                                                             (∀ pp lpp #t0.
                                                               (Lock( pp, lpp, L_h ) @ #t0)
                                                              ⇒
-                                                              ((#t0 < #vr.24) ∨
-                                                               (#t0 = #vr.24) ∨
+                                                              ((#t0 < #vr.23) ∨
+                                                               (#t0 = #vr.23) ∨
                                                                (#t2 < #t0))) ∧
                                                             (∀ pp lpp #t0.
                                                               (Unlock( pp, lpp, L_h ) @ #t0)
                                                              ⇒
-                                                              ((#t0 < #vr.24) ∨
+                                                              ((#t0 < #vr.23) ∨
                                                                (#t2 < #t0) ∨
                                                                (#t2 = #t0)))))  ∥
-                                                         (#vr.45 < #vr.24) )
-                                                    case case_1
-                                                    solve( State_12111111111( L_h2.1, k.1, m.1, v, L_h, ~n.5
-                                                           ) ▶₀ #t2.8 )
-                                                      case insertLhmwrap_0_121111111
-                                                      by contradiction /* cyclic */
-                                                    qed
-                                                  next
-                                                    case case_2
-                                                    solve( State_11111121111111( ~n.9, v, L_h ) ▶₀ #t2.8 )
-                                                      case eventWrapHandleLh_0_1111112111111
-                                                      solve( (#t2.12 < #t2.13)  ∥ (#t2.12 = #t2.13) )
-                                                        case case_1
-                                                        by contradiction /* from formulas */
-                                                      next
-                                                        case case_2
-                                                        solve( Insert( L_h1, <z.1, 'init'> ) @ #t2.9 )
-                                                          case insertLhkinit_0_111111111111
-                                                          solve( State_111111111111( lock, L_h1, z.1
-                                                                 ) ▶₀ #t2.9 )
-                                                            case eventNewKeyLhk_0_11111111111
-                                                            by contradiction /* from formulas */
-                                                          qed
-                                                        qed
-                                                      qed
-                                                    qed
-                                                  qed
-                                                qed
-                                              next
-                                                case insertLhmwrap_0_121111111
-                                                solve( State_121111111( L_h, k.1, k, v, L_h.1, lock
-                                                       ) ▶₀ #t2.7 )
-                                                  case eventUnwrappedLhm_0_12111111
-                                                  solve( Insert( L_h1, <z.1, 'init'> ) @ #t2.8 )
-                                                    case insertLhkinit_0_111111111111
-                                                    solve( State_111111111111( lock, L_h1, z.1 ) ▶₀ #t2.8 )
-                                                      case eventNewKeyLhk_0_11111111111
-                                                      by contradiction /* from formulas */
-                                                    qed
-                                                  qed
-                                                qed
-                                              qed
-                                            qed
-                                          qed
-                                        next
-                                          case eventWrapkeyvkeyv_0_112111111_case_2
-                                          solve( !KU( ~n.4 ) @ #vk.9 )
-                                            case eventDecUsingkeyvm_0_11112111111
-                                            solve( (∃ h2 k2 #t2 #t3.
-                                                     (NewKey( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
-                                                    ∧
-                                                     (¬(last(#t3))) ∧
-                                                     (¬(last(#t2))) ∧
-                                                     (#t2 < #vr.43) ∧
-                                                     (#t3 < #vr.43))  ∥
-                                                   (∃ #t2.
-                                                     (EncUsing( z.4, t ) @ #t2)
-                                                    ∧
-                                                     (¬(last(#t2))) ∧ (#t2 < #vr.43))  ∥
-                                                   (∃ h2 k2 #t2 #t3.
-                                                     (Unwrapped( h2, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
-                                                    ∧
-                                                     (¬(last(#t3))) ∧
-                                                     (¬(last(#t2))) ∧
-                                                     (#t2 < #vr.43) ∧
-                                                     (#t3 < #vr.43))  ∥
-                                                   (∃ #t2 #t3 h1 h2 k2.
-                                                     (WrapKey( h2, k2 ) @ #t2) ∧ (DecKey( h1, k2 ) @ #t3)
-                                                    ∧
-                                                     (¬(last(#t3))) ∧
-                                                     (¬(last(#t2))) ∧
-                                                     (#t2 < #vr.43) ∧
-                                                     (#t3 < #vr.43))  ∥
-                                                   (∃ #t2 #t3 h1 h2 k2.
-                                                     (Unwrapped( h2, k2 ) @ #t2) ∧ (DecKey( h1, k2 ) @ #t3)
-                                                    ∧
-                                                     (¬(last(#t3))) ∧
-                                                     (¬(last(#t2))) ∧
-                                                     (#t2 < #vr.43) ∧
-                                                     (#t3 < #vr.43)) )
-                                              case case_1
-                                              by contradiction /* from formulas */
-                                            next
-                                              case case_2
-                                              solve( State_11121111( t, lock, v, L_h.2 ) ▶₀ #t2.7 )
-                                                case ifattCvdec_0_1112111
-                                                by contradiction /* cyclic */
-                                              qed
-                                            next
-                                              case case_3
-                                              by contradiction /* from formulas */
-                                            next
-                                              case case_4
-                                              by contradiction /* from formulas */
-                                            next
-                                              case case_5
-                                              by contradiction /* from formulas */
-                                            qed
-                                          next
-                                            case eventWrapkeyvkeyv_0_112111111
-                                            solve( Insert( L_h, <k, 'wrap'> ) @ #t2.7 )
-                                              case insertLhkeyvwrap_0_111111211111
-                                              solve( State_111111211111( lock, v, L_h ) ▶₀ #t2.7 )
-                                                case eventWrapKeyLhkeyv_0_11111121111
-                                                solve( ((#vr.24 < #vr.54) ∧
-                                                        (∃ #t2.
-                                                          (Unlock_6( '6', ~n.5, L_h ) @ #t2)
-                                                         ∧
-                                                          (#vr.24 < #t2) ∧
-                                                          (#t2 < #vr.54) ∧
-                                                          (∀ #t0 pp.
-                                                            (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
-                                                          (∀ pp lpp #t0.
-                                                            (Lock( pp, lpp, L_h ) @ #t0)
-                                                           ⇒
-                                                            ((#t0 < #vr.24) ∨ (#t0 = #vr.24) ∨ (#t2 < #t0))) ∧
-                                                          (∀ pp lpp #t0.
-                                                            (Unlock( pp, lpp, L_h ) @ #t0)
-                                                           ⇒
-                                                            ((#t0 < #vr.24) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                                       (#vr.54 < #vr.24) )
-                                                  case case_1
-                                                  solve( State_12111111111( L_h2.2, k.1, m.1, v, L_h, ~n.5
-                                                         ) ▶₀ #t2.8 )
-                                                    case insertLhmwrap_0_121111111
-                                                    by contradiction /* cyclic */
-                                                  qed
-                                                next
-                                                  case case_2
-                                                  solve( State_11111121111111( ~n.9, v, L_h ) ▶₀ #t2.8 )
-                                                    case eventWrapHandleLh_0_1111112111111
-                                                    solve( (#t2.14 < #t2.15)  ∥ (#t2.14 = #t2.15) )
-                                                      case case_1
-                                                      by contradiction /* from formulas */
-                                                    next
-                                                      case case_2
-                                                      solve( Insert( L_h1, <z.1, 'init'> ) @ #t2.9 )
-                                                        case insertLhkinit_0_111111111111
-                                                        solve( State_111111111111( lock, L_h1, z.1
-                                                               ) ▶₀ #t2.9 )
-                                                          case eventNewKeyLhk_0_11111111111
-                                                          by contradiction /* from formulas */
-                                                        qed
-                                                      qed
-                                                    qed
-                                                  qed
-                                                qed
-                                              qed
-                                            next
-                                              case insertLhmwrap_0_121111111
-                                              solve( State_121111111( L_h, k.1, k, v, L_h.1, lock ) ▶₀ #t2.7 )
-                                                case eventUnwrappedLhm_0_12111111
-                                                solve( Insert( L_h1, <z.1, 'init'> ) @ #t2.8 )
-                                                  case insertLhkinit_0_111111111111
-                                                  solve( State_111111111111( lock, L_h1, z.1 ) ▶₀ #t2.8 )
-                                                    case eventNewKeyLhk_0_11111111111
-                                                    by contradiction /* from formulas */
-                                                  qed
-                                                qed
-                                              qed
-                                            qed
-                                          next
-                                            case insertLhmwrap_0_121111111
-                                            solve( (#t2.7 < #t2.11)  ∥ (#t2.7 = #t2.11) )
-                                              case case_1
-                                              by contradiction /* from formulas */
-                                            next
-                                              case case_2
-                                              solve( Insert( L_h, <k, 'wrap'> ) @ #t2.7 )
-                                                case insertLhkeyvwrap_0_111111211111
-                                                solve( State_111111211111( lock, v, L_h ) ▶₀ #t2.7 )
-                                                  case eventWrapKeyLhkeyv_0_11111121111
-                                                  solve( ((#vr.24 < #vr.46) ∧
-                                                          (∃ #t2.
-                                                            (Unlock_6( '6', ~n.5, L_h ) @ #t2)
-                                                           ∧
-                                                            (#vr.24 < #t2) ∧
-                                                            (#t2 < #vr.46) ∧
-                                                            (∀ #t0 pp.
-                                                              (Unlock( pp, ~n.5, L_h ) @ #t0) ⇒ #t0 = #t2) ∧
-                                                            (∀ pp lpp #t0.
-                                                              (Lock( pp, lpp, L_h ) @ #t0)
-                                                             ⇒
-                                                              ((#t0 < #vr.24) ∨
-                                                               (#t0 = #vr.24) ∨
-                                                               (#t2 < #t0))) ∧
-                                                            (∀ pp lpp #t0.
-                                                              (Unlock( pp, lpp, L_h ) @ #t0)
-                                                             ⇒
-                                                              ((#t0 < #vr.24) ∨
-                                                               (#t2 < #t0) ∨
-                                                               (#t2 = #t0)))))  ∥
-                                                         (#vr.46 < #vr.24) )
+                                                         (#vr.45 < #vr.23) )
                                                     case case_1
                                                     solve( State_12111111111( L_h2.1, k.1, m.1, v, L_h, ~n.5
                                                            ) ▶₀ #t2.8 )
@@ -2190,10 +2190,10 @@ next
               qed
             qed
           next
-            case eventDecUsingkeyvm_0_11112111111_case_1
+            case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
             by contradiction /* from formulas */
           next
-            case eventDecUsingkeyvm_0_11112111111_case_2
+            case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
             solve( ((∃ h1 #t1.
                       (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.1)) ∧
                     (∃ hp #t0.
@@ -2228,10 +2228,10 @@ next
               by contradiction /* from formulas */
             qed
           next
-            case eventDecUsingkeyvm_0_11112111111_case_3
+            case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
             by contradiction /* from formulas */
           next
-            case eventDecUsingkeyvm_0_11112111111_case_4
+            case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
             by contradiction /* from formulas */
           next
             case eventEncUsingkeyvm_0_11121111
@@ -2601,10 +2601,10 @@ next
                                       case c_senc
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_1
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_2
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                       solve( ((∃ h1 #t1.
                                                 (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                               (∃ hp #t0.
@@ -2650,10 +2650,10 @@ next
                                         by contradiction /* from formulas */
                                       qed
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_3
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_4
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                       by contradiction /* from formulas */
                                     next
                                       case eventEncUsingkeyvm_0_11121111
@@ -2661,10 +2661,10 @@ next
                                     next
                                       case eventWrapkeyvkeyv_0_112111111_case_1
                                       solve( !KU( ~n.5 ) @ #vk.3 )
-                                        case eventDecUsingkeyvm_0_11112111111_case_1
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_2
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                         solve( ((∃ h1 #t1.
                                                   (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                                 (∃ hp #t0.
@@ -2710,10 +2710,10 @@ next
                                           by contradiction /* from formulas */
                                         qed
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_3
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_4
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                         by contradiction /* from formulas */
                                       next
                                         case eventWrapkeyvkeyv_0_112111111
@@ -2995,10 +2995,10 @@ next
                                     next
                                       case eventWrapkeyvkeyv_0_112111111_case_2
                                       solve( !KU( ~n.5 ) @ #vk.3 )
-                                        case eventDecUsingkeyvm_0_11112111111_case_1
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_2
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                         solve( ((∃ h1 #t1.
                                                   (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                                 (∃ hp #t0.
@@ -3044,10 +3044,10 @@ next
                                           by contradiction /* from formulas */
                                         qed
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_3
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_4
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                         by contradiction /* from formulas */
                                       next
                                         case eventWrapkeyvkeyv_0_112111111
@@ -3365,10 +3365,10 @@ next
                                       case c_senc
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_1
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_2
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                       solve( ((∃ h1 #t1.
                                                 (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.4)) ∧
                                               (∃ hp #t0.
@@ -3414,10 +3414,10 @@ next
                                         by contradiction /* from formulas */
                                       qed
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_3
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_4
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                       by contradiction /* from formulas */
                                     next
                                       case eventEncUsingkeyvm_0_11121111
@@ -3425,10 +3425,10 @@ next
                                     next
                                       case eventWrapkeyvkeyv_0_112111111_case_1
                                       solve( !KU( ~n.5 ) @ #vk.3 )
-                                        case eventDecUsingkeyvm_0_11112111111_case_1
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_2
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                         solve( ((∃ h1 #t1.
                                                   (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.4)) ∧
                                                 (∃ hp #t0.
@@ -3474,10 +3474,10 @@ next
                                           by contradiction /* from formulas */
                                         qed
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_3
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_4
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                         by contradiction /* from formulas */
                                       next
                                         case eventWrapkeyvkeyv_0_112111111
@@ -3760,10 +3760,10 @@ next
                                     next
                                       case eventWrapkeyvkeyv_0_112111111_case_2
                                       solve( !KU( ~n.5 ) @ #vk.3 )
-                                        case eventDecUsingkeyvm_0_11112111111_case_1
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_2
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                         solve( ((∃ h1 #t1.
                                                   (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.4)) ∧
                                                 (∃ hp #t0.
@@ -3809,10 +3809,10 @@ next
                                           by contradiction /* from formulas */
                                         qed
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_3
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_4
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                         by contradiction /* from formulas */
                                       next
                                         case eventWrapkeyvkeyv_0_112111111
@@ -4413,10 +4413,10 @@ next
                                       case c_senc
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_1
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_2
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                       solve( ((∃ h1 #t1.
                                                 (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                               (∃ hp #t0.
@@ -4462,10 +4462,10 @@ next
                                         by contradiction /* from formulas */
                                       qed
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_3
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_4
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                       by contradiction /* from formulas */
                                     next
                                       case eventEncUsingkeyvm_0_11121111
@@ -4473,10 +4473,10 @@ next
                                     next
                                       case eventWrapkeyvkeyv_0_112111111_case_1
                                       solve( !KU( ~n.5 ) @ #vk.3 )
-                                        case eventDecUsingkeyvm_0_11112111111_case_1
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_2
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                         solve( ((∃ h1 #t1.
                                                   (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                                 (∃ hp #t0.
@@ -4522,10 +4522,10 @@ next
                                           by contradiction /* from formulas */
                                         qed
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_3
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_4
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                         by contradiction /* from formulas */
                                       next
                                         case eventWrapkeyvkeyv_0_112111111
@@ -4807,10 +4807,10 @@ next
                                     next
                                       case eventWrapkeyvkeyv_0_112111111_case_2
                                       solve( !KU( ~n.5 ) @ #vk.3 )
-                                        case eventDecUsingkeyvm_0_11112111111_case_1
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_2
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                         solve( ((∃ h1 #t1.
                                                   (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                                 (∃ hp #t0.
@@ -4856,10 +4856,10 @@ next
                                           by contradiction /* from formulas */
                                         qed
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_3
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_4
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                         by contradiction /* from formulas */
                                       next
                                         case eventWrapkeyvkeyv_0_112111111
@@ -6238,10 +6238,10 @@ next
               qed
             qed
           next
-            case eventDecUsingkeyvm_0_11112111111_case_1
+            case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
             by contradiction /* from formulas */
           next
-            case eventDecUsingkeyvm_0_11112111111_case_2
+            case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
             solve( ((∃ h1 #t1.
                       (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.1)) ∧
                     (∃ hp #t0.
@@ -6276,10 +6276,10 @@ next
               by contradiction /* from formulas */
             qed
           next
-            case eventDecUsingkeyvm_0_11112111111_case_3
+            case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
             by contradiction /* from formulas */
           next
-            case eventDecUsingkeyvm_0_11112111111_case_4
+            case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
             by contradiction /* from formulas */
           next
             case eventEncUsingkeyvm_0_11121111
@@ -6869,10 +6869,10 @@ next
                                       case c_senc
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_1
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_2
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                       solve( ((∃ h1 #t1.
                                                 (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                               (∃ hp #t0.
@@ -6918,10 +6918,10 @@ next
                                         by contradiction /* from formulas */
                                       qed
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_3
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                       by contradiction /* from formulas */
                                     next
-                                      case eventDecUsingkeyvm_0_11112111111_case_4
+                                      case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                       by contradiction /* from formulas */
                                     next
                                       case eventEncUsingkeyvm_0_11121111
@@ -6929,10 +6929,10 @@ next
                                     next
                                       case eventWrapkeyvkeyv_0_112111111_case_1
                                       solve( !KU( ~n.5 ) @ #vk.3 )
-                                        case eventDecUsingkeyvm_0_11112111111_case_1
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_2
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                         solve( ((∃ h1 #t1.
                                                   (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                                 (∃ hp #t0.
@@ -6978,10 +6978,10 @@ next
                                           by contradiction /* from formulas */
                                         qed
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_3
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_4
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                         by contradiction /* from formulas */
                                       next
                                         case eventWrapkeyvkeyv_0_112111111
@@ -7263,10 +7263,10 @@ next
                                     next
                                       case eventWrapkeyvkeyv_0_112111111_case_2
                                       solve( !KU( ~n.5 ) @ #vk.3 )
-                                        case eventDecUsingkeyvm_0_11112111111_case_1
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_2
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                         solve( ((∃ h1 #t1.
                                                   (NewKey( h1, k2 ) @ #t1) ∧ (¬(last(#t1))) ∧ (#t1 < #t2.5)) ∧
                                                 (∃ hp #t0.
@@ -7312,10 +7312,10 @@ next
                                           by contradiction /* from formulas */
                                         qed
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_3
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                         by contradiction /* from formulas */
                                       next
-                                        case eventDecUsingkeyvm_0_11112111111_case_4
+                                        case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                         by contradiction /* from formulas */
                                       next
                                         case eventWrapkeyvkeyv_0_112111111
@@ -12885,10 +12885,10 @@ next
       solve( State_11111111111( lock, h, k ) ▶₀ #i )
         case increate_0_1111111
         solve( !KU( ~n.2 ) @ #j )
-          case eventDecUsingkeyvm_0_11112111111_case_1
+          case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
           by contradiction /* from formulas */
         next
-          case eventDecUsingkeyvm_0_11112111111_case_2
+          case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
           solve( ((∃ h1 #t1. (NewKey( h1, k2 ) @ #t1) ∧ #t1 < #t2) ∧
                   (∃ hp #t0.
                     (WrapKey( hp, k2 ) @ #t0)
@@ -12920,10 +12920,10 @@ next
             by contradiction /* from formulas */
           qed
         next
-          case eventDecUsingkeyvm_0_11112111111_case_3
+          case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
           by contradiction /* from formulas */
         next
-          case eventDecUsingkeyvm_0_11112111111_case_4
+          case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
           by contradiction /* from formulas */
         next
           case eventWrapkeyvkeyv_0_112111111
@@ -13092,10 +13092,10 @@ next
                                   case c_senc
                                   by contradiction /* cyclic */
                                 next
-                                  case eventDecUsingkeyvm_0_11112111111_case_1
+                                  case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                   by contradiction /* from formulas */
                                 next
-                                  case eventDecUsingkeyvm_0_11112111111_case_2
+                                  case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                   solve( ((∃ h1 #t1. (NewKey( h1, k2 ) @ #t1) ∧ #t1 < #t2.3) ∧
                                           (∃ hp #t0.
                                             (WrapKey( hp, k2 ) @ #t0)
@@ -13127,10 +13127,10 @@ next
                                     by contradiction /* from formulas */
                                   qed
                                 next
-                                  case eventDecUsingkeyvm_0_11112111111_case_3
+                                  case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                   by contradiction /* from formulas */
                                 next
-                                  case eventDecUsingkeyvm_0_11112111111_case_4
+                                  case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                   by contradiction /* from formulas */
                                 next
                                   case eventEncUsingkeyvm_0_11121111
@@ -13138,10 +13138,10 @@ next
                                 next
                                   case eventWrapkeyvkeyv_0_112111111_case_1
                                   solve( !KU( ~n.4 ) @ #vk.6 )
-                                    case eventDecUsingkeyvm_0_11112111111_case_1
+                                    case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                     by contradiction /* from formulas */
                                   next
-                                    case eventDecUsingkeyvm_0_11112111111_case_2
+                                    case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                     solve( ((∃ h1 #t1. (NewKey( h1, k2 ) @ #t1) ∧ #t1 < #t2.3) ∧
                                             (∃ hp #t0.
                                               (WrapKey( hp, k2 ) @ #t0)
@@ -13173,10 +13173,10 @@ next
                                       by contradiction /* from formulas */
                                     qed
                                   next
-                                    case eventDecUsingkeyvm_0_11112111111_case_3
+                                    case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                     by contradiction /* from formulas */
                                   next
-                                    case eventDecUsingkeyvm_0_11112111111_case_4
+                                    case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                     by contradiction /* from formulas */
                                   next
                                     case eventWrapkeyvkeyv_0_112111111
@@ -13415,10 +13415,10 @@ next
                                 next
                                   case eventWrapkeyvkeyv_0_112111111_case_2
                                   solve( !KU( ~n.4 ) @ #vk.6 )
-                                    case eventDecUsingkeyvm_0_11112111111_case_1
+                                    case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
                                     by contradiction /* from formulas */
                                   next
-                                    case eventDecUsingkeyvm_0_11112111111_case_2
+                                    case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
                                     solve( ((∃ h1 #t1. (NewKey( h1, k2 ) @ #t1) ∧ #t1 < #t2.3) ∧
                                             (∃ hp #t0.
                                               (WrapKey( hp, k2 ) @ #t0)
@@ -13450,10 +13450,10 @@ next
                                       by contradiction /* from formulas */
                                     qed
                                   next
-                                    case eventDecUsingkeyvm_0_11112111111_case_3
+                                    case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
                                     by contradiction /* from formulas */
                                   next
-                                    case eventDecUsingkeyvm_0_11112111111_case_4
+                                    case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
                                     by contradiction /* from formulas */
                                   next
                                     case eventWrapkeyvkeyv_0_112111111
@@ -13752,10 +13752,10 @@ next
       solve( State_11111111111( lock, h, k ) ▶₀ #i )
         case increate_0_1111111
         solve( !KU( ~n.2 ) @ #j )
-          case eventDecUsingkeyvm_0_11112111111_case_1
+          case eventDecUsingkeyvsdecckeyv_0_1111211111_case_1
           by contradiction /* from formulas */
         next
-          case eventDecUsingkeyvm_0_11112111111_case_2
+          case eventDecUsingkeyvsdecckeyv_0_1111211111_case_2
           solve( ((∃ h1 #t1. (NewKey( h1, k2 ) @ #t1) ∧ #t1 < #t2) ∧
                   (∃ hp #t0.
                     (WrapKey( hp, k2 ) @ #t0)
@@ -13844,7 +13844,7 @@ next
             qed
           qed
         next
-          case eventDecUsingkeyvm_0_11112111111_case_3
+          case eventDecUsingkeyvsdecckeyv_0_1111211111_case_3
           solve( ((#t1 < #t2) ∧ (#t0 < #t2))  ∥ ((#t1 < #t3) ∧ (#t0 < #t3)) )
             case case_1
             by contradiction /* from formulas */
@@ -13853,7 +13853,7 @@ next
             by contradiction /* from formulas */
           qed
         next
-          case eventDecUsingkeyvm_0_11112111111_case_4
+          case eventDecUsingkeyvsdecckeyv_0_1111211111_case_4
           solve( ((∃ h1 #t1. (NewKey( h1, k2 ) @ #t1) ∧ #t1 < #t2) ∧
                   (∃ hp #t0.
                     (WrapKey( hp, k2 ) @ #t0)
@@ -15151,80 +15151,78 @@ rule (modulo E) ifsencSuccckeyvtrue_0_111121111[color=#ffffff,
                                                 process="if sencSucc(c.1, key(v.3))=true"]:
    [ State_111121111( c.1, lock.3, v.3, L_h.4 ) ]
   --[ Pred_Eq( sencSucc(c.1, key(v.3)), true ) ]->
-   [ Let_11112111111( <c.1, key(v.3)>, c.1, lock.3, v.3, L_h.4 ) ]
+   [ State_1111211111( c.1, lock.3, v.3, L_h.4 ) ]
 
   /*
   rule (modulo AC) ifsencSuccckeyvtrue_0_111121111[color=#ffffff,
                                                    process="if sencSucc(c.1, key(v.3))=true"]:
      [ State_111121111( c, lock, v, L_h ) ]
-    --[ Pred_Eq( z.1, true ) ]->
-     [ Let_11112111111( <c, z>, c, lock, v, L_h ) ]
+    --[ Pred_Eq( z, true ) ]->
+     [ State_1111211111( c, lock, v, L_h ) ]
+    variants (modulo AC)
+    1. c     = c.10
+       v     = v.12
+       z     = sencSucc(c.10, key(v.12))
+    
+    2. c     = c.12
+       v     = <x.10, x.11>
+       z     = sencSucc(c.12, x.10)
+    
+    3. c     = senc(x.10, x.11)
+       v     = <x.11, x.13>
+       z     = true
+    
+    4. c     = senc(x.10, key(x.11))
+       v     = x.11
+       z     = true
+  */
+
+rule (modulo E) eventDecUsingkeyvsdecckeyv_0_1111211111[color=#ffffff,
+                                                        process="event DecUsing( key(v.3), sdec(c.1, key(v.3)) );"]:
+   [ State_1111211111( c.1, lock.3, v.3, L_h.4 ) ]
+  --[ DecUsing( key(v.3), sdec(c.1, key(v.3)) ) ]->
+   [
+   State_111121111111( c.1, lock.3, v.3, L_h.4 ), Out( sdec(c.1, key(v.3)) )
+   ]
+
+  /*
+  rule (modulo AC) eventDecUsingkeyvsdecckeyv_0_1111211111[color=#ffffff,
+                                                           process="event DecUsing( key(v.3), sdec(c.1, key(v.3)) );"]:
+     [ State_1111211111( c, lock, v, L_h ) ]
+    --[ DecUsing( z.1, z ) ]->
+     [ State_111121111111( c, lock, v, L_h ), Out( z ) ]
     variants (modulo AC)
     1. c     = c.11
        v     = v.13
-       z     = key(v.13)
-       z.1   = sencSucc(c.11, key(v.13))
+       z     = sdec(c.11, key(v.13))
+       z.1   = key(v.13)
     
     2. c     = c.13
        v     = <x.11, x.12>
-       z     = x.11
-       z.1   = sencSucc(c.13, x.11)
+       z     = sdec(c.13, x.11)
+       z.1   = x.11
     
     3. c     = senc(x.11, x.12)
        v     = <x.12, x.14>
-       z     = x.12
-       z.1   = true
+       z     = x.11
+       z.1   = x.12
     
     4. c     = senc(x.11, key(x.12))
        v     = x.12
-       z     = key(x.12)
-       z.1   = true
-  */
-
-rule (modulo E) letmsdecckeyv_1_1111211111[color=#ffffff,
-                                           process="let m.1=sdec(c.1, key(v.3))"]:
-   [ Let_11112111111( <senc(m.1, x.2), x.2>, c.1, lock.3, v.3, L_h.4 ) ]
-  -->
-   [ State_11112111111( c.1, m.1, lock.3, v.3, L_h.4 ) ]
-
-  /*
-  rule (modulo AC) letmsdecckeyv_1_1111211111[color=#ffffff,
-                                              process="let m.1=sdec(c.1, key(v.3))"]:
-     [ Let_11112111111( <senc(m, x), x>, c, lock, v, L_h ) ]
-    -->
-     [ State_11112111111( c, m, lock, v, L_h ) ]
-  */
-
-rule (modulo E) eventDecUsingkeyvm_0_11112111111[color=#ffffff,
-                                                 process="event DecUsing( key(v.3), m.1 );"]:
-   [ State_11112111111( c.1, m.1, lock.3, v.3, L_h.4 ) ]
-  --[ DecUsing( key(v.3), m.1 ) ]->
-   [ State_1111211111111( c.1, m.1, lock.3, v.3, L_h.4 ), Out( m.1 ) ]
-
-  /*
-  rule (modulo AC) eventDecUsingkeyvm_0_11112111111[color=#ffffff,
-                                                    process="event DecUsing( key(v.3), m.1 );"]:
-     [ State_11112111111( c, m, lock, v, L_h ) ]
-    --[ DecUsing( z, m ) ]->
-     [ State_1111211111111( c, m, lock, v, L_h ), Out( m ) ]
-    variants (modulo AC)
-    1. v     = v.13
-       z     = key(v.13)
-    
-    2. v     = <x.11, x.12>
        z     = x.11
+       z.1   = key(x.12)
   */
 
-rule (modulo E) unlockLh_0_1111211111111[color=#ffffff,
-                                         process="unlock L_h.4;"]:
-   [ State_1111211111111( c.1, m.1, lock.3, v.3, L_h.4 ) ]
+rule (modulo E) unlockLh_0_111121111111[color=#ffffff,
+                                        process="unlock L_h.4;"]:
+   [ State_111121111111( c.1, lock.3, v.3, L_h.4 ) ]
   --[ Unlock_3( '3', lock.3, L_h.4 ), Unlock( '3', lock.3, L_h.4 ) ]->
    [ ]
 
   /*
-  rule (modulo AC) unlockLh_0_1111211111111[color=#ffffff,
-                                            process="unlock L_h.4;"]:
-     [ State_1111211111111( c, m, lock, v, L_h ) ]
+  rule (modulo AC) unlockLh_0_111121111111[color=#ffffff,
+                                           process="unlock L_h.4;"]:
+     [ State_111121111111( c, lock, v, L_h ) ]
     --[ Unlock_3( '3', lock, L_h ), Unlock( '3', lock, L_h ) ]->
      [ ]
   */
@@ -15897,29 +15895,21 @@ restriction locking_6:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
-
-  output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 270.052537099s
-  dec_limits (all-traces): verified (290 steps)
-  wrap_key_origins (all-traces): verified (1140 steps)
-  no_key_is_wrap_and_dec_ind (all-traces): verified (140 steps)
-  no_key_is_wrap_and_dec_ind2 (all-traces): verified (540 steps)
-  cannot_obtain_key_ind (all-traces): verified (395 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -15927,7 +15917,8 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 270.052537099s
+  processing time: 82.13s
+  
   dec_limits (all-traces): verified (290 steps)
   wrap_key_origins (all-traces): verified (1140 steps)
   no_key_is_wrap_and_dec_ind (all-traces): verified (140 steps)

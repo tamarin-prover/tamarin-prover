@@ -2,8 +2,7 @@ theory StatVerifSecurityDevice begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, fst/1[destructor], pair/2, pk/1,
-           snd/1[destructor]
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -1958,28 +1957,21 @@ restriction locking_1:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
-
-  output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 11.093962963s
-  source (all-traces): verified (122 steps)
-  reachability_left (exists-trace): verified (14 steps)
-  reachability_right (exists-trace): verified (14 steps)
-  secrecy (all-traces): verified (192 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1987,7 +1979,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 11.093962963s
+  processing time: 5.29s
+  
   source (all-traces): verified (122 steps)
   reachability_left (exists-trace): verified (14 steps)
   reachability_right (exists-trace): verified (14 steps)

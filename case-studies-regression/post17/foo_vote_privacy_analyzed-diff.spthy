@@ -3,8 +3,8 @@ theory FOO_Vote_Privacy begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: blind/2, checksign/2, commit/2, fst/1[destructor], open/2,
-           pair/2, pk/1, sign/2, snd/1[destructor], unblind/2
+functions: blind/2, checksign/2, commit/2, fst/1, open/2, pair/2, pk/1,
+           sign/2, snd/1, unblind/2
 equations:
     checksign(sign(m, sk), pk(sk)) = m,
     fst(<x.1, x.2>) = x.1,
@@ -164,7 +164,7 @@ solve( (#i < #j)  ∥ (#j < #i) )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -21886,25 +21886,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/post17/foo_vote_privacy.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/post17/foo_vote_privacy.spthy
-
-  output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 517.789299278s
-  RHS :  exec (exists-trace): verified (12 steps)
-  LHS :  exec (exists-trace): verified (12 steps)
-  DiffLemma:  Observational_equivalence : verified (7204 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -21912,7 +21906,8 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 517.789299278s
+  processing time: 174.12s
+  
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (7204 steps)

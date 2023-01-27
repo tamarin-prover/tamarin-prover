@@ -3,8 +3,7 @@ theory CH07_UK1 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1[destructor], h/1, lh/1, pair/2, rh/1, rot/2,
-           snd/1[destructor]
+functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -101,7 +100,7 @@ solve( Response( x, 'Tag' ) @ #j )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -9203,25 +9202,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/CH07-UK1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
-
-  output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 179.638424363s
-  RHS :  executable (exists-trace): verified (5 steps)
-  LHS :  executable (exists-trace): verified (5 steps)
-  DiffLemma:  Observational_equivalence : verified (3048 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -9229,7 +9222,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 179.638424363s
+  processing time: 30.28s
+  
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3048 steps)

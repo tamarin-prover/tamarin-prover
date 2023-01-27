@@ -1,5 +1,7 @@
 # Automated Security Analysis of Exposure Notification Systems
 
+This is the artifact for the paper *Automated Security Analysis of Exposure Notification Systems* accepted for *USENIX Security '23*.
+
 ## Authors
 
 - Kevin Morio, *CISPA Helmholtz Center for Information Security*
@@ -7,38 +9,58 @@
 - Dennis Jackson, *Mozilla*
 - Robert Künnemann, *CISPA Helmholtz Center for Information Security*
 
-The paper has been accepted for *USENIX Security '23*.
-
 ## Preprint
 
-A preprint of the full version of the paper is available on arXiv: [2210.00649](https://arxiv.org/abs/2210.00649)
+A preprint of the full version of the paper is available on arXiv: [2210.00649](https://arxiv.org/abs/2210.00649).
 
 ## Models
 
-### CWA (`cwa.spthy`)
+The artifact consists of the Tamarin model files with the corresponding oracles for the three exposure notification systems ROBERT, DP3T, and the CWA presented in the paper.
 
-This is a model of a modified DP-3T design 1 following the CWA proposal with Google/Apple-style keys and authorisation scheme 3 (device bound authorisation).
+### ROBERT (`robert.spthy`)
 
-- Run as `tamarin-prover --prove cwa.spthy` in the terminal for automated mode,
-- Run as `tamarin-prover interactive cwa.spthy` for interactive mode.
-
-The oracle `oracle-cwa` is directly imported by the model.
+This is a model of the French deployment of the ROBust and privacy-presERving proximity Tracing (ROBERT) protocol as used by the TousAntiCovid app.
+This model uses the oracle `oracle-robert`.
 
 ### DP3T (`dp3t.spthy`)
 
-This is a model of DP-3T design 3 with authorisation scheme 3 (device bound authorisation).
+This is a model of the Decentralized Privacy-Preserving Proximity Tracing (DP3T) protocol with authorisation scheme 3 (device bound authorisation).
+This model uses the oracle `oracle-dp3t`.
 
-- Run as `tamarin-prover --prove dp3t.spthy` in the terminal for automated mode,
-- Run as `tamarin-prover interactive dp3t.spthy` for interactive mode.
+### CWA (`cwa.spthy`)
 
-The oracle `oracle-dp3t` is directly imported by the model.
+This is a model of the German Corona-Warn App (CWA).
+This model uses the oracle `oracle-cwa`.
 
-## ROBERT (`robert.spthy`)
+## Installation
 
-This is a model of ROBERT (ROBust and privacy-presERving proximity Tracing) / TousAntiCovid.
+This artifact can be evaluated with a local Tamarin installation or using the provided Docker container.
 
-- Run as `tamarin-prover --prove robert.spthy` in the terminal for automated mode,
-- Run as `tamarin-prover interactive robert.spthy` for interactive mode.
+Tamarin and its dependencies can be installed following the instruction from the [Tamarin manual](https://tamarin-prover.github.io/manual/book/002_installation.html).
 
-The oracle `oracle-robert` is directly imported by the model.
+Installation instruction for Docker are available in the [Docker documentation](https://docs.docker.com/engine/install).
+The Docker container can be obtained by executing
 
+    docker pull kevinmorio/usenix23-ens
+
+## Usage
+
+The lemmas of the models can be automatically verified by executing
+
+    tamarin-prover --prove <model>
+
+for a local installation of Tamarin or
+
+    docker run kevinmorio/usenix23-ens tamarin-prover --prove <model>
+
+for using the Docker container, where `<model>` can be one of `robert.spthy`, `dp3t.spthy`, or `cwa.spthy`.
+
+Alternatively, the models can be inspected in Tamarin's interactive mode by executing
+
+    tamarin-prover interactive .
+
+or
+
+    docker run -it -p 3001:3001 kevinmorio/usenix23-ens tamarin-prover interactive --interface='*4' .
+
+Tamarin's web interface is then accessible on the host under [localhost:3001](http://localhost:3001).

@@ -36,9 +36,9 @@ profiling:
 tamarin-clean:
 	stack clean
 
-# Clean Tamarin and SAPIC
+# Clean Tamarin
 .PHONY: clean
-clean:	tamarin-clean sapic-clean
+clean:	tamarin-clean
 
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.

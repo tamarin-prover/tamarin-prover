@@ -2,8 +2,8 @@ theory TPM_Envelope begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2, aenc/2, fst/1[destructor], h/1, pair/2, pk/1, sign/2,
-           snd/1[destructor], true/0, verify/3
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sign/2, snd/1,
+           true/0, verify/3
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -390,33 +390,21 @@ next
   by sorry
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ccs15/Attack_TPM_Envelope.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
-
-  output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.586439386s
-  RHS :  types (all-traces): analysis incomplete (1 steps)
-  LHS :  types (all-traces): analysis incomplete (1 steps)
-  RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
-  LHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
-  RHS :  executable (exists-trace): analysis incomplete (1 steps)
-  LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  RHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  LHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (75 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -424,7 +412,8 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.586439386s
+  processing time: 0.29s
+  
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)

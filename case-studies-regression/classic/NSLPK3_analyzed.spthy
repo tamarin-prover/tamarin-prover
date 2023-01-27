@@ -2,8 +2,7 @@ theory NSLPK3 begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, fst/1[destructor], pair/2, pk/1,
-           snd/1[destructor]
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -711,28 +710,21 @@ solve( Secret( A, B, s ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/classic/NSLPK3.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/classic/NSLPK3.spthy
-
-  output:          examples/classic/NSLPK3.spthy.tmp
-  processing time: 2.629416539s
-  types (all-traces): verified (33 steps)
-  nonce_secrecy (all-traces): verified (54 steps)
-  injective_agree (all-traces): verified (92 steps)
-  session_key_setup_possible (exists-trace): verified (5 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -740,7 +732,8 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3.spthy
 
   output:          examples/classic/NSLPK3.spthy.tmp
-  processing time: 2.629416539s
+  processing time: 1.06s
+  
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): verified (54 steps)
   injective_agree (all-traces): verified (92 steps)

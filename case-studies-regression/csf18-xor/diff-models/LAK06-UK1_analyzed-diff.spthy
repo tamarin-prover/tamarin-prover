@@ -3,7 +3,7 @@ theory LAK06_UK1 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
+functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -1208,174 +1208,6 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
         qed
       next
         case split_case_5
-        solve( !KU( (~k2⊕x⊕~r1.1) ) @ #vk.1 )
-          case c_xor_case_1
-          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          by solve( !KU( ~k2 ) @ #vk.4 )
-        next
-          case c_xor_case_3
-          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k2⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k2⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case coerce
-          solve( !KD( (~k2⊕x⊕~r1.1) ) ▶₀ #vk.1 )
-            case acceptreader
-            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-          next
-            case initiatereader
-            by contradiction /* impossible chain */
-          next
-            case tag1
-            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by contradiction /* impossible chain */
-            next
-              case d_0_snd
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
-          qed
-        qed
-      next
-        case split_case_6
         solve( !KU( (~k2⊕x) ) @ #vk.1 )
           case c_xor
           by solve( !KU( ~k2 ) @ #vk.4 )
@@ -1399,7 +1231,7 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
           qed
         qed
       next
-        case split_case_7
+        case split_case_6
         solve( !KU( (x⊕~r1.1) ) @ #vk.1 )
           case c_xor
           solve( !KU( (~k⊕~k2⊕x⊕h((~k⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
@@ -1793,6 +1625,174 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
         next
           case coerce
           solve( !KD( (x⊕~r1.1) ) ▶₀ #vk.1 )
+            case acceptreader
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_7
+        solve( !KU( (~k2⊕x⊕~r1.1) ) @ #vk.1 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k2 ) @ #vk.4 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k2⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k2⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k2⊕x⊕~r1.1) ) ▶₀ #vk.1 )
             case acceptreader
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
@@ -2708,174 +2708,6 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
         qed
       next
         case split_case_5
-        solve( !KU( (~k2⊕x⊕~r1.1) ) @ #vk.1 )
-          case c_xor_case_1
-          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          by solve( !KU( ~k2 ) @ #vk.4 )
-        next
-          case c_xor_case_3
-          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k2⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k2⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case coerce
-          solve( !KD( (~k2⊕x⊕~r1.1) ) ▶₀ #vk.1 )
-            case acceptreader
-            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-          next
-            case initiatereader
-            by contradiction /* impossible chain */
-          next
-            case tag1
-            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by contradiction /* impossible chain */
-            next
-              case d_0_snd
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
-          qed
-        qed
-      next
-        case split_case_6
         solve( !KU( (~k2⊕x) ) @ #vk.1 )
           case c_xor
           by solve( !KU( ~k2 ) @ #vk.4 )
@@ -2899,7 +2731,7 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
           qed
         qed
       next
-        case split_case_7
+        case split_case_6
         solve( !KU( (x⊕~r1.1) ) @ #vk.1 )
           case c_xor
           solve( !KU( (~k⊕~k2⊕x⊕h((~k⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
@@ -3293,6 +3125,174 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
         next
           case coerce
           solve( !KD( (x⊕~r1.1) ) ▶₀ #vk.1 )
+            case acceptreader
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_7
+        solve( !KU( (~k2⊕x⊕~r1.1) ) @ #vk.1 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k2 ) @ #vk.4 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k2⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k2⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k2⊕x⊕~r1.1) ) ▶₀ #vk.1 )
             case acceptreader
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
@@ -4832,174 +4832,6 @@ next
         qed
       next
         case split_case_5
-        solve( !KU( (~k1⊕x⊕~r1.1) ) @ #vk.1 )
-          case c_xor_case_1
-          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          by solve( !KU( ~k1 ) @ #vk.4 )
-        next
-          case c_xor_case_3
-          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k1⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k1⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case coerce
-          solve( !KD( (~k1⊕x⊕~r1.1) ) ▶₀ #vk.1 )
-            case acceptreader
-            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-          next
-            case initiatereader
-            by contradiction /* impossible chain */
-          next
-            case tag1
-            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by contradiction /* impossible chain */
-            next
-              case d_0_snd
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
-          qed
-        qed
-      next
-        case split_case_6
         solve( !KU( (~k1⊕x) ) @ #vk.1 )
           case c_xor
           by solve( !KU( ~k1 ) @ #vk.4 )
@@ -5023,7 +4855,7 @@ next
           qed
         qed
       next
-        case split_case_7
+        case split_case_6
         solve( !KU( (x⊕~r1.1) ) @ #vk.1 )
           case c_xor
           solve( !KU( (~k⊕~k1⊕x⊕h((~k⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
@@ -5417,6 +5249,174 @@ next
         next
           case coerce
           solve( !KD( (x⊕~r1.1) ) ▶₀ #vk.1 )
+            case acceptreader
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_7
+        solve( !KU( (~k1⊕x⊕~r1.1) ) @ #vk.1 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k1 ) @ #vk.4 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k1⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k1⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k1⊕x⊕~r1.1) ) ▶₀ #vk.1 )
             case acceptreader
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
@@ -11000,174 +11000,6 @@ next
         qed
       next
         case split_case_5
-        solve( !KU( (~k1⊕x⊕~r1.1) ) @ #vk.1 )
-          case c_xor_case_1
-          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          by solve( !KU( ~k1 ) @ #vk.4 )
-        next
-          case c_xor_case_3
-          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k1⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k1⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case coerce
-          solve( !KD( (~k1⊕x⊕~r1.1) ) ▶₀ #vk.1 )
-            case acceptreader
-            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-          next
-            case initiatereader
-            by contradiction /* impossible chain */
-          next
-            case tag1
-            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by contradiction /* impossible chain */
-            next
-              case d_0_snd
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
-          qed
-        qed
-      next
-        case split_case_6
         solve( !KU( (~k1⊕x) ) @ #vk.1 )
           case c_xor
           by solve( !KU( ~k1 ) @ #vk.4 )
@@ -11191,7 +11023,7 @@ next
           qed
         qed
       next
-        case split_case_7
+        case split_case_6
         solve( !KU( (x⊕~r1.1) ) @ #vk.1 )
           case c_xor
           solve( !KU( (~k⊕~k1⊕x⊕h((~k⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
@@ -11585,6 +11417,174 @@ next
         next
           case coerce
           solve( !KD( (x⊕~r1.1) ) ▶₀ #vk.1 )
+            case acceptreader
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_7
+        solve( !KU( (~k1⊕x⊕~r1.1) ) @ #vk.1 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k1 ) @ #vk.4 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k1⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k1⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k1⊕x⊕~r1.1) ) ▶₀ #vk.1 )
             case acceptreader
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
@@ -17181,174 +17181,6 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
         qed
       next
         case split_case_5
-        solve( !KU( (~k2⊕x⊕~r1.1) ) @ #vk.1 )
-          case c_xor_case_1
-          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          by solve( !KU( ~k2 ) @ #vk.4 )
-        next
-          case c_xor_case_3
-          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k2⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k2⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case coerce
-          solve( !KD( (~k2⊕x⊕~r1.1) ) ▶₀ #vk.1 )
-            case acceptreader
-            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-          next
-            case initiatereader
-            by contradiction /* impossible chain */
-          next
-            case tag1
-            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by contradiction /* impossible chain */
-            next
-              case d_0_snd
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
-          qed
-        qed
-      next
-        case split_case_6
         solve( !KU( (~k2⊕x) ) @ #vk.1 )
           case c_xor
           by solve( !KU( ~k2 ) @ #vk.4 )
@@ -17372,7 +17204,7 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
           qed
         qed
       next
-        case split_case_7
+        case split_case_6
         solve( !KU( (x⊕~r1.1) ) @ #vk.1 )
           case c_xor
           solve( !KU( (~k⊕~k2⊕x⊕h((~k⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
@@ -17766,6 +17598,174 @@ solve( TagState1( ~k, ~r1, r0, phase ) ▶₀ #i )
         next
           case coerce
           solve( !KD( (x⊕~r1.1) ) ▶₀ #vk.1 )
+            case acceptreader
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_7
+        solve( !KU( (~k2⊕x⊕~r1.1) ) @ #vk.1 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k2 ) @ #vk.4 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k2⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k2⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k2⊕x⊕~r1.1) ) ▶₀ #vk.1 )
             case acceptreader
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
@@ -23355,174 +23355,6 @@ next
         qed
       next
         case split_case_5
-        solve( !KU( (~k1⊕x⊕~r1.1) ) @ #vk.1 )
-          case c_xor_case_1
-          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          by solve( !KU( ~k1 ) @ #vk.4 )
-        next
-          case c_xor_case_3
-          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k1⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k1⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case coerce
-          solve( !KD( (~k1⊕x⊕~r1.1) ) ▶₀ #vk.1 )
-            case acceptreader
-            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-          next
-            case initiatereader
-            by contradiction /* impossible chain */
-          next
-            case tag1
-            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by contradiction /* impossible chain */
-            next
-              case d_0_snd
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
-          qed
-        qed
-      next
-        case split_case_6
         solve( !KU( (~k1⊕x) ) @ #vk.1 )
           case c_xor
           by solve( !KU( ~k1 ) @ #vk.4 )
@@ -23546,7 +23378,7 @@ next
           qed
         qed
       next
-        case split_case_7
+        case split_case_6
         solve( !KU( (x⊕~r1.1) ) @ #vk.1 )
           case c_xor
           solve( !KU( (~k⊕~k1⊕x⊕h((~k⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
@@ -23940,6 +23772,174 @@ next
         next
           case coerce
           solve( !KD( (x⊕~r1.1) ) ▶₀ #vk.1 )
+            case acceptreader
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_7
+        solve( !KU( (~k1⊕x⊕~r1.1) ) @ #vk.1 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k1 ) @ #vk.4 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k1⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k1⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k1⊕x⊕~r1.1) ) ▶₀ #vk.1 )
             case acceptreader
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
@@ -24855,174 +24855,6 @@ next
         qed
       next
         case split_case_5
-        solve( !KU( (~k1⊕x⊕~r1.1) ) @ #vk.1 )
-          case c_xor_case_1
-          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          by solve( !KU( ~k1 ) @ #vk.4 )
-        next
-          case c_xor_case_3
-          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k1⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k1⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k1 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case coerce
-          solve( !KD( (~k1⊕x⊕~r1.1) ) ▶₀ #vk.1 )
-            case acceptreader
-            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-          next
-            case initiatereader
-            by contradiction /* impossible chain */
-          next
-            case tag1
-            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by contradiction /* impossible chain */
-            next
-              case d_0_snd
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
-          qed
-        qed
-      next
-        case split_case_6
         solve( !KU( (~k1⊕x) ) @ #vk.1 )
           case c_xor
           by solve( !KU( ~k1 ) @ #vk.4 )
@@ -25046,7 +24878,7 @@ next
           qed
         qed
       next
-        case split_case_7
+        case split_case_6
         solve( !KU( (x⊕~r1.1) ) @ #vk.1 )
           case c_xor
           solve( !KU( (~k⊕~k1⊕x⊕h((~k⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
@@ -25440,6 +25272,174 @@ next
         next
           case coerce
           solve( !KD( (x⊕~r1.1) ) ▶₀ #vk.1 )
+            case acceptreader
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_7
+        solve( !KU( (~k1⊕x⊕~r1.1) ) @ #vk.1 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k1⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k1 ) @ #vk.4 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k1⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k1⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k1 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k1⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k1⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k1⊕x⊕~r1.1) ) ▶₀ #vk.1 )
             case acceptreader
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
@@ -30927,174 +30927,6 @@ next
         qed
       next
         case split_case_5
-        solve( !KU( (~k2⊕x⊕~r1.1) ) @ #vk.1 )
-          case c_xor_case_1
-          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case c_xor_case_2
-          by solve( !KU( ~k2 ) @ #vk.4 )
-        next
-          case c_xor_case_3
-          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
-            case c_xor_case_1
-            solve( !KU( (~k2⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.7 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case c_xor_case_2
-            by solve( !KU( ~k ) @ #vk.6 )
-          next
-            case c_xor_case_3
-            solve( !KU( (~k2⊕x) ) @ #vk.4 )
-              case c_xor
-              by solve( !KU( ~k2 ) @ #vk.8 )
-            next
-              case coerce
-              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
-                case acceptreader
-                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-              next
-                case initiatereader
-                by contradiction /* impossible chain */
-              next
-                case tag1
-                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
-                  case d_0_fst
-                  by contradiction /* impossible chain */
-                next
-                  case d_0_snd
-                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
-                qed
-              qed
-            qed
-          next
-            case coerce
-            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
-              case acceptreader
-              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-            next
-              case initiatereader
-              by contradiction /* impossible chain */
-            next
-              case tag1
-              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                case d_0_fst
-                by contradiction /* impossible chain */
-              next
-                case d_0_snd
-                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-              qed
-            qed
-          qed
-        next
-          case coerce
-          solve( !KD( (~k2⊕x⊕~r1.1) ) ▶₀ #vk.1 )
-            case acceptreader
-            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-          next
-            case initiatereader
-            by contradiction /* impossible chain */
-          next
-            case tag1
-            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-              case d_0_fst
-              by contradiction /* impossible chain */
-            next
-              case d_0_snd
-              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
-            qed
-          qed
-        qed
-      next
-        case split_case_6
         solve( !KU( (~k2⊕x) ) @ #vk.1 )
           case c_xor
           by solve( !KU( ~k2 ) @ #vk.4 )
@@ -31118,7 +30950,7 @@ next
           qed
         qed
       next
-        case split_case_7
+        case split_case_6
         solve( !KU( (x⊕~r1.1) ) @ #vk.1 )
           case c_xor
           solve( !KU( (~k⊕~k2⊕x⊕h((~k⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
@@ -31512,6 +31344,174 @@ next
         next
           case coerce
           solve( !KD( (x⊕~r1.1) ) ▶₀ #vk.1 )
+            case acceptreader
+            by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+          next
+            case initiatereader
+            by contradiction /* impossible chain */
+          next
+            case tag1
+            solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+              case d_0_fst
+              by contradiction /* impossible chain */
+            next
+              case d_0_snd
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+            qed
+          qed
+        qed
+      next
+        case split_case_7
+        solve( !KU( (~k2⊕x⊕~r1.1) ) @ #vk.1 )
+          case c_xor_case_1
+          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k2⊕~r1.1) ) @ #vk.3 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕~r1.1) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case c_xor_case_2
+          by solve( !KU( ~k2 ) @ #vk.4 )
+        next
+          case c_xor_case_3
+          solve( !KU( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~k2⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.7 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case c_xor_case_2
+            by solve( !KU( ~k ) @ #vk.6 )
+          next
+            case c_xor_case_3
+            solve( !KU( (~k2⊕x) ) @ #vk.4 )
+              case c_xor
+              by solve( !KU( ~k2 ) @ #vk.8 )
+            next
+              case coerce
+              solve( !KD( (~k2⊕x) ) ▶₀ #vk.3 )
+                case acceptreader
+                by solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+              next
+                case initiatereader
+                by contradiction /* impossible chain */
+              next
+                case tag1
+                solve( (#vl.1, 0) ~~> (#vk.3, 0) )
+                  case d_0_fst
+                  by contradiction /* impossible chain */
+                next
+                  case d_0_snd
+                  by solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                qed
+              qed
+            qed
+          next
+            case coerce
+            solve( !KD( (~k⊕x⊕h((~k⊕~k2⊕~r1⊕x⊕~r1.1))) ) ▶₀ #vk.2 )
+              case acceptreader
+              by solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+            next
+              case initiatereader
+              by contradiction /* impossible chain */
+            next
+              case tag1
+              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                case d_0_fst
+                by contradiction /* impossible chain */
+              next
+                case d_0_snd
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
+              qed
+            qed
+          qed
+        next
+          case coerce
+          solve( !KD( (~k2⊕x⊕~r1.1) ) ▶₀ #vk.1 )
             case acceptreader
             by solve( (#vl.1, 0) ~~> (#vk.1, 0) )
           next
@@ -32007,7 +32007,7 @@ next
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -85317,25 +85317,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/LAK06-UK1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/LAK06-UK1.spthy
-
-  output:          examples/csf18-xor/diff-models/LAK06-UK1.spthy.tmp
-  processing time: 378.624581105s
-  RHS :  executable (exists-trace): falsified - no trace found (5324 steps)
-  LHS :  executable (exists-trace): falsified - no trace found (5324 steps)
-  DiffLemma:  Observational_equivalence : verified (17784 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -85343,7 +85337,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/LAK06-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/LAK06-UK1.spthy.tmp
-  processing time: 378.624581105s
+  processing time: 153.52s
+  
   RHS :  executable (exists-trace): falsified - no trace found (5324 steps)
   LHS :  executable (exists-trace): falsified - no trace found (5324 steps)
   DiffLemma:  Observational_equivalence : verified (17784 steps)

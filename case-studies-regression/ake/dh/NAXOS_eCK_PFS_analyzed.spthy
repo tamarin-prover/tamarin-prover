@@ -3,7 +3,7 @@ theory NAXOS_eCK begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], h1/1, h2/1, pair/2, snd/1[destructor]
+functions: fst/1, h1/1, h2/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -134,6 +134,10 @@ rule (modulo E) Init_2:
         Y     = x.698^(x.699*inv((x.700*h1(<~ex.354, ~ea.352>))))
         z     = x.698^(~ea.352*x.699*inv((x.700*h1(<~ex.354, ~ea.352>))))
         z.1   = x.698^(x.699*inv(x.700))
+    
+    15. Y     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Resp_1:
@@ -246,6 +250,10 @@ rule (modulo E) Resp_1:
         X     = x.874^(x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
         z     = x.874^(~eb.440*x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
         z.1   = x.874^(x.875*inv(x.876))
+    
+    15. X     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Sessk_reveal:
@@ -352,25 +360,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/dh/NAXOS_eCK_PFS.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/dh/NAXOS_eCK_PFS.spthy
-
-  output:          examples/ake/dh/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 3.771815967s
-  eCK_PFS_key_secrecy (all-traces): falsified - found trace (15 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -378,7 +382,8 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK_PFS.spthy
 
   output:          examples/ake/dh/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 3.771815967s
+  processing time: 2.83s
+  
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (15 steps)
 
 ==============================================================================

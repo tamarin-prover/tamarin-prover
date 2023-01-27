@@ -3,7 +3,7 @@ theory NAXOS_eCK begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], h1/1, h2/1, pair/2, snd/1[destructor]
+functions: fst/1, h1/1, h2/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -138,6 +138,10 @@ rule (modulo E) Init_2:
         Y     = x.608^(x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
         z     = x.608^(~lkI.308*x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
         z.1   = x.608^(x.609*inv(x.610))
+    
+    15. Y     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Resp_1:
@@ -253,6 +257,10 @@ rule (modulo E) Resp_1:
         X     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
         z     = x.1076^(~lkR.543*x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
         z.1   = x.1076^(x.1077*inv(x.1078))
+    
+    15. X     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Sessk_reveal:
@@ -725,25 +733,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf12/NAXOS_eCK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf12/NAXOS_eCK.spthy
-
-  output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 6.004839056s
-  eCK_key_secrecy (all-traces): verified (134 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -751,7 +755,8 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 6.004839056s
+  processing time: 2.85s
+  
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ==============================================================================

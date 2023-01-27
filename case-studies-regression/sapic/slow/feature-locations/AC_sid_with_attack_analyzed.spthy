@@ -2,9 +2,8 @@ theory AC_sid begin
 
 // Function signature and definition of the equational theory E
 
-functions: check_rep/2[destructor], fst/1[destructor],
-           get_rep/1[destructor], list/2, pair/2, prog/3, rep/2[private,destructor],
-           report/1, snd/1[destructor]
+functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
+           pair/2, prog/3, rep/2[private,destructor], report/1, snd/1
 equations:
     check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -684,25 +683,21 @@ restriction locking_1:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
-
-  output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 77.497069458s
-  attested_comput (exists-trace): verified (31 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -710,7 +705,8 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 77.497069458s
+  processing time: 27.21s
+  
   attested_comput (exists-trace): verified (31 steps)
 
 ==============================================================================

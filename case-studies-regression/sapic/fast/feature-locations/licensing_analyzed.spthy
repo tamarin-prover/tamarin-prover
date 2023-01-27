@@ -2,10 +2,9 @@ theory licensing begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, ask/2, check_rep/2[destructor],
-           dec/1, dec1/1, dec2/1, fst/1[destructor], get_rep/1[destructor], ok/2,
-           pair/2, pk/1, prg/1, rep/2[private,destructor], report/1, run/2,
-           sdec/2[destructor], senc/2, snd/1[destructor], tkn/1
+functions: adec/2, aenc/2, ask/2, check_rep/2[destructor], dec/1, dec1/1,
+           dec2/1, fst/1, get_rep/1[destructor], ok/2, pair/2, pk/1, prg/1,
+           rep/2[private,destructor], report/1, run/2, sdec/2, senc/2, snd/1, tkn/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     check_rep(rep(x.1, x.2), x.2) = x.1,
@@ -939,27 +938,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-locations/licensing.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-locations/licensing.spthy
-
-  output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 4.633126128s
-  attested_comput (all-traces): verified (19 steps)
-  unique (all-traces): verified (104 steps)
-  final (all-traces): verified (44 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -967,7 +960,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 4.633126128s
+  processing time: 2.19s
+  
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (104 steps)
   final (all-traces): verified (44 steps)

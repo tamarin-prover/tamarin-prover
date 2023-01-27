@@ -2,7 +2,7 @@ theory N5N6DiffTest begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
+functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -10,7 +10,7 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 rule (modulo E) Test:
    [ Fr( ~f ) ] --> [ Out( diff(h($A), ~f) ) ]
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -34,23 +34,19 @@ rule-equivalence
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/equivalence/N5N6DiffTest.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/equivalence/N5N6DiffTest.spthy
-
-  output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
-  processing time: 0.22659775s
-  DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -58,7 +54,8 @@ summary of summaries:
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
-  processing time: 0.22659775s
+  processing time: 0.07s
+  
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ==============================================================================

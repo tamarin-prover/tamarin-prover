@@ -3,8 +3,7 @@ theory UM_three_pass begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, multiset
-functions: MAC/2, concat/2, first/1, fst/1[destructor], h/1, pair/2,
-           second/1, snd/1[destructor]
+functions: MAC/2, concat/2, first/1, fst/1, h/1, pair/2, second/1, snd/1
 equations:
     concat(first(x), second(x)) = x,
     fst(<x.1, x.2>) = x.1,
@@ -208,6 +207,9 @@ rule (modulo E) I_Complete:
     6. ~ex   = ~ex.437
        Y     = x.866^(x.867*inv((~ex.437*x.868)))
        z     = x.866^(x.867*inv(x.868))
+    
+    7. Y     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) I_Expire:
@@ -323,6 +325,9 @@ rule (modulo E) R_Activate:
     6. ~ey   = ~ey.335
        X     = x.662^(x.663*inv((~ey.335*x.664)))
        z     = x.662^(x.663*inv(x.664))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) R_Complete:
@@ -501,6 +506,9 @@ rule (modulo E) R_Complete:
     6. ~ey   = ~ey.423
        X     = x.838^(x.839*inv((~ey.423*x.840)))
        z     = x.838^(x.839*inv(x.840))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) R_Expire:
@@ -13337,26 +13345,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/dh/UM_three_pass.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/dh/UM_three_pass.spthy
-
-  output:          examples/ake/dh/UM_three_pass.spthy.tmp
-  processing time: 243.742273744s
-  key_agreement_reachable (exists-trace): verified (14 steps)
-  CK_secure_UM3 (all-traces): verified (1170 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -13364,7 +13367,8 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass.spthy
 
   output:          examples/ake/dh/UM_three_pass.spthy.tmp
-  processing time: 243.742273744s
+  processing time: 91.57s
+  
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (1170 steps)
 

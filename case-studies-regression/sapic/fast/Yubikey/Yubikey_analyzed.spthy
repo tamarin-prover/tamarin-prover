@@ -3,8 +3,7 @@ theory Yubikey begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -1150,12 +1149,12 @@ rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#805140,
   */
 
 rule (modulo E) insc_0_111111112111111111211[color=#805140,
-                                             process="in(=sc);"]:
+                                             process="in(sc.2);"]:
    [
    State_111111112111111111211( StateChannel, L_pid.1, SL_pid.1,
                                 StateChannel.1, YL_pid.1, k.2, lock.2, secretid.2, tc.2
    ),
-   In( sc ), Fr( nonce.2 ), Fr( npr.2 ), L_CellLocked( YL_pid.1, lock.2 )
+   In( sc.2 ), Fr( nonce.2 ), Fr( npr.2 ), L_CellLocked( YL_pid.1, lock.2 )
    ]
   --[ YubiPress( L_pid.1, secretid.2, k.2, tc.2 ) ]->
    [
@@ -1166,7 +1165,7 @@ rule (modulo E) insc_0_111111112111111111211[color=#805140,
   // loop breaker: [4]
   /*
   rule (modulo AC) insc_0_111111112111111111211[color=#805140,
-                                                process="in(=sc);"]:
+                                                process="in(sc.2);"]:
      [
      State_111111112111111111211( StateChannel, L_pid, SL_pid, StateChannel.1,
                                   YL_pid, k, lock, secretid, tc
@@ -1193,33 +1192,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/Yubikey/Yubikey.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
-
-  output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 14.971877017s
-  secrecy_enc (all-traces): verified (18 steps)
-  init_server (all-traces): verified (42 steps)
-  init_server_secrecy (all-traces): verified (20 steps)
-  Login_reachable (exists-trace): verified (16 steps)
-  Login_reachable_two (exists-trace): verified (16 steps)
-  one_count_foreach_login (all-traces): verified (21 steps)
-  no_replay (all-traces): verified (2 steps)
-  injective_correspondance (all-traces): verified (6 steps)
-  Login_invalidates_smaller_counters (all-traces): verified (6 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1227,7 +1214,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 14.971877017s
+  processing time: 10.10s
+  
   secrecy_enc (all-traces): verified (18 steps)
   init_server (all-traces): verified (42 steps)
   init_server_secrecy (all-traces): verified (20 steps)

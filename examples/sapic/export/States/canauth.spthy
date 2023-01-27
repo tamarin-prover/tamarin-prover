@@ -10,7 +10,7 @@ section{* CANauth protocol *}
    Tamarin: ?
 
 */
-builtins: multiset
+builtins: dest-pairing, multiset
 
 options: enableStateOpt
 

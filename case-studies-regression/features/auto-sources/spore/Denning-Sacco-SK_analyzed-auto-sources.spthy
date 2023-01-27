@@ -2,8 +2,7 @@ theory Denning_Sacco_SK begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -287,7 +286,7 @@ solve( !LongtermKey( ykbs, B ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -376,27 +375,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
-
-  output:          examples/features/auto-sources/spore/Denning-Sacco-SK.spthy.tmp
-  processing time: 3.474958853s
-  executability (exists-trace): verified (7 steps)
-  secrecy (all-traces): verified (27 steps)
-  noninjectiveagreement_B (all-traces): verified (8 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (8 steps)
-  AUTO_typing (all-traces): verified (21 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -404,7 +395,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK.spthy.tmp
-  processing time: 3.474958853s
+  processing time: 0.53s
+  
   executability (exists-trace): verified (7 steps)
   secrecy (all-traces): verified (27 steps)
   noninjectiveagreement_B (all-traces): verified (8 steps)

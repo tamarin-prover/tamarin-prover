@@ -2,8 +2,7 @@ theory KAS2_eCK begin
 
 // Function signature and definition of the equational theory E
 
-functions: KDF/1, MAC/2, adec/2[destructor], aenc/2, fst/1[destructor],
-           h/1, pair/2, pk/1, snd/1[destructor]
+functions: KDF/1, MAC/2, adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -237,25 +236,21 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf12/KAS2_eCK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf12/KAS2_eCK.spthy
-
-  output:          examples/csf12/KAS2_eCK.spthy.tmp
-  processing time: 4.729995843s
-  eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -263,7 +258,8 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          examples/csf12/KAS2_eCK.spthy.tmp
-  processing time: 4.729995843s
+  processing time: 1.94s
+  
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

@@ -3,7 +3,7 @@ theory KCL07_UK3 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
+functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -184,7 +184,7 @@ next
             case Setup
             step( solve( !KU( r1 ) @ #vk.1 ) )
               case c_fst
-              by sorry /* unannotated */
+              by sorry
             next
               case c_h
               by sorry
@@ -193,7 +193,7 @@ next
               by sorry
             next
               case c_snd
-              by sorry /* unannotated */
+              by sorry
             next
               case c_union
               by sorry
@@ -413,29 +413,21 @@ next
   by sorry
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
-
-  output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 2.065979375s
-  RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
-  LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
-  RHS :  executable (exists-trace): analysis incomplete (1 steps)
-  LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (90 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -443,7 +435,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 2.065979375s
+  processing time: 0.79s
+  
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)

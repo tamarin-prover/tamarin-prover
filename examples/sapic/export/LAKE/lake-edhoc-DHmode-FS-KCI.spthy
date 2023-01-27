@@ -20,7 +20,7 @@ theory edhoc
 
 begin
 
-builtins: diffie-hellman,signing, symmetric-encryption
+builtins: dest-pairing, diffie-hellman,dest-signing, dest-symmetric-encryption
 
 functions: hash/1,hkdfextract/2, hkdfexpand(bitstring,bitstring):skey
 

@@ -3,8 +3,8 @@ theory Okamoto_Vote_Privacy begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: blind/2, checksign/2, f/4, fst/1[destructor], open/2, pair/2,
-           pk/1, sign/2, snd/1[destructor], tdcommit/3, unblind/2
+functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
+           sign/2, snd/1, tdcommit/3, unblind/2
 equations:
     checksign(sign(m, sk), pk(sk)) = m,
     f(m1, f(m, r, td, m1), td, m2) = f(m, r, td, m2),
@@ -193,7 +193,7 @@ solve( (#i < #j)  ∥ (#j < #i) )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -11362,25 +11362,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/post17/okamoto_vote_privacy.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/post17/okamoto_vote_privacy.spthy
-
-  output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 341.792848282s
-  RHS :  exec (exists-trace): verified (12 steps)
-  LHS :  exec (exists-trace): verified (12 steps)
-  DiffLemma:  Observational_equivalence : verified (3701 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -11388,7 +11382,8 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 341.792848282s
+  processing time: 69.14s
+  
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (3701 steps)

@@ -3,8 +3,8 @@ theory OPC_UA_Secure_Communication begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: fst/1[destructor], h/1, mac/2, pair/2, sdec/2[destructor],
-           senc/2, snd/1[destructor], true/0, verifyMac/3
+functions: fst/1, h/1, mac/2, pair/2, sdec/2, senc/2, snd/1, true/0,
+           verifyMac/3
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -11955,30 +11955,21 @@ restriction reliable:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
-
-  output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 315.449309069s
-  Executable (exists-trace): verified (36 steps)
-  all_received_were_sent (all-traces): verified (18 steps)
-  all_received_were_sent_injective (all-traces): verified (168 steps)
-  order (all-traces): verified (954 steps)
-  delivery_wo_order (all-traces): verified (25 steps)
-  delivery_order (all-traces): verified (124 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -11986,7 +11977,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 315.449309069s
+  processing time: 138.94s
+  
   Executable (exists-trace): verified (36 steps)
   all_received_were_sent (all-traces): verified (18 steps)
   all_received_were_sent_injective (all-traces): verified (168 steps)

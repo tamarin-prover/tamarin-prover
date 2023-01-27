@@ -3,7 +3,7 @@ theory UM_one_pass_attack begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
+functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -104,6 +104,9 @@ rule (modulo E) R_Complete:
     6. ~eb   = ~eb.139
        X     = x.271^(x.272*inv((~eb.139*x.273)))
        z     = x.271^(x.272*inv(x.273))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) R_Expire:
@@ -323,26 +326,21 @@ solve( (¬(role = 'I'))  ∥
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/dh/UM_one_pass_attack.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/dh/UM_one_pass_attack.spthy
-
-  output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 4.71225803s
-  key_agreement_reachable (exists-trace): verified (10 steps)
-  CK_secure (all-traces): falsified - found trace (19 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -350,7 +348,8 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 4.71225803s
+  processing time: 2.99s
+  
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 

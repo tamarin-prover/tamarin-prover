@@ -2,7 +2,7 @@ theory ChannelsTestThree begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 heuristic: p
@@ -133,26 +133,21 @@ restriction in_event:
       (∀ #t1 xp.
         (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/channels3.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/channels3.spthy
-
-  output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.065110218s
-  not_secret (exists-trace): verified (4 steps)
-  internal_comm (exists-trace): verified (3 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -160,7 +155,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.065110218s
+  processing time: 0.08s
+  
   not_secret (exists-trace): verified (4 steps)
   internal_comm (exists-trace): verified (3 steps)
 

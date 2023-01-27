@@ -18,7 +18,7 @@ theory KEMTLS
 
 begin
 
-builtins: symmetric-encryption
+builtins: dest-pairing, dest-symmetric-encryption
 
 functions: kempk/1, kemenc/2, kemdec/2[destructor], hkdfext/2, hkdfexp/3, htrans/1, cert/1[private],getcert/1[destructor], senc/2,msdec/2[destructor],hmac/2,leak/1[destructor]
 

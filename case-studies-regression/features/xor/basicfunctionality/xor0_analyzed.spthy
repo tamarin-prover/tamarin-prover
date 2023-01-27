@@ -3,7 +3,7 @@ theory xor0 begin
 // Function signature and definition of the equational theory E
 
 builtins: xor
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -59,25 +59,21 @@ solve( splitEqs(0) )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/xor/basicfunctionality/xor0.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/xor/basicfunctionality/xor0.spthy
-
-  output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.092042084s
-  crworks (exists-trace): verified (6 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -85,7 +81,8 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.092042084s
+  processing time: 0.06s
+  
   crworks (exists-trace): verified (6 steps)
 
 ==============================================================================

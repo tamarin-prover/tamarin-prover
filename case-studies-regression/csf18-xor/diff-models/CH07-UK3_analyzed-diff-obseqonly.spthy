@@ -3,8 +3,7 @@ theory CH07_UK3 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1[destructor], h/1, lh/1, pair/2, rh/1, rot/2,
-           snd/1[destructor]
+functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -186,7 +185,12 @@ guarded formula characterizing all satisfying traces:
 */
 by sorry
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Check presence of the --prove/--lemma arguments in theory:
+  --> 'Observational_equivalence' from arguments do(es) not correspond to a specified lemma in the theory 
+*/
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -252,29 +256,19 @@ rule-equivalence
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/CH07-UK3.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
-
-  output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 372.043568197s
-  RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
-  LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
-  RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
-  LHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
-  RHS :  executable (exists-trace): analysis incomplete (1 steps)
-  LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (22 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -282,7 +276,11 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 372.043568197s
+  processing time: 200.22s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  recentalive_reader (all-traces): analysis incomplete (1 steps)
