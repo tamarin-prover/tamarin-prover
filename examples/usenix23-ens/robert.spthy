@@ -1,0 +1,815 @@
+/*
+ * Protocol:   ROBERT (ROBust and privacy-presERving proximity Tracing) / TousAntiCovid
+ * Modeler:    Robert Künnemann, Kevin Morio, and Dennis Jackson
+ * Date:       April 2021
+ * Status:     working
+ *
+ * Sources:    https://github.com/ROBERT-proximity-tracing/documents/blob/e220bfff3a36f0a94feb723533547bfe699df186/ROBERT-specification-EN-v1_1.pdf
+ *             https://gitlab.inria.fr/stopcovid19
+ *
+ * Invocation: tamarin-prover --prove robert.spthy
+ */
+
+theory ROBERT
+
+begin
+
+heuristic: o "./oracles/oracle-robert"
+
+builtins: diffie-hellman
+
+functions:
+    senc/2
+  , sdec/2
+  , sdecSuc/2
+  , sencr/3
+  , sdecr/2
+  , sdecrSuc/2
+  , sencIV/3
+  , sdecIV/3
+  , sdecIVSuc/3
+  , mac/2
+  , true/0
+  , false/0
+  , trunc16/1
+  , sign/2
+  , verify/2
+  , pk/1
+  , extract/1
+
+equations:
+ // 64-bit block cipher
+    sdec(k, senc(k, m)) = m
+  , sdecSuc(k, senc(k, m)) = true()
+ // AES-GCM
+  , sdecr(k, sencr(k, r, m)) = m
+  , sdecrSuc(k, sencr(k, r, m)) = true()
+ // AES−OFB
+  , sdecIV(k, iv, sencIV(k, iv, m)) = m
+  , sdecIVSuc(k, iv, sencIV(k, iv, m)) = true()
+  , verify(pk(sk), sign(sk, m)) = true()
+  , extract(sign(sk, m)) = m
+
+
+
+/*
+**********************************************
+Modeling of time
+**********************************************
+
+Uses of 32 bit timestamps:
+  - hello message collection (5.2)
+    |time - trunc16(time')| < δ
+  - hello message upload (hello, time32)
+    |t - trunc16(time32)| < δ
+  - inside esr request (7.)
+
+Uses of 16 bit timestamps:
+  - inside hello message (5.1)
+
+Uses of epochs:
+  - ebid generated per epoch i (4.)
+  - server hello message verification (6.2 step 6)
+    time32 corresponds to epoch i
+  - inside esr request (7.)
+  - stored in SRE
+
+**********************************************
+*/
+
+restriction time:
+    "All d #t1 #t3. Time(d)@t1 
+                  & Time(d)@t3 
+                  & #t1 < #t3
+                    ==> All dp #t2. Time(dp)@t2 
+                                  & #t1 < #t2 
+                                  & #t2 < #t3 ==> dp = d"
+
+restriction timeEpochInDates:
+    "All cc e d dp #t1 #t3. Epoch(cc, e)@t1 & Time(d)@t1
+                          & Epoch(cc, e)@t3 & Time(dp)@t3
+                            ==> d = dp"
+
+predicate:
+    EarlierTimeP(d1, d2) <=> (All #t1 #t2. Time(d1)@t1
+                                         & Time(d2)@t2
+                                           ==> not(d1 = d2) & #t1 < #t2)
+  , EarlierTimeEqP(ts1, ts2) <=> (All #t1 #t2. Time(ts1)@t1
+                                             & Time(ts2)@t2
+                                               ==> ts1 = ts2 | (not(ts1 = ts2) & #t1 < #t2))
+  , EarlierEpochEqP(cc, i, j) <=> (All #t1 #t2. Epoch(cc, i)@t1
+                                              & Epoch(cc, j)@t2
+                                                ==> i = j | (not(i = j) & #t1 < #t2))
+
+restriction epoch_ealier_eq:
+    "All #t cc x y. EarlierEpochEq(cc, x, y)@t ==> EarlierEpochEqP(cc, x, y)"
+
+restriction earlier_time:
+    "All #t x y. EarlierTime(x, y)@t ==> EarlierTimeP(x, y)"
+
+
+restriction epoch_at_time:
+    "All cc e t #i. EpochAtTime(cc, e, t)@i
+    ==> Ex #j. Epoch(cc, e)@j & Time(t)@j
+        & #j < #i"
+
+restriction is_true:
+    "All x #i. IsTrue(x)@i ==> x = true()"
+
+
+
+/*
+**********************************************
+Bluetooth
+**********************************************
+
+Broadcast channel, anyone at some $place and time $t and epoch $e$ can share and receive messages.
+
+**********************************************
+*/
+
+rule BLEwr:
+    [ In(eph)]
+  --[ Time($t)
+    , Epoch($CC, $e)
+    , BLEwr($t, $e, $place, eph) ]->
+    [ !SpaceTime($place, $t, $e, eph) ]
+
+rule BLErd:
+    [ !SpaceTime($place, $t, $e, eph) ]
+  --[ Time($t)
+    , Epoch($CC, $e)
+    , BLErd($t, $e, $place, eph) ]->
+    [ Out(eph) ]
+
+
+
+/*
+**********************************************
+Phone
+**********************************************
+
+* Setup phone
+*
+* Broadcast an ephemeral identifier
+* Receive a broadcast identifier
+* Check risk status
+
+**********************************************
+*/
+
+/*
+ * Server-side and application-side registration in one step.
+ *   (see Sect. 3.2 and 3.3.)
+ *
+ */
+
+rule PhoneSetup [color=#33FF33]:
+    [ ]
+  --[ PhoneInit($id, $CC) ]->
+    [ !Phone($id, $CC) ]
+
+rule PhoneRegister:
+    let
+        pkP = 'g'^~skP
+        sharedKeyPS = pkS^~skP
+        KauthP = mac(sharedKeyPS, 'authentication_key')
+        KencP  = mac(sharedKeyPS, 'encryption_key')
+    in
+    [ Fr(~skP)
+    , !Phone($id, $CC)
+    , !BackendPubKey($CC, pkS) ]
+  --[ PhoneRegister($id, $CC)
+    , CreateKey($id, <KauthP, KencP>) ]->
+    [ !PhoneKey($id, <~skP, KauthP, KencP>)
+    , !ChanP_B(<'P', $id>, <'B', $CC>, <'pubkey', pkP>) ]
+
+rule BackendRegisterPhone:
+    let
+        SharedKeyPS = pkP^~skS
+        KauthP = mac(SharedKeyPS, 'authentication_key')
+        KencP = mac(SharedKeyPS, 'encryption_key')
+    in
+    [ !Backend($CC, <~KS, ~skS>)
+    , !ChanP_B(<'P', $id>, <'B', $CC>, <'pubkey', pkP>) ]
+  --[ BackendRegisterPhone($CC, $id, <pkP, KauthP, KencP>) ]->
+    [ !IDTable($CC, KauthP, KencP, $id) ]
+
+
+/* 3.1. Server Set Up
+ *
+ * - KS: server key
+ * - KG: federation key
+ * - (skS , pkS): registration key-pair
+ * - CCS: country code
+ *
+ */
+
+rule FederationSetup:
+    [ Fr(~KG) ]
+  --[ FederationInit(~KG) ]->
+    [ !FederationKey(~KG) ]
+
+rule BackendInit:
+    let
+        pkS = 'g'^~skS
+    in
+    [ Fr(~KS)
+    , Fr(~skS)
+    , !FederationKey(~KG) ]
+  --[ BackendInit($CC, <~KS, ~skS>) ]->
+    [ !Backend($CC, <~KS, ~skS>)
+    , !BackendPubKey($CC, pkS)
+    , Out(pkS) ]
+
+/*
+ * The authorization procedure is explicitely not desribed in the specification paper,
+ * so we had to recover this from the following sources:
+ *
+ * [1] API spec: https://gitlab.inria.fr/stopcovid19/robert-client-api-spec/-/blob/develop/openapi.yaml
+ * [2] ROBERT server code git@gitlab.inria.fr:stopcovid19/robert-server.git
+ *     file /src/main/java/fr/gouv/stopc/robertserver/ws/controller/impl/ReportControllerV4Impl.java|68
+ * [3] https://gitlab.inria.fr/stopcovid19/submission-code-server
+ *     file submission-code-server-database/src/main/java/fr/gouv/stopc/submission/code/server/database/service/impl/SubmissionCodeServiceImpl.java
+ *
+ * [1] specifies that a QR-code token is attached with key uploads. [2] uses
+ * the JWT library to produce it, setting the signature algorithm to RSA DSA
+ * and specifying the content of the token, which includes an issuing date and
+ * expiry date, but no other (non-static) data. [3] indicates that the
+ * submission server does not validate the token, but looks it up in its local
+ * database. The last snapshot in [3] is 8 months old, though, so we cannot
+ * say with certainty that the same method is still deployed.
+ *
+ * It is furthmore diffcult to determine whether the key used for creating the
+ * token is the server key, as we can only consult the source code, but not its
+ * concrete deployment. Best practice would mandate the use of a separate key,
+ * but we consider the worse case here, to be on the conservative side.
+ */
+rule BackendDistributeToken:
+    let
+        qr = sign(~skS, r)
+    in
+    [ !Backend($CC, <~KS, ~skS>)
+    , Fr(r) ]
+  --[ ]->
+    [ !QRList($CC, qr)
+    , ValidToken($CC, qr) ]
+
+
+
+/*
+ * Section 4: every M epochs (value to be defined), each registered user UA
+ * connects to the server in order to obtain a list of the M (EBIDA, i, ECCA, i)
+ * pairs for the M following epochs.
+ *
+ * NOTES:
+ * - We assume M=1.
+ * - we store the epoch with each value. This is given implicitely, as Phone
+ *   receives M for following epochs and it knows the current epoch.
+ */
+rule GenEphS:
+    let
+        ebid =  senc(~KS, <$e, id>)
+        ecc  =  sencIV(~KG, ebid, $CC)
+        preHello = sencr(KencP, ~r, <ebid, ecc>)
+    in
+    [ !FederationKey(~KG)
+    , !Backend($CC, <~KS, ~x>)
+    , !IDTable($CC, KauthP, KencP, id)
+    , Fr(~r) ]
+  --[ Time($t)
+    , Epoch($CC, $en)
+    , GenEphS(id, $CC, $e, preHello)
+    , EarlierEpochEq($CC, $en, $e) ]->
+    [ !ChanB_P(<'B', $CC>, <'P', id>, <'prehello', $e, preHello>) ]
+
+rule StoreEphP:
+    [ !Phone($id, $CC)
+    , !ChanB_P(<'B', $CC>, <'P', $id>, <'prehello', $e, preHello>) ]
+  --[ ]->
+    [ !PEph($id, $e, preHello) ]
+
+
+
+/*
+**********************************************
+Phone corruption
+**********************************************
+
+* Disclose key
+* Disclose received eph
+* Send message from phone to any party over !Chan
+* Receive message from any party and output message
+
+**********************************************
+*/
+
+rule CorruptPhoneKey [color=#fc5386]:
+    [ !PhoneKey(id, <skP, KauthP, KencP> ) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneKey', <skP, KauthP, KencP>) ]->
+    [ Out(<skP, KauthP, KencP>) ]
+
+rule CorruptPhoneReceive [color=#fc5386]:
+    [ !LocalProximityList(id, <hello, $t>) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneReceived', <hello, $t>) ]->
+    [ Out(<hello, $t>) ]
+
+// !PEph is already captured by CorruptPhoneReceive
+
+rule CorruptPhoneSend [color=#fc5386]:
+    [ In(m)
+    , !Phone(id, $CC) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneSend', m)
+    , _restrict(not(Ex pkP. m = <'pubkey', pkP>)) ]->
+    [ !ChanP_B(<'P', id>, <'B', $party>, m) ]
+
+rule CorruptPhoneSendPubkey [color=#fc5386]:
+    [ In(skP)
+    , !Phone(id, $CC) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneSendPubkey', <'pubkey', 'g'^skP>) ]->
+    [ !ChanP_B(<'P', id>, <'B', $party>, <'pubkey', 'g'^skP>) ]
+
+rule CorruptPhoneReceiveB [color=#fc5386]:
+    [ !ChanB_P(<'B', $party>, <'P', id>, m)
+    , !Phone(id, $CC) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneReceive', m) ]->
+    [ Out(m) ]
+
+rule CorruptPhoneReceiveHA [color=#fc5386]:
+    [ !ChanHA_P(<'HA', $party>, <'P', id>, m)
+    , !Phone(id, $CC) ]
+  --[ Corrupt(<'P', id>, 'CorruptPhoneReceive', m) ]->
+    [ Out(m) ]
+
+
+
+/*
+ * Section 5.1. HELLO Message Broadcasting
+ */
+
+rule SendEph:
+    let
+        ebid = fst(sdecr(KencP, preHello))
+        ecc = snd(sdecr(KencP, preHello))
+        m = <ecc, ebid, trunc16($t)>
+        hello = <m, mac(KauthP, m)>
+    in
+    [ !Phone(id, $CC)
+    , !PhoneKey(id, <skP, KauthP, KencP>)
+    , !PEph(id, $e, preHello) ]
+  --[ Time($t)
+    , Epoch($CC, $e)
+    , IsAt(id, $place, $t, $e)
+    , IsTrue(sdecrSuc(KencP, preHello))
+    , Send(id, <hello, $t>)
+    , SendEph(id, $CC, $e, preHello, ebid, ecc)
+   // Ensure that decrypted preHello can be parsed as pair
+    , _restrict( <ebid, ecc> = sdecr(KencP, preHello)) ]->
+    [ !SpaceTime($place, $t, $e, hello)
+    , !PEphSent(id, $e, preHello, $t) ]
+
+lemma geneph_storeeph [sources, use_induction]:
+    "All id cc e preHello ebid ecc #t1. SendEph(id, cc, e, preHello, ebid, ecc)@t1
+         ==> (Ex id2 #t2 cco eo . GenEphS(id2, cco, eo, preHello)@t2 & #t2 < #t1)
+            |( Ex #t3 #t4.  KU(ebid)@t3  & KU(ecc)@t4  & #t3 < #t1 & #t4 < #t1)"
+
+
+
+/*
+ * Section 5.2: AppA continuously collects HELLO messages sent by nearby devices running the same application.
+ */
+
+rule RecvEph:
+    let
+        m = <ecc, ebid, time16>
+        hello = <m, m_mac>
+    in
+    [ !Phone(id, $CC)
+    , !SpaceTime($place, $t, $e, hello) ]
+  --[ Time($t)
+    , Epoch($CC, $e)
+    , _restrict(time16 = trunc16($t))
+    , IsAt(id, $place, $t, $e)
+    , Received(id, <hello, $t>) ]->
+    [ !LocalProximityList(id, <hello, $t>) ]
+
+
+
+/*
+ * Section 7 - Application processing
+ *
+ * NOTES:
+ * - We assume that AppA has an EBID for the current Time32.
+ * - User may sent ESR for any ebid with an epoch equal to the current or in the past.
+ *   In the spec, only the current epoch or the most recent epoch for where the user has en ebid is allowed.
+ */
+
+rule PhoneExposureStatusRequest:
+    let
+        ebid = fst(sdecr(KencP, preHello))
+        m = <ebid, $e, $t>
+        esr_req = <m, mac(KauthP, m)>
+    in
+    [ !Phone(id, $CC)
+    , !PhoneKey(id, <skP, KauthP, KencP>)
+    , !PEphSent(id, $e, preHello, $t) ]
+  --[ IsTrue(sdecrSuc(KencP, preHello))
+    , Epoch($CC, $en)
+    , EarlierEpochEq($CC, $e, $en)
+    , ExposureRequest(id, $CC, esr_req) ]->
+    [ !ChanP_B(<'P', id> , <'B', $CC>, <'esr_req', esr_req>) ]
+
+
+
+/*
+ * Section 7 - Server processing
+ *
+ * NOTES:
+ * - Risk score computation is abstracted such that each user sending a request is at risk.
+ * - Step 7 checks if UN_A is falase. Ensured by the restriction `one_esr_reply'.
+ */
+
+ rule ServerExposureStatusRequest:
+    let
+        epochp = fst(sdec(~KS, ebid))
+        id = snd(sdec(~KS, ebid))
+        m = <ebid, epoch, $t>
+        esr_req = <m, mac(KauthP, m)>
+    in
+    [ !FederationKey(~KG)
+    , !Backend($CC, <~KS, ~x>)
+    , !IDTable($CC, KauthP, KencP, id)
+    , !ChanP_B(<'P', idS>, <'B', $CC>, <'esr_req', esr_req>)
+    , !LEE($CC, id, epoch) ]
+  --[ Time($t)
+    , _restrict(epochp = epoch)
+    // This check is assumed to be implicit in the spec and only an artifect of our model.
+    , _restrict(idS = id)
+    , IsTrue(sdecSuc(~KS, ebid))
+    , ExposureReply(id, $CC, epoch, '1', esr_req) ]->
+    [ !ChanB_P(<'B', $CC>, <'P', idS>, <'esr_reply', '1'>) ]
+
+
+/*
+ * Section 7 - Application processing
+ *
+ * NOTES:
+ * - ACK message is not modelled.
+ */
+
+rule AtRisk:
+    [ !Phone(id, $CC)
+    , !ChanB_P(<'B', $CC> , <'P', id>, <'esr_reply', '1'>) ]
+  --[ PClaimAtRisk(id) ]->
+    [ ]
+
+
+
+/*
+**********************************************
+Testing and release
+**********************************************
+*/
+
+rule Lab:
+    [ !Phone(id, $CC)
+    , !QRList($CC, qr) ]
+  --[ Time($tTest)
+    , TestPositive(id, $tTest)
+    , HAClaimInfected(id, $tContStart, $tContEnd, $tTest)
+    , Within14Days($tContStart, $tContEnd)
+    , EarlierTime($tContStart, $tTest)
+    , EarlierTime($tTest, $tContagEnd) ]->
+    [ !ChanHA_P(<'HA', $CC>, <'P', id>, <'infected', $tContStart, $tContEnd, qr>) ]
+
+/*
+ * 6.1. Upload by the Application
+ *
+ * NOTES:
+ * - Spec says: "In this document, we do not detail the interactions between AppC and the health authority."
+ */
+rule PhoneUploadHello:
+    [ !Phone(id, $CC)
+    , !ChanHA_P(<'HA', $CC>, <'P', id>, <'infected', $tContStart, $tContEnd, qr>)
+    , !LocalProximityList(id, <hello, $t>) ]
+  --[ Time($tn)
+    , EarlierTime($tContStart, $t)
+    , EarlierTime($t, $tContEnd)
+   // Phone only keeps local proximity list for 14 days.
+    , Within14Days($t, $tn)
+    , UploadHello(id, $t, hello) ]->
+    [ !ChanP_B(<'P', id> , <'B', $CC>, <'upload_hello', hello, $t, qr>) ]
+
+/*
+ * 6.2. Server Operations
+ *
+ * NOTES:
+ * - A server with country code CC2 can receive uploads originally intended for a server with country code $CC1
+ *   given that the country code in the HELLO message is $CC2.
+ *   This models an implicit forwarding of the HELLO message from CC1 to CC2.
+ *   (See Section 8: CC2=FR, CC1=DE. )
+ */
+rule Backend:
+    let
+        epochp = fst(sdec(~KS, ebid))
+        id = snd(sdec(~KS, ebid))
+        CC2 = sdecIV(~KG, ebid, ecc)
+        m = <ecc, ebid, time16>
+        hello = <m, mac(KauthP, m)>
+    in
+    [ !FederationKey(~KG)
+    , !Backend(CC2, <~KS, ~skS>)
+    , !IDTable(CC2, KauthP, KencP, id)
+    , !ChanP_B(<'P', idI>, <'B', $CC1>, <'upload_hello', hello, $time, qr>)
+   // As idI is contacting their backend (CC1), this backend is validating the token.
+    , ValidToken($CC1, qr) ]
+  --[  EpochAtTime(CC2, epochp, $time)
+    , _restrict(time16 = trunc16($time))
+    , MarkPositive(idI, $time)
+    , BackendForward($CC1, CC2)
+    , IsTrue(sdecSuc(~KS, ebid))
+    , IsTrue(sdecIVSuc(~KG, ebid, ecc)) ]->
+    [ !LEE(CC2, id, epochp) ]
+
+
+
+/*
+**********************************************
+Backend corruption
+**********************************************
+*/
+
+rule CorruptBState [color=#fc5386]:
+    [ !Backend($CC, <~KS, ~skS>) ]
+  --[ Corrupt(<'B', $CC>, 'CorruptBState', <~KS, ~skS>) ]->
+    [ Out(<~KS, ~skS>) ]
+
+rule CorruptToken [color=#fc5386]:
+    [ !QRList($CC, qr) ]
+  --[ Corrupt(<'B', $CC>, 'CorruptQRList', qr) ]->
+    [ Out(qr) ]
+
+rule CorruptBIDTable [color=#fc5386]:
+    [ !IDTable($CC, KauthP, KencP, id) ]
+  --[ Corrupt(<'B', $CC>, 'CorruptBIDTable', <KauthP, KencP, id>) ]->
+    [ Out(<KauthP, KencP, id>) ]
+
+rule CorruptBFederationKey [color=#fc5386]:
+    [ !FederationKey(~KG)
+    , !Backend($CC, k) ]
+  --[ Corrupt(<'B', $CC>, 'CorruptBFederationKey', ~KG) ]->
+    [ Out(~KG) ]
+
+rule CorruptBSend [color=#fc5386]:
+    [ In(m)
+    , !Phone($id, $CC)
+    , !Backend($CC, k) ]
+  --[ Corrupt(<'B', $CC>, 'CorruptBSend', m) ]->
+    [ !ChanB_P(<'B', $CC>, <'P', $id>, m) ]
+
+rule CorruptBReceive [color=#fc5386]:
+    [ !Phone($id, $CC)
+    , !ChanP_B(<'P', $id>, <'B', $CC>, m)
+    , !Backend($CC, k) ]
+  --[ Corrupt(<'B', $CC>, 'CorruptBReceive', m) ]->
+    [ Out(m) ]
+
+
+
+/*
+**********************************************
+Enforcing behavior
+**********************************************
+*/
+
+// Initialize phone for one country only.
+restriction init_phone:
+   "All id cc1 cc2 #i #j. PhoneInit(id, cc1)@i
+                        & PhoneInit(id, cc2)@j ==> cc1 = cc2"
+
+// Each individual tested at one timepoint.
+restriction test_postive_once:
+  "All id tt1 tt2 #i #j. TestPositive(id, tt1)@i
+                      &  TestPositive(id, tt2)@j ==> tt1 = tt2"
+
+// A phone is registed once at a backend.
+restriction backend_register_phone_once:
+  "All id cc k1 k2 #i #j. BackendRegisterPhone(cc, id, k1)@i
+                        & BackendRegisterPhone(cc, id, k2)@j ==> k1 = k2 & #i = #j"
+
+// Each individual is given start and end date for their contagious period by the HA.
+restriction cont_period:
+  "All id ts1 te1 ts2 te2 tt1 tt2 #i #j. HAClaimInfected(id, ts1, te1, tt1)@i
+                                       & HAClaimInfected(id, ts2, te2, tt2)@j
+                                         ==> ts1 = ts2 & te1 = te2 & tt1 = tt2"
+
+// There exists only a single federation key.
+restriction single_federation_key:
+  "All kg1 kg2 #i #j.FederationInit(kg1)@i
+                   & FederationInit(kg2)@j ==> kg1 = kg2 & #i = #j"
+
+// Each individual registers in one country.
+restriction phone_register_once:
+    "All id cc1 cc2 #i #j. PhoneRegister(id, cc1)@i
+                         & PhoneRegister(id, cc2)@j ==> cc1 = cc2 & #i = #j "
+
+// For each country code, there exists at most one server.
+restriction one_server_per_country_code:
+  "All cc k1 k2 #i #j. BackendInit(cc, k1)@i & BackendInit(cc, k2)@j ==> k1 = k2 & #i = #j"
+
+// This restriction means we treat users-post-positive test as no longer being capable of being at risk.
+restriction positive_means_stop:
+  "not Ex id tsTest #t1 #t2. TestPositive(id, tsTest)@t1
+                         & PClaimAtRisk(id)@t2
+                         & #t1 < t2"
+
+/*
+ * NOTES:
+ * - See Section 7 (Server Processing) step 7:
+ *   "Verifies that UN_A is 'false' in order to check that the user has not already received an 'At Risk' notification."
+ * - Since in this model, each ESR_REQUEST is replied with an 'At Risk' notification, there may only be one reply for a user.
+ *
+ */
+restriction one_esr_reply:
+  "All id cc1 cc2 e1 e2 tr1 tr2 #i #j. ExposureReply(id, cc1, e1, '1', tr1)@i
+                                     & ExposureReply(id, cc2, e2, '1', tr2)@j ==> #i = #j"
+
+
+
+predicates:
+ /* The shared keys can be obtained by either corrupting the respective phone
+  * or the backend and leaking the IDTable of the phone.
+  */
+    ObtainSharedKeys(id) <=> (Ex skP KauthP KencP #i. Corrupt(<'P', id>, 'CorruptPhoneKey', <skP, KauthP, KencP>)@i)
+                           | (Ex cc  KauthP KencP #i. Corrupt(<'B', cc>, 'CorruptBIDTable', <KauthP, KencP, id>)@i)
+ /* HELLO message of idR is either recorded when broadcasted or leaked by a corrupted intermediary phone id,
+  * or reconstructed by observing the prehello message from the backend to idR or an esr request.
+  */
+  , ObtainHELLOMessageData(idR, hello, t) <=> // A HELLO message is recorded ...
+                                                   (Ex e1 p1 #i #j. Send(idR, <hello, t>)@i
+                                                                  & BLErd(t, e1, p1, hello)@j)
+                                                   // ... or it is received and leaked by an intermediary phone id ...
+                                                 | (Ex id #i #j #k.
+                                                       Send(idR, <hello, t>)@i
+                                                     & Received(id, <hello, t>)@j
+                                                     & Corrupt(<'P', id>, 'CorruptPhoneReceived', <hello, t>)@k
+                                                     /* & not(id = idI) */
+                                                     )
+                                                   // ... or the prehello message from the backend to idR is captured.
+                                                 | (Ex e prehello #i. Corrupt(<'P', idR>, 'CorruptPhoneReceive', <'prehello', e, prehello>)@i)
+                                                   // ... or an esr request to the backend is captured.
+                                                 | (Ex cc esr_req #t2. Corrupt(<'B', cc>, 'CorruptBReceive', <'esr_req', esr_req>)@t2)
+  ,  MaliciousUpload(id) <=>
+          /* :C-A-S-E: \ref{at:robert-upload-phone} described below
+           *
+           * A positive phone leaks the qr code and shares it with another
+           * phone that can obtain hello from id.
+           * (Phone identified by id, needs precisely the qr code and infected
+           * phone obtained. As next case covers obtaining QR codes from
+           * another source, this says the phones can be different)
+           */
+          (Ex idI t1 t2 qr hello tsClose #t1 #t2 #t3
+         .
+             Corrupt(<'P', idI>, 'CorruptPhoneReceive', <'infected', t1, t2, qr>)@t1
+           & Corrupt(<'P', id>, 'CorruptPhoneSend', <'upload_hello', hello, tsClose, qr>)@t2
+           & KU(hello)@t3
+          )
+          /* CASE: Obtain 1\maxuploadf QR code\anycc and upload with \emph{these} phones  (\ref{at:robert-upload-phone}, \ref{at:robert-upload-qr-list}, \ref{at:robert-upload-qr-upload})
+           * QR tokens can be stolen from the backend either by leaking the QR list or leaking the
+           * QR code in a possibly honest upload message.
+           */
+         |(Ex qr hello tsClose #t2 #t3.
+             ( (Ex ccOtherB #t1. Corrupt(<'B', ccOtherB>, 'CorruptQRList', qr)@t1)
+             | (Ex ccOtherB h1 ts1 #t1. Corrupt(<'B', ccOtherB>, 'CorruptBReceive', <'upload_hello', h1, ts1, qr>)@t1)
+             )
+           & Corrupt(<'P', id>, 'CorruptPhoneSend', <'upload_hello', hello, tsClose, qr>)@t2
+           & KU(hello)@t3 // Attacker must obtain hello, but at this point, it does not yet need to be well-formed or relate to any party.
+          )
+          /* CASE: Compromise $1$ back end\anycc (\ref{at:robert-upload-secret})
+           * The signing key for QR tokens can be obtained by backend compromise (by any backend)
+           */
+         |(Ex ccOtherB state qr hello tsClose #t1 #t2 #t3.
+             Corrupt(<'B', ccOtherB>, 'CorruptBState', state)@t1
+           & Corrupt(<'P', id>, 'CorruptPhoneSend', <'upload_hello', hello, tsClose, qr>)@t2
+           & KU(qr)@t3
+           )
+ // When a phone registers as infected and uploads its local proximity list ...
+  , UploadAuth(id) <=> (All t #t1 .
+        MarkPositive(id, t)@t1
+        ==> // That phone tested positive .. or a compromise event happened
+               (Ex dayTestC #t3 . TestPositive(id, dayTestC)@t3 & #t3 < #t1))
+
+lemma upload_auth:
+    "All id t #t1.
+         MarkPositive(id, t)@t1 ==>
+             (Ex dayTestC #t3 . TestPositive(id, dayTestC)@t3 & #t3 < #t1)
+           | MaliciousUpload(id)"
+
+lemma soundness:
+    "All idR #tRisk. PClaimAtRisk(idR)@tRisk
+         ==> (Ex idI place tsClose e tsStart tsEnd tsTest #t1 #t2 #t3 #t4 #t5 #t6.
+                 IsAt(idR, place, tsClose, e)@t1
+               & IsAt(idI, place, tsClose, e)@t2
+               & HAClaimInfected(idI, tsStart, tsEnd, tsTest)@t3
+               & EarlierTime(tsStart, tsClose)@t4
+               & EarlierTime(tsClose, tsEnd)@t5
+               & Within14Days(tsStart, tsEnd)@t6
+               & not(idR = idI))
+            /* CASE: Compromise $1$ (or many) infected phones and, during the last 14 days\outsidef, place in proximity to all $n$ phones (\ref{at:robert-refl}, \ref{at:robert-window})
+             *
+             * This is a weaker version from above without the need for EarlierTime.
+             * Instead idI is compromised but behaves according to the protocol.
+             */
+            | (Ex idI place tsClose e tsStart tsEnd tsTest #t1 #t2 #t3 #t4.
+                 IsAt(idR, place, tsClose, e)@t1
+               & IsAt(idI, place, tsClose, e)@t2
+               & HAClaimInfected(idI, tsStart, tsEnd, tsTest)@t3
+               & MaliciousUpload(idI)
+               & Within14Days(tsStart, tsEnd)@t4
+               )
+           /* CASE: Obtain\obtainf $n$ ephemerals\dayf and relay to 1\maxuploadf infected phone\anycc (\ref{at:robert-relay})
+            *
+            * A HELLO message is obtained or reconstructed and then replayed at a different place but same time.
+            *
+            * The epoch can be different as the CC's of idR and idI can also be different.
+            * Finally, the HELLO message is received by the infected user idI.
+            */
+            | (Ex idI dayTest hello t e2 p2 #t1 #t2 #t3.
+                ObtainHELLOMessageData(idR, hello, t)
+              & BLEwr(t, e2, p2, hello)@t1
+              & Received(idI, <hello, t>)@t2
+              & TestPositive(idI, dayTest)@t3)
+            /*  CASE: Obtain\obtainf $n$ ephemerals\dayf and let 1\maxuploadf compromised infected phone upload\anycc  (\ref{at:robert-relay-malicious})
+             *
+             * A HELLO message is obtained or reconstructed and then uploaded to the backend in the name of id.
+             * id doesn't have to (but may be) tested positive.
+             */
+            | (Ex cc id hello t qr #t1 #t2.
+                PhoneInit(id, cc)@t1
+              & Corrupt(<'P', id>, 'CorruptPhoneSend', <'upload_hello', hello, t, qr>)@t2
+              & ObtainHELLOMessageData(idR, hello, t)
+              & MaliciousUpload(id))
+             /* CASE: Compromise $1$ back end\samecc (active attack, \ref{at:robert-false-report})
+              *
+              * The backend sends a positive esr reply irrespective of idR's actual health status.
+              */
+            | (Ex cc #t1 #t2.
+                PhoneInit(idR, cc)@t1
+              & Corrupt(<'B', cc>, 'CorruptBSend', <'esr_reply', '1'>)@t2)
+            /* CASE: Steal $1$ back end key\samecc + 1 federation key and compromise 1 infected phone\samecc (\ref{at:robert-backend-qr})
+             * C-A-S-E: left out because the above variant is stronger. both subsubed in same case anyhow.
+             *
+             * When all keys are leaked, everything is possible:
+             * concrete attack not violating mark_positive is where attacker
+             * reads ephemeral and reconstructs identical ephemeral but with
+             * new epoch using the knowledge of both keys. They just need one
+             * phone to declare any other phone infected. QR code can come from infected phone or HA.
+             */
+            | (Ex cc ccAny KG KS skS #t1 #t2 #t3.
+                PhoneInit(idR, cc)@t1
+              & Corrupt(<'B', cc>, 'CorruptBState', <KS, skS>)@t2
+              & Corrupt(<'B', ccAny>, 'CorruptBFederationKey', KG)@t3
+             // Create entirely new message posing as idR
+              & ObtainSharedKeys(idR))
+            /* CASE: Learn/inject $n$ phones' public keys (\ref{at:robert-pubkey})
+             *
+             * Adverary knows the public part of the key that idR is registered with
+             * Then either a prehello message is captured or the backend's keys and the federation keys are leaked.
+             *
+             * A HELLO message can be  constructed which hasn't been broadcasted by idR before and idI can upload this message.
+             *
+             * NOTES:
+             * - This doesn't require any bluetooth methods.
+             * - The adversary can use the same public key for multiple phones.
+             * - iR has to be compromised as the constructed HELLO message hasn't been broadcasted.
+             */
+            | (Ex pkP cc KauthP KencP #t1.
+             // idR is registered with a certain public key
+                BackendRegisterPhone(cc, idR, <pkP, KauthP, KencP>)@t1
+              & ( (Ex esr_req #t21 #t22. Corrupt(<'P', idR>, 'CorruptPhoneSendPubkey', <'pubkey', pkP>)@t21
+                                       & Corrupt(<'P', idR>, 'CorruptPhoneSend', <'esr_req', esr_req>)@t22)
+                | (Ex #t2. Corrupt(<'B', cc>, 'CorruptBReceive', <'pubkey', pkP>)@t2)
+                )
+              & ( // The prehello message from the backend to idR is captured ...
+                  (Ex e prehello #i. Corrupt(<'P', idR>, 'CorruptPhoneReceive', <'prehello', e, prehello>)@i)
+                  // ... or backend and federation keys are leaked.
+                | (Ex cc1 KG KS skS #i #j.
+                      Corrupt(<'B', cc1>, 'CorruptBFederationKey', KG)@i
+                    & Corrupt(<'B', cc>, 'CorruptBState', <KS, skS>)@j)
+                )
+              )"
+
+/*
+==============================================================================
+summary of summaries:
+
+analyzed: robert.spthy
+
+  geneph_storeeph (all-traces): verified (185 steps)
+  upload_auth (all-traces): verified (80 steps)
+  soundness (all-traces): verified (170137 steps)
+
+==============================================================================
+*/
+
+end

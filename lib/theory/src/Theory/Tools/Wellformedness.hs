@@ -980,6 +980,7 @@ findNotProvedLemmas lemmaArgsNames lemmasInTheory = foldl (\acc x -> if not (arg
   -----------------------
 checkIfLemmasInTheory :: Theory sig c r p s  -> WfErrorReport
 checkIfLemmasInTheory thy 
+        | lemmaArgsNames == [[]] = []
         | null notProvedLemmas = []
         | otherwise = 
             [(topic, vcat
@@ -999,6 +1000,7 @@ checkIfLemmasInTheory thy
   -----------------------
 checkIfLemmasInDiffTheory :: DiffTheory sig c r r2 p p2  -> WfErrorReport
 checkIfLemmasInDiffTheory thy 
+        | lemmaArgsNames == [[]] = []
         | null notProvedLemmas = []
         | otherwise = 
             [(topic, vcat

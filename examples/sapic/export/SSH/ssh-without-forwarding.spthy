@@ -13,7 +13,7 @@ theory temp
 
 begin
 
-builtins: diffie-hellman, symmetric-encryption, signing
+builtins: dest-pairing, diffie-hellman, dest-symmetric-encryption, dest-signing
 
 functions: hash/1, kdfPtoS(bitstring):skey, kdfStoP(bitstring):skey
 

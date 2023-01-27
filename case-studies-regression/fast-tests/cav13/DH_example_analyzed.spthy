@@ -3,8 +3,7 @@ theory ex1 begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], g/0, mac/2, pair/2,
-           shk/0[private,destructor], snd/1[destructor]
+functions: fst/1, g/0, mac/2, pair/2, shk/0[private,destructor], snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -52,6 +51,9 @@ rule (modulo E) Step2:
     6. ~x    = ~x.9
        Y     = x.7^x.8
        z     = x.7^(x.8*~x.9)
+    
+    7. Y     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) RevealKey:
@@ -126,7 +128,15 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -134,26 +144,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/cav13/DH_example.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/cav13/DH_example.spthy
-
-  output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.281971466s
-  Accept_Secret (all-traces): verified (9 steps)
-  Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.281971466s
+  processing time: 0.39s
+  
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)
 

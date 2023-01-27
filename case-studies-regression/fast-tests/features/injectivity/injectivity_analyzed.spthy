@@ -2,7 +2,7 @@ theory injectivity begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -63,7 +63,15 @@ next
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -71,25 +79,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/features//injectivity/injectivity.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features//injectivity/injectivity.spthy
-
-  output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.023936838s
-  injectivity_check (all-traces): verified (9 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.023936838s
+  processing time: 0.09s
+  
   injectivity_check (all-traces): verified (9 steps)
 
 ==============================================================================

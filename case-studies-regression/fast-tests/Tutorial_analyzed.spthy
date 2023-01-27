@@ -2,8 +2,7 @@ theory Tutorial begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2, aenc/2, fst/1[destructor], h/1, pair/2, pk/1,
-           snd/1[destructor]
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(m, pk(k)), k) = m,
     fst(<x.1, x.2>) = x.1,
@@ -231,7 +230,15 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -239,28 +246,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/Tutorial.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/Tutorial.spthy
-
-  output:          examples/Tutorial.spthy.tmp
-  processing time: 0.293417705s
-  Client_session_key_secrecy (all-traces): verified (5 steps)
-  Client_auth (all-traces): verified (11 steps)
-  Client_auth_injective (all-traces): verified (15 steps)
-  Client_session_key_honest_setup (exists-trace): verified (5 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.293417705s
+  processing time: 0.22s
+  
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)

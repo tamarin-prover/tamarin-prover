@@ -3,7 +3,7 @@ theory DDH begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], g/0, pair/2, snd/1[destructor]
+functions: fst/1, g/0, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -13,7 +13,7 @@ rule (modulo E) DDH:
   -->
    [ Out( <g^~x, g^~y, diff(g^~z, g^~x^~y)> ) ]
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -7553,23 +7553,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
-
-
-analyzing: examples/ccs15/DDH.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ccs15/DDH.spthy
-
-  output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 14.023246448s
-  DiffLemma:  Observational_equivalence : verified (2522 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -7577,7 +7573,8 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 14.023246448s
+  processing time: 14.18s
+  
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 
 ==============================================================================

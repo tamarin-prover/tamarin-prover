@@ -3,8 +3,7 @@ theory TAK1 begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing, multiset
-functions: fst/1[destructor], h/1, kdf/1, pair/2, snd/1[destructor],
-           tag/1
+functions: fst/1, h/1, kdf/1, pair/2, snd/1, tag/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -320,6 +319,10 @@ rule (modulo E) Proto3:
        emXBXC
              = x.962^(x.963*inv((~ex.486*x.964)))
        z     = x.962^(x.963*inv(x.964))
+    
+    7. emXBXC
+             = DH_neutral
+       z     = DH_neutral
   */
 
 lemma session_key_establish:
@@ -524,7 +527,15 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -532,26 +543,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/ake/bilinear/TAK1_eCK_like.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
-
-  output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 76.998296726s
-  session_key_establish (exists-trace): verified (17 steps)
-  Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 76.998296726s
+  processing time: 73.88s
+  
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)
 

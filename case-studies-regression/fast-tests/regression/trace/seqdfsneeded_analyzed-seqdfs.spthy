@@ -2,7 +2,7 @@ theory seqdfsneeded begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
+functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -134,7 +134,15 @@ rule (modulo E) amplify_decoy_case3:
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -142,25 +150,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/regression/trace/seqdfsneeded.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/trace/seqdfsneeded.spthy
-
-  output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.241769075s
-  slow (exists-trace): verified (24 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/regression/trace/seqdfsneeded.spthy
 
   output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.241769075s
+  processing time: 0.26s
+  
   slow (exists-trace): verified (24 steps)
 
 ==============================================================================

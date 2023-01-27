@@ -53,12 +53,15 @@ builtinsDiffNames :: [(String,
 builtinsDiffNames = [
   ("diffie-hellman", dhMaudeSig),
   ("bilinear-pairing", bpMaudeSig),
-
   ("multiset", msetMaudeSig),
   ("xor", xorMaudeSig),
   ("symmetric-encryption", symEncMaudeSig),
   ("asymmetric-encryption", asymEncMaudeSig),
   ("signing", signatureMaudeSig),
+  ("dest-pairing", pairDestMaudeSig),  
+  ("dest-symmetric-encryption", symEncDestMaudeSig),
+  ("dest-asymmetric-encryption", asymEncDestMaudeSig),
+  ("dest-signing", signatureDestMaudeSig),  
   ("revealing-signing", revealSignatureMaudeSig),
   ("hashing", hashMaudeSig)
               ]

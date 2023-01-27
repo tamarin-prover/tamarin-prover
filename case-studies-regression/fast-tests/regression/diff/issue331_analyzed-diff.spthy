@@ -2,7 +2,7 @@ theory Issue331 begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], g/2, pair/2, snd/1[destructor]
+functions: fst/1, g/2, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -20,7 +20,7 @@ restriction secrecy [left]:
   "¬(∃ #i1 #i2 k. (A( k ) @ #i1) ∧ (!KU( k ) @ #i2))"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -113,23 +113,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
-
-
-analyzing: examples/regression/diff/issue331.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/diff/issue331.spthy
-
-  output:          examples/regression/diff/issue331.spthy.tmp
-  processing time: 0.23827286s
-  DiffLemma:  Observational_equivalence : verified (37 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -137,7 +133,8 @@ summary of summaries:
 analyzed: examples/regression/diff/issue331.spthy
 
   output:          examples/regression/diff/issue331.spthy.tmp
-  processing time: 0.23827286s
+  processing time: 0.35s
+  
   DiffLemma:  Observational_equivalence : verified (37 steps)
 
 ==============================================================================

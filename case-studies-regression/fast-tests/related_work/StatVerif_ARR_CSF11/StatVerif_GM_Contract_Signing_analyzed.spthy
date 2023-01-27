@@ -2,8 +2,8 @@ theory StatVerif_GM_Contract_Signing begin
 
 // Function signature and definition of the equational theory E
 
-functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1[destructor],
-           pair/2, pcs/3, pk/1, sign/2, snd/1[destructor], true/0
+functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1, pair/2,
+           pcs/3, pk/1, sign/2, snd/1, true/0
 equations:
     check_getmsg(pk(xsk), sign(xsk, xm)) = xm,
     checkpcs(xc, pk(xsk), ypk, zpk, pcs(sign(xsk, xc), ypk, zpk)) = true,
@@ -390,7 +390,15 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -398,28 +406,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
-
-  output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.572410166s
-  aborted_and_resolved_exclusive (all-traces): verified (7 steps)
-  aborted_contract_reachable (exists-trace): verified (8 steps)
-  resolved1_contract_reachable (exists-trace): verified (9 steps)
-  resolved2_contract_reachable (exists-trace): verified (9 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.572410166s
+  processing time: 0.67s
+  
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

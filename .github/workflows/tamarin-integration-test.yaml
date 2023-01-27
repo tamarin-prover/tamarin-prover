@@ -15,7 +15,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install graphviz
-          
+
       - name: Caching
         uses: actions/cache@v2
         with:
@@ -37,8 +37,8 @@ jobs:
           curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
           chmod a+x ~/.local/bin/stack
           stack --no-terminal setup
-          curl -L https://github.com/tamarin-prover/tamarin-prover/releases/download/1.6.0/Maude-2.7.1-linux.zip > maude.zip
-          unzip -o maude.zip -d ~/.local/bin/
+          curl -L https://github.com/SRI-CSL/Maude/releases/download/3.2.1/Maude-3.2.1-linux.zip > maude.zip
+          unzip -oj maude.zip -d ~/.local/bin/
           mv -f ~/.local/bin/maude.linux64 ~/.local/bin/maude
           chmod a+x ~/.local/bin/maude
           mkdir -p case-studies case-studies/ake case-studies/ake/bilinear case-studies/ake/dh case-studies/related_work

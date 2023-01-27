@@ -2,8 +2,8 @@ theory TESLA_Scheme1 begin
 
 // Function signature and definition of the equational theory E
 
-functions: MAC/2, f/1, fst/1[destructor], pair/2, pk/1, sign/2,
-           snd/1[destructor], true/0, verify/3[destructor]
+functions: MAC/2, f/1, fst/1, pair/2, pk/1, sign/2, snd/1, true/0,
+           verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
@@ -774,7 +774,15 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -782,26 +790,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/loops/TESLA_Scheme1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/TESLA_Scheme1.spthy
-
-  output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 7.457912808s
-  authentic (all-traces): verified (158 steps)
-  authentic_reachable (exists-trace): verified (13 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 7.457912808s
+  processing time: 6.23s
+  
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

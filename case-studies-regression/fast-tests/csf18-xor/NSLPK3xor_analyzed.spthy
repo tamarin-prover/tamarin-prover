@@ -3,8 +3,7 @@ theory NSLPK3XOR begin
 // Function signature and definition of the equational theory E
 
 builtins: xor
-functions: adec/2[destructor], aenc/2, fst/1[destructor], pair/2, pk/1,
-           snd/1[destructor]
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -322,7 +321,15 @@ solve( Secret( A, B, s ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -330,28 +337,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/csf18-xor/NSLPK3xor.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/NSLPK3xor.spthy
-
-  output:          examples/csf18-xor/NSLPK3xor.spthy.tmp
-  processing time: 6.099362385s
-  types (all-traces): falsified - found trace (13 steps)
-  nonce_secrecy (all-traces): falsified - found trace (11 steps)
-  injective_agree (all-traces): falsified - found trace (13 steps)
-  session_key_setup_possible (exists-trace): verified (6 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/csf18-xor/NSLPK3xor.spthy
 
   output:          examples/csf18-xor/NSLPK3xor.spthy.tmp
-  processing time: 6.099362385s
+  processing time: 5.55s
+  
   types (all-traces): falsified - found trace (13 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)
   injective_agree (all-traces): falsified - found trace (13 steps)

@@ -33,6 +33,7 @@ module Theory.Model.Fact (
   , isPersistentFact
   , isProtoFact
   , isInFact
+  , isKLogFact
 
   , factTagName
   , showFactTag
@@ -311,6 +312,10 @@ isProtoFact _                            = False
 isInFact :: Fact t -> Bool
 isInFact (Fact InFact _ _) = True
 isInFact _                 = False
+
+-- | True iff the fact is the non-special Log-fact K() from the intruder rule isend
+isKLogFact :: Fact t -> Bool
+isKLogFact f = isProtoFact f && (factTagName (factTag f) == "K")
 
 -- | View a protocol fact.
 protoFactView :: LNFact -> Maybe [LNTerm]

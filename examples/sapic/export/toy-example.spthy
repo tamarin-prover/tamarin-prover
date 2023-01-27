@@ -19,6 +19,8 @@ theory Toy
 
 begin
 
+builtins: dest-pairing
+
 functions: dec/2 [destructor], enc/2
 
 equations: dec(enc(m, k), k) = m
@@ -37,7 +39,7 @@ let Q(sk) =
      out('abort')
 
 process:
-!new sk; event SharedKey(sk); (! new key; P(sk,key) || !Q(sk))
+!new ~sk; event SharedKey(~sk); (! new key; P(~sk,key) || !Q(~sk))
 
 lemma Auth:
  "All k #i. Accept(k)@i ==> Ex #j. Honest(k)@j & j < i"

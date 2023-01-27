@@ -203,8 +203,7 @@ c01chja@Colossus05 $ time proverif output.pv
 
 begin
 
-builtins:
-	asymmetric-encryption, multiset, xor
+builtins: dest-pairing,	dest-asymmetric-encryption, multiset, xor
 
 functions:
 	// AKA functions (TS 33.102)

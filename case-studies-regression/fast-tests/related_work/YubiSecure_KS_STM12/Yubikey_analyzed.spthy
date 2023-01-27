@@ -2,8 +2,7 @@ theory Yubikey begin
 
 // Function signature and definition of the equational theory E
 
-functions: S/1, fst/1[destructor], myzero/0, pair/2, sdec/2[destructor],
-           senc/2, snd/1[destructor]
+functions: S/1, fst/1, myzero/0, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -3759,7 +3758,15 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -3767,29 +3774,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
-
-  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 17.171069702s
-  Login_reachable (exists-trace): verified (12 steps)
-  slightly_weaker_invariant (all-traces): verified (1141 steps)
-  no_replay (all-traces): verified (4 steps)
-  injective_correspondance (all-traces): verified (23 steps)
-  Login_invalidates_smaller_counters (all-traces): verified (4 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 17.171069702s
+  processing time: 16.52s
+  
   Login_reachable (exists-trace): verified (12 steps)
   slightly_weaker_invariant (all-traces): verified (1141 steps)
   no_replay (all-traces): verified (4 steps)

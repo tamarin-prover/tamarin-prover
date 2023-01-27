@@ -3,8 +3,7 @@ theory YubikeyMultisets begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
@@ -1492,7 +1491,15 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
 
 end
 /* Output
@@ -1500,30 +1507,14 @@ maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
 
-
-analyzing: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
-
-  output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 23.272680924s
-  transitivity (all-traces): verified (2 steps)
-  Login_reachable (exists-trace): verified (8 steps)
-  slightly_weaker_invariant (all-traces): verified (420 steps)
-  no_replay (all-traces): verified (8 steps)
-  injective_correspondance (all-traces): verified (7 steps)
-  Login_invalidates_smaller_counters (all-traces): verified (4 steps)
-
-------------------------------------------------------------------------------
-
 ==============================================================================
 summary of summaries:
 
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 23.272680924s
+  processing time: 22.95s
+  
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)
   slightly_weaker_invariant (all-traces): verified (420 steps)

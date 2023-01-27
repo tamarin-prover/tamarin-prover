@@ -2,8 +2,7 @@ theory probEnc begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, pdec/2, penc/3, pk/1,
-           snd/1[destructor]
+functions: fst/1, pair/2, pdec/2, penc/3, pk/1, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     pdec(penc(m, pk(k), r), k) = m,
@@ -19,7 +18,7 @@ rule (modulo E) enc:
   -->
    [ Out( diff(~r1, penc(x, pk(k), ~r2)) ) ]
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -218,23 +217,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.0
+Git revision: 82b634faa495c3406e89f2d7ca64065902749ced, branch: feature-destructor-option
+Compiled at: 2023-01-25 13:14:18.712098538 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
  checking version: 3.0. OK.
  checking installation: OK.
-
-
-analyzing: examples/ccs15/probEnc.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ccs15/probEnc.spthy
-
-  output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.51629814s
-  DiffLemma:  Observational_equivalence : verified (75 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -242,7 +237,8 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.51629814s
+  processing time: 0.45s
+  
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
 ==============================================================================

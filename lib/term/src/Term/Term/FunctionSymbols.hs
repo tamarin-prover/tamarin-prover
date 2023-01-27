@@ -48,6 +48,8 @@ module Term.Term.FunctionSymbols (
     , pairSym
     , fstSym
     , sndSym
+    , fstDestSym
+    , sndDestSym    
     , zeroSym
 
     -- ** concrete signatures
@@ -56,6 +58,7 @@ module Term.Term.FunctionSymbols (
     , bpFunSig
     , msetFunSig
     , pairFunSig
+    , pairFunDestSig    
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig
@@ -150,13 +153,22 @@ oneSym   = (oneSymString,(0,Public,Constructor))
 -- | The groupd identity
 dhNeutralSym = (dhNeutralSymString,(0,Public, Constructor))
 -- | Projection of first component of pair.
-fstSym   = ("fst",(1,Public,Destructor))
+fstSym   = ("fst",(1,Public,Constructor))
 -- | Projection of second component of pair.
-sndSym   = ("snd",(1,Public,Destructor))
+sndSym   = ("snd",(1,Public,Constructor))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
 pmultSym = (pmultSymString,(2,Public,Constructor))
 -- | The zero for XOR.
 zeroSym  = (zeroSymString,(0,Public,Constructor))
+
+mkDestSym :: NoEqSym -> NoEqSym
+mkDestSym (name,(k,p,_)) = (name,(k,p, Destructor))
+
+fstDestSym, sndDestSym :: NoEqSym
+-- | Projection of first component of pair.
+fstDestSym   = mkDestSym fstSym
+-- | Projection of second component of pair.
+sndDestSym   = mkDestSym sndSym
 
 ----------------------------------------------------------------------
 -- Fixed signatures
@@ -181,6 +193,10 @@ msetFunSig = S.fromList [AC Union]
 -- | The signature for pairing.
 pairFunSig :: NoEqFunSig
 pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
+
+-- | The signature for pairing with destructors.
+pairFunDestSig :: NoEqFunSig
+pairFunDestSig = S.fromList [ pairSym, fstDestSym, sndDestSym ]
 
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig
