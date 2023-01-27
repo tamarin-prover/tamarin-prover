@@ -1,0 +1,456 @@
+theory AC_counter begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
+           null/0, pair/2, prog/3, rep/2[private,destructor], report/1, snd/1,
+           succ/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: S
+
+/* looping facts with injective instances: L_CellLocked/2, L_PureState/2
+*/
+
+
+
+predicate: Report( x, y )<=>¬(y = 'l')
+
+
+
+
+
+
+
+lemma attested_comput_second_step [reuse]:
+  all-traces
+  "∀ #t1 o2 i2 o i.
+    (Voutput( <o2, i2, o, list(i, 'init')> ) @ #t1) ⇒
+    (∃ #t2. (Poutput( <o2, i2, o, list(i, 'init')> ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 o2 i2 o i.
+  (Voutput( <o2, i2, o, list(i, 'init')> ) @ #t1)
+ ∧
+  ∀ #t2. (Poutput( <o2, i2, o, list(i, 'init')> ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+solve( State_1211111111111( StateChannel, lock, signedios, i2, o2,
+                            <<o, list(i, 'init')>, z>, state
+       ) ▶₀ #t1 )
+  case ifoipsndstcheckrepsignediosl_0_121111111111_case_1
+  solve( State_111111111( StateChannel, lock, st, state ) ▶₀ #vr.6 )
+    case p_1_11111_case_2
+    solve( State_111111111( StateChannel, lock, st, ~n.7 ) ▶₀ #vr.10 )
+      case p_1_11111_case_1
+      solve( L_CellLocked( ~n.4, ~n.1 ) ▶₁ #t1 )
+        case p_1_121111
+        solve( L_PureState( ~n.4, <<o, list(i, 'init')>, succ(null)> ) ▶₁ #vr.2 )
+          case eventVoutputoipfstst_0_1211111111111_case_1
+          solve( State_111111111( StateChannel, lock, <z, null>, state
+                 ) ▶₀ #vr.17 )
+            case p_1_11111
+            solve( L_CellLocked( ~n.8, ~n.7 ) ▶₃ #vr.6 )
+              case p_1_11111
+              solve( L_CellLocked( ~n.8, ~n.9 ) ▶₃ #vr.10 )
+                case p_1_11111
+                solve( L_CellLocked( ~n.5, ~n.10 ) ▶₁ #vr.13 )
+                  case p_1_121111
+                  solve( L_PureState( ~n.5, <'init', null> ) ▶₁ #vr.16 )
+                    case p_1_12
+                    solve( L_CellLocked( ~n.13, ~n.12 ) ▶₃ #vr.17 )
+                      case p_1_11111
+                      solve( !KU( prog(~n.2, i2, <prog(~n.3, ip, 'init'), list(ip, 'init')>)
+                             ) @ #vk.5 )
+                        case inip_0_111111111_case_1
+                        solve( !KU( prog(~n.4, i, 'init') ) @ #vk.8 )
+                          case inip_0_111111111_case_1
+                          SOLVED // trace found
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'l'))"
+  // safety formula
+
+rule (modulo E) ReportRule[color=#ffffff, process="!"]:
+   [ In( <x, loc> ) ]
+  --[ Restr_ReportRule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;"]:
+   [ State_11( ), Fr( state.1 ), Fr( StateChannel ) ]
+  -->
+   [
+   !Semistate_111111( StateChannel, state.1 ),
+   L_PureState( state.1, <'init', null> )
+   ]
+
+  /*
+  rule (modulo AC) newstate_0_11[color=#ffffff, process="new state.1;"]:
+     [ State_11( ), Fr( state ), Fr( StateChannel ) ]
+    -->
+     [
+     !Semistate_111111( StateChannel, state ),
+     L_PureState( state, <'init', null> )
+     ]
+  */
+
+rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
+   [
+   !Semistate_111111( StateChannel, state.1 ), L_PureState( state.1, st.1 ),
+   Fr( lock )
+   ]
+  -->
+   [
+   State_111111111( StateChannel, lock, st.1, state.1 ),
+   L_CellLocked( state.1, lock )
+   ]
+
+  /*
+  rule (modulo AC) p_1_11111[color=#ffffff, process="!"]:
+     [
+     !Semistate_111111( StateChannel, state ), L_PureState( state, st ),
+     Fr( lock )
+     ]
+    -->
+     [
+     State_111111111( StateChannel, lock, st, state ),
+     L_CellLocked( state, lock )
+     ]
+  */
+
+rule (modulo E) inip_0_111111111[color=#405280, process="in(ip.1);"]:
+   [
+   State_111111111( StateChannel, lock, st.1, state.1 ), In( ip.1 ),
+   Fr( r.1 ), L_CellLocked( state.1, lock )
+   ]
+  --[ Poutput( <prog(r.1, ip.1, fst(st.1)), ip.1, fst(st.1)> ) ]->
+   [
+   L_PureState( state.1,
+                <<prog(r.1, ip.1, fst(st.1)), list(ip.1, fst(st.1))>, succ(snd(st.1))>
+   ),
+   Out( <prog(r.1, ip.1, fst(st.1)), 
+         rep(<prog(r.1, ip.1, fst(st.1)), ip.1, snd(st.1)>, 'l')>
+   )
+   ]
+
+  // loop breakers: [0,3]
+  /*
+  rule (modulo AC) inip_0_111111111[color=#405280, process="in(ip.1);"]:
+     [
+     State_111111111( StateChannel, lock, st, state ), In( ip ), Fr( r ),
+     L_CellLocked( state, lock )
+     ]
+    --[ Poutput( <prog(r, ip, z), ip, z> ) ]->
+     [
+     L_PureState( state, <<prog(r, ip, z), list(ip, z)>, succ(z.1)> ),
+     Out( <prog(r, ip, z), rep(<prog(r, ip, z), ip, z.1>, 'l')> )
+     ]
+    variants (modulo AC)
+    1. st    = st.11
+       z     = fst(st.11)
+       z.1   = snd(st.11)
+    
+    2. st    = <z.12, z.13>
+       z     = z.12
+       z.1   = z.13
+    // loop breakers: [0,3]
+  */
+
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ !Semistate_121( ), State_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+   [ !Semistate_121( ), Fr( state.2 ), Fr( StateChannel.1 ) ]
+  -->
+   [
+   !Semistate_1211111( StateChannel.1, state.2 ),
+   L_PureState( state.2, <'init', null> )
+   ]
+
+  /*
+  rule (modulo AC) p_1_12[color=#ffffff, process="!"]:
+     [ !Semistate_121( ), Fr( state ), Fr( StateChannel ) ]
+    -->
+     [
+     !Semistate_1211111( StateChannel, state ),
+     L_PureState( state, <'init', null> )
+     ]
+  */
+
+rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
+   [
+   !Semistate_1211111( StateChannel.1, state.2 ),
+   L_PureState( state.2, st.2 ), Fr( lock.1 )
+   ]
+  -->
+   [
+   State_1211111111( StateChannel.1, lock.1, st.2, state.2 ),
+   L_CellLocked( state.2, lock.1 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) p_1_121111[color=#ffffff, process="!"]:
+     [
+     !Semistate_1211111( StateChannel, state ), L_PureState( state, st ),
+     Fr( lock )
+     ]
+    -->
+     [
+     State_1211111111( StateChannel, lock, st, state ),
+     L_CellLocked( state, lock )
+     ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) inip_0_1211111111[color=#658040, process="in(ip.2);"]:
+   [
+   State_1211111111( StateChannel.1, lock.1, st.2, state.2 ), In( ip.2 ),
+   In( <o.2, signedios.1> )
+   ]
+  -->
+   [
+   State_121111111111( StateChannel.1, lock.1, signedios.1, ip.2, o.2, st.2,
+                       state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) inip_0_1211111111[color=#658040, process="in(ip.2);"]:
+     [
+     State_1211111111( StateChannel, lock, st, state ), In( ip ),
+     In( <o, signedios> )
+     ]
+    -->
+     [ State_121111111111( StateChannel, lock, signedios, ip, o, st, state ) ]
+  */
+
+rule (modulo E) ifoipsndstcheckrepsignediosl_0_121111111111[color=#658040,
+                                                            process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')"]:
+   [
+   State_121111111111( StateChannel.1, lock.1, signedios.1, ip.2, o.2, st.2,
+                       state.2
+   )
+   ]
+  --[ Pred_Eq( <o.2, ip.2, snd(st.2)>, check_rep(signedios.1, 'l') ) ]->
+   [
+   State_1211111111111( StateChannel.1, lock.1, signedios.1, ip.2, o.2,
+                        st.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifoipsndstcheckrepsignediosl_0_121111111111[color=#658040,
+                                                               process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')"]:
+     [ State_121111111111( StateChannel, lock, signedios, ip, o, st, state ) ]
+    --[ Pred_Eq( <o, ip, z>, z.1 ) ]->
+     [ State_1211111111111( StateChannel, lock, signedios, ip, o, st, state )
+     ]
+    variants (modulo AC)
+    1. signedios
+             = signedios.12
+       st    = st.13
+       z     = snd(st.13)
+       z.1   = check_rep(signedios.12, 'l')
+    
+    2. signedios
+             = signedios.14
+       st    = <x.12, x.13>
+       z     = x.13
+       z.1   = check_rep(signedios.14, 'l')
+    
+    3. signedios
+             = rep(x.12, 'l')
+       st    = st.14
+       z     = snd(st.14)
+       z.1   = x.12
+    
+    4. signedios
+             = rep(x.12, 'l')
+       st    = <x.15, x.16>
+       z     = x.16
+       z.1   = x.12
+  */
+
+rule (modulo E) eventVoutputoipfstst_0_1211111111111[color=#658040,
+                                                     process="event Voutput( <o.2, ip.2, fst(st.2)> );"]:
+   [
+   State_1211111111111( StateChannel.1, lock.1, signedios.1, ip.2, o.2,
+                        st.2, state.2
+   ),
+   L_CellLocked( state.2, lock.1 )
+   ]
+  --[ Voutput( <o.2, ip.2, fst(st.2)> ) ]->
+   [ L_PureState( state.2, <<o.2, list(ip.2, fst(st.2))>, succ(snd(st.2))> )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) eventVoutputoipfstst_0_1211111111111[color=#658040,
+                                                        process="event Voutput( <o.2, ip.2, fst(st.2)> );"]:
+     [
+     State_1211111111111( StateChannel, lock, signedios, ip, o, st, state ),
+     L_CellLocked( state, lock )
+     ]
+    --[ Voutput( <o, ip, z> ) ]->
+     [ L_PureState( state, <<o, list(ip, z)>, succ(z.1)> ) ]
+    variants (modulo AC)
+    1. st    = st.13
+       z     = fst(st.13)
+       z.1   = snd(st.13)
+    
+    2. st    = <x.12, x.13>
+       z     = x.12
+       z.1   = x.13
+    // loop breaker: [1]
+  */
+
+rule (modulo E) ifoipsndstcheckrepsignediosl_1_121111111111[color=#658040,
+                                                            process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')"]:
+   [
+   State_121111111111( StateChannel.1, lock.1, signedios.1, ip.2, o.2, st.2,
+                       state.2
+   )
+   ]
+  --[ Pred_Not_Eq( <o.2, ip.2, snd(st.2)>, check_rep(signedios.1, 'l') )
+  ]->
+   [
+   State_1211111111112( StateChannel.1, lock.1, signedios.1, ip.2, o.2,
+                        st.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifoipsndstcheckrepsignediosl_1_121111111111[color=#658040,
+                                                               process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')"]:
+     [ State_121111111111( StateChannel, lock, signedios, ip, o, st, state ) ]
+    --[ Pred_Not_Eq( <o, ip, z>, z.1 ) ]->
+     [ State_1211111111112( StateChannel, lock, signedios, ip, o, st, state )
+     ]
+    variants (modulo AC)
+    1. signedios
+             = signedios.12
+       st    = st.13
+       z     = snd(st.13)
+       z.1   = check_rep(signedios.12, 'l')
+    
+    2. signedios
+             = signedios.14
+       st    = <x.12, x.13>
+       z     = x.13
+       z.1   = check_rep(signedios.14, 'l')
+    
+    3. signedios
+             = rep(x.12, 'l')
+       st    = st.14
+       z     = snd(st.14)
+       z.1   = x.12
+    
+    4. signedios
+             = rep(x.12, 'l')
+       st    = <x.15, x.16>
+       z     = x.16
+       z.1   = x.12
+  */
+
+rule (modulo E) eventFail_0_1211111111112[color=#658040,
+                                          process="event Fail( );"]:
+   [
+   State_1211111111112( StateChannel.1, lock.1, signedios.1, ip.2, o.2,
+                        st.2, state.2
+   )
+   ]
+  --[ Fail( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventFail_0_1211111111112[color=#658040,
+                                             process="event Fail( );"]:
+     [ State_1211111111112( StateChannel, lock, signedios, ip, o, st, state )
+     ]
+    --[ Fail( ) ]->
+     [ ]
+  */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
+
+  output:          examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy.tmp
+  processing time: 2.27s
+  
+  attested_comput_second_step (all-traces): falsified - found trace (15 steps)
+
+==============================================================================
+*/
