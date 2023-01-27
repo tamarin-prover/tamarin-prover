@@ -3,7 +3,7 @@ theory issue519 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -61,8 +61,8 @@ qed
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 3063551fa783622802bf38bdec715c58f70eefd2 (with uncommited changes), branch: fix-dh-neutral
-Compiled at: 2022-09-23 14:03:06.880236851 UTC
+Git revision: deed4ce88c4d1c55110dfce64cafa6ee88c43d61 (with uncommited changes), branch: fix-issue-519
+Compiled at: 2023-01-27 19:30:27.642598244 UTC
 */
 
 end
@@ -77,7 +77,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue519.spthy
 
   output:          examples/regression/trace/issue519.spthy.tmp
-  processing time: 0.03603801s
+  processing time: 0.05s
   
   secret_msgVar (all-traces): falsified - found trace (4 steps)
   secret_freshVar (all-traces): falsified - found trace (4 steps)
