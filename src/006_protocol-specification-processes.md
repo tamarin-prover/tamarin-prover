@@ -102,7 +102,7 @@ an action `Insert(x,y)` has occurred previously, and in between, no other
 `Insert(x,y')` or `Delete(x)` action has changed the global store at the position `x`. Hence,
 the global store is distinct from the set of facts in the current state.
 
-### Enforcing local progress (optional)
+### Enforcing local progress (optional) {#sec:local-progress}
 
 The translation from processes can be modified so it enforces a different
 semantics. In this semantics, the set of traces consists of only those where

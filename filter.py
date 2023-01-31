@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 """
 
@@ -43,7 +43,7 @@ def includefile(filename,lower=0,upper=-1):
     fp = open(filename,'r')
     i = 0
     res = []
-    for l in fp.xreadlines():
+    for l in fp:
         if i >= lower:
             if (i <= upper or upper == -1):
                 res += [l]
@@ -94,7 +94,7 @@ def filter(infn,outfn):
 
     fpi = open(infn, 'r')
     res = []
-    for l in fpi.xreadlines():
+    for l in fpi:
         res += [l]
         if l.startswith(codeblock):
             if len(res) >= 2:
@@ -121,7 +121,7 @@ def main():
     if len(sys.argv) >= (1+2):
         filter(sys.argv[1],sys.argv[2])
     else:
-        print "Need two arguments: infile and outfile."
+        print("Need two arguments: infile and outfile.")
 
 if __name__ == '__main__':
     main()
