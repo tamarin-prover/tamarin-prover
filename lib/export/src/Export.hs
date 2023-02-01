@@ -358,6 +358,13 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       Lit (Con (Name PubName n)) ->
         if List.elem (show n) ["g", "one", "zero"]
           then S.empty
+          -- The 's' is just prepended here instead of using sanitizeSymbol, because that function
+          -- only does the prepending for reserved keywords and symbols starting with a digit. For
+          -- free bitstrings however, we ALWAYS want the leading 's', to also avoid clashes with
+          -- function names, rule names, event names etc. We could also do it like that for variables
+          -- and function names (where we use sanitizeSymbol now), but I thought if we did it in all
+          -- other places it might not be needed there, and I thought it would be better to leave as
+          -- much as possible of the original naming as it is
           else S.singleton (Sym "free" ("s" ++ show n) ":bitstring" [])
       Lit (_) -> S.empty
       FApp _ ts -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts

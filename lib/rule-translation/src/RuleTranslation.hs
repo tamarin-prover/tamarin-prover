@@ -240,18 +240,55 @@ newsFilter (Fact tag _ _) = (factTagName tag) == "Fr"
 outsFilter :: LNFact -> Bool
 outsFilter (Fact tag _ _) = (factTagName tag) == "Out"
 
+-- | @translatePatterns facts factType filterFunction vars helperVars destructors@ applies the
+--   @filterFunction@ to the @facts@ to extract those that should be translated with this call, and
+--   returns a list with translations for all those facts. @factType@ indicates what type of fact 
+--   should be translated. @vars@ are all variables that have appeared in the current rule translation
+--   up to this point. @helperVars@ maps all patterns that have already appeared in this rule
+--   translation to their helper variables. @destructors@ contains the map with all destructors.
+--   Also returns the updated set of variables for the current rule translation (including the ones
+--   seen here for the first time), as well as the updated set of helper vars for this rule
+--   translation and the updated map of destructors.
 translatePatterns :: (HighlightDocument d) => [LNFact] -> String -> (LNFact -> Bool) -> S.Set String -> M.Map String String -> M.Map (String, String) String -> ([d], S.Set String, M.Map String String, M.Map (String, String) String)
 translatePatterns facts factType filterFunction vars helperVars destructors =
+    -- Translate all selected pattern facts, while keeping track of the variables that have already
+    -- appeared and also continuously updating the maps with the helper vars and the destructors.
     let (doclist, finalvars, finalHelperVars, finalDestructors) = foldl (\(d1, v1, v1', destr1) g -> let (d2, v2, v2', destr2) = translate g v1 v1' destr1 in (d1 ++ [d2], (S.union v1 v2), v2', destr2)) ([], vars, helperVars, destructors) patternFacts
       in
     (doclist, finalvars, finalHelperVars, finalDestructors)
     where
       patternFacts = filter filterFunction facts
-      translate prem@(Fact _ _ ts) vs hvs destrs = (getDoc, atoms, newHelperVars, newDestructors)
+      
+      -- Translates one single fact, both with the core part that is either 'get' or 'in', as well
+      -- as all destructor expressions to extract the content of the patterns. @vs@ is the set
+      -- of variables that have already appeared in the rule translation up to this point, @hvs@
+      -- is the map of helper variables (which are used to store the content of the patterns before
+      -- applying the destructors), and @destrs@ is the map containing all the currently defined
+      -- destructors. Also returns the updated set of variables from the current rule translation,
+      -- the updated map of helper vars and the updated map of destructors, so they can be used
+      -- for the translation of the next fact.
+      translate prem@(Fact _ _ ts) vs hvs destrs = (factPlusDestructorsDoc, newVars, newHelperVars, newDestructors)
                                              where
+                                               -- First create only the part of the translation that is 'get'
+                                               -- or 'in', introducing new helper vars for all patterns.
                                                (factDoc, newHelperVars) = translatePatternFact prem factType vs hvs
-                                               (destrDocList, atoms, newDestructors) = foldl (\(docs,vset,des) t -> let (doc,vset',des') = makeDestructorExpressions vset newHelperVars des t in (docs ++ [doc], vset `S.union` vset', des')) ([], (vs `S.union` literals), destrs) patternTerms
-                                               getDoc = factDoc $-$ (vcat $ destrDocList)
+                                               
+                                               -- For each pattern term, create the list of destructor expressions
+                                               -- that extract its contents. @literals@ contains all non-pattern
+                                               -- terms from the current fact, which have to be remembered together
+                                               -- with all variables from the current rule. This way, they will not
+                                               -- be accidentally redefined when extracting them with a destructor,
+                                               -- but instead can be prepended with '=' to check for equality. All
+                                               -- variables which are seen in a destructor expression for the first
+                                               -- time have to also be remembered in case they appear again in a
+                                               -- later expression, which is why this set is also given to 
+                                               -- @makeDestructorExpressions@ and updated during the fold. The map
+                                               -- of destructors is also updated continiuously.
+                                               (destrDocList, newVars, newDestructors) = foldl (\(docs,vset,des) t -> let (doc,vset',des') = makeDestructorExpressions vset newHelperVars des t in (docs ++ [doc], vset `S.union` vset', des')) ([], (vs `S.union` literals), destrs) patternTerms
+                                               
+                                               -- Then put all the docs together.
+                                               factPlusDestructorsDoc = factDoc $-$ (vcat $ destrDocList)
+
                                                patternTerms = filter isPattern ts
                                                literals = S.fromList (foldl (\acc t -> acc ++ getAtoms t) [] (filter (not . isPattern) ts))
 
@@ -263,9 +300,9 @@ translateNonPatterns facts factType filterFunction vars =
     (doclist, finalvars)
     where
       nonPatternFacts = filter filterFunction facts
-      translate prem@(Fact _ _ ts) vs = (getDoc, atoms)
+      translate prem@(Fact _ _ ts) vs = (factDoc, atoms)
                                              where
-                                              getDoc = case factType of
+                                              factDoc = case factType of
                                                 "OUT"    -> if checkForNewIDs
                                                               then idConstructor $-$ translateFact prem factType vs
                                                               else translateFact prem factType vs
@@ -413,7 +450,14 @@ makeVariable t varMap = case M.lookup (printTerm S.empty False t) varMap of
                  in
                (newVar, newMap)
       
-
+-- | @makeDestructorName dMap t a@ looks up if a destructor that extracts @a@ from @t@ already exists
+--   in map @dMap@, and depending on the result returns the one that already exists or a newly created
+--   one, together with the (updated) map. Note that for the mapping we don't just print the term to
+--   a string, but use @makeDestructorDefinition@ to also prepend it with declarations of all its
+--   variables. We need those later when we want to define the destructor, and create them right here
+--   because here we can still extract the variables from the actual term, while later we can only
+--   access the term as a string. (Terms are stringified for mapping because in their raw form they
+--   are not orderable, i.e. can not be used in a map.)
 makeDestructorName :: (Show l) => M.Map (String, String) String -> Term l -> String -> (String, M.Map (String, String) String)
 makeDestructorName dMap t a = case M.lookup ((makeDestructorDefinition t),a) dMap of
     Just d  -> (d, dMap)
