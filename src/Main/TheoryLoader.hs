@@ -317,13 +317,15 @@ loadTheory thyOpts input inFile = do
 
     parse p = parseString (toParserFlags thyOpts) inFile p input
 
-    translate | isParseOnlyMode = return
+    translate | isParseOnlyMode && not (isMSRModule) = return
               | otherwise       = Sapic.typeTheory
                               >=> Sapic.translate
                               >=> Acc.translate
 
     isDiffMode      = L.get oDiffMode thyOpts
     isParseOnlyMode = L.get oParseOnlyMode thyOpts
+    isMSRModule  = L.get oOutputModule thyOpts == Just ModuleMsr
+
 
     unwrapError (Left (Left e)) = Left e
     unwrapError (Left (Right v)) = Right $ Left v
