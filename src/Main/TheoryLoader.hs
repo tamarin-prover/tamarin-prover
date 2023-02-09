@@ -77,7 +77,7 @@ import           qualified Data.Label as L
 import           Theory.Text.Parser.Token (parseString)
 import           Data.Bifunctor (Bifunctor(bimap))
 import           Data.Bitraversable (Bitraversable(bitraverse))
-import           Control.Monad.Catch (MonadCatch, onException, handle)
+import           Control.Monad.Catch (MonadCatch)
 import qualified Accountability as Acc
 import qualified Accountability.Generation as Acc
 import GHC.Records (HasField(getField))
@@ -247,9 +247,11 @@ mkTheoryLoadOptions as = TheoryLoadOptions
     autoSources   = return $ argExists "auto-sources" as
 
     outputModule
+    -- when proving, we act like we chose the Msr Output module.
      | Nothing  <- findArg "outModule" as , [] /= findArg "prove" as = return $ Just ModuleMsr
-     -- ^ when proving, we act like we chose the Msr Output module.
-     | Nothing  <- findArg "outModule" as = return $ Just ModuleSpthy -- default
+    -- default
+     | Nothing  <- findArg "outModule" as = return $ Just ModuleSpthy
+     -- Otherwise, find output module  that matches string argument
      | Just str <- findArg "outModule" as
      , Just modCon <- find (\x -> show x  == str) (enumFrom minBound) = return $ Just modCon
      | otherwise   = throwError $ ArgumentError "output mode not supported."
@@ -259,7 +261,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 
     chain = findArg "OpenChainsLimit" as
     chainDefault = L.get oOpenChain defaultTheoryLoadOptions
-    openchain = if not (null chain) 
+    openchain = if not (null chain)
                   then return (fromMaybe chainDefault (readMaybe (head chain) ::Maybe Integer))
                   else return chainDefault
     -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
@@ -274,7 +276,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
 lemmaSelectorByModule thyOpt lem = case lemmaModules of
     [] -> True -- default to true if no modules (or only empty ones) are set
-    _  -> case (L.get oOutputModule thyOpt) of
+    _  -> case L.get oOutputModule thyOpt of
       Just outMod -> outMod `elem` lemmaModules
       Nothing     -> ModuleSpthy `elem` lemmaModules
     where
@@ -317,13 +319,12 @@ loadTheory thyOpts input inFile = do
 
     parse p = parseString (toParserFlags thyOpts) inFile p input
 
-    translate | isParseOnlyMode && not (isMSRModule) = return
-              | otherwise       = Sapic.typeTheory
+    translate | isMSRModule   = Sapic.typeTheory
                               >=> Sapic.translate
                               >=> Acc.translate
+              | otherwise     = return
 
-    isDiffMode      = L.get oDiffMode thyOpts
-    isParseOnlyMode = L.get oParseOnlyMode thyOpts
+    isDiffMode   = L.get oDiffMode thyOpts
     isMSRModule  = L.get oOutputModule thyOpts == Just ModuleMsr
 
 
