@@ -1,0 +1,83 @@
+theory OperatorPrecedenceLetTriple begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+section{* A few test cases for operator precedence *}
+
+
+
+lemma second_process_covered:
+  all-traces "∀ #e x. (E( x ) @ #e) ⇒ (x = '1')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #e x. (E( x ) @ #e) ∧ ¬(x = '1')"
+*/
+simplify
+solve( E( x ) @ #e )
+  case in_0_11
+  by contradiction /* from formulas */
+next
+  case in_0_12
+  by contradiction /* from formulas */
+next
+  case in_0_2
+  by contradiction /* from formulas */
+qed
+
+rule (modulo E) in_0_11[color=#ffffff, process="in('1');"]:
+   [ State_11( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_0_12[color=#ffffff, process="in('1');"]:
+   [ State_12( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="|"]:
+   [ ] --[ Init( ) ]-> [ State_11( ), State_12( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_0_2[color=#ffffff, process="in('1');"]:
+   [ State_2( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/operator-precedence-5.spthy
+
+  output:          examples/sapic/fast/basic/operator-precedence-5.spthy.tmp
+  processing time: 0.04s
+  
+  second_process_covered (all-traces): verified (5 steps)
+
+==============================================================================
+*/

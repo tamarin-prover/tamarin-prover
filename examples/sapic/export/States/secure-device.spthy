@@ -9,7 +9,7 @@ theory StatVerif_Security_Device begin
 
 */
 
-builtins: asymmetric-encryption
+builtins: dest-pairing, dest-asymmetric-encryption
 
 //options: enableStateOpt
 

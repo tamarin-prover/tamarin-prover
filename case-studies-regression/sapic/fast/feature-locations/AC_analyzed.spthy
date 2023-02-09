@@ -1,0 +1,405 @@
+theory AttestedComputation begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
+           pair/2, prog/3, rep/2[private,destructor], report/1, snd/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+heuristic: S
+
+/* looping facts with injective instances: L_CellLocked/2, L_PureState/2
+*/
+
+
+
+predicate: Report( x, y )<=>¬(y = 'loc')
+
+
+
+
+
+
+
+lemma can_run_v:
+  exists-trace "∃ #i m. Local( m, 'loc' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i m. (Local( m, 'loc' ) @ #i)"
+*/
+simplify
+solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
+       ) ▶₀ #i )
+  case ifoiliocheckreprloc_0_121111111111_case_1
+  solve( State_111111111( StateChannel, lock, lio, state ) ▶₀ #vr.8 )
+    case p_1_11111_case_1
+    solve( L_CellLocked( ~n.2, ~n.1 ) ▶₁ #i )
+      case p_1_121111
+      solve( L_PureState( ~n.2, 'init' ) ▶₂ #vr.2 )
+        case p_1_12
+        solve( L_CellLocked( ~n.6, ~n.4 ) ▶₁ #vr.6 )
+          case p_1_11111
+          solve( !KU( prog(~n.3, i.1, 'init') ) @ #vk.4 )
+            case eventRemoteprogrilioilioloc_0_111111111111_case_1
+            SOLVED // trace found
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma simp [reuse]:
+  all-traces
+  "∀ #i m. (!KU( rep(m, 'loc') ) @ #i) ⇒ (∃ #j. Remote( m, 'loc' ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i m.
+  (!KU( rep(m, 'loc') ) @ #i) ∧ ∀ #j. (Remote( m, 'loc' ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( !KU( rep(m, 'loc') ) @ #i )
+  case ReportRule
+  by contradiction /* from formulas */
+next
+  case eventRemoteprogrilioilioloc_0_111111111111_case_1
+  by contradiction /* from formulas */
+next
+  case eventRemoteprogrilioilioloc_0_111111111111_case_2
+  solve( State_111111111( StateChannel, lock, lio, state ) ▶₀ #vr.5 )
+    case p_1_11111_case_1
+    by contradiction /* forbidden KD-fact */
+  next
+    case p_1_11111_case_2
+    by solve( (#vr.4, 0) ~~> (#i, 0) )
+  qed
+qed
+
+lemma attested_comput:
+  all-traces
+  "∀ #i m. (Local( m, 'loc' ) @ #i) ⇒ (∃ #j. Remote( m, 'loc' ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i m. (Local( m, 'loc' ) @ #i) ∧ ∀ #j. (Remote( m, 'loc' ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
+       ) ▶₀ #i )
+  case ifoiliocheckreprloc_0_121111111111_case_1
+  by contradiction /* from formulas */
+next
+  case ifoiliocheckreprloc_0_121111111111_case_2
+  by contradiction /* from formulas */
+qed
+
+
+
+
+
+
+
+
+
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
+  // safety formula
+
+rule (modulo E) ReportRule[color=#ffffff, process="!"]:
+   [ In( <x, loc> ) ]
+  --[ Restr_ReportRule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="!"]:
+   [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;"]:
+   [ State_11( ), Fr( state.1 ), Fr( StateChannel ) ]
+  -->
+   [
+   !Semistate_111111( StateChannel, state.1 ),
+   L_PureState( state.1, 'init' )
+   ]
+
+  /*
+  rule (modulo AC) newstate_0_11[color=#ffffff, process="new state.1;"]:
+     [ State_11( ), Fr( state ), Fr( StateChannel ) ]
+    -->
+     [ !Semistate_111111( StateChannel, state ), L_PureState( state, 'init' )
+     ]
+  */
+
+rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
+   [
+   !Semistate_111111( StateChannel, state.1 ),
+   L_PureState( state.1, lio.1 ), Fr( lock )
+   ]
+  -->
+   [
+   State_111111111( StateChannel, lock, lio.1, state.1 ),
+   L_CellLocked( state.1, lock )
+   ]
+
+  /*
+  rule (modulo AC) p_1_11111[color=#ffffff, process="!"]:
+     [
+     !Semistate_111111( StateChannel, state ), L_PureState( state, lio ),
+     Fr( lock )
+     ]
+    -->
+     [
+     State_111111111( StateChannel, lock, lio, state ),
+     L_CellLocked( state, lock )
+     ]
+  */
+
+rule (modulo E) eventReadlio_0_111111111[color=#405280,
+                                         process="event Read( lio.1 );"]:
+   [
+   State_111111111( StateChannel, lock, lio.1, state.1 ), In( i.1 ),
+   Fr( r.1 )
+   ]
+  --[ Read( lio.1 ) ]->
+   [ State_111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ) ]
+
+  // loop breaker: [0]
+  /*
+  rule (modulo AC) eventReadlio_0_111111111[color=#405280,
+                                            process="event Read( lio.1 );"]:
+     [ State_111111111( StateChannel, lock, lio, state ), In( i ), Fr( r ) ]
+    --[ Read( lio ) ]->
+     [ State_111111111111( StateChannel, lock, i, lio, r, state ) ]
+    // loop breaker: [0]
+  */
+
+rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#405280,
+                                                           process="event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );"]:
+   [
+   State_111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ),
+   L_CellLocked( state.1, lock )
+   ]
+  --[ Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' ) ]->
+   [
+   L_PureState( state.1, list(prog(r.1, i.1, lio.1), list(i.1, lio.1)) ),
+   Out( <prog(r.1, i.1, lio.1), 
+         rep(<prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc')>
+   )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) eventRemoteprogrilioilioloc_0_111111111111[color=#405280,
+                                                              process="event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );"]:
+     [
+     State_111111111111( StateChannel, lock, i, lio, r, state ),
+     L_CellLocked( state, lock )
+     ]
+    --[ Remote( <prog(r, i, lio), i, lio>, 'loc' ) ]->
+     [
+     L_PureState( state, list(prog(r, i, lio), list(i, lio)) ),
+     Out( <prog(r, i, lio), rep(<prog(r, i, lio), i, lio>, 'loc')> )
+     ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ] --> [ !Semistate_121( ), State_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+   [ !Semistate_121( ), Fr( state2.1 ), Fr( StateChannel.1 ) ]
+  -->
+   [
+   !Semistate_1211111( StateChannel.1, state2.1 ),
+   L_PureState( state2.1, 'init' )
+   ]
+
+  /*
+  rule (modulo AC) p_1_12[color=#ffffff, process="!"]:
+     [ !Semistate_121( ), Fr( state2 ), Fr( StateChannel ) ]
+    -->
+     [
+     !Semistate_1211111( StateChannel, state2 ), L_PureState( state2, 'init' )
+     ]
+  */
+
+rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
+   [
+   !Semistate_1211111( StateChannel.1, state2.1 ), In( <i.2, o.2, r.2> ),
+   L_PureState( state2.1, lio.2 ), Fr( lock.1 )
+   ]
+  -->
+   [
+   State_12111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2, r.2
+   ),
+   L_CellLocked( state2.1, lock.1 )
+   ]
+
+  // loop breaker: [2]
+  /*
+  rule (modulo AC) p_1_121111[color=#ffffff, process="!"]:
+     [
+     !Semistate_1211111( StateChannel, state2 ), In( <i, o, r> ),
+     L_PureState( state2, lio ), Fr( lock )
+     ]
+    -->
+     [
+     State_12111111111( StateChannel, lock, state2, i, lio, o, r ),
+     L_CellLocked( state2, lock )
+     ]
+    // loop breaker: [2]
+  */
+
+rule (modulo E) eventReadlio_0_12111111111[color=#658040,
+                                           process="event Read( lio.2 );"]:
+   [
+   State_12111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2, r.2
+   )
+   ]
+  --[ Read( lio.2 ) ]->
+   [
+   State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                       r.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventReadlio_0_12111111111[color=#658040,
+                                              process="event Read( lio.2 );"]:
+     [ State_12111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    --[ Read( lio ) ]->
+     [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+  */
+
+rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#658040,
+                                                   process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
+   [
+   State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                       r.2
+   )
+   ]
+  --[ Pred_Eq( <o.2, i.2, lio.2>, check_rep(r.2, 'loc') ) ]->
+   [
+   State_1211111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                        r.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifoiliocheckreprloc_0_121111111111[color=#658040,
+                                                      process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
+     [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    --[ Pred_Eq( <o, i, lio>, z ) ]->
+     [ State_1211111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    variants (modulo AC)
+    1. r     = r.12
+       z     = check_rep(r.12, 'loc')
+    
+    2. r     = rep(x.11, 'loc')
+       z     = x.11
+  */
+
+rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#658040,
+                                                   process="event Local( <o.2, i.2, lio.2>, 'loc' );"]:
+   [
+   State_1211111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                        r.2
+   ),
+   L_CellLocked( state2.1, lock.1 )
+   ]
+  --[ Local( <o.2, i.2, lio.2>, 'loc' ) ]->
+   [ L_PureState( state2.1, list(o.2, list(i.2, lio.2)) ) ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) eventLocaloilioloc_0_1211111111111[color=#658040,
+                                                      process="event Local( <o.2, i.2, lio.2>, 'loc' );"]:
+     [
+     State_1211111111111( StateChannel, lock, state2, i, lio, o, r ),
+     L_CellLocked( state2, lock )
+     ]
+    --[ Local( <o, i, lio>, 'loc' ) ]->
+     [ L_PureState( state2, list(o, list(i, lio)) ) ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) ifoiliocheckreprloc_1_121111111111[color=#658040,
+                                                   process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
+   [
+   State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                       r.2
+   ),
+   L_CellLocked( state2.1, lock.1 )
+   ]
+  --[ Pred_Not_Eq( <o.2, i.2, lio.2>, check_rep(r.2, 'loc') ) ]->
+   [ L_PureState( state2.1, lio.2 ) ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) ifoiliocheckreprloc_1_121111111111[color=#658040,
+                                                      process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
+     [
+     State_121111111111( StateChannel, lock, state2, i, lio, o, r ),
+     L_CellLocked( state2, lock )
+     ]
+    --[ Pred_Not_Eq( <o, i, lio>, z ) ]->
+     [ L_PureState( state2, lio ) ]
+    variants (modulo AC)
+    1. r     = r.12
+       z     = check_rep(r.12, 'loc')
+    
+    2. r     = rep(x.11, 'loc')
+       z     = x.11
+    // loop breaker: [1]
+  */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/AC.spthy
+
+  output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
+  processing time: 0.43s
+  
+  can_run_v (exists-trace): verified (8 steps)
+  simp (all-traces): verified (7 steps)
+  attested_comput (all-traces): verified (4 steps)
+
+==============================================================================
+*/

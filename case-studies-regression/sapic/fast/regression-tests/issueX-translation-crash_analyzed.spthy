@@ -1,0 +1,319 @@
+theory Typing begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process="new sk.1;"]:
+   [ Fr( sk.1 ), Fr( a.1 ) ]
+  --[ Init( ) ]->
+   [ State_1111( a.1, sk.1 ), Out( <'helloClient', 'g'^a.1> ) ]
+
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="new sk.1;"]:
+     [ Fr( sk ), Fr( a ) ]
+    --[ Init( ) ]->
+     [ State_1111( a, sk ), Out( <'helloClient', z> ) ]
+    variants (modulo AC)
+    1. a     = a.7
+       z     = 'g'^a.7
+    
+    2. a     = one
+       z     = 'g'
+  */
+
+rule (modulo E) inhelloServergagB_0_1111[color=#518040,
+                                         process="in(<'helloServer', 'g'^=a.1, gB.1>);"]:
+   [ State_1111( a.1, sk.1 ), In( <'helloServer', 'g'^a.1, gB.1> ) ]
+  --[ Key( gB.1^a.1 ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) inhelloServergagB_0_1111[color=#518040,
+                                            process="in(<'helloServer', 'g'^=a.1, gB.1>);"]:
+     [ State_1111( a, sk ), In( <'helloServer', z, gB> ) ]
+    --[ Key( z.1 ) ]->
+     [ ]
+    variants (modulo AC)
+     1. a     = a.9
+        gB    = gB.10
+        z     = 'g'^a.9
+        z.1   = gB.10^a.9
+    
+     2. a     = a.9
+        gB    = DH_neutral
+        z     = 'g'^a.9
+        z.1   = DH_neutral
+    
+     3. a     = a.10
+        gB    = z.15^inv(a.10)
+        z     = 'g'^a.10
+        z.1   = z.15
+    
+     4. a     = a.11
+        gB    = x.17^x.18
+        z     = 'g'^a.11
+        z.1   = x.17^(a.11*x.18)
+    
+     5. a     = a.11
+        gB    = x.18^inv((a.11*x.19))
+        z     = 'g'^a.11
+        z.1   = x.18^inv(x.19)
+    
+     6. a     = a.11
+        gB    = x.18^(x.19*inv(a.11))
+        z     = 'g'^a.11
+        z.1   = x.18^x.19
+    
+     7. a     = a.12
+        gB    = x.19^(x.20*inv((a.12*x.21)))
+        z     = 'g'^a.12
+        z.1   = x.19^(x.20*inv(x.21))
+    
+     8. a     = inv(x.11)
+        gB    = z.10^x.11
+        z     = 'g'^inv(x.11)
+        z.1   = z.10
+    
+     9. a     = inv(x.11)
+        gB    = x.12^inv(x.13)
+        z     = 'g'^inv(x.11)
+        z.1   = x.12^inv((x.11*x.13))
+    
+    10. a     = inv(x.11)
+        gB    = x.12^(x.11*x.13)
+        z     = 'g'^inv(x.11)
+        z.1   = x.12^x.13
+    
+    11. a     = inv(x.12)
+        gB    = x.13^(x.14*inv(x.15))
+        z     = 'g'^inv(x.12)
+        z.1   = x.13^(x.14*inv((x.12*x.15)))
+    
+    12. a     = inv((x.11*x.12))
+        gB    = x.13^x.12
+        z     = 'g'^inv((x.11*x.12))
+        z.1   = x.13^inv(x.11)
+    
+    13. a     = inv((x.12*x.13))
+        gB    = x.14^(x.12*x.15)
+        z     = 'g'^inv((x.12*x.13))
+        z.1   = x.14^(x.15*inv(x.13))
+    
+    14. a     = inv((x.12*x.13))
+        gB    = x.14^(x.12*inv(x.15))
+        z     = 'g'^inv((x.12*x.13))
+        z.1   = x.14^inv((x.13*x.15))
+    
+    15. a     = inv((x.13*x.14))
+        gB    = x.15^(x.13*x.16*inv(x.17))
+        z     = 'g'^inv((x.13*x.14))
+        z.1   = x.15^(x.16*inv((x.14*x.17)))
+    
+    16. a     = one
+        gB    = gB.9
+        z     = 'g'
+        z.1   = gB.9
+    
+    17. a     = (x.11*x.12)
+        gB    = x.13^inv(x.11)
+        z     = 'g'^(x.11*x.12)
+        z.1   = x.13^x.12
+    
+    18. a     = (x.11*inv(x.12))
+        gB    = x.13^x.12
+        z     = 'g'^(x.11*inv(x.12))
+        z.1   = x.13^x.11
+    
+    19. a     = (x.12*x.13)
+        gB    = x.14^inv((x.12*x.15))
+        z     = 'g'^(x.12*x.13)
+        z.1   = x.14^(x.13*inv(x.15))
+    
+    20. a     = (x.12*x.13)
+        gB    = x.14^(x.15*inv(x.12))
+        z     = 'g'^(x.12*x.13)
+        z.1   = x.14^(x.13*x.15)
+    
+    21. a     = (x.12*x.13*inv(x.14))
+        gB    = x.15^(x.14*inv(x.12))
+        z     = 'g'^(x.12*x.13*inv(x.14))
+        z.1   = x.15^x.13
+    
+    22. a     = (x.12*inv(x.13))
+        gB    = z.11^(x.13*inv(x.12))
+        z     = 'g'^(x.12*inv(x.13))
+        z.1   = z.11
+    
+    23. a     = (x.12*inv(x.13))
+        gB    = x.14^inv(x.15)
+        z     = 'g'^(x.12*inv(x.13))
+        z.1   = x.14^(x.12*inv((x.13*x.15)))
+    
+    24. a     = (x.12*inv(x.13))
+        gB    = x.14^inv((x.12*x.15))
+        z     = 'g'^(x.12*inv(x.13))
+        z.1   = x.14^inv((x.13*x.15))
+    
+    25. a     = (x.12*inv(x.13))
+        gB    = x.14^(x.13*x.15)
+        z     = 'g'^(x.12*inv(x.13))
+        z.1   = x.14^(x.12*x.15)
+    
+    26. a     = (x.12*inv(x.13))
+        gB    = x.14^(x.13*x.15*inv(x.12))
+        z     = 'g'^(x.12*inv(x.13))
+        z.1   = x.14^x.15
+    
+    27. a     = (x.12*inv(x.13))
+        gB    = x.14^(x.13*inv((x.12*x.15)))
+        z     = 'g'^(x.12*inv(x.13))
+        z.1   = x.14^inv(x.15)
+    
+    28. a     = (x.12*inv((x.13*x.14)))
+        gB    = x.15^x.14
+        z     = 'g'^(x.12*inv((x.13*x.14)))
+        z.1   = x.15^(x.12*inv(x.13))
+    
+    29. a     = (x.12*inv((x.13*x.14)))
+        gB    = x.15^(x.14*inv(x.12))
+        z     = 'g'^(x.12*inv((x.13*x.14)))
+        z.1   = x.15^inv(x.13)
+    
+    30. a     = (x.13*x.14)
+        gB    = x.15^(x.16*inv((x.13*x.17)))
+        z     = 'g'^(x.13*x.14)
+        z.1   = x.15^(x.14*x.16*inv(x.17))
+    
+    31. a     = (x.13*x.14*inv(x.15))
+        gB    = x.16^inv((x.14*x.17))
+        z     = 'g'^(x.13*x.14*inv(x.15))
+        z.1   = x.16^(x.13*inv((x.15*x.17)))
+    
+    32. a     = (x.13*x.14*inv(x.15))
+        gB    = x.16^(x.15*x.17*inv(x.13))
+        z     = 'g'^(x.13*x.14*inv(x.15))
+        z.1   = x.16^(x.14*x.17)
+    
+    33. a     = (x.13*x.14*inv(x.15))
+        gB    = x.16^(x.15*inv((x.13*x.17)))
+        z     = 'g'^(x.13*x.14*inv(x.15))
+        z.1   = x.16^(x.14*inv(x.17))
+    
+    34. a     = (x.13*x.14*inv((x.15*x.16)))
+        gB    = x.17^(x.16*inv(x.14))
+        z     = 'g'^(x.13*x.14*inv((x.15*x.16)))
+        z.1   = x.17^(x.13*inv(x.15))
+    
+    35. a     = (x.13*inv(x.14))
+        gB    = x.15^(x.14*x.16*inv((x.13*x.17)))
+        z     = 'g'^(x.13*inv(x.14))
+        z.1   = x.15^(x.16*inv(x.17))
+    
+    36. a     = (x.13*inv(x.14))
+        gB    = x.15^(x.16*inv(x.17))
+        z     = 'g'^(x.13*inv(x.14))
+        z.1   = x.15^(x.13*x.16*inv((x.14*x.17)))
+    
+    37. a     = (x.13*inv(x.14))
+        gB    = x.15^(x.16*inv((x.13*x.17)))
+        z     = 'g'^(x.13*inv(x.14))
+        z.1   = x.15^(x.16*inv((x.14*x.17)))
+    
+    38. a     = (x.13*inv((x.14*x.15)))
+        gB    = x.16^(x.14*x.17)
+        z     = 'g'^(x.13*inv((x.14*x.15)))
+        z.1   = x.16^(x.13*x.17*inv(x.15))
+    
+    39. a     = (x.13*inv((x.14*x.15)))
+        gB    = x.16^(x.14*x.17*inv(x.13))
+        z     = 'g'^(x.13*inv((x.14*x.15)))
+        z.1   = x.16^(x.17*inv(x.15))
+    
+    40. a     = (x.13*inv((x.14*x.15)))
+        gB    = x.16^(x.14*inv(x.17))
+        z     = 'g'^(x.13*inv((x.14*x.15)))
+        z.1   = x.16^(x.13*inv((x.15*x.17)))
+    
+    41. a     = (x.13*inv((x.14*x.15)))
+        gB    = x.16^(x.14*inv((x.13*x.17)))
+        z     = 'g'^(x.13*inv((x.14*x.15)))
+        z.1   = x.16^inv((x.15*x.17))
+    
+    42. a     = (x.14*x.15*inv(x.16))
+        gB    = x.17^(x.16*x.18*inv((x.14*x.19)))
+        z     = 'g'^(x.14*x.15*inv(x.16))
+        z.1   = x.17^(x.15*x.18*inv(x.19))
+    
+    43. a     = (x.14*x.15*inv(x.16))
+        gB    = x.17^(x.18*inv((x.14*x.19)))
+        z     = 'g'^(x.14*x.15*inv(x.16))
+        z.1   = x.17^(x.15*x.18*inv((x.16*x.19)))
+    
+    44. a     = (x.14*x.15*inv((x.16*x.17)))
+        gB    = x.18^(x.16*x.19*inv(x.14))
+        z     = 'g'^(x.14*x.15*inv((x.16*x.17)))
+        z.1   = x.18^(x.15*x.19*inv(x.17))
+    
+    45. a     = (x.14*x.15*inv((x.16*x.17)))
+        gB    = x.18^(x.16*inv((x.14*x.19)))
+        z     = 'g'^(x.14*x.15*inv((x.16*x.17)))
+        z.1   = x.18^(x.15*inv((x.17*x.19)))
+    
+    46. a     = (x.14*inv((x.15*x.16)))
+        gB    = x.17^(x.15*x.18*inv(x.19))
+        z     = 'g'^(x.14*inv((x.15*x.16)))
+        z.1   = x.17^(x.14*x.18*inv((x.16*x.19)))
+    
+    47. a     = (x.14*inv((x.15*x.16)))
+        gB    = x.17^(x.15*x.18*inv((x.14*x.19)))
+        z     = 'g'^(x.14*inv((x.15*x.16)))
+        z.1   = x.17^(x.18*inv((x.16*x.19)))
+    
+    48. a     = (x.15*x.16*inv((x.17*x.18)))
+        gB    = x.19^(x.17*x.20*inv((x.15*x.21)))
+        z     = 'g'^(x.15*x.16*inv((x.17*x.18)))
+        z.1   = x.19^(x.16*x.20*inv((x.18*x.21)))
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/regression-tests/issueX-translation-crash.spthy
+
+  output:          examples/sapic/fast/regression-tests/issueX-translation-crash.spthy.tmp
+  processing time: 0.57s
+  
+
+==============================================================================
+*/

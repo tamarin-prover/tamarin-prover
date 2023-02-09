@@ -17,18 +17,18 @@ import qualified Data.Set as S
 
 -- | Binary builtin function symbols.
 sdecSym, sencSym, adecSym, aencSym, signSym, revealSignSym, repSym, checkRepSym :: NoEqSym
-sdecSym = ("sdec",(2, Public, Destructor))
+sdecSym = ("sdec",(2, Public, Constructor))
 sencSym = ("senc",(2, Public, Constructor))
-adecSym = ("adec",(2, Public, Destructor))
+adecSym = ("adec",(2, Public, Constructor))
 aencSym = ("aenc",(2, Public, Constructor))
 signSym = ("sign",(2, Public, Constructor))
 revealSignSym = ("revealSign",(2, Public, Constructor))
-repSym = ("rep",(2,Private,Constructor))
-checkRepSym = ("check_rep",(2,Public,Destructor))
+repSym = ("rep",(2,Private, Constructor))
+checkRepSym = ("check_rep",(2,Public, Destructor))
 
 -- | Ternary builtin function symbols.
 verifySym, revealVerifySym :: NoEqSym
-verifySym = ("verify",(3, Public, Destructor))
+verifySym = ("verify",(3, Public, Constructor))
 revealVerifySym = ("revealVerify",(3, Public,Constructor))
 
 -- | Unary builtin function symbols.
@@ -44,6 +44,15 @@ reportSym = ("report",(1, Public,Constructor))
 trueSym :: NoEqSym
 trueSym = ("true",(0, Public, Constructor))
 
+
+-- | Destructor variants
+mkDestSym :: NoEqSym -> NoEqSym
+mkDestSym (name,(k,p,_)) = (name,(k,p, Destructor))
+
+sdecDestSym, adecDestSym, verifyDestSym :: NoEqSym
+sdecDestSym = mkDestSym sdecSym
+adecDestSym = mkDestSym adecSym
+verifyDestSym = mkDestSym verifySym
 ----------------------------------------------------------------------
 -- Builtin signatures
 ----------------------------------------------------------------------
@@ -70,3 +79,20 @@ locationReportFunSig = S.fromList $ [ repSym, checkRepSym, getRepSym, reportSym]
 -- | The signature for hashing.
 hashFunSig :: NoEqFunSig
 hashFunSig = S.fromList [ hashSym ]
+
+
+----------------------------------------------------------------------
+-- Destructor builtin signatures
+----------------------------------------------------------------------
+
+-- | The signature for symmetric encryption.
+symEncFunDestSig :: NoEqFunSig
+symEncFunDestSig = S.fromList $ [ sdecDestSym, sencSym ]
+
+-- | The signature for asymmetric encryption.
+asymEncFunDestSig :: NoEqFunSig
+asymEncFunDestSig = S.fromList $ [ adecDestSym, aencSym, pkSym ]
+
+-- | The signature for cryptographic signatures.
+signatureFunDestSig :: NoEqFunSig
+signatureFunDestSig = S.fromList $ [ signSym, verifyDestSym, trueSym, pkSym ]

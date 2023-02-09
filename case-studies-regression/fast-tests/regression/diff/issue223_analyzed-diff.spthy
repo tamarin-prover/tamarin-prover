@@ -2,8 +2,7 @@ theory issue223 begin
 
 // Function signature and definition of the equational theory E
 
-functions: commit/3, fake/4, fst/1[destructor], open/3, pair/2, pk/1,
-           snd/1[destructor]
+functions: commit/3, fake/4, fst/1, open/3, pair/2, pk/1, snd/1
 equations:
     commit(ni2, fake(ni1, r, sk, ni2), pk(sk)) = commit(ni1, r, pk(sk)),
     fake(ni2, fake(ni1, r, sk, ni2), sk, ni3) = fake(ni1, r, sk, ni3),
@@ -3237,15 +3236,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
-Compiled at: 2022-11-09 11:41:33.798849 UTC
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -3254,7 +3253,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 0.031778s
+  processing time: 3.16s
   
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 

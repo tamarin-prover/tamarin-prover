@@ -86,6 +86,7 @@ module Term.Term (
     , msetFunSig
     , xorFunSig
     , pairFunSig
+    , pairFunDestSig    
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig

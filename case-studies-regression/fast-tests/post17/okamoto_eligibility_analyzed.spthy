@@ -2,8 +2,8 @@ theory Okamoto_Eligibilty begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, f/4, fst/1[destructor], open/2, pair/2,
-           pk/1, sign/2, snd/1[destructor], tdcommit/3, unblind/2
+functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
+           sign/2, snd/1, tdcommit/3, unblind/2
 equations:
     checksign(sign(m, sk), pk(sk)) = m,
     f(m1, f(m, r, td, m1), td, m2) = f(m, r, td, m2),
@@ -220,15 +220,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
-Compiled at: 2022-11-09 11:41:33.798849 UTC
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -237,7 +237,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.036003s
+  processing time: 0.49s
   
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)

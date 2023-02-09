@@ -3,8 +3,7 @@ theory TAK1 begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing, multiset
-functions: fst/1[destructor], h/1, kdf/1, pair/2, snd/1[destructor],
-           tag/1
+functions: fst/1, h/1, kdf/1, pair/2, snd/1, tag/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -106,8 +105,8 @@ rule (modulo E) Proto2:
         z     = em(x.9, x.12)^(x.10*inv((x.8*x.11)))
     
     13. XB    = pmult(inv((x.8*x.9)), x.10)
-        XC    = pmult(x.8, x.11)
-        z     = em(x.10, x.11)^inv(x.9)
+        XC    = pmult(x.9, x.11)
+        z     = em(x.10, x.11)^inv(x.8)
     
     14. XB    = pmult(inv((x.8*x.9)), x.10)
         XC    = pmult((x.8*x.11), x.12)
@@ -138,8 +137,8 @@ rule (modulo E) Proto2:
         z     = em(x.10, x.13)^(x.9*x.11*inv(x.12))
     
     21. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
-        XC    = pmult(inv((x.8*x.12)), x.13)
-        z     = em(x.11, x.13)^(x.9*inv((x.10*x.12)))
+        XC    = pmult(inv((x.9*x.12)), x.13)
+        z     = em(x.11, x.13)^(x.8*inv((x.10*x.12)))
     
     22. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
         XC    = pmult((x.10*x.12*inv(x.8)), x.13)
@@ -150,8 +149,8 @@ rule (modulo E) Proto2:
         z     = em(x.11, x.14)^(x.9*x.12*inv(x.13))
     
     24. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
-        XC    = pmult((x.10*inv(x.8)), x.12)
-        z     = em(x.11, x.12)^x.9
+        XC    = pmult((x.10*inv(x.9)), x.12)
+        z     = em(x.11, x.12)^x.8
     
     25. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
         XC    = pmult((x.10*inv((x.8*x.12))), x.13)
@@ -170,12 +169,12 @@ rule (modulo E) Proto2:
         z     = em(x.12, x.15)^(x.9*x.13*inv((x.11*x.14)))
     
     29. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
-        XC    = pmult((x.10*inv(x.8)), x.13)
-        z     = em(x.12, x.13)^(x.9*inv(x.11))
-    
-    30. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
         XC    = pmult((x.10*inv((x.8*x.13))), x.14)
         z     = em(x.12, x.14)^(x.9*inv((x.11*x.13)))
+    
+    30. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.11*inv(x.9)), x.13)
+        z     = em(x.12, x.13)^(x.8*inv(x.10))
     
     31. XB    = pmult((x.8*inv(x.9)), x.10)
         XC    = pmult(x.9, x.11)
@@ -218,8 +217,8 @@ rule (modulo E) Proto2:
         z     = em(x.10, x.13)^(x.11*inv((x.9*x.12)))
     
     41. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
-        XC    = pmult(x.9, x.12)
-        z     = em(x.11, x.12)^(x.8*inv(x.10))
+        XC    = pmult(x.10, x.12)
+        z     = em(x.11, x.12)^(x.8*inv(x.9))
     
     42. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*x.12), x.13)
@@ -238,16 +237,16 @@ rule (modulo E) Proto2:
         z     = em(x.11, x.14)^(x.12*inv((x.10*x.13)))
     
     46. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
-        XC    = pmult((x.9*inv(x.8)), x.12)
-        z     = em(x.11, x.12)^inv(x.10)
-    
-    47. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*inv(x.12)), x.13)
         z     = em(x.11, x.13)^(x.8*inv((x.10*x.12)))
     
-    48. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+    47. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*inv((x.8*x.12))), x.13)
         z     = em(x.11, x.13)^inv((x.10*x.12))
+    
+    48. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.10*inv(x.8)), x.12)
+        z     = em(x.11, x.12)^inv(x.9)
   */
 
 rule (modulo E) Proto3:
@@ -320,6 +319,10 @@ rule (modulo E) Proto3:
        emXBXC
              = x.962^(x.963*inv((~ex.486*x.964)))
        z     = x.962^(x.963*inv(x.964))
+    
+    7. emXBXC
+             = DH_neutral
+       z     = DH_neutral
   */
 
 lemma session_key_establish:
@@ -2651,15 +2654,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
-Compiled at: 2022-11-09 11:41:33.798849 UTC
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -2668,7 +2671,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 0.033526s
+  processing time: 52.50s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)

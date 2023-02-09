@@ -36,9 +36,9 @@ profiling:
 tamarin-clean:
 	stack clean
 
-# Clean Tamarin and SAPIC
+# Clean Tamarin
 .PHONY: clean
-clean:	tamarin-clean sapic-clean
+clean:	tamarin-clean
 
 # ###########################################################################
 # NOTE the remainder makefile is FOR DEVELOPERS ONLY.
@@ -398,7 +398,7 @@ auto-sources-case-studies:	$(AUTO_SOURCES_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy
+REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy
 
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 

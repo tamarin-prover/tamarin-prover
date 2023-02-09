@@ -3,8 +3,7 @@ theory NSLPK3XOR begin
 // Function signature and definition of the equational theory E
 
 builtins: xor
-functions: adec/2[destructor], aenc/2, fst/1[destructor], pair/2, pk/1,
-           snd/1[destructor]
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -327,15 +326,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: d52cd85ca2516a1d333e4e134ab4f563ed6cd596 (with uncommited changes), branch: pr-export-k-facts
-Compiled at: 2022-11-09 11:41:33.798849 UTC
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -344,7 +343,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/NSLPK3xor.spthy
 
   output:          examples/csf18-xor/NSLPK3xor.spthy.tmp
-  processing time: 0.033135s
+  processing time: 2.75s
   
   types (all-traces): falsified - found trace (13 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)
