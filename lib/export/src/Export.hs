@@ -33,7 +33,7 @@ import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
-
+import         System.IO.Unsafe
 import           Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
@@ -73,6 +73,11 @@ emptyTC =
       hasUnboundStates = False,
       predicates = []
     }
+
+-- Failure function performing an unsafe IO failure
+translationFail :: String -> a
+translationFail s = unsafePerformIO (fail s)
+    
 ------------------------------------------------------------------------------
 -- Core Proverif Export
 ------------------------------------------------------------------------------
@@ -196,16 +201,17 @@ prettyProVerifEquivTheory (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
   headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd
   let hd = attribHeaders tc headers2
-  return $ proverifEquivTemplate hd queries finalproc macroproc
+  fproc <- finalproc
+  return $ proverifEquivTemplate hd queries fproc macroproc
   where
     tc = emptyTC {predicates = theoryPredicates thy}
     (equivlemmas, equivhd, hasBoundState, hasUnboundState) = loadEquivProc tc thy
     (diffEquivlemmas, diffEquivhd, _, diffHasUnboundState) = loadDiffProc tc thy
     base_headers = if hasUnboundState || diffHasUnboundState then state_headers else S.empty
-    finalproc =
+    finalproc = do
       if length equivlemmas + length diffEquivlemmas > 1
-        then [text "Error: Proverif can only support at most one equivalence or diff equivalence query."]
-        else equivlemmas ++ diffEquivlemmas
+        then fail "Error: Proverif can only support at most one equivalence or diff equivalence query."
+        else return $ equivlemmas ++ diffEquivlemmas
     queries = loadQueries thy
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
@@ -347,7 +353,7 @@ ppLNTerm tc = pppLNTerm tc False
 -- pretty print a Fact, collecting the constant that need to be declared
 ppFact :: TranslationContext -> Fact SapicTerm -> (Doc, S.Set ProVerifHeader)
 ppFact tc (Fact tag _ ts)
-  | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
+  | factTagArity tag /= length ts = translationFail $ "MALFORMED-" ++ show tag
   | otherwise = sppFact (factTagName tag) ts
   where
     sppFact name ts2 =
@@ -486,7 +492,7 @@ ppAction ProcessAnnotation {stateChannel = Nothing, pureState = False} tc@Transl
     ptvar = "stateChannel" ++ stripNonAlphanumerical (render pt)
     dumpvar = "dumpvar" ++ stripNonAlphanumerical (render pt)
     hd = Sym "free" ptvar ":channel" []
-ppAction _ _ _ = (text "Action not supported for translation", S.empty, True)
+ppAction _ _ _ = translationFail "Action not supported for translation"
 
 ppSapic :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (Doc, S.Set ProVerifHeader)
 ppSapic _ (ProcessNull _) = (text "0", S.empty) -- remove zeros when not needed
@@ -548,7 +554,7 @@ ppSapic tc (ProcessComb (Cond a) _ pl pr) =
         (ppUnTypeVar vn1 <> text "<" <> ppUnTypeVar vn2, S.empty)
     ppFact' p =
       case expandFormula (predicates tc) (toLFormula p) of
-        Left _ -> (text "undefined predicate in condition ", S.empty)
+        Left _ -> translationFail "Export does not support tamarin predicates in conditionnals."
         Right form -> (fst . snd $ Precise.evalFresh (ppLFormula emptyTypeEnv ppNAtom form) (avoidPrecise form), S.empty)
     addElseBranch (d, s) = case pr of
       ProcessNull _ -> (d, s)
@@ -576,8 +582,7 @@ ppSapic tc (ProcessComb (Lookup _ c) ProcessAnnotation {stateChannel = Just (AnV
     (ppl, pshl) = ppSapic tc pl
 
 -- Should never happen
-ppSapic _ (ProcessComb (Lookup _ _) ProcessAnnotation {stateChannel = Nothing, pureState = True} _ (ProcessNull _)) =
-  (text "TRANSLATIONERROR", S.empty)
+ppSapic _ (ProcessComb (Lookup _ _) ProcessAnnotation {stateChannel = Nothing, pureState = True} _ (ProcessNull _)) = translationFail "Unexpected error -> please report with an issue on the github."
 ppSapic tc (ProcessComb (Lookup _ c) ProcessAnnotation {stateChannel = Just (AnVar lvar), pureState = False} pl (ProcessNull _)) =
   ( text "in(" <> pt <> text ", " <> pc <> text ");"
       $$ text "out(" <> pt <> text ", " <> pc2 <> text ") |"
@@ -637,7 +642,7 @@ ppSapic tc (ProcessComb (Lookup t c) ProcessAnnotation {stateChannel = Nothing, 
     (ppl, pshl) = ppSapic tc pl
     (ppr, pshr) = ppSapic tc pr
 ppSapic _ (ProcessComb (Lookup _ _) _ _ _) =
-  (text "TRANSLATION ERROR, lookup with else branch unsupported", S.empty)
+  translationFail "The export does not support a lookup with an else branch."
 ppSapic tc@TranslationContext {trans = ProVerif} (ProcessAction Rep _ p) = (text "!" $$ parens pp, psh)
   where
     (pp, psh) = ppSapic tc p
@@ -669,7 +674,7 @@ addAttackerReportProc tc thy p =
       List.find (\(Predicate (Fact tag _ _) _) -> showFactTag tag == "Report") $
         theoryPredicates thy
     (_, (formula, _)) = case reportPreds of
-      Nothing -> ([], (text "Translation Error, no Report predicate provided", M.empty))
+      Nothing -> translationFail "Translation Error, the Report predicate must be defined."
       Just (Predicate _ form) -> Precise.evalFresh (ppLFormula emptyTypeEnv ppNAtom form) (avoidPrecise form)
 
 ------------------------------------------------------------------------------
@@ -690,7 +695,7 @@ loadProc tc thy = case theoryProcesses thy of
       p = makeAnnotations thy pr
       hasStates = hasBoundUnboundStates p
       (tc2, hd) = mkAttackerContext tc {hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates} p
-  _ -> (text "Multiple sapic processes detected, error", S.empty, False, False)
+  _ -> translationFail "Multiple sapic processes were defined."
 
 loadMacroProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader)
 loadMacroProc tc thy = loadMacroProcs tc thy (theoryProcessDefs thy)
@@ -730,7 +735,7 @@ loadDiffProc tc thy = case theoryDiffEquivLemmas thy of
       p = makeAnnotations thy pr
       hasStates = hasBoundUnboundStates p
       (tc2, hd) = mkAttackerContext tc {hasBoundStates = fst hasStates, hasUnboundStates = snd hasStates} p
-  _ -> ([text "Multiple sapic processes detected, error"], S.empty, False, False)
+  _ -> translationFail "Multiple sapic processes were defined."
 
 loadEquivProc :: TranslationContext -> OpenTheory -> ([Doc], S.Set ProVerifHeader, Bool, Bool)
 loadEquivProc tc thy = loadEquivProcs tc thy (theoryEquivLemmas thy)
@@ -794,7 +799,7 @@ typeVarsEvent TypingEnvironment {events = ev} tag ts =
 
 ppProtoAtom :: (HighlightDocument d, Ord k, Show k, Show c) => TypingEnvironment -> Bool -> (s (Term (Lit c k)) -> d) -> (Term (Lit c k) -> d) -> ProtoAtom s (Term (Lit c k)) -> (d, M.Map k SapicType)
 ppProtoAtom te _ _ ppT (Action v f@(Fact tag _ ts))
-  | factTagArity tag /= length ts = (ppFactL ("MALFORMED-" ++ show tag) ts, M.empty)
+  | factTagArity tag /= length ts = translationFail $ "MALFORMED function" ++ show tag
   | (tag == KUFact) || isKLogFact f  -- treat KU() and K() facts the same
       = (ppFactL ("attacker") ts <> opAction <> ppT v, M.empty)
   | otherwise =
@@ -827,7 +832,7 @@ mapLits f t = case viewTerm t of
 
 extractFree :: BVar p -> p
 extractFree (Free v) = v
-extractFree (Bound i) = error $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
+extractFree (Bound i) = translationFail $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
 toLAt :: (Ord (f1 b), Ord (f1 (BVar b)), Functor f2, Functor f1) => f2 (Term (f1 (BVar b))) -> f2 (Term (f1 b))
 toLAt a = fmap (mapLits (fmap extractFree)) a
@@ -1154,7 +1159,7 @@ getAttackerChannel ::
 getAttackerChannel tc t1 = case (t1, attackerChannel tc) of
   (Just tt1, _) -> ppSapicTerm tc tt1
   (Nothing, Just (LVar n _ _)) -> (text n, S.empty)
-  _ -> (text "TRANSLATION ERROR", S.empty)
+  _ ->  translationFail "Unexpected error -> please report with an issue on the github."
 
 ------------------------------------------------------------------------------
 -- Some utility functions
