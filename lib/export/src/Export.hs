@@ -34,6 +34,7 @@ import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
 import         System.IO.Unsafe
+import         System.IO
 import           Control.Monad.Fresh
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
@@ -77,7 +78,15 @@ emptyTC =
 -- Failure function performing an unsafe IO failure
 translationFail :: String -> a
 translationFail s = unsafePerformIO (fail s)
-    
+
+
+translationWarning :: String -> a -> a
+translationWarning s cont = unsafePerformIO (printWarning)
+  where
+    printWarning = do
+      hPutStr stderr $ "WARNING: " ++ s
+      return cont
+                    
 ------------------------------------------------------------------------------
 -- Core Proverif Export
 ------------------------------------------------------------------------------
@@ -324,8 +333,16 @@ auxppSapicTerm tc mVars isPattern t = auxppTerm ppLit t
   where
     ppLit v = case v of
       Con (Name FreshName n) -> (text $ show n)
-      Con (Name PubName n) | isPattern -> text "=" <> (text $ show n)
+      Con (Name PubName n) | isPattern ->  text "=" <> (text $ show n)
       Con (Name PubName n) -> ppPubName n
+      Var (SapicLVar (lvar@(LVar n LSortPub _)) _)
+        | S.member lvar mVars ->
+          translationWarning ("Pattern matching on public variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
+          text "=" <> ppLVar lvar
+      Var (SapicLVar (lvar@(LVar n LSortFresh _)) _)
+        | S.member lvar mVars ->
+          translationWarning ("Pattern matching on fresh variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
+          text "=" <> ppLVar lvar
       Var (SapicLVar (lvar) _)
         | S.member lvar mVars -> text "=" <> ppLVar lvar
       l | isPattern -> ppTypeLit tc l
