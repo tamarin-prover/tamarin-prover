@@ -5,8 +5,10 @@ set -e # Exit with nonzero exit code if anything fails
 REPO=`git config remote.origin.url`
 SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 SHA=`git rev-parse --verify HEAD`
+BRANCH=`git rev-parse --abbrev-ref HEAD`
 
-SOURCE_BRANCH="master"
+MASTER_BRANCH="master"
+DEVELOP_BRANCH="develop"
 TARGET_BRANCH="gh-pages"
 
 function doCompile {
@@ -29,15 +31,15 @@ git -C $CHECKOUT config user.email "$COMMIT_AUTHOR_EMAIL"
 git -C $CHECKOUT checkout $TARGET_BRANCH || git -C $CHECKOUT checkout --orphan $TARGET_BRANCH
 
 # Replace existing contents of checkout with the results of a fresh compile.
-rm -rf $CHECKOUT/* || exit 0
+rm -rf $CHECKOUT/$BRANCH || exit 0
+mkdir -p $CHECKOUT/$BRANCH/tex
 doCompile
 for x in book code code_ERRORexamples code_ObsEquiv images
 do
-    cp -r $x $CHECKOUT
+    cp -r $x $CHECKOUT/$BRANCH
 done
-mkdir -p $CHECKOUT/tex
-cp tex/tamarin-manual.pdf $CHECKOUT/tex/tamarin-manual.pdf
-cp index.html $CHECKOUT/index.html
+cp tex/tamarin-manual.pdf $CHECKOUT/$BRANCH/tex/tamarin-manual.pdf
+cp index.html $CHECKOUT/$BRANCH/index.html
 
 # If there are no changes to the compiled book (e.g. this is a README update) then just bail.
 if [[ -z `git -C $CHECKOUT status --porcelain` ]]; then
@@ -47,7 +49,7 @@ fi
 
 # Commit the "changes", i.e. the new version. The delta will show diffs between new and old versions.
 git -C $CHECKOUT add \*
-git -C $CHECKOUT commit -m "Deploy to GitHub Pages: ${SHA}"
+git -C $CHECKOUT commit -m "Deploy to GitHub Pages on ${BRANCH}: ${SHA}"
 
 # Get the deploy key by using Githubs's stored variables to decrypt deploy_key.enc.
 openssl enc -nosalt -aes-256-cbc -d -in deploy_key.enc -out deploy_key -base64 -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV
