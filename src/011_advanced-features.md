@@ -96,8 +96,24 @@ The syntax of the tactics will be detailed below in the part `Using a tactic`. H
 `O`:
 : is the oracle ranking based on the 'smart' heuristic `s`. It works the same as `o` but uses 'smart' instead of 'Consecutive' ranking to start with.
 
+`p`:
+: is the SAPIC-specific ranking. It is a modified version of the smart `s`
+heuristic, but resolves SAPIC's `state`-facts right away, as well as Unlock
+goals, and some helper facts introduced in SAPICs translation (`MID_Receiver`,
+`MID_Sender`). 
+`Progress_To` goals (which are generated when using the optional
+[local progress](006_protocol-specification-processes.html#sec:local-progress))
+are also prioritised.
+Similar to [fact annotations]( #sec:fact-annotations ) below,
+this ranking also introduces a prioritisation for `Insert`-actions
+When the first element of the key
+is prefixed `F_`, the key is prioritized, e.g.,  `lookup <F_key,p> as v in ...`.
+Using `L_` instead of `F_` achieves deprioritsation. 
+Likewise, names and be (de)prioritized by prefixes them in the same manner.
+See [@KK-jcs16] for the reasoning behind this ranking.
 
-
+`P`:
+: is like `p` but without delaying loop breakers.
 
 If several rankings are given for the heuristic flag, then they are employed
 in a round-robin fashion depending on the proof-depth. For example, a flag
