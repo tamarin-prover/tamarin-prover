@@ -21,6 +21,8 @@ import Control.Monad.Trans.State.Lazy
 import Control.Monad.Catch
 import Theory
 import Theory.Sapic
+import Term.Builtin.Rules
+import Term.SubtermRule
 import Sapic.Exceptions
 import Sapic.Bindings
 import Control.Monad.Fresh
@@ -29,6 +31,7 @@ import Data.Bifunctor ( Bifunctor(second) )
 import GHC.Stack (HasCallStack)
 import qualified Data.List as List
 import Data.Typeable (Typeable)
+
 
 -- | Smaller-or-equal / More-or-equally-specific relation on types.
 smallerType :: Eq a => Maybe a -> Maybe a -> Bool
@@ -169,20 +172,48 @@ typeProcess p = traverseProcess fNull fAct fComb gAct gComb p
                   modify' (\s -> s { vars = Map.insert (slvar v) (stype v) (vars te)})
         handleEx p' wferror = throwM $ ProcessNotWellformed wferror (Just p')
 
-typeTheoryEnv :: (MonadThrow m, MonadCatch m) => Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement, TypingEnvironment)
+toSapicLVar :: LVar -> SapicLVar
+toSapicLVar v = SapicLVar v Nothing
+
+toSapicTerm :: LNTerm -> SapicTerm
+toSapicTerm = fmap f
+  where
+    f (Con c) = Con c
+    f (Var v) = Var $ toSapicLVar v
+
+typeRule ::  (MonadThrow m, MonadCatch m) =>  TypingEnvironment -> CtxtStRule -> m TypingEnvironment
+typeRule typeEnv r | (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
+                       te <- typeTermsWithEnv typeEnv (map toSapicTerm [lhs, rhs])
+                       return te
+
+initTEFromSig :: (MonadThrow m, MonadCatch m) => OpenTheory -> m TypingEnvironment
+initTEFromSig th = do
+  te <-  foldM (\te rule->typeRule te rule) initTE sigRules
+  return te
+  where
+    -- we load all funs and add default type
+    sig = (L.get sigpMaudeSig (L.get thySignature th))
+    funSet = stFunSyms sig
+    funTyped = foldMap (\fs@(_,(n,_,_)) -> Map.singleton fs (defaultFunctionType n)) funSet
+    -- we then also add the custom used defined types
+    withUserDefinedFuns = foldr (\(s,inp,out) acc -> Map.insert s (inp,out) acc) funTyped (theoryFunctionTypingInfos th)
+    initTE = TypingEnvironment{
+                vars = Map.empty,
+                funs =  withUserDefinedFuns,
+                events = Map.empty
+                 }
+    sigRules = stRules sig
+
+
+typeTheoryEnv :: (MonadThrow m, MonadCatch m) => OpenTheory -> m (OpenTheory, TypingEnvironment)
 -- typeTheory :: Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement)
 typeTheoryEnv th = do
+    initTE <- initTEFromSig th
     (thaux, fteaux) <- runStateT (mapMProcesses typeAndRenameProcess th) initTE
     (th', fte) <- runStateT (mapMProcessesDef typeAndRenameProcessDef thaux) fteaux
     let th'' = Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte)
     return (th'', fte)
     where
-        -- initial typing environment with functions as far as declared
-        initTE = TypingEnvironment{
-                vars = Map.empty,
-                funs = foldMap (\(s,inp,out) -> Map.singleton s (inp,out)) (theoryFunctionTypingInfos th),
-                events = Map.empty
-                 }
         typeAndRenameProcess p = do
                 pUnique <- renameUnique p
                 modify' (\s -> s { vars = Map.empty})
@@ -199,7 +230,7 @@ typeTheoryEnv th = do
         addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)
 
 -- | Type the Sapic processes in a theory
-typeTheory :: (MonadThrow m, MonadCatch m) => Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement)
+typeTheory :: (MonadThrow m, MonadCatch m) => OpenTheory -> m (OpenTheory)
 typeTheory th = fst <$> typeTheoryEnv th
 
 -- | Rename a process so that all its names are unique. Returns renamed process
