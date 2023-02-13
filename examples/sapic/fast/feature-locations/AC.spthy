@@ -13,7 +13,7 @@ builtins: locations-report
 functions: prog/3,list/2
 heuristic: S
 
-options: enableStateOpt
+options: translation-state-optimisation
 
 predicates:
 Report(x,y) <=> not  (y= 'loc')

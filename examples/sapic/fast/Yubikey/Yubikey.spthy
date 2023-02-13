@@ -10,7 +10,7 @@ section{* The Yubikey-Protocol *}
  */
 
 builtins: symmetric-encryption, multiset
-options: enableStateOpt
+options: translation-state-optimisation
 
 let Yubikey(L_pid,YL_pid,SL_pid,secretid,k)=
  !(( //Plug
