@@ -66,8 +66,6 @@ import           Paths_tamarin_prover (version)
 
 import           Language.Haskell.TH
 import           Development.GitRev
-import           Theory.Module
-import           Data.List
 
 ------------------------------------------------------------------------------
 -- Static constants for the tamarin-prover
@@ -78,9 +76,9 @@ gitVersion :: String
 gitVersion = concat
   [ "Git revision: "
     , $(gitHash)
-    , case $(gitDirty) of
-          True  -> " (with uncommited changes)"
-          False -> ""
+    , if $(gitDirty) then
+          " (with uncommited changes)"
+      else ""
     , ", branch: "
     , $(gitBranch)
   ]
