@@ -9,7 +9,7 @@ PI-Calculus" (plus) and is described in the following papers:
       to multiset rewrite rules and axioms.
 
 - [@BaDrKr-2016-liveness] added non-deterministic choice, reliable channels
-      and [local progress](#sec:progress) to it.
+      and [local progress](#sec:local-progress) to it.
 
 - [@jacomme2017symbolic] added support for [isolated execution environments](#sec:iee).
 
@@ -194,7 +194,8 @@ an action `Insert(x,y)` has occurred previously, and in between, no other
 `Insert(x,y')` or `Delete(x)` action has changed the global store at the position `x`. Hence,
 the global store is distinct from the set of facts in the current state.
 
-### Enforcing local progress (optional) {#sec:progress}
+### Enforcing local progress (optional) {#sec:local-progress}
+
 
 The translation from processes can be modified so it enforces a different
 semantics. In this semantics, the set of traces consists of only those where
