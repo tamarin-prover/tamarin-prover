@@ -498,6 +498,9 @@ postRootR = do
               let sig = either (get thySignature) (get diffThySignature) openThy
               sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) sig
 
+              -- let tactic = get thyTactic openThy
+              --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
+
               closeThy yesod sig' openThy
 
             case thyWithRep of

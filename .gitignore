@@ -47,3 +47,8 @@ out/
 *.pv
 
 .worktree
+
+
+**/benchmark
+**/input
+**/diff

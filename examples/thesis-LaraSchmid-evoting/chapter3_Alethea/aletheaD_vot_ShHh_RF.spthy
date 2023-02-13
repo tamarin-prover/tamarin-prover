@@ -61,6 +61,65 @@ decp(encp(x,r,pk(sk)),sk)=x,
 ver(sg(m, sk), pk(sk)) = m 
 
 
+tactic: indivVerif_v
+presort: C
+prio:
+  regex "In_S"
+prio:
+  regex "AgSt"
+prio:
+  regex "~skS"
+prio:
+  regex "h\("
+prio:
+  regex "encp\("
+
+tactic: indivVerif_b
+prio:
+  regex "In_S"
+prio:
+  regex "AgSt"
+prio:
+  regex "~skS"
+prio:
+  regex "h\("
+prio:
+  regex "encp\("
+
+tactic: Observational_equivalence
+presort: C
+prio:
+  regex "In_S"
+prio:
+  regex "~~"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "!KU\( ~sskD"
+prio:
+  regex "!KU\( ~x"
+prio:
+	regex "!KU\( sg\(encp\(v"
+prio:
+  regex "!KU\( encp\(v"
+prio:
+  regex "!KU\( encp\("
+prio:
+  regex "!KU\( ~r "
+prio:
+  regex "~x"
+prio:
+  regex "AgSt"
+prio:
+  regex "'zkp'"
+prio:
+  regex "encp\("
+prio:
+  regex "!KD"
+prio:
+  regex "Out_A"
+prio:
+  regex "In_A"
 
 
 /* ==========
@@ -208,7 +267,7 @@ lemma functional: exists-trace
 Individual verifiability properties
 =================================*/
 
-lemma indivVerif_v: 
+lemma indivVerif_v[heuristic={indivVerif_v}]: 
 	"All H v #i b #j bOther .
 		Vote(H,v) @i 			
 		& Verify(H,b,b + bOther) @j	
@@ -216,7 +275,7 @@ lemma indivVerif_v:
 		BB_rec(BB,<'b', b + b2 >) @l 	
 		& b = sg(encp(v,r,pkS),sskD) " 	
 
-lemma indivVerif_b: 
+lemma indivVerif_b[heuristic={indivVerif_b}]: 
 	"All H b #j bOther .
 		Verify(H,b,b + bOther) @j
 	==> Ex BB b2 #l . 

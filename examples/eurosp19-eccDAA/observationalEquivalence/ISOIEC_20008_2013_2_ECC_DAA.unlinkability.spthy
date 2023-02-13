@@ -49,6 +49,15 @@ restriction issuer_init:	   "All #i #j        . IssuerInit( ) @ i & IssuerInit( 
 restriction signA:           "All #i #j x      . UniqueExecSign( x ) @ #i & UniqueExecSign( x ) @ #j ==> #i = #j"
 
 
+tactic: Observational_equivalence
+prio:
+    regex ".*!F_IssuerSK\(.*"
+    regex ".*!F_IssuerPK\(.*"
+    regex ".*!F_IssuerKi\(.*"
+    regex ".*!F_IssuerGenerator\(.*"
+    regex ".*!F_BSN\(.*"
+    regex ".*Shuffle\(.*"
+
 // ********************************* PROTOCOL START *****************************************
 
 

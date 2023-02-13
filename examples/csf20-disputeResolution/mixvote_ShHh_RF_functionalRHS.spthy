@@ -12,6 +12,238 @@ equations:
     snd(<x.1, x.2>) = x.2,
     ver(sg(m, sk), pk(sk)) = m
 
+tactic: indivVerif 
+prio:
+  regex "~~>"
+prio:
+  regex "In_S"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(encp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: VoterC 
+prio:
+  regex "~~>"
+prio:
+  regex "($H = 'H1')"
+prio:
+  regex "($H.1 = 'H1')"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex "AgSt_H"
+prio:
+  regex " 'S', <'b'"
+prio:
+  regex " In_A( $BB, <'b'"
+prio:
+  regex "!KU( sg(encp(v"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: TimelyP 
+prio:
+  regex "~~>"
+prio:
+  regex "($H = 'H1')"
+prio:
+  regex "($H.1 = 'H1')"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex "AgSt_H"
+prio:
+  regex " 'S', <'b'"
+prio:
+  regex " In_A( $BB, <'b'"
+prio:
+  regex "!KU( sg(encp(v"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: AuthP 
+prio:
+  regex "~~>"
+prio:
+  regex "($H = 'H1')"
+prio:
+  regex "($H.1 = 'H1')"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex "AgSt_H"
+prio:
+  regex " 'S', <'b'"
+prio:
+  regex " In_A( $BB, <'b'"
+prio:
+  regex "!KU( sg(encp(v"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: Uniqueness 
+prio:
+  regex "~~>"
+prio:
+  regex "($H = 'H1')"
+prio:
+  regex "($H.1 = 'H1')"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex "AgSt_H"
+prio:
+  regex " 'S', <'b'"
+prio:
+  regex " In_A( $BB, <'b'"
+prio:
+  regex "!KU( sg(encp(v"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: Observational_equivalence 
+prio:
+  regex "!KU( ~sk"
+prio:
+  regex "!KU( ~ssk"
+prio:
+  regex "Out_IR"
+prio:
+  regex "Out_A("
+prio:
+  regex "~~>"
+prio:
+  regex "In_S"
+prio:
+  regex "!KD( "
+prio:
+  regex "AgSt"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex "!KU( sg(encp("
+prio:
+  regex "'pr'"
+prio:
+  regex "'bs'"
+prio:
+  regex "sg(cp("
+prio:
+  regex "In_A"
+prio:
+  regex "In_S"
+prio:
+  regex "~~>"
+prio:
+  regex "cp("
+
 rule (modulo E) ChanOut_S:
    [ Out_S( $A, $B, x ) ]
   --[ ChanOut_S( $A, $B, x ) ]->
@@ -839,7 +1071,7 @@ guarded formula characterizing all satisfying traces:
 */
 by sorry /* removed */
 
-lemma indivVerif [right]:
+lemma indivVerif [heuristic={indivVerif},right]:
   all-traces
   "∀ H v #i b #j bOther.
     ((Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)) ⇒
@@ -859,7 +1091,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma indivVerif [left]:
+lemma indivVerif [heuristic={indivVerif},left]:
   all-traces
   "∀ H v #i b #j bOther.
     ((Vote( H, v ) @ #i) ∧ (Verify( H, b, (b+bOther) ) @ #j)) ⇒
@@ -879,7 +1111,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma VoterC [right]:
+lemma VoterC [heuristic={VoterC},right]:
   all-traces
   "∀ H b #j b1 b2.
     (Verify( H, b, (b1+b2) ) @ #j) ⇒
@@ -921,7 +1153,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma VoterC [left]:
+lemma VoterC [heuristic={VoterC},left]:
   all-traces
   "∀ H b #j b1 b2.
     (Verify( H, b, (b1+b2) ) @ #j) ⇒
@@ -963,7 +1195,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma TimelyP [right]:
+lemma TimelyP [heuristic={TimelyP},right]:
   all-traces
   "∀ H b #i #j.
     (((Ballot( H, b ) @ #i) ∧ (End( ) @ #j)) ∧ (#i < #j)) ⇒
@@ -1006,7 +1238,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma TimelyP [left]:
+lemma TimelyP [heuristic={TimelyP},left]:
   all-traces
   "∀ H b #i #j.
     (((Ballot( H, b ) @ #i) ∧ (End( ) @ #j)) ∧ (#i < #j)) ⇒
@@ -1049,7 +1281,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma AuthP [right]:
+lemma AuthP [heuristic={AuthP},right]:
   all-traces
   "∀ S #i.
     (Honest( S ) @ #i) ⇒
@@ -1089,7 +1321,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma AuthP [left]:
+lemma AuthP [heuristic={AuthP}, left]:
   all-traces
   "∀ S #i.
     (Honest( S ) @ #i) ⇒
@@ -1129,7 +1361,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Uniqueness [right]:
+lemma Uniqueness [heuristic={Uniqueness},right]:
   all-traces
   "∀ #i b1 b2 BB.
     (((¬(∃ b BB.1 skS #k #l #m ba b3.
@@ -1187,7 +1419,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Uniqueness [left]:
+lemma Uniqueness [heuristic={Uniqueness},left]:
   all-traces
   "∀ #i b1 b2 BB.
     (((¬(∃ b BB.1 skS #k #l #m ba b3.
@@ -1247,7 +1479,7 @@ by sorry
 
 /* All well-formedness checks were successful. */
 
-diffLemma Observational_equivalence:
+diffLemma Observational_equivalence[heuristic={Observational_equivalence}]:
 by sorry
 
 end

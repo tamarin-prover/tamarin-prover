@@ -47,7 +47,8 @@ import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
 import           Data.Label
-import           Data.List                           (isPrefixOf,intersperse, find)
+import           Data.List                           (isPrefixOf, intercalate, find)
+
 import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
 
@@ -68,6 +69,7 @@ import           Main.Environment
 
 import           Text.Parsec                hiding ((<|>),try,parse)
 import           Safe
+
 import qualified Theory.Text.Pretty as Pretty
 import           Items.LemmaItem (HasLemmaName, HasLemmaAttributes)
 import           Control.Monad.Except
@@ -85,6 +87,7 @@ import GHC.Records (HasField(getField))
 import           TheoryObject                        (diffThyOptions)
 import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve)
 import Data.Maybe (fromMaybe)
+
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -109,8 +112,8 @@ theoryLoadFlags =
   , flagOpt "5" ["bound", "b"] (updateArg "bound") "INT"
       "Bound the depth of the proofs"
 
-  , flagOpt (prettyGoalRanking $ head $ defaultRankings False)
-      ["heuristic"] (updateArg "heuristic") ("(" ++ intersperse '|' (keys goalRankingIdentifiers) ++ ")+")
+  ,  flagOpt (prettyGoalRanking $ head $ defaultRankings False)
+      ["heuristic"] (updateArg "heuristic") ("(" ++ (intercalate "|" $ keys goalRankingIdentifiers) ++ ")+")
       ("Sequence of goal rankings to use (default '" ++ prettyGoalRanking (head $ defaultRankings False) ++ "')")
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partial-evaluation")
@@ -118,19 +121,22 @@ theoryLoadFlags =
       "Partially evaluate multiset rewriting system"
 
   , flagOpt "" ["defines","D"] (updateArg "defines") "STRING"
-      "Define flags for pseudo-preprocessor"
+      "Define flags for pseudo-preprocessor."
 
   , flagNone ["diff"] (addEmptyArg "diff")
-      "Turn on observational equivalence mode using diff terms"
+      "Turn on observational equivalence mode using diff terms."
 
   , flagNone ["quit-on-warning"] (addEmptyArg "quit-on-warning")
-      "Strict mode that quits on any warning that is emitted"
+      "Strict mode that quits on any warning that is emitted."
 
   , flagNone ["auto-sources"] (addEmptyArg "auto-sources")
       "Try to auto-generate sources lemmas"
 
   , flagOpt (oraclePath defaultOracle) ["oraclename"] (updateArg "oraclename") "FILE"
       ("Path to the oracle heuristic (default '" ++ oraclePath defaultOracle ++ "')")
+
+  , flagNone ["quiet"] (addEmptyArg "quiet")
+      "Do not display computation steps of oracle or tactic."
 
   , flagOpt "10" ["open-chains","c"] (updateArg "OpenChainsLimit" ) "PositiveInteger"
       "Limits the number of open chains to be resoled during precomputations (default 10)"
@@ -152,7 +158,7 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oLemmaNames        :: [String]
   , _oStopOnTrace       :: SolutionExtractor
   , _oProofBound        :: Maybe Int
-  , _oHeuristic         :: Maybe Heuristic
+  , _oHeuristic         :: Maybe (Heuristic ProofContext)
   , _oPartialEvaluation :: Maybe EvaluationStyle
   , _oDefines           :: [String]
   , _oDiffMode          :: Bool
@@ -228,12 +234,12 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> return $ Just $ roundRobinHeuristic
-                                         $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as)) . toGoalRanking) rawRankings
+                                         $ map (mapOracleRanking (maybeSetOracleRelPath (findArg "oraclename" as))) (filterHeuristic (argExists "diff" as) rawRankings)
         Just []                -> throwError $ ArgumentError "heuristic: at least one ranking must be given"
         _                      -> return Nothing
 
-    toGoalRanking | argExists "diff" as = charToGoalRankingDiff
-                  | otherwise           = charToGoalRanking
+    --toGoalRanking | argExists "diff" as = stringToGoalRankingDiff
+    --              | otherwise           = stringToGoalRanking
 
     partialEvaluation = case map toLower <$> findArg "partial-evaluation" as of
       Just "summary" -> return $ Just Summary
@@ -281,6 +287,10 @@ lemmaSelectorByModule thyOpt lem = case lemmaModules of
       Nothing     -> ModuleSpthy `elem` lemmaModules
     where
         lemmaModules = concat [ m | LemmaModule m <- getField @"lAttributes" lem]
+
+-- | quiet flag in the argument
+--quiet :: Arguments -> [String]
+--quiet as = if (argExists "quiet" as) then ["quiet"] else []
 
 -- | Select lemmas for proving
 lemmaSelector :: HasLemmaName l => TheoryLoadOptions -> l -> Bool
@@ -393,6 +403,7 @@ closeTheory version thyOpts sig srcThy = do
 constructAutoProver :: TheoryLoadOptions -> AutoProver
 constructAutoProver thyOpts =
     AutoProver (L.get oHeuristic thyOpts)
+               Nothing
                (L.get oProofBound thyOpts)
                (L.get oStopOnTrace thyOpts)
 

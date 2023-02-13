@@ -94,6 +94,200 @@ functions: cp/2,  PeqPVote/3, PeqPY/3, dcp/2
 equations: 
 dcp(cp(x,pk(sk)),sk)=x     //we abstract away the randomness r as we do not need it 
 
+tactic: secret_x
+presort: C
+prio: 
+	regex "~~>"
+prio:
+  regex "AgSt"
+ prio:
+  regex "cp\("
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: secret_r
+presort: C
+prio:  
+  regex "~~>"
+prio:
+  regex "AgSt"
+prio:
+  regex "cp\("
+ prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: secret_rb
+presort: C
+prio:
+  regex "~~>"
+prio:
+  regex "AgSt"
+prio:
+  regex "cp\("
+ prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+tactic: agreementHwrtS
+presort: C
+prio:  
+  regex "~~>"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "cp\("
+
+tactic: agreementSwrtH_vote
+presort: C
+prio:  
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "!KU\( ~r1"
+prio:
+  regex "!KU\( ~rb1"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "!KU\( h\("
+prio:
+  regex "~~>"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "cp\("
+
+tactic: agreementSwrtH_code
+presort: C
+prio:  
+  regex "!KU\( ~skS"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "!KU\( ~r1"
+prio:
+  regex "!KU\( ~rb1"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "!KU\( h\("
+prio:
+  regex "~~>"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "cp\("
+
+tactic: indivVerif
+presort: C
+prio:  
+  regex "Vote\("
+prio:
+  regex "In_S"
+prio:
+  regex "AgSt_H"
+prio:
+  regex "Vote\("
+prio:
+  regex "In_A\( 'S', <'codes'"
+prio:
+  regex "In_A\( 'BB', <'codes'"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S\( 'H1'"
+prio:
+  regex "~~>"
+prio:
+  regex "cp\("
+
+
+tactic: Observational_equivalence
+presort: C
+
+prio:  
+  regex "'proofV'"
+prio:
+  regex "In_S"
+prio:
+  regex "_BB0"
+prio:
+  regex "Out_A\( $A, x"
+prio:
+  regex "!KD\( $ind"
+prio:
+  regex "~~>"
+prio:
+  regex "!KU\( $ind"
+prio:
+  regex "In_S"
+prio:
+  regex "KU\( ~skS"
+prio:
+  regex "KU\( ~x"
+prio:
+  regex "KU\( h\(~x"
+prio:
+  regex "h\(<~x"
+prio:
+  regex "h\(<'H2', ~x"
+prio:
+  regex "h\(<'H2', ~x"
+prio:
+  regex "h\(<'H1', ~x"
+prio:
+  regex "KD\("
+prio:
+  regex "!KU\( 'BB'"
+prio:
+  regex "!KD\( 'BB'"
+prio:
+  regex "!KU\( PeqPV"
+prio:
+  regex "'pVHashes'"
+prio:
+  regex "!KU\( x )"
+prio:
+	regex "!KU\( 'codes'"
+
+
+
 /* ==========
 Channel rules
 ============= */
@@ -286,7 +480,7 @@ lemma functional: exists-trace
 individual verifiability
 ======================== */
 
-lemma indivVerif: //If voter finds his code on BB => his code (representing his vote) is on BB, that is the vote is registered
+lemma indivVerif[heuristic={indivVerif}]: //If voter finds his code on BB => his code (representing his vote) is on BB, that is the vote is registered
 	"All H S vote fstcode sndcode #i2 #i #j .
 		Vote(H,vote) @i2 					// this is voter's vote
 		//verify(H,<fstcode,sndcode> in [code], true)
@@ -303,7 +497,7 @@ ADDITONAL LEMMAS
 secrecy claims
 ============== */
 //(not in [1]) with an honest S, the voter secret is not learned by the adversary
-lemma secret_x:
+lemma secret_x[heuristic={secret_x}]:
 	"All x #i.  Secret_x(x) @i ==>  not(Ex #j. K(x) @j)	"
 
 /* =======
@@ -312,15 +506,15 @@ agreements
 //(not in [1]) with an honest S, there is some agreement beween H and S
 
 //agreement from H wrt S (all that read from BB is authentically from S)
-lemma agreementHwrtS:
+lemma agreementHwrtS[heuristic={agreementHwrtS}]:
 " (All H S x #i. Learn_H_C(H,S,x) @i 	==> Ex #j. Comm_S_C(S,x) @j & j<i)" 
 
 
 // agreements from S wrt H
-lemma agreementSwrtH_vote:
+lemma agreementSwrtH_vote[heuristic={agreementSwrtH_vote}]:
 " All H S x #i. Learn_S_V(S,H,x) @i	==> Ex #j. Comm_H_V(H,S,x) @j & j<i "
 
-lemma agreementSwrtH_code: 
+lemma agreementSwrtH_code[heuristic={agreementSwrtH_code}]: 
 "All H S x #i. Learn_S_C(S,H,x) @i 	==> Ex #j. Comm_H_C(H,S,x) @j & j<i"
 
 

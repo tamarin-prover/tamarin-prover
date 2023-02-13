@@ -49,6 +49,7 @@ import           Theory.Text.Parser.Lemma
 import           Theory.Text.Parser.Rule
 import Theory.Text.Parser.Exceptions
 import Theory.Text.Parser.Signature
+import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
 
@@ -216,6 +217,8 @@ theory inFile = do
     addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
            addItems inFile0 thy'
+      , do thy' <- liftedAddTactic thy =<< tactic False
+           addItems inFile0 thy'
       , do thy' <- builtins thy
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
@@ -338,6 +341,10 @@ theory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
+    liftedAddTactic thy t = case addTactic t thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default tactic already defined"
+
 -- | Parse a diff theory.
 diffTheory :: Maybe FilePath
        -> Parser OpenDiffTheory
@@ -354,6 +361,8 @@ diffTheory inFile = do
     addItems :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
+           addItems inFile0 thy'
+      , do thy' <- liftedAddTactic thy =<< tactic True
            addItems inFile0 thy'
       , do
            diffbuiltins
@@ -450,6 +459,10 @@ diffTheory inFile = do
     liftedAddHeuristic thy h = case addDiffHeuristic h thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
+
+    liftedAddTactic thy t = case addDiffTactic t thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default tactic already defined"
 
     liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
         Just thy' -> return thy'

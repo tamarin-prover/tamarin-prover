@@ -69,4 +69,4 @@ for line in lines:
 for j in range(len(plist)):
   for i in plist[j]:
     print i
-print 1
+#print 1
