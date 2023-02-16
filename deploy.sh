@@ -2,7 +2,7 @@
 set -e # Exit with nonzero exit code if anything fails
 
 # Set up some git information.
-REPO=`git config remote.origin.url`
+REPO=`git config remote.${1:=origin}.url`
 SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 SHA=`git rev-parse --verify HEAD`
 BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -16,11 +16,10 @@ function doCompile {
     make pdf
 }
 
-# Pull requests and commits to other branches shouldn't try to deploy, just build to verify
-#if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "$SOURCE_BRANCH" ]; then
-#    echo "Skipping deploy; not the right kind of build."
-#    exit 0
-#fi
+if [ [$BRANCH != $MASTER_BRANCH] -o [$BRANCH != $DEVELOP_BRANCH] ]; then
+    echo "Please use this script on branch $MASTER_BRANCH or $DEVELOP_BRANCH only. You seem to be on $BRANCH."
+    exit 0
+fi
 
 # Clone the existing gh-pages for this repo into a temporary folder $CHECKOUT.
 CHECKOUT=`mktemp -d`
