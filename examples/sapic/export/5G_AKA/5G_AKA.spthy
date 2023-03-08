@@ -219,8 +219,8 @@ functions:
 	KDF/2,	 // KDF		 --> K_ausf, K_seaf, XRES*
 	SHA256/2 // KDF		 --> HXRES*
 
-options: enableStateOpt,
-asynchronous-channels, compress-events,
+options: translation-state-optimisation,
+translation-asynchronous-channels, translation-compress-events,
 translation-allow-pattern-lookups
 
 

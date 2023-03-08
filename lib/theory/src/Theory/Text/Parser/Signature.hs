@@ -183,11 +183,12 @@ options thy0 =do
     setOption' thy Nothing  = thy
     setOption' thy (Just l) = setOption l thy
     builtinTheory = asum
-      [  try (symbol "translation-progress") Data.Functor.$> Just transProgress
+      [  try 
+         (symbol "translation-progress") Data.Functor.$> Just transProgress
         , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
-        , symbol "enableStateOpt" Data.Functor.$> Just stateChannelOpt
-        , symbol "asynchronous-channels" Data.Functor.$> Just asynchronousChannels
-        , symbol "compress-events" Data.Functor.$> Just compressEvents
+        , symbol "translation-state-optimisation" Data.Functor.$> Just stateChannelOpt
+        , symbol "translation-asynchronous-channels" Data.Functor.$> Just asynchronousChannels
+        , symbol "translation-compress-events" Data.Functor.$> Just compressEvents
       ]
 
 predicate :: Parser Predicate
