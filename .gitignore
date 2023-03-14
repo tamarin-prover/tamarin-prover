@@ -42,6 +42,7 @@ stack.yaml.lock
 
 *.iml
 .idea/
+.vscode/
 out/
 
 *.pv
