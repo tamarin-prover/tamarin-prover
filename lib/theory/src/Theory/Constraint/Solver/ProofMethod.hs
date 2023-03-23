@@ -640,7 +640,7 @@ itRanking tactic ags ctxt _sys = result
       preorderedDeprio = if (Nothing `elem` indexDeprio) then map (snd . unzip) (tail groupedDeprio) else map (snd . unzip) groupedDeprio -- recovering ranked goals only (no prio = Nothing = fst)
 
       deprioRankingFunctions = map rankingDeprio (_deprios tactic)
-      rankingFunToBeAppliedDeprio = chooseRankingFunctionByPrio deprioRankingFunctions (map head groupedPrio)
+      rankingFunToBeAppliedDeprio = chooseRankingFunctionByPrio deprioRankingFunctions (map head groupedDeprio)
       deprioReorderedGoals = applyRankingFunctions rankingFunToBeAppliedDeprio preorderedDeprio
 
       rankedDeprioGoals = concat deprioReorderedGoals
