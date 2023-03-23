@@ -25,7 +25,6 @@ where
 
 import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
-import           Data.Foldable              (asum)
 import           Data.Either
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
