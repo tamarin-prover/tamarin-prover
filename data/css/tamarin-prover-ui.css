@@ -501,6 +501,7 @@ h4 {
     right: 0em;
     padding: 0em;
     overflow: auto;
+    white-space: nowrap;
 }
 
 #ui-main-display, #ui-debug-display, #proof {
