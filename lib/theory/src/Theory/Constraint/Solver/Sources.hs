@@ -35,7 +35,6 @@ module Theory.Constraint.Solver.Sources (
 import           Prelude                                 hiding (id, (.))
 import           Safe
 
-import           Data.Foldable                           (asum)
 import qualified Data.Map                                as M
 import qualified Data.Set                                as S
 

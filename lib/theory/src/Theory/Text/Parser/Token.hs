@@ -117,7 +117,6 @@ module Theory.Text.Parser.Token (
 
 import           Prelude             hiding (id, (.))
 
-import           Data.Foldable       (asum)
 -- import           Data.Label
 -- import           Data.Binary
 import           Data.List (foldl')

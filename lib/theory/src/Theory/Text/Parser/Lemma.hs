@@ -17,8 +17,6 @@ module Theory.Text.Parser.Lemma(
 where
 
 import           Prelude                    hiding (id, (.))
-import           Data.Foldable              (asum)
--- import           Data.Monoid                hiding (Last)
 import           Control.Applicative        hiding (empty, many, optional)
 import           Text.Parsec                hiding ((<|>))
 import           Theory
