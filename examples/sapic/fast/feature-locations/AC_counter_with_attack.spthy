@@ -10,7 +10,7 @@ functions: prog/3,null/0,succ/1,list/2
 
 heuristic:S
 
-options: enableStateOpt
+options: translation-state-optimisation
 
 predicates:
 Report(x,y) <=> not  (y= 'l')

@@ -25,7 +25,6 @@ where
 
 import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
-import           Data.Foldable              (asum)
 import           Data.Either
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
@@ -183,11 +182,12 @@ options thy0 =do
     setOption' thy Nothing  = thy
     setOption' thy (Just l) = setOption l thy
     builtinTheory = asum
-      [  try (symbol "translation-progress") Data.Functor.$> Just transProgress
+      [  try 
+         (symbol "translation-progress") Data.Functor.$> Just transProgress
         , symbol "translation-allow-pattern-lookups" Data.Functor.$> Just transAllowPatternMatchinginLookup
-        , symbol "enableStateOpt" Data.Functor.$> Just stateChannelOpt
-        , symbol "asynchronous-channels" Data.Functor.$> Just asynchronousChannels
-        , symbol "compress-events" Data.Functor.$> Just compressEvents
+        , symbol "translation-state-optimisation" Data.Functor.$> Just stateChannelOpt
+        , symbol "translation-asynchronous-channels" Data.Functor.$> Just asynchronousChannels
+        , symbol "translation-compress-events" Data.Functor.$> Just compressEvents
       ]
 
 predicate :: Parser Predicate
@@ -213,7 +213,7 @@ export thy = do
                     _          <- colon
                     text       <- doubleQuoted $ many bodyChar -- TODO Gotta use some kind of text.
                     let ei = ExportInfo tag text
-                    liftMaybeToEx (DuplicateItem (TranslationItem (ExportInfoItem ei))) (addExportInfo ei thy)
+                    return (addExportInfo ei thy)
                     <?> "export block"
               where
                 bodyChar = try $ do

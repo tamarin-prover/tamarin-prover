@@ -21,7 +21,6 @@ where
 import           Prelude                    hiding (id, (.))
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Char8      as BC
-import           Data.Foldable              (asum)
 import           Data.Label
 import           Data.Either
 import           Data.Maybe

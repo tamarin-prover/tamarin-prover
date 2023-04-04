@@ -28,7 +28,6 @@ module Theory.Text.Parser (
   ) where
 
 import           Prelude                    hiding (id, (.))
-import           Data.Foldable              (asum)
 import           Data.Label
 import           Data.Maybe
 -- import           Data.Monoid                hiding (Last)

@@ -142,7 +142,7 @@ isNonSemiState (State kind _ _) = not $ isSemiState kind
 isNonSemiState _ = False
 
 isState :: TransFact -> Bool
-isState (State _ _ _) = True
+isState (State {}) = True
 isState _ = False
 
 addVarToState :: LVar -> TransFact -> TransFact
@@ -204,20 +204,20 @@ actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
 actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
 actionToFact (DeleteA t )   =  protoFact Linear "Delete" [t]
 actionToFact (ChannelIn t)   =  protoFact Linear "ChannelIn" [t]
-actionToFact (EventEmpty)   =   protoFact Linear "Event" []
-actionToFact (PredicateA f)   =  mapFactName (\s -> "Pred_" ++ s) f
-actionToFact (NegPredicateA f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
+actionToFact EventEmpty   =   protoFact Linear "Event" []
+actionToFact (PredicateA f)   =  mapFactName ("Pred_" ++) f
+actionToFact (NegPredicateA f)   =  mapFactName ("Pred_Not_" ++) f
 actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,varTerm v, t ]
 actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, varTerm v, t ]
 actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,varTerm v,t]
 actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varTerm v,t]
 actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
-actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
+actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
 
 toFreeMsgVariable :: LVar -> BVar LVar
 toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
-toFreeMsgVariable v = Free $ v
+toFreeMsgVariable v = Free v
 
 actionToFactFormula :: TransAction -> Fact (Term (Lit Name (BVar LVar)))
 actionToFactFormula = fmap (fmap $ fmap toFreeMsgVariable) . actionToFact
@@ -232,7 +232,7 @@ varMID p = LVar n s i
                 -- but I don't see an advantage (yet)
 
 factToFact :: TransFact -> Fact LNTerm
-factToFact (Fr v) = freshFact $ varTerm (v)
+factToFact (Fr v) = freshFact $ varTerm v
 factToFact (In t) = inFact t
 factToFact (Out t) = outFact t
 factToFact (FLet p t vars) = protoFact Linear ("Let"++ "_" ++ prettyPosition p) (t:ts)
@@ -247,15 +247,15 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
         name k = if isSemiState k then "Semistate" else "State"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
-factToFact (PureCell t1 t2) = protoFact Linear ("L_PureState") [t1, t2]
-factToFact (CellLocked t1 t2) = protoFact Linear ("L_CellLocked") [t1, t2]
+factToFact (PureCell t1 t2) = protoFact Linear "L_PureState" [t1, t2]
+factToFact (CellLocked t1 t2) = protoFact Linear "L_CellLocked" [t1, t2]
 
 
 pureStateFactTag :: FactTag
-pureStateFactTag =  ProtoFact Linear ("L_PureState") 2
+pureStateFactTag =  ProtoFact Linear "L_PureState" 2
 
 pureStateLockFactTag :: FactTag
-pureStateLockFactTag =  ProtoFact Linear ("L_CellLocked") 2
+pureStateLockFactTag =  ProtoFact Linear "L_CellLocked" 2
 
 
 isOutFact :: Fact t -> Bool
@@ -321,7 +321,7 @@ colorHash :: (Fractional t, Ord t) => String -> RGB t
 colorHash s = RGB r g b
       where
         nthByte x n = (x `shiftR` (8*n)) .&. 0xff
-        [r,g,b] = map ((/255) . fromIntegral . nthByte (crc32 s)) [0,1,2]
+        (r,g,b) = fmap ((/255) . fromIntegral . nthByte (crc32 s)) (0,1,2)
 
 -- Computes a color for a list of strings by first computing
 -- the CRC32 checksum of each string and then interpolating the
