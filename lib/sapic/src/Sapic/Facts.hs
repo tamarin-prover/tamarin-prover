@@ -11,10 +11,12 @@ module Sapic.Facts (
    , TransFact(..)
    , SpecialPosition(..)
    , AnnotatedRule(..)
+   , FactType(..)
    , mapAct
    , StateKind(..)
    , isSemiState
    , isState
+   , isFrFact
    , isOutFact
    , isStateFact
    , isLetFact
@@ -30,6 +32,10 @@ module Sapic.Facts (
    , varMID
    , varProgress
    , msgVarProgress
+   , patternInsFilter
+   , nonPatternInsFilter
+   , isPattern
+   , hasPattern
    , propagateNames
 ) where
 -- import Data.Maybe
@@ -121,6 +127,10 @@ data AnnotatedRule ann = AnnotatedRule {
     , restr        :: [SyntacticLNFormula]
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
+
+-- | Fact types used by the MSR to ProverIf translation.
+data FactType = GET | IN | NEW | EVENT | INSERT | OUT
+  deriving Eq
 
 -- | applies function acting on rule taple on annotated rule.
 mapAct :: (([TransFact], [TransAction], [TransFact],[SyntacticLNFormula])
@@ -262,6 +272,10 @@ isOutFact :: Fact t -> Bool
 isOutFact (Fact OutFact _ _) = True
 isOutFact _                 = False
 
+isFrFact :: Fact t -> Bool
+isFrFact (Fact FreshFact _ _) = True
+isFrFact _                 = False
+
 
 isLetFact :: Fact LNTerm -> Bool
 isLetFact (Fact (ProtoFact _ name _) _ _) =
@@ -281,6 +295,19 @@ isLockFact (Fact (ProtoFact _ name _) _ _) =
   "L_CellLocked" `List.isPrefixOf` name
 isLockFact _ = False
 
+patternInsFilter :: LNFact -> Bool
+patternInsFilter f = isInFact f && hasPattern f
+
+nonPatternInsFilter :: LNFact -> Bool
+nonPatternInsFilter f = isInFact f && not (hasPattern f)
+
+isPattern :: Term l -> Bool
+isPattern t = case viewTerm t of
+    Lit _ -> False
+    _     -> True
+
+hasPattern :: LNFact -> Bool
+hasPattern (Fact _ _ ts) = any isPattern ts
 
 prettyEitherPositionOrSpecial:: Either ProcessPosition SpecialPosition -> String
 prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos

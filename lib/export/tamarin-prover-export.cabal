@@ -64,3 +64,4 @@ library
 
     exposed-modules:
         Export
+        RuleTranslation
