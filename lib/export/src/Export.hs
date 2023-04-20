@@ -1077,7 +1077,8 @@ loadHeaders tc thy typeEnv = do
       foldl
         ( \y x -> case List.lookup x builtins of
             Nothing -> case x of
-              "multiset"         -> throw UnsupportedBuiltinMS
+              "multiset"         -> -- on the long run, this should throw UnsupportedBuiltinMS, but we currently allow to use multiset in a restricted fashion
+                translationWarning "you are using in the Sapic model the multiset builtin. Unless you are only using it to model natural numbers, this may result in a failure of the translation." y
               "bilinear-pairing" -> throw UnsupportedBuiltinBP
               _                  -> y
             Just t -> y `S.union` t
