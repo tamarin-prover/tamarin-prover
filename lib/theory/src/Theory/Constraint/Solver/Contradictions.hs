@@ -146,9 +146,9 @@ maybeNonNormalTerms :: MaudeHandle -> System -> [LNTerm]
 maybeNonNormalTerms hnd se =
     sortednub . concatMap getTerms . M.elems . L.get sNodes $ se
     where getTerms (Rule _ ps cs as nvs) = do
-          f <- ps++cs++as
-          t <- factTerms f ++ nvs
-          maybeNotNfSubterms (mhMaudeSig hnd) t
+           f <- ps++cs++as
+           t <- factTerms f ++ nvs
+           maybeNotNfSubterms (mhMaudeSig hnd) t
 
 substCreatesNonNormalTerms :: MaudeHandle -> System -> LNSubst -> LNSubstVFresh -> Bool
 substCreatesNonNormalTerms hnd sys fsubst =

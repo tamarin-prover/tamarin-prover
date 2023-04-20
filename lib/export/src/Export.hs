@@ -1,10 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ViewPatterns               #-}
 -- |
 -- Copyright   : (c) 2019 Charlie Jacomme and Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -18,7 +14,6 @@ module Export (
     prettyProVerifTheory,
     prettyProVerifEquivTheory,
     prettyDeepSecTheory
-
 ) where
 import         Term.Builtin.Rules
 import         Term.SubtermRule
@@ -33,9 +28,14 @@ import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
+import         Sapic.Exceptions
+
+import         RuleTranslation
+
 import         System.IO.Unsafe
 import         System.IO
 import           Control.Monad.Fresh
+import           Control.Exception
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Set as S
@@ -45,8 +45,10 @@ import Data.List as List
 
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Functor.Identity
+import Data.Bifunctor
 import Data.Char
 import Data.Data
+import Data.Maybe
 
 data Translation =
    ProVerif
@@ -81,7 +83,7 @@ translationFail s = unsafePerformIO (fail s)
 
 
 translationWarning :: String -> a -> a
-translationWarning s cont = unsafePerformIO (printWarning)
+translationWarning s cont = unsafePerformIO printWarning
   where
     printWarning = do
       hPutStr stderr $ "WARNING: " ++ s
@@ -91,30 +93,43 @@ translationWarning s cont = unsafePerformIO (printWarning)
 -- Core Proverif Export
 ------------------------------------------------------------------------------
 
-proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> d
-proverifTemplate headers queries process macroproc lemmas =
+proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> [d] -> d
+proverifTemplate headers queries process macroproc ruleproc lemmas =
   vcat headers
     $$ vcat queries
     $$ vcat lemmas
     $$ vcat macroproc
+    $$ vcat ruleproc
     $$ text "process"
     $$ nest 4 process
 
-prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO (Doc)
+prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO Doc
 prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` prochd `S.union` macroprochd
+  headers2 <- checkDuplicates $ (S.toList . filterHeaders $ baseHeaders `S.union` headers `S.union` prochd `S.union` macroprochd) ++ S.toList (filterHeaders ruleHeaders)
   let hd = attribHeaders tc headers2
-  return $ proverifTemplate hd queries proc macroproc lemmas
+  return $ proverifTemplate hd queries proc' macroproc ruleproc lemmas
   where
     tc = emptyTC {predicates = theoryPredicates thy}
     (proc, prochd, hasBoundState, hasUnboundState) = loadProc tc thy
-    base_headers = if hasUnboundState then state_headers else S.empty
+    (ruleproc, ruleComb, (baseRuleHeaders, destrHeaders, frHeaders, tblHeaders, evHeaders)) = loadRules thy
+    baseRuleHeaderSet = S.fromList $ map (uncurry4 Sym) baseRuleHeaders
+    destrHeaderSet = S.fromList $ map (uncurry4 Eq) destrHeaders
+    frHeaderSet = S.fromList $ map (uncurry4 Sym) frHeaders
+    tblHeaderSet = S.fromList $ map (uncurry Table) tblHeaders
+    evHeaderSet = S.fromList $ map (uncurry HEvent) evHeaders
+    ruleHeaders = baseRuleHeaderSet `S.union` destrHeaderSet `S.union` frHeaderSet `S.union` tblHeaderSet `S.union` evHeaderSet
+    proc'
+      | null (theoryProcesses thy) = ruleComb
+      | null (theoryRules thy) = proc
+      | otherwise = proc <-> text "|" <-> ruleComb
+    baseHeaders = if hasUnboundState then stateHeaders else S.empty
     queries = loadQueries thy
     lemmas = loadLemmas lemSel tc typEnv thy
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
+    uncurry4 f (a,b,c,d) = f a b c d
 
 -- ProVerif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProVerifHeader
@@ -126,8 +141,8 @@ data ProVerifHeader
   | Eq String String String String -- eqtype, quantif, equation pub/priv
   deriving (Ord, Show, Eq)
 
-state_headers :: S.Set ProVerifHeader
-state_headers =
+stateHeaders :: S.Set ProVerifHeader
+stateHeaders =
   S.fromList
     [ Table "tbl_states_handle" "(bitstring,channel)", --the table for linking states identifiers and channels
       Table "tbl_locks_handle" "(bitstring,channel)" --the table for linking locks identifiers and channels
@@ -137,7 +152,7 @@ state_headers =
 builtins :: [(String, S.Set ProVerifHeader)]
 builtins =
   map
-    (\(x, y) -> (x, S.fromList y))
+    (second S.fromList)
     [ ( "diffie-hellman",
         [ Sym "const" "g" ":bitstring" [],
           Fun "fun" "exp" 2 "(bitstring,bitstring):bitstring" [],
@@ -149,22 +164,50 @@ builtins =
         ]
       ),
       ( "xor",
-        [ Fun "fun" "xor" 2 "(bitstring,bitstring):bitstring" []
+        [ Fun "fun" "xor" 2 "(bitstring,bitstring):bitstring" [],
+          Fun "fun" "zero" 0 "():bitstring" []
+        ]
+      ),
+      ( "hashing",
+        [ Fun "fun" "h" 1 "(bitstring):bitstring" []
+        ]
+      ),
+      ( "asymmetric-encryption",
+        [ Fun "fun" "aenc" 2 "(bitstring,bitstring):bitstring" [],
+          Fun "fun" "pk" 1 "(bitstring):bitstring" []
+        ] --Don't need to define the reduc equations here because they are already read from the theory
+      ),
+      ( "signing",
+        [ Fun "fun" "sign" 2 "(bitstring,bitstring):bitstring" [],
+          Fun "fun" "pk" 1 "(bitstring):bitstring" [],
+          Fun "fun" "okay" 0 "():bitstring" []
+        ]
+      ),
+      ( "revealing-signing",
+        [ Fun "fun" "revealSign" 2 "(bitstring,bitstring):bitstring" [],
+          Fun "fun" "revealVerify" 3 "(bitstring,bitstring,bitstring):bitstring" [],
+          Fun "fun" "getMessage" 1 "(bitstring):bitstring" [],
+          Fun "fun" "pk" 1 "(bitstring):bitstring" [],
+          Fun "fun" "okay" 0 "():bitstring" []
+        ]
+      ),
+      ( "symmetric-encryption",
+        [ Fun "fun" "senc" 2 "(bitstring,bitstring):bitstring" []
         ]
       )
     ]
 
 -- We filter out some predefined headers that we don't want to redefine.
 filterHeaders :: S.Set ProVerifHeader -> S.Set ProVerifHeader
-filterHeaders s = S.filter (not . isForbidden) s
+filterHeaders = S.filter (not . isForbidden)
   where
     isForbidden (Fun "fun" "true" _ _ _) = True
     isForbidden (Type "bitstring") = True
     isForbidden (Type "channel") = True
     isForbidden _ = False
 
--- We cannot define a a constant and a function with the same name in proverif
-checkDuplicates :: MonadFail m => [ProVerifHeader] -> m ([ProVerifHeader])
+-- We cannot define a constant and a function with the same name in proverif
+checkDuplicates :: MonadFail m => [ProVerifHeader] -> m [ProVerifHeader]
 checkDuplicates hd = do
   let names =
         foldl
@@ -180,18 +223,20 @@ checkDuplicates hd = do
    in let conflicts = filter ((> 1) . length) . group $ sort names
        in if null conflicts
             then return hd
-            else fail ("The string " <> (head $ head conflicts) <> " is used for distinct constructs (function name, constant or events). You should rename the constructs.")
+            else fail ("The string " <> head (head conflicts) <> " is used for distinct constructs (function name, constant or events). You should rename the constructs.")
 
 ppPubName :: NameId -> Doc
-ppPubName (NameId "zero") = text "0"
-ppPubName (NameId "one") = text "1"
-ppPubName (NameId t) = text t
+ppPubName (NameId n) = text $ case n of
+  "zero" -> "0"
+  "one"  -> "1"
+  "g"    -> "g"
+  _      -> "s" ++ n
 
 -- Loader of the export functions
 ------------------------------------------------------------------------------
 loadQueries :: Theory sig c b p TranslationElement -> [Doc]
 loadQueries thy =
-  map (\x -> text $ L.get eText x) (lookupExportInfo "queries" thy)  
+  map (text . L.get eText) (lookupExportInfo "queries" thy)
 
 
 ------------------------------------------------------------------------------
@@ -205,10 +250,10 @@ proverifEquivTemplate headers queries equivlemmas macroproc =
     $$ vcat macroproc
     $$ vcat equivlemmas
 
-prettyProVerifEquivTheory :: (OpenTheory, TypingEnvironment) -> IO (Doc)
+prettyProVerifEquivTheory :: (OpenTheory, TypingEnvironment) -> IO Doc
 prettyProVerifEquivTheory (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
-  headers2 <- checkDuplicates . S.toList . filterHeaders $ base_headers `S.union` headers `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd
+  headers2 <- checkDuplicates . S.toList . filterHeaders $ baseHeaders `S.union` headers `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd
   let hd = attribHeaders tc headers2
   fproc <- finalproc
   return $ proverifEquivTemplate hd queries fproc macroproc
@@ -216,7 +261,7 @@ prettyProVerifEquivTheory (thy, typEnv) = do
     tc = emptyTC {predicates = theoryPredicates thy}
     (equivlemmas, equivhd, hasBoundState, hasUnboundState) = loadEquivProc tc thy
     (diffEquivlemmas, diffEquivhd, _, diffHasUnboundState) = loadDiffProc tc thy
-    base_headers = if hasUnboundState || diffHasUnboundState then state_headers else S.empty
+    baseHeaders = if hasUnboundState || diffHasUnboundState then stateHeaders else S.empty
     finalproc = do
       if length equivlemmas + length diffEquivlemmas > 1
         then fail "Error: Proverif can only support at most one equivalence or diff equivalence query."
@@ -240,7 +285,7 @@ deepsecTemplate headers macroproc requests equivlemmas =
 emptyTypeEnv :: TypingEnvironment
 emptyTypeEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
 
-prettyDeepSecTheory :: OpenTheory -> IO (Doc)
+prettyDeepSecTheory :: OpenTheory -> IO Doc
 prettyDeepSecTheory thy = do
   headers <- loadHeaders tc thy emptyTypeEnv
   let hd =
@@ -261,15 +306,15 @@ prettyDeepSecTheory thy = do
 ------------------------------------------------------------------------------
 loadRequests :: Theory sig c b p TranslationElement -> [Doc]
 loadRequests thy =
-  map (\x -> text $ L.get eText x) (lookupExportInfo "requests" thy)  
+  map (text . L.get eText) (lookupExportInfo "requests" thy)
 
 ------------------------------------------------------------------------------
 -- Term Printers
 ------------------------------------------------------------------------------
 
 ppLVar :: LVar -> Doc
-ppLVar (LVar n _ 0) = text n
-ppLVar (LVar n _ i) = text $ n <> "_" <> (show i)
+ppLVar (LVar n _ 0) = text $ sanitizeSymbol 'a' n
+ppLVar (LVar n _ i) = text . sanitizeSymbol 'a' $ n <> "_" <> show i
 
 ppUnTypeVar :: SapicLVar -> Doc
 ppUnTypeVar (SapicLVar lvar _) = ppLVar lvar
@@ -285,7 +330,7 @@ ppTypeVar tc v@(SapicLVar lvar ty) = case trans tc of
 
 ppTypeLit :: (Show c) => TranslationContext -> Lit c SapicLVar -> Doc
 ppTypeLit tc (Var v) = ppTypeVar tc v
-ppTypeLit _ (Con c) = text $ show c
+ppTypeLit _ (Con c) = text . sanitizeSymbol 'a' $ show c
 
 auxppTerm :: Show v => (Lit Name v -> Doc) -> VTerm Name v -> (Doc, S.Set ProVerifHeader)
 auxppTerm ppLit t = (ppTerm t, getHdTerm t)
@@ -297,7 +342,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       FApp (NoEq s) [t1, t2] | s == expSym -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
       FApp (NoEq s) [t1, t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
       FApp (NoEq _) [t1, t2] | isPair tm -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-      FApp (NoEq (f, _)) [] -> text (BC.unpack f)
+      FApp (NoEq (f, _)) [] -> text $ ppFunSym f
       FApp (NoEq (f, _)) ts -> ppFun f ts
       FApp (C EMap) ts -> ppFun emapSymString ts
       FApp List ts -> ppFun (BC.pack "LIST") ts
@@ -309,45 +354,50 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
     ppXor [] = text "one"
     ppXor [t1, t2] = text "xor(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
     ppXor (t1 : ts) = text "xor(" <> ppTerm t1 <> text ", " <> ppXor ts <> text ")"
-    ppTerms sepa n lead finish ts =
-      fcat . (text lead :) . (++ [text finish])
-        . map (nest n)
-        . punctuate (text sepa)
-        . map ppTerm
-        $ ts
+    ppTerms sepa n lead finish = fcat
+      . (text lead :)
+          . (++ [text finish])
+              . map (nest n) . punctuate (text sepa) . map ppTerm
     ppFun f ts =
-      text (BC.unpack f ++ "(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
+      text (ppFunSym f ++ "(") <> fsep (punctuate comma (map ppTerm ts)) <> text ")"
     getHdTerm tm = case viewTerm tm of
       Lit (Con (Name PubName n)) ->
-        if List.elem (show n) ["g", "one", "zero"]
+        if show n `elem` ["g", "one", "zero"]
           then S.empty
-          else S.singleton (Sym "free" (show n) ":bitstring" [])
-      Lit (_) -> S.empty
-      FApp _ ts -> foldl (\x y -> x `S.union` (getHdTerm y)) S.empty ts
+          -- The 's' is just prepended here instead of using sanitizeSymbol, because that function
+          -- only does the prepending for reserved keywords and symbols starting with a digit. For
+          -- free bitstrings however, we ALWAYS want the leading 's', to also avoid clashes with
+          -- function names, rule names, event names etc. We could also do it like that for variables
+          -- and function names (where we use sanitizeSymbol now), but I thought if we did it in all
+          -- other places it might not be needed there, and I thought it would be better to leave as
+          -- much as possible of the original naming as it is
+          else S.singleton (Sym "free" ("s" ++ show n) ":bitstring" [])
+      Lit  _    -> S.empty
+      FApp _ ts -> foldl (\x y -> x `S.union` getHdTerm y) S.empty ts
 
 -- pretty print a SapicTerm, collecting the constant that need to be declared
 -- matchVars is the set of vars that correspond to pattern matching
 -- isPattern enables the pattern match printing, which adds types to variables, and = to constants.
 auxppSapicTerm :: TranslationContext -> S.Set LVar -> Bool -> SapicTerm -> (Doc, S.Set ProVerifHeader)
-auxppSapicTerm tc mVars isPattern t = auxppTerm ppLit t
+auxppSapicTerm tc mVars isPattern = auxppTerm ppLit
   where
     ppLit v = case v of
-      Con (Name FreshName n) -> (text $ show n)
-      Con (Name PubName n) | isPattern ->  text "=" <> (text $ show n)
+      Con (Name FreshName n) -> text . sanitizeSymbol 'a' $ show n
+      Con (Name PubName n) | isPattern -> text "=" <> text ("s" ++ show n)
       Con (Name PubName n) -> ppPubName n
-      Var (SapicLVar (lvar@(LVar n LSortPub _)) _)
+      Var (SapicLVar lvar@(LVar n LSortPub _) _)
         | S.member lvar mVars ->
           translationWarning ("Pattern matching on public variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
           text "=" <> ppLVar lvar
-      Var (SapicLVar (lvar@(LVar n LSortFresh _)) _)
+      Var (SapicLVar lvar@(LVar n LSortFresh _) _)
         | S.member lvar mVars ->
           translationWarning ("Pattern matching on fresh variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
           text "=" <> ppLVar lvar
-      Var (SapicLVar (lvar) _)
+      Var (SapicLVar lvar _)
         | S.member lvar mVars -> text "=" <> ppLVar lvar
       l | isPattern -> ppTypeLit tc l
-      Var (SapicLVar (lvar) _) -> ppLVar lvar
-      l -> (text $ show l)
+      Var (SapicLVar lvar _)  -> ppLVar lvar
+      l -> text . sanitizeSymbol 'a' $ show l
 
 ppSapicTerm :: TranslationContext -> SapicTerm -> (Doc, S.Set ProVerifHeader)
 ppSapicTerm tc = auxppSapicTerm tc S.empty False
@@ -355,14 +405,14 @@ ppSapicTerm tc = auxppSapicTerm tc S.empty False
 -- pretty print an LNTerm, collecting the constant that need to be declared
 -- the boolean b enables types printout
 pppLNTerm :: TranslationContext -> Bool -> LNTerm -> (Doc, S.Set ProVerifHeader)
-pppLNTerm _ b t = auxppTerm ppLit t
+pppLNTerm _ b = auxppTerm ppLit
   where
     ppLit v = case v of
-      Con (Name FreshName n) -> text $ show n
+      Con (Name FreshName n) -> text . sanitizeSymbol 'a' $ show n
       Con (Name PubName n) -> ppPubName n
-      tm2 | b -> text $ show tm2 <> ":bitstring"
-      Var (lvar) -> ppLVar lvar
-      tm2 -> text $ show tm2
+      tm2 | b -> text $ sanitizeSymbol 'a' (show tm2) <> ":bitstring"
+      Var lvar -> ppLVar lvar
+      tm2 -> text . sanitizeSymbol 'a' $ show tm2
 
 ppLNTerm :: TranslationContext -> LNTerm -> (Doc, S.Set ProVerifHeader)
 ppLNTerm tc = pppLNTerm tc False
@@ -370,8 +420,8 @@ ppLNTerm tc = pppLNTerm tc False
 -- pretty print a Fact, collecting the constant that need to be declared
 ppFact :: TranslationContext -> Fact SapicTerm -> (Doc, S.Set ProVerifHeader)
 ppFact tc (Fact tag _ ts)
-  | factTagArity tag /= length ts = translationFail $ "MALFORMED-" ++ show tag
-  | otherwise = sppFact (factTagName tag) ts
+  | factTagArity tag /= length ts = sppFact ("MALFORMED-" ++ show tag) ts
+  | otherwise = sppFact ('e' : factTagName tag) ts
   where
     sppFact name ts2 =
       (nestShort' (name ++ "(") ")" . fsep . punctuate comma $ pts, sh)
@@ -382,7 +432,7 @@ ppFact tc (Fact tag _ ts)
 -- pretty print an Action, collecting the constant and events that need to be declared. It also returns a boolean, specifying if the printout can serve as the end of a process or not.
 ppAction :: ProcessAnnotation LVar -> TranslationContext -> LSapicAction -> (Doc, S.Set ProVerifHeader, Bool)
 ppAction ProcessAnnotation {isStateChannel = Nothing} tc (New v) =
-  (text "new " <> (ppTypeVar tc v), S.empty, True)
+  (text "new " <> ppTypeVar tc v, S.empty, True)
 ppAction ProcessAnnotation {pureState = False, isStateChannel = Just t} tc (New v@(SapicLVar lvar _)) =
   ( extras $
       text "new " <> channel <> text "[assumeCell];"
@@ -403,7 +453,7 @@ ppAction ProcessAnnotation {pureState = False, isStateChannel = Just t} tc (New 
             $$ text "insert tbl_locks_handle(" <> pt <> text ", lock_" <> ppLVar lvar <> text ");"
         else x
 ppAction ProcessAnnotation {pureState = True, isStateChannel = Just _} tc (New v) =
-  ( text "new " <> (ppTypeVar tc v) <> text "[assumeCell]",
+  ( text "new " <> ppTypeVar tc v <> text "[assumeCell]",
     S.empty,
     True
   )
@@ -513,11 +563,11 @@ ppAction _ _ _ = translationFail "Action not supported for translation"
 
 ppSapic :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (Doc, S.Set ProVerifHeader)
 ppSapic _ (ProcessNull _) = (text "0", S.empty) -- remove zeros when not needed
-ppSapic tc (ProcessComb Parallel _ pl pr) = (parens $ (nest 2 (parens ppl)) $$ text "|" $$ (nest 2 (parens ppr)), pshl `S.union` pshr)
+ppSapic tc (ProcessComb Parallel _ pl pr) = (parens $ nest 2 (parens ppl) $$ text "|" $$ nest 2 (parens ppr), pshl `S.union` pshr)
   where
     (ppl, pshl) = ppSapic tc pl
     (ppr, pshr) = ppSapic tc pr
-ppSapic tc (ProcessComb NDC _ pl pr) = ((nest 4 (parens ppl)) $$ text "+" <> (nest 4 (parens ppr)), pshl `S.union` pshr)
+ppSapic tc (ProcessComb NDC _ pl pr) = (nest 4 (parens ppl) $$ text "+" <> nest 4 (parens ppr), pshl `S.union` pshr)
   where
     (ppl, pshl) = ppSapic tc pl
     (ppr, pshr) = ppSapic tc pr
@@ -561,7 +611,7 @@ ppSapic tc (ProcessComb (ProcessCall name ts) _ _ _) =
     pts = map (ppSapicTerm tc) ts
     (ppts, shs) = unzip pts
 ppSapic tc (ProcessComb (Cond a) _ pl pr) =
-  addElseBranch (text "if " <> pa <> text " then" $$ (nest 4 (parens ppl)), sh `S.union` pshl)
+  addElseBranch (text "if " <> pa <> text " then" $$ nest 4 (parens ppl), sh `S.union` pshl)
   where
     (ppl, pshl) = ppSapic tc pl
     (pa, sh) = ppFact' a
@@ -577,13 +627,13 @@ ppSapic tc (ProcessComb (Cond a) _ pl pr) =
       ProcessNull _ -> (d, s)
       _ ->
         let (ppr, pshr) = ppSapic tc pr
-         in (d $$ text "else" $$ (nest 4 (parens ppr)), s `S.union` pshr)
-ppSapic tc (ProcessComb (CondEq t1 t2) _ pl (ProcessNull _)) = (text "let (=" <> pt1 <> text ")=" <> pt2 <> text " in " $$ (nest 4 (parens ppl)), sh1 `S.union` sh2 `S.union` pshl)
+         in (d $$ text "else" $$ nest 4 (parens ppr), s `S.union` pshr)
+ppSapic tc (ProcessComb (CondEq t1 t2) _ pl (ProcessNull _)) = (text "let (=" <> pt1 <> text ")=" <> pt2 <> text " in " $$ nest 4 (parens ppl), sh1 `S.union` sh2 `S.union` pshl)
   where
     (ppl, pshl) = ppSapic tc pl
     (pt1, sh1) = ppSapicTerm tc t1
     (pt2, sh2) = ppSapicTerm tc t2
-ppSapic tc (ProcessComb (CondEq t1 t2) _ pl pr) = (text "let (=" <> pt1 <> text ")=" <> pt2 <> text " in " $$ (nest 4 (parens ppl)) $$ text "else" <> (nest 4 (parens ppr)), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
+ppSapic tc (ProcessComb (CondEq t1 t2) _ pl pr) = (text "let (=" <> pt1 <> text ")=" <> pt2 <> text " in " $$ nest 4 (parens ppl) $$ text "else" <> nest 4 (parens ppr), sh1 `S.union` sh2 `S.union` pshl `S.union` pshr)
   where
     (ppl, pshl) = ppSapic tc pl
     (ppr, pshr) = ppSapic tc pr
@@ -627,7 +677,7 @@ ppSapic tc (ProcessComb (Lookup t c) ProcessAnnotation {stateChannel = Nothing, 
     (ppl, pshl) = ppSapic tc pl
 ppSapic tc (ProcessComb (Lookup t c) ProcessAnnotation {stateChannel = Nothing, pureState = False} pl pr) =
   ( text "get tbl_states_handle(" <> pt <> text "," <> text ptvar <> text ") in"
-      $$ ( nest
+      $$ nest
              4
              ( parens
                  ( text "in(" <> text ptvar <> text " , " <> pc <> text ");"
@@ -635,9 +685,8 @@ ppSapic tc (ProcessComb (Lookup t c) ProcessAnnotation {stateChannel = Nothing, 
                      $$ ppl
                  )
              )
-         )
       $$ text "else"
-      $$ ( nest
+      $$ nest
              4
              ( parens
                  ( text "new " <> text ptvar <> text ":channel [assumeCell];" --the cell did not exists, we create it !
@@ -645,8 +694,7 @@ ppSapic tc (ProcessComb (Lookup t c) ProcessAnnotation {stateChannel = Nothing, 
                      $$ text "out(" <> text ptvar <> text ",0) |"
                      $$ ppr
                  )
-             )
-         ),
+             ),
     sh `S.union` pshl `S.union` pshr
   )
   where
@@ -704,7 +752,7 @@ loadProc tc thy = case theoryProcesses thy of
   [pr] ->
     let (d, headers) = ppSapic tc2 p
      in let finald =
-              if (List.find (\x -> x == "locations-report") $ theoryBuiltins thy) == Nothing
+              if isNothing (List.find (== "locations-report") (theoryBuiltins thy))
                 then d
                 else addAttackerReportProc tc2 thy d
          in (finald, S.union hd headers, fst hasStates, snd hasStates)
@@ -726,11 +774,11 @@ loadMacroProcs tc thy (p : q) =
         Nothing -> (docs, hd `S.union` heads)
         Just pvars ->
           let (new_text, new_heads) = ppSapic tc3 mainProc
-           in let vrs = text "(" <> (fsep (punctuate comma (map (ppTypeVar tc3) pvars))) <> text ")"
+           in let vrs = text "(" <> fsep (punctuate comma (map (ppTypeVar tc3) pvars)) <> text ")"
                in let headers = headersOfType $ map extractType pvars
                    in let macro_def =
-                            text "let " <> (text $ L.get pName p) <> vrs <> text "="
-                              $$ (nest 4 new_text) <> text "."
+                            text "let " <> text (L.get pName p) <> vrs <> text "="
+                              $$ nest 4 new_text <> text "."
                        in (macro_def : docs, hd `S.union` new_heads `S.union` heads `S.union` headers)
   where
     mainProc = makeAnnotations thy $ L.get pBody p
@@ -747,7 +795,7 @@ loadDiffProc tc thy = case theoryDiffEquivLemmas thy of
   [] -> ([], S.empty, False, False)
   [pr] ->
     let (d, headers) = ppSapic tc2 p
-     in ([text "process" $$ (nest 4 d)], S.union hd headers, fst hasStates, snd hasStates)
+     in ([text "process" $$ nest 4 d], S.union hd headers, fst hasStates, snd hasStates)
     where
       p = makeAnnotations thy pr
       hasStates = hasBoundUnboundStates p
@@ -767,12 +815,12 @@ loadEquivProcs tc thy ((p1, p2) : q) =
                     case trans tc of
                       ProVerif ->
                         text "equivalence"
-                          $$ (nest 4 new_text1)
-                          $$ (nest 4 new_text2)
+                          $$ nest 4 new_text1
+                          $$ nest 4 new_text2
                       DeepSec ->
                         text "query session_equiv("
-                          $$ (nest 4 new_text1) <> text ","
-                          $$ (nest 4 new_text2) <> text ")."
+                          $$ nest 4 new_text1 <> text ","
+                          $$ nest 4 new_text2 <> text ")."
                in (macro_def : docs, hd `S.union` new_heads1 `S.union` new_heads2 `S.union` heads, hasBoundSt || hadBoundStates, hasUnboundSt || hadUnboundStates)
   where
     mainProc1 = makeAnnotations thy p1
@@ -798,7 +846,7 @@ mergeType Nothing t = t
 mergeType _ t = t
 
 mergeEnv :: M.Map LVar SapicType -> M.Map LVar SapicType -> M.Map LVar SapicType
-mergeEnv vs1 vs2 = M.mergeWithKey (\_ t1 t2 -> Just $ mergeType t1 t2) id id vs1 vs2
+mergeEnv = M.mergeWithKey (\_ t1 t2 -> Just $ mergeType t1 t2) id id
 
 typeVarsEvent :: Ord k => TypingEnvironment -> FactTag -> [Term (Lit c k)] -> M.Map k SapicType
 typeVarsEvent TypingEnvironment {events = ev} tag ts =
@@ -807,7 +855,7 @@ typeVarsEvent TypingEnvironment {events = ev} tag ts =
       foldl
         ( \mp (term, ty) ->
             case viewTerm term of
-              Lit (Var (lvar)) -> M.insert lvar ty mp
+              Lit (Var lvar) -> M.insert lvar ty mp
               _ -> mp
         )
         M.empty
@@ -818,9 +866,9 @@ ppProtoAtom :: (HighlightDocument d, Ord k, Show k, Show c) => TypingEnvironment
 ppProtoAtom te _ _ ppT (Action v f@(Fact tag _ ts))
   | factTagArity tag /= length ts = translationFail $ "MALFORMED function" ++ show tag
   | (tag == KUFact) || isKLogFact f  -- treat KU() and K() facts the same
-      = (ppFactL ("attacker") ts <> opAction <> ppT v, M.empty)
+      = (ppFactL "attacker" ts <> opAction <> ppT v, M.empty)
   | otherwise =
-    ( text "event(" <> ppFactL (factTagName tag) ts <> text ")" <> opAction <> ppT v,
+    ( text "event(" <> ppFactL ('e' : factTagName tag) ts <> text ")" <> opAction <> ppT v,
       typeVarsEvent te tag ts
     )
   where
@@ -840,7 +888,7 @@ ppAtom te b = ppProtoAtom te b (const emptyDoc)
 -- only used for ProVerif queries display
 -- the Bool is set to False when we must negate the atom
 ppNAtom :: TypingEnvironment -> Bool -> ProtoAtom s LNTerm -> (Doc, M.Map LVar SapicType)
-ppNAtom te b = ppAtom te b (fst . (ppLNTerm emptyTC))
+ppNAtom te b = ppAtom te b (fst . ppLNTerm emptyTC)
 
 mapLits :: (Ord a, Ord b) => (a -> b) -> Term a -> Term b
 mapLits f t = case viewTerm t of
@@ -852,7 +900,7 @@ extractFree (Free v) = v
 extractFree (Bound i) = translationFail $ "prettyFormula: illegal bound variable '" ++ show i ++ "'"
 
 toLAt :: (Ord (f1 b), Ord (f1 (BVar b)), Functor f2, Functor f1) => f2 (Term (f1 (BVar b))) -> f2 (Term (f1 b))
-toLAt a = fmap (mapLits (fmap extractFree)) a
+toLAt = fmap (mapLits (fmap extractFree))
 
 ppLFormula :: (MonadFresh m, Ord c, HighlightDocument b, Functor syn) => TypingEnvironment -> (TypingEnvironment -> Bool -> ProtoAtom syn (Term (Lit c LVar)) -> (b, M.Map LVar SapicType)) -> ProtoFormula syn (String, LSort) c LVar -> m ([LVar], (b, M.Map LVar SapicType))
 ppLFormula te ppAt =
@@ -875,14 +923,14 @@ ppLFormula te ppAt =
         ppOp Or = text "||"
         ppOp Imp = text "==>"
         ppOp Iff = opIff
-    pp fm@(Qua _ _ _) =
+    pp fm@(Qua {}) =
       scopeFreshness $ do
         (vs, _, fm') <- openFormulaPrefix fm
         (vsp, d') <- pp fm'
         return (vs ++ vsp, d')
 
 isPropFormula :: LNFormula -> Bool
-isPropFormula (Qua _ _ _) = False
+isPropFormula (Qua {}) = False
 isPropFormula (Ato _) = True
 isPropFormula (TF _) = True
 isPropFormula (Not (Ato (EqE _ _))) = True
@@ -916,14 +964,14 @@ ppRestrictFormula te =
   where
     pp (Not fm@(Qua Ex _ _)) = do
       (vs, _, fm') <- openFormulaPrefix fm
-      return $
+      return
         ( if isPropFormula fm'
             then ppOk fm' vs
             else ppFail fm
         )
-    pp (fm@(Qua Ex _ _)) = do
+    pp fm@(Qua Ex _ _) = do
       (vs, _, fm') <- openFormulaPrefix fm
-      return $
+      return
         ( if isPropFormula fm'
             then ppOk fm' vs
             else ppFail fm
@@ -938,7 +986,7 @@ ppRestrictFormula te =
     pp2 fm_original fm | isPropFormula fm = return $ ppOk fm_original []
     pp2 fm_original (Conn Imp p fm) | isPropFormula p = do
       isExDisj <- disjunct_ex fm
-      return $
+      return
         ( if isExDisj
             then ppOk fm_original []
             else ppFail fm_original
@@ -983,13 +1031,13 @@ ppLemma te p =
 loadLemmas :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> TranslationContext -> TypingEnvironment -> OpenTheory -> [Doc]
 loadLemmas lemSel tc te thy = map (ppLemma te) proverifLemmas
   where
-    thyLemmas = (theoryLemmas thy)
+    thyLemmas = theoryLemmas thy
     proverifLemmas =
       filter
         ( \lem ->
             lemSel lem && case concat [ls | LemmaModule ls <- L.get lAttributes lem] of
               [] -> True
-              ls -> (exportModule $ trans tc) `elem` ls
+              ls -> exportModule (trans tc) `elem` ls
         )
         thyLemmas
 
@@ -1010,7 +1058,7 @@ headersOfType types =
 
 headerOfFunSym :: SapicFunSym -> S.Set ProVerifHeader
 headerOfFunSym ((f, (k, pub, Constructor)), inTypes, outType) =
-  Fun "fun" (BC.unpack f) k ("(" ++ (make_argtypes inTypes) ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert` headersOfType (outType : inTypes)
+  Fun "fun" (ppFunSym f) k ("(" ++ makeArgtypes inTypes ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert` headersOfType (outType : inTypes)
   where
     priv_or_pub Public = []
     priv_or_pub Private = ["private"]
@@ -1020,15 +1068,18 @@ headerOfFunSym _ = S.empty
 loadHeaders :: TranslationContext -> OpenTheory -> TypingEnvironment -> IO (S.Set ProVerifHeader)
 loadHeaders tc thy typeEnv = do
   eqHeaders <- mapM (headersOfRule tc typeEnv) (S.toList sigRules)
-  return $ typedHeaderOfFunSym `S.union` headerBuiltins `S.union` (foldl (\acc x -> x `S.union` acc) S.empty eqHeaders) `S.union` eventHeaders
+  return $ typedHeaderOfFunSym `S.union` headerBuiltins' `S.union` foldl (flip S.union) S.empty eqHeaders `S.union` eventHeaders
   where
-    sig = (L.get sigpMaudeSig (L.get thySignature thy))
+    sig = L.get sigpMaudeSig (L.get thySignature thy)
     -- all builtins are contained in Sapic Element
     thyBuiltins = theoryBuiltins thy
     headerBuiltins =
       foldl
         ( \y x -> case List.lookup x builtins of
-            Nothing -> y
+            Nothing -> case x of
+              "multiset"         -> throw UnsupportedBuiltinMS
+              "bilinear-pairing" -> throw UnsupportedBuiltinBP
+              _                  -> y
             Just t -> y `S.union` t
         )
         S.empty
@@ -1038,8 +1089,15 @@ loadHeaders tc thy typeEnv = do
     userDeclaredFunctions = theoryFunctionTypingInfos thy
     typedHeaderOfFunSym = foldl (\y x -> headerOfFunSym x `S.union` y) S.empty userDeclaredFunctions
 
+    -- builtin headers need to be filtered, to make sure we don't redefine a user-defined function
+    headerBuiltins' = S.filter builtinFilter headerBuiltins
+    builtinFilter (Fun _ name _ _ _) = any (equalName name) typedHeaderOfFunSym
+    builtinFilter _ = True
+    equalName name (Fun _ name' _ _ _) = name /= name'
+    equalName _ _ = False
+
     -- events headers
-    eventHeaders = M.foldrWithKey (\tag types acc -> HEvent (factTagName tag) ("(" ++ make_argtypes types ++ ")") `S.insert` acc) S.empty (events typeEnv)
+    eventHeaders = M.foldrWithKey (\tag types acc -> HEvent ('e' : factTagName tag) ("(" ++ makeArgtypes types ++ ")") `S.insert` acc) S.empty (events typeEnv)
     -- generating headers for equations
     sigRules = stRules sig
 
@@ -1063,7 +1121,7 @@ headersOfRule tc typeEnv r | (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
       suffix = case viewTerm lhs of
         FApp (NoEq (_, (_, Private, Destructor))) _ -> " [private]"
         _ -> ""
-      freesr = List.union (frees lhs) (frees rhs)
+      freesr = frees lhs `union` frees rhs
       freesrTyped = map (\v -> (v, M.lookup v $ vars tye)) freesr
       hrule =
         Eq
@@ -1074,13 +1132,13 @@ headersOfRule tc typeEnv r | (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
           )
           ( render $
               sep
-                [ nest 2 $ plhs,
+                [ nest 2 plhs,
                   text "=" <-> prhs
                 ]
           )
           suffix
 
-  return $ (S.singleton hrule) `S.union` lsh `S.union` rsh
+  return $ S.singleton hrule `S.union` lsh `S.union` rsh
   where
     ppFreeTyped (v, Nothing) = ppLVar v <> text ":bitstring"
     ppFreeTyped (v, Just s) = ppLVar v <> text ":" <> text (ppType s)
@@ -1099,13 +1157,14 @@ prettyProVerifHeader (Fun fkind name _ symtype attr) =
 
 prettyDeepSecHeader :: ProVerifHeader -> Doc
 prettyDeepSecHeader (Type _) = text "" -- no types in deepsec
-prettyDeepSecHeader (Eq eqtype _ eq _) = text eqtype <> text " " <> text eq <> text "."
+prettyDeepSecHeader (Eq "reduc" _ eq _) = text "reduc" <> text " " <> text eq <> text "."
+prettyDeepSecHeader (Eq eqtype _ eq _) = error $ "Deepsec does not support equations ATM: " ++ eqtype ++ " " ++ eq
 prettyDeepSecHeader (HEvent _ _) = text ""
 prettyDeepSecHeader (Table _ _) = text ""
 -- drop symtypes in symbol declarations
 prettyDeepSecHeader (Sym symkind name _ []) = text symkind <> text " " <> text name <> text "."
 prettyDeepSecHeader (Sym symkind name _ attr) =
-  if List.elem "private" attr
+  if "private" `elem` attr
     then text symkind <> text " " <> text name <> text "[private]" <> text "."
     else text symkind <> text " " <> text name <> text "."
 -- only keep arity for fun declarations
@@ -1116,7 +1175,7 @@ prettyDeepSecHeader (Fun fkind name arity _ []) =
     <> text (show arity)
     <> text "."
 prettyDeepSecHeader (Fun fkind name arity _ attr) =
-  if List.elem "private" attr
+  if "private" `elem` attr
     then
       text fkind <> text " " <> text name
         <> text "/"
@@ -1135,12 +1194,12 @@ attribHeaders tc hd =
       DeepSec -> prettyDeepSecHeader
     splitHeaders [] = ([], [], [])
     splitHeaders (x : xs)
-      | Sym _ _ _ _ <- x = (e1, f1, (pph x) : s1)
-      | Fun _ _ _ _ _ <- x = (e1, (pph x) : f1, s1)
-      | Eq _ _ _ _ <- x = ((pph x) : e1, f1, s1)
-      | HEvent _ _ <- x = ((pph x) : e1, f1, s1)
-      | Table _ _ <- x = ((pph x) : e1, f1, s1)
-      | Type _ <- x = (e1, f1, (pph x) : s1)
+      | Sym {} <- x = (e1, f1, pph x : s1)
+      | Fun {} <- x = (e1, pph x : f1, s1)
+      | Eq {} <- x = (pph x : e1, f1, s1)
+      | HEvent _ _ <- x = (pph x : e1, f1, s1)
+      | Table _ _ <- x = (pph x : e1, f1, s1)
+      | Type _ <- x = (e1, f1, pph x : s1)
       where
         (e1, f1, s1) = splitHeaders xs
 
@@ -1155,18 +1214,16 @@ mkAttackerChannel ::
   ) =>
   LProcess (ProcessAnnotation LVar) ->
   m LVar
-mkAttackerChannel _ = (freshLVar attChanName LSortMsg)
+mkAttackerChannel _ = freshLVar attChanName LSortMsg
 
 mkAttackerContext :: TranslationContext -> LProcess (ProcessAnnotation LVar) -> (TranslationContext, S.Set ProVerifHeader)
 mkAttackerContext tc p =
   (tc {attackerChannel = Just attackerVar}, S.singleton hd)
   where
-    attackerVar@(LVar n _ _) = (evalFresh (mkAttackerChannel p) (initStateAtt))
+    attackerVar@(LVar n _ _) = evalFresh (mkAttackerChannel p) initStateAtt
     initState = avoidPreciseVars . map (\(SapicLVar lvar _) -> lvar) $ S.toList $ varsProc p
-    initStateAtt = case M.lookup attChanName initState of
-      Nothing -> 0
-      Just i -> i
-    hd = (Sym "free" n ":channel" [])
+    initStateAtt = fromMaybe 0 (M.lookup attChanName initState)
+    hd = Sym "free" n ":channel" []
 
 -- given an optional channel name and a translation context, returns the corresponding printer
 getAttackerChannel ::
@@ -1182,13 +1239,13 @@ getAttackerChannel tc t1 = case (t1, attackerChannel tc) of
 -- Some utility functions
 ------------------------------------------------------------------------------
 
-make_argtypes :: [SapicType] -> String
-make_argtypes [] = ""
-make_argtypes [x] = ppType x
-make_argtypes (x : t) = ppType x ++ "," ++ (make_argtypes t)
+makeArgtypes :: [SapicType] -> String
+makeArgtypes [] = ""
+makeArgtypes [x] = ppType x
+makeArgtypes (x : t) = ppType x ++ "," ++ makeArgtypes t
 
 stripNonAlphanumerical :: [Char] -> [Char]
-stripNonAlphanumerical = filter (\x -> isAlpha x)
+stripNonAlphanumerical = filter isAlpha
 
 -- return the annotated process
 makeAnnotations :: OpenTheory -> PlainProcess -> LProcess (ProcessAnnotation LVar)
@@ -1197,6 +1254,6 @@ makeAnnotations thy p = res
     p' = report $ toAnProcess p
     res = annotatePureStates p'
     report pr =
-      if (List.find (\x -> x == "locations-report") $ theoryBuiltins thy) == Nothing
+      if isNothing (List.find (== "locations-report") (theoryBuiltins thy))
         then pr
         else translateTermsReport pr
