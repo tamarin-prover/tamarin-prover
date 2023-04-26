@@ -23,7 +23,7 @@ import           System.Process
 
 import           Main.Console
 
--- For tamarin, git version, compile time... 
+-- For tamarin, git version, compile time...
 import Data.Version (showVersion)
 import Paths_tamarin_prover (version)
 
@@ -42,7 +42,7 @@ getVersionIO maudeVersion = do
 
 ensureMaudeAndGetVersion :: Arguments -> IO String
 ensureMaudeAndGetVersion as = do
-          -- Ensure Maude version and get Maude version 
+          -- Ensure Maude version and get Maude version
           maybeMaudeVersion <- ensureMaude as
           let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
           -- Get String for version and put it in the arguments __version__
@@ -157,7 +157,7 @@ ensureGraphVizDot :: Arguments -> IO (Maybe String)
 ensureGraphVizDot as = do
     putStrLn $ "GraphViz tool: '" ++ dot ++ "'"
     dotExists <- testProcess (check "graphviz" "") errMsg1 " checking version: " dot ["-V"] "" False False
-    if isJust dotExists 
+    if isJust dotExists
        then testProcess (check "png" "OK.") errMsg2 " checking PNG support: " dot ["-T?"] "" True False
        else return dotExists
   where
