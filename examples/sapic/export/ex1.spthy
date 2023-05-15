@@ -20,7 +20,7 @@ equations: bij(unbij(x))=x
 export queries :
  "
  (* This query was added manualy, and the other one automatically from the lemmas. *)
- query x:bitstring; event(Secret(x)) && (attacker(x)).
+ query x:bitstring; event(eSecret(x)) && (attacker(x)).
  "
 
 let P = new a; event Secret(a); out (senc(<a,'test'>,sk))

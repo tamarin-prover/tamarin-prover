@@ -12,7 +12,8 @@
 module Sapic.Exceptions (
     WFLockTag(..),
     WFerror(..),
-    SapicException(..)
+    SapicException(..),
+    ExportException(..)
 , prettySapicException) where
 import Data.Typeable
 import Data.Set as S
@@ -59,6 +60,24 @@ data SapicException p = NotImplementedError String
                     | ReliableTransmissionButNoProcess
                     | CannotExpandPredicate FactTag SyntacticRestriction
     deriving (Typeable)
+
+data ExportException = UnsupportedBuiltinMS
+                       | UnsupportedBuiltinBP
+                       | UnsupportedTypes [String]
+
+instance Show ExportException where
+    
+    show (UnsupportedTypes incorrectFunctionUsages) = do
+        let functionsString = List.intercalate ", " incorrectFunctionUsages
+        (case length functionsString of
+          1 -> "The function " ++ functionsString ++ ", which is declared with a user-defined type, appears in a rewrite rule. "
+          _ -> "The functions " ++ functionsString ++ ", which are declared with a user-defined type, appear in a rewrite rule. ")
+        ++ "However, the translation of rules only works with bitstrings at the moment."
+    show unsuppBuiltin = 
+        "The builtins bilinear-pairing and multiset are not supported for export. However, your model uses " ++
+        (case unsuppBuiltin of
+            UnsupportedBuiltinBP -> "bilinear-pairing."
+            UnsupportedBuiltinMS -> "multiset.")
 
 prettyVarSet :: S.Set LVar -> String
 prettyVarSet = List.intercalate ", "  . List.map show . toList
@@ -124,3 +143,4 @@ instance Show WFerror where
 
 instance Exception WFerror
 instance (Typeable a, Show a) => Exception (SapicException a)
+instance Exception ExportException
