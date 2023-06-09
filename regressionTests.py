@@ -298,7 +298,10 @@ def compare():
 	## results differ ##
 	logging.warning("\n" + "-"*80 + "\n")
 	if majorDifferences:
-		logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas or the files itself could not be parsed!"))
+		if settings.verbose >= 3:
+			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas, differences in the proofs or the files itself could not be parsed!"))
+		else: 
+			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas or the files itself could not be parsed!"))
 		logging.error(f"For more information, run 'diff -r {settings.folderA} {settings.folderB}'")
 		return False
 
@@ -316,6 +319,12 @@ def compare():
 		return False
 	else:
 		logging.warning("The total amount of steps did not change")
+	if settings.verbose >= 3: 
+		logging.warning("The rules did not change")
+		logging.warning("The functions did not change")
+		logging.warning("The builtins did not change")
+		logging.warning("The equations did not change")
+		logging.warning("The warnings did not change")
 	return True
 
 
