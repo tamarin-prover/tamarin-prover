@@ -680,8 +680,7 @@ prettyGoalRanking ranking = case ranking of
     compareRankings (OracleRanking _) (OracleRanking _) = True
     compareRankings (OracleSmartRanking _) (OracleSmartRanking _) = True
     compareRankings (InternalTacticRanking _ ) (InternalTacticRanking _ ) = True
-    -- compareRankings r1 r2 = r1 == r2
-    compareRankings _ _ = True
+    compareRankings r1 r2 = r1 == r2
 
 
 ------------------------------------------------------------------------------
