@@ -292,7 +292,7 @@ publicNamesReport :: OpenTranslatedTheory -> WfErrorReport
 publicNamesReport thy =
     case findClashes publicNames of
       []      -> []
-      clashes -> return $ (,) (topic++notif) topic $ numbered' $
+      clashes -> return $ (,) (topic++notif) $ numbered' $
           map (nest 2 . fsep . punctuate comma . map ppRuleAndName) clashes
   where
     topic       = "public names with mismatching capitalization"
