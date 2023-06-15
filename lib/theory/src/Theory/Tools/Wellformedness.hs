@@ -439,13 +439,16 @@ factReports thy = concat
     -- multiplicity or arity.
     factUsage = do
        clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-       return $ (,) "Fact usage" $ numbered' $ do
+       return $ (,) (topic++p1++p2) $ numbered' $ do
            (origin, (ppFa, info@(tag, _, _))) <- clash
            return $ text (origin ++
                           ", fact " ++ show (map toLower $ factTagName tag) ++
                           ": " ++ showInfo info)
                     $-$ nest 2 ppFa
       where
+        topic = "Fact usage"
+        p1    = "(possibility of inconsistent capital letters when naming facts\n"
+        p2    = "or of applying different multiplicities or arities to the same facts) "
         showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
