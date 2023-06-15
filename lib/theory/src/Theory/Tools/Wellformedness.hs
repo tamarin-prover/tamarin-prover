@@ -404,7 +404,7 @@ factReports thy = concat
             : map (nest 2) errs
 
     reservedFactName (ppFa, info@(ProtoFact _ name _, _,_))
-      | map toLower name `elem` ["fr","k","out","in"] =
+      | map toLower name `elem` ["fr","ku","kd","out","in"] =
           return $ ppFa $-$ text ("show:" ++ show info)
     reservedFactName _ = Nothing
 
