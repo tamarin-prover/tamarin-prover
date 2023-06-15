@@ -292,10 +292,12 @@ publicNamesReport :: OpenTranslatedTheory -> WfErrorReport
 publicNamesReport thy =
     case findClashes publicNames of
       []      -> []
-      clashes -> return $ (,) topic $ numbered' $
+      clashes -> return $ (,) (topic++notif) topic $ numbered' $
           map (nest 2 . fsep . punctuate comma . map ppRuleAndName) clashes
   where
     topic       = "public names with mismatching capitalization"
+    notif       = "(identifiers are case-sensitive, \n"++ 
+                  "mismatched capitalizations are considered as different)"
     publicNames = do
         ru <- thyProtoRules thy
         (,) (showRuleCaseName ru) <$>
