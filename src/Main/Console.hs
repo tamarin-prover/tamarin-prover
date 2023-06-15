@@ -81,7 +81,7 @@ import           Language.Haskell.TH
 import           Development.GitRev
 
 ------------------------------------------------------------------------------
--- Static constants for the tamarin-prover
+-- Maude version functions - previously in Environment.hs
 ------------------------------------------------------------------------------
 
 -- | Path to maude tool
@@ -177,6 +177,19 @@ ensureMaude as = do
           , " Please install one of the following versions of Maude: " ++ intercalate ", " supportedVersions
           ]
 
+-- Maude Version
+ensureMaudeAndGetVersion :: Arguments -> IO String
+ensureMaudeAndGetVersion as = do
+          -- Ensure Maude version and get Maude version 
+          maybeMaudeVersion <- ensureMaude as
+          let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
+          -- Get String for version and put it in the arguments __version__
+          getVersionIO maudeVersion
+
+------------------------------------------------------------------------------
+-- Static constants for the tamarin-prover
+------------------------------------------------------------------------------
+
 -- | Git Version
 gitVersion :: String
 gitVersion = concat
@@ -188,15 +201,6 @@ gitVersion = concat
     , ", branch: "
     , $(gitBranch)
   ]
-
--- Maude Version
-ensureMaudeAndGetVersion :: Arguments -> IO String
-ensureMaudeAndGetVersion as = do
-          -- Ensure Maude version and get Maude version 
-          maybeMaudeVersion <- ensureMaude as
-          let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
-          -- Get String for version and put it in the arguments __version__
-          getVersionIO maudeVersion
 
 -- | Compile Time
 compileTime :: String
