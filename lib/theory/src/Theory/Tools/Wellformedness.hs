@@ -295,9 +295,11 @@ publicNamesReport thy =
       clashes -> return $ (,) (topic++notif) $ numbered' $
           map (nest 2 . fsep . punctuate comma . map ppRuleAndName) clashes
   where
-    topic       = "public names with mismatching capitalization"
-    notif       = "(identifiers are case-sensitive, \n"++ 
-                  "mismatched capitalizations are considered as different)"
+    topic       = "public names with mismatching capitalization\n"
+    notif       = "Identifiers are case-sensitive, "++ 
+                  "mismatched capitalizations are considered as different, "++
+                  "ie., 'ID' is different from 'id'. "++
+                  "Check the capitalization of your identifiers"
     publicNames = do
         ru <- thyProtoRules thy
         (,) (showRuleCaseName ru) <$>
@@ -314,9 +316,11 @@ publicNamesReportDiff thy =
       clashes -> return $ (,) (topic++notif) $ numbered' $
           map (nest 2 . fsep . punctuate comma . map ppRuleAndName) clashes
   where
-    topic       = "public names with mismatching capitalization"
-    notif       = "(identifiers are case-sensitive, \n"++ 
-                  "mismatched capitalizations are considered as different)"
+    topic       = "public names with mismatching capitalization\n"
+    notif       = "Identifiers are case-sensitive, "++ 
+                  "mismatched capitalizations are considered as different, "++
+                  "ie., 'ID' is different from 'id'. "++
+                  "Check the capitalization of your identifiers"
     publicNames = do
         ru <- diffThyProtoRules thy
         (,) (showRuleCaseName ru) <$>
@@ -446,9 +450,15 @@ factReports thy = concat
                           ": " ++ showInfo info)
                     $-$ nest 2 ppFa
       where
-        topic = "Fact usage"
-        p1    = "(possibility of inconsistent capital letters when naming facts\n"
-        p2    = "or of applying different multiplicities or arities to the same facts) "
+        topic = "Fact usage\n"
+        p1    = "Possible reason: \n"++
+                "1. Fact names are case-sensitive, different capitalizations are "++
+                  "considered as different facts, "++
+                  "ie., Fact() is different from FAct(). "++
+                  "Check the capitalization of your fact names.\n"
+        p2    = "2. Same fact used with different arities, "++
+                "ie., Fact('A','B') is different from Fact('A'). "++
+                "Check the arguments of your facts "
         showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
@@ -595,9 +605,15 @@ factReportsDiff thy = concat
                           ": " ++ showInfo info)
                     $-$ nest 2 ppFa
       where
-        topic = "Fact usage"
-        p1    = "(possibility of inconsistent capital letters when naming facts\n"
-        p2    = "or of applying different multiplicities or arities to the same facts) "
+        topic = "Fact usage\n"
+        p1    = "Possible reason: \n"++
+                "1. Fact names are case-sensitive, different capitalizations are "++
+                  "considered as different facts, "++
+                  "ie., Fact() is different from FAct(). "++
+                  "Check the capitalization of your fact names.\n"
+        p2    = "2. Same fact used with different arities, "++
+                "ie., Fact('A','B') is different from Fact('A'). "++
+                "Check the arguments of your facts "
         showInfo (tag, k, multipl) = show (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
