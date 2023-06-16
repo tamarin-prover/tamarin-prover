@@ -165,10 +165,16 @@ sortsClashCheck :: HasFrees t => String -> t -> WfErrorReport
 sortsClashCheck info t = case clashesOn removeSort id $ frees t of
     [] -> []
     cs -> return
-            ( "sorts"
+            ( topic++reason
             , text info $-$ nest 2 (numbered' $ map prettyVarList cs)
             )
   where
+    topic = "sorts\n"
+    reason = "Possible reasons:\n"++
+              "1. Identifiers are case sensitive, i.e.,"++
+              "'x' and 'X' are considered to be different.\n"++ 
+              "2. The same holds aren't used for sorts:, "++
+              "i.e., '$x', 'x', and '~x' are considered to be different"
     removeSort lv = (lowerCase (lvarName lv), lvarIdx lv)
 
 -- | Report on sort clashes.
@@ -176,7 +182,7 @@ ruleSortsReport :: OpenTranslatedTheory -> WfErrorReport
 ruleSortsReport thy = do
     ru <- thyProtoRules thy
     sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++
-                     " clashing sorts, casings, or multiplicities:") ru
+                     ": ") ru
 
 --- | Check that the protocol rule variants are correct.
 variantsCheck :: MaudeHandle -> String -> OpenProtoRule -> WfErrorReport
@@ -243,7 +249,7 @@ ruleSortsReportDiff :: OpenDiffTheory -> WfErrorReport
 ruleSortsReportDiff thy = do
     ru <- diffThyProtoRules thy
     sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++
-                     " clashing sorts, casings, or multiplicities:") ru
+                     ":") ru
 
 -- -- | Report on rule name clashes.
 -- -- Unnecessary, is already checked during parsing!
@@ -298,7 +304,7 @@ publicNamesReport thy =
     topic       = "public names with mismatching capitalization\n"
     notif       = "Identifiers are case-sensitive, "++ 
                   "mismatched capitalizations are considered as different, "++
-                  "ie., 'ID' is different from 'id'. "++
+                  "i.e., 'ID' is different from 'id'. "++
                   "Check the capitalization of your identifiers"
     publicNames = do
         ru <- thyProtoRules thy
@@ -319,7 +325,7 @@ publicNamesReportDiff thy =
     topic       = "public names with mismatching capitalization\n"
     notif       = "Identifiers are case-sensitive, "++ 
                   "mismatched capitalizations are considered as different, "++
-                  "ie., 'ID' is different from 'id'. "++
+                  "i.e., 'ID' is different from 'id'. "++
                   "Check the capitalization of your identifiers"
     publicNames = do
         ru <- diffThyProtoRules thy
@@ -454,10 +460,10 @@ factReports thy = concat
         p1    = "Possible reasons: \n"++
                 "1. Fact names are case-sensitive, different capitalizations are "++
                   "considered as different facts, "++
-                  "ie., Fact() is different from FAct(). "++
+                  "i.e., Fact() is different from FAct(). "++
                   "Check the capitalization of your fact names.\n"
-        p2    = "2. Same fact used with different arities, "++
-                "ie., Fact('A','B') is different from Fact('A'). "++
+        p2    = "2. Same fact is used with different arities, "++
+                "i.e., Fact('A','B') is different from Fact('A'). "++
                 "Check the arguments of your facts "
         showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
@@ -609,10 +615,10 @@ factReportsDiff thy = concat
         p1    = "Possible reasons: \n"++
                 "1. Fact names are case-sensitive, different capitalizations are "++
                   "considered as different facts, "++
-                  "ie., Fact() is different from FAct(). "++
+                  "i.e., Fact() is different from FAct(). "++
                   "Check the capitalization of your fact names.\n"
-        p2    = "2. Same fact used with different arities, "++
-                "ie., Fact('A','B') is different from Fact('A'). "++
+        p2    = "2. Same fact is used with different arities, "++
+                "i.e., Fact('A','B') is different from Fact('A'). "++
                 "Check the arguments of your facts "
         showInfo (tag, k, multipl) = show (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
