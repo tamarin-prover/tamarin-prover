@@ -360,7 +360,7 @@ unboundReportDiff thy = do
 -- | Report on facts usage.
 factReports :: OpenTranslatedTheory -> WfErrorReport
 factReports thy = concat
-    [ reservedReport, reservedFactNameKuKd, freshFactArguments, specialFactsUsage
+    [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
     , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
@@ -409,7 +409,7 @@ factReports thy = concat
     reservedFactName _ = Nothing
 
     -- Check for usage of all type facts with reserved names
-    reservedFactNameKuKd = do
+    reservedFactNameRules = do
       ru <- thyProtoRules thy
       let lfact = [fa| fa <- get rPrems ru
                       , factTag fa `elem` [KUFact,KDFact]]
