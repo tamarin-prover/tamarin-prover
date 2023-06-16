@@ -451,7 +451,7 @@ factReports thy = concat
                     $-$ nest 2 ppFa
       where
         topic = "Fact usage\n"
-        p1    = "Possible reason: \n"++
+        p1    = "Possible reasons: \n"++
                 "1. Fact names are case-sensitive, different capitalizations are "++
                   "considered as different facts, "++
                   "ie., Fact() is different from FAct(). "++
@@ -606,7 +606,7 @@ factReportsDiff thy = concat
                     $-$ nest 2 ppFa
       where
         topic = "Fact usage\n"
-        p1    = "Possible reason: \n"++
+        p1    = "Possible reasons: \n"++
                 "1. Fact names are case-sensitive, different capitalizations are "++
                   "considered as different facts, "++
                   "ie., Fact() is different from FAct(). "++
