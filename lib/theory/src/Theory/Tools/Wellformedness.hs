@@ -360,7 +360,7 @@ unboundReportDiff thy = do
 -- | Report on facts usage.
 factReports :: OpenTranslatedTheory -> WfErrorReport
 factReports thy = concat
-    [ reservedReport, freshFactArguments, specialFactsUsage
+    [ reservedReport, reservedFactNameKuKd, freshFactArguments, specialFactsUsage
     , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
@@ -408,6 +408,25 @@ factReports thy = concat
           return $ ppFa $-$ text ("show:" ++ show info)
     reservedFactName _ = Nothing
 
+    -- Check for usage of all type facts with reserved names
+    reservedFactNameKuKd = do
+      ru <- thyProtoRules thy
+      let lfact = [fa| fa <- get rPrems ru
+                      , factTag fa `elem` [KUFact,KDFact]]
+          mfact = [fa | fa <- get rActs ru
+                      , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]]
+          rfact = [fa | fa <- get rConcs ru
+                      , factTag fa `elem` [KUFact, KDFact]]
+          check _   []  = mzero
+          check msg fas = return $ (,) "Rserved names" $
+               text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
+               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
+
+      msum [ check "contains facts with reserved names:"  lfact
+            , check "contains facts with reserved names:" mfact
+            , check "contains facts with reserved names:" rfact ]
+              
+    
     freshFactArguments = do
        ru                      <- thyProtoRules thy
        fa@(Fact FreshFact _ [m]) <- get rPrems ru
@@ -420,9 +439,9 @@ factReports thy = concat
     specialFactsUsage = do
        ru <- thyProtoRules thy
        let lhsf = [ fa | fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact, KDFact, OutFact] ]
+                      , factTag fa `elem` [OutFact] ]
            rhsf = [ fa | fa <- get rConcs ru
-                      , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
+                      , factTag fa `elem` [FreshFact,InFact] ]
            check _   []  = mzero
            check msg fas = return $ (,) "Special fact usage" $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
