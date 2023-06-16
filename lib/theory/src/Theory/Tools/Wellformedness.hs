@@ -412,19 +412,23 @@ factReports thy = concat
     reservedFactNameRules = do
       ru <- thyProtoRules thy
       let lfact = [fa| fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact,KDFact]]
+                      , factTag fa `elem` [KUFact,KDFact] 
+                      || isKLogFact fa]
           mfact = [fa | fa <- get rActs ru
-                      , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]]
+                      , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
+                      || isKLogFact fa]
           rfact = [fa | fa <- get rConcs ru
-                      , factTag fa `elem` [KUFact, KDFact]]
+                      , factTag fa `elem` [KUFact, KDFact]
+                      || isKLogFact fa]
           check _   []  = mzero
-          check msg fas = return $ (,) "Rserved names" $
-               text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
+          check msg fas = return $ (,) "Reserved names" $
+               text ("rule " ++ quote (showRuleCaseName ru))
+                <-> text ("contains facts with reserved names"++msg) $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
-      msum [ check "contains facts with reserved names:"  lfact
-            , check "contains facts with reserved names:" mfact
-            , check "contains facts with reserved names:" rfact ]
+      msum [ check " on left-hand-side:"  lfact
+            , check " on the middle:" mfact
+            , check " on the right-hand-side:" rfact ]
               
     
     freshFactArguments = do
