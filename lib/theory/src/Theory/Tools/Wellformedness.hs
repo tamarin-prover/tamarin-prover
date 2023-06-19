@@ -357,11 +357,12 @@ unboundReportDiff thy = do
                   " has unbound variables: "
                  ) ru
 
+
 -- | Report on facts usage.
 factReports :: OpenTranslatedTheory -> WfErrorReport
 factReports thy = concat
     [ reservedReport, freshFactArguments, specialFactsUsage
-    , factUsage, inexistentActions, inexistentActionsRestrictions
+    , factUsage, factLhsOccurNoRhs, inexistentActions, inexistentActionsRestrictions
     ]
   where
     ruleFacts ru =
@@ -456,7 +457,30 @@ factReports thy = concat
         : kuFact undefined
         : (do RuleItem ru <- get thyItems thy; get rActs $ get oprRuleE ru)
           ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
+    
+    
+    --- Report a protocol fact occurs in an LHS but not in any RHS
+    -- idea: fact of LHS and fact of RHS, compare the two lists and give a result
+    factLhsOccurNoRhs = do
+      rule <- thyProtoRules thy
+      let lhsf = [fa|fa <- get rPrems rule,  isProtoFact fa] 
+          rhsf = [fa|fa <- get rConcs rule,  isProtoFact fa]
+          check _   []  = mzero
+          check msg fas = return $ (,) "Special fact usage" $
+               text ("rule " ++ quote (showRuleCaseName rule)) <-> text msg $-$
+               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
+      msum [ check "uses disallowed facts on left-hand-side:"  lhsf
+            , check "uses disallowed facts on right-hand-side:" rhsf ]
+-- matchFact dispo to use cf definition.hs
+    
+    compareFacts fa fb =
+      zipWith toBool. matchFact fa fb
+      
+        
+    
+
+    
     inexistentActions = do
         LemmaItem l <- get thyItems thy
         fa <- sortednub $ formulaFacts (get lFormula l)
