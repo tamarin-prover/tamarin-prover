@@ -485,11 +485,14 @@ factReports thy = concat
         fa <- sortednub $ formulaFacts (get lFormula l)
         let info = factInfo fa
             name = get lName l
+            (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
           else return $ (,) "Lemma actions" $
                  text ("lemma " ++ quote name ++ " references action ") $-$
-                 nest 2 (text $ show info) $-$
+                 nest 2 (text ("fact " ++ show (factTagName tag)++
+                 " (arity "++ show ari++
+                 ", "++show mul++") ")) $-$
                  text "but no rule has such an action."
 
     inexistentActionsRestrictions = do
@@ -497,11 +500,14 @@ factReports thy = concat
         fa <- sortednub $ formulaFacts (get rstrFormula l)
         let info = factInfo fa
             name = get rstrName l
+            (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
           else return $ (,) "Restriction actions" $
                  text ("restriction " ++ quote name ++ " references action ") $-$
-                 nest 2 (text $ show info) $-$
+                 nest 2 (text ("fact " ++ show (factTagName tag)++
+                 " (arity "++ show ari++
+                 ", "++show mul++") ")) $-$
                  text "but no rule has such an action."
 
 
@@ -649,11 +655,14 @@ factReportsDiff thy = concat
         fa <- sortednub $ formulaFacts (get lFormula l)
         let info = factInfo fa
             name = get lName l
+            (tag,ari,mul) = info
         if info `S.member` ruleActions
           then []
           else return $ (,) "Lemma actions" $
                  text (show s ++ " lemma " ++ quote name ++ " references action ") $-$
-                 nest 2 (text $ show info) $-$
+                 nest 2 (text ("fact " ++ show (factTagName tag)++
+                 " (arity "++ show ari++
+                 ", "++show mul++") ")) $-$
                  text "but no rule has such an action."
 
     inexistentActionsRestrictions = do
@@ -661,11 +670,14 @@ factReportsDiff thy = concat
         fa <- sortednub $ formulaFacts (get rstrFormula l)
         let info = factInfo fa
             name = get rstrName l
+            (tag,ari,mul) = info
         if info `S.member` ruleActions
           then []
           else return $ (,) "Restriction actions" $
                  text (show s ++ "restriction " ++ quote name ++ " references action ") $-$
-                 nest 2 (text $ show info) $-$
+                 nest 2 (text ("fact " ++ show (factTagName tag)++
+                 " (arity "++ show ari++
+                 ", "++show mul++") ")) $-$
                  text "but no rule has such an action."
 
 -- | Gather all facts referenced in a formula.
