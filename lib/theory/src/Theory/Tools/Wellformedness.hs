@@ -299,7 +299,7 @@ publicNamesReport thy =
     case findClashes publicNames of
       []      -> []
       clashes -> return $ (,) (topic++notif) $ numbered' $
-          map (nest 2 . fsep . punctuate comma . map ppRuleAndName) clashes
+          map (nest 2 .fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
   where
     topic       = "public names with mismatching capitalization\n"
     notif       = "Identifiers are case-sensitive, "++ 
@@ -311,8 +311,10 @@ publicNamesReport thy =
         (,) (showRuleCaseName ru) <$>
             (filter ((LSortPub ==) . sortOfName) $ universeBi ru)
     findClashes   = clashesOn (map toLower . show . snd) (show . snd)
-    ppRuleAndName (ruName, pub) =
-        text $ "rule " ++ show ruName ++ " name " ++ show pub
+    ppRuleAndName ((ruName, pub):rest) =
+        text $ "rule " ++ show ruName ++ ": "++" name " ++
+         show (pub) ++ concatMap ((", " ++) . show . snd) rest
+
 
 -- | Report on capitalization of public names.
 publicNamesReportDiff :: OpenDiffTheory -> WfErrorReport
@@ -320,7 +322,7 @@ publicNamesReportDiff thy =
     case findClashes publicNames of
       []      -> []
       clashes -> return $ (,) (topic++notif) $ numbered' $
-          map (nest 2 . fsep . punctuate comma . map ppRuleAndName) clashes
+          map (nest 2 . fsep . punctuate comma . map ppRuleAndName.  (groupOn fst)) clashes
   where
     topic       = "public names with mismatching capitalization\n"
     notif       = "Identifiers are case-sensitive, "++ 
@@ -332,8 +334,9 @@ publicNamesReportDiff thy =
         (,) (showRuleCaseName ru) <$>
             (filter ((LSortPub ==) . sortOfName) $ universeBi ru)
     findClashes   = clashesOn (map toLower . show . snd) (show . snd)
-    ppRuleAndName (ruName, pub) =
-        text $ "rule " ++ show ruName ++ " name " ++ show pub
+    ppRuleAndName ((ruName, pub):rest) =
+        text $ "rule " ++ show ruName ++ ": "++" name " ++
+         show (pub) ++ concatMap ((", " ++) . show . snd) rest
 
 
 -- | Check whether a rule has unbound variables.
