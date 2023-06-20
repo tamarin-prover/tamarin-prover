@@ -156,6 +156,11 @@ clashesOn f g xs = do
 quote :: String -> String
 quote cs = '`' : cs ++ "'"
 
+-- | add double underline to the topic
+underlineTopic :: String -> String
+underlineTopic topic = topic ++"\n" ++ 
+                      (concat $ take (length topic) $ repeat "=")
+                      ++"\n"
 ------------------------------------------------------------------------------
 -- Checks
 ------------------------------------------------------------------------------
@@ -169,7 +174,7 @@ sortsClashCheck info t = case clashesOn removeSort id $ frees t of
             , text info $-$ nest 2 (numbered' $ map prettyVarList cs)
             )
   where
-    topic = "sorts\n"
+    topic = (underlineTopic "Variable with mismatchings sorts or capitalization")++"\n"
     reason = "Possible reasons:\n"++
               "1. Identifiers are case sensitive, i.e.,"++
               "'x' and 'X' are considered to be different.\n"++ 
@@ -192,7 +197,7 @@ variantsCheck hnd info (OpenProtoRule ruE ruAC) =
     []
   else
     return $
-            ( "variants"
+            ( (underlineTopic "Variants")
             , text info $-$ (nest 2 $ (numbered' $ (map prettyProtoRuleAC ruAC)))
               $--$ text "Recomputed variants: " $--$
               (nest 2 $ (numbered' $ map prettyProtoRuleAC recomputedVariants))
@@ -230,13 +235,13 @@ leftRightRuleReportDiff thy = do
     ru <- [ ru | DiffRuleItem ru <- get diffThyItems thy ]
     case get dprLeftRight ru of
       Just ((OpenProtoRule lr _), _) | not (equalUpToAddedActions lr (getLeftRule (get dprRule ru))) -> return $
-              ( "left rule"
+              ( (underlineTopic "Left rule")
               , text "Inconsistent left rule" $-$ (nest 2 $ prettyProtoRuleE lr)
                 $--$ text "w.r.t." $--$
                 (nest 2 $ prettyProtoRuleE (get dprRule ru))
               )
       Just (_, (OpenProtoRule rr _)) | not (equalUpToAddedActions rr (getRightRule (get dprRule ru))) -> return $
-              ( "right rule"
+              ( (underlineTopic "Right rule")
               , text "Inconsistent right rule" $-$ (nest 2 $ prettyProtoRuleE rr)
                 $--$ text "w.r.t." $--$
                 (nest 2 $ prettyProtoRuleE (get dprRule ru))
@@ -277,7 +282,7 @@ freshNamesReport thy = do
     ru <- thyProtoRules thy
     case filter ((LSortFresh ==) . sortOfName) $ universeBi ru of
       []    -> []
-      names -> return $ (,) "fresh names" $ fsep $
+      names -> return $ (,) (underlineTopic "Fresh names") $ fsep $
           text ( "rule " ++ quote (showRuleCaseName ru) ++ ": " ++
                  "fresh names are not allowed in rule:" )
         : punctuate comma (map (nest 2 . text . show) names)
@@ -288,7 +293,7 @@ freshNamesReportDiff thy = do
     ru <- diffThyProtoRules thy
     case filter ((LSortFresh ==) . sortOfName) $ universeBi ru of
       []    -> []
-      names -> return $ (,) "fresh names" $ fsep $
+      names -> return $ (,) (underlineTopic "Fresh names") $ fsep $
           text ( "rule " ++ quote (showRuleCaseName ru) ++ ": " ++
                  "fresh names are not allowed in rule:" )
         : punctuate comma (map (nest 2 . text . show) names)
@@ -301,7 +306,7 @@ publicNamesReport thy =
       clashes -> return $ (,) (topic++notif) $ numbered' $
           map (nest 2 .fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
   where
-    topic       = "public names with mismatching capitalization\n"
+    topic       = (underlineTopic "Public names with mismatching capitalization") ++ "\n"
     notif       = "Identifiers are case-sensitive, "++ 
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
@@ -324,7 +329,7 @@ publicNamesReportDiff thy =
       clashes -> return $ (,) (topic++notif) $ numbered' $
           map (nest 2 . fsep . punctuate comma . map ppRuleAndName.  (groupOn fst)) clashes
   where
-    topic       = "public names with mismatching capitalization\n"
+    topic       = (underlineTopic "Public names with mismatching capitalization") ++ "\n"
     notif       = "Identifiers are case-sensitive, "++ 
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
@@ -344,7 +349,7 @@ unboundCheck :: Document b => String -> Rule ProtoRuleEInfo -> [([Char], b)]
 unboundCheck info ru
     | null unboundVars = []
     | otherwise        = return $
-        ( "unbound"
+        ( underlineTopic "Unbound"
         , text info $-$ (nest 2 $ prettyVarList unboundVars) )
   where
     boundVars   = S.fromList $ frees (get rPrems ru)
@@ -415,7 +420,7 @@ factReports thy = concat
         (origin, fas) <- theoryFacts
         case mapMaybe reservedFactName fas of
           []   -> []
-          errs -> return $ (,) "Reserved names" $ foldr1 ($--$) $
+          errs -> return $ (,) (underlineTopic "Reserved names") $ foldr1 ($--$) $
               wrappedText ("The " ++ origin ++
                            " contains facts with reserved names:")
             : map (nest 2) errs
@@ -429,7 +434,7 @@ factReports thy = concat
        ru                      <- thyProtoRules thy
        fa@(Fact FreshFact _ [m]) <- get rPrems ru
        guard (not (isMsgVar m || isFreshVar m))
-       return $ (,) "Fr facts must only use a fresh- or a msg-variable" $
+       return $ (,) (underlineTopic "Fr facts must only use a fresh- or a msg-variable") $
            text ("rule " ++ quote (showRuleCaseName ru)) <->
            text "fact:" <-> prettyLNFact fa
 
@@ -441,7 +446,7 @@ factReports thy = concat
            rhsf = [ fa | fa <- get rConcs ru
                       , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
-           check msg fas = return $ (,) "Special fact usage" $
+           check msg fas = return $ (,) (underlineTopic "Special fact usage") $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
@@ -461,7 +466,7 @@ factReports thy = concat
                           ", " ++ show arity ++", " ++ show multipl)
                     $-$ nest 2 ppFa 
       where
-        topic = "Fact usage\n"
+        topic = (underlineTopic "Fact usage") ++ "\n"
         p1    = "Possible reasons: \n"++
                 "1. Fact names are case-sensitive, different capitalizations are "++
                   "considered as different facts, "++
@@ -493,7 +498,7 @@ factReports thy = concat
             (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
-          else return $ (,) "Lemma actions" $
+          else return $ (,) (underlineTopic "Lemma actions") $
                  text ("lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " (arity "++ show ari++
@@ -508,7 +513,7 @@ factReports thy = concat
             (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
-          else return $ (,) "Restriction actions" $
+          else return $ (,) (underlineTopic "Restriction actions") $
                  text ("restriction " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " (arity "++ show ari++
@@ -563,7 +568,7 @@ factReportsDiff thy = concat
         (origin, fas) <- theoryFacts
         case mapMaybe reservedFactName fas of
           []   -> []
-          errs -> return $ (,) "Reserved names" $ foldr1 ($--$) $
+          errs -> return $ (,) (underlineTopic "Reserved names") $ foldr1 ($--$) $
               wrappedText ("The " ++ origin ++
                            " contains facts with reserved names:")
             : map (nest 2) errs
@@ -578,7 +583,7 @@ factReportsDiff thy = concat
         (origin, fas) <- theoryDiffRuleFacts
         case mapMaybe reservedPrefixFactName fas of
           []   -> []
-          errs -> return $ (,) "Reserved names" $ foldr1 ($--$) $
+          errs -> return $ (,) (underlineTopic "Reserved names") $ foldr1 ($--$) $
               wrappedText ("The " ++ origin ++
                            " contains facts with reserved prefixes ('DiffIntr', 'DiffProto') inside names:")
             : map (nest 2) errs
@@ -592,7 +597,7 @@ factReportsDiff thy = concat
        ru                      <- diffThyProtoRules thy
        fa@(Fact FreshFact _ [m]) <- get rPrems ru
        guard (not (isMsgVar m || isFreshVar m))
-       return $ (,) "Fr facts must only use a fresh- or a msg-variable" $
+       return $ (,) (underlineTopic "Fr facts must only use a fresh- or a msg-variable") $
            text ("rule " ++ quote (showRuleCaseName ru)) <->
            text "fact:" <-> prettyLNFact fa
 
@@ -604,7 +609,7 @@ factReportsDiff thy = concat
            rhsf = [ fa | fa <- get rConcs ru
                       , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
-           check msg fas = return $ (,) "Special fact usage" $
+           check msg fas = return $ (,) (underlineTopic "Special fact usage") $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
@@ -624,7 +629,7 @@ factReportsDiff thy = concat
                           ", " ++ show arity ++", " ++ show multipl)
                     $-$ nest 2 ppFa 
       where
-        topic = "Fact usage\n"
+        topic = (underlineTopic "Fact usage" ) ++ "\n"
         p1    = "Possible reasons: \n"++
                 "1. Fact names are case-sensitive, different capitalizations are "++
                   "considered as different facts, "++
@@ -664,7 +669,7 @@ factReportsDiff thy = concat
             (tag,ari,mul) = info
         if info `S.member` ruleActions
           then []
-          else return $ (,) "Lemma actions" $
+          else return $ (,) (underlineTopic "Lemma actions") $
                  text (show s ++ " lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " arity "++ show ari++
@@ -679,7 +684,7 @@ factReportsDiff thy = concat
             (tag,ari,mul) = info
         if info `S.member` ruleActions
           then []
-          else return $ (,) "Restriction actions" $
+          else return $ (,) (underlineTopic "Restriction actions") $
                  text (show s ++ "restriction " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " (arity "++ show ari++
@@ -719,7 +724,7 @@ lemmaAttributeReport thy = do
     lem <- theoryLemmas thy
     guard $    get lTraceQuantifier lem == ExistsTrace
             && ReuseLemma `elem` get lAttributes lem
-    return ( "Attributes"
+    return ( underlineTopic "Attributes"
            , text "lemma" <-> (text $ quote $ get lName lem) <> colon <->
              text "cannot reuse 'exists-trace' lemmas"
            )
@@ -731,7 +736,7 @@ lemmaAttributeReportDiff thy = do
     (s, lem) <- diffTheoryLemmas thy
     guard $    get lTraceQuantifier lem == ExistsTrace
             && ReuseLemma `elem` get lAttributes lem
-    return ( "Attributes"
+    return ( underlineTopic "Attributes"
            , text ("lemma " ++ show s) <-> (text $ quote $ get lName lem) <> colon <->
              text "cannot reuse 'exists-trace' lemmas"
            )
@@ -743,9 +748,9 @@ lemmaAttributeReportDiff thy = do
 formulaReports :: OpenTranslatedTheory -> WfErrorReport
 formulaReports thy = do
     (header, fm) <- annFormulas
-    msum [ ((,) "Quantifier sorts") <$> checkQuantifiers header fm
-         , ((,) "Formula terms")    <$> checkTerms header fm
-         , ((,) "Guardedness")      <$> checkGuarded header fm
+    msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
+         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header fm
+         , ((,) (underlineTopic "Guardedness"))      <$> checkGuarded header fm
          ]
   where
     annFormulas = do LemmaItem l <- get thyItems thy
@@ -809,9 +814,9 @@ formulaReports thy = do
 formulaReportsDiff :: OpenDiffTheory -> WfErrorReport
 formulaReportsDiff thy = do
     (header, fm) <- annFormulas
-    msum [ ((,) "Quantifier sorts") <$> checkQuantifiers header fm
-         , ((,) "Formula terms")    <$> checkTerms header fm
-         , ((,) "Guardedness")      <$> checkGuarded header fm
+    msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
+         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header fm
+         , ((,) (underlineTopic "Guardedness"))      <$> checkGuarded header fm
          ]
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
@@ -880,7 +885,7 @@ multRestrictedReport :: OpenTranslatedTheory -> WfErrorReport
 multRestrictedReport thy = do
     ruO <- theoryRules thy
     let ru = get oprRuleE ruO
-    (,) "Multiplication restriction of rules" <$>
+    (,) (underlineTopic "Multiplication restriction of rules") <$>
         case restrictedFailures ru of
           ([],[]) -> []
           (mults, unbounds) ->
@@ -947,7 +952,7 @@ multRestrictedReportDiff :: OpenDiffTheory -> WfErrorReport
 multRestrictedReportDiff thy = do
     ruO <- diffTheoryDiffRules thy
     let ru = get dprRule ruO
-    (,) "Multiplication restriction of rules" <$>
+    (,) (underlineTopic "Multiplication restriction of rules") <$>
         case restrictedFailures ru of
           ([],[]) -> []
           (mults, unbounds) ->
@@ -1041,7 +1046,7 @@ checkIfLemmasInTheory thy
 
     where
       lemmaArgsNames = get (lemmasToProve.thyOptions) thy
-      topic = "Check presence of the --prove/--lemma arguments in theory"
+      topic = underlineTopic "Check presence of the --prove/--lemma arguments in theory"
       lemmasInTheory = map _lName (theoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
 
@@ -1061,7 +1066,7 @@ checkIfLemmasInDiffTheory thy
 
     where
       lemmaArgsNames = get (lemmasToProve.diffThyOptions) thy
-      topic = "Check presence of the --prove/--lemma arguments in theory"
+      topic = underlineTopic "Check presence of the --prove/--lemma arguments in theory"
       lemmasInTheory = map (_lName.snd) (diffTheoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
 
