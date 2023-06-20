@@ -457,7 +457,7 @@ factReports thy = concat
        return $ (,) (topic++p1++p2) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
            (origin, (ppFa, (tag, arity, multipl))) <- clash
            return $ text (origin ++
-                          ", captalization  " ++ show (factTagName tag) ++
+                          ", capitalization  " ++ show (factTagName tag) ++
                           ", " ++ show arity ++", " ++ show multipl)
                     $-$ nest 2 ppFa 
       where
@@ -620,7 +620,7 @@ factReportsDiff thy = concat
        return $ (,) (topic++p1++p2) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
            (origin, (ppFa, (tag, arity, multipl))) <- clash
            return $ text (origin ++
-                          ", captalization  " ++ show (factTagName tag) ++
+                          ", capitalization  " ++ show (factTagName tag) ++
                           ", " ++ show arity ++", " ++ show multipl)
                     $-$ nest 2 ppFa 
       where
