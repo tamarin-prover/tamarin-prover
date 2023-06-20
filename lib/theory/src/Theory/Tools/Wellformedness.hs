@@ -667,8 +667,8 @@ factReportsDiff thy = concat
           else return $ (,) "Lemma actions" $
                  text (show s ++ " lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
-                 " (arity "++ show ari++
-                 ", "++show mul++") ")) $-$
+                 " arity "++ show ari++
+                 ", "++show mul++" ")) $-$
                  text "but no rule has such an action."
 
     inexistentActionsRestrictions = do
