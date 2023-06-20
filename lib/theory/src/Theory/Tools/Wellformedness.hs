@@ -108,7 +108,7 @@ prettyWfErrorReport =
   where
     ppTopic []                 = error "prettyWfErrorReport: groupOn returned empty list"
     ppTopic errs@((topic,_):_) =
-      text topic <> colon $-$
+      text topic $-$
       (nest 2 . vcat . intersperse (text "") $ map snd errs)
 
 
