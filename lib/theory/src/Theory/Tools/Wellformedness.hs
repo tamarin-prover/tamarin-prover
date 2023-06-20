@@ -349,7 +349,7 @@ unboundCheck :: Document b => String -> Rule ProtoRuleEInfo -> [([Char], b)]
 unboundCheck info ru
     | null unboundVars = []
     | otherwise        = return $
-        ( underlineTopic "Unbound"
+        ( underlineTopic "Unbound variables"
         , text info $-$ (nest 2 $ prettyVarList unboundVars) )
   where
     boundVars   = S.fromList $ frees (get rPrems ru)
@@ -446,7 +446,7 @@ factReports thy = concat
            rhsf = [ fa | fa <- get rConcs ru
                       , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
-           check msg fas = return $ (,) (underlineTopic "Special fact usage") $
+           check msg fas = return $ (,) (underlineTopic "Special facts") $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
@@ -498,7 +498,7 @@ factReports thy = concat
             (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
-          else return $ (,) (underlineTopic "Lemma actions") $
+          else return $ (,) (underlineTopic "Inexistant lemma actions") $
                  text ("lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " (arity "++ show ari++
@@ -609,7 +609,7 @@ factReportsDiff thy = concat
            rhsf = [ fa | fa <- get rConcs ru
                       , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
            check _   []  = mzero
-           check msg fas = return $ (,) (underlineTopic "Special fact usage") $
+           check msg fas = return $ (,) (underlineTopic "Special facts") $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
 
@@ -669,7 +669,7 @@ factReportsDiff thy = concat
             (tag,ari,mul) = info
         if info `S.member` ruleActions
           then []
-          else return $ (,) (underlineTopic "Lemma actions") $
+          else return $ (,) (underlineTopic "Inexistant lemma actions") $
                  text (show s ++ " lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " arity "++ show ari++
@@ -750,7 +750,7 @@ formulaReports thy = do
     (header, fm) <- annFormulas
     msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
          , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header fm
-         , ((,) (underlineTopic "Guardedness"))      <$> checkGuarded header fm
+         , ((,) (underlineTopic " Formula guardedness"))      <$> checkGuarded header fm
          ]
   where
     annFormulas = do LemmaItem l <- get thyItems thy
@@ -816,7 +816,7 @@ formulaReportsDiff thy = do
     (header, fm) <- annFormulas
     msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
          , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header fm
-         , ((,) (underlineTopic "Guardedness"))      <$> checkGuarded header fm
+         , ((,) (underlineTopic "Formula guardedness"))      <$> checkGuarded header fm
          ]
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
