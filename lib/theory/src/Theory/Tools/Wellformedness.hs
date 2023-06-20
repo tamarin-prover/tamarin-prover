@@ -174,12 +174,12 @@ sortsClashCheck info t = case clashesOn removeSort id $ frees t of
             , text info $-$ nest 2 (numbered' $ map prettyVarList cs)
             )
   where
-    topic = (underlineTopic "Variable with mismatchings sorts or capitalization")++"\n"
+    topic = (underlineTopic "Variable with mismatching sorts or capitalization")++"\n"
     reason = "Possible reasons:\n"++
               "1. Identifiers are case sensitive, i.e.,"++
               "'x' and 'X' are considered to be different.\n"++ 
               "2. The same holds aren't used for sorts:, "++
-              "i.e., '$x', 'x', and '~x' are considered to be different"
+              "i.e., '$x', 'x', and '~x' are considered to be different.\n"
     removeSort lv = (lowerCase (lvarName lv), lvarIdx lv)
 
 -- | Report on sort clashes.
@@ -310,7 +310,7 @@ publicNamesReport thy =
     notif       = "Identifiers are case-sensitive, "++ 
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
-                  "Check the capitalization of your identifiers"
+                  "Check the capitalization of your identifiers.\n"
     publicNames = do
         ru <- thyProtoRules thy
         (,) (showRuleCaseName ru) <$>
@@ -333,7 +333,7 @@ publicNamesReportDiff thy =
     notif       = "Identifiers are case-sensitive, "++ 
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
-                  "Check the capitalization of your identifiers"
+                  "Check the capitalization of your identifiers.\n"
     publicNames = do
         ru <- diffThyProtoRules thy
         (,) (showRuleCaseName ru) <$>
@@ -474,7 +474,7 @@ factReports thy = concat
                   "Check the capitalization of your fact names.\n"
         p2    = "2. Same fact is used with different arities, "++
                 "i.e., Fact('A','B') is different from Fact('A'). "++
-                "Check the arguments of your facts "
+                "Check the arguments of your facts.\n "
         --showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
@@ -637,7 +637,7 @@ factReportsDiff thy = concat
                   "Check the capitalization of your fact names.\n"
         p2    = "2. Same fact is used with different arities, "++
                 "i.e., Fact('A','B') is different from Fact('A'). "++
-                "Check the arguments of your facts "
+                "Check the arguments of your facts.\n "
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
 
