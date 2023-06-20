@@ -451,13 +451,15 @@ factReports thy = concat
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
     factUsage = do
-       clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-       return $ (,) (topic++p1++p2) $ numbered' $ do
-           (origin, (ppFa, info@(tag, _, _))) <- clash
+       clash <- clashesOn factIdentifier (snd . snd) theoryFacts' 
+       let (_, (_, (factName, _, _))) = head clash
+           name =quote( map toLower $ factTagName factName  )        
+       return $ (,) (topic++p1++p2) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
+           (origin, (ppFa, (tag, arity, multipl))) <- clash
            return $ text (origin ++
-                          ", fact " ++ show (map toLower $ factTagName tag) ++
-                          ": " ++ showInfo info)
-                    $-$ nest 2 ppFa
+                          ", captalization  " ++ show (factTagName tag) ++
+                          ", " ++ show arity ++", " ++ show multipl)
+                    $-$ nest 2 ppFa 
       where
         topic = "Fact usage\n"
         p1    = "Possible reasons: \n"++
@@ -468,7 +470,7 @@ factReports thy = concat
         p2    = "2. Same fact is used with different arities, "++
                 "i.e., Fact('A','B') is different from Fact('A'). "++
                 "Check the arguments of your facts "
-        showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
+        --showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
 
@@ -613,12 +615,14 @@ factReportsDiff thy = concat
     -- multiplicity or arity.
     factUsage = do
        clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-       return $ (,) (topic++p1++p2) $ numbered' $ do
-           (origin, (ppFa, info@(tag, _, _))) <- clash
+       let (_, (_, (factName, _, _))) = head clash
+           name =quote( map toLower $ factTagName factName  )        
+       return $ (,) (topic++p1++p2) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
+           (origin, (ppFa, (tag, arity, multipl))) <- clash
            return $ text (origin ++
-                          ", fact " ++ show (map toLower $ factTagName tag) ++
-                          ": " ++ showInfo info)
-                    $-$ nest 2 ppFa
+                          ", captalization  " ++ show (factTagName tag) ++
+                          ", " ++ show arity ++", " ++ show multipl)
+                    $-$ nest 2 ppFa 
       where
         topic = "Fact usage\n"
         p1    = "Possible reasons: \n"++
@@ -629,7 +633,6 @@ factReportsDiff thy = concat
         p2    = "2. Same fact is used with different arities, "++
                 "i.e., Fact('A','B') is different from Fact('A'). "++
                 "Check the arguments of your facts "
-        showInfo (tag, k, multipl) = show (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
 
