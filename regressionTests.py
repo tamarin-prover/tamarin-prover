@@ -208,28 +208,28 @@ def compare():
 			if equationsA != equationsB:
 				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
 				if len(equationsA) != len(equationsB):
-					logging.error(color(colors.RED + colors.BOLD, f"The number of equations are not equals!"))
+					logging.error(color(colors.RED + colors.BOLD, f"The number of equations are not equal!"))
 				else:
 					if settings.verbose >= 6:
 						for i in range(len(equationsA)):
 							if equationsA[i] != equationsB[i]:
 								logging.error(color(colors.RED + colors.BOLD, f"The equation changed from {equationsA[i]} to {equationsB[i]}"))
 					else:
-						logging.error(color(colors.RED + colors.BOLD, f"One or multiple equations doesn't match!"))
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple equations do not match!"))
 				majorDifferences = True
 
 			## Rules differ ##
 			if rulesA != rulesB:
 				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
 				if len(rulesB) != len(rulesA):
-					logging.error(color(colors.RED + colors.BOLD, f"The number of rules are not equals!"))
+					logging.error(color(colors.RED + colors.BOLD, f"The number of rules are not equal!"))
 				else:
 					if settings.verbose >= 6:
 						for i in range(len(rulesA)):
 							if rulesA[i] != rulesB[i]:
 								logging.error(color(colors.RED + colors.BOLD, f"The rule changed from rule{rulesA[i]} \nto rule{rulesB[i]}"))
 					else:
-						logging.error(color(colors.RED + colors.BOLD, f"One or multiple rules doesn't match!"))
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple rules do not match!"))
 				majorDifferences = True
 
 			## warnings differ ##
@@ -238,35 +238,35 @@ def compare():
 				if settings.verbose >= 6:
 					logging.error(color(colors.RED + colors.BOLD, f"The warning changed from {warningA} to {warningB}"))
 				else:
-					logging.error(color(colors.RED + colors.BOLD, f"The warnings doesn't match!"))
+					logging.error(color(colors.RED + colors.BOLD, f"The warnings do not match!"))
 				majorDifferences = True				
 
 			## functions differ ## 
 			if funcA != funcB:
 				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
 				if len(funcA) != len(funcB):
-					logging.error(color(colors.RED + colors.BOLD, f"The number of functions are not equals!"))
+					logging.error(color(colors.RED + colors.BOLD, f"The number of functions are not equal!"))
 				else:
 					if settings.verbose >= 6:
 						for i in range(len(funcA)):
 							if funcA[i] != funcB[i]:
 								logging.error(color(colors.RED + colors.BOLD, f"The function changed from {funcA[i]} to {funcB[i]}"))
 					else:
-						logging.error(color(colors.RED + colors.BOLD, f"One or multiple functions doesn't match!"))
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple functions do not match!"))
 				majorDifferences = True
 
 			## builtins differ ##
 			if builtinsA != builtinsB:
 				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
 				if len(builtinsA) != len(builtinsB):
-					logging.error(color(colors.RED + colors.BOLD, f"The number of builtins are not equals!"))
+					logging.error(color(colors.RED + colors.BOLD, f"The number of builtins are not equal!"))
 				else:
 					if settings.verbose >= 6:
 						for i in range(len(builtinsA)):
 							if builtinsA[i] != builtinsB[i]:
 								logging.error(color(colors.RED + colors.BOLD, f"The builtin changed from {builtinsA[i]} to {builtinsB[i]}"))
 					else:
-						logging.error(color(colors.RED + colors.BOLD, f"One or multiple builtins doesn't match!"))
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple builtins do not match!"))
 				majorDifferences = True
 
 
@@ -299,7 +299,7 @@ def compare():
 	logging.warning("\n" + "-"*80 + "\n")
 	if majorDifferences:
 		if settings.verbose >= 3:
-			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas, differences in the proofs or the files itself could not be parsed!"))
+			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas, or in the rules, or in the equations, or in the builtins, or in the functions, or in the warnings, or the files itself could not be parsed!"))
 		else: 
 			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas or the files itself could not be parsed!"))
 		logging.error(f"For more information, run 'diff -r {settings.folderA} {settings.folderB}'")
@@ -344,7 +344,7 @@ def getArguments():
 			"0: show only critical error output and changes of verified vs. trace found\n" +
 			"1: show summary of time and step differences\n" +
 			"2: show step differences for changed lemmas\n" +
-			"3: show step differences for changed lemmas and part of the proof\n" +
+			"3: show step differences for changed lemmas and changed functions, rules, equations, warning and builtins\n" +
 			"4: show time differences for all lemmas\n" +
 			"5: show shell command output\n" +
 			"6: show diff output if the corresponding proofs changed"
