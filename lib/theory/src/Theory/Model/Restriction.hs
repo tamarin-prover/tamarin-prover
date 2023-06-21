@@ -143,7 +143,7 @@ fromRuleRestriction rname f =
                 -- and varnow
                 mkRestriction f' = Restriction
                                         (restrPrefix ++ rname)
-                                        (foldr (hinted forall) f'' (frees f''))
+                                        (foldr (hinted forAll) f'' (frees f''))
                                         where
                                             f'' = Ato (Action timepoint fact) .==>. f'
                                             timepoint = varTerm $ Free varNow

@@ -71,7 +71,7 @@ fatom varp nodep = asum
   ]
   where
     quantification = do
-        q <- (forall <$ opForall) <|> (exists <$ opExists)
+        q <- (forAll <$ opForall) <|> (exists <$ opExists)
         vs <- many1 (try varp <|> nodep)  <* dot
         f  <- iff varp nodep
         return $ foldr (hinted q) f vs
