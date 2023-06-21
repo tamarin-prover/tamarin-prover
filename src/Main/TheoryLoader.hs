@@ -22,6 +22,7 @@ module Main.TheoryLoader (
   , oDiffMode
   , oOutputModule
   , oMaudePath
+  , oVerboseMode
   , oParseOnlyMode
   , defaultTheoryLoadOptions
   , ArgumentError(..)
@@ -66,6 +67,7 @@ import qualified Sapic as Sapic
 import           Main.Console                        (argExists, findArg, addEmptyArg, updateArg, Arguments)
 
 import           Main.Environment
+import           Main.Console
 
 import           Text.Parsec                hiding ((<|>),try,parse)
 import           Safe
@@ -85,7 +87,7 @@ import qualified Accountability.Generation as Acc
 import GHC.Records (HasField(getField))
 
 import           TheoryObject                        (diffThyOptions)
-import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve)
+import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve,verboseOption)
 import Data.Maybe (fromMaybe)
 
 
@@ -138,6 +140,9 @@ theoryLoadFlags =
   , flagNone ["quiet"] (addEmptyArg "quiet")
       "Do not display computation steps of oracle or tactic."
 
+  , flagNone ["verbose", "v"] (addEmptyArg "verbose")
+      "Display full information when calculating proof."
+
   , flagOpt "10" ["open-chains","c"] (updateArg "OpenChainsLimit" ) "PositiveInteger"
       "Limits the number of open chains to be resoled during precomputations (default 10)"
 
@@ -164,6 +169,7 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oDiffMode          :: Bool
   , _oQuitOnWarning     :: Bool
   , _oAutoSources       :: Bool
+  , _oVerboseMode       :: Bool
   , _oOutputModule      :: Maybe ModuleType -- Note: This flag is only used for batch mode.
   , _oMaudePath         :: FilePath -- FIXME: Other functions defined in Environment.hs
   , _oParseOnlyMode     :: Bool
@@ -184,6 +190,7 @@ defaultTheoryLoadOptions = TheoryLoadOptions {
   , _oDiffMode          = False
   , _oQuitOnWarning     = False
   , _oAutoSources       = False
+  , _oVerboseMode       = False
   , _oOutputModule      = Nothing
   , _oMaudePath         = "maude"
   , _oParseOnlyMode     = False
@@ -211,6 +218,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
                          <*> diffMode
                          <*> quitOnWarning
                          <*> autoSources
+                         <*> verboseMode
                          <*> outputModule
                          <*> (return $ maudePath as)
                          <*> parseOnlyMode
@@ -249,6 +257,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 
     defines       = return $ findArg "defines" as
     diffMode      = return $ argExists "diff" as
+    verboseMode   = return $ argExists "verbose" as
     quitOnWarning = return $ argExists "quit-on-warning" as
     autoSources   = return $ argExists "auto-sources" as
 
@@ -410,7 +419,7 @@ constructAutoProver thyOpts =
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addParamsOptions :: TheoryLoadOptions -> Either OpenTheory OpenDiffTheory -> Either OpenTheory OpenDiffTheory
-addParamsOptions opt = addSatArg . addChainsArg . addLemmaToProve
+addParamsOptions opt = addVerboseOptions . addSatArg . addChainsArg . addLemmaToProve
 
     where
       -- Add Open Chain Limit parameters in the Options
@@ -425,6 +434,10 @@ addParamsOptions opt = addSatArg . addChainsArg . addLemmaToProve
       lem = L.get oLemmaNames opt
       addLemmaToProve (Left thy) = Left $ set (lemmasToProve.thyOptions) lem thy
       addLemmaToProve (Right diffThy) = Right $ set (lemmasToProve.diffThyOptions) lem diffThy
+      -- Add Verbose parameter in the Options
+      verb = L.get oVerboseMode opt
+      addVerboseOptions (Left thy) = Left $ set (verboseOption.thyOptions) verb thy
+      addVerboseOptions (Right diffThy) = Right $ set (verboseOption.diffThyOptions) verb diffThy
 
 
 ------------------------------------------------------------------------------

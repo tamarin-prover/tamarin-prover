@@ -30,6 +30,7 @@ module Theory.Constraint.Solver.Reduction (
   -- ** Accessing the 'ProofContext'
   , getProofContext
   , getMaudeHandle
+  , getVerbose
 
   -- ** Inserting nodes, edges, and atoms
   , labelNodeId
@@ -185,6 +186,10 @@ getProofContext = ask
 -- | Retrieve the 'MaudeHandle' from the 'ProofContext'.
 getMaudeHandle :: Reduction MaudeHandle
 getMaudeHandle = askM pcMaudeHandle
+
+-- | Retrieve the verbose parameter from the 'ProofContext'.
+getVerbose :: Reduction Bool
+getVerbose = askM pcVerbose
 
 
 -- Inserting (fresh) nodes into the constraint system
@@ -505,7 +510,7 @@ insertGoalStatus goal status = do
 -- | Insert a 'Goal' and store its age.
 insertGoal :: Goal -> Bool -> Reduction ()
 insertGoal goal looping = insertGoalStatus goal (GoalStatus False 0 looping)
-
+ 
 -- | Mark the given goal as solved.
 markGoalAsSolved :: String -> Goal -> Reduction ()
 markGoalAsSolved how goal =
@@ -522,9 +527,10 @@ markGoalAsSolved how goal =
   where
     updateStatus = do
         mayStatus <- M.lookup goal <$> getM sGoals
+        verbose <- getVerbose
         case mayStatus of
-          Just status -> trace (msg status) $
-              modM sGoals $ M.insert goal $ set gsSolved True status
+          Just status -> if (verbose) then trace (msg status) $
+              modM sGoals $ M.insert goal $ set gsSolved True status else modM sGoals $ M.insert goal $ set gsSolved True status
           Nothing     -> trace ("markGoalAsSolved: inexistent goal " ++ show goal) $ return ()
 
     msg status = render $ nest 2 $ fsep $
