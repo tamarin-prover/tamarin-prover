@@ -459,28 +459,27 @@ factReports thy = concat
           ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
     
     
-    --- Report a protocol fact occurs in an LHS but not in any RHS
+    -- Report a protocol fact occurs in an LHS but not in any RHS
     -- idea: fact of LHS and fact of RHS, compare the two lists and give a result
-    factLhsOccurNoRhs = do
-      rule <- thyProtoRules thy
-      let lhsf = [fa|fa <- get rPrems rule,  isProtoFact fa] 
-          rhsf = [fa|fa <- get rConcs rule,  isProtoFact fa]
-          check _   []  = mzero
-          check msg fas = return $ (,) "Special fact usage" $
-               text ("rule " ++ quote (showRuleCaseName rule)) <-> text msg $-$
-               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
+    factLhsOccurNoRhs = 
+      case factLhsNoRhs of
+        []            -> []
+        facts         -> return $ (,) topic $ numbered' $
+          map (nest 2 . ruleAndFact ) facts
+      where
+        topic = "Facts occur in an LHS but not in any RHS "
+        factLhsNoRhs = [fa | fa <-getfactsLhsNoRhs (getFactsBySide rPrems ru) (getFactsBySide rConcs ru),
+                            isProtoFact $ snd fa]      -- all the protocol facts not in any rhs
+        ru = thyProtoRules thy
+        getFactsBySide side = map (\x-> (,) (showRuleCaseName x) $ (get side x)) 
+        getfactsLhsNoRhs lfacts rfacts =  ruleLhsNoRhs (regroup lfacts) $ regroup rfacts
+        regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x) ++ acc) [] 
+        ruleLhsNoRhs lhsf rhsf = filter (\x -> matchTuple x rhsf) lhsf 
+        matchTuple fl rhsf  = all (\x -> snd x /= snd fl) rhsf
+        ruleAndFact (ruName,fact) =
+          text  ("rule " ++ show ruName ++ ": "++" name "
+           ++show(factInfo fact))
 
-      msum [ check "uses disallowed facts on left-hand-side:"  lhsf
-            , check "uses disallowed facts on right-hand-side:" rhsf ]
--- matchFact dispo to use cf definition.hs
-    
-    compareFacts fa fb =
-      zipWith toBool. matchFact fa fb
-      
-        
-    
-
-    
     inexistentActions = do
         LemmaItem l <- get thyItems thy
         fa <- sortednub $ formulaFacts (get lFormula l)
