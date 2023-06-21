@@ -475,9 +475,9 @@ factReports thy = concat
         getfactsLhsNoRhs lfacts rfacts =  ruleLhsNoRhs (regroup lfacts) $ regroup rfacts
         regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x) ++ acc) [] 
         ruleLhsNoRhs lhsf rhsf = filter (\x -> matchTuple x rhsf) lhsf 
-        matchTuple fl rhsf  = all (\x -> snd x /= snd fl) rhsf
+        matchTuple fl rhsf  = all (\x -> factInfo (snd x) /= factInfo (snd fl)) rhsf
         ruleAndFact (ruName,fact) =
-          text  ("rule " ++ show ruName ++ ": "++" name "
+          text  ("rule " ++ show ruName ++ ": "
            ++show(factInfo fact))
 
     inexistentActions = do
