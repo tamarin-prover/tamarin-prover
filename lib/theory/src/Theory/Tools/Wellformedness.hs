@@ -102,6 +102,8 @@ import           TheoryObject                (diffThyOptions)
 type Topic         = String
 type WfError       = (Topic, Doc)
 type WfErrorReport = [WfError]
+type RuleAndFact   = (String, LNFact) -- String : name of rule where the fact is
+                                      -- LNFact : the rule
 
 prettyWfErrorReport :: WfErrorReport -> Doc
 prettyWfErrorReport =
@@ -474,17 +476,20 @@ factReports thy = concat
         : (do RuleItem ru <- get thyItems thy; get rActs $ get oprRuleE ru)
           ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
 
-    -- | Compare two list of string and give the list of words which have an editing
-    -- | distance <= 3 or [](nothing)
-    -- | [(ruleName, factLhs)] -> [factsRhs] -> [(ruleName, fact),[fact ed<3]]
-    mostSimilarName :: [(String, LNFact)]->[(String,LNFact)]->[((String,LNFact), (String,LNFact))]
+    
+    -- | To bound a fact with his most similar fact
+    -- | The editing distance of two facts must between 1(includ) and 3 (includ)
+    mostSimilarName :: [RuleAndFact]->[RuleAndFact]
+                      ->[(RuleAndFact,RuleAndFact)]
     mostSimilarName xs xt = 
-        filter (\x-> (isSame (fst x) $ snd x) && (notSimiler (fst x) $ snd x) ) $ 
+        filter (\x-> (notSame (fst x) $ snd x)
+         && (isSimiler (fst x) $ snd x) ) $ 
         foldr (\x acc-> ((,) x $ minEd (snd x) xt):acc) [] xs
       where
-        notSimiler s t            = distance (snd s) t < 3
-        isSame s t                = distance (snd s) t/=0 
-        minEd s                   = head $ sortOn (\x -> (distance s  x) )
+        isSimiler s t             = distance (snd s) t < 3
+        notSame s t               = distance (snd s) t/=0 
+        minEd s li                = head $
+                                    sortOn (\x -> distance s x) li
         distance factL ruleRactR  = editDistance (getName factL) $ 
                                     getName $ snd ruleRactR
         tagName (tag,_,_)         = factTagName tag
@@ -502,12 +507,16 @@ factReports thy = concat
         factLhsNoRhs = [fa | fa <-factsLhsNoRhs 
                              (getFactSide rPrems ru) (getFactSide rConcs ru),
                              isProtoFact $ getFact fa]      -- all the protocol facts not in any rhs
-                                                       -- fa : [((ruleName,fact),(ruleName,fact))]
+                                                       -- type of fa : [((ruleName,fact),(ruleName,fact))]
         ru = thyProtoRules thy
-        getFactSide s = map (\x-> (,) (showRuleCaseName x) $ get s x) -- [(ruleName, [LNFact])]
-
-        factsLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) $ regroup rfacts
-        regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x) ++ acc) [] --[(rule,fact)]
+        getFactSide s = map (\x-> (,) (showRuleCaseName x) 
+                            $ get s x) -- [(ruleName, [LNFact])]
+                                                -- to get all the facts of LHS and of RHS
+        factsLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
+                                      $ regroup rfacts
+                                                -- for each fact on LHS, get his most similar fact in RHS
+        regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x)
+                       ++ acc) [] --type : [RuleAndFact]
         getFact ((_,factL),_) = factL
 
         ruleAndFact ((ruName,factL),(ruNameR,factR)) =
