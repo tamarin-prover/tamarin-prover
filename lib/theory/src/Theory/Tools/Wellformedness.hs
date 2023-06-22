@@ -482,18 +482,16 @@ factReports thy = concat
         filter (\x-> (isSame (fst x) $ snd x) && (notSimiler (fst x) $ snd x) ) $ 
         foldr (\x acc-> ((,) x $ minEd (snd x) xt):acc) [] xs
       where
-        notSimiler s t = distance (snd s) t < 3
-        isSame s t = distance (snd s) t/=0 
-        minEd s xt  = head $ sortOn (\x -> (distance s  x) ) xt 
-        distance factL ruleRactR = editDistance (getName factL) $ 
-                            getName $ snd ruleRactR
-        tagName (tag,_,_) = factTagName tag
-        getName fact = tagName $ factInfo fact
+        notSimiler s t            = distance (snd s) t < 3
+        isSame s t                = distance (snd s) t/=0 
+        minEd s                   = head $ sortOn (\x -> (distance s  x) )
+        distance factL ruleRactR  = editDistance (getName factL) $ 
+                                    getName $ snd ruleRactR
+        tagName (tag,_,_)         = factTagName tag
+        getName fact              = tagName $ factInfo fact
     
-    -- [(ruleName, factNameLhs)] -> [factsNameRhs] -> [(rule, fact),[factName ed<3]]
-    -- regroupSimilarName 
+    
     -- Report a protocol fact occurs in an LHS but not in any RHS
-    -- idea: fact of LHS and fact of RHS, compare the two lists and give a result
     factLhsOccurNoRhs = 
       case factLhsNoRhs of
         []            -> []
@@ -504,20 +502,25 @@ factReports thy = concat
         factLhsNoRhs = [fa | fa <-factsLhsNoRhs 
                              (getFactSide rPrems ru) (getFactSide rConcs ru),
                              isProtoFact $ getFact fa]      -- all the protocol facts not in any rhs
-                                                       -- fa : [((rule,fact),[(rule,fact)])]
+                                                       -- fa : [((ruleName,fact),(ruleName,fact))]
         ru = thyProtoRules thy
-        getFactSide s = map (\x-> (,) (showRuleCaseName x) $ get s x) -- [(string, [LNFact])]
+        getFactSide s = map (\x-> (,) (showRuleCaseName x) $ get s x) -- [(ruleName, [LNFact])]
 
         factsLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) $ regroup rfacts
         regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x) ++ acc) [] --[(rule,fact)]
         getFact ((_,factL),_) = factL
-        -- ruleLhsNoRhs lhsf rhsf = filter (\x -> matchTuple x rhsf) lhsf 
-        -- matchTuple fl rhsf  = all (\x -> factInfo (snd x) /= factInfo (snd fl)) rhsf
-        --(String, LNFact), (String, LNFact)
+
         ruleAndFact ((ruName,factL),(ruNameR,factR)) =
-          text  ("rule " ++ show ruName ++ ": "
-           ++show(factInfo factL)++ ". Perhaps you want to use fact:"
-           ++concatMap (\x -> "rule"++ show ruNameR++","++ show (factInfo factR) ++" ") [(ruNameR,factR)]  ) 
+          text  ("in rule " ++ show ruName ++": "
+           ++ showFactInfo(factInfo factL)
+           ++ ". Perhaps you want to use the fact in rule "
+           ++ show ruNameR ++": "
+           ++ showFactInfo (factInfo factR)  ) 
+        showFactInfo (tag,arity,multi) =
+                  " factName "++quote (factTagName tag)
+                  ++ " arity: "++show arity
+                  ++ " multiplicity: "++show multi
+        
         --ruleAndFact ((ruName,factL),_)= text ("rule " ++ show ruName ++ ": "
           -- ++show(factInfo factL)++ ".")
 
