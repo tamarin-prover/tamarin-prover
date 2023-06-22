@@ -82,6 +82,7 @@ import qualified Data.Set                    as S
 -- import           Data.Traversable            (traverse)
 
 import           Control.Monad.Bind
+-- import           Options.Applicative.Help.Levenshtein
 
 import           Extension.Prelude
 import           Term.LTerm
@@ -169,6 +170,8 @@ editDistance s t =
                              , d!!(i-1)!!(j-1) + (if s!!(i-1)==t!!(j-1) 
                                                   then 0 else 1) 
                              ]
+
+
 ------------------------------------------------------------------------------
 -- Checks
 ------------------------------------------------------------------------------
@@ -470,8 +473,25 @@ factReports thy = concat
         : kuFact undefined
         : (do RuleItem ru <- get thyItems thy; get rActs $ get oprRuleE ru)
           ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
+
+    -- | Compare two list of string and give the list of words which have an editing
+    -- | distance <= 3 or [](nothing)
+    -- | [(ruleName, factLhs)] -> [factsRhs] -> [(ruleName, fact),[fact ed<3]]
+    mostSimilarName :: [(String, LNFact)]->[(String,LNFact)]->[((String,LNFact), (String,LNFact))]
+    mostSimilarName xs xt = 
+        filter (\x-> (isSame (fst x) $ snd x) && (notSimiler (fst x) $ snd x) ) $ 
+        foldr (\x acc-> ((,) x $ minEd (snd x) xt):acc) [] xs
+      where
+        notSimiler s t = distance (snd s) t < 3
+        isSame s t = distance (snd s) t/=0 
+        minEd s xt  = head $ sortOn (\x -> (distance s  x) ) xt 
+        distance factL ruleRactR = editDistance (getName factL) $ 
+                            getName $ snd ruleRactR
+        tagName (tag,_,_) = factTagName tag
+        getName fact = tagName $ factInfo fact
     
-    
+    -- [(ruleName, factNameLhs)] -> [factsNameRhs] -> [(rule, fact),[factName ed<3]]
+    -- regroupSimilarName 
     -- Report a protocol fact occurs in an LHS but not in any RHS
     -- idea: fact of LHS and fact of RHS, compare the two lists and give a result
     factLhsOccurNoRhs = 
@@ -481,17 +501,26 @@ factReports thy = concat
                           map (nest 2 . ruleAndFact ) facts
       where
         topic = "Facts occur in an left-hand-side but not in any right-hand-side "
-        factLhsNoRhs = [fa | fa <-getfactsLhsNoRhs (getFactsBySide rPrems ru) (getFactsBySide rConcs ru),
-                            isProtoFact $ snd fa]      -- all the protocol facts not in any rhs
+        factLhsNoRhs = [fa | fa <-factsLhsNoRhs 
+                             (getFactSide rPrems ru) (getFactSide rConcs ru),
+                             isProtoFact $ getFact fa]      -- all the protocol facts not in any rhs
+                                                       -- fa : [((rule,fact),[(rule,fact)])]
         ru = thyProtoRules thy
-        getFactsBySide side = map (\x-> (,) (showRuleCaseName x) $ (get side x)) 
-        getfactsLhsNoRhs lfacts rfacts =  ruleLhsNoRhs (regroup lfacts) $ regroup rfacts
-        regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x) ++ acc) [] 
-        ruleLhsNoRhs lhsf rhsf = filter (\x -> matchTuple x rhsf) lhsf 
-        matchTuple fl rhsf  = all (\x -> factInfo (snd x) /= factInfo (snd fl)) rhsf
-        ruleAndFact (ruName,fact) =
+        getFactSide s = map (\x-> (,) (showRuleCaseName x) $ get s x) -- [(string, [LNFact])]
+
+        factsLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) $ regroup rfacts
+        regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x) ++ acc) [] --[(rule,fact)]
+        getFact ((_,factL),_) = factL
+        -- ruleLhsNoRhs lhsf rhsf = filter (\x -> matchTuple x rhsf) lhsf 
+        -- matchTuple fl rhsf  = all (\x -> factInfo (snd x) /= factInfo (snd fl)) rhsf
+        --(String, LNFact), (String, LNFact)
+        ruleAndFact ((ruName,factL),(ruNameR,factR)) =
           text  ("rule " ++ show ruName ++ ": "
-           ++show(factInfo fact))
+           ++show(factInfo factL)++ ". Perhaps you want to use fact:"
+           ++concatMap (\x -> "rule"++ show ruNameR++","++ show (factInfo factR) ++" ") [(ruNameR,factR)]  ) 
+        --ruleAndFact ((ruName,factL),_)= text ("rule " ++ show ruName ++ ": "
+          -- ++show(factInfo factL)++ ".")
+
 
     inexistentActions = do
         LemmaItem l <- get thyItems thy
