@@ -156,6 +156,19 @@ clashesOn f g xs = do
 quote :: String -> String
 quote cs = '`' : cs ++ "'"
 
+
+-- | Editing distance
+editDistance :: String-> String -> Int
+editDistance s t = 
+    d !!(length s)!!(length t)  
+    where d = [ [ dist m n | n <- [0..length t] ] | m <- [0..length s] ]
+          dist i 0 = i
+          dist 0 j = j
+          dist i j = minimum [ d!!(i-1)!!j+1
+                             , d!!i!!(j-1)+1
+                             , d!!(i-1)!!(j-1) + (if s!!(i-1)==t!!(j-1) 
+                                                  then 0 else 1) 
+                             ]
 ------------------------------------------------------------------------------
 -- Checks
 ------------------------------------------------------------------------------
@@ -465,9 +478,9 @@ factReports thy = concat
       case factLhsNoRhs of
         []            -> []
         facts         -> return $ (,) topic $ numbered' $
-          map (nest 2 . ruleAndFact ) facts
+                          map (nest 2 . ruleAndFact ) facts
       where
-        topic = "Facts occur in an LHS but not in any RHS "
+        topic = "Facts occur in an left-hand-side but not in any right-hand-side "
         factLhsNoRhs = [fa | fa <-getfactsLhsNoRhs (getFactsBySide rPrems ru) (getFactsBySide rConcs ru),
                             isProtoFact $ snd fa]      -- all the protocol facts not in any rhs
         ru = thyProtoRules thy
