@@ -214,9 +214,9 @@ helpAndExit tmode mayMsg = do
     putStrLn $ showText (Wrap lineWidth)
              $ helpText header HelpFormatOne (tmCmdArgsMode tmode)
     -- output example info
-    when (tmIsMainMode tmode) $ do
-      putStrLn $ unlines
+    putStrLn $ unlines
         [ separator
+        , "To show help for differents commands, type tamarin-prover [Command] --help."
         , "See 'https://github.com/tamarin-prover/tamarin-prover/blob/master/README.md'"
         , "for usage instructions and pointers to examples."
         , separator
@@ -235,7 +235,8 @@ defaultMain firstMode otherModes = do
     case findArg "mode" as of
       Nothing   -> error $ "defaultMain: impossible - mode not set"
       Just name -> headNote "defaultMain: impossible - no mode found" $ do
-          tmode <- (mainMode : otherModes)
+          allModes <- [interMode:intruderMode:testMode:[]]
+          tmode <- (mainMode : allModes)
           guard (tmName tmode == name)
           return $ tmRun tmode tmode as
   where
@@ -255,6 +256,27 @@ defaultMain firstMode otherModes = do
               }
           }
       , tmIsMainMode = True
+      }
+    interMode = (head otherModes)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ head otherModes)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ firstMode : (tail otherModes))
+        }
+      }
+    intruderMode = (otherModes !! 1)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ otherModes !! 1)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ firstMode : (head otherModes : last otherModes : []))
+        }
+      }
+    testMode = (otherModes !! 2)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ otherModes !! 2)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ firstMode : (init otherModes))
+        }
       }
 
 
