@@ -490,7 +490,7 @@ factReports thy = concat
                           map (nest 2 . ruleAndFact ) facts
       where
         topic = "Facts occur in an left-hand-side but not in any right-hand-side "
-        factLhsNoRhs = [fa | fa <-factsLhsNoRhs 
+        factLhsNoRhs = [fa | fa <-getFactLhsNoRhs 
                              (getFactSide rPrems ru) (getFactSide rConcs ru),
                              isProtoFact $ getFact fa]      -- all the protocol facts not in any rhs
                                                        -- type of fa : [((ruleName,fact),(ruleName,fact))]
@@ -498,7 +498,7 @@ factReports thy = concat
         getFactSide s = map (\x-> (,) (showRuleCaseName x) 
                             $ get s x) -- [(ruleName, [LNFact])]
                                                 -- to get all the facts of LHS and of RHS
-        factsLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
+        getFactLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
                                       $ regroup rfacts
                                                 -- for each fact on LHS, get his most similar fact in RHS
         regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x)
