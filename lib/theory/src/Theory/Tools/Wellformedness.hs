@@ -93,6 +93,7 @@ import           Theory.Tools.RuleVariants
 import           Safe                        (lastMay)
 import           Items.OptionItem            (lemmasToProve)
 import           TheoryObject                (diffThyOptions)
+import           Utils.Misc
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -157,20 +158,6 @@ clashesOn f g xs = do
 -- | Nice quoting.
 quote :: String -> String
 quote cs = '`' : cs ++ "'"
-
-
--- | Editing distance
-editDistance :: String-> String -> Int
-editDistance s t = 
-    d !!(length s)!!(length t)  
-    where d = [ [ dist m n | n <- [0..length t] ] | m <- [0..length s] ]
-          dist i 0 = i
-          dist 0 j = j
-          dist i j = minimum [ d!!(i-1)!!j+1
-                             , d!!i!!(j-1)+1
-                             , d!!(i-1)!!(j-1) + (if s!!(i-1)==t!!(j-1) 
-                                                  then 0 else 1) 
-                             ]
 
 
 ------------------------------------------------------------------------------
