@@ -82,7 +82,6 @@ import qualified Data.Set                    as S
 -- import           Data.Traversable            (traverse)
 
 import           Control.Monad.Bind
--- import           Options.Applicative.Help.Levenshtein
 
 import           Extension.Prelude
 import           Term.LTerm
