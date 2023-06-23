@@ -1,0 +1,15 @@
+theory TestNewWarn
+begin
+
+rule r1:
+  [LongFactNameExt()]-->[ LongFactNameExact(),LongFactNameExac() ]
+
+rule r2:
+  [OnResultingIn('second'),LongFactNameExkt() ]-->[ResultingIn('second')]
+
+rule r3:
+  [LongFactNameExact() ] --> [OneResultingIn('second')]
+
+rule r4:
+  [ ] --> [TwoResultingIn('second')]
+end
