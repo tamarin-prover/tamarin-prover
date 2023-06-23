@@ -29,6 +29,9 @@ module Utils.Misc (
   -- * unsafeEq
   , unsafeEq
 
+  -- * String operations
+  , editDistance
+
   -- * triples
   , fst3
   , snd3
@@ -152,3 +155,17 @@ twoPartitions (x:xs) = (map addToFirst ps) ++ (map addToSecond ps)
         addToFirst  (a, b) = (x:a, b)
         addToSecond (a, b) = (a, x:b)
         ps = twoPartitions xs
+
+
+-- | Calculate the editing distance between two strings
+editDistance :: String-> String -> Int
+editDistance s t = 
+    d !!(length s)!!(length t)  
+    where d = [ [ dist m n | n <- [0..length t] ] | m <- [0..length s] ]
+          dist i 0 = i
+          dist 0 j = j
+          dist i j = minimum [ d!!(i-1)!!j+1
+                             , d!!i!!(j-1)+1
+                             , d!!(i-1)!!(j-1) + (if s!!(i-1)==t!!(j-1) 
+                                                  then 0 else 1) 
+                             ]
