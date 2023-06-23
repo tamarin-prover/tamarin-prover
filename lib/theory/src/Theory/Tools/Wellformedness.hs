@@ -469,10 +469,10 @@ factReports thy = concat
                       ->[(RuleAndFact,RuleAndFact)]
     mostSimilarName xs xt = 
         filter (\x-> (notSame (fst x) $ snd x)
-         && (isSimiler (fst x) $ snd x) ) $ 
+         && (isSimilar (fst x) $ snd x) ) $ 
         foldr (\x acc-> ((,) x $ minEd (snd x) xt):acc) [] xs
       where
-        isSimiler s t             = distance (snd s) t < 3
+        isSimilar s t             = distance (snd s) t < 3
         notSame s t               = distance (snd s) t/=0 
         minEd s li                = head $
                                     sortOn (\x -> distance s x) li
