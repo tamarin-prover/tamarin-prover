@@ -51,7 +51,7 @@ module Theory.Model.Formula (
   , (.==>.)
   , (.<=>.)
   , exists
-  , forall
+  , forAll
   , hinted
 
   -- ** General Transformations
@@ -338,14 +338,14 @@ quantify x =
               | otherwise = Free v
 
 -- | Create a universal quantification with a sort hint for the bound variable.
-forall :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
-forall hint' x = Qua All hint' . quantify x
+forAll :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
+forAll hint' x = Qua All hint' . quantify x
 
 -- | Create a existential quantification with a sort hint for the bound variable.
 exists :: (Ord c, Ord v, Functor syn) => s -> v -> ProtoFormula syn s c v -> ProtoFormula syn s c v
 exists hint' x = Qua Ex hint' . quantify x
 
--- | Transform @forall@ and @exists@ into functions that operate on logical variables or other variables
+-- | Transform @forAll@ and @exists@ into functions that operate on logical variables or other variables
 --   that have hasHint
 hinted :: Hinted v => ((String, LSort) -> v -> a) -> v -> a
 hinted f v = f (hint v) v
