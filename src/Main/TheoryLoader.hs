@@ -66,6 +66,7 @@ import qualified Sapic as Sapic
 import           Main.Console                        (argExists, findArg, addEmptyArg, updateArg, Arguments)
 
 import           Main.Environment
+import           Main.Console
 
 import           Text.Parsec                hiding ((<|>),try,parse)
 import           Safe

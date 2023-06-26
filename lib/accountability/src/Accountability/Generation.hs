@@ -59,7 +59,7 @@ freesSubsetCorrupt vars = foldl1 (.&&.) corrupted
         corrupt var = quantifyVars exists [tempVar "i"] $ protoFactFormula "Corrupted" [varTerm $ Free var] (tempTerm "i")
 
 corruptSubsetFrees :: [LVar] -> SyntacticLNFormula
-corruptSubsetFrees vars = quantifyVars forall [msgVar "a", tempVar "i"] $
+corruptSubsetFrees vars = quantifyVars forAll [msgVar "a", tempVar "i"] $
                             (protoFactFormula "Corrupted" [msgTerm "a"] (tempTerm "i") .==>. isElem (msgVar "a") vars)
 
 isElem :: LVar -> [LVar] -> SyntacticLNFormula
@@ -91,7 +91,7 @@ singleMatch :: MonadFresh m => SyntacticLNFormula -> m SyntacticLNFormula
 singleMatch t = do
     t1 <- rename t
     t2 <- rename t
-    return $ t1 .&&. quantifyVars forall (frees t2) (t2 .==>. varsEq (frees t2) (frees t1))
+    return $ t1 .&&. quantifyVars forAll (frees t2) (t2 .==>. varsEq (frees t2) (frees t1))
 
 caseTestFormulasExcept :: AccLemma -> CaseTest -> [SyntacticLNFormula]
 caseTestFormulasExcept accLemma caseTest = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) (L.get aCaseTests accLemma))
@@ -173,7 +173,7 @@ verifiabilityEmpty accLemma = return $ toLemma accLemma AllTraces name formula
         taus = map (L.get cFormula) (L.get aCaseTests accLemma)
         lhs = Not $ foldConn (.||.) $ map (quantifyFrees exists) taus
         phi = L.get aFormula accLemma
-        formula = quantifyFrees forall $ lhs .==>. phi
+        formula = quantifyFrees forAll $ lhs .==>. phi
 
 verifiabilityNonEmpty :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
 verifiabilityNonEmpty accLemma caseTest = return $ toLemma accLemma AllTraces name (toIntermediate formula)
@@ -181,7 +181,7 @@ verifiabilityNonEmpty accLemma caseTest = return $ toLemma accLemma AllTraces na
         name = "_" ++ L.get cName caseTest ++ "_verif_nonempty"
         tau = L.get cFormula caseTest
         phi = L.get aFormula accLemma
-        formula = quantifyFrees forall $ tau .==>. Not phi
+        formula = quantifyFrees forAll $ tau .==>. Not phi
 
 minimality :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
 minimality accLemma caseTest = do
@@ -189,7 +189,7 @@ minimality accLemma caseTest = do
     tts <- mapM rename taus
 
     let rhs = map (\t -> Not (quantifyVars exists (frees t) $ t .&&. strictSubsetOf (frees t) (frees t1))) tts
-    let formula = quantifyFrees forall $ t1 .==>. foldConn (.&&.) rhs
+    let formula = quantifyFrees forAll $ t1 .==>. foldConn (.&&.) rhs
 
     return $ toLemma accLemma AllTraces name (toIntermediate formula)
     where
@@ -202,7 +202,7 @@ uniqueness accLemma caseTest = return $ toLemma accLemma AllTraces name (toInter
     where
         name = "_" ++ L.get cName caseTest ++ "_uniq"
         tau = L.get cFormula caseTest
-        formula = quantifyFrees forall (tau .==>. freesSubsetCorrupt (frees tau))
+        formula = quantifyFrees forAll (tau .==>. freesSubsetCorrupt (frees tau))
 
 -- | :TODO: : Avoid duplicates
 injective :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
@@ -210,7 +210,7 @@ injective accLemma caseTest = return $ toLemma accLemma AllTraces name (toInterm
     where
         name = "_" ++ L.get cName caseTest ++ "_inj"
         tau = L.get cFormula caseTest
-        formula = quantifyFrees forall (tau .==>. foldl (.&&.) (TF True) [ Not $ varsEq [x] [y] | x <- frees tau, y <- frees tau, x /= y ])
+        formula = quantifyFrees forAll (tau .==>. foldl (.&&.) (TF True) [ Not $ varsEq [x] [y] | x <- frees tau, y <- frees tau, x /= y ])
 
 singlematched :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
 singlematched accLemma caseTest = do
