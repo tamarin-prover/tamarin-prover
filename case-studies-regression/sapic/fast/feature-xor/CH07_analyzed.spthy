@@ -6,6 +6,8 @@ builtins: xor
 functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 
@@ -516,6 +518,12 @@ qed
 
 
 
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="!"]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
@@ -533,33 +541,33 @@ rule (modulo E) p_1_[color=#ffffff, process="!"]:
      [ !Semistate_1111( ~id, ~k ) ]
   */
 
-rule (modulo E) newr_0_111111[color=#404480, process="new ~r1.1;"]:
+rule (modulo E) newr_0_111111[color=#40805f, process="new ~r1.1;"]:
    [ State_111111( ~id.1, ~k.1 ), Fr( ~r1.1 ) ]
   --[ Challenge( ~r1.1, 'Reader' ) ]->
    [ State_111111111( ~id.1, ~k.1, ~r1.1 ), Out( ~r1.1 ) ]
 
   /*
-  rule (modulo AC) newr_0_111111[color=#404480, process="new ~r1.1;"]:
+  rule (modulo AC) newr_0_111111[color=#40805f, process="new ~r1.1;"]:
      [ State_111111( ~id, ~k ), Fr( ~r1 ) ]
     --[ Challenge( ~r1, 'Reader' ) ]->
      [ State_111111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
   */
 
-rule (modulo E) inrx_0_111111111[color=#404480,
+rule (modulo E) inrx_0_111111111[color=#40805f,
                                  process="in(<r2.1, x.1>);"]:
    [ State_111111111( ~id.1, ~k.1, ~r1.1 ), In( <r2.1, x.1> ) ]
   -->
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
 
   /*
-  rule (modulo AC) inrx_0_111111111[color=#404480,
+  rule (modulo AC) inrx_0_111111111[color=#40805f,
                                     process="in(<r2.1, x.1>);"]:
      [ State_111111111( ~id, ~k, ~r1 ), In( <r2, x> ) ]
     -->
      [ State_1111111111( ~id, ~k, ~r1, r2, x ) ]
   */
 
-rule (modulo E) ifxlhhkrrrotidhkrr_0_1111111111[color=#404480,
+rule (modulo E) ifxlhhkrrrotidhkrr_0_1111111111[color=#40805f,
                                                 process="if x.1=lh((h((~k.1⊕~r1.1⊕r2.1))⊕rot(~id.1, h((~k.1⊕~r1.1⊕r2.1)))))"]:
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
   --[
@@ -569,7 +577,7 @@ rule (modulo E) ifxlhhkrrrotidhkrr_0_1111111111[color=#404480,
    [ State_11111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
 
   /*
-  rule (modulo AC) ifxlhhkrrrotidhkrr_0_1111111111[color=#404480,
+  rule (modulo AC) ifxlhhkrrrotidhkrr_0_1111111111[color=#40805f,
                                                    process="if x.1=lh((h((~k.1⊕~r1.1⊕r2.1))⊕rot(~id.1, h((~k.1⊕~r1.1⊕r2.1)))))"]:
      [ State_1111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     --[ Pred_Eq( x.1, lh((h(x)⊕rot(~id, h(x)))) ) ]->
@@ -621,42 +629,42 @@ rule (modulo E) ifxlhhkrrrotidhkrr_0_1111111111[color=#404480,
        x     = (~r1.83⊕x.160)
   */
 
-rule (modulo E) eventAlivekTag_0_11111111111[color=#404480,
+rule (modulo E) eventAlivekTag_0_11111111111[color=#40805f,
                                              process="event Alive( ~k.1, 'Tag' );"]:
    [ State_11111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
   --[ Alive( ~k.1, 'Tag' ) ]->
    [ State_111111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
 
   /*
-  rule (modulo AC) eventAlivekTag_0_11111111111[color=#404480,
+  rule (modulo AC) eventAlivekTag_0_11111111111[color=#40805f,
                                                 process="event Alive( ~k.1, 'Tag' );"]:
      [ State_11111111111( ~id, ~k, ~r1, r2, x ) ]
     --[ Alive( ~k, 'Tag' ) ]->
      [ State_111111111111( ~id, ~k, ~r1, r2, x ) ]
   */
 
-rule (modulo E) eventResponsekReader_0_111111111111[color=#404480,
+rule (modulo E) eventResponsekReader_0_111111111111[color=#40805f,
                                                     process="event Response( ~k.1, 'Reader' );"]:
    [ State_111111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
   --[ Response( ~k.1, 'Reader' ) ]->
    [ State_1111111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
 
   /*
-  rule (modulo AC) eventResponsekReader_0_111111111111[color=#404480,
+  rule (modulo AC) eventResponsekReader_0_111111111111[color=#40805f,
                                                        process="event Response( ~k.1, 'Reader' );"]:
      [ State_111111111111( ~id, ~k, ~r1, r2, x ) ]
     --[ Response( ~k, 'Reader' ) ]->
      [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
   */
 
-rule (modulo E) eventRunningTRkrr_0_1111111111111[color=#404480,
+rule (modulo E) eventRunningTRkrr_0_1111111111111[color=#40805f,
                                                   process="event Running( <'T', 'R', (~k.1⊕~r1.1⊕r2.1)> );"]:
    [ State_1111111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
   --[ Running( <'T', 'R', (~k.1⊕~r1.1⊕r2.1)> ) ]->
    [ State_11111111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
 
   /*
-  rule (modulo AC) eventRunningTRkrr_0_1111111111111[color=#404480,
+  rule (modulo AC) eventRunningTRkrr_0_1111111111111[color=#40805f,
                                                      process="event Running( <'T', 'R', (~k.1⊕~r1.1⊕r2.1)> );"]:
      [ State_1111111111111( ~id, ~k, ~r1, r2, x ) ]
     --[ Running( <'T', 'R', z> ) ]->
@@ -708,14 +716,14 @@ rule (modulo E) eventRunningTRkrr_0_1111111111111[color=#404480,
        z     = (~r1.21⊕x.36)
   */
 
-rule (modulo E) eventCommitRTkrr_0_11111111111111[color=#404480,
+rule (modulo E) eventCommitRTkrr_0_11111111111111[color=#40805f,
                                                   process="event Commit( <'R', 'T', (~k.1⊕~r1.1⊕r2.1)> );"]:
    [ State_11111111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
   --[ Commit( <'R', 'T', (~k.1⊕~r1.1⊕r2.1)> ) ]->
    [ Out( rh((h((~k.1⊕~r1.1⊕r2.1))⊕rot(~id.1, h((~k.1⊕~r1.1⊕r2.1))))) ) ]
 
   /*
-  rule (modulo AC) eventCommitRTkrr_0_11111111111111[color=#404480,
+  rule (modulo AC) eventCommitRTkrr_0_11111111111111[color=#40805f,
                                                      process="event Commit( <'R', 'T', (~k.1⊕~r1.1⊕r2.1)> );"]:
      [ State_11111111111111( ~id, ~k, ~r1, r2, x ) ]
     --[ Commit( <'R', 'T', z> ) ]->
@@ -767,7 +775,7 @@ rule (modulo E) eventCommitRTkrr_0_11111111111111[color=#404480,
        z     = (~r1.139⊕x.272)
   */
 
-rule (modulo E) ifxlhhkrrrotidhkrr_1_1111111111[color=#404480,
+rule (modulo E) ifxlhhkrrrotidhkrr_1_1111111111[color=#40805f,
                                                 process="if x.1=lh((h((~k.1⊕~r1.1⊕r2.1))⊕rot(~id.1, h((~k.1⊕~r1.1⊕r2.1)))))"]:
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, r2.1, x.1 ) ]
   --[
@@ -778,7 +786,7 @@ rule (modulo E) ifxlhhkrrrotidhkrr_1_1111111111[color=#404480,
    [ ]
 
   /*
-  rule (modulo AC) ifxlhhkrrrotidhkrr_1_1111111111[color=#404480,
+  rule (modulo AC) ifxlhhkrrrotidhkrr_1_1111111111[color=#40805f,
                                                    process="if x.1=lh((h((~k.1⊕~r1.1⊕r2.1))⊕rot(~id.1, h((~k.1⊕~r1.1⊕r2.1)))))"]:
      [ State_1111111111( ~id, ~k, ~r1, r2, x.1 ) ]
     --[ Pred_Not_Eq( x.1, lh((h(x)⊕rot(~id, h(x)))) ) ]->
@@ -842,33 +850,33 @@ rule (modulo E) p_1_111[color=#ffffff, process="!"]:
      [ State_111121( ~id, ~k ), State_111111( ~id, ~k ) ]
   */
 
-rule (modulo E) inr_0_111121[color=#40807c, process="in(r1.2);"]:
+rule (modulo E) inr_0_111121[color=#408057, process="in(r1.2);"]:
    [ State_111121( ~id.1, ~k.1 ), In( r1.2 ), Fr( ~r2.2 ) ]
   --[ Response( ~k.1, 'Tag' ) ]->
    [ State_111121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ]
 
   /*
-  rule (modulo AC) inr_0_111121[color=#40807c, process="in(r1.2);"]:
+  rule (modulo AC) inr_0_111121[color=#408057, process="in(r1.2);"]:
      [ State_111121( ~id, ~k ), In( r1 ), Fr( ~r2 ) ]
     --[ Response( ~k, 'Tag' ) ]->
      [ State_111121111( ~id, ~k, ~r2, r1 ) ]
   */
 
-rule (modulo E) eventChallengerTag_0_111121111[color=#40807c,
+rule (modulo E) eventChallengerTag_0_111121111[color=#408057,
                                                process="event Challenge( ~r2.2, 'Tag' );"]:
    [ State_111121111( ~id.1, ~k.1, ~r2.2, r1.2 ) ]
   --[ Challenge( ~r2.2, 'Tag' ) ]->
    [ State_1111211111( ~id.1, ~k.1, ~r2.2, r1.2 ) ]
 
   /*
-  rule (modulo AC) eventChallengerTag_0_111121111[color=#40807c,
+  rule (modulo AC) eventChallengerTag_0_111121111[color=#408057,
                                                   process="event Challenge( ~r2.2, 'Tag' );"]:
      [ State_111121111( ~id, ~k, ~r2, r1 ) ]
     --[ Challenge( ~r2, 'Tag' ) ]->
      [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
   */
 
-rule (modulo E) eventRunningRTkrr_0_1111211111[color=#40807c,
+rule (modulo E) eventRunningRTkrr_0_1111211111[color=#408057,
                                                process="event Running( <'R', 'T', (~k.1⊕~r2.2⊕r1.2)> );"]:
    [ State_1111211111( ~id.1, ~k.1, ~r2.2, r1.2 ) ]
   --[ Running( <'R', 'T', (~k.1⊕~r2.2⊕r1.2)> ) ]->
@@ -879,7 +887,7 @@ rule (modulo E) eventRunningRTkrr_0_1111211111[color=#40807c,
    ]
 
   /*
-  rule (modulo AC) eventRunningRTkrr_0_1111211111[color=#40807c,
+  rule (modulo AC) eventRunningRTkrr_0_1111211111[color=#408057,
                                                   process="event Running( <'R', 'T', (~k.1⊕~r2.2⊕r1.2)> );"]:
      [ State_1111211111( ~id, ~k, ~r2, r1 ) ]
     --[ Running( <'R', 'T', z> ) ]->
@@ -934,7 +942,7 @@ rule (modulo E) eventRunningRTkrr_0_1111211111[color=#40807c,
        z     = (~r2.130⊕x.253)
   */
 
-rule (modulo E) inrhhkrrrotidhkrr_0_111121111111[color=#40807c,
+rule (modulo E) inrhhkrrrotidhkrr_0_111121111111[color=#408057,
                                                  process="in(rh((h((=~k.1⊕=~r2.2⊕=r1.2))⊕rot(=~id.1, h((=~k.1⊕=~r2.2⊕=r1.2))))));"]:
    [
    State_111121111111( ~id.1, ~k.1, ~r2.2, r1.2 ),
@@ -944,7 +952,7 @@ rule (modulo E) inrhhkrrrotidhkrr_0_111121111111[color=#40807c,
    [ State_11112111111111( ~id.1, ~k.1, ~r2.2, r1.2 ) ]
 
   /*
-  rule (modulo AC) inrhhkrrrotidhkrr_0_111121111111[color=#40807c,
+  rule (modulo AC) inrhhkrrrotidhkrr_0_111121111111[color=#408057,
                                                     process="in(rh((h((=~k.1⊕=~r2.2⊕=r1.2))⊕rot(=~id.1, h((=~k.1⊕=~r2.2⊕=r1.2))))));"]:
      [ State_111121111111( ~id, ~k, ~r2, r1 ), In( rh((h(x)⊕rot(~id, h(x)))) )
      ]
@@ -997,14 +1005,14 @@ rule (modulo E) inrhhkrrrotidhkrr_0_111121111111[color=#40807c,
        x     = (~r2.92⊕x.177)
   */
 
-rule (modulo E) eventCommitTRkrr_0_11112111111111[color=#40807c,
+rule (modulo E) eventCommitTRkrr_0_11112111111111[color=#408057,
                                                   process="event Commit( <'T', 'R', (~k.1⊕~r2.2⊕r1.2)> );"]:
    [ State_11112111111111( ~id.1, ~k.1, ~r2.2, r1.2 ) ]
   --[ Commit( <'T', 'R', (~k.1⊕~r2.2⊕r1.2)> ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventCommitTRkrr_0_11112111111111[color=#40807c,
+  rule (modulo AC) eventCommitTRkrr_0_11112111111111[color=#408057,
                                                      process="event Commit( <'T', 'R', (~k.1⊕~r2.2⊕r1.2)> );"]:
      [ State_11112111111111( ~id, ~k, ~r2, r1 ) ]
     --[ Commit( <'T', 'R', z> ) ]->
@@ -1074,8 +1082,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -1090,7 +1098,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CH07.spthy
 
   output:          examples/sapic/fast/feature-xor/CH07.spthy.tmp
-  processing time: 2.63s
+  processing time: 1.68s
   
   recentalive_tag_attack (exists-trace): verified (10 steps)
   recentalive_reader (all-traces): verified (24 steps)

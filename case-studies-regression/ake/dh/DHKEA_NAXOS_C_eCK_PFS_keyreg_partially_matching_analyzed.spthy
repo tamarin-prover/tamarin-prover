@@ -16,6 +16,8 @@ equations:
 
 
 
+
+
 rule (modulo E) generate_ltk:
    [ Fr( ~ea ) ]
   --[ RegKey( $A ), Honest( $A ) ]->
@@ -5249,14 +5251,25 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Timed Out:
+  Derivation Checks
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -5271,7 +5284,10 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy.tmp
-  processing time: 88.19s
+  processing time: 66.71s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (809 steps)

@@ -8,6 +8,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 heuristic: p
 
 
@@ -87,6 +89,22 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 rule (modulo E) MessageIDRule[color=#ffffff, process="+"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
@@ -152,8 +170,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -168,7 +186,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/reliable-channel.spthy
 
   output:          examples/sapic/fast/basic/reliable-channel.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.11s
   
   A_possible (exists-trace): verified (3 steps)
   B_possible (exists-trace): verified (3 steps)

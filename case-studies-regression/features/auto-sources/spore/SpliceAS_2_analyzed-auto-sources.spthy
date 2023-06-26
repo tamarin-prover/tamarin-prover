@@ -17,6 +17,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ]
   --[ Register( $U, ~ltk ), OnlyOnce( $U ) ]->
@@ -598,7 +600,40 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  AS_send_key
+Failed to derive Variable(s): ~ltkY
+  
+  C_to_S
+Failed to derive Variable(s): ~ltkAS
+  
+  S_to_AS
+Failed to derive Variable(s): ltkC
+  
+  S_to_C
+Failed to derive Variable(s): ~ltkAS
+*/
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -781,8 +816,8 @@ qed
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -797,7 +832,10 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 5.04s
+  processing time: 4.38s
+  
+  WARNING: 4 wellformedness check failed!
+           The analysis results might be wrong!
   
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)
