@@ -1,0 +1,19 @@
+theory issue515
+begin
+
+rule test:
+[ K(x) ] --[ KU(x) ]-> [ KD(x) ]
+
+rule test2:
+[ Out(x)] --[ KD(x) ]-> [ In(x) ]
+
+rule test3:
+[ K(x) ] --[In(x) ]-> [ K(x) ]
+
+rule test4:
+[ Ku(x) ] --[ Ku(x) ]-> [ Out(x) ]
+
+rule test5:
+[ Kd(x) ] --[ Kd(x) ]-> [ Ku(x) ]
+
+end
