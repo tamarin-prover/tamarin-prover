@@ -1,0 +1,368 @@
+theory anonymity_Initiator_psk_revealed_trusted_pki_K1K begin
+/* Channel rules for the following handshake:
+K1K:
+ -> s
+ <- s
+ ...
+ -> e es
+ <- e ee
+ -> se
+
+ */
+
+builtins: hashing, diffie-hellman
+functions: aead/4, kdf1/1, kdf2/1, kdf3/1, decrypt/3, verify/4, true/0
+// decrypt is not used by agents but we need to offer this possibility to the adversary
+equations: decrypt(k, n, aead(k, n, a, p)) = p
+// verify is not needed by agents but we need to offer this possibility to the
+// adversary for observationnal independence properties
+equations: verify(k, n, a, aead(k, n, a, p)) = true
+
+tactic: equivalence
+presort: s
+prio: 
+ //state (fst)
+    regex "^My" 
+    regex "^I_"
+    regex "^R_" 
+    regex "^St_"
+    regex "^!Transport_"
+    regex "^!SessionId\("
+    regex "^Ek"
+    regex "^Handshake" 
+    regex "^Peer"
+prio:
+// diff (fst)
+    regex "~~>" | regex "^!KD"
+prio:
+// peer (fst)
+    regex "^!Pk\("
+prio: 
+// nonces (fst)
+    regex "^!KU\( *~.*\)"
+    //reasonableNoncesNoise ""
+prio: {smallest}  //smallest dh
+    dhreNoise "diff" 
+prio: {smallest}
+//smallest channel
+    regex "Receivable\(.*'"
+    regex "Receivable\(.*\("
+    regex "Recv\(.*\("
+    regex "Recv\(.*'"
+prio:
+//default case
+    not regex "!KU\( (\$?[a-zA-Z0-9.]+|'[^']+') \)"
+    not regex "!KU\( (?!(one|true))[a-zA-Z0-9.]+ \)"
+
+
+/* Handshake initialisation with initial
+        knowledge for Initiator */
+
+rule Init_Handshake_Initiator:
+ let hash0 = h(<'K1K', prologue>)
+     hash1 = h(<hash0, ('g'^~s)>)
+     hash2 = h(<hash1, ('g'^rs)>) in
+ [ Init_Handshake_Initiator(id, prologue, ~s, ('g'^rs)) ]
+ --[  ]->
+ [ HandshakeState_Initiator_0(id, hash2, 'K1K', ~s, ('g'^rs)) ]
+
+/* Initiator is Snding this message: -> e es */
+
+rule Handshake_Initiator_Snd_1:
+ let rs = ~rs
+     hash1 = h(<hash, ('g'^~e0)>)
+     ck2 = kdf1(<ck, (('g'^rs)^~e0)>)
+     k3 = kdf2(<ck, (('g'^rs)^~e0)>)
+     c4 = aead(k3, '0', hash1, payload)
+     hash5 = h(<hash1, c4>) in
+ [ HandshakeState_Initiator_0(id, hash, ck, ~s, ('g'^rs)), Handshake_Snd_1(id, payload), Ek(~e0) ]
+ --[ RawSnd('Initiator1', <('g'^~e0), c4>) ]->
+ [
+  MyEk_Initiator(id, ('g'^~e0)),
+  HandshakeState_Initiator_1(id, hash5, ck2, k3, ~e0, ~s, ('g'^rs)),
+  Send(<('g'^~e0), c4>)
+ ]
+
+/* Initiator is Recving this message: <- e ee */
+
+rule Handshake_Initiator_Recv_2:
+ let rs = ~rs
+     hash1 = h(<hash, ('g'^re0)>)
+     ck2 = kdf1(<ck, (('g'^re0)^~e)>)
+     k3 = kdf2(<ck, (('g'^re0)^~e)>)
+     c4 = aead(k3, '0', hash1, payload)
+     hash5 = h(<hash1, c4>) in
+ [ HandshakeState_Initiator_1(id, hash, ck, k, ~e, ~s, ('g'^rs)), Recv(<('g'^re0), c4>) ]
+ --[ RawRecv('Responder2', <('g'^re0), c4>) ]->
+ [
+  PeerEk_Initiator(id, ('g'^re0)),
+  HandshakeState_Initiator_2(id, hash5, ck2, k3, ~e, ('g'^re0), ~s, ('g'^rs)),
+  Handshake_Recv_2(id, payload)
+ ]
+
+/* Initiator is Snding this message: -> se */
+
+rule Handshake_Initiator_Snd_3:
+ let rs = ~rs
+     ck0 = kdf1(<ck, (('g'^re)^~s)>)
+     k1 = kdf2(<ck, (('g'^re)^~s)>)
+     c2 = aead(k1, '0', hash, payload)
+     hash3 = h(<hash, c2>) in
+ [
+  HandshakeState_Initiator_2(id, hash, ck, k, ~e, ('g'^re), ~s, ('g'^rs)),
+  Handshake_Snd_3(id, payload)
+ ]
+ --[ RawSnd('Initiator3', <c2>) ]->
+ [ HandshakeState_Initiator_3(id, hash3, ck0, k1, ~e, ('g'^re), ~s, ('g'^rs)), Send(<c2>) ]
+
+/* Initiator switches to transport mode */
+
+rule Initiator_to_transport_mode:
+ [ HandshakeState_Initiator_3(id, hash, ck, k, ~e, ('g'^re), ~s, ('g'^rs)) ]
+ --[  ]->
+ [ !Transport_Initiator(id, kdf1(ck), kdf2(ck)), !SessionId(id, hash) ]
+
+/* Handshake initialisation with initial
+        knowledge for Responder */
+
+rule Init_Handshake_Responder:
+ let hash0 = h(<'K1K', prologue>)
+     hash1 = h(<hash0, ('g'^rs)>)
+     hash2 = h(<hash1, ('g'^~s)>) in
+ [ Init_Handshake_Responder(id, prologue, ~s, ('g'^rs)) ]
+ --[  ]->
+ [ HandshakeState_Responder_0(id, hash2, 'K1K', ~s, ('g'^rs)) ]
+
+/* Responder is Recving this message: -> e es */
+
+rule Handshake_Responder_Recv_1:
+ let rs = ~rs
+     hash1 = h(<hash, ('g'^re0)>)
+     ck2 = kdf1(<ck, (('g'^re0)^~s)>)
+     k3 = kdf2(<ck, (('g'^re0)^~s)>)
+     c4 = aead(k3, '0', hash1, payload)
+     hash5 = h(<hash1, c4>) in
+ [ HandshakeState_Responder_0(id, hash, ck, ~s, ('g'^rs)), Recv(<('g'^re0), c4>) ]
+ --[ RawRecv('Initiator1', <('g'^re0), c4>) ]->
+ [
+  PeerEk_Responder(id, ('g'^re0)),
+  HandshakeState_Responder_1(id, hash5, ck2, k3, ('g'^re0), ~s, ('g'^rs)),
+  Handshake_Recv_1(id, payload)
+ ]
+
+/* Responder is Snding this message: <- e ee */
+
+rule Handshake_Responder_Snd_2:
+ let rs = ~rs
+     hash1 = h(<hash, ('g'^~e0)>)
+     ck2 = kdf1(<ck, (('g'^re)^~e0)>)
+     k3 = kdf2(<ck, (('g'^re)^~e0)>)
+     c4 = aead(k3, '0', hash1, payload)
+     hash5 = h(<hash1, c4>) in
+ [
+  HandshakeState_Responder_1(id, hash, ck, k, ('g'^re), ~s, ('g'^rs)),
+  Handshake_Snd_2(id, payload),
+  Ek(~e0)
+ ]
+ --[ RawSnd('Responder2', <('g'^~e0), c4>) ]->
+ [
+  MyEk_Responder(id, ('g'^~e0)),
+  HandshakeState_Responder_2(id, hash5, ck2, k3, ~e0, ('g'^re), ~s, ('g'^rs)),
+  Send(<('g'^~e0), c4>)
+ ]
+
+/* Responder is Recving this message: -> se */
+
+rule Handshake_Responder_Recv_3:
+ let rs = ~rs
+     ck0 = kdf1(<ck, (('g'^rs)^~e)>)
+     k1 = kdf2(<ck, (('g'^rs)^~e)>)
+     c2 = aead(k1, '0', hash, payload)
+     hash3 = h(<hash, c2>) in
+ [ HandshakeState_Responder_2(id, hash, ck, k, ~e, ('g'^re), ~s, ('g'^rs)), Recv(<c2>) ]
+ --[ RawRecv('Initiator3', <c2>) ]->
+ [
+  HandshakeState_Responder_3(id, hash3, ck0, k1, ~e, ('g'^re), ~s, ('g'^rs)),
+  Handshake_Recv_3(id, payload)
+ ]
+
+/* Responder switches to transport mode */
+
+rule Responder_to_transport_mode:
+ [ HandshakeState_Responder_3(id, hash, ck, k, ~e, ('g'^re), ~s, ('g'^rs)) ]
+ --[  ]->
+ [ !Transport_Responder(id, kdf1(ck), kdf2(ck)), !SessionId(id, hash) ]
+
+/* transport mode rules */
+
+rule I_Recv_from_R:
+ let c = <n, aead(kr2i, n, '0', msg)>
+ in
+ [ Recv(c)
+ , !Transport_Initiator(id, ki2r, kr2i)
+ ] --[
+ RawRecv(<'R', n>, c)
+ ]->
+ [ I_Recv(id, n, msg) ]
+
+rule R_Recv_from_I:
+ let c = <n, aead(ki2r, n, '0', msg)>
+ in
+ [ Recv(c)
+ , !Transport_Responder(id, ki2r, kr2i)
+ ] --[
+ RawRecv(<'I', n>, c)
+ ]->
+ [ R_Recv(id, n, msg) ]
+
+rule I_Snd_to_R:
+ let c = <n, aead(ki2r, n, '0', msg)>
+ in
+ [ I_Snd(id, n, msg)
+ , !Transport_Initiator(id, ki2r, kr2i)
+ ] --[
+ RawSnd(<'I', n>, c)
+ ]->
+ [ Send(c)
+ ]
+
+rule R_Snd_to_I:
+ let c = <n, aead(kr2i, n, '0', msg)>
+ in
+ [ R_Snd(id, n, msg)
+ , !Transport_Responder(id, ki2r, kr2i)
+ ] --[
+ RawSnd(<'R', n>, c)
+ ]->
+ [ Send(c)
+ ]
+
+
+/* Start of instrumentation protocol */
+
+rule channel_send:
+[ Send(m) ] --> [ Out(m) ]
+rule channel_receive:
+[ In(m) ] --> [ Recv(m) ]
+
+
+restriction at_most_1:
+ "All tag #t0 #t1. ((Bounded(tag) @ #t0) & (Bounded(tag) @ #t1)) ==> (#t0 = #t1)"
+
+builtins: multiset
+
+rule test_agent_keygen:
+ [ Fr(~a), Fr(~b) ]
+ --[  ]->
+ [
+  !TestPk(diff(~a, ~b), diff(('g'^~a), ('g'^~b))),
+  Out(('g'^~a)),
+  Out(('g'^~b)),
+  !TestAlternatives((~a+~b))
+ ]
+
+rule test_common:
+ [ !TestAlternatives((~a+~b)) ]
+ --[  ]->
+ [ !Pk(~a, ('g'^~a)), !Pk(~b, ('g'^~b)) ]
+
+rule peer_keygen:
+ [ Fr(~s) ]
+ --[  ]->
+ [ !PeerPk(~s, ('g'^~s)), !Pk(~s, ('g'^~s)), !TestPk(~s, ('g'^~s)), Out(('g'^~s)) ]
+
+rule ephemeral_keygen:
+ [ Fr(~e) ] --[ HonestEk(('g'^~e)) ]-> [ Ek(~e), Out(('g'^~e)) ]
+
+/* Creation of the Initiator */
+
+rule Create_Initiator:
+ [ Fr(~id), !TestPk(~ltk, me), !PeerPk(whatever, peer) ]
+ --[ Create_Initiator(), Bounded('Initiator'), Peer(peer) ]->
+ [ St_Initiator_0(~id, me, peer), Init_Handshake_Initiator(~id, 'prologue', ~ltk, peer) ]
+
+/* Initiator is Snding message 1 */
+
+rule Instrumentation_Initiator_1:
+ [ St_Initiator_0(~id, me, peer) ]
+ --[  ]->
+ [ St_Initiator_1(~id, me, peer), Handshake_Snd_1(~id, $msg) ]
+
+/* Initiator is Recving message 2 */
+
+rule Instrumentation_Initiator_2:
+ [ St_Initiator_1(~id, me, peer), MyEk_Initiator(~id, e), Handshake_Recv_2(~id, msg) ]
+ --[  ]->
+ [ St_Initiator_2(~id, e, me, peer) ]
+
+/* Initiator is Snding message 3 */
+
+rule Instrumentation_Initiator_3:
+ [ St_Initiator_2(~id, e, me, peer), PeerEk_Initiator(~id, re) ]
+ --[  ]->
+ [ St_Initiator_3(~id, e, me, re, peer), Handshake_Snd_3(~id, $msg) ]
+
+/* Initiator is Recving message 4 */
+
+rule Instrumentation_Initiator_4:
+ [ St_Initiator_3(~id, e, me, re, peer), I_Recv(~id, '0', msg) ]
+ --[  ]->
+ [ St_Initiator_4(~id, e, me, re, peer) ]
+
+/* Initiator is Snding message 5 */
+
+rule Instrumentation_Initiator_5:
+ [ St_Initiator_4(~id, e, me, re, peer) ]
+ --[  ]->
+ [ St_Initiator_5(~id, e, me, re, peer), I_Snd(~id, '1', $msg) ]
+
+/* Creation of the Responder */
+
+rule Create_Responder:
+ [ Fr(~id), !PeerPk(~ltk, me), !TestPk(whatever, peer) ]
+ --[ Create_Responder(), Bounded('Responder'), Peer(peer) ]->
+ [ St_Responder_0(~id, me, peer), Init_Handshake_Responder(~id, 'prologue', ~ltk, peer) ]
+
+/* Responder is Recving message 1 */
+
+rule Instrumentation_Responder_1:
+ [ St_Responder_0(~id, me, peer), Handshake_Recv_1(~id, msg) ]
+ --[  ]->
+ [ St_Responder_1(~id, me, peer) ]
+
+/* Responder is Snding message 2 */
+
+rule Instrumentation_Responder_2:
+ [ St_Responder_1(~id, me, peer), PeerEk_Responder(~id, re) ]
+ --[  ]->
+ [ St_Responder_2(~id, me, re, peer), Handshake_Snd_2(~id, $msg) ]
+
+/* Responder is Recving message 3 */
+
+rule Instrumentation_Responder_3:
+ [ St_Responder_2(~id, me, re, peer), MyEk_Responder(~id, e), Handshake_Recv_3(~id, msg) ]
+ --[  ]->
+ [ St_Responder_3(~id, e, me, re, peer) ]
+
+/* Responder is Snding message 4 */
+
+rule Instrumentation_Responder_4:
+ [ St_Responder_3(~id, e, me, re, peer) ]
+ --[  ]->
+ [ St_Responder_4(~id, e, me, re, peer), R_Snd(~id, '0', $msg) ]
+
+/* Responder is Recving message 5 */
+
+rule Instrumentation_Responder_5:
+ [ St_Responder_4(~id, e, me, re, peer), R_Recv(~id, '1', msg) ]
+ --[ Finish() ]->
+ [ St_Responder_5(~id, e, me, re, peer) ]
+
+lemma executabilityPassiveAdv:
+exists-trace
+ "(Ex #i. Finish() @ #i) &
+  ((All id m #j. (RawRecv(id, m) @ #j) ==> (Ex #k. (RawSnd(id, m) @ #k) & (#k < #j))) &
+   ((All id m m2 #a #b. ((RawSnd(id, m) @ #a) & (RawSnd(id, m2) @ #b)) ==> (#a = #b)) &
+    ((All #a #b. ((Create_Initiator() @ #a) & (Create_Initiator() @ #b)) ==> (#a = #b)) &
+     (All #a #b. ((Create_Responder() @ #a) & (Create_Responder() @ #b)) ==> (#a = #b)))))"
+end

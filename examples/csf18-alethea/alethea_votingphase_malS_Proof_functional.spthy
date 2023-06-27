@@ -13,6 +13,520 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+tactic: functional
+presort: C
+prio:
+  regex "PeqPVote"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "!KU\( ~skS"
+prio:
+  regex  "proofY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "'codes'"
+prio:
+  regex  "BB_C"
+prio:
+  regex  "In_A\( 'S', <'codes'"
+prio:
+  regex  "In_A\( 'BB', <'codes'"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: indivVerif
+presort: C
+prio:
+  regex "AgSt_H"
+prio:
+  regex  "In_A\( 'S', <'codes'"
+prio:
+  regex  "In_A\( 'BB', <'codes'"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofV_v1
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofV'"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofV_v2
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofV'"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofV_v3
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofV'"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofV_v4
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofV'"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofV_v5
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofV'"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofV_v6
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofV'"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofV_v7
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofV'"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofV_v8
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofV'"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofY_v1
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofY'"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofY_v2
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofY'"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofY_v3
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofY'"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofY_v4
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofY'"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofY_v5
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofY'"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofY_v6
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofY'"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofY_v7
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofY'"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
+tactic: Universal_VerProofY_v8
+presort: C
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex  "In_S\( 'H1', 'D1', vote"
+prio:
+  regex  "In_S\( 'H2', 'D2', vote"
+prio:
+  regex  "PeqPVote"
+prio:
+  regex  "AgSt_Au\("
+prio:
+  regex  "'codes'"
+prio:
+  regex  "proofY'"
+prio:
+  regex  "PeqPY"
+prio:
+  regex  "In_S"
+prio:
+  regex  "In_A"
+prio:
+  regex  "In_S\( 'H1'"
+prio:
+  regex  "~~>"
+prio:
+  regex  "cp\("
+
 rule (modulo E) ChanOut_S:
    [ Out_S( $A, $B, x ) ]
   --[ ChanOut_S( $A, $B, x ) ]->
@@ -172,7 +686,7 @@ restriction OneSetup:
   "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-lemma functional:
+lemma functional[heuristic={functional}]:
   exists-trace
   "∃ #i #j #k H1 H2 S BB vote1 vote2 fstcode1 sndcode1 fstcode2
      sndcode2 skS hV1 hV2 y1 y2 hY1 hY2 A #a #l #m #s.
@@ -626,7 +1140,7 @@ solve( In_A( $BB.2,
   qed
 qed
 
-lemma indivVerif:
+lemma indivVerif[heuristic={indivVerif}]:
   all-traces
   "∀ H S vote fstcode sndcode #i2 #i #j.
     (((Vote( H, vote ) @ #i2) ∧
@@ -650,7 +1164,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofV_v1:
+lemma Universal_VerProofV_v1[heuristic={Universal_VerProofV_v1}]:
   all-traces
   "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
     (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
@@ -688,7 +1202,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofV_v2:
+lemma Universal_VerProofV_v2[heuristic={Universal_VerProofV_v2}]:
   all-traces
   "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
     (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
@@ -726,7 +1240,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofV_v3:
+lemma Universal_VerProofV_v3[heuristic={Universal_VerProofV_v3}]:
   all-traces
   "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
     (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
@@ -764,7 +1278,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofV_v4:
+lemma Universal_VerProofV_v4[heuristic={Universal_VerProofV_v4}]:
   all-traces
   "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
     (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
@@ -802,7 +1316,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofV_v5:
+lemma Universal_VerProofV_v5[heuristic={Universal_VerProofV_v5}]:
   all-traces
   "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
     (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
@@ -840,7 +1354,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofV_v6:
+lemma Universal_VerProofV_v6[heuristic={Universal_VerProofV_v6}]:
   all-traces
   "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
     (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
@@ -878,7 +1392,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofV_v7:
+lemma Universal_VerProofV_v7[heuristic={Universal_VerProofV_v7}]:
   all-traces
   "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
     (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
@@ -916,7 +1430,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofV_v8:
+lemma Universal_VerProofV_v8[heuristic={Universal_VerProofV_v8}]:
   all-traces
   "∀ S A x1 x2 skS #a #i BB v1 v2 codes.
     (((Learn_A_Vs( S, A, <'votes', (v1+v2)> ) @ #a) ∧
@@ -954,7 +1468,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofY_v1:
+lemma Universal_VerProofY_v1[heuristic={Universal_VerProofY_v1}]:
   all-traces
   "∀ A x1 x2 skS #i BB codes #a S y1 y2.
     (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
@@ -992,7 +1506,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofY_v2:
+lemma Universal_VerProofY_v2[heuristic={Universal_VerProofY_v2}]:
   all-traces
   "∀ A x1 x2 skS #i BB codes #a S y1 y2.
     (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
@@ -1030,7 +1544,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofY_v3:
+lemma Universal_VerProofY_v3[heuristic={Universal_VerProofY_v3}]:
   all-traces
   "∀ A x1 x2 skS #i BB codes #a S y1 y2.
     (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
@@ -1068,7 +1582,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofY_v4:
+lemma Universal_VerProofY_v4[heuristic={Universal_VerProofY_v4}]:
   all-traces
   "∀ A x1 x2 skS #i BB codes #a S y1 y2.
     (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
@@ -1106,7 +1620,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofY_v5:
+lemma Universal_VerProofY_v5[heuristic={Universal_VerProofY_v5}]:
   all-traces
   "∀ A x1 x2 skS #i BB codes #a S y1 y2.
     (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
@@ -1144,7 +1658,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofY_v6:
+lemma Universal_VerProofY_v6[heuristic={Universal_VerProofY_v6}]:
   all-traces
   "∀ A x1 x2 skS #i BB codes #a S y1 y2.
     (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
@@ -1182,7 +1696,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofY_v7:
+lemma Universal_VerProofY_v7[heuristic={Universal_VerProofY_v7}]:
   all-traces
   "∀ A x1 x2 skS #i BB codes #a S y1 y2.
     (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧
@@ -1220,7 +1734,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma Universal_VerProofY_v8:
+lemma Universal_VerProofY_v8[heuristic={Universal_VerProofY_v8}]:
   all-traces
   "∀ A x1 x2 skS #i BB codes #a S y1 y2.
     (((Learn_A_YSGs( S, A, <'ySG', (y1+y2)> ) @ #a) ∧

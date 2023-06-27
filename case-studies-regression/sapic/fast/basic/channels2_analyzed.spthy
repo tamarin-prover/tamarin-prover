@@ -1,0 +1,77 @@
+theory ChannelTestTwo begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+
+
+
+
+lemma received:
+  all-traces "¬(∃ #i. Reached( ) @ #i)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Reached( ) @ #i)"
+*/
+simplify
+solve( Semistate_1111( a, c ) ▶₀ #i )
+  case Init
+  by solve( Ack( ~n.1, ~n ) ▶₁ #i )
+qed
+
+rule (modulo E) Init[color=#ffffff, process="new c.1;"]:
+   [ Fr( c.1 ), Fr( a.1 ) ]
+  --[ Init( ) ]->
+   [ Message( c.1, a.1 ), Semistate_1111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="new c.1;"]:
+     [ Fr( c ), Fr( a ) ]
+    --[ Init( ) ]->
+     [ Message( c, a ), Semistate_1111( a, c ) ]
+  */
+
+rule (modulo E) outca_1_111[color=#6c8040, process="out(c.1,a.1);"]:
+   [ Semistate_1111( a.1, c.1 ), Ack( c.1, a.1 ) ] --[ Reached( ) ]-> [ ]
+
+  /*
+  rule (modulo AC) outca_1_111[color=#6c8040, process="out(c.1,a.1);"]:
+     [ Semistate_1111( a, c ), Ack( c, a ) ] --[ Reached( ) ]-> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/channels2.spthy
+
+  output:          examples/sapic/fast/basic/channels2.spthy.tmp
+  processing time: 0.04s
+  
+  received (all-traces): verified (3 steps)
+
+==============================================================================
+*/

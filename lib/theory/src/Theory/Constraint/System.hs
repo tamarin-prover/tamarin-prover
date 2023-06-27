@@ -20,6 +20,43 @@
 module Theory.Constraint.System (
   -- * Constraints
     module Theory.Constraint.System.Constraints
+  -- Heuristics (had to be moved here because of circular definition)
+  , GoalRanking(..)
+  , Heuristic(..)
+  , defaultRankings
+  , defaultHeuristic
+
+  , Oracle(..)
+  , defaultOracle
+  , oraclePath
+  , maybeSetOracleWorkDir
+  , maybeSetOracleRelPath
+  , mapOracleRanking
+
+  , Tactic(..)
+  , Prio(..)
+  , Deprio(..)
+  -- , Ranking(..)
+  , defaultTactic
+  , mapInternalTacticRanking
+  , maybeSetInternalTacticName
+
+  , goalRankingIdentifiers
+  , goalRankingIdentifiersDiff
+  , goalRankingToChar
+
+  , stringToGoalRankingMay
+  , stringToGoalRanking
+  , stringToGoalRankingDiffMay
+  , stringToGoalRankingDiff
+  , filterHeuristic
+
+  , listGoalRankings
+  , listGoalRankingsDiff
+
+  , goalRankingName
+  , prettyGoalRankings
+  , prettyGoalRanking
 
   -- * Proof contexts
   -- | The proof context captures all relevant information about the context
@@ -40,6 +77,7 @@ module Theory.Constraint.System (
   , pcSourceKind
   , pcUseInduction
   , pcHeuristic
+  , pcTactic
   , pcTraceQuantifier
   , pcLemmaName
   , pcHiddenLemmas
@@ -209,7 +247,7 @@ import           GHC.Generics                         (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.List                            (foldl', partition, intersect)
+import           Data.List                            (foldl', partition, intersect,find,intercalate)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe,mapMaybe)
 -- import           Data.Monoid                          (Monoid(..))
@@ -228,11 +266,15 @@ import           Data.Label                           ((:->), mkLabels)
 import qualified Extension.Data.Label                 as L
 
 import           Logic.Connectives
+import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.System.Constraints
-import           Theory.Constraint.Solver.Heuristics
+--import           Theory.Constraint.Solver.Heuristics
 import           Theory.Model
 import           Theory.Text.Pretty
 import           Theory.Tools.EquationStore
+
+import           System.FilePath
+import           Text.Show.Functions()
 
 ----------------------------------------------------------------------
 -- ClassifiedRules
@@ -355,6 +397,293 @@ sConjDisjEqs :: System :-> Conj (SplitId, S.Set (LNSubstVFresh))
 sConjDisjEqs = eqsConj . sEqStore
 
 ------------------------------------------------------------------------------
+-- Oracles
+------------------------------------------------------------------------------
+
+data Oracle = Oracle {
+    oracleWorkDir :: !FilePath
+  , oracleRelPath :: !FilePath
+  }
+  deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+------------------------------------------------------------------------------
+-- Tactics 
+------------------------------------------------------------------------------
+
+
+-- | Prio keeps a list of function that aim at recognizing some goals based on the state of the 
+-- | System, the ProofContext and the Annotated Goal considered. If one of the function returns 
+-- | True for a goal, it is considered recognized by the all priority. Prio also holds an other 
+-- | function that will order the recognized goals based on some arbitrary criteria such as size...
+-- | The goals recognized by a Prio will be treated earlier than the others.
+data Prio a = Prio {
+       rankingPrio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -- An optional function to order the recognized goals
+     , stringRankingPrio :: String                               -- The name of the function for pretty printing
+     , functionsPrio :: [(AnnotatedGoal, a, System) -> Bool]     -- The main list of function
+     , stringsPrio :: [String]                                   -- The name of the function for pretty printing
+    }
+    --deriving Show
+    deriving( Generic )
+
+instance Show (Prio a) where
+    show p = (stringRankingPrio p) ++ " _ " ++ intercalate ", " (stringsPrio p)
+
+instance Eq (Prio a) where
+    (==) _ _ = True
+
+instance Ord (Prio a) where
+    compare _ _ = EQ
+    (<=) _ _ = True
+
+instance NFData (Prio a) where
+    rnf _ = ()
+
+instance Binary (Prio a) where
+    put p = put $ show p
+    get = return (Prio Nothing "" [] []) 
+
+-- | Derio keeps a list of function that aim at recognizing some goals based on the state of the 
+-- | System, the ProofContext and the Annotated Goal considered. If one of the function returns 
+-- | True for a goal, it is considered recognized by the all priority. Prio also holds an other 
+-- | function that will order the recognized goals based on some arbitrary criteria such as size...
+-- | Deprio works as Prio but the goals it recognizes will be treated later than the others.
+data Deprio a = Deprio {
+       rankingDeprio :: Maybe ([AnnotatedGoal] -> [AnnotatedGoal]) -- An optional function to order the recognized goals
+     , stringRankingDeprio :: String                               -- The name of the function for pretty printing
+     , functionsDeprio :: [(AnnotatedGoal, a, System) -> Bool]     -- The main list of function
+     , stringsDeprio :: [String]                                        -- The name of the function for pretty printing
+    }
+    deriving ( Generic )
+
+instance Show (Deprio a) where
+    show d = (stringRankingDeprio d) ++ " _ " ++ intercalate ", " (map show $ stringsDeprio d)
+
+instance Eq (Deprio a) where
+    (==) _ _ = True
+
+instance Ord (Deprio a) where
+    compare _ _ = EQ
+    (<=) _ _ = True
+
+instance NFData (Deprio a) where
+    rnf _ = ()
+
+instance Binary (Deprio a) where
+    put d = put $ show d
+    get = return (Deprio Nothing "" [] [])
+
+
+-- | The object that record a user written tactic. 
+data Tactic a = Tactic{
+      _name :: String,                  -- The name of the tactic
+      _presort :: GoalRanking a,        -- The default strategy to order recognized goals in a tactic 
+      _prios :: [Prio a],               -- The list of priorities, the higher in the list the priority, the earlier its recognized goals will be treated
+      _deprios :: [Deprio a]            -- The list of depriorities, the higher in the list the priority, the earlier its recognized goals will be treated 
+                                        -- (but still after all the goals recognized by the priorities and not recognized has been treated).
+    }
+    deriving (Eq, Ord, Show, Generic, NFData, Binary )
+
+
+-- | The different available functions to rank goals with respect to their
+-- order of solving in a constraint system.
+data GoalRanking a =
+    GoalNrRanking
+  | OracleRanking Oracle
+  | OracleSmartRanking Oracle
+  | InternalTacticRanking (Tactic a)
+  | SapicRanking
+  | SapicPKCS11Ranking
+  | UsefulGoalNrRanking
+  | SmartRanking Bool
+  | SmartDiffRanking
+  | InjRanking Bool
+  deriving (Eq, Ord, Show, Generic, NFData, Binary  )
+
+newtype Heuristic a = Heuristic [GoalRanking a]
+    deriving (Eq, Ord, Show, Generic, NFData, Binary  )
+
+-- Default rankings for normal and diff mode.
+defaultRankings :: Bool -> [GoalRanking ProofContext]
+defaultRankings False = [SmartRanking False]
+defaultRankings True = [SmartDiffRanking]
+
+-- Default heuristic for normal and diff mode.
+defaultHeuristic :: Bool -> (Heuristic ProofContext)
+defaultHeuristic = Heuristic . defaultRankings
+
+defaultTactic :: Tactic ProofContext
+defaultTactic = Tactic "default" (SmartRanking False) [] []
+
+
+-- Default to "./oracle" in the current working directory.
+defaultOracle :: Oracle
+defaultOracle = Oracle "." "oracle"
+
+maybeSetOracleWorkDir :: Maybe FilePath -> Oracle -> Oracle
+maybeSetOracleWorkDir p o = maybe o (\x -> o{ oracleWorkDir = x }) p
+
+maybeSetOracleRelPath :: Maybe FilePath -> Oracle -> Oracle
+maybeSetOracleRelPath p o = maybe o (\x -> o{ oracleRelPath = x }) p
+
+mapOracleRanking :: (Oracle -> Oracle) -> (GoalRanking ProofContext) -> (GoalRanking ProofContext)
+mapOracleRanking f (OracleRanking o) = OracleRanking (f o)
+mapOracleRanking f (OracleSmartRanking o) = OracleSmartRanking (f o)
+mapOracleRanking _ r = r
+
+oraclePath :: Oracle -> FilePath
+oraclePath (Oracle oracleWorkDir_ oracleRelPath_) = oracleWorkDir_ </> normalise oracleRelPath_
+
+maybeSetInternalTacticName :: Maybe String -> Tactic ProofContext -> Tactic ProofContext
+maybeSetInternalTacticName s t = maybe t (\x -> t{ _name = x }) s
+
+mapInternalTacticRanking :: (Tactic ProofContext -> Tactic ProofContext) -> GoalRanking ProofContext -> GoalRanking ProofContext
+mapInternalTacticRanking f (InternalTacticRanking t) = InternalTacticRanking (f t)
+mapInternalTacticRanking _ r = r
+
+
+goalRankingIdentifiers :: M.Map String (GoalRanking ProofContext)
+goalRankingIdentifiers = M.fromList
+                        [ ("s", SmartRanking False)
+                        , ("S", SmartRanking True)
+                        , ("o", OracleRanking defaultOracle)
+                        , ("O", OracleSmartRanking defaultOracle)
+                        , ("p", SapicRanking)
+                        , ("P", SapicPKCS11Ranking)
+                        , ("c", UsefulGoalNrRanking)
+                        , ("C", GoalNrRanking)
+                        , ("i", InjRanking False)
+                        , ("I", InjRanking True)
+                        , ("{.}", InternalTacticRanking defaultTactic)
+                        ]
+
+goalRankingIdentifiersNoOracle :: M.Map String (GoalRanking ProofContext)
+goalRankingIdentifiersNoOracle = M.fromList
+                        [ ("s", SmartRanking False)
+                        , ("S", SmartRanking True)
+                        , ("p", SapicRanking)
+                        , ("P", SapicPKCS11Ranking)
+                        , ("c", UsefulGoalNrRanking)
+                        , ("C", GoalNrRanking)
+                        , ("i", InjRanking False)
+                        , ("I", InjRanking True)
+                        ]
+
+goalRankingToIdentifiersNoOracle :: M.Map (GoalRanking ProofContext) Char
+goalRankingToIdentifiersNoOracle = M.fromList
+                        [ (SmartRanking False, 's')
+                        , (SmartDiffRanking, 's')
+                        , (SmartRanking True, 'S')
+                        , (SapicRanking, 'p')
+                        , (SapicPKCS11Ranking, 'P')
+                        , (UsefulGoalNrRanking, 'c')
+                        , (GoalNrRanking, 'C')
+                        , (InjRanking False, 'i')
+                        , (InjRanking True, 'I')
+                        ]
+
+goalRankingIdentifiersDiff :: M.Map String (GoalRanking ProofContext)
+goalRankingIdentifiersDiff  = M.fromList
+                            [ ("s", SmartDiffRanking)
+                            , ("S", SmartRanking True)
+                            , ("o", OracleRanking defaultOracle)
+                            , ("O", OracleSmartRanking defaultOracle)
+                            , ("c", UsefulGoalNrRanking)
+                            , ("C", GoalNrRanking)
+                            , ("{.}", InternalTacticRanking defaultTactic)
+                            ]
+
+goalRankingIdentifiersDiffNoOracle :: M.Map String (GoalRanking ProofContext)
+goalRankingIdentifiersDiffNoOracle  = M.fromList
+                            [ ("s", SmartDiffRanking)
+                            , ("S", SmartRanking True)
+                            , ("c", UsefulGoalNrRanking)
+                            , ("C", GoalNrRanking)
+                            ]
+
+stringToGoalRankingMay :: Bool -> String -> Maybe (GoalRanking ProofContext)
+stringToGoalRankingMay noOracle s = if noOracle then M.lookup s goalRankingIdentifiersNoOracle else M.lookup s goalRankingIdentifiers
+
+goalRankingToChar :: GoalRanking ProofContext -> Char
+goalRankingToChar g = fromMaybe (error $ render $ sep $ map text $ lines $ "Unknown goal ranking."++ show g)
+    $ M.lookup g goalRankingToIdentifiersNoOracle
+
+stringToGoalRanking :: Bool -> String -> GoalRanking ProofContext
+stringToGoalRanking noOracle s = fromMaybe
+    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
+        ++ "'. Use one of the following:\n" ++ listGoalRankings noOracle)
+    $ stringToGoalRankingMay noOracle s
+
+stringToGoalRankingDiffMay :: Bool -> String -> Maybe (GoalRanking ProofContext)
+stringToGoalRankingDiffMay noOracle s = if noOracle then M.lookup s goalRankingIdentifiersDiffNoOracle else M.lookup s goalRankingIdentifiersDiff
+
+stringToGoalRankingDiff :: Bool -> String -> GoalRanking ProofContext
+stringToGoalRankingDiff noOracle s = fromMaybe
+    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
+        ++ "'. Use one of the following:\n" ++ listGoalRankingsDiff noOracle)
+    $ stringToGoalRankingDiffMay noOracle s  
+
+listGoalRankings :: Bool -> String
+listGoalRankings noOracle = M.foldMapWithKey
+    (\k v -> "'"++k++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersList
+    where
+        goalRankingIdentifiersList = if noOracle then goalRankingIdentifiersNoOracle else goalRankingIdentifiers
+
+
+listGoalRankingsDiff :: Bool -> String
+listGoalRankingsDiff noOracle = M.foldMapWithKey
+    (\k v -> "'"++k++"': " ++ goalRankingName v ++ "\n") goalRankingIdentifiersDiffList
+    where
+        goalRankingIdentifiersDiffList = if noOracle then goalRankingIdentifiersDiffNoOracle else goalRankingIdentifiersDiff
+
+
+filterHeuristic :: Bool -> String -> [GoalRanking ProofContext]
+filterHeuristic diff  ('{':t) = if '}' `elem` t then InternalTacticRanking (Tactic (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic diff $ tail $ dropWhile (/= '}') t) else error "A call to a tactic is supposed to end by '}' "
+filterHeuristic False (c:t)   = (stringToGoalRanking False [c]):(filterHeuristic False t)
+filterHeuristic True  (c:t)   = (stringToGoalRankingDiff False [c]):(filterHeuristic True t)
+filterHeuristic   _   ("")    = []
+
+-- | The name/explanation of a 'GoalRanking'.
+goalRankingName :: GoalRanking ProofContext -> String
+goalRankingName ranking =
+    "Goals sorted according to " ++ case ranking of
+        GoalNrRanking                 -> "their order of creation"
+        OracleRanking oracle          -> "an oracle for ranking, located at " ++ oraclePath oracle
+        OracleSmartRanking oracle     -> "an oracle for ranking based on 'smart' heuristic, located at " ++ oraclePath oracle
+        UsefulGoalNrRanking           -> "their usefulness and order of creation"
+        SapicRanking                  -> "heuristics adapted for processes"
+        SapicPKCS11Ranking            -> "heuristics adapted to a specific model of PKCS#11 expressed using SAPIC. deprecated."
+        SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
+        SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
+        InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
+        InternalTacticRanking tactic  -> "the tactic written in the theory file: "++ _name tactic
+   where
+     loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
+
+prettyGoalRankings :: [GoalRanking ProofContext] -> String
+prettyGoalRankings rs = unwords (map prettyGoalRanking rs)
+
+prettyGoalRanking :: GoalRanking ProofContext -> String
+prettyGoalRanking ranking = case ranking of
+    OracleRanking oracle            -> findIdentifier ranking ++ " \"" ++ oracleRelPath oracle ++ "\""
+    OracleSmartRanking oracle       -> findIdentifier ranking ++ " \"" ++ oracleRelPath oracle ++ "\""
+    InternalTacticRanking tactic    -> '{':_name tactic++"}"
+    _                         -> findIdentifier ranking
+  where
+    findIdentifier r = case find (compareRankings r . snd) combinedIdentifiers of
+        Just (k,_) -> k
+        Nothing    -> error "Goal ranking does not have a defined identifier"
+
+    -- Note because find works left first this will look at non-diff identifiers first. Thus,
+    -- this assumes the diff rankings don't use a different character for the same goal ranking.
+    combinedIdentifiers = M.toList goalRankingIdentifiers ++ M.toList goalRankingIdentifiersDiff
+
+    compareRankings (OracleRanking _) (OracleRanking _) = True
+    compareRankings (OracleSmartRanking _) (OracleSmartRanking _) = True
+    compareRankings (InternalTacticRanking _ ) (InternalTacticRanking _ ) = True
+    compareRankings r1 r2 = r1 == r2
+
+
+------------------------------------------------------------------------------
 -- Proof Context
 ------------------------------------------------------------------------------
 
@@ -379,7 +708,8 @@ data ProofContext = ProofContext
        , _pcSourceKind         :: SourceKind
        , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
-       , _pcHeuristic          :: Maybe Heuristic
+       , _pcHeuristic          :: Maybe (Heuristic ProofContext)
+       , _pcTactic            :: Maybe [Tactic ProofContext]
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
@@ -1256,7 +1586,7 @@ isLast sys i = Just i == L.get sLastAtom sys
 -- | Pretty print a sequent
 prettySystem :: HighlightDocument d => System -> d
 prettySystem se = vcat $
-    map combine
+    map combine_
       [ ("nodes",          vcat $ map prettyNode $ M.toList $ L.get sNodes se)
       , ("actions",        fsepList ppActionAtom $ unsolvedActionAtoms se)
       , ("edges",          fsepList prettyEdge   $ S.toList $ L.get sEdges se)
@@ -1265,13 +1595,13 @@ prettySystem se = vcat $
       ]
     ++ [prettyNonGraphSystem se]
   where
-    combine (header, d) = fsep [keyword_ header <> colon, nest 2 d]
+    combine_ (header, d) = fsep [keyword_ header <> colon, nest 2 d]
     ppActionAtom (i, fa) = prettyNAtom (Action (varTerm i) fa)
 
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
 prettyNonGraphSystem :: HighlightDocument d => System -> d
-prettyNonGraphSystem se = vsep $ map combine -- text $ show se
+prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
   [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
   , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
@@ -1286,12 +1616,12 @@ prettyNonGraphSystem se = vsep $ map combine -- text $ show se
 --   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-- $ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
-    combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+    combine_ (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
 
 -- | Pretty print the non-graph part of the sequent; i.e. equation store and
 -- clauses.
 prettyNonGraphSystemDiff :: HighlightDocument d => DiffProofContext -> DiffSystem -> d
-prettyNonGraphSystemDiff ctxt se = vsep $ map combine
+prettyNonGraphSystemDiff ctxt se = vsep $ map combine_
   [ ("proof type",          prettyProofType $ L.get dsProofType se)
   , ("current rule",        maybe (text "none") text $ L.get dsCurrentRule se)
   , ("system",              maybe (text "none") prettyNonGraphSystem $ L.get dsSystem se)
@@ -1305,7 +1635,7 @@ prettyNonGraphSystemDiff ctxt se = vsep $ map combine
   , ("destruction rules",   vsep $ map prettyRuleAC $ S.toList $ L.get dsDestrRules se)
   ]
   where
-    combine (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
+    combine_ (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
 --     help :: Maybe [LNGuarded]
 --     help = do
 --       side <- L.get dsSide se
@@ -1401,9 +1731,9 @@ prettyGoals solved sys = vsep $ do
 prettySource :: HighlightDocument d => Source -> d
 prettySource th = vcat $
    [ prettyGoal $ L.get cdGoal th ]
-   ++ map combine (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
+   ++ map combine_ (zip [(1::Int)..] $ map snd . getDisj $ (L.get cdCases th))
   where
-    combine (i, sys) = fsep [keyword_ ("Case " ++ show i) <> colon, nest 2 (prettySystem sys)]
+    combine_ (i, sys) = fsep [keyword_ ("Case " ++ show i) <> colon, nest 2 (prettySystem sys)]
 
 
 -- Additional instances

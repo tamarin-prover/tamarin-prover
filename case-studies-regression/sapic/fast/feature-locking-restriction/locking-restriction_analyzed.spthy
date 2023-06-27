@@ -1,0 +1,107 @@
+theory LockingRestriction begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+heuristic: p
+
+
+
+
+
+lemma ANotReachable:
+  all-traces "¬(∃ #t. A( ) @ #t)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+by solve( State_111( lock, lock.1 ) ▶₀ #t )
+
+rule (modulo E) Init[color=#ffffff, process="lock 'P';"]:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lockP_0_[color=#ffffff, process="lock 'P';"]:
+   [ State_( ), Fr( lock ) ]
+  --[ Lock_0( '0', lock, 'P' ), Lock( '0', lock, 'P' ) ]->
+   [ State_11( lock ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) lockP_0_11[color=#6c8040, process="lock 'P';"]:
+   [ State_11( lock ), Fr( lock.1 ) ]
+  --[ Lock_1( '1', lock.1, 'P' ), Lock( '1', lock.1, 'P' ) ]->
+   [ State_111( lock, lock.1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventA_0_111[color=#6c8040, process="event A( );"]:
+   [ State_111( lock, lock.1 ) ] --[ A( ) ]-> [ State_1111( lock, lock.1 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) unlockP_0_1111[color=#6c8040, process="unlock 'P';"]:
+   [ State_1111( lock, lock.1 ) ]
+  --[ Unlock_1( '1', lock.1, 'P' ), Unlock( '1', lock.1, 'P' ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction locking_1:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+
+restriction locking_0:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
+
+  output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
+  processing time: 0.04s
+  
+  ANotReachable (all-traces): verified (2 steps)
+
+==============================================================================
+*/

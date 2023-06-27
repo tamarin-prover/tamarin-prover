@@ -1,0 +1,79 @@
+theory xor1 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+rule (modulo E) testsend:
+   [ Fr( ~x ), Fr( ~y ) ]
+  --[ OnlyOnce( ), Secret( ~x ) ]->
+   [ Out( <(~x⊕~y), ~y> ) ]
+
+  /*
+  rule (modulo AC) testsend:
+     [ Fr( ~x ), Fr( ~y ) ]
+    --[ OnlyOnce( ), Secret( ~x ) ]->
+     [ Out( <z, ~y> ) ]
+    variants (modulo AC)
+    1. ~x    = ~x.4
+       ~y    = ~x.4
+       z     = zero
+    
+    2. ~x    = ~x.4
+       ~y    = ~y.4
+       z     = (~x.4⊕~y.4)
+  */
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma secrecybroken:
+  all-traces "∀ x #i. (Secret( x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Secret( x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+simplify
+solve( !KU( ~x ) @ #vk )
+  case testsend
+  solve( !KU( ~y ) @ #vk.1 )
+    case testsend_case_2
+    SOLVED // trace found
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
+Compiled at: 2023-01-27 13:01:52.341920052 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/xor/basicfunctionality/xor1.spthy
+
+  output:          examples/features/xor/basicfunctionality/xor1.spthy.tmp
+  processing time: 0.06s
+  
+  secrecybroken (all-traces): falsified - found trace (4 steps)
+
+==============================================================================
+*/

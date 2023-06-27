@@ -12,7 +12,7 @@ section{* CANauth protocol *}
 */
 builtins: dest-pairing, multiset
 
-options: enableStateOpt
+options: translation-state-optimisation
 
 functions: hmac(bitstring,bitstring):bitstring
 

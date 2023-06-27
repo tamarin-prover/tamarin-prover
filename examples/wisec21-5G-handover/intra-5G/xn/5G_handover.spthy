@@ -66,6 +66,236 @@ functions:
   // 3GPP KDFs [TS 33.501]
   KDF/2 // KDF --> K_AMF, K_gNB, NH, K_gNB*
 
+tactic: GUTI
+presort: C
+prio:
+    regex ".*last.*"
+prio:
+    regex ".*<'MRU',.*"
+prio:
+    regex ".*RcvS\(.*<'ho_req',.*"
+
+tactic: PDUorigin
+presort: C
+prio:
+    regex ".*last.*"
+prio:
+    regex ".*PDU_Session.*"
+
+tactic: PDUargsconstant
+presort: C
+prio:
+    regex ".*CreatePDUSession.*"
+
+tactic: PDUidunique
+presort: C
+prio:
+    regex ".*CreatePDUSession.*"
+
+tactic: ValueOrigin
+presort: C
+prio:
+    regex ".*last.*"
+prio:
+    regex ".*St_._UE\(.*"
+
+tactic: ValueReset
+presort: C
+prio:
+    regex ".*last.*"
+prio:
+    regex ".*St_._UE\(.*"
+
+
+tactic: executability_
+presort: C
+prio:
+    regex ".*Handover.*Done\( .*"
+    regex ".*Horizontal.*"
+    regex ".*Vertical.*"
+    regex ".*Connect.*"
+    regex ".*Init\( .*"
+prio:
+    regex ".*=.*=.*"
+    regex ".*<.*=.*"
+    regex ".*!UE\( .*"
+    regex ".*!KU\( KDF\(.*"
+    regex ".*!KU\( ~K_AMF.*"
+    regex ".*!KU\( ~SUPI.*"
+    regex ".*!KU\( ~K_SEAF.*"
+prio:
+    regex ".*St\_.*\_.*\( .*"
+    regex ".*RcvS\( .*"
+prio:
+    regex ".*PDU\_Session\( .*"
+prio:
+    regex ".*!KU\( senc\(.*"
+    regex ".*!KU\( ~TRAN.*"
+    regex ".*!KU\( ~PDU\_SESSION\_ID.*"
+
+tactic: injectiveagreement_ue_tran_k_gnb
+prio:
+    regex ".*RcvS\(.*<'ho_req_ack\.*"
+    regex ".*Commit"
+    regex ".*St_._UE\(.*MAX.*"
+prio:
+    regex ".*!KU\( senc\(<'MRU', ~K_SEAF>,.*K.*"
+    regex ".*RcvS\(.*<'ho_req', ~TRAN_ID.*"
+prio:
+    regex ".*!KU\( senc\(<'ho_init', ~TRAN_ID..*"
+    regex ".*Intermediate.*" & not regex ".*Intermediate.*<'NH', NH.*"
+    regex ".*!KU\( KDF\(KDF\(~K_SEAF.*"
+    regex ".*!KU\( KDF\(~K_SEAF.*"
+    regex ".*!KU\( ~K_SEAF.*"
+    regex ".*!KU\( ~SUPI.*"
+prio:
+    regex ".*St_._UE\( .*"
+deprio:      
+    regex ".*Intermediate.*<'NH', NH.*"
+      
+tactic: injectiveagreement_tran_ue_k_gnb
+presort: C
+prio:
+    regex ".*Commit"
+prio:
+    not regex ".*!KU\( .*~K_SEAF\..*" & regex ".*!KU\( senc\(<'MRU', ~K_SEAF>,.*K.*"
+prio:
+    regex ".*Intermediate.*" & not regex ".*Intermediate.*<'NH', NH.*"
+prio:
+    regex ".*!KU\( KDF\(KDF\(KDF\(~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( KDF\(KDF\(~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( KDF\(~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( ~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*St_._TRAN\( .*"
+prio:
+    regex ".*RcvS\(.*<'ho_req_ack\.*"
+    regex ".*RcvS\(.*<'ho_req', ~TRAN_ID.*"
+prio:
+    regex ".*St_._UE\( .*KDF\(.*"
+prio:
+    regex ".*!KU\( senc\(<'ho_init', ~TRAN.*"
+prio:
+    regex ".*!KU\( senc\('RRCReconfigurationComplete',.*K.*"
+prio:
+    regex ".*RcvS\(.*'sn_status_transfer.*"
+deprio:
+    regex ".*Intermediate.*<'NH', NH.*"
+    regex ".*!KU\( .*~K_SEAF\..*"
+
+
+tactic: secret_supi
+presort: C
+prio:
+    regex ".*!UE\( .*"
+prio:
+    regex ".*RcvS\( .*~SUPI.*"
+    regex ".*!KU\( senc\(<'MRU', ~SUPI.*"
+prio:
+    regex ".*Secret.*"
+    regex ".*St_.*_.*"
+    regex ".*!KU\( ~SUPI.*"
+
+
+tactic: secret_k_seaf
+presort: C
+prio:
+    regex ".*!UE\( .*"
+prio:
+    regex ".*St_.*_UE*" & not regex ".*St_._UE\(.*SEAF\."
+    regex ".*RcvS\( .*~K_SEAF.*"
+    regex ".*!KU\( senc\(<'MRU', ~K_SEAF.*" & regex ".*St_._UE\(.*SEAF\."
+prio:
+    regex ".*Secret.*"
+    regex ".*!KU\( ~K_SEAF.*" & not regex ".*St_._UE\(.*SEAF\."
+prio:
+    regex ".*St_._UE\(.*SEAF\."
+      
+
+tactic: secret_k_amf
+presort: C
+prio:
+    regex ".*Secret.*"
+prio:
+    regex ".*X #k.*"
+    regex ".*#j\. \(Create.*"
+    regex ".*!UE\( .*"
+    regex ".*RcvS\( .*~K_SEAF.*"
+    regex ".*!KU\( senc\(<'MRU', ~K_SEAF.*"
+    regex ".*!KU\( senc\(<'MRU', ~SUPI.*"
+    regex ".*Intermediate.*" & not regex ".*Intermediate.*<'NH', NH.*"
+    regex ".*!KU\( senc\(<'ho_init', \~SUPI.*"
+    regex ".*RcvS\(.*~SUPI.*"
+prio:
+    regex ".*KeyDerived\( .*"
+    regex ".*!KU\( KDF\(~K_SEAF.*"
+    regex ".*!KU\( ~K_SEAF.*"
+    regex ".*!KU\( ~SUPI.*"
+deprio:
+    regex ".*Intermediate.*<'NH', NH.*"
+
+    
+
+tactic: secret_k_gnb
+presort: C
+prio:
+    regex ".*Secret.*"
+prio:
+    regex ".*X #k.*"
+    regex ".*#j\. \(Create.*"
+    regex ".*!UE\( .*"
+    regex ".*Intermediate.*" & not regex ".*Intermediate.*<'NH\', NH.*"
+    regex ".*!KU\( senc\(<'ho_init', ~SUPI.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*RcvS\(.*~SUPI.*"
+    regex ".*RcvS\( .*~K_SEAF.*"
+    regex ".*!KU\( senc\(<'MRU\', ~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( senc\(<'MRU', ~SUPI.*"
+    regex ".*!KU\( KDF\(KDF\(~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+prio:
+    regex ".*KeyDerived\( .*"
+    regex ".*!KU\( KDF\(~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( ~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( ~SUPI.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+deprio:
+    regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*Intermediate.*<'NH\', NH.*"
+    
+tactic: secret_k_gnb_star
+presort: C
+prio:
+    regex ".*Secret.*"
+prio:
+    regex ".*!UE\( .*"
+    regex ".*RcvS\(.*~SUPI.*"
+    regex ".*Intermediate.*" & not regex ".*Intermediate.*<'NH', NH.*"
+    regex ".*RcvS\( .*~K_SEAF.*"
+    regex ".*!KU\( senc\(<'MRU\', ~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( senc\(<'MRU\', ~SUPI.*"
+    regex ".*!KU\( KDF\(KDF\(~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+prio:
+    regex ".*St_.*_UE.*MAX.*"
+    regex ".*Bind\(.*"
+prio:
+    regex ".*St_.*_UE.*SUPI\..*"
+    regex ".*X #k.*"
+    regex ".*#j\. \(Create.*"
+    regex ".*!KU\( KDF\(~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( KDF\(KDF\(KDF\(~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( ~K_SEAF.*" & not regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*!KU\( ~SUPI.*"
+    regex ".*KeyDerived\( .*"
+prio:
+    regex ".*St_.*_UE*"
+prio:
+    regex ".*!KU\( senc\(<'ho_init', \~SUPI.*"
+prio:
+    regex ".*Bind\(.*SEAF\..*"
+deprio:
+    regex ".*!KU\( .*~K_SEAF\..*"
+    regex ".*Intermediate.*<'NH', NH.*"
+    
+    
+    
+
 /***********************************/
 /*         Secure Channels         */
 /***********************************/
@@ -618,7 +848,7 @@ rule init_next_handover:
 /************************************/
 
 // Proof: Automatic (~25 s (25 steps), +RTS -N10 -M20G -RTS)
-lemma GUTI_SRC [sources]:
+lemma GUTI_SRC [heuristic={GUTI}, sources]:
   " All g #i. GUTI_RCV(g)@i
       ==> (Ex #j. GUTI_SND(g)@j & j < i)
            | (Ex #k. KU(g)@k & k < i)
@@ -651,31 +881,31 @@ restriction GUTInotSUPI:
 /***********************************/
 
 // Proof: Automatic (~25 s (66 steps), +RTS -N10 -M20G -RTS)
-lemma PDUorigin [use_induction, reuse]:
+lemma PDUorigin [heuristic={PDUorigin}, use_induction, reuse]:
   " All p q #i. UsePDUSession(p,q)@i
       ==> (Ex #j. CreatePDUSession(p,q)@j)
   "
 
 // Proof: Automatic (~25 s (8 steps), +RTS -N10 -M20G -RTS)
-lemma PDUargsconstant [use_induction, reuse]:
+lemma PDUargsconstant [heuristic={PDUargsconstant}, use_induction, reuse]:
   " All p q r #i #j. UsePDUSession(p,q)@i & UsePDUSession(p,r)@j
       ==> (q = r)
   "
 
 // Proof: Automatic (~25 s (8 steps), +RTS -N10 -M20G -RTS)
-lemma PDUidunique [use_induction, reuse]:
+lemma PDUidunique [heuristic={PDUidunique}, use_induction, reuse]:
    " All p q r #i #j. CreatePDUSession(p,q)@i & CreatePDUSession(p,r)@j
        ==> (q = r)
    "
 
 // Proof: Automatic (~25 s (19 steps), +RTS -N10 -M20G -RTS)
-lemma ValueOrigin [use_induction, reuse]:
+lemma ValueOrigin [heuristic={ValueOrigin}, use_induction, reuse]:
   " All p #i. UseValues(p)@i
       ==> (Ex #j. CreateValues(p)@j) | (Ex #j. ResetValues(p)@j)
   "
 
 // Proof: Automatic (~25 s (18 steps), +RTS -N10 -M20G -RTS)
-lemma ValueReset [use_induction, reuse]:
+lemma ValueReset [heuristic={ValueReset}, use_induction, reuse]:
   " All p #i. Reset('K_SEAF', p)@i
       ==> (Ex #j. Init('K_SEAF', p)@j)
   "
@@ -686,7 +916,7 @@ lemma ValueReset [use_induction, reuse]:
 
 // Normal executability for one Handover (hkd)
 // Proof: Automatic (~2 min (55 steps), +RTS -N10 -M20G -RTS)
-lemma executability_hkd:
+lemma executability_hkd [heuristic={executability_}]:
   exists-trace
   " Ex x0 x1
        s t
@@ -739,7 +969,7 @@ lemma executability_hkd:
 
 // Normal executability for two consecutive Handovers (hkd-vkd)
 // Proof: Automatic (~12 min (253 steps), +RTS -N10 -M20G -RTS)
-lemma executability_hkd_vkd:
+lemma executability_hkd_vkd [heuristic={executability_}]:
   exists-trace
   " Ex x0 x1 x2 x3
        s t
@@ -818,7 +1048,7 @@ lemma executability_hkd_vkd:
 
 // Normal executability for two consecutive Handovers (hkd-hkd)
 // Proof: Automatic (~12 min (257 steps), +RTS -N10 -M20G -RTS)
-lemma executability_hkd_hkd:
+lemma executability_hkd_hkd [heuristic={executability_}]:
   exists-trace
   " Ex x0 x1 x2 x3
        s t
@@ -900,7 +1130,7 @@ lemma executability_hkd_hkd:
 // Long execution time, enable with -D=exec_hkd_hkd_hkd
 // Proof: Automatic (~60 min (564 steps), +RTS -N10 -M20G -RTS)
 #ifdef exec_hkd_hkd_hkd
-lemma executability_hkd_hkd_hkd:
+lemma executability_hkd_hkd_hkd [heuristic={executability_}]:
   exists-trace
   " Ex x0 x1 x2 x3 x4 x5
        s t
@@ -1008,7 +1238,7 @@ lemma executability_hkd_hkd_hkd:
 // Long execution time, enable with -D=exec_hkd_hkd_vkd
 // Proof: Automatic (~40 min (560 steps), +RTS -N10 -M20G -RTS)
 #ifdef exec_hkd_hkd_vkd
-lemma executability_hkd_hkd_vkd:
+lemma executability_hkd_hkd_vkd [heuristic={executability_}]:
   exists-trace
   " Ex x0 x1 x2 x3 x4 x5
        s t
@@ -1117,7 +1347,7 @@ lemma executability_hkd_hkd_vkd:
 // Long execution time, enable with -D=exec_hkd_vkd_hkd
 // Proof: Automatic (~45 min (557 steps), +RTS -N10 -M20G -RTS)
 #ifdef exec_hkd_vkd_hkd
-lemma executability_hkd_vkd_hkd:
+lemma executability_hkd_vkd_hkd [heuristic={executability_}]:
   exists-trace
   " Ex x0 x1 x2 x3 x4 x5
        s t
@@ -1226,7 +1456,7 @@ lemma executability_hkd_vkd_hkd:
 // Long execution time, enable with -D=exec_hkd_vkd_vkd
 // Proof: Automatic (~50 min (561 steps), +RTS -N10 -M20G -RTS)
 #ifdef exec_hkd_vkd_vkd
-lemma executability_hkd_vkd_vkd:
+lemma executability_hkd_vkd_vkd [heuristic={executability_}]:
   exists-trace
   " Ex x0 x1 x2 x3 x4 x5
        s t
@@ -1349,7 +1579,7 @@ lemma executability_hkd_vkd_vkd:
  *  b = TRAN_ID
  *  r = K_gNB_star
  */
-lemma injectiveagreement_ue_tran_k_gnb:
+lemma injectiveagreement_ue_tran_k_gnb [heuristic={injectiveagreement_ue_tran_k_gnb}]:
   " All a b r #i. Commit(a,b,<'UE','TRAN',<'K_gNB_star',r>>)@i
       ==> (Ex #j. Running(b,a,<'UE','TRAN',<'K_gNB_star',r>>)@j
            & not (Ex a2 b2 #i2. Commit(a2,b2,<'UE','TRAN',<'K_gNB_star',r>>)@i2
@@ -1371,7 +1601,7 @@ lemma injectiveagreement_ue_tran_k_gnb:
  *  b = SUPI
  *  r = K_gNB_star
  */
-lemma injectiveagreement_tran_ue_k_gnb:
+lemma injectiveagreement_tran_ue_k_gnb [heuristic={injectiveagreement_tran_ue_k_gnb}]:
   " All a b r #i. Commit(a,b,<'TRAN','UE',<'K_gNB_star',r>>)@i
       ==> (Ex #j. Running(b,a,<'TRAN','UE',<'K_gNB_star',r>>)@j
            & not (Ex a2 b2 #i2. Commit(a2,b2,<'TRAN','UE',<'K_gNB_star',r>>)@i2
@@ -1393,7 +1623,7 @@ lemma injectiveagreement_tran_ue_k_gnb:
  * Notations:
  *   s = SUPI
  */
-lemma secret_supi:
+lemma secret_supi [heuristic={secret_supi}]:
   " All s #i. Secret(<'SUPI',s>)@i
     ==> (not (Ex #j. K(s)@j))
          | (Ex X #j. Rev(X,<'SUPI',s>)@j & Honest(X)@i)
@@ -1409,7 +1639,7 @@ lemma secret_supi:
  * Notations:
  *  p = K_SEAF
  */
-lemma secret_k_seaf:
+lemma secret_k_seaf [heuristic={secret_k_seaf}]:
   " All p #i. Secret(<'K_SEAF',p>)@i
     ==> (not (Ex #j. K(p)@j))
          | (Ex X #j. Rev(X,<'K_SEAF',p>)@j & Honest(X)@i)
@@ -1429,7 +1659,7 @@ lemma secret_k_seaf:
  *  q r = K_AMF
  *  s   = SUPI
  */
-lemma secret_k_amf:
+lemma secret_k_amf [heuristic={secret_k_amf}]:
   " All p q s #i #j.
         Secret(<'K_AMF',q>)@i
       & KeyDerived(<'K_AMF',q>,p,q,s)@j
@@ -1456,7 +1686,7 @@ lemma secret_k_amf:
  *  r = K_gNB
  *  s = SUPI
  */
-lemma secret_k_gnb:
+lemma secret_k_gnb [heuristic={secret_k_gnb}]:
   " All p q r s #i #j.
         Secret(<'K_gNB',r>)@i
       & KeyDerived(<'K_gNB',r>,p,q,s)@j
@@ -1486,7 +1716,7 @@ lemma secret_k_gnb:
  *  s = SUPI
  *  t = NH or K_gNB
  */
-lemma secret_k_gnb_star:
+lemma secret_k_gnb_star [heuristic={secret_k_gnb_star}]:
   " All p q r s t #i #j.
         Secret(<'K_gNB_star',r>)@i
       & KeyDerived(<'K_gNB_star',r>,p,q,s)@j

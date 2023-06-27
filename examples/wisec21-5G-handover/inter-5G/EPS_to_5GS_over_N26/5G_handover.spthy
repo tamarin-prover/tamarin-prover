@@ -55,6 +55,132 @@ functions:
   // 3GPP KDFs [TS 33.501]
   KDF/2 // KDF --> K_AMF, K_gNB, NH, K_gNB*
 
+tactic: executability
+presort: C
+prio:
+    regex ".*!S1\( .*"
+prio:
+    regex ".*St_.*"
+prio:
+    regex ".*RcvS.*"
+prio:
+    regex ".*!KU.*" & not regex ".*!KU.*_ID.*" & not regex ".*!KU.*~cid.*"
+prio:
+    regex ".*!KU.*_ID.*"
+    regex ".*!KU.*~cid.*"
+
+tactic: injectiveagreement_ue_gnb_k_gnb
+presort: C
+prio:
+    regex ".*Commit\( .*"
+prio:
+    regex ".*St_1_UE.*"
+    regex ".*RcvS\( .*, ~K_ASME.*"
+prio:
+    regex ".*!KU\( ~K_ASME .*"
+    regex ".*!KU\( KDF\(~K_ASME,.*"
+    regex ".*!KU\( KDF\(KDF\(~K_ASME,.*"
+prio:
+    regex ".*RcvS.*"
+prio:
+    regex ".*!KU\( senc.*~K_ASME.*"
+prio:
+    regex ".*!Handover.*"
+
+tactic: injectiveagreement_gnb_ue_k_gnb
+presort: C
+prio:
+    regex ".*Commit\( .*"
+prio:
+    regex ".*St_1_gNB.*"
+    regex ".*!Handover.*"
+    regex ".*!KU\( senc.*"
+    regex ".*!KU\( ~K_ASME.*"
+    regex ".*!KU\( KDF\(~K_ASME,.*"
+    regex ".*!KU\( KDF\(KDF\(~K_ASME,.*"
+prio:
+    regex ".*!KU\( KDF\(NH,.*"
+prio:    
+    regex ".*RcvS.*"
+prio:
+    regex ".*St_1_UE.*"
+
+
+tactic: secret_k_asme
+presort: C
+prio:
+    regex ".*Secret\( .*"
+prio:
+    regex ".*St_3_.*\( .*"
+prio:
+    regex ".*St_2_.*\( .*"
+prio:
+    regex ".*RcvS.*~K_ASME\>.*"
+prio:
+    regex ".*!KU\( ~K_ASME \)"
+prio:
+    regex ".*RcvS.*"
+    
+
+tactic: secret_k_amf
+presort: C
+prio:
+    regex ".*Secret\( .*"
+prio:
+    regex ".*KeyDerived\( .*"
+    regex ".*RcvS.*'fr_req.*~K_ASME.*\, ~K_ASME.*"
+    regex ".*RcvS.*\, ~K_ASME.*" & not regex ".*RcvS.*'fr_req.*"
+    regex ".*St_3_.*\( .*"
+prio:
+    regex ".*St_2_.*\( .*"
+prio:
+    regex ".*!KU\( KDF\(~K_ASME.*"
+    regex ".*!KU\( ~K_ASME.*"
+prio:
+    regex ".*RcvS.*'fr_req.*"
+    
+
+tactic: secret_k_enb
+presort: C
+prio:
+    regex ".*Secret\( .*"
+prio:    
+    regex ".*KeyDerived\( .*"
+    regex ".*RcvS.*'fr_req.*~K_ASME.*\, ~K_ASME.*"
+    regex ".*RcvS.*\, ~K_ASME.*"
+    regex ".*St_3_.*\( .*"
+prio:
+    regex ".*St_2_.*\( .*"
+prio:
+    regex ".*!KU\( KDF\(~K_ASME.*"
+    regex ".*!KU\( ~K_ASME.*"
+prio:
+    regex ".*RcvS.*'fr_req.*"
+    
+
+tactic: secret_k_gnb_star
+presort: C
+prio:
+    regex ".*Secret\( .*"
+prio:
+    regex ".*KeyDerived\( .*"
+    regex ".*RcvS.*'fr_req.*~K_ASME.*\, ~K_ASME.*"
+    regex ".*RcvS.*\, ~K_ASME.*"
+    regex ".*St_3_.*\( .*"
+prio:
+    regex ".*St_2_.*\( .*"
+prio:
+    regex ".*St_1_.*\( .*"
+    regex ".*!KU\( senc\(<'ho_cmd.*\, KDF\(~K_ASME\,.*"
+    regex ".*!KU\( senc\(<'ho_cmd.*\, KDF\(~K_gNB\,.*"
+prio:
+    regex ".*!KU\( ~K_ASME.*"
+    regex ".*!KU\( KDF\(~K_ASME.*"
+prio:
+    regex ".*!KU\( .*KDF\(~K_ASME\,.*"
+    regex ".*RcvS.*'fr_req.*"
+    
+
 /***********************************/
 /*         Secure Channels         */
 /***********************************/
@@ -435,7 +561,7 @@ restriction OnlyOnce:
 
 // Normal executability for one handover
 // Proof: Automatic (~5 s (16 steps), +RTS -N10 -M20G -RTS)
-lemma executability:
+lemma executability [heuristic={executability}]:
   exists-trace
   " Ex x #i.
       HandoverDone(x)@i
@@ -476,7 +602,7 @@ lemma executability:
  *  b = gNB_ID
  *  r = K_gNB_star
  */
-lemma injectiveagreement_ue_gnb_k_gnb:
+lemma injectiveagreement_ue_gnb_k_gnb [heuristic={injectiveagreement_ue_gnb_k_gnb}]:
   " All a b r #i. Commit(a,b,<'UE','gNB',<'K_gNB_star',r>>)@i
       ==> (Ex #j. Running(b,a,<'UE','gNB',<'K_gNB_star',r>>)@j
            & not (Ex a2 b2 #i2. Commit(a2,b2,<'UE','gNB',<'K_gNB_star',r>>)@i2
@@ -498,7 +624,7 @@ lemma injectiveagreement_ue_gnb_k_gnb:
  *  b = SUPI
  *  r = K_gNB_star
  */
-lemma injectiveagreement_gnb_ue_k_gnb:
+lemma injectiveagreement_gnb_ue_k_gnb [heuristic={injectiveagreement_gnb_ue_k_gnb}]:
   " All a b r #i. Commit(a,b,<'gNB','UE',<'K_gNB_star',r>>)@i
       ==> (Ex #j. Running(b,a,<'gNB','UE',<'K_gNB_star',r>>)@j
            & not (Ex a2 b2 #i2. Commit(a2,b2,<'gNB','UE',<'K_gNB_star',r>>)@i2
@@ -522,7 +648,7 @@ lemma injectiveagreement_gnb_ue_k_gnb:
  * Notations:
  *   q = K_ASME
  */
-lemma secret_k_asme:
+lemma secret_k_asme [heuristic={secret_k_asme}]:
   " All q #i. Secret(<'K_ASME',q>)@i
     ==> (not (Ex #k. K(q)@k))
          | (Ex X #k. Rev(X,<'K_ASME',q>)@k & Honest(X)@i)
@@ -544,7 +670,7 @@ lemma secret_k_asme:
  *   p = K_AMF
  *   q = K_ASME
  */
-lemma secret_k_amf:
+lemma secret_k_amf [heuristic={secret_k_amf}]:
   " All p q #i #j.
         Secret(<'K_AMF',p>)@i
       & KeyDerived(<'K_AMF',p>,q)@j
@@ -569,7 +695,7 @@ lemma secret_k_amf:
  *   q = K_ASME
  *   r = K_eNB
  */
-lemma secret_k_enb:
+lemma secret_k_enb [heuristic={secret_k_enb}]:
   " All q r #i #j.
         Secret(<'K_eNB',r>)@i
       & KeyDerived(<'K_eNB',r>,q)@j
@@ -598,7 +724,7 @@ lemma secret_k_enb:
  *   s = K_gNB_star
  *   t = NH
  */
-lemma secret_k_gnb_star:
+lemma secret_k_gnb_star [heuristic={secret_k_gnb_star}]:
   " All s t #i #j.
         Secret(<'K_gNB_star',s>)@i
       & KeyDerived(<'K_gNB_star',s>,t)@j

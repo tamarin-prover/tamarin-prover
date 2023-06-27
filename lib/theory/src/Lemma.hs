@@ -27,7 +27,7 @@ import Items.LemmaItem
 import Text.PrettyPrint.Highlight
 import Theory.Text.Pretty
 import Theory.Model
-import Theory.Constraint.Solver
+--import Theory.Constraint.Solver
 import Data.List (intercalate)
 
 
@@ -93,6 +93,7 @@ prettyLemmaAttribute (LemmaHeuristic h) = text ("heuristic=" ++ (prettyGoalRanki
 prettyLemmaAttribute (LemmaModule h)    = text ("output=[" ++ intercalate "," (map show h)  ++ "]")
 prettyLemmaAttribute LHSLemma           = text "left"
 prettyLemmaAttribute RHSLemma           = text "right"
+prettyLemmaAttribute _                  = emptyDoc
 --     prettyLemmaAttribute BothLemma      = text "both"
 
 

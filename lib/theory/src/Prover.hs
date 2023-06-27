@@ -71,14 +71,15 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
   if autoSources && (containsPartialDeconstructions (cacheLeft items) || containsPartialDeconstructions (cacheRight items))
     then
       proveDiffTheory (const True) checkProof checkDiffProof
-        (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items') (cacheRight items') (diffCacheLeft items') (diffCacheRight items') items' (L.get diffThyOptions thy0))
+        (DiffTheory (L.get diffThyName thy0) h t sig (cacheLeft items') (cacheRight items') (diffCacheLeft items') (diffCacheRight items') items' (L.get diffThyOptions thy0))
     else
       proveDiffTheory (const True) checkProof checkDiffProof
-        (DiffTheory (L.get diffThyName thy0) h sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items (L.get diffThyOptions thy0))
+        (DiffTheory (L.get diffThyName thy0) h t sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items (L.get diffThyOptions thy0))
 
   where
     parameters = Sources.IntegerParameters (L.get (openChainsLimit.diffThyOptions) thy0) (L.get (saturationLimit.diffThyOptions) thy0)
     h              = L.get diffThyHeuristic thy0
+    t              = L.get diffThyTactic thy0
     diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True
     diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True
     cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False
@@ -141,9 +142,9 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
 
     -- extract protocol rules
     leftClosedRules  :: [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
-    leftClosedRules its = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose errClose its errClose)
+    leftClosedRules its = leftTheoryRules  (DiffTheory errClose errClose errClose errClose errClose errClose errClose errClose its errClose)
     rightClosedRules :: [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof s] -> [ClosedProtoRule]
-    rightClosedRules its = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose errClose its errClose)
+    rightClosedRules its = rightTheoryRules (DiffTheory errClose errClose errClose errClose errClose errClose errClose errClose its errClose)
     errClose  = error "closeDiffTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -168,13 +169,14 @@ closeTheoryWithMaude sig thy0 autoSources =
   if autoSources && containsPartialDeconstructions (cache items)
     then
         proveTheory (const True) checkProof
-      $ Theory (L.get thyName thy0) h sig (cache items') items' (L.get thyOptions thy0)
+      $ Theory (L.get thyName thy0) h t sig (cache items') items' (L.get thyOptions thy0)
     else
         proveTheory (const True) checkProof
-      $ Theory (L.get thyName thy0) h sig (cache items) items (L.get thyOptions thy0)
+      $ Theory (L.get thyName thy0) h t sig (cache items) items (L.get thyOptions thy0)
   where
     parameters = Sources.IntegerParameters (L.get (openChainsLimit.thyOptions) thy0) (L.get (saturationLimit.thyOptions) thy0)
     h          = L.get thyHeuristic thy0
+    t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
     cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
@@ -225,7 +227,7 @@ closeTheoryWithMaude sig thy0 autoSources =
 
     -- extract protocol rules
     rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
-    rules its = theoryRules (Theory errClose errClose errClose errClose its errClose)
+    rules its = theoryRules (Theory errClose errClose errClose errClose errClose its errClose)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -433,8 +435,8 @@ applyPartialEvaluationDiff evalStyle autoSources thy0 =
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openTheory :: ClosedTheory -> OpenTheory
-openTheory  (Theory n h sig c items opts) = openTranslatedTheory(
-    Theory n h (toSignaturePure sig) (openRuleCache c)
+openTheory  (Theory n h t sig c items opts) = openTranslatedTheory(
+    Theory n h t (toSignaturePure sig) (openRuleCache c)
     -- We merge duplicate rules if they were split into variants
       (mergeOpenProtoRules $ map (mapTheoryItem openProtoRule incrementalToSkeletonProof) items)
       opts)
@@ -442,9 +444,9 @@ openTheory  (Theory n h sig c items opts) = openTranslatedTheory(
 -- | Open a theory by dropping the closed world assumption and values whose
 -- soundness depends on it.
 openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
-openDiffTheory  (DiffTheory n h sig c1 c2 c3 c4 items opts) =
+openDiffTheory  (DiffTheory n h t sig c1 c2 c3 c4 items opts) =
     -- We merge duplicate rules if they were split into variants
-    DiffTheory n h (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
+    DiffTheory n h t (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
       (mergeOpenProtoRulesDiff $ map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a b c d e) -> (x, Lemma a b c d (incrementalToSkeletonProof e)))) items)
       opts
 

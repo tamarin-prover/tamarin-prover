@@ -1,0 +1,514 @@
+theory secrecy_4_passive_INpsk1 begin
+/* Channel rules for the following handshake:
+INpsk1:
+ -> e s psk
+ <- e ee se
+
+ */
+
+builtins: hashing, diffie-hellman
+functions: aead/4, kdf1/1, kdf2/1, kdf3/1, decrypt/3, verify/4, true/0
+// decrypt is not used by agents but we need to offer this possibility to the adversary
+equations: decrypt(k, n, aead(k, n, a, p)) = p
+// verify is not needed by agents but we need to offer this possibility to the
+// adversary for observationnal independence properties
+equations: verify(k, n, a, aead(k, n, a, p)) = true
+
+tactic: unless
+presort: s
+prio:
+ //state (fst)
+    regex "^My" 
+    regex "^I_"
+    regex "^R_" 
+    regex "^St_"
+    regex "^!Transport_"
+    regex "^!SessionId\("
+    regex "^Ek"
+    regex "^Handshake" 
+    regex "^Peer"
+prio:
+// reasonable_nonces (fst)
+    regex "!KU\( *~.*\)" & reasonableNoncesNoise "resN"
+    //reasonableNoncesNoise ""
+prio: {smallest}  //smallest dh
+    dhreNoise "dh" 
+prio: {smallest}
+//smallest aqs
+    regex "Receivable\(.*'" "" ""
+    regex "Receivable\(.*\(" "" ""
+    regex "Recv\(.*\(" "" ""
+    regex "Recv\(.*'" "" ""
+prio:
+//default case
+    not regex "^!KU\("
+    regex "^(?<!'g'\^)\~[a-zA-Z.0-9]*$" & defaultNoise "(?<!'g'\^)\~[a-zA-Z.0-9]*" "def"
+
+tactic: unless_reveal_psk
+presort: s
+prio:
+ //state (fst)
+    regex "^My" 
+    regex "^I_"
+    regex "^R_" 
+    regex "^St_"
+    regex "^!Transport_"
+    regex "^!SessionId\("
+    regex "^Ek"
+    regex "^Handshake" 
+    regex "^Peer"
+prio:
+// reasonable_nonces (fst)
+    regex "!KU\( *~.*\)" & reasonableNoncesNoise ""
+    //reasonableNoncesNoise ""
+prio: {smallest} //smallest psk
+    regex "!KU\(.*~psk.*\)"
+prio: {smallest}  //smallest dh
+    dhreNoise "~n" "\(Reveal[a-zA-Z]+\( *'g'^(~[a-zA-Z0-9.]+) *\) *@ *#reveal" "^(~[a-zA-Z0-9.]+)" 
+prio: {smallest}
+//smallest aqs
+    regex "Receivable\(.*'" "" ""
+    regex "Receivable\(.*\(" "" ""
+    regex "Recv\(.*\(" "" ""
+    regex "Recv\(.*'"
+prio: {smallest}
+//default case
+    not regex "^!KU\("
+    regex "^(?<!'g'\^)\~[a-zA-Z.0-9]*$" & defaultNoise "(?<!'g'\^)\~[a-zA-Z.0-9]*" "def"
+
+/* Handshake initialisation with initial
+        knowledge for Initiator */
+
+rule Init_Handshake_Initiator:
+ let hash0 = h(<'INpsk1', prologue>) in
+ [ Init_Handshake_Initiator(id, prologue, ~s, psk) ]
+ --[  ]->
+ [ HandshakeState_Initiator_0(id, hash0, 'INpsk1', ~s, psk) ]
+
+/* Initiator is Snding this message: -> e s psk */
+
+rule Handshake_Initiator_Snd_1:
+ let hash1 = h(<hash, ('g'^~e0)>)
+     ck2 = kdf1(<ck, ('g'^~e0)>)
+     k3 = kdf2(<ck, ('g'^~e0)>)
+     c4 = aead(k3, '0', hash1, ('g'^~s))
+     hash5 = h(<hash1, c4>)
+     hash6 = h(<hash5, kdf1(<ck2, psk>)>)
+     ck7 = kdf2(<ck2, psk>)
+     k8 = kdf3(<ck2, psk>)
+     c9 = aead(k8, '0', hash6, payload)
+     hash10 = h(<hash6, c9>) in
+ [ HandshakeState_Initiator_0(id, hash, ck, ~s, psk), Handshake_Snd_1(id, payload), Ek(~e0) ]
+ --[ RawSnd('Initiator1', <('g'^~e0), c4, c9>) ]->
+ [
+  MyEk_Initiator(id, ('g'^~e0)),
+  HandshakeState_Initiator_1(id, hash10, ck7, k8, ~e0, ~s, psk),
+  Send(<('g'^~e0), c4, c9>)
+ ]
+
+/* Initiator is Recving this message: <- e ee se */
+
+rule Handshake_Initiator_Recv_2:
+ let hash1 = h(<hash, ('g'^re0)>)
+     ck2 = kdf1(<ck, ('g'^re0)>)
+     k3 = kdf2(<ck, ('g'^re0)>)
+     ck4 = kdf1(<ck2, (('g'^re0)^~e)>)
+     k5 = kdf2(<ck2, (('g'^re0)^~e)>)
+     ck6 = kdf1(<ck4, (('g'^re0)^~s)>)
+     k7 = kdf2(<ck4, (('g'^re0)^~s)>)
+     c8 = aead(k7, '0', hash1, payload)
+     hash9 = h(<hash1, c8>) in
+ [ HandshakeState_Initiator_1(id, hash, ck, k, ~e, ~s, psk), Recv(<('g'^re0), c8>) ]
+ --[ RawRecv('Responder2', <('g'^re0), c8>) ]->
+ [
+  PeerEk_Initiator(id, ('g'^re0)),
+  HandshakeState_Initiator_2(id, hash9, ck6, k7, ~e, ('g'^re0), ~s, psk),
+  Handshake_Recv_2(id, payload)
+ ]
+
+/* Initiator switches to transport mode */
+
+rule Initiator_to_transport_mode:
+ [ HandshakeState_Initiator_2(id, hash, ck, k, ~e, ('g'^re), ~s, psk) ]
+ --[  ]->
+ [ !Transport_Initiator(id, kdf1(ck), kdf2(ck)), !SessionId(id, hash) ]
+
+/* Handshake initialisation with initial
+        knowledge for Responder */
+
+rule Init_Handshake_Responder:
+ let hash0 = h(<'INpsk1', prologue>) in
+ [ Init_Handshake_Responder(id, prologue, psk) ]
+ --[  ]->
+ [ HandshakeState_Responder_0(id, hash0, 'INpsk1', psk) ]
+
+/* Responder is Recving this message: -> e s psk */
+
+rule Handshake_Responder_Recv_1:
+ let hash1 = h(<hash, ('g'^re0)>)
+     ck2 = kdf1(<ck, ('g'^re0)>)
+     k3 = kdf2(<ck, ('g'^re0)>)
+     c5 = aead(k3, '0', hash1, ('g'^rs4))
+     hash6 = h(<hash1, c5>)
+     hash7 = h(<hash6, kdf1(<ck2, psk>)>)
+     ck8 = kdf2(<ck2, psk>)
+     k9 = kdf3(<ck2, psk>)
+     c10 = aead(k9, '0', hash7, payload)
+     hash11 = h(<hash7, c10>) in
+ [ HandshakeState_Responder_0(id, hash, ck, psk), Recv(<('g'^re0), c5, c10>) ]
+ --[ RawRecv('Initiator1', <('g'^re0), c5, c10>) ]->
+ [
+  PeerEk_Responder(id, ('g'^re0)),
+  PeerLtk_Responder(id, ('g'^rs4)),
+  HandshakeState_Responder_1(id, hash11, ck8, k9, ('g'^re0), ('g'^rs4), psk),
+  Handshake_Recv_1(id, payload)
+ ]
+
+/* Responder is Snding this message: <- e ee se */
+
+rule Handshake_Responder_Snd_2:
+ let hash1 = h(<hash, ('g'^~e0)>)
+     ck2 = kdf1(<ck, ('g'^~e0)>)
+     k3 = kdf2(<ck, ('g'^~e0)>)
+     ck4 = kdf1(<ck2, (('g'^re)^~e0)>)
+     k5 = kdf2(<ck2, (('g'^re)^~e0)>)
+     ck6 = kdf1(<ck4, (('g'^rs)^~e0)>)
+     k7 = kdf2(<ck4, (('g'^rs)^~e0)>)
+     c8 = aead(k7, '0', hash1, payload)
+     hash9 = h(<hash1, c8>) in
+ [
+  HandshakeState_Responder_1(id, hash, ck, k, ('g'^re), ('g'^rs), psk),
+  Handshake_Snd_2(id, payload),
+  Ek(~e0)
+ ]
+ --[ RawSnd('Responder2', <('g'^~e0), c8>) ]->
+ [
+  MyEk_Responder(id, ('g'^~e0)),
+  HandshakeState_Responder_2(id, hash9, ck6, k7, ~e0, ('g'^re), ('g'^rs), psk),
+  Send(<('g'^~e0), c8>)
+ ]
+
+/* Responder switches to transport mode */
+
+rule Responder_to_transport_mode:
+ [ HandshakeState_Responder_2(id, hash, ck, k, ~e, ('g'^re), ('g'^rs), psk) ]
+ --[  ]->
+ [ !Transport_Responder(id, kdf1(ck), kdf2(ck)), !SessionId(id, hash) ]
+
+/* transport mode rules */
+
+rule I_Recv_from_R:
+ let c = <n, aead(kr2i, n, '0', msg)>
+ in
+ [ Recv(c)
+ , !Transport_Initiator(id, ki2r, kr2i)
+ ] --[
+ RawRecv(<'R', n>, c)
+ ]->
+ [ I_Recv(id, n, msg) ]
+
+rule R_Recv_from_I:
+ let c = <n, aead(ki2r, n, '0', msg)>
+ in
+ [ Recv(c)
+ , !Transport_Responder(id, ki2r, kr2i)
+ ] --[
+ RawRecv(<'I', n>, c)
+ ]->
+ [ R_Recv(id, n, msg) ]
+
+rule I_Snd_to_R:
+ let c = <n, aead(ki2r, n, '0', msg)>
+ in
+ [ I_Snd(id, n, msg)
+ , !Transport_Initiator(id, ki2r, kr2i)
+ ] --[
+ RawSnd(<'I', n>, c)
+ ]->
+ [ Send(c)
+ ]
+
+rule R_Snd_to_I:
+ let c = <n, aead(kr2i, n, '0', msg)>
+ in
+ [ R_Snd(id, n, msg)
+ , !Transport_Responder(id, ki2r, kr2i)
+ ] --[
+ RawSnd(<'R', n>, c)
+ ]->
+ [ Send(c)
+ ]
+
+
+/* Start of instrumentation protocol */
+
+rule channel_send:
+[ Send(m) ] --> [ Receivable(m), Out(m) ]
+rule channel_receive:
+[ Receivable(m) ] --> [ Recv(m) ]
+
+
+rule disclose_sid: [ !SessionId(~id, h) ] --> [ Out(h) ]
+
+rule static_keygen:
+ [ Fr(~key) ] --[ HonestPk(('g'^~key)) ]-> [ !Pk(~key, ('g'^~key)), Out(('g'^~key)) ]
+
+rule static_reveal:
+ [ !Pk(~s, ('g'^~s)) ] --[ RevealLtk(('g'^~s)) ]-> [ Out(~s) ]
+
+rule ephemeral_keygen:
+ [ Fr(~e) ] --[ HonestEk(('g'^~e)) ]-> [ Ek(~e), Out(('g'^~e)), RevealableEk(~e) ]
+
+rule ephemeral_reveal:
+ [ RevealableEk(~e) ] --[ RevealEk(('g'^~e)) ]-> [ Out(~e) ]
+
+rule psk_keygen:
+ [ Fr(~psk) ] --[  ]-> [ !Psk(~psk) ]
+
+rule psk_reveal:
+ [ !Psk(~psk) ] --[ RevealPsk(~psk) ]-> [ Out(~psk) ]
+
+/* Creation of the Initiator */
+
+rule Create_Initiator:
+ [ Fr(~id), !Pk(~ltk, me), !Psk(psk) ]
+ --[ Create_Initiator() ]->
+ [ St_Initiator_0(~id, me, psk), Init_Handshake_Initiator(~id, 'prologue', ~ltk, psk) ]
+
+/* Initiator is Snding message 1 */
+
+rule Instrumentation_Initiator_1:
+ [ St_Initiator_0(~id, me, psk) ]
+ --[  ]->
+ [ St_Initiator_1(~id, me, psk), Handshake_Snd_1(~id, $msg) ]
+
+/* Initiator is Recving message 2 */
+
+rule Instrumentation_Initiator_2:
+ [ St_Initiator_1(~id, me, psk), MyEk_Initiator(~id, e), Handshake_Recv_2(~id, msg) ]
+ --[  ]->
+ [ St_Initiator_2(~id, e, me, psk) ]
+
+/* Initiator is Snding message 3 */
+
+rule Instrumentation_Initiator_3:
+ [ St_Initiator_2(~id, e, me, psk), PeerEk_Initiator(~id, re) ]
+ --[  ]->
+ [ St_Initiator_3(~id, e, me, re, psk), I_Snd(~id, '0', $msg) ]
+
+/* Initiator is Recving message 4 */
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active skipped because it is obviously false
+*/
+
+lemma Secrecy_INpsk1_4_for_Initiator_unless_active_or_reveal_psk_AnyTime_end:
+ "All msg e me re psk #claim.
+ (Secret_INpsk1_4_Initiator(e, me, re, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) | (Ex #reveal. RevealPsk(psk) @ #reveal))"
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active or R(re) skipped because it is obviously false
+*/
+
+lemma Secrecy_INpsk1_4_for_Initiator_unless_active_or_reveal_re_AnyTime_or_reveal_psk_AnyTime_end:
+ "All msg e me re psk #claim.
+ (Secret_INpsk1_4_Initiator(e, me, re, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     ((Ex #reveal. RevealEk(re) @ #reveal) | (Ex #reveal. RevealPsk(psk) @ #reveal)))"
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active or R(s) skipped because it is obviously false
+*/
+
+lemma Secrecy_INpsk1_4_for_Initiator_unless_active_or_reveal_s_AnyTime_or_reveal_psk_AnyTime_end[heuristic={unless_reveal_psk}]:
+ "All msg e me re psk #claim.
+ (Secret_INpsk1_4_Initiator(e, me, re, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     ((Ex #reveal. RevealLtk(me) @ #reveal) | (Ex #reveal. RevealPsk(psk) @ #reveal)))"
+
+lemma Secrecy_INpsk1_4_for_Initiator_unless_active_or_reveal_s_AnyTime_or_reveal_re_AnyTime_end:
+ "All msg e me re psk #claim.
+ (Secret_INpsk1_4_Initiator(e, me, re, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     ((Ex #reveal. RevealLtk(me) @ #reveal) | (Ex #reveal. RevealEk(re) @ #reveal)))"
+
+lemma
+ Secrecy_INpsk1_4_for_Initiator_unless_active_or_reveal_s_AnyTime_or_reveal_re_AnyTime_or_reveal_psk_AnyTime_end:
+ "All msg e me re psk #claim.
+ (Secret_INpsk1_4_Initiator(e, me, re, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     (((Ex #reveal. RevealLtk(me) @ #reveal) | (Ex #reveal. RevealEk(re) @ #reveal)) |
+      (Ex #reveal. RevealPsk(psk) @ #reveal)))"
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active or R(e) skipped because it is obviously false
+*/
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active or R(e) or R(psk) skipped because it is useless
+*/
+
+lemma Secrecy_INpsk1_4_for_Initiator_unless_active_or_reveal_e_AnyTime_or_reveal_re_AnyTime_end:
+ "All msg e me re psk #claim.
+ (Secret_INpsk1_4_Initiator(e, me, re, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     ((Ex #reveal. RevealEk(e) @ #reveal) | (Ex #reveal. RevealEk(re) @ #reveal)))"
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active or R(e) or R(re) or R(psk) skipped because it is useless
+*/
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active or R(e) or R(s) skipped because it is obviously false
+*/
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active or R(e) or R(s) or R(psk) skipped because it is useless
+*/
+
+lemma
+ Secrecy_INpsk1_4_for_Initiator_unless_active_or_reveal_e_AnyTime_or_reveal_s_AnyTime_or_reveal_re_AnyTime_end:
+ "All msg e me re psk #claim.
+ (Secret_INpsk1_4_Initiator(e, me, re, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     (((Ex #reveal. RevealEk(e) @ #reveal) | (Ex #reveal. RevealLtk(me) @ #reveal)) |
+      (Ex #reveal. RevealEk(re) @ #reveal)))"
+
+/*
+Secrecy for Initiator at message 4 of INpsk1 unless active or R(e) or R(s) or R(re) or R(psk) skipped because it is useless
+*/
+
+rule Instrumentation_Initiator_4:
+ [ St_Initiator_3(~id, e, me, re, psk), I_Recv(~id, '1', msg) ]
+ --[ Secret_INpsk1_4_Initiator(e, me, re, psk, msg), Finish() ]->
+ [ St_Initiator_4(~id, e, me, re, psk) ]
+
+/* Creation of the Responder */
+
+rule Create_Responder:
+ [ Fr(~id), !Pk(~ltk, me), !Psk(psk) ]
+ --[ Create_Responder() ]->
+ [ St_Responder_0(~id, psk), Init_Handshake_Responder(~id, 'prologue', psk) ]
+
+/* Responder is Recving message 1 */
+
+rule Instrumentation_Responder_1:
+ [ St_Responder_0(~id, psk), Handshake_Recv_1(~id, msg) ]
+ --[  ]->
+ [ St_Responder_1(~id, psk) ]
+
+/* Responder is Snding message 2 */
+
+rule Instrumentation_Responder_2:
+ [ St_Responder_1(~id, psk), PeerEk_Responder(~id, re), PeerLtk_Responder(~id, peer) ]
+ --[  ]->
+ [ St_Responder_2(~id, re, peer, psk), Handshake_Snd_2(~id, $msg) ]
+
+/* Responder is Recving message 3 */
+
+rule Instrumentation_Responder_3:
+ [ St_Responder_2(~id, re, peer, psk), MyEk_Responder(~id, e), R_Recv(~id, '0', msg) ]
+ --[  ]->
+ [ St_Responder_3(~id, e, re, peer, psk) ]
+
+/* Responder is Snding message 4 */
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active skipped because it is obviously false
+*/
+
+lemma Secrecy_INpsk1_4_for_Responder_unless_active_or_reveal_psk_AnyTime_end:
+ "All msg e re peer psk #claim.
+ (Secret_INpsk1_4_Responder(e, re, peer, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) | (Ex #reveal. RevealPsk(psk) @ #reveal))"
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active or R(rs) skipped because it is obviously false
+*/
+
+lemma Secrecy_INpsk1_4_for_Responder_unless_active_or_reveal_rs_AnyTime_or_reveal_psk_AnyTime_end:
+ "All msg e re peer psk #claim.
+ (Secret_INpsk1_4_Responder(e, re, peer, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     ((Ex #reveal. RevealLtk(peer) @ #reveal) | (Ex #reveal. RevealPsk(psk) @ #reveal)))"
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active or R(re) skipped because it is obviously false
+*/
+
+lemma Secrecy_INpsk1_4_for_Responder_unless_active_or_reveal_re_AnyTime_or_reveal_psk_AnyTime_end:
+ "All msg e re peer psk #claim.
+ (Secret_INpsk1_4_Responder(e, re, peer, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     ((Ex #reveal. RevealEk(re) @ #reveal) | (Ex #reveal. RevealPsk(psk) @ #reveal)))"
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active or R(re) or R(rs) skipped because it is obviously false
+*/
+
+lemma
+ Secrecy_INpsk1_4_for_Responder_unless_active_or_reveal_re_AnyTime_or_reveal_rs_AnyTime_or_reveal_psk_AnyTime_end:
+ "All msg e re peer psk #claim.
+ (Secret_INpsk1_4_Responder(e, re, peer, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     (((Ex #reveal. RevealEk(re) @ #reveal) | (Ex #reveal. RevealLtk(peer) @ #reveal)) |
+      (Ex #reveal. RevealPsk(psk) @ #reveal)))"
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active or R(e) skipped because it is obviously false
+*/
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active or R(e) or R(psk) skipped because it is useless
+*/
+
+lemma Secrecy_INpsk1_4_for_Responder_unless_active_or_reveal_e_AnyTime_or_reveal_rs_AnyTime_end:
+ "All msg e re peer psk #claim.
+ (Secret_INpsk1_4_Responder(e, re, peer, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     ((Ex #reveal. RevealEk(e) @ #reveal) | (Ex #reveal. RevealLtk(peer) @ #reveal)))"
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active or R(e) or R(rs) or R(psk) skipped because it is useless
+*/
+
+lemma Secrecy_INpsk1_4_for_Responder_unless_active_or_reveal_e_AnyTime_or_reveal_re_AnyTime_end:
+ "All msg e re peer psk #claim.
+ (Secret_INpsk1_4_Responder(e, re, peer, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     ((Ex #reveal. RevealEk(e) @ #reveal) | (Ex #reveal. RevealEk(re) @ #reveal)))"
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active or R(e) or R(re) or R(psk) skipped because it is useless
+*/
+
+lemma
+ Secrecy_INpsk1_4_for_Responder_unless_active_or_reveal_e_AnyTime_or_reveal_re_AnyTime_or_reveal_rs_AnyTime_end:
+ "All msg e re peer psk #claim.
+ (Secret_INpsk1_4_Responder(e, re, peer, psk, msg) @ #claim) ==>
+    ((not (Ex #attack. K(msg) @ #attack)) |
+     (((Ex #reveal. RevealEk(e) @ #reveal) | (Ex #reveal. RevealEk(re) @ #reveal)) |
+      (Ex #reveal. RevealLtk(peer) @ #reveal)))"
+
+/*
+Secrecy for Responder at message 4 of INpsk1 unless active or R(e) or R(re) or R(rs) or R(psk) skipped because it is useless
+*/
+
+rule Instrumentation_Responder_4:
+ [ St_Responder_3(~id, e, re, peer, psk), Fr(msg) ]
+ --[ Secret_INpsk1_4_Responder(e, re, peer, psk, msg) ]->
+ [ St_Responder_4(~id, e, re, peer, psk), R_Snd(~id, '1', msg) ]
+
+lemma executabilityPassiveAdv:
+exists-trace
+ "(((Ex #i. Finish() @ #i) &
+    ((All id m #j. (RawRecv(id, m) @ #j) ==> (Ex #k. (RawSnd(id, m) @ #k) & (#k < #j))) &
+     ((All id m m2 #a #b. ((RawSnd(id, m) @ #a) & (RawSnd(id, m2) @ #b)) ==> (#a = #b)) &
+      ((All #a #b. ((Create_Initiator() @ #a) & (Create_Initiator() @ #b)) ==> (#a = #b)) &
+       (All #a #b. ((Create_Responder() @ #a) & (Create_Responder() @ #b)) ==> (#a = #b))))))
+   &
+   ((not (Ex key #k. RevealLtk(key) @ #k)) & (not (Ex key #k. RevealEk(key) @ #k))))
+  &
+  (not (Ex key #k. RevealPsk(key) @ #k))"
+end

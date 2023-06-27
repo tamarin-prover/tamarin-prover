@@ -17,8 +17,6 @@ module Theory.Text.Parser.Lemma(
 where
 
 import           Prelude                    hiding (id, (.))
-import           Data.Foldable              (asum)
--- import           Data.Monoid                hiding (Last)
 import           Control.Applicative        hiding (empty, many, optional)
 import           Text.Parsec                hiding ((<|>))
 import           Theory
@@ -47,7 +45,7 @@ lemmaAttribute diff workDir = asum
   , symbol "diff_reuse"    *> pure ReuseDiffLemma
   , symbol "use_induction" *> pure InvariantLemma
   , symbol "hide_lemma" *> opEqual *> (HideLemma <$> identifier)
-  , symbol "heuristic"  *> opEqual *> (LemmaHeuristic <$> many1 (goalRanking diff workDir))
+  , symbol "heuristic"  *> opEqual *> (LemmaHeuristic <$> goalRanking diff workDir)
   , symbol "output"  *> opEqual *> (LemmaModule <$> list constructorp)
   , symbol "left"          *> pure LHSLemma
   , symbol "right"         *> pure RHSLemma
