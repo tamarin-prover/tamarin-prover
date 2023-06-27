@@ -12,6 +12,8 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~k ), Fr( ~id ) ] --> [ !Reader( ~k, ~id ), !Tag( ~k, ~id ) ]
 
@@ -737,14 +739,28 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  reader2
+Failed to derive Variable(s): hash
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -759,7 +775,10 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 1.10s
+  processing time: 0.80s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)

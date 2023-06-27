@@ -8,6 +8,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 heuristic: p
 
 section{* small example for progression function *}
@@ -53,6 +55,22 @@ solve( State_211( ~prog_, n ) ▶₀ #t )
     by solve( State_( ~prog_ ) ▶₀ #j )
   qed
 qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 rule (modulo E) MessageIDRule[color=#ffffff, process="+"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
@@ -155,14 +173,44 @@ restriction reliable:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  MessageIDRule
+Failed to derive Variable(s): ~mid_
+  
+  Init
+Failed to derive Variable(s): ~prog_
+  
+  inrm_0_1
+Failed to derive Variable(s): ~mid_1, ~prog_, m.1
+  
+  eventA_0_11
+Failed to derive Variable(s): ~prog_, m.1
+  
+  p_0_111
+Failed to derive Variable(s): ~prog_, m.1
+  
+  newn_0_2
+Failed to derive Variable(s): ~prog_, n.1
+  
+  outrn_0_21
+Failed to derive Variable(s): ~mid_21, ~prog_, n.1
+  
+  eventB_0_211
+Failed to derive Variable(s): ~prog_, n.1
+  
+  p_0_2111
+Failed to derive Variable(s): ~prog_, n.1
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -177,7 +225,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini4.spthy
 
   output:          examples/sapic/fast/feature-progress/mini4.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.12s
+  
+  WARNING: 9 wellformedness check failed!
+           The analysis results might be wrong!
   
   A_possible (exists-trace): verified (5 steps)
   B_impossible (all-traces): verified (4 steps)

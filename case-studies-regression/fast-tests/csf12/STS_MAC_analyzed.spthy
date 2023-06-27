@@ -18,6 +18,8 @@ equations:
 
 
 
+
+
 section{* The Station-To-Station Protocol (MAC version) *}
 
 rule (modulo E) Register_pk_clone:
@@ -323,14 +325,39 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  Init_2
+Failed to derive Variable(s): ~ltkR
+  
+  Resp_2
+Failed to derive Variable(s): ~ltkI
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -345,7 +372,10 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC.spthy
 
   output:          examples/csf12/STS_MAC.spthy.tmp
-  processing time: 1.96s
+  processing time: 3.37s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
   
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (12 steps)

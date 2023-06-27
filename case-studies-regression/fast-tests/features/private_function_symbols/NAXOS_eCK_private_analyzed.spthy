@@ -10,6 +10,8 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
 section{* NAXOS *}
 
 rule (modulo E) Init_1:
@@ -591,14 +593,20 @@ qed
 
 
 
+
+
+
+
+
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -613,7 +621,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 1.97s
+  processing time: 1.51s
   
   eCK_key_secrecy (all-traces): verified (89 steps)
 

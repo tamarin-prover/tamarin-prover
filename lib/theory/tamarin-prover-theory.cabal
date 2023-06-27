@@ -117,6 +117,7 @@ library
       Theory.Text.Parser.Restriction
       Theory.Text.Parser.Signature
 
+      Theory.Tools.MessageDerivationChecks
       Theory.Tools.AbstractInterpretation
       Theory.Tools.EquationStore
       Theory.Tools.InjectiveFactInstances
