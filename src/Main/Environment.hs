@@ -144,9 +144,10 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
 
   where
     handler :: IOException -> IO (Maybe String)
-    handler _ = do putStrLn "caught exception while executing:"
+    handler exception = do putStrLn "caught exception while executing:"
                    putStrLn $ commandLine prog args
                    putStrLn $ "with input: " ++ inp
+                   putStrLn $ "with exception: " ++ show exception
                    if maudeTest then
                      error "Maude is not installed. Ensure Maude is available and on the path."
                      else putStrLn ""
