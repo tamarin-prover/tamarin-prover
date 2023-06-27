@@ -138,7 +138,8 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
 
   where
     handler :: IOException -> IO (Maybe String)
-    handler exception = do putStrLn "caught exception while executing:"
+    handler exception =
+                do putStrLn "caught exception while executing:"
                    putStrLn $ commandLine prog args
                    putStrLn $ "with input: " ++ inp
                    putStrLn $ "with exception: " ++ show exception
