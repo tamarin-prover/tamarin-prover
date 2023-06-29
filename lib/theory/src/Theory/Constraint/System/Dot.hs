@@ -21,7 +21,7 @@ import           Data.Char                (isSpace)
 import           Data.Color
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
-import           Data.List                (find,foldl',intersect)
+import           Data.List                (find,foldl',intersect,isPrefixOf)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
@@ -371,9 +371,27 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
         ruleLabel =
             prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
             (brackets $ vcat $ punctuate comma $
-                map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
+            map prettyLNFact $ map newAutoLabel $ filter isNotDiffAnnotation $ get rActs ru)
 
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
+
+        -- give a new lable of auto-source
+        newAutoLabel ::  LNFact -> LNFact
+        newAutoLabel (Fact tag ann ts) = 
+            Fact{factTag = ProtoFact Linear 
+            (replaceAutoLabel (showFactTag $ tag) $ getRuleName ru) (length ts),
+            factAnnotations=ann,
+            factTerms= ts}
+
+        -- simplify the label of auto-source 
+        replaceAutoLabel :: String -> String -> String
+        replaceAutoLabel f rName
+            | "AUTO_IN_TERM_" `isPrefixOf` f  = "In_TERM_"++ rName
+            | "AUTO_IN_FACT_" `isPrefixOf` f  = "In_FACT_"++ rName
+            | "AUTO_OUT_TERM_" `isPrefixOf` f = "Out_TERM_"++ rName
+            | "AUTO_OUT_FACT_" `isPrefixOf` f = "Out_FACT_"++ rName
+            | otherwise = f
+        
 
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
