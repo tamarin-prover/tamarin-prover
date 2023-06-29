@@ -7,9 +7,9 @@ theory AC_sid
 
 begin
 
-//options: enableStateOpt
+//options: translation-state-optimisation
 
-builtins: locations-report
+builtins: dest-pairing, locations-report
 
 functions: prog/3,list/2
 

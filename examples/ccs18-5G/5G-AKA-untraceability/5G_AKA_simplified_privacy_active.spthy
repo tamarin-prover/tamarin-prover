@@ -20,6 +20,25 @@ functions:
 	// 3GPP KDFs (TS 33.501)
 	KDF/2
 
+tactic: sqn_ue_invariance
+presort: C
+prio:
+    regex ".*SUPI\(.*"
+    regex ".*Sqn_UE\(.*"
+
+tactic: sqn_hss_invariance
+presort: C
+prio:
+    regex ".*last\(.*"
+prio:
+    regex ".*Sqn_UE_Change\(.*"
+prio:
+    regex ".*SUPI\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+    regex ".*Sqn_HSS\(.*"
+
+
 /************************************/
 /*     Initialization Rules         */
 /************************************/
@@ -265,14 +284,14 @@ lemma dummy: "not(F)"
 
 // holds (autoproof with oracle)
 // 1 sec
-lemma sqn_ue_invariance [use_induction, sources]:
+lemma sqn_ue_invariance [heuristic={sqn_ue_invariance}, use_induction, sources]:
 	" All supi Sqn sqn_root count #i.
 		Sqn_UE_Invariance(supi, Sqn, sqn_root, count)@i
 			==> sqn_root + count = Sqn"
 
 // holds (autoproof with oracle)
 // 1 sec
-lemma sqn_hss_invariance [use_induction, sources]:
+lemma sqn_hss_invariance [heuristic={sqn_hss_invariance}, use_induction, sources]:
 	" All supi Sqn sqn_root count #i.
 		Sqn_HSS_Invariance(supi, Sqn, sqn_root, count)@i
 			==> sqn_root + count = Sqn "

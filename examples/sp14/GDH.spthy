@@ -27,6 +27,78 @@ restriction Less1:   "not (Ex x #i. Less(x,x) @ i)"
 restriction Less2:   "not (Ex x y #i. Less(x+y,x) @ i)"
 restriction InEq:   "not (Ex x #i. InEq(x,x) @ i)"
 
+tactic: Exp_nonce_or_product2
+presort: C
+prio:
+    regex ".*Group.*"
+prio:
+    regex ".*last.*"
+prio:
+    regex ".*ExpRoundKey.*" | regex ".*ExpKeyFor.*"
+prio:
+    regex ".*splitEqs.*"
+prio:
+    regex ".*AO.*"
+
+tactic: key_secret_last
+presort: C
+prio:
+    regex ".*Group.*" | regex ".*'RoundKey', 'g'>.*" | regex ".*KU\(\s~.*"
+prio:
+    regex ".*Pstate.*" | regex ".*splitEqs.*"
+prio:
+    regex ".*\^\(~.*\*.*\).*"
+prio:
+    regex ".*AO.*"
+
+tactic: key_secret
+presort: C
+prio:
+    regex ".*Group.*" | regex ".*'RoundKey', 'g'>.*"
+prio:
+    regex ".*Pstate.*" | regex ".*splitEqs.*"
+prio:
+    regex ".*KU\(\s~.*"
+prio:
+    regex ".*AO.*'1'\+.*k.*"
+prio:
+    regex ".*\^\(~.*\*.*\).*"
+prio:
+    regex ".*WaitAccept.*"
+prio:
+    regex ".*AO.*"
+
+tactic: Exp_subterm
+presort: C
+prio:
+    regex ".*Group.*" | regex ".*'RoundKey', 'g'>.*" | regex ".*ExpKeyFor\(.*"        
+    regex ".*ExpRoundKey\(.*" | regex ".*last.*"
+prio:
+    regex ".*Pstate.*" | regex ".*splitEqs.*"
+prio:
+    regex ".*KU\(\s~.*"
+prio:
+    regex ".*AO.*'1'\+.*k.*"
+prio:
+    regex ".*\^\(~.*\*.*\).*"
+prio:
+    regex ".*WaitAccept.*"
+prio:
+    regex ".*AO.*"
+
+tactic: Relate_KeyFor_RoundKey
+presort: C
+prio:
+    regex ".*Group.*" | regex ".*last.*"
+prio:
+    regex ".*ExpRoundKey.*" | regex ".*ExpKeyFor.*"
+prio:
+    regex ".*Pstate.*"
+prio:    
+    regex ".*splitEqs.*"
+prio:
+    regex ".*AO.*"
+
 rule AuthOut:
   [ !AO( A, x ) ] --> [ Out( x ) ]
 
@@ -167,7 +239,7 @@ lemma Esk_fresh_name[reuse]:
 lemma ExpKeyFor_one[reuse]:
   "All #v i r gid. ExpKeyFor( gid, r, i, 1 ) @ v ==> i = '1' & r = '1' + '1'"
 
-lemma Relate_KeyFor_RoundKey[reuse,hide_lemma=Exp_earlier_Esk, use_induction]:
+lemma Relate_KeyFor_RoundKey[heuristic={Relate_KeyFor_RoundKey}, reuse,hide_lemma=Exp_earlier_Esk, use_induction]:
   all-traces
   "All #v1 #v2 gid r j ej e.
      ExpKeyFor( gid, r, j, ej) @ v1 & ExpRoundKey( gid, r, e) @ v2
@@ -175,7 +247,7 @@ lemma Relate_KeyFor_RoundKey[reuse,hide_lemma=Exp_earlier_Esk, use_induction]:
      (Ex #v3 xj. Esk( gid, j, xj) @ v3 & ej * xj = e) | ej = 1"
 
 
-lemma Exp_subterm[use_induction, reuse]:
+lemma Exp_subterm[heuristic={Exp_subterm}, use_induction, reuse]:
   all-traces
   "not (Ex gid r i j e x #v1 #v2.
           ExpKeyFor(gid, '1' + r, j, e) @ v1 & ExpKeyFor(gid, '1' + r, i, e * x) @ v2)"
@@ -197,7 +269,7 @@ lemma roundkey_keyfor_different[use_induction,reuse,hide_lemma=Exp_earlier_Esk,h
               ExpKeyFor( gid, r1, i, y ) @ i
             & ExpRoundKey( gid, r1, y ) @ j)"
 
-lemma Exp_nonce_or_product2[use_induction,reuse,hide_lemma=Exp_earlier_Esk,hide_lemma=Relate_KeyFor_RoundKey]:
+lemma Exp_nonce_or_product2[heuristic={Exp_nonce_or_product2}, use_induction,reuse,hide_lemma=Exp_earlier_Esk,hide_lemma=Relate_KeyFor_RoundKey]:
   all-traces
   "All #i j x z gid. Exp( gid, j, x * z) @ i ==>
      (Ex #j r.  Esk( gid, r, x ) @ j) | (Ex #j ~n r. Esk( gid, r, ~n ) @ j & Ex y. x = y * ~n)"
@@ -215,13 +287,13 @@ lemma Esk_Exp_same_gid[hide_lemma=Exp_earlier_Esk,reuse,use_induction,hide_lemma
   "All gid1 gid2 i j x e #v1 #v2.
      Esk( gid1, i, x ) @ v1 & Exp(gid2, j, e * x) @ v2 ==> gid1 = gid2"
 
-lemma key_secret_last[hide_lemma=Exp_earlier_Esk,hide_lemma=Exp_nonce_or_product2,hide_lemma=Relate_KeyFor_RoundKey]:
+lemma key_secret_last[heuristic={key_secret_last}, hide_lemma=Exp_earlier_Esk,hide_lemma=Exp_nonce_or_product2,hide_lemma=Relate_KeyFor_RoundKey]:
   all-traces
   "not (Ex gid A i key #i1 #i2.
             AcceptLast( gid, A, i, key ) @ i1
           & KU( key ) @ i2)"
 
-lemma key_secret[hide_lemma=Exp_earlier_Esk,hide_lemma=Exp_nonce_or_product2,hide_lemma=Relate_KeyFor_RoundKey]:
+lemma key_secret[heuristic={key_secret}, hide_lemma=Exp_earlier_Esk,hide_lemma=Exp_nonce_or_product2,hide_lemma=Relate_KeyFor_RoundKey]:
   all-traces
   "not (Ex gid A i key #i1 #i2.
             Accept( gid, A, i, key ) @ i1

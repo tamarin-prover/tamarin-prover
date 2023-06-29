@@ -17,9 +17,8 @@
 -- "Theory.Constraint.Solver.ProofMethod" for the public interface to solving
 -- goals and the implementation of heuristics.
 module Theory.Constraint.Solver.Goals (
-    Usefulness(..)
-  , AnnotatedGoal
-  , openGoals
+    
+  openGoals
   , solveGoal
   , plainOpenGoals
   ) where
@@ -45,6 +44,7 @@ import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hidin
 
 import           Extension.Data.Label                    as L
 
+import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
@@ -52,25 +52,14 @@ import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultR
 import           Theory.Model
 import           Term.Builtin.Convenience
 
+
 import           Utils.Misc                              (twoPartitions)
 
 ------------------------------------------------------------------------------
 -- Extracting Goals
 ------------------------------------------------------------------------------
 
-data Usefulness =
-    Useful
-  -- ^ A goal that is likely to result in progress.
-  | LoopBreaker
-  -- ^ A goal that is delayed to avoid immediate termination.
-  | ProbablyConstructible
-  -- ^ A goal that is likely to be constructible by the adversary.
-  | CurrentlyDeducible
-  -- ^ A message that is deducible for the current solution.
-  deriving (Show, Eq, Ord)
-
--- | Goals annotated with their number and usefulness.
-type AnnotatedGoal = (Goal, (Integer, Usefulness))
+-- Usefullness and AnnotatedGoal moved to AnnotatedGoals.hs to allow exportation
 
 
 -- Instances
@@ -310,7 +299,7 @@ solveChain :: [RuleAC]              -- ^ All destruction rules.
            -> Reduction String      -- ^ Case name to use.
 solveChain rules (c, p) = do
     faConc  <- gets $ nodeConcFact c
-    (do -- solve it by a direct edge
+    do -- solve it by a direct edge
         cRule <- gets $ nodeRule (nodeConcNode c)
         pRule <- gets $ nodeRule (nodePremNode p)
         faPrem <- gets $ nodePremFact p
@@ -318,7 +307,7 @@ solveChain rules (c, p) = do
         insertEdges [(c, faConc, faPrem, p)]
         let mPrem = case kFactView faConc of
                       Just (DnK, m') -> m'
-                      _              -> error $ "solveChain: impossible"
+                      _              -> error "solveChain: impossible"
             caseName (viewTerm -> FApp o _)    = showFunSymName o
             caseName (viewTerm -> Lit l)       = showLitName l
         contradictoryIf (illegalCoerce pRule mPrem)
@@ -331,7 +320,7 @@ solveChain rules (c, p) = do
                 -- compute the applicable destruction rules directly.
                 i <- freshLVar "vr" LSortNode
                 let rus = map (ruleACIntrToRuleACInst . mkDUnionRule args)
-                              (filter (not . isMsgVar) args)
+                              args
                 -- NOTE: We rely on the check that the chain is open here.
                 ru <- disjunctionOfList rus
                 modM sNodes (M.insert i ru)
@@ -354,7 +343,6 @@ solveChain rules (c, p) = do
                 (v, faPrem) <- disjunctionOfList $ take 1 $ enumPrems ru
                 extendAndMark i ru v faPrem faConc
          _ -> error "solveChain: not a down fact"
-     )
   where
     extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact
       -> Control.Monad.Trans.State.Lazy.StateT System

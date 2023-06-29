@@ -1,0 +1,771 @@
+theory anonymity_Initiator_psk_revealed_trusted_pki_K1K begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman, multiset
+functions: aead/4, decrypt/3, fst/1[destructor], h/1, kdf1/1, kdf2/1,
+           kdf3/1, pair/2, snd/1[destructor], true/0, verify/4
+equations:
+    decrypt(k, n, aead(k, n, a, p)) = p,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(k, n, a, aead(k, n, a, p)) = true
+
+tactic: equivalence
+presort: s
+prio: {id}
+  regex"^My"
+  regex"^I_"
+  regex"^R_"
+  regex"^St_"
+  regex"^!Transport_"
+  regex"^!SessionId\("
+  regex"^Ek"
+  regex"^Handshake"
+  regex"^Peer"
+prio: {id}
+  regex"~~>" | regex"^!KD"
+prio: {id}
+  regex"^!Pk\("
+prio: {id}
+  regex"^!KU\(*~.*\)"
+prio: {smallest}
+  dhreNoise"diff"
+prio: {smallest}
+  regex"Receivable\(.*'"
+  regex"Receivable\(.*\("
+  regex"Recv\(.*\("
+  regex"Recv\(.*'"
+prio: {id}
+  not regex"!KU\((\$?[a-zA-Z0-9.]+|'[^']+')\)"
+  not regex"!KU\((?!(one|true))[a-zA-Z0-9.]+\)"
+
+
+
+
+
+rule (modulo E) Init_Handshake_Initiator:
+   [ Init_Handshake_Initiator( id, prologue, ~s, 'g'^rs ) ]
+  -->
+   [
+   HandshakeState_Initiator_0( id,
+                               h(<h(<h(<'K1K', prologue>), 'g'^~s>), 'g'^rs>), 'K1K', ~s, 'g'^rs
+   )
+   ]
+
+rule (modulo E) Handshake_Initiator_Snd_1:
+   [
+   HandshakeState_Initiator_0( id, hash, ck, ~s, 'g'^~rs ),
+   Handshake_Snd_1( id, payload ), Ek( ~e0 )
+   ]
+  --[
+  RawSnd( 'Initiator1',
+          <'g'^~e0, aead(kdf2(<ck, 'g'^~rs^~e0>), '0', h(<hash, 'g'^~e0>), payload)
+          >
+  )
+  ]->
+   [
+   MyEk_Initiator( id, 'g'^~e0 ),
+   HandshakeState_Initiator_1( id,
+                               h(<h(<hash, 'g'^~e0>), 
+                                  aead(kdf2(<ck, 'g'^~rs^~e0>), '0', h(<hash, 'g'^~e0>), payload)>),
+                               kdf1(<ck, 'g'^~rs^~e0>), kdf2(<ck, 'g'^~rs^~e0>), ~e0, ~s, 'g'^~rs
+   ),
+   Send( <'g'^~e0, 
+          aead(kdf2(<ck, 'g'^~rs^~e0>), '0', h(<hash, 'g'^~e0>), payload)>
+   )
+   ]
+
+rule (modulo E) Handshake_Initiator_Recv_2:
+   [
+   HandshakeState_Initiator_1( id, hash, ck, k, ~e, ~s, 'g'^~rs ),
+   Recv( <'g'^re0, 
+          aead(kdf2(<ck, 'g'^re0^~e>), '0', h(<hash, 'g'^re0>), payload)>
+   )
+   ]
+  --[
+  RawRecv( 'Responder2',
+           <'g'^re0, aead(kdf2(<ck, 'g'^re0^~e>), '0', h(<hash, 'g'^re0>), payload)>
+  )
+  ]->
+   [
+   PeerEk_Initiator( id, 'g'^re0 ),
+   HandshakeState_Initiator_2( id,
+                               h(<h(<hash, 'g'^re0>), 
+                                  aead(kdf2(<ck, 'g'^re0^~e>), '0', h(<hash, 'g'^re0>), payload)>),
+                               kdf1(<ck, 'g'^re0^~e>), kdf2(<ck, 'g'^re0^~e>), ~e, 'g'^re0, ~s, 'g'^~rs
+   ),
+   Handshake_Recv_2( id, payload )
+   ]
+
+rule (modulo E) Handshake_Initiator_Snd_3:
+   [
+   HandshakeState_Initiator_2( id, hash, ck, k, ~e, 'g'^re, ~s, 'g'^~rs ),
+   Handshake_Snd_3( id, payload )
+   ]
+  --[
+  RawSnd( 'Initiator3', aead(kdf2(<ck, 'g'^re^~s>), '0', hash, payload) )
+  ]->
+   [
+   HandshakeState_Initiator_3( id,
+                               h(<hash, aead(kdf2(<ck, 'g'^re^~s>), '0', hash, payload)>),
+                               kdf1(<ck, 'g'^re^~s>), kdf2(<ck, 'g'^re^~s>), ~e, 'g'^re, ~s, 'g'^~rs
+   ),
+   Send( aead(kdf2(<ck, 'g'^re^~s>), '0', hash, payload) )
+   ]
+
+rule (modulo E) Initiator_to_transport_mode:
+   [ HandshakeState_Initiator_3( id, hash, ck, k, ~e, 'g'^re, ~s, 'g'^rs ) ]
+  -->
+   [ !Transport_Initiator( id, kdf1(ck), kdf2(ck) ), !SessionId( id, hash )
+   ]
+
+rule (modulo E) Init_Handshake_Responder:
+   [ Init_Handshake_Responder( id, prologue, ~s, 'g'^rs ) ]
+  -->
+   [
+   HandshakeState_Responder_0( id,
+                               h(<h(<h(<'K1K', prologue>), 'g'^rs>), 'g'^~s>), 'K1K', ~s, 'g'^rs
+   )
+   ]
+
+rule (modulo E) Handshake_Responder_Recv_1:
+   [
+   HandshakeState_Responder_0( id, hash, ck, ~s, 'g'^~rs ),
+   Recv( <'g'^re0, 
+          aead(kdf2(<ck, 'g'^re0^~s>), '0', h(<hash, 'g'^re0>), payload)>
+   )
+   ]
+  --[
+  RawRecv( 'Initiator1',
+           <'g'^re0, aead(kdf2(<ck, 'g'^re0^~s>), '0', h(<hash, 'g'^re0>), payload)>
+  )
+  ]->
+   [
+   PeerEk_Responder( id, 'g'^re0 ),
+   HandshakeState_Responder_1( id,
+                               h(<h(<hash, 'g'^re0>), 
+                                  aead(kdf2(<ck, 'g'^re0^~s>), '0', h(<hash, 'g'^re0>), payload)>),
+                               kdf1(<ck, 'g'^re0^~s>), kdf2(<ck, 'g'^re0^~s>), 'g'^re0, ~s, 'g'^~rs
+   ),
+   Handshake_Recv_1( id, payload )
+   ]
+
+rule (modulo E) Handshake_Responder_Snd_2:
+   [
+   HandshakeState_Responder_1( id, hash, ck, k, 'g'^re, ~s, 'g'^~rs ),
+   Handshake_Snd_2( id, payload ), Ek( ~e0 )
+   ]
+  --[
+  RawSnd( 'Responder2',
+          <'g'^~e0, aead(kdf2(<ck, 'g'^re^~e0>), '0', h(<hash, 'g'^~e0>), payload)>
+  )
+  ]->
+   [
+   MyEk_Responder( id, 'g'^~e0 ),
+   HandshakeState_Responder_2( id,
+                               h(<h(<hash, 'g'^~e0>), 
+                                  aead(kdf2(<ck, 'g'^re^~e0>), '0', h(<hash, 'g'^~e0>), payload)>),
+                               kdf1(<ck, 'g'^re^~e0>), kdf2(<ck, 'g'^re^~e0>), ~e0, 'g'^re, ~s, 'g'^~rs
+   ),
+   Send( <'g'^~e0, 
+          aead(kdf2(<ck, 'g'^re^~e0>), '0', h(<hash, 'g'^~e0>), payload)>
+   )
+   ]
+
+rule (modulo E) Handshake_Responder_Recv_3:
+   [
+   HandshakeState_Responder_2( id, hash, ck, k, ~e, 'g'^re, ~s, 'g'^~rs ),
+   Recv( aead(kdf2(<ck, 'g'^~rs^~e>), '0', hash, payload) )
+   ]
+  --[
+  RawRecv( 'Initiator3', aead(kdf2(<ck, 'g'^~rs^~e>), '0', hash, payload) )
+  ]->
+   [
+   HandshakeState_Responder_3( id,
+                               h(<hash, aead(kdf2(<ck, 'g'^~rs^~e>), '0', hash, payload)>),
+                               kdf1(<ck, 'g'^~rs^~e>), kdf2(<ck, 'g'^~rs^~e>), ~e, 'g'^re, ~s, 'g'^~rs
+   ),
+   Handshake_Recv_3( id, payload )
+   ]
+
+rule (modulo E) Responder_to_transport_mode:
+   [ HandshakeState_Responder_3( id, hash, ck, k, ~e, 'g'^re, ~s, 'g'^rs ) ]
+  -->
+   [ !Transport_Responder( id, kdf1(ck), kdf2(ck) ), !SessionId( id, hash )
+   ]
+
+rule (modulo E) I_Recv_from_R:
+   [
+   Recv( <n, aead(kr2i, n, '0', msg)> ),
+   !Transport_Initiator( id, ki2r, kr2i )
+   ]
+  --[ RawRecv( <'R', n>, <n, aead(kr2i, n, '0', msg)> ) ]->
+   [ I_Recv( id, n, msg ) ]
+
+rule (modulo E) R_Recv_from_I:
+   [
+   Recv( <n, aead(ki2r, n, '0', msg)> ),
+   !Transport_Responder( id, ki2r, kr2i )
+   ]
+  --[ RawRecv( <'I', n>, <n, aead(ki2r, n, '0', msg)> ) ]->
+   [ R_Recv( id, n, msg ) ]
+
+rule (modulo E) I_Snd_to_R:
+   [ I_Snd( id, n, msg ), !Transport_Initiator( id, ki2r, kr2i ) ]
+  --[ RawSnd( <'I', n>, <n, aead(ki2r, n, '0', msg)> ) ]->
+   [ Send( <n, aead(ki2r, n, '0', msg)> ) ]
+
+rule (modulo E) R_Snd_to_I:
+   [ R_Snd( id, n, msg ), !Transport_Responder( id, ki2r, kr2i ) ]
+  --[ RawSnd( <'R', n>, <n, aead(kr2i, n, '0', msg)> ) ]->
+   [ Send( <n, aead(kr2i, n, '0', msg)> ) ]
+
+rule (modulo E) channel_send:
+   [ Send( m ) ] --> [ Out( m ) ]
+
+rule (modulo E) channel_receive:
+   [ In( m ) ] --> [ Recv( m ) ]
+
+restriction at_most_1 [right]:
+  "∀ tag #t0 #t1.
+    ((Bounded( tag ) @ #t0) ∧ (Bounded( tag ) @ #t1)) ⇒ (#t0 = #t1)"
+  // safety formula
+
+restriction at_most_1 [left]:
+  "∀ tag #t0 #t1.
+    ((Bounded( tag ) @ #t0) ∧ (Bounded( tag ) @ #t1)) ⇒ (#t0 = #t1)"
+  // safety formula
+
+rule (modulo E) test_agent_keygen:
+   [ Fr( ~a ), Fr( ~b ) ]
+  -->
+   [
+   !TestPk( diff(~a, ~b), diff('g'^~a, 'g'^~b) ), Out( 'g'^~a ),
+   Out( 'g'^~b ), !TestAlternatives( (~a+~b) )
+   ]
+
+rule (modulo E) test_common:
+   [ !TestAlternatives( (~a+~b) ) ]
+  -->
+   [ !Pk( ~a, 'g'^~a ), !Pk( ~b, 'g'^~b ) ]
+
+rule (modulo E) peer_keygen:
+   [ Fr( ~s ) ]
+  -->
+   [
+   !PeerPk( ~s, 'g'^~s ), !Pk( ~s, 'g'^~s ), !TestPk( ~s, 'g'^~s ),
+   Out( 'g'^~s )
+   ]
+
+rule (modulo E) ephemeral_keygen:
+   [ Fr( ~e ) ] --[ HonestEk( 'g'^~e ) ]-> [ Ek( ~e ), Out( 'g'^~e ) ]
+
+rule (modulo E) Create_Initiator:
+   [ Fr( ~id ), !TestPk( ~ltk, me ), !PeerPk( whatever, peer ) ]
+  --[ Create_Initiator( ), Bounded( 'Initiator' ), Peer( peer ) ]->
+   [
+   St_Initiator_0( ~id, me, peer ),
+   Init_Handshake_Initiator( ~id, 'prologue', ~ltk, peer )
+   ]
+
+rule (modulo E) Instrumentation_Initiator_1:
+   [ St_Initiator_0( ~id, me, peer ) ]
+  -->
+   [ St_Initiator_1( ~id, me, peer ), Handshake_Snd_1( ~id, $msg ) ]
+
+rule (modulo E) Instrumentation_Initiator_2:
+   [
+   St_Initiator_1( ~id, me, peer ), MyEk_Initiator( ~id, e ),
+   Handshake_Recv_2( ~id, msg )
+   ]
+  -->
+   [ St_Initiator_2( ~id, e, me, peer ) ]
+
+rule (modulo E) Instrumentation_Initiator_3:
+   [ St_Initiator_2( ~id, e, me, peer ), PeerEk_Initiator( ~id, re ) ]
+  -->
+   [ St_Initiator_3( ~id, e, me, re, peer ), Handshake_Snd_3( ~id, $msg ) ]
+
+rule (modulo E) Instrumentation_Initiator_4:
+   [ St_Initiator_3( ~id, e, me, re, peer ), I_Recv( ~id, '0', msg ) ]
+  -->
+   [ St_Initiator_4( ~id, e, me, re, peer ) ]
+
+rule (modulo E) Instrumentation_Initiator_5:
+   [ St_Initiator_4( ~id, e, me, re, peer ) ]
+  -->
+   [ St_Initiator_5( ~id, e, me, re, peer ), I_Snd( ~id, '1', $msg ) ]
+
+rule (modulo E) Create_Responder:
+   [ Fr( ~id ), !PeerPk( ~ltk, me ), !TestPk( whatever, peer ) ]
+  --[ Create_Responder( ), Bounded( 'Responder' ), Peer( peer ) ]->
+   [
+   St_Responder_0( ~id, me, peer ),
+   Init_Handshake_Responder( ~id, 'prologue', ~ltk, peer )
+   ]
+
+rule (modulo E) Instrumentation_Responder_1:
+   [ St_Responder_0( ~id, me, peer ), Handshake_Recv_1( ~id, msg ) ]
+  -->
+   [ St_Responder_1( ~id, me, peer ) ]
+
+rule (modulo E) Instrumentation_Responder_2:
+   [ St_Responder_1( ~id, me, peer ), PeerEk_Responder( ~id, re ) ]
+  -->
+   [ St_Responder_2( ~id, me, re, peer ), Handshake_Snd_2( ~id, $msg ) ]
+
+rule (modulo E) Instrumentation_Responder_3:
+   [
+   St_Responder_2( ~id, me, re, peer ), MyEk_Responder( ~id, e ),
+   Handshake_Recv_3( ~id, msg )
+   ]
+  -->
+   [ St_Responder_3( ~id, e, me, re, peer ) ]
+
+rule (modulo E) Instrumentation_Responder_4:
+   [ St_Responder_3( ~id, e, me, re, peer ) ]
+  -->
+   [ St_Responder_4( ~id, e, me, re, peer ), R_Snd( ~id, '0', $msg ) ]
+
+rule (modulo E) Instrumentation_Responder_5:
+   [ St_Responder_4( ~id, e, me, re, peer ), R_Recv( ~id, '1', msg ) ]
+  --[ Finish( ) ]->
+   [ St_Responder_5( ~id, e, me, re, peer ) ]
+
+lemma executabilityPassiveAdv [right]:
+  exists-trace
+  "(∃ #i. Finish( ) @ #i) ∧
+   ((∀ id m #j.
+      (RawRecv( id, m ) @ #j) ⇒ (∃ #k. (RawSnd( id, m ) @ #k) ∧ (#k < #j))) ∧
+    ((∀ id m m2 #a #b.
+       ((RawSnd( id, m ) @ #a) ∧ (RawSnd( id, m2 ) @ #b)) ⇒ (#a = #b)) ∧
+     ((∀ #a #b.
+        ((Create_Initiator( ) @ #a) ∧ (Create_Initiator( ) @ #b)) ⇒ (#a = #b)) ∧
+      (∀ #a #b.
+        ((Create_Responder( ) @ #a) ∧ (Create_Responder( ) @ #b)) ⇒
+        (#a = #b)))))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ #i. (Finish( ) @ #i)) ∧
+ (∀ id m #j.
+   (RawRecv( id, m ) @ #j) ⇒ ∃ #k. (RawSnd( id, m ) @ #k) ∧ #k < #j) ∧
+ (∀ id m m2 #a #b.
+   (RawSnd( id, m ) @ #a) ∧ (RawSnd( id, m2 ) @ #b) ⇒ #a = #b) ∧
+ (∀ #a #b.
+   (Create_Initiator( ) @ #a) ∧ (Create_Initiator( ) @ #b) ⇒ #a = #b) ∧
+ (∀ #a #b.
+   (Create_Responder( ) @ #a) ∧ (Create_Responder( ) @ #b) ⇒ #a = #b)"
+*/
+simplify
+solve( St_Responder_4( ~id, e, me, re, peer ) ▶₀ #i )
+  case Instrumentation_Responder_4_case_1
+  solve( R_Recv( ~id, '1', msg ) ▶₁ #i )
+    case R_Recv_from_I
+    solve( !KU( aead(kdf1(kdf1(<kdf1(<kdf1(<'K1K', z>), z.1>), 'g'^(~e0*~x)
+                               >)),
+                     '1', '0', msg)
+           ) @ #vk.6 )
+      case channel_send_case_1
+      solve( !KU( aead(kdf2(kdf1(<kdf1(<kdf1(<'K1K', 'g'^(~e*~x.2)>), z>), 
+                                  'g'^(~e0*~x.1)>)),
+                       '0', '0', msg.7)
+             ) @ #vk.9 )
+        case channel_send
+        solve( !KU( aead(kdf2(<'K1K', 'g'^(~e*~x.2)>), '0',
+                         h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~x.1>), 'g'^~s>), 'g'^x>), msg.4)
+               ) @ #vk.6 )
+          case channel_send
+          solve( RawSnd( <'I', '1'>,
+                         <'1', 
+                          aead(kdf1(kdf1(<kdf1(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), 
+                                          'g'^(~e0*~s.1)>)),
+                               '1', '0', $msg)
+                         >
+                 ) @ #k.2 )
+            case I_Snd_to_R
+            solve( RawSnd( <'R', '0'>,
+                           <'0', 
+                            aead(kdf2(kdf1(<kdf1(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), 
+                                            'g'^(~e0*~s.1)>)),
+                                 '0', '0', $msg.3)
+                           >
+                   ) @ #k.3 )
+              case R_Snd_to_I
+              solve( RawSnd( 'Initiator1',
+                             <'g'^~e, 
+                              aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                   h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e>), $msg.1)
+                             >
+                     ) @ #k.1 )
+                case Handshake_Initiator_Snd_1
+                solve( !KU( aead(kdf2(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), '0',
+                                 h(<
+                                    h(<h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e>), 
+                                       aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                            h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e>),
+                                            $msg.1)
+                                      >), 
+                                    'g'^~e0>),
+                                 payload)
+                       ) @ #vk.12 )
+                  case channel_send
+                  solve( RawSnd( 'Responder2',
+                                 <'g'^~e0, 
+                                  aead(kdf2(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), '0',
+                                       h(<
+                                          h(<h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e>), 
+                                             aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                  h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 
+                                                     'g'^~e>),
+                                                  $msg.1)
+                                            >), 
+                                          'g'^~e0>),
+                                       $msg.2)
+                                 >
+                         ) @ #vr.3 )
+                    case Handshake_Responder_Snd_2
+                    solve( !KU( aead(kdf2(<kdf1(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), 
+                                           'g'^(~e0*~s.1)>),
+                                     '0',
+                                     h(<
+                                        h(<
+                                           h(<
+                                              h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e
+                                                >), 
+                                              aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                   h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 
+                                                      'g'^~e>),
+                                                   $msg.1)
+                                             >), 
+                                           'g'^~e0>), 
+                                        aead(kdf2(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), '0',
+                                             h(<
+                                                h(<
+                                                   h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 
+                                                      'g'^~e>), 
+                                                   aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                        h(<
+                                                           h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s
+                                                             >), 
+                                                           'g'^~e>),
+                                                        $msg.1)
+                                                  >), 
+                                                'g'^~e0>),
+                                             $msg.2)
+                                       >),
+                                     msg.5)
+                           ) @ #vk.8 )
+                      case channel_send
+                      solve( RawSnd( 'Initiator3',
+                                     aead(kdf2(<kdf1(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), 
+                                                'g'^(~e0*~s.1)>),
+                                          '0',
+                                          h(<
+                                             h(<
+                                                h(<
+                                                   h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 
+                                                      'g'^~e>), 
+                                                   aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                        h(<
+                                                           h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s
+                                                             >), 
+                                                           'g'^~e>),
+                                                        $msg.1)
+                                                  >), 
+                                                'g'^~e0>), 
+                                             aead(kdf2(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), '0',
+                                                  h(<
+                                                     h(<
+                                                        h(<
+                                                           h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s
+                                                             >), 
+                                                           'g'^~e>), 
+                                                        aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                             h(<
+                                                                h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 
+                                                                   'g'^~s>), 
+                                                                'g'^~e>),
+                                                             $msg.1)
+                                                       >), 
+                                                     'g'^~e0>),
+                                                  $msg.2)
+                                            >),
+                                          $msg.3)
+                             ) @ #k )
+                        case Handshake_Initiator_Snd_3
+                        solve( !KU( 'g'^~e0 ) @ #vk.12 )
+                          case channel_send
+                          solve( !KU( 'g'^~e ) @ #vk.10 )
+                            case channel_send
+                            SOLVED // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma executabilityPassiveAdv [left]:
+  exists-trace
+  "(∃ #i. Finish( ) @ #i) ∧
+   ((∀ id m #j.
+      (RawRecv( id, m ) @ #j) ⇒ (∃ #k. (RawSnd( id, m ) @ #k) ∧ (#k < #j))) ∧
+    ((∀ id m m2 #a #b.
+       ((RawSnd( id, m ) @ #a) ∧ (RawSnd( id, m2 ) @ #b)) ⇒ (#a = #b)) ∧
+     ((∀ #a #b.
+        ((Create_Initiator( ) @ #a) ∧ (Create_Initiator( ) @ #b)) ⇒ (#a = #b)) ∧
+      (∀ #a #b.
+        ((Create_Responder( ) @ #a) ∧ (Create_Responder( ) @ #b)) ⇒
+        (#a = #b)))))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ #i. (Finish( ) @ #i)) ∧
+ (∀ id m #j.
+   (RawRecv( id, m ) @ #j) ⇒ ∃ #k. (RawSnd( id, m ) @ #k) ∧ #k < #j) ∧
+ (∀ id m m2 #a #b.
+   (RawSnd( id, m ) @ #a) ∧ (RawSnd( id, m2 ) @ #b) ⇒ #a = #b) ∧
+ (∀ #a #b.
+   (Create_Initiator( ) @ #a) ∧ (Create_Initiator( ) @ #b) ⇒ #a = #b) ∧
+ (∀ #a #b.
+   (Create_Responder( ) @ #a) ∧ (Create_Responder( ) @ #b) ⇒ #a = #b)"
+*/
+simplify
+solve( St_Responder_4( ~id, e, me, re, peer ) ▶₀ #i )
+  case Instrumentation_Responder_4_case_1
+  solve( R_Recv( ~id, '1', msg ) ▶₁ #i )
+    case R_Recv_from_I
+    solve( !KU( aead(kdf1(kdf1(<kdf1(<kdf1(<'K1K', z>), z.1>), 'g'^(~e0*~x)
+                               >)),
+                     '1', '0', msg)
+           ) @ #vk.6 )
+      case channel_send_case_1
+      solve( !KU( aead(kdf2(kdf1(<kdf1(<kdf1(<'K1K', 'g'^(~e*~x.2)>), z>), 
+                                  'g'^(~e0*~x.1)>)),
+                       '0', '0', msg.7)
+             ) @ #vk.9 )
+        case channel_send
+        solve( !KU( aead(kdf2(<'K1K', 'g'^(~e*~x.2)>), '0',
+                         h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~x.1>), 'g'^~s>), 'g'^x>), msg.4)
+               ) @ #vk.6 )
+          case channel_send
+          solve( RawSnd( <'I', '1'>,
+                         <'1', 
+                          aead(kdf1(kdf1(<kdf1(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), 
+                                          'g'^(~e0*~s.1)>)),
+                               '1', '0', $msg)
+                         >
+                 ) @ #k.2 )
+            case I_Snd_to_R
+            solve( RawSnd( <'R', '0'>,
+                           <'0', 
+                            aead(kdf2(kdf1(<kdf1(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), 
+                                            'g'^(~e0*~s.1)>)),
+                                 '0', '0', $msg.3)
+                           >
+                   ) @ #k.3 )
+              case R_Snd_to_I
+              solve( RawSnd( 'Initiator1',
+                             <'g'^~e, 
+                              aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                   h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e>), $msg.1)
+                             >
+                     ) @ #k.1 )
+                case Handshake_Initiator_Snd_1
+                solve( !KU( aead(kdf2(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), '0',
+                                 h(<
+                                    h(<h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e>), 
+                                       aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                            h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e>),
+                                            $msg.1)
+                                      >), 
+                                    'g'^~e0>),
+                                 payload)
+                       ) @ #vk.12 )
+                  case channel_send
+                  solve( RawSnd( 'Responder2',
+                                 <'g'^~e0, 
+                                  aead(kdf2(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), '0',
+                                       h(<
+                                          h(<h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e>), 
+                                             aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                  h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 
+                                                     'g'^~e>),
+                                                  $msg.1)
+                                            >), 
+                                          'g'^~e0>),
+                                       $msg.2)
+                                 >
+                         ) @ #vr.3 )
+                    case Handshake_Responder_Snd_2
+                    solve( !KU( aead(kdf2(<kdf1(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), 
+                                           'g'^(~e0*~s.1)>),
+                                     '0',
+                                     h(<
+                                        h(<
+                                           h(<
+                                              h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 'g'^~e
+                                                >), 
+                                              aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                   h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 
+                                                      'g'^~e>),
+                                                   $msg.1)
+                                             >), 
+                                           'g'^~e0>), 
+                                        aead(kdf2(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), '0',
+                                             h(<
+                                                h(<
+                                                   h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 
+                                                      'g'^~e>), 
+                                                   aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                        h(<
+                                                           h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s
+                                                             >), 
+                                                           'g'^~e>),
+                                                        $msg.1)
+                                                  >), 
+                                                'g'^~e0>),
+                                             $msg.2)
+                                       >),
+                                     msg.5)
+                           ) @ #vk.8 )
+                      case channel_send
+                      solve( RawSnd( 'Initiator3',
+                                     aead(kdf2(<kdf1(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), 
+                                                'g'^(~e0*~s.1)>),
+                                          '0',
+                                          h(<
+                                             h(<
+                                                h(<
+                                                   h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s>), 
+                                                      'g'^~e>), 
+                                                   aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                        h(<
+                                                           h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s
+                                                             >), 
+                                                           'g'^~e>),
+                                                        $msg.1)
+                                                  >), 
+                                                'g'^~e0>), 
+                                             aead(kdf2(<kdf1(<'K1K', 'g'^(~e*~s)>), 'g'^(~e*~e0)>), '0',
+                                                  h(<
+                                                     h(<
+                                                        h(<
+                                                           h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 'g'^~s
+                                                             >), 
+                                                           'g'^~e>), 
+                                                        aead(kdf2(<'K1K', 'g'^(~e*~s)>), '0',
+                                                             h(<
+                                                                h(<h(<h(<'K1K', 'prologue'>), 'g'^~s.1>), 
+                                                                   'g'^~s>), 
+                                                                'g'^~e>),
+                                                             $msg.1)
+                                                       >), 
+                                                     'g'^~e0>),
+                                                  $msg.2)
+                                            >),
+                                          $msg.3)
+                             ) @ #k )
+                        case Handshake_Initiator_Snd_3
+                        solve( !KU( 'g'^~e0 ) @ #vk.12 )
+                          case channel_send
+                          solve( !KU( 'g'^~e ) @ #vk.10 )
+                            case channel_send
+                            SOLVED // trace found
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case channel_send
+      step( solve( Send( t ) ▶₀ #vr ) )
+        case Handshake_Responder_Snd_2_case_1
+        step( solve( (#vl, 0) ~~> (#i, 0) ) )
+          case pair
+          step( solve( !KU( aead(kdf2(<'K1K', z>), '0',
+                                 h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~x>), 'g'^~s>), z.2>), payload)
+                       ) @ #vk.2 ) )
+            case c_aead
+            step( solve( !KU( h(<h(<h(<h(<'K1K', 'prologue'>), 'g'^~x>), 'g'^~s>), 
+                                 z.2>)
+                         ) @ #vk.5 ) )
+              case c_h
+              step( solve( !KU( h(<h(<h(<'K1K', 'prologue'>), 'g'^~x>), 'g'^~s>)
+                           ) @ #vk.8 ) )
+                case c_h
+                step( solve( !KU( h(<h(<'K1K', 'prologue'>), 'g'^~x>) ) @ #vk.10 ) )
+                  case c_h
+                  step( solve( !KU( kdf2(<'K1K', z>) ) @ #vk.9 ) )
+                    case c_kdf2
+                    step( solve( !KU( h(<'K1K', 'prologue'>) ) @ #vk.14 ) )
+                      case c_h
+                      step( solve( !KU( '0' ) @ #vk.13 ) )
+                        case pub
+                        step( solve( !KU( 'g'^~s ) @ #vk.15 ) )
+                          case peer_keygen
+                          step( solve( !KU( 'g'^~x ) @ #vk.16 ) )
+                            case test_agent_keygen
+                            step( solve( !KU( 'K1K' ) @ #vk.17 ) )
+                              case pub
+                              step( solve( !KU( 'prologue' ) @ #vk.19 ) )
+                                case pub
+                                step( solve( splitEqs(1) ) )
+                                  case split_case_2
+                                  step( solve( !KU( 'g' ) @ #vk.17 ) )
+                                    case pub
+                                    by ATTACK // trace found
+                                  qed
+                                qed
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 3cb7de8d32abb28af2c15661792ee709093dfac5 (with uncommited changes), branch: tacticParser
+Compiled at: 2023-01-23 09:28:22.913257386 UTC
+*/
+
+end

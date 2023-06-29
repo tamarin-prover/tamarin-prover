@@ -2,8 +2,10 @@ theory LockingRestriction begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -20,6 +22,12 @@ guarded formula characterizing all counter-examples:
 simplify
 by solve( State_111( lock, lock.1 ) ▶₀ #t )
 
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="lock 'P';"]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -32,19 +40,19 @@ rule (modulo E) lockP_0_[color=#ffffff, process="lock 'P';"]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockP_0_11[color=#6c8040, process="lock 'P';"]:
+rule (modulo E) lockP_0_11[color=#408051, process="lock 'P';"]:
    [ State_11( lock ), Fr( lock.1 ) ]
   --[ Lock_1( '1', lock.1, 'P' ), Lock( '1', lock.1, 'P' ) ]->
    [ State_111( lock, lock.1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_111[color=#6c8040, process="event A( );"]:
+rule (modulo E) eventA_0_111[color=#408051, process="event A( );"]:
    [ State_111( lock, lock.1 ) ] --[ A( ) ]-> [ State_1111( lock, lock.1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlockP_0_1111[color=#6c8040, process="unlock 'P';"]:
+rule (modulo E) unlockP_0_1111[color=#408051, process="unlock 'P';"]:
    [ State_1111( lock, lock.1 ) ]
   --[ Unlock_1( '1', lock.1, 'P' ), Unlock( '1', lock.1, 'P' ) ]->
    [ ]
@@ -82,15 +90,15 @@ restriction locking_0:
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -99,7 +107,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.06904456s
+  processing time: 0.08s
   
   ANotReachable (all-traces): verified (2 steps)
 

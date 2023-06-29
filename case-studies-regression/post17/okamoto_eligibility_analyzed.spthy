@@ -2,8 +2,8 @@ theory Okamoto_Eligibilty begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, f/4, fst/1[destructor], open/2, pair/2,
-           pk/1, sign/2, snd/1[destructor], tdcommit/3, unblind/2
+functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
+           sign/2, snd/1, tdcommit/3, unblind/2
 equations:
     checksign(sign(m, sk), pk(sk)) = m,
     f(m1, f(m, r, td, m1), td, m2) = f(m, r, td, m2),
@@ -14,6 +14,8 @@ equations:
     tdcommit(m2, f(m1, r, td, m2), td) = tdcommit(m1, r, td),
     unblind(blind(m, b), b) = m,
     unblind(sign(blind(m, b), sk), b) = sign(m, sk)
+
+
 
 
 
@@ -215,20 +217,38 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  A_1
+Failed to derive Variable(s): ~ltkV
+  
+  V_2
+Failed to derive Variable(s): ~ltkA
+  
+  C_1
+Failed to derive Variable(s): ~ltkA
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -237,7 +257,10 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.062484474s
+  processing time: 0.57s
+  
+  WARNING: 3 wellformedness check failed!
+           The analysis results might be wrong!
   
   types (all-traces): verified (23 steps)
   exec (exists-trace): verified (6 steps)

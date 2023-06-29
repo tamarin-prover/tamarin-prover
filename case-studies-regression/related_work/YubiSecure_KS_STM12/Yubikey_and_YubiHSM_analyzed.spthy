@@ -2,9 +2,9 @@ theory YubikeyHSM begin
 
 // Function signature and definition of the equational theory E
 
-functions: S/1, demac/2, dexor1/2, dexor2/2, fst/1[destructor],
-           keystream/2, keystream_kh/1, keystream_n/1, mac/2, myzero/0, pair/2,
-           sdec/2[destructor], senc/2, snd/1[destructor], xorc/2
+functions: S/1, demac/2, dexor1/2, dexor2/2, fst/1, keystream/2,
+           keystream_kh/1, keystream_n/1, mac/2, myzero/0, pair/2, sdec/2, senc/2,
+           snd/1, xorc/2
 equations:
     demac(mac(m, k), k) = m,
     dexor1(xorc(a, b), a) = b,
@@ -14,6 +14,8 @@ equations:
     keystream_n(keystream(n, n)) = n,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -7522,20 +7524,36 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  YSM_AEAD_YUBIKEY_OTP_DECODE
+Failed to derive Variable(s): N
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -7544,7 +7562,10 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 0.077423283s
+  processing time: 20.15s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   adv_can_guess_counter (all-traces): verified (24 steps)
   otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)

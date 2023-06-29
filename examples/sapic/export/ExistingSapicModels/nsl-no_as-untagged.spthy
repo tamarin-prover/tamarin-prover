@@ -21,6 +21,8 @@ theory NeedhamSchroeder
 
 begin
 
+builtins: dest-pairing
+
 functions: pk/1, aenc/2, adec/2[destructor]
 
 equations: adec(aenc(m,pk(sk)),sk)=m

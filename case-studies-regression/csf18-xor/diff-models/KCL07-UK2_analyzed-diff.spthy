@@ -3,8 +3,10 @@ theory KCL07_UK2 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
+functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -12,7 +14,7 @@ rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( 'setup' ) ]->
    [
-   Transcript( <~k1, ~id1> ), Reader( (<~k1, ~id1>++<~k2, ~id2>) ),
+   Transcript( <~k1, ~id1> ), Reader( (<~k1, ~id1>+<~k2, ~id2>) ),
    TagRun( diff(<~k1, ~id1>, <~k2, ~id2>) )
    ]
 
@@ -22,7 +24,7 @@ rule (modulo E) transcript:
    [ Out( ~r1 ), Out( <~r2, (~id⊕~r2), (~r2⊕h(<~r1, ~k>))> ) ]
 
 rule (modulo E) initiatereader:
-   [ Reader( (d1++d2) ), Fr( ~r0 ) ] --> [ ReaderRun( d1 ) ]
+   [ Reader( (d1+d2) ), Fr( ~r0 ) ] --> [ ReaderRun( d1 ) ]
 
 rule (modulo E) reader1:
    [ Fr( ~r1 ) ]
@@ -105,15 +107,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -122,7 +124,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 0.102348531s
+  processing time: 35.84s
   
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 

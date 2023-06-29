@@ -3,10 +3,18 @@ theory Typing begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
+
+
+
+
+
+
 
 
 
@@ -32,14 +40,14 @@ rule (modulo E) Init[color=#ffffff, process="new sk.1;"]:
        z     = 'g'
   */
 
-rule (modulo E) inhelloServergagB_0_1111[color=#518040,
+rule (modulo E) inhelloServergagB_0_1111[color=#408041,
                                          process="in(<'helloServer', 'g'^=a.1, gB.1>);"]:
    [ State_1111( a.1, sk.1 ), In( <'helloServer', 'g'^a.1, gB.1> ) ]
   --[ Key( gB.1^a.1 ) ]->
    [ ]
 
   /*
-  rule (modulo AC) inhelloServergagB_0_1111[color=#518040,
+  rule (modulo AC) inhelloServergagB_0_1111[color=#408041,
                                             process="in(<'helloServer', 'g'^=a.1, gB.1>);"]:
      [ State_1111( a, sk ), In( <'helloServer', z, gB> ) ]
     --[ Key( z.1 ) ]->
@@ -101,9 +109,9 @@ rule (modulo E) inhelloServergagB_0_1111[color=#518040,
         z.1   = x.13^(x.14*inv((x.12*x.15)))
     
     12. a     = inv((x.11*x.12))
-        gB    = x.13^x.11
+        gB    = x.13^x.12
         z     = 'g'^inv((x.11*x.12))
-        z.1   = x.13^inv(x.12)
+        z.1   = x.13^inv(x.11)
     
     13. a     = inv((x.12*x.13))
         gB    = x.14^(x.12*x.15)
@@ -181,14 +189,14 @@ rule (modulo E) inhelloServergagB_0_1111[color=#518040,
         z.1   = x.14^inv(x.15)
     
     28. a     = (x.12*inv((x.13*x.14)))
-        gB    = x.15^x.13
+        gB    = x.15^x.14
         z     = 'g'^(x.12*inv((x.13*x.14)))
-        z.1   = x.15^(x.12*inv(x.14))
+        z.1   = x.15^(x.12*inv(x.13))
     
     29. a     = (x.12*inv((x.13*x.14)))
-        gB    = x.15^(x.13*inv(x.12))
+        gB    = x.15^(x.14*inv(x.12))
         z     = 'g'^(x.12*inv((x.13*x.14)))
-        z.1   = x.15^inv(x.14)
+        z.1   = x.15^inv(x.13)
     
     30. a     = (x.13*x.14)
         gB    = x.15^(x.16*inv((x.13*x.17)))
@@ -196,9 +204,9 @@ rule (modulo E) inhelloServergagB_0_1111[color=#518040,
         z.1   = x.15^(x.14*x.16*inv(x.17))
     
     31. a     = (x.13*x.14*inv(x.15))
-        gB    = x.16^inv((x.13*x.17))
+        gB    = x.16^inv((x.14*x.17))
         z     = 'g'^(x.13*x.14*inv(x.15))
-        z.1   = x.16^(x.14*inv((x.15*x.17)))
+        z.1   = x.16^(x.13*inv((x.15*x.17)))
     
     32. a     = (x.13*x.14*inv(x.15))
         gB    = x.16^(x.15*x.17*inv(x.13))
@@ -211,9 +219,9 @@ rule (modulo E) inhelloServergagB_0_1111[color=#518040,
         z.1   = x.16^(x.14*inv(x.17))
     
     34. a     = (x.13*x.14*inv((x.15*x.16)))
-        gB    = x.17^(x.15*inv(x.13))
+        gB    = x.17^(x.16*inv(x.14))
         z     = 'g'^(x.13*x.14*inv((x.15*x.16)))
-        z.1   = x.17^(x.14*inv(x.16))
+        z.1   = x.17^(x.13*inv(x.15))
     
     35. a     = (x.13*inv(x.14))
         gB    = x.15^(x.14*x.16*inv((x.13*x.17)))
@@ -295,15 +303,15 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -312,7 +320,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issueX-translation-crash.spthy
 
   output:          examples/sapic/fast/regression-tests/issueX-translation-crash.spthy.tmp
-  processing time: 0.070005487s
+  processing time: 0.47s
   
 
 ==============================================================================

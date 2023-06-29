@@ -1,27 +1,34 @@
 -- |
--- Copyright   : (c) 2011 Simon Meier
+-- Copyright   : (c) 2011 Simon Meier, 2022 Kevin Morio
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
--- A simple module for timing IO action.
+-- A simple module for timing IO actions and evaluation of values.
 module System.Timing (
-    timed
-  , timed_
+    timedIO
+  , timed
 ) where
 
-import           Control.Monad
-import           Data.Time.Clock
+import Data.Time.Clock ( diffUTCTime, getCurrentTime, NominalDiffTime )
+import GHC.IO (unsafePerformIO)
+import Control.DeepSeq ( NFData, deepseq )
 
--- | Execute an IO action and return its result plus the time it took to execute it.
-timed :: IO a -> IO (a, NominalDiffTime)
-timed io = do
-  t0 <- getCurrentTime
-  x <- io
-  t1 <- getCurrentTime
-  return (x, diffUTCTime t1 t0)
+-- | Fully evaluate an IO action and measure its execution time.
+timedIO :: NFData a => IO a -> IO (a, NominalDiffTime)
+timedIO mx = do
+    t0 <- getCurrentTime
+    val <- mx
+    t1 <- val `deepseq` getCurrentTime
+    let measure = t1 `diffUTCTime` t0
+    return (val, measure)
 
--- | Execute an IO action and return the time it took to execute it.
-timed_ :: IO a -> IO NominalDiffTime
-timed_ = (snd `liftM`) . timed
+-- | Fully evaluate a value and measure its execution time.
+timed :: NFData a => a -> (a, NominalDiffTime)
+timed x =
+    let measure = unsafePerformIO $ do
+                    t0 <- getCurrentTime
+                    t1 <- x `deepseq` getCurrentTime
+                    return (t1 `diffUTCTime` t0)
+    in (x, measure)

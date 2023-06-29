@@ -1,14 +1,14 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Computing the variants of a term.
 module Term.Narrowing.Variants.Compute (
     computeVariantsBound
   , computeVariants
-  
+
   -- * for testing
   , compareSubstVariant
 ) where
@@ -132,7 +132,7 @@ narrowSeqStepComplexity (checked, var@(Variant _ subst)) =
 
 -- | @computeVariants t d@ compute the variants of term @t@ with bound @d@.
 --   The rewriting rules are taken from the Maude context.
-computeVariantsBound :: LNTerm -> Maybe Int 
+computeVariantsBound :: LNTerm -> Maybe Int
                      -> WithMaude (Maybe [LNSubstVFresh])
 computeVariantsBound t d = reader $ \hnd -> (\res -> trace (show ("ComputeVariantsBound", t, res)) res) $
     case (`runReader` hnd) $ narrowVariant t d of

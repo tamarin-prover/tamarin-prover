@@ -2,14 +2,15 @@ theory AttestedComputation begin
 
 // Function signature and definition of the equational theory E
 
-functions: check_rep/2[destructor], fst/1[destructor],
-           get_rep/1[destructor], list/2, pair/2, prog/3, rep/2[private,destructor],
-           report/1, snd/1[destructor]
+functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
+           pair/2, prog/3, rep/2[private,destructor], report/1, snd/1
 equations:
     check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     get_rep(rep(x.1, x.2)) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: S
 
@@ -105,6 +106,16 @@ qed
 
 
 
+
+
+
+
+
+
+
+
+
+
 restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
   // safety formula
@@ -161,7 +172,7 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) eventReadlio_0_111111111[color=#405280,
+rule (modulo E) eventReadlio_0_111111111[color=#408067,
                                          process="event Read( lio.1 );"]:
    [
    State_111111111( StateChannel, lock, lio.1, state.1 ), In( i.1 ),
@@ -172,7 +183,7 @@ rule (modulo E) eventReadlio_0_111111111[color=#405280,
 
   // loop breaker: [0]
   /*
-  rule (modulo AC) eventReadlio_0_111111111[color=#405280,
+  rule (modulo AC) eventReadlio_0_111111111[color=#408067,
                                             process="event Read( lio.1 );"]:
      [ State_111111111( StateChannel, lock, lio, state ), In( i ), Fr( r ) ]
     --[ Read( lio ) ]->
@@ -180,7 +191,7 @@ rule (modulo E) eventReadlio_0_111111111[color=#405280,
     // loop breaker: [0]
   */
 
-rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#405280,
+rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#408067,
                                                            process="event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );"]:
    [
    State_111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ),
@@ -196,7 +207,7 @@ rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#405280,
 
   // loop breaker: [1]
   /*
-  rule (modulo AC) eventRemoteprogrilioilioloc_0_111111111111[color=#405280,
+  rule (modulo AC) eventRemoteprogrilioilioloc_0_111111111111[color=#408067,
                                                               process="event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );"]:
      [
      State_111111111111( StateChannel, lock, i, lio, r, state ),
@@ -259,7 +270,7 @@ rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
     // loop breaker: [2]
   */
 
-rule (modulo E) eventReadlio_0_12111111111[color=#658040,
+rule (modulo E) eventReadlio_0_12111111111[color=#408052,
                                            process="event Read( lio.2 );"]:
    [
    State_12111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2, r.2
@@ -273,14 +284,14 @@ rule (modulo E) eventReadlio_0_12111111111[color=#658040,
    ]
 
   /*
-  rule (modulo AC) eventReadlio_0_12111111111[color=#658040,
+  rule (modulo AC) eventReadlio_0_12111111111[color=#408052,
                                               process="event Read( lio.2 );"]:
      [ State_12111111111( StateChannel, lock, state2, i, lio, o, r ) ]
     --[ Read( lio ) ]->
      [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
   */
 
-rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#658040,
+rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#408052,
                                                    process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
    [
    State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
@@ -295,7 +306,7 @@ rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#658040,
    ]
 
   /*
-  rule (modulo AC) ifoiliocheckreprloc_0_121111111111[color=#658040,
+  rule (modulo AC) ifoiliocheckreprloc_0_121111111111[color=#408052,
                                                       process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
      [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
     --[ Pred_Eq( <o, i, lio>, z ) ]->
@@ -308,7 +319,7 @@ rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#658040,
        z     = x.11
   */
 
-rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#658040,
+rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#408052,
                                                    process="event Local( <o.2, i.2, lio.2>, 'loc' );"]:
    [
    State_1211111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
@@ -321,7 +332,7 @@ rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#658040,
 
   // loop breaker: [1]
   /*
-  rule (modulo AC) eventLocaloilioloc_0_1211111111111[color=#658040,
+  rule (modulo AC) eventLocaloilioloc_0_1211111111111[color=#408052,
                                                       process="event Local( <o.2, i.2, lio.2>, 'loc' );"]:
      [
      State_1211111111111( StateChannel, lock, state2, i, lio, o, r ),
@@ -332,7 +343,7 @@ rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#658040,
     // loop breaker: [1]
   */
 
-rule (modulo E) ifoiliocheckreprloc_1_121111111111[color=#658040,
+rule (modulo E) ifoiliocheckreprloc_1_121111111111[color=#408052,
                                                    process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
    [
    State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
@@ -345,7 +356,7 @@ rule (modulo E) ifoiliocheckreprloc_1_121111111111[color=#658040,
 
   // loop breaker: [1]
   /*
-  rule (modulo AC) ifoiliocheckreprloc_1_121111111111[color=#658040,
+  rule (modulo AC) ifoiliocheckreprloc_1_121111111111[color=#408052,
                                                       process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
      [
      State_121111111111( StateChannel, lock, state2, i, lio, o, r ),
@@ -379,15 +390,15 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -396,7 +407,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.077632441s
+  processing time: 0.92s
   
   can_run_v (exists-trace): verified (8 steps)
   simp (all-traces): verified (7 steps)

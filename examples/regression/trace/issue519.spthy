@@ -1,0 +1,36 @@
+theory issue519
+begin
+
+/* Minimal working example for incorrect source computation bug where the source is a MsgVar part of a multiset.
+ *
+ * Expectation: Both lemmas should be false, because St(x) can only occur for x a fresh value.
+ * However, in Tamarin 1.6.1, the first is verified (MsgVar, incorrectly), and the second falsified (FreshVar, correctly).
+ *
+ * This seems to be caused by an incorrect source computation for the fresh value, which does not consider Send_multiset_msgVar as a source.
+ *
+ * By Cas Cremers
+ */
+builtins: multiset
+
+rule CreateAndStoreFresh:
+  [Fr(~x)]-->[St(~x)]
+
+rule Send_multiset_msgVar:
+  [St(x), In(y)]
+  --[ Secret_MsgVar(x) ]->
+  [ Out(x+y) ]
+
+rule Send_multiset_freshVar:
+  [St(~x), In(y)]
+  --[ Secret_FreshVar(~x) ]->
+  [ Out(~x+y) ]
+
+lemma secret_msgVar:
+  // Tamarin 1.6.1 falsely yields verified
+  "All #i x. Secret_MsgVar(x)@i   ==> not Ex #j. K(x)@j"
+
+lemma secret_freshVar:
+  // Tamarin 1.6.1 correctly yields falsified
+  "All #i x. Secret_FreshVar(x)@i ==> not Ex #j. K(x)@j"
+
+end

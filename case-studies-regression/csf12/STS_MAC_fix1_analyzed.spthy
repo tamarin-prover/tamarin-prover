@@ -3,12 +3,14 @@ theory STS_MAC_fix1 begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: KDF/1, fst/1[destructor], mac/2, pair/2, pk/1, sign/2,
-           snd/1[destructor], true/0, verify/3[destructor]
+functions: KDF/1, fst/1, mac/2, pair/2, pk/1, sign/2, snd/1, true/0,
+           verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
 
 
 
@@ -1101,20 +1103,43 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  Init_2
+Failed to derive Variable(s): ~ltkR
+  
+  Resp_2
+Failed to derive Variable(s): ~ltkI
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -1123,7 +1148,10 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix1.spthy
 
   output:          examples/csf12/STS_MAC_fix1.spthy.tmp
-  processing time: 0.068604302s
+  processing time: 3.97s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
   
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (109 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (160 steps)

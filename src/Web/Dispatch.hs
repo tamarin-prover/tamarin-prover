@@ -58,6 +58,7 @@ import qualified Data.Label as L
 import Main.Console (renderDoc)
 import qualified Text.PrettyPrint.Class          as Pretty
 import System.Exit
+import Text.PrettyPrint.Html
 -- import           System.Process
 
 -- | Create YesodDispatch instance for the interface.
@@ -183,11 +184,14 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
           die "quit-on-warning mode selected - aborting on wellformedness errors."
         Right (report, thy) -> do
           time <- getZonedTime
+          wfErrors <- case report of 
+                  [] -> pure $ "" 
+                  _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
           unless (null report) $ putStrLn $ renderDoc $ ppInteractive report path
           return $ Just
              ( idx
-             , either (\t -> Trace $ TheoryInfo idx t time Nothing True (Local path) autoProver)
-                      (\t -> Diff $ DiffTheoryInfo idx t time Nothing True (Local path) autoProver) thy
+             , either (\t -> Trace $ TheoryInfo idx t time Nothing True (Local path) autoProver wfErrors)
+                      (\t -> Diff $ DiffTheoryInfo idx t time Nothing True (Local path) autoProver wfErrors) thy 
              )
       where
         reportFailure error inFile = Pretty.vcat [ Pretty.text $ replicate 78 '-'

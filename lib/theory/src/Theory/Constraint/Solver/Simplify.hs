@@ -605,7 +605,6 @@ simpInjectiveFactEqMon = do
       then Unchanged else Changed
 
     where
-
       getPairs :: [(FactTag, [[MonotonicBehaviour]])] -> M.Map NodeId RuleACInst -> [(MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm))]
       getPairs [] _ = []
       getPairs ((tag, behaviours):rest) nodes = paired ++ getPairs rest nodes

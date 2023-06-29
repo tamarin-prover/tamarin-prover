@@ -2,12 +2,13 @@ theory Typing_and_Destructors begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], h/1, pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, h/1, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -202,7 +203,16 @@ solve( !Key( key ) ▶₀ #i )
   case Setup_Key
   solve( splitEqs(0) )
     case split_case_1
-    by solve( !KU( fst(sdec(msg, ~k)) ) @ #vk.1 )
+    solve( !KU( fst(sdec(msg, ~k)) ) @ #vk.1 )
+      case c_fst
+      solve( !KU( sdec(msg, ~k) ) @ #vk.2 )
+        case c_sdec
+        solve( !KU( ~k ) @ #vk.3 )
+          case Reveal_Key
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
   next
     case split_case_2
     solve( !KU( senc(<sec, z>, ~k) ) @ #vk )
@@ -257,6 +267,18 @@ solve( !Key( k ) ▶₀ #i )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 WARNING: the following wellformedness checks failed!
 
@@ -274,15 +296,15 @@ Formula terms:
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -291,13 +313,13 @@ summary of summaries:
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          examples/loops/Typing_and_Destructors.spthy.tmp
-  processing time: 0.051007208s
+  processing time: 0.17s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   type_assertion (all-traces): verified (27 steps)
-  Responder_secrecy (all-traces): verified (14 steps)
+  Responder_secrecy (all-traces): verified (17 steps)
   Public_part_public (exists-trace): verified (5 steps)
 
 ==============================================================================

@@ -165,7 +165,7 @@ progressRestr anP restrictions  = do
             mapM (\tos -> return $ Restriction (name tos) (formula tos))  (toList toss)
             where
                 name tos = "Progress_" ++ prettyPosition pos ++ "_to_" ++ List.intercalate "_or_" (map prettyPosition $ toList tos)
-                formula tos = hinted forall pvar $ hinted forall t1var $ antecedent .==>. conclusion tos
+                formula tos = hinted forAll pvar $ hinted forAll t1var $ antecedent .==>. conclusion tos
                 pvar = msgVarProgress pos
                 t1var = LVar "t" LSortNode 1
                 t2var = LVar "t" LSortNode 2

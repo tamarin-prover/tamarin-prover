@@ -17,13 +17,21 @@ def prioritize(num,m):
   global priorities, plist, match
   for i in range(len(priorities)):
     if match:
+      print (m,priorities[i],re.match(priorities[i],m))
       if re.match(priorities[i],m):
          plist[i].append(num)
          break
+      #else:
+      #    buf.append(num)
+          #break
     else:
       if priorities[i] in m:
          plist[i].append(num)
+         #print(i,num)
          break
+      #else:
+          #buf.append(num)
+          #break
 
 if lemma == "secret_x":
   match = False
@@ -43,11 +51,11 @@ if lemma == "agreementHwrtS":
 
 if lemma == "agreementSwrtH_vote":
   match = False
-  priorities = ["!KU( ~skS","In_S","In_A","!KU( ~r1","!KU( ~rb1","!KU( ~skS","!KU( h(","~~>","AgSt","In_S","In_A","cp("]
+  priorities = ["!KU\( ~skS","In_S","In_A","!KU\( ~r1","!KU\( ~rb1","!KU\( ~skS","!KU\( h\(","~~>","AgSt","In_S","In_A","cp\("]
 
 if lemma == "agreementSwrtH_code":
   match = False
-  priorities = ["!KU( ~skS","In_S","In_A","!KU( ~r1","!KU( ~rb1","!KU( ~skS","!KU( h(","~~>","AgSt","In_S","In_A","cp("]
+  priorities = ["!KU\( ~skS","In_S","In_A","!KU\( ~r1","!KU\( ~rb1","!KU\( ~skS","!KU\( h\(","~~>","AgSt","In_S","In_A","cp\("]
 
 if lemma == "indivVerif":
   match = False
@@ -64,6 +72,7 @@ if lemma == "Observational_equivalence":
 
 #j
 plist = [ [] for i in priorities ]
+buf = []
 
 for line in lines:
   if debug: print >> sys.stderr, "Line is "+line,
@@ -79,4 +88,6 @@ for line in lines:
 for j in range(len(plist)):
   for i in plist[j]:
     print i
-print 1
+for i in buf:
+  print i
+#print 1

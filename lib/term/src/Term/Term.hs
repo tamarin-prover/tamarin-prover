@@ -92,6 +92,7 @@ module Term.Term (
     , natFunSig
     , xorFunSig
     , pairFunSig
+    , pairFunDestSig    
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig

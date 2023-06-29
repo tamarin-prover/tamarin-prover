@@ -2,8 +2,8 @@ theory FOO_Eligibility begin
 
 // Function signature and definition of the equational theory E
 
-functions: blind/2, checksign/2, commit/2, fst/1[destructor], open/2,
-           pair/2, pk/1, sign/2, snd/1[destructor], unblind/2
+functions: blind/2, checksign/2, commit/2, fst/1, open/2, pair/2, pk/1,
+           sign/2, snd/1, unblind/2
 equations:
     checksign(sign(m, k), pk(k)) = m,
     fst(<x.1, x.2>) = x.1,
@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     unblind(blind(m, r), r) = m,
     unblind(sign(blind(m, r), sk), r) = sign(m, sk)
+
+
 
 
 
@@ -326,20 +328,32 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  C_2
+Failed to derive Variable(s): x
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -348,7 +362,10 @@ summary of summaries:
 analyzed: examples/post17/foo_eligibility.spthy
 
   output:          examples/post17/foo_eligibility.spthy.tmp
-  processing time: 0.074233864s
+  processing time: 0.90s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   types (all-traces): verified (44 steps)
   exec (exists-trace): verified (9 steps)

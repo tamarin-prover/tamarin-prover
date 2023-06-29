@@ -16,6 +16,8 @@ section{* Scytl Voting System *}
 
  */
 
+builtins: dest-pairing
+
 functions: w/2, sk/1 [private], h/1, f/2, phi/1, v/1, cc/1 [private],
            cut/1, honest/1 [private], enc/3, pub/1, sign/2, zkp/7,
            verifP/6 [destructor], verifE/2 [destructor], verifS/3 [destructor], dec/2, get_message/1, check/2,

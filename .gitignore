@@ -42,8 +42,14 @@ stack.yaml.lock
 
 *.iml
 .idea/
+.vscode/
 out/
 
 *.pv
 
 .worktree
+
+
+**/benchmark
+**/input
+**/diff

@@ -136,22 +136,22 @@ Untrained human rules
 ===================== */
 
 rule H_Fresh:
-    [ Fr(~x) ] --[ Fresh($H,$t,~x), !HK($H,$t,~x), Untrained($H) ]-> [ !HK($H,$t,~x) ]
+    [ Fr(~x) ] --[ Fresh($H,$t,~x), HK_event($H,$t,~x), Untrained($H) ]-> [ !HK($H,$t,~x) ]
 
 rule H_Send_I:
     [ !HK($H,$t,x) ] --[ Send($H,$A,<$t,x>), Untrained($H) ]-> [ Out(<$t,x>) ]
 
 rule H_Receive_I:
-    [ In(<$t,x>) ] --[ Receive($A,$H,<$t,x>), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+    [ In(<$t,x>) ] --[ Receive($A,$H,<$t,x>), HK_event($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
 
 rule H_Send_S:
     [ !HK($H,$t,x) ] --[ Send($H,$A,<$t,x>), To($A), Untrained($H) ]-> [ Out_S($H,$A,<$t,x>) ]
 
 rule H_Receive_S:
-    [ In_S($A,$H,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+    [ In_S($A,$H,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), HK_event($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
 
 rule H_Receive_A:
-    [ In_A($A,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), !HK($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
+    [ In_A($A,<$t,x>) ] --[ Receive($A,$H,<$t,x>), From($A), HK_event($H,$t,x), Untrained($H) ]-> [ !HK($H,$t,x) ]
 
 rule H_Claim:
     [  ] --[ Claim($H,$goal), Untrained($H) ]-> [  ]
@@ -194,7 +194,7 @@ rule Setup:
 		Goal('H1','ballot',<'b','ukn'>),
 		Goal('H1','IVHE4',<<'b','bs'>,<'ukn','ukn'>>),
 
-		!HK('H1','D','D1'), !HK('H1','BB','BB'), !HK('H1','v',$v1),
+		HK_event('H1','D','D1'), HK_event('H1','BB','BB'), HK_event('H1','v',$v1),
 		InitK('H1','D','D1'), InitK('H1','BB','BB'), InitK('H1','v',$v1)
 
 		// rule-based human guidelines that are "activated":
@@ -245,7 +245,7 @@ rule H_2:
 		, Infallible($H)
 		, Receive($D,$H,<'b',b>)
 		, From($D)
-		, !HK($H,'b', b)
+		, HK_event($H,'b', b)
 		, Send($H,$P,<'b', b>)
 		, Claim($H,'ballot')	
 	]->
@@ -302,7 +302,7 @@ rule H_3:
 		, Infallible($H)
 		, Receive($BB,$H,<'bs', b>)
 		, From($BB)
-		, !HK($H,'bs', b)
+		, HK_event($H,'bs', b)
 		, Claim($H,'IVHE')
 		, Claim($H,'IVHE2')
 		, Claim($H,'IVHE3')
@@ -319,7 +319,7 @@ RESTRICTIONS MODELING RULE-BASED HUMAN's GUIDELINES
 
 // do not overwrite an already known term with the tag 'tag' by another term.
 restriction NoOverwrite:
-	"All tag m n #s #i #j. NoOverwrite('H1',tag) @s & !HK('H1',tag,m) @i & !HK('H1',tag,n) @j ==> m = n"
+	"All tag m n #s #i #j. NoOverwrite('H1',tag) @s & HK_event('H1',tag,m) @i & HK_event('H1',tag,n) @j ==> m = n"
 
 // do receive a message with tag 'tag' from an agent 'R' with tag 'rtag' in H's initial knowledge.
 restriction GetFrom:
@@ -328,7 +328,7 @@ restriction GetFrom:
 // only accept the receipt of a messag with tag 'tag2' if it is equal to the message with tag 'tag' in the knowledge
 restriction Compare:
 	"All tag tag2 #s m #i R n #j. Compare('H1',tag,tag2) @s 
-			& !HK('H1',tag,m) @i 
+			& HK_event('H1',tag,m) @i 
 			& Receive(R,'H1',<tag2,n>) @j ==> m=n" 
 
 
@@ -396,8 +396,8 @@ lemma functional2: exists-trace
 		& Goal('H1','vote',<'v',v>) @j
 		& Claim('H1','IVHE4') @k 		
 		& Goal('H1','IVHE4',<<'b','bs'>,<'ukn','ukn'>>) @l
-		& !HK('H1','b',b) @m
-		& !HK('H1','bs',bs) @n
+		& HK_event('H1','b',b) @m
+		& HK_event('H1','bs',bs) @n
 		
 		& Claim('H1','IVHE') @i2		
 		& Goal('H1','IVHE',<<'v','b'>,<v,'ukn'>>) @j2	
@@ -418,7 +418,7 @@ lemma indivVerif_HE:
 		"All v #i b #j #k.
 		Claim('H1','IVHE') @i 		
 		& Goal('H1','IVHE',<<'v','b'>,<v,'ukn'>>) @j	
-		& !HK('H1','b',b) @k
+		& HK_event('H1','b',b) @k
 	==> Ex BB #l r pkS sskD . 
 		BB_rec(BB,<'bs', b  >) @l 	
 		& b = sg(encp(v,r,pkS),sskD) "
@@ -447,8 +447,8 @@ lemma indivVerif_HE4:
 		& Goal('H1','vote',<'v',v>) @j
 		& Claim('H1','IVHE4') @k 		
 		& Goal('H1','IVHE4',<<'b','bs'>,<'ukn','ukn'>>) @l
-		& !HK('H1','b',b) @m
-		& !HK('H1','bs',bs) @n
+		& HK_event('H1','b',b) @m
+		& HK_event('H1','bs',bs) @n
 	==> Ex BB #l r pkS sskD . 
 		BB_rec(BB,<'bs', b  >) @l 	
 		& b = sg(encp(v,r,pkS),sskD) " 

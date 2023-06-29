@@ -120,7 +120,6 @@ module Theory.Text.Parser.Token (
 
 import           Prelude             hiding (id, (.))
 
-import           Data.Foldable       (asum)
 -- import           Data.Label
 -- import           Data.Binary
 import           Data.List (foldl')
@@ -464,7 +463,7 @@ opXor = symbol_ "XOR" <|> symbol_ "⊕"
 opLess :: Parser ()
 opLess = symbol_ "<"
 
--- | The multiset comparison operator @(<)@. 
+-- | The multiset comparison operator @(<)@.
 opLessTerm :: Parser ()
 opLessTerm = symbol_ "(<)"
 

@@ -15,7 +15,6 @@ module Theory.Text.Parser.Proof (
 where
 
 import           Prelude                    hiding (id, (.))
-import           Data.Foldable              (asum)
 import qualified Data.Map                   as M
 -- import           Data.Monoid                hiding (Last)
 import           Control.Applicative        hiding (empty, many, optional)

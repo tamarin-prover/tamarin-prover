@@ -2,13 +2,15 @@ theory SetAbst begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, fst/1[destructor], pair/2, pk/1,
-           sign/2, snd/1[destructor], true/0, verify/3[destructor]
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, sign/2, snd/1, true/0,
+           verify/3
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
 
 heuristic: s i
 
@@ -58,6 +60,20 @@ qed
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="!"]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
@@ -71,7 +87,7 @@ rule (modulo E) p_1_[color=#ffffff, process="!"]:
      [ !Semistate_1( ), Fr( pki ) ] --> [ !Semistate_111( pki ) ]
   */
 
-rule (modulo E) innewuser_0_1111111[color=#806040,
+rule (modulo E) innewuser_0_1111111[color=#408051,
                                     process="in(<'new', user.1>);"]:
    [ State_1111111( pki.1 ), In( <'new', user.1> ), Fr( ~sk.1 ) ]
   --[ HonestKey( ~sk.1 ) ]->
@@ -81,7 +97,7 @@ rule (modulo E) innewuser_0_1111111[color=#806040,
    ]
 
   /*
-  rule (modulo AC) innewuser_0_1111111[color=#806040,
+  rule (modulo AC) innewuser_0_1111111[color=#408051,
                                        process="in(<'new', user.1>);"]:
      [ State_1111111( pki ), In( <'new', user> ), Fr( ~sk ) ]
     --[ HonestKey( ~sk ) ]->
@@ -89,21 +105,21 @@ rule (modulo E) innewuser_0_1111111[color=#806040,
      ]
   */
 
-rule (modulo E) inusersk_0_1111112[color=#806040,
+rule (modulo E) inusersk_0_1111112[color=#408051,
                                    process="in(<user.2, sk.2>);"]:
    [ State_1111112( pki.1 ), In( <user.2, sk.2> ) ]
   -->
    [ ServerDB( pki.1, user.2, pk(sk.2) ) ]
 
   /*
-  rule (modulo AC) inusersk_0_1111112[color=#806040,
+  rule (modulo AC) inusersk_0_1111112[color=#408051,
                                       process="in(<user.2, sk.2>);"]:
      [ State_1111112( pki ), In( <user, sk> ) ]
     -->
      [ ServerDB( pki, user, pk(sk) ) ]
   */
 
-rule (modulo E) inrenewuserpknsk_0_111112[color=#806040,
+rule (modulo E) inrenewuserpknsk_0_111112[color=#408051,
                                           process="in(<'renew', user.3, pk(nsk.1)>);"]:
    [
    State_111112( pki.1 ), In( <'renew', user.3, pk(nsk.1)> ),
@@ -119,7 +135,7 @@ rule (modulo E) inrenewuserpknsk_0_111112[color=#806040,
 
   // loop breaker: [3]
   /*
-  rule (modulo AC) inrenewuserpknsk_0_111112[color=#806040,
+  rule (modulo AC) inrenewuserpknsk_0_111112[color=#408051,
                                              process="in(<'renew', user.3, pk(nsk.1)>);"]:
      [
      State_111112( pki ), In( <'renew', user, pk(nsk)> ),
@@ -184,7 +200,7 @@ rule (modulo E) p_1_11121[color=#ffffff, process="!"]:
     // loop breaker: [2]
   */
 
-rule (modulo E) outsignrenewuserpknsksk_0_1112111111[color=#518040,
+rule (modulo E) outsignrenewuserpknsksk_0_1112111111[color=#408041,
                                                      process="out(sign(<'renew', user.4, pk(~nsk.2)>, ~sk.4));"]:
    [ State_1112111111( pki.1, ~nsk.2, ~sk.4, user.4 ) ]
   -->
@@ -194,7 +210,7 @@ rule (modulo E) outsignrenewuserpknsksk_0_1112111111[color=#518040,
    ]
 
   /*
-  rule (modulo AC) outsignrenewuserpknsksk_0_1112111111[color=#518040,
+  rule (modulo AC) outsignrenewuserpknsksk_0_1112111111[color=#408041,
                                                         process="out(sign(<'renew', user.4, pk(~nsk.2)>, ~sk.4));"]:
      [ State_1112111111( pki, ~nsk, ~sk, user ) ]
     -->
@@ -204,7 +220,7 @@ rule (modulo E) outsignrenewuserpknsksk_0_1112111111[color=#518040,
      ]
   */
 
-rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_11121111111[color=#518040,
+rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_11121111111[color=#408041,
                                                                    process="in(sign(<'confirm', sign(<'renew', =user.4, pk(=~nsk.2)>, =~sk.4)>,
      =pki.1));"]:
    [
@@ -216,7 +232,7 @@ rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_11121111111[color=#518040
    [ Out( ~sk.4 ) ]
 
   /*
-  rule (modulo AC) insignconfirmsignrenewuserpknskskpki_0_11121111111[color=#518040,
+  rule (modulo AC) insignconfirmsignrenewuserpknskskpki_0_11121111111[color=#408041,
                                                                       process="in(sign(<'confirm', sign(<'renew', =user.4, pk(=~nsk.2)>, =~sk.4)>,
      =pki.1));"]:
      [
@@ -231,20 +247,26 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  inrenewuserpknsk_0_111112
+Failed to derive Variable(s): nsk.1, sk.3
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -253,7 +275,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
-  processing time: 0.076280895s
+  processing time: 0.25s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   Knows_Honest_Key_imp_Revoked (all-traces): verified (8 steps)
 

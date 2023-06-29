@@ -28,7 +28,6 @@ module Theory.Text.Parser (
   ) where
 
 import           Prelude                    hiding (id, (.))
-import           Data.Foldable              (asum)
 import           Data.Label
 import           Data.Maybe
 -- import           Data.Monoid                hiding (Last)
@@ -49,6 +48,7 @@ import           Theory.Text.Parser.Lemma
 import           Theory.Text.Parser.Rule
 import Theory.Text.Parser.Exceptions
 import Theory.Text.Parser.Signature
+import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
 
@@ -128,8 +128,8 @@ liftedAddLemma thy lem = do
                                          -- ++ get lName lem
                                          -- ++ "."
 
-liftedAddAccLemma :: Catch.MonadThrow m => 
-                     Theory sig c r p TranslationElement 
+liftedAddAccLemma :: Catch.MonadThrow m =>
+                     Theory sig c r p TranslationElement
                      -> AccLemma -> m (Theory sig c r p TranslationElement)
 liftedAddAccLemma thy lem =
    liftMaybeToEx (DuplicateItem $ TranslationItem $ AccLemmaItem lem) (addAccLemma lem thy)
@@ -216,14 +216,16 @@ theory inFile = do
     addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
            addItems inFile0 thy'
+      , do thy' <- liftedAddTactic thy =<< tactic False
+           addItems inFile0 thy'
       , do thy' <- builtins thy
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
       , do thy' <- options thy
-           addItems inFile0 thy'      
+           addItems inFile0 thy'
       , do fs <- functions
            msig <- sig <$> getState
-           let thy' = foldl (flip addFunctionTypingInfo) thy fs in           
+           let thy' = foldl (flip addFunctionTypingInfo) thy fs in
              addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
       , do equations
            msig <- sig <$> getState
@@ -252,7 +254,7 @@ theory inFile = do
       , do r <- intrRule
            addItems inFile0 (addIntrRuleACs [r] thy)
       , do c <- formalComment
-           addItems inFile0 (addFormalComment c thy)      
+           addItems inFile0 (addFormalComment c thy)
       , do procc <- toplevelprocess thy                          -- try parsing a process
            addItems inFile0 (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
@@ -269,7 +271,7 @@ theory inFile = do
            addItems inFile0 (thy')
       , do ifdef inFile0 thy
       , do define inFile0 thy
-      , do include inFile0 thy      
+      , do include inFile0 thy
       , do return thy
       ]
       where workDir = (takeDirectory <$> inFile0)
@@ -338,6 +340,10 @@ theory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
+    liftedAddTactic thy t = case addTactic t thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default tactic already defined"
+
 -- | Parse a diff theory.
 diffTheory :: Maybe FilePath
        -> Parser OpenDiffTheory
@@ -355,10 +361,12 @@ diffTheory inFile = do
     addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
            addItems inFile0 thy'
+      , do thy' <- liftedAddTactic thy =<< tactic True
+           addItems inFile0 thy'
       , do
            diffbuiltins
            msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy           
+           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
       , do _ <- functions -- typing affects only SAPIC translation, hence functions
                           -- are only added to maude signature, but not to theory.
            msig <- sig <$> getState
@@ -450,6 +458,10 @@ diffTheory inFile = do
     liftedAddHeuristic thy h = case addDiffHeuristic h thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
+
+    liftedAddTactic thy t = case addDiffTactic t thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default tactic already defined"
 
     liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
         Just thy' -> return thy'

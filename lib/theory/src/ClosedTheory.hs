@@ -101,6 +101,7 @@ getProofContext l thy = ProofContext
     ( L.get (cases . thyCache)                 thy)
     inductionHint
     specifiedHeuristic
+    specifiedTactic
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
     (L.get lName l)
     ([ h | HideLemma h <- L.get lAttributes l])
@@ -126,6 +127,13 @@ getProofContext l thy = ProofContext
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lAttributes l])
 
+    -- Tactic specified for the lemma
+    specifiedTactic = case lattr of
+        [] -> Nothing
+        _  -> Just lattr
+      where
+        lattr = L.get thyTactic thy
+
 -- | Get the proof context for a lemma of the closed theory.
 getProofContextDiff :: Side -> Lemma a -> ClosedDiffTheory -> ProofContext
 getProofContextDiff s l thy = case s of
@@ -137,6 +145,7 @@ getProofContextDiff s l thy = case s of
             ( L.get (cases . diffThyCacheLeft)                 thy)
             inductionHint
             specifiedHeuristic
+            specifiedTactic
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
@@ -152,6 +161,7 @@ getProofContextDiff s l thy = case s of
             ( L.get (cases . diffThyCacheRight)              thy)
             inductionHint
             specifiedHeuristic
+            specifiedTactic
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
@@ -175,6 +185,12 @@ getProofContextDiff s l thy = case s of
       where
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lAttributes l])
+
+    specifiedTactic = case lattr of
+        [] -> Nothing
+        _  -> Just lattr
+      where
+        lattr = L.get diffThyTactic thy
 
 -- | Get the proof context for a diff lemma of the closed theory.
 getDiffProofContext :: DiffLemma a -> ClosedDiffTheory -> DiffProofContext
@@ -203,6 +219,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get (crcRefinedSources . diffThyDiffCacheLeft)              thy)
             AvoidInduction
             specifiedHeuristic
+            specifiedTactic
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
@@ -218,6 +235,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ( L.get (crcRefinedSources . diffThyDiffCacheRight)              thy)
             AvoidInduction
             specifiedHeuristic
+            specifiedTactic
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
@@ -234,6 +252,12 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
       where
         lattr = (headMay [Heuristic gr
                     | LemmaHeuristic gr <- L.get lDiffAttributes l])
+
+    specifiedTactic = case lattr of
+        [] -> Nothing
+        _  -> Just lattr
+      where
+        lattr = L.get diffThyTactic thy
 
 -- | The facts with injective instances in this theory
 getInjectiveFactInsts :: ClosedTheory -> S.Set (FactTag, [[MonotonicBehaviour]])
@@ -363,6 +387,7 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
     thy' :: Theory SignatureWithMaude ClosedRuleCache OpenProtoRule IncrementalProof ()
     thy' = Theory {_thyName=(L.get thyName thy)
             ,_thyHeuristic=(L.get thyHeuristic thy)
+            ,_thyTactic=(L.get thyTactic thy)
             ,_thySignature=(L.get thySignature thy)
             ,_thyCache=(L.get thyCache thy)
             ,_thyItems = mergedRules
@@ -401,6 +426,7 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
     thy' :: DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule OpenProtoRule IncrementalDiffProof IncrementalProof
     thy' = DiffTheory {_diffThyName=(L.get diffThyName thy)
             ,_diffThyHeuristic=(L.get diffThyHeuristic thy)
+            ,_diffThyTactic=(L.get diffThyTactic thy)
             ,_diffThySignature=(L.get diffThySignature thy)
             ,_diffThyCacheLeft=(L.get diffThyCacheLeft thy)
             ,_diffThyCacheRight=(L.get diffThyCacheRight thy)

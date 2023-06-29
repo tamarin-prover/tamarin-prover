@@ -40,7 +40,16 @@ def iterFolder(folder):
 				continue
 			yield fpath
 
-
+## functions for cutting and parsing part of the proof ##
+def parseTest(lines, tester):
+	keywords = ["rule", "lemma", "/*", "*/", "restriction", "section", "text", "equations", "builtins", "functions", "end", "heuristic", "predicate", "options", "process"]
+	try:
+		for key in keywords:
+			if(tester != key):
+				lines = lines.split(key)[0]					
+		return lines.replace('\t', '')
+	except Exception:
+		return f"There was an error while parsing {tester}"
 
 def parseFile(path):
 	"""
@@ -66,18 +75,75 @@ def parseFile(path):
 	times = re.findall(r"processing time: (.*)s", summary)
 	if len(times) != 1:
 		return f"Parse error - time: {path}"
+	
+	## parse equations ##
+	try:
+		splitEq = proof.split("equations:")[-1]
+		equations = parseTest(splitEq, "equations")
+		equations = equations.splitlines()
+		equations = list(filter(None, equations))
+	except Exception as ex:
+		return f"Parse error - equations: {path}"
+	
+	## parse functions ##
+	try:
+		splitFunc = proof.split("functions:")
+		func = parseTest(splitFunc, "functions").replace(' ', '').replace('\n', '')
+		func = func.split(',')
+	except Exception as ex:
+		return f"Parse error - functions: {path}"
+
+	## parse builtins ##
+	try: 
+		splitBuilt = proof.split("builtins:")
+		builtins = parseTest(splitBuilt, "builtins").replace(' ', '').replace('\n', '')
+		builtins = builtins.split(',')
+	except Exception as ex:
+		return f"Parse error - builtins: {path}"
+	
+	## parse rules ##
+	try:
+		getRules = proof.split("rule")
+		getRules.pop(0)
+		rules = []
+		for rule in getRules: 
+			rules.append(parseTest(rule, "rule"))
+	except Exception as ex:
+		return f"Parse error - rules: {path}"
+	
+
+	## parse warning ##
+	try:
+		warning = []
+		test = False
+		for line in proof.splitlines():
+			if test and line != '':
+				warning.append(line)
+			if test and line.find("*/") != -1:
+				test = False
+			if line.find("All wellformedness checks were successful.") != -1:
+				warning.append(line)
+			if line.find("WARNING: the following wellformedness checks failed!") != -1: 
+				test = True
+				warning.append(line)
+		warning = "".join([str(item) + ' ' for item in warning]).replace("/*", '').replace("*/", '')
+	except Exception as ex:
+		return f"Parse error - warnings: {path}"
+	
 
 	## parse lemmas ##
 	try:
+		
 		parsed = re.findall(r"(\w+) (?:\(.*\))?:(?!  ) (.*) \((\d+) steps\)\n", summary)
 		parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]  # convert types
 		parsed = list(zip(*parsed))             # transpose matrix
 		if (parsed == []): parsed = [[],[],[]]  #
-		return (parsed[0], parsed[1], parsed[2], float(times[0]), proof)
+		return (parsed[0], parsed[1], parsed[2], float(times[0]), proof, equations, func, warning, rules, builtins)
 
 	except Exception as ex:
 		return f"Parse error - lemmas: {path}"
-
+	
+	
 
 
 def parseFiles(pathB):
@@ -96,14 +162,14 @@ def parseFiles(pathB):
 	parsedA = parseFile(pathA)
 	if type(parsedA) == str:
 		return parsedA
-	(lemmasA, resA, stepsA, timeA, proofA) = parsedA
-	(lemmasB, resB, stepsB, timeB, proofB) = parsedB
+	(lemmasA, resA, stepsA, timeA, proofA, equationsA, funcA, warningA, rulesA, builtinsA) = parsedA
+	(lemmasB, resB, stepsB, timeB, proofB, equationsB, funcB, warningB, rulesB, builtinsB) = parsedB
 
 	## check compatibility ##
 	if lemmasA != lemmasB:
 		return f"The lemmas for {pathA} cannot be compared, they are different."
 
-	return (lemmasA, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB)
+	return (lemmasA, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB)
 
 
 
@@ -127,15 +193,81 @@ def compare():
 			logging.error(color(colors.RED + colors.BOLD, parsed))
 			majorDifferences = True
 			continue
-		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB) = parsed
+		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB) = parsed
 
 		## proofs differ ##
 		if proofA != proofB:
-			if settings.verbose >= 5:
+			if settings.verbose >= 6:
 				pathA = settings.folderA + pathB.split(settings.folderB, 1)[-1]
 				command = f"diff {pathA} {pathB} || :"
 				output = subprocess.check_output(command, shell=True).decode("utf-8")
 				logging.debug(output.split("\n<   processing time")[0])
+
+		if settings.verbose >= 3:
+		## Equations differ ## 
+			if equationsA != equationsB:
+				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
+				if len(equationsA) != len(equationsB):
+					logging.error(color(colors.RED + colors.BOLD, f"The number of equations are not equal!"))
+				else:
+					if settings.verbose >= 6:
+						for i in range(len(equationsA)):
+							if equationsA[i] != equationsB[i]:
+								logging.error(color(colors.RED + colors.BOLD, f"The equation changed from {equationsA[i]} to {equationsB[i]}"))
+					else:
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple equations do not match!"))
+				majorDifferences = True
+
+			## Rules differ ##
+			if rulesA != rulesB:
+				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
+				if len(rulesB) != len(rulesA):
+					logging.error(color(colors.RED + colors.BOLD, f"The number of rules are not equal!"))
+				else:
+					if settings.verbose >= 6:
+						for i in range(len(rulesA)):
+							if rulesA[i] != rulesB[i]:
+								logging.error(color(colors.RED + colors.BOLD, f"The rule changed from rule{rulesA[i]} \nto rule{rulesB[i]}"))
+					else:
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple rules do not match!"))
+				majorDifferences = True
+
+			## warnings differ ##
+			if warningB != warningA:
+				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
+				if settings.verbose >= 6:
+					logging.error(color(colors.RED + colors.BOLD, f"The warning changed from {warningA} to {warningB}"))
+				else:
+					logging.error(color(colors.RED + colors.BOLD, f"The warnings do not match!"))
+				majorDifferences = True				
+
+			## functions differ ## 
+			if funcA != funcB:
+				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
+				if len(funcA) != len(funcB):
+					logging.error(color(colors.RED + colors.BOLD, f"The number of functions are not equal!"))
+				else:
+					if settings.verbose >= 6:
+						for i in range(len(funcA)):
+							if funcA[i] != funcB[i]:
+								logging.error(color(colors.RED + colors.BOLD, f"The function changed from {funcA[i]} to {funcB[i]}"))
+					else:
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple functions do not match!"))
+				majorDifferences = True
+
+			## builtins differ ##
+			if builtinsA != builtinsB:
+				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
+				if len(builtinsA) != len(builtinsB):
+					logging.error(color(colors.RED + colors.BOLD, f"The number of builtins are not equal!"))
+				else:
+					if settings.verbose >= 6:
+						for i in range(len(builtinsA)):
+							if builtinsA[i] != builtinsB[i]:
+								logging.error(color(colors.RED + colors.BOLD, f"The builtin changed from {builtinsA[i]} to {builtinsB[i]}"))
+					else:
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple builtins do not match!"))
+				majorDifferences = True
 
 
 		## results differ ##
@@ -150,7 +282,7 @@ def compare():
 		## compare steps and times ##
 		timeColor = getColorQuality(timeA, timeB)
 		timeText = "The time changed from " + color(timeColor, f"{str(round(timeA,2)).rjust(12)}s to {str(round(timeB,2)).rjust(9)}s") + f" in {pathB.split(settings.folderB, 1)[-1]}"
-		if stepsA != stepsB and settings.verbose < 3:
+		if stepsA != stepsB and settings.verbose < 4:
 			logging.info(timeText)
 		logging.debug(timeText)
 		for i in range(len(lemmas)):
@@ -166,7 +298,10 @@ def compare():
 	## results differ ##
 	logging.warning("\n" + "-"*80 + "\n")
 	if majorDifferences:
-		logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas or the files itself could not be parsed!"))
+		if settings.verbose >= 3:
+			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas, or in the rules, or in the equations, or in the builtins, or in the functions, or in the warnings, or the files itself could not be parsed!"))
+		else: 
+			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas or the files itself could not be parsed!"))
 		logging.error(f"For more information, run 'diff -r {settings.folderA} {settings.folderB}'")
 		return False
 
@@ -184,6 +319,12 @@ def compare():
 		return False
 	else:
 		logging.warning("The total amount of steps did not change")
+	if settings.verbose >= 3: 
+		logging.warning("The rules did not change")
+		logging.warning("The functions did not change")
+		logging.warning("The builtins did not change")
+		logging.warning("The equations did not change")
+		logging.warning("The warnings did not change")
 	return True
 
 
@@ -199,14 +340,15 @@ def getArguments():
 	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
 	parser.add_argument("-r", "--repeat", help = "Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements", type=int, default=1)
 	parser.add_argument("-v", "--verbose", 
-		help="Level of verbosity, values are from 0 to 5. Default is 2\n" +
+		help="Level of verbosity, values are from 0 to 6. Default is 2\n" +
 			"0: show only critical error output and changes of verified vs. trace found\n" +
 			"1: show summary of time and step differences\n" +
 			"2: show step differences for changed lemmas\n" +
-			"3: show time differences for all lemmas\n" +
-			"4: show shell command output\n" +
-			"5: show diff output if the corresponding proofs changed"
-			, type=int, default=2)
+			"3: show step differences for changed lemmas and changed functions, rules, equations, warning and builtins\n" +
+			"4: show time differences for all lemmas\n" +
+			"5: show shell command output\n" +
+			"6: show diff output if the corresponding proofs changed"
+			, type=int, default=3)
 
 	## save the settings ##
 	global settings
@@ -214,8 +356,12 @@ def getArguments():
 	settings.folderA = settings.directory
 	settings.folderB = "case-studies"
 
+	## Check Verbose ##
+	if settings.verbose > 6 or settings.verbose < 0:
+		raise argparse.ArgumentError(None, "The level of verbosity must be between 0 and 6 !")
+
 	## set up logging ##
-	loglevel = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG, logging.DEBUG, logging.DEBUG][settings.verbose]
+	loglevel = [logging.ERROR, logging.WARNING, logging.INFO, logging.INFO, logging.DEBUG, logging.DEBUG, logging.DEBUG][settings.verbose]
 	logging.basicConfig(level=loglevel,format='%(message)s')
 
 

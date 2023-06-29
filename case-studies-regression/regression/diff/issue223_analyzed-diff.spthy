@@ -2,8 +2,7 @@ theory issue223 begin
 
 // Function signature and definition of the equational theory E
 
-functions: commit/3, fake/4, fst/1[destructor], open/3, pair/2, pk/1,
-           snd/1[destructor]
+functions: commit/3, fake/4, fst/1, open/3, pair/2, pk/1, snd/1
 equations:
     commit(ni2, fake(ni1, r, sk, ni2), pk(sk)) = commit(ni1, r, pk(sk)),
     fake(ni2, fake(ni1, r, sk, ni2), sk, ni3) = fake(ni1, r, sk, ni3),
@@ -11,6 +10,8 @@ equations:
     open(commit(ni, r, pk(sk)), r, sk) = ni,
     open(commit(ni1, r, pk(sk)), fake(ni1, r, sk, ni2), sk) = ni2,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -3237,15 +3238,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -3254,7 +3255,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 0.083599764s
+  processing time: 1.93s
   
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 

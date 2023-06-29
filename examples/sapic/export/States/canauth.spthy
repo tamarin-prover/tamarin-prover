@@ -10,9 +10,9 @@ section{* CANauth protocol *}
    Tamarin: ?
 
 */
-builtins: multiset
+builtins: dest-pairing, multiset
 
-options: enableStateOpt
+options: translation-state-optimisation
 
 functions: hmac(bitstring,bitstring):bitstring
 

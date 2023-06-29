@@ -61,6 +61,92 @@ decp(encp(x,r,pk(sk)),sk)=x,
 ver(sg(m, sk), pk(sk)) = m 
 
 
+tactic: indivVerif_D_ps 
+prio:
+  regex "~~"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~lsk"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_A"
+prio:
+  regex "'zkp'"
+prio:
+  regex "encp\("
+prio:
+  regex "!KD"
+prio:
+  regex "Out_A"
+prio:
+  regex "In_A"
+
+tactic: indivVerif_D_sel 
+prio:
+  regex "~~"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~lsk"
+prio:
+  regex "!KU\( ~skS"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_A"
+prio:
+  regex "'zkp'"
+prio:
+  regex "encp\("
+prio:
+  regex "!KD"
+prio:
+  regex "Out_A"
+prio:
+  regex "In_A"
+
+tactic: Observational_equivalence 
+prio:
+  regex "Out_A"
+prio:
+  regex "~~"
+prio:
+  regex "In_A"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU\( ~lsk"
+prio:
+  regex " pk\(~lskD1)"
+prio:
+  regex " pk\(~lskDa)"
+prio:
+  regex " pk\(~lskDb)"
+prio:
+  regex "!KU\( ~x"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_A"
+prio:
+  regex "encp\("
+prio:
+  regex "!KD"
+prio:
+  regex "Out_A"
+prio:
+  regex "In_A"
+
+
+
 /* ==========
 Channel rules
 ============= */
@@ -222,7 +308,7 @@ lemma functional: exists-trace  //spkD2,spkD1 in list and spkD2 chosen in SG
 Individual verifiability properties
 =================================*/
 
-lemma indivVerif_D_ps: // pkD \in [pkD] from thesis is expressed as "either pkD is first or second element of [pkD]"
+lemma indivVerif_D_ps[heuristic={indivVerif_D_ps}]: // pkD \in [pkD] from thesis is expressed as "either pkD is first or second element of [pkD]"
 	" (All H spkDD spkDb #i . 
 		Verify_spkDD(H,spkDD,spkDD,spkDb) @i  
 	==> (Ex BB spkD2 #j #k. 
@@ -247,7 +333,7 @@ lemma indivVerif_D_ps: // pkD \in [pkD] from thesis is expressed as "either pkD 
 	 )	
 	"
 
-lemma indivVerif_D_sel:
+lemma indivVerif_D_sel[heuristic={indivVerif_D_sel}]:
 	" All H spkDD #i .
 		Sel(H, spkDD, spkDD) @i
 	==> Ex BB #j #k.   

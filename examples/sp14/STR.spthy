@@ -10,6 +10,23 @@ restriction Less:   "All x y #i. Less(x,y) @ i ==> Ex z. x + z = y"
 restriction Leq:   "All x y #i. Leq(x,y) @ i ==> ((Ex z. x + z = y) | x = y)"
 restriction InEq:   "not (Ex x #i. InEq(x,x) @ i)"
 
+tactic: key_secret
+presort: C
+prio:
+    regex ".*Group.*" | regex ".*'RoundKey', 'g'>.*"
+prio:
+    regex ".*Pstate.*" | regex ".*splitEqs.*"
+prio:
+    regex ".*KU\(\s~.*"
+prio:
+    regex ".*AO.*'1'\+.*k.*"
+prio:
+    regex ".*\^\(~.*\*.*\).*"
+prio:
+    regex ".*WaitAccept.*"
+prio:
+    regex ".*AO.*"
+
 /* ********************************************************************* */
 /* Setup and reveal rules                                                */
 /*                                                                       */
@@ -133,7 +150,7 @@ rule StepOther:
 // run tamarin with -Dsecure to include this lemma
 #ifdef secure
 
-lemma key_secret[use_induction]:
+lemma key_secret[heuristic={key_secret}, use_induction]:
   all-traces
   "not (Ex gid A i j k key #i1 #i2.
             Accept( gid, A, i, j ,k, key ) @ i1

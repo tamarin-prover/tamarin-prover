@@ -2,12 +2,13 @@ theory mini5 begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], h/1, pair/2, pk/1, sign/2,
-           snd/1[destructor], true/0, verify/3[destructor]
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
 
 heuristic: p
 
@@ -90,6 +91,22 @@ solve( State_122( ~prog_, s ) ▶₀ #t )
     qed
   qed
 qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 rule (modulo E) MessageIDRule[color=#ffffff, process="new s.1;"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
@@ -296,20 +313,71 @@ restriction Progress__to_12111_or_12121_or_1221:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  MessageIDRule
+Failed to derive Variable(s): ~mid_
+  
+  Init
+Failed to derive Variable(s): ~prog_
+  
+  news_0_
+Failed to derive Variable(s): ~prog_, s.1
+  
+  p_0_1
+Failed to derive Variable(s): ~prog_, s.1
+  
+  insertsHELLO_0_11
+Failed to derive Variable(s): ~prog_, s.1
+  
+  p_0_111
+Failed to derive Variable(s): ~prog_, s.1
+  
+  lookupsasx_0_12
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  lookupsasx_1_12
+Failed to derive Variable(s): ~prog_, s.1
+  
+  ifxHELLO_0_121
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  ifxHELLO_1_121
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  eventA_0_1211
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  p_0_12111
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  eventB_0_1212
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  p_0_12121
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  eventC_0_122
+Failed to derive Variable(s): ~prog_, s.1
+  
+  p_0_1221
+Failed to derive Variable(s): ~prog_, s.1
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -318,7 +386,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini5.spthy
 
   output:          examples/sapic/fast/feature-progress/mini5.spthy.tmp
-  processing time: 0.070952392s
+  processing time: 0.23s
+  
+  WARNING: 16 wellformedness check failed!
+           The analysis results might be wrong!
   
   A_possible (exists-trace): verified (9 steps)
   B_impossible (all-traces): verified (3 steps)

@@ -154,7 +154,7 @@ clashesOn :: (Ord b, Ord c)
 clashesOn f g xs = do
     grp <- groupOn f $ sortOn f xs
     guard (length (sortednubOn g grp) >= 2)
-    return grp
+    return $ sortednubOn g grp
 
 -- | Nice quoting.
 quote :: String -> String

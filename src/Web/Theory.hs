@@ -80,6 +80,7 @@ import           Theory
 import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
 import           Theory.Tools.Wellformedness
+import           TheoryObject
 
 import           Web.Settings
 import           Web.Types
@@ -100,7 +101,8 @@ applyMethodAtPath thy lemmaName proofPath prover i = do
         sys   = psInfo (root subProof)
         heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
+        tactic = selectTactic prover ctxt
+    methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPath thy lemmaName proofPath
       (oneStepProver method                            `mappend`
@@ -121,7 +123,8 @@ applyMethodAtPathDiff thy s lemmaName proofPath prover i = do
         sys   = psInfo (root subProof)
         heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
+        tactic = selectTactic prover ctxt
+    methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPathDiff thy s lemmaName proofPath
       (oneStepProver method                            `mappend`
@@ -142,7 +145,8 @@ applyDiffMethodAtPath thy lemmaName proofPath prover i = do
         sys   = dpsInfo (root subProof)
         heuristic = selectDiffHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankDiffProofMethods ranking ctxt) <$> sys
+        tactic = selectDiffTactic prover ctxt
+    methods <- (map fst . rankDiffProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyDiffProverAtPath thy lemmaName proofPath
       (oneStepDiffProver method                        `mappend`
@@ -373,6 +377,8 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     , text ""
     , ruleLink
     , text ""
+    , tacticLink
+    , text ""
     , reqCasesLink "Raw sources" RawSource
     , text ""
     , reqCasesLink "Refined sources " RefinedSource
@@ -402,6 +408,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
     ruleLinkMsg         = "Multiset rewriting rules" ++
                           if null(theoryRestrictions thy) then "" else " and restrictions"
+    tacticLink          = overview "Tactic(s)" (text "") TheoryTactic
 
     reqCasesLink name k = overview name (casesInfo k) (TheorySource k 0 0)
 
@@ -580,7 +587,8 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectHeuristic (tiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    proofMethods            = rankProofMethods ranking ctxt
+    tactic                 = selectTactic (tiAutoProver ti) ctxt
+    proofMethods            = rankProofMethods ranking tactic ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -673,7 +681,8 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectHeuristic (dtiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    proofMethods            = rankProofMethods ranking ctxt
+    tactic                 = selectTactic (dtiAutoProver ti) ctxt
+    proofMethods            = rankProofMethods ranking tactic ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -786,7 +795,8 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectDiffHeuristic (dtiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    diffProofMethods        = rankDiffProofMethods ranking ctxt
+    tactic                 = selectDiffTactic (dtiAutoProver ti) ctxt
+    diffProofMethods        = rankDiffProofMethods ranking tactic ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -901,6 +911,15 @@ messageSnippet thy = vcat
         [("class","monospace rules")]
         (vcat (intersperse (text "") $ s))
 
+-- | Build the Html document showing the message theory.
+tacticSnippet :: HtmlDocument d => ClosedTheory -> d
+tacticSnippet thy = ppSection "Tactic(s)" (map prettyTactic $ get thyTactic thy)
+  where
+    ppSection header s =
+      withTag "h2" [] (text header) $$ withTag "p"
+        [("class","monospace rules")]
+        (vcat (intersperse (text "") $ s))
+
 -- | Build the Html document showing the diff rules of the diff theory.
 rulesDiffSnippet :: HtmlDocument d => ClosedDiffTheory -> d
 rulesDiffSnippet thy = vcat
@@ -960,9 +979,9 @@ messageDiffSnippet s isdiff thy = vcat
 htmlThyPath :: RenderUrl    -- ^ The function for rendering Urls.
             -> TheoryInfo   -- ^ The info of the theory to render
             -> TheoryPath   -- ^ Path to render
-            -> Html
+            ->  Html
 htmlThyPath renderUrl info path =
-    go path
+  go path
   where
     thy  = tiTheory info
     tidx = tiIndex  info
@@ -977,6 +996,7 @@ htmlThyPath renderUrl info path =
 
     go TheoryRules             = pp $ rulesSnippet thy
     go TheoryMessage           = pp $ messageSnippet thy
+    go TheoryTactic            = pp $ tacticSnippet thy 
     go (TheorySource kind _ _) = pp $ reqCasesSnippet renderUrl tidx kind thy
 
     go (TheoryProof l p)       = pp $
@@ -987,13 +1007,14 @@ htmlThyPath renderUrl info path =
 
     go (TheoryLemma _)         = pp $ text "Implement lemma pretty printing!"
 
-    go TheoryHelp              = [hamlet|
+    go TheoryHelp              = do
+      [hamlet|
         $newline never
         <p>
           Theory: #{get thyName $ tiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
           \ from #{show $ tiOrigin info})
-          \ #{preEscapedToMarkup wfErrors}
+          \ #{preEscapedToMarkup infoErrors}
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -1076,12 +1097,7 @@ htmlThyPath renderUrl info path =
                 Display this help message.
       |] renderUrl
          where
-             wfErrors = case report of
-                             [] -> ""
-                             _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-
-             report = checkWellformedness (removeTranslationItems (openTheory thy)) (get thySignature thy)
-                   ++ Acc.checkWellformedness (openTheory thy) -- FIXME: openTheory doesn't contain translated items, hence no warning is shown in the interactive mode
+             infoErrors = tiErrorsHtml info
 
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.
@@ -1130,7 +1146,7 @@ htmlDiffThyPath renderUrl info path =
           Theory: #{get diffThyName $ dtiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ dtiTime info}
           \ from #{show $ dtiOrigin info})
-          \ #{preEscapedToMarkup wfErrors}
+          \ #{preEscapedToMarkup infoErrors}
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -1213,12 +1229,7 @@ htmlDiffThyPath renderUrl info path =
                 Display this help message.
       |] renderUrl
          where
-             wfErrors = case report of
-                             [] -> ""
-                             _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             report = checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
-
-
+             infoErrors = dtiErrorsHtml info
 
 {-
 -- | Render debug information for the item in the theory given by the path.
@@ -1417,12 +1428,11 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
           then do
             lem <- lookupDiffLemma lemma thy
             let ctxt = getDiffProofContext lem thy
-            sideCtxt <- eitherProofContext ctxt <$> get dsSide diffSequent
-            let isSolved sys' = (rankProofMethods GoalNrRanking sideCtxt sys') == []
-                                  && finishedSubterms sideCtxt sys' -- checks if the system is solved
+            side <- get dsSide diffSequent
+            let isSolved s sys' = (rankProofMethods GoalNrRanking [defaultTactic] (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
             nsequent <- get dsSystem diffSequent
             -- Here we can potentially get Nothing if there is no mirror DG
-            let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved nsequent)
+            let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
             if null sequentList then Nothing else return $ compact $ head sequentList
           else do
             sequent <- get dsSystem diffSequent
@@ -1487,6 +1497,7 @@ titleThyPath thy path = go path
     go TheoryHelp                       = "Theory: " ++ get thyName thy
     go TheoryRules                      = "Multiset rewriting rules and restrictions"
     go TheoryMessage                    = "Message theory"
+    go TheoryTactic                     = "Tactics"
     go (TheorySource RawSource _ _)     = "Raw sources"
     go (TheorySource RefinedSource _ _) = "Refined sources"
     go (TheoryLemma l)                  = "Lemma: " ++ l
@@ -1573,7 +1584,8 @@ nextThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextThyPath thy = go
   where
     go TheoryHelp                       = TheoryMessage
-    go TheoryMessage                    = TheoryRules
+    go TheoryMessage                    = TheoryTactic
+    go TheoryTactic                     = TheoryRules
     go TheoryRules                      = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)     = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource _ _) = fromMaybe TheoryHelp firstLemma
@@ -1665,7 +1677,8 @@ prevThyPath thy = go
   where
     go TheoryHelp                        = TheoryHelp
     go TheoryMessage                     = TheoryHelp
-    go TheoryRules                       = TheoryMessage
+    go TheoryTactic                      = TheoryMessage
+    go TheoryRules                       = TheoryTactic
     go (TheorySource RawSource _ _)      = TheoryRules
     go (TheorySource RefinedSource _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)
@@ -1779,7 +1792,8 @@ nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextSmartThyPath thy = go
   where
     go TheoryHelp                         = TheoryMessage
-    go TheoryMessage                      = TheoryRules
+    go TheoryMessage                      = TheoryTactic
+    go TheoryTactic                       = TheoryRules
     go TheoryRules                        = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)       = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource   _ _) = fromMaybe TheoryHelp firstLemma
@@ -1877,7 +1891,8 @@ prevSmartThyPath thy = go
   where
     go TheoryHelp                          = TheoryHelp
     go TheoryMessage                       = TheoryHelp
-    go TheoryRules                         = TheoryMessage
+    go TheoryTactic                        = TheoryMessage
+    go TheoryRules                         = TheoryTactic
     go (TheorySource RawSource _ _)        = TheoryRules
     go (TheorySource RefinedSource   _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)

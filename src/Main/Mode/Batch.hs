@@ -16,7 +16,7 @@ import           Data.List
 import           Data.Bitraversable              (bisequence)
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
-import           System.Timing                   (timed)
+import           System.Timing                   (timedIO)
 import           Extension.Data.Label
 
 import qualified Text.PrettyPrint.Class          as Pretty
@@ -35,6 +35,7 @@ import           Theory.Module
 import           Control.Monad.Except (MonadIO(liftIO), runExceptT)
 import           System.Exit (die)
 import Theory.Tools.Wellformedness (prettyWfErrorReport)
+import           Text.Printf                     (printf)
 
 
 -- | Batch processing mode.
@@ -89,9 +90,8 @@ run thisMode as
       putStrLn ""
   | otherwise = do
       versionData <- ensureMaudeAndGetVersion as
-      res <- mapM (timed . processThy versionData) inFiles
-      let (thys, times) = unzip res
-      let (docs, reps) = unzip thys
+      resTimed <- mapM (timedIO . processThy versionData) inFiles
+      let (docs, reps, times) = unzip3 $ fmap (\((d, r), t) -> (d, r, t)) resTimed
 
       if writeOutput then do
         let maybeOutFiles = sequence $ mkOutPath <$> inFiles
@@ -125,7 +125,7 @@ run thisMode as
                   , Pretty.text $ ""
                   , Pretty.nest 2 $ Pretty.vcat [
                       maybe Pretty.emptyDoc (\o -> Pretty.text $ "output:          " ++ o) outFile
-                    , Pretty.text $ "processing time: " ++ show time
+                    , Pretty.text $ printf "processing time: %.2fs" (realToFrac time :: Double)
                     , Pretty.text $ ""
                     , summary ] ]
 
@@ -175,7 +175,7 @@ run thisMode as
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
         either (\t -> return (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
                (\d -> return (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d)) thy'
-               
+
       where
         isParseOnlyMode = get oParseOnlyMode thyLoadOptions
 

@@ -2,14 +2,16 @@ theory StatVerif_GM_Contract_Signing begin
 
 // Function signature and definition of the equational theory E
 
-functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1[destructor],
-           pair/2, pcs/3, pk/1, sign/2, snd/1[destructor], true/0
+functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1, pair/2,
+           pcs/3, pk/1, sign/2, snd/1, true/0
 equations:
     check_getmsg(pk(xsk), sign(xsk, xm)) = xm,
     checkpcs(xc, pk(xsk), ypk, zpk, pcs(sign(xsk, xc), ypk, zpk)) = true,
     convertpcs(zsk, pcs(sign(xsk, xc), ypk, pk(zsk))) = sign(xsk, xc),
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -390,20 +392,35 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  Witness_Aborted
+Failed to derive Variable(s): ct, sk1, ysk
+  
+  Witness_Resolved
+Failed to derive Variable(s): ct, sk1, sk2
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -412,7 +429,10 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.059193617s
+  processing time: 0.56s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
   
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)

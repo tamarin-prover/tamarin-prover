@@ -56,6 +56,110 @@ functions:
   // 3GPP KDFs [TS 33.501]
   KDF/2 // KDF --> K_ASME, K_gNB, K_eNB, NH, K_eNB*,
 
+tactic: executability
+presort: C
+prio:
+    regex ".*!S1\( .*"
+prio:
+    regex ".*St_.*"
+prio:
+    regex ".*RcvS.*"
+prio:
+    regex ".*!KU.*" & not regex ".*!KU.*_ID.*" & not regex ".*!KU.*~cid.*"
+deprio:
+    regex ".*!KU.*_ID.*"
+    regex ".*!KU.*~cid.*"
+    
+    
+
+tactic: injectiveagreement_ue_enb_k_enb
+presort: C
+prio:
+    regex ".*Commit\( .*"
+prio:
+    regex ".*!KU\( ~K_AMF.*"
+    regex ".*!KU\( KDF\(~K_AMF,.*"
+    regex ".*!KU\( KDF\(KDF\(~K_AMF,.*"
+prio:
+    regex ".*RcvS.*"
+prio:
+    regex ".*!KU\( senc.*~K_AMF.*"
+      
+
+tactic: injectiveagreement_enb_ue_k_enb
+presort: C
+prio:
+    regex ".*Commit\( .*"
+prio:
+    regex ".*St_1_eNB.*"
+    regex ".*!KU\( senc.*"
+    regex ".*!KU\( ~K_AMF.*"
+    regex ".*!KU\( KDF\(~K_AMF,.*"
+    regex ".*!KU\( KDF\(KDF\(~K_AMF,.*"
+prio:
+    regex ".*!KU\( KDF\(NH,.*"
+prio:    
+    regex ".*RcvS.*"
+      
+
+tactic: secret_k_amf
+presort: C
+prio:
+    regex ".*Secret\( .*"
+prio:
+    regex ".*!KU\( ~K_AMF.*"
+prio:
+    regex ".*RcvS\(.*AMF.*"
+    
+
+tactic: secret_k_asme
+presort: C
+prio:
+    regex ".*Secret\( .*"
+prio:
+    regex ".*KeyDerived\( .*"
+    regex ".*RcvS\( .*, ~K_AMF.*"
+prio:
+    regex ".*St_3_AMF\( .*"
+prio:
+    regex ".*!KU\( KDF\(~K_AMF.*"
+prio:
+    regex ".*!KU\( ~K_AMF.*"
+      
+
+tactic: secret_k_gnb
+presort: C
+prio:
+    regex ".*Secret\( .*"
+prio:
+    regex ".*KeyDerived\( .*"
+prio:
+    regex ".*RcvS\( .*, ~K_AMF.*"
+    regex ".*St_3_gNB\( .*"
+prio:
+    regex ".*!KU\( KDF\(~K_AMF.*"
+prio:
+    regex ".*!KU\( ~K_AMF.*"
+      
+
+tactic: secret_k_enb_star
+presort: C
+prio:
+    regex ".*Secret\( .*"
+prio:
+    regex ".*KeyDerived\( .*"
+prio:
+    regex ".*RcvS\( .*, ~K_AMF.*"
+prio:
+    regex ".*St_3_.*\( .*"
+prio:
+    regex ".*St_2_.*\( .*"
+    regex ".*!KU\( ~K_AMF.*"
+    regex ".*!KU\( .*KDF\(~K_AMF,.*"
+prio:
+    regex ".*RcvS\( .*"
+      
+
 /***********************************/
 /*         Secure Channels         */
 /***********************************/
@@ -448,7 +552,7 @@ restriction OnlyOnce:
 
 // Normal executability for one handover
 // Proof: Automatic (~5 s (16 steps), +RTS -N10 -M20G -RTS)
-lemma executability:
+lemma executability [heuristic={executability}]:
   exists-trace
   " Ex x #i.
       HandoverDone(x)@i
@@ -489,7 +593,7 @@ lemma executability:
  *  b = eNB_ID
  *  r = K_eNB_star
  */
-lemma injectiveagreement_ue_enb_k_enb:
+lemma injectiveagreement_ue_enb_k_enb [heuristic={injectiveagreement_ue_enb_k_enb}]:
   " All a b r #i. Commit(a,b,<'UE','eNB',<'K_eNB_star',r>>)@i
       ==> (Ex #j. Running(b,a,<'UE','eNB',<'K_eNB_star',r>>)@j
            & not (Ex a2 b2 #i2. Commit(a2,b2,<'UE','eNB',<'K_eNB_star',r>>)@i2
@@ -511,7 +615,7 @@ lemma injectiveagreement_ue_enb_k_enb:
  *  b = SUPI
  *  r = K_eNB_star
  */
-lemma injectiveagreement_enb_ue_k_enb:
+lemma injectiveagreement_enb_ue_k_enb [heuristic={injectiveagreement_enb_ue_k_enb}]:
   " All a b r #i. Commit(a,b,<'eNB','UE',<'K_eNB_star',r>>)@i
       ==> (Ex #j. Running(b,a,<'eNB','UE',<'K_eNB_star',r>>)@j
            & not (Ex a2 b2 #i2. Commit(a2,b2,<'eNB','UE',<'K_eNB_star',r>>)@i2
@@ -533,7 +637,7 @@ lemma injectiveagreement_enb_ue_k_enb:
  * Notations:
  *   p = K_AMF
  */
-lemma secret_k_amf:
+lemma secret_k_amf [heuristic={secret_k_amf}]:
   " All p #i. Secret(<'K_AMF',p>)@i
     ==> (not (Ex #k. K(p)@k))
          | (Ex X #k. Rev(X,<'K_AMF',p>)@k & Honest(X)@i)
@@ -553,7 +657,7 @@ lemma secret_k_amf:
  *   p = K_AMF
  *   q = K_ASME
  */
-lemma secret_k_asme:
+lemma secret_k_asme [heuristic={secret_k_asme}]:
   " All p q #i #j.
         Secret(<'K_ASME',q>)@i
       & KeyDerived(<'K_ASME',q>,p)@j
@@ -576,7 +680,7 @@ lemma secret_k_asme:
  *   p = K_AMF
  *   r = K_gNB
  */
-lemma secret_k_gnb:
+lemma secret_k_gnb [heuristic={secret_k_gnb}]:
   " All p r #i #j.
         Secret(<'K_gNB',r>)@i
       & KeyDerived(<'K_gNB',r>,p)@j
@@ -604,7 +708,7 @@ lemma secret_k_gnb:
  *   s = K_eNB_star
  *   t = NH
  */
-lemma secret_k_enb_star:
+lemma secret_k_enb_star [heuristic={secret_k_enb_star}]:
   " All s t #i #j.
         Secret(<'K_eNB_star',s>)@i
       & KeyDerived(<'K_eNB_star',s>,t)@j

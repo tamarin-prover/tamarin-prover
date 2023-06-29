@@ -52,6 +52,8 @@ module Term.Term.FunctionSymbols (
     , pairSym
     , fstSym
     , sndSym
+    , fstDestSym
+    , sndDestSym    
     , zeroSym
     , natOneSym
 
@@ -61,6 +63,7 @@ module Term.Term.FunctionSymbols (
     , bpFunSig
     , msetFunSig
     , pairFunSig
+    , pairFunDestSig    
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig
@@ -172,6 +175,15 @@ zeroSym  = (zeroSymString,(0,Public,Constructor))
 -- | One for natural numbers.
 natOneSym = (natOneSymString, (0,Public,Constructor))
 
+mkDestSym :: NoEqSym -> NoEqSym
+mkDestSym (name,(k,p,_)) = (name,(k,p, Destructor))
+
+fstDestSym, sndDestSym :: NoEqSym
+-- | Projection of first component of pair.
+fstDestSym   = mkDestSym fstSym
+-- | Projection of second component of pair.
+sndDestSym   = mkDestSym sndSym
+
 ----------------------------------------------------------------------
 -- Fixed signatures
 ----------------------------------------------------------------------
@@ -195,6 +207,10 @@ msetFunSig = S.fromList [AC Union]
 -- | The signature for pairing.
 pairFunSig :: NoEqFunSig
 pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
+
+-- | The signature for pairing with destructors.
+pairFunDestSig :: NoEqFunSig
+pairFunDestSig = S.fromList [ pairSym, fstDestSym, sndDestSym ]
 
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig

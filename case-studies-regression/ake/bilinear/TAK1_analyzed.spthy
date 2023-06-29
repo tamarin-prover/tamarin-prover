@@ -3,9 +3,10 @@ theory TAK1 begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing, multiset
-functions: fst/1[destructor], h/1, kdf/1, pair/2, snd/1[destructor],
-           tag/1
+functions: fst/1, h/1, kdf/1, pair/2, snd/1, tag/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -41,7 +42,7 @@ rule (modulo E) Reveal_sessk:
 
 rule (modulo E) Proto1:
    [ Fr( ~ex ) ]
-  --[ Origin( ~ex, pmult(~ex, 'P') ), Participants( ($A++$B++$C) ) ]->
+  --[ Origin( ~ex, pmult(~ex, 'P') ), Participants( ($A+$B+$C) ) ]->
    [ PState1( ~ex, $A, $B, $C ), Out( pmult(~ex, 'P') ), !EphKey( ~ex ) ]
 
   /* has exactly the trivial AC variant */
@@ -106,8 +107,8 @@ rule (modulo E) Proto2:
         z     = em(x.9, x.12)^(x.10*inv((x.8*x.11)))
     
     13. XB    = pmult(inv((x.8*x.9)), x.10)
-        XC    = pmult(x.8, x.11)
-        z     = em(x.10, x.11)^inv(x.9)
+        XC    = pmult(x.9, x.11)
+        z     = em(x.10, x.11)^inv(x.8)
     
     14. XB    = pmult(inv((x.8*x.9)), x.10)
         XC    = pmult((x.8*x.11), x.12)
@@ -138,8 +139,8 @@ rule (modulo E) Proto2:
         z     = em(x.10, x.13)^(x.9*x.11*inv(x.12))
     
     21. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
-        XC    = pmult(inv((x.8*x.12)), x.13)
-        z     = em(x.11, x.13)^(x.9*inv((x.10*x.12)))
+        XC    = pmult(inv((x.9*x.12)), x.13)
+        z     = em(x.11, x.13)^(x.8*inv((x.10*x.12)))
     
     22. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
         XC    = pmult((x.10*x.12*inv(x.8)), x.13)
@@ -150,8 +151,8 @@ rule (modulo E) Proto2:
         z     = em(x.11, x.14)^(x.9*x.12*inv(x.13))
     
     24. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
-        XC    = pmult((x.10*inv(x.8)), x.12)
-        z     = em(x.11, x.12)^x.9
+        XC    = pmult((x.10*inv(x.9)), x.12)
+        z     = em(x.11, x.12)^x.8
     
     25. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
         XC    = pmult((x.10*inv((x.8*x.12))), x.13)
@@ -170,12 +171,12 @@ rule (modulo E) Proto2:
         z     = em(x.12, x.15)^(x.9*x.13*inv((x.11*x.14)))
     
     29. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
-        XC    = pmult((x.10*inv(x.8)), x.13)
-        z     = em(x.12, x.13)^(x.9*inv(x.11))
-    
-    30. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
         XC    = pmult((x.10*inv((x.8*x.13))), x.14)
         z     = em(x.12, x.14)^(x.9*inv((x.11*x.13)))
+    
+    30. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.11*inv(x.9)), x.13)
+        z     = em(x.12, x.13)^(x.8*inv(x.10))
     
     31. XB    = pmult((x.8*inv(x.9)), x.10)
         XC    = pmult(x.9, x.11)
@@ -218,8 +219,8 @@ rule (modulo E) Proto2:
         z     = em(x.10, x.13)^(x.11*inv((x.9*x.12)))
     
     41. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
-        XC    = pmult(x.9, x.12)
-        z     = em(x.11, x.12)^(x.8*inv(x.10))
+        XC    = pmult(x.10, x.12)
+        z     = em(x.11, x.12)^(x.8*inv(x.9))
     
     42. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*x.12), x.13)
@@ -238,16 +239,16 @@ rule (modulo E) Proto2:
         z     = em(x.11, x.14)^(x.12*inv((x.10*x.13)))
     
     46. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
-        XC    = pmult((x.9*inv(x.8)), x.12)
-        z     = em(x.11, x.12)^inv(x.10)
-    
-    47. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*inv(x.12)), x.13)
         z     = em(x.11, x.13)^(x.8*inv((x.10*x.12)))
     
-    48. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+    47. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*inv((x.8*x.12))), x.13)
         z     = em(x.11, x.13)^inv((x.10*x.12))
+    
+    48. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.10*inv(x.8)), x.12)
+        z     = em(x.11, x.12)^inv(x.9)
   */
 
 rule (modulo E) Proto3:
@@ -257,16 +258,16 @@ rule (modulo E) Proto3:
    ]
   --[
   Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
-          kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A++$B++$C), 
-               (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
+          kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A+$B+$C), 
+               (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
   ),
-  Match( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> ),
-  Sid( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> )
+  Match( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> ),
+  Sid( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> )
   ]->
    [
    !SessKey( ~ex,
-             kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A++$B++$C), 
-                  (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
+             kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A+$B+$C), 
+                  (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
    )
    ]
 
@@ -278,16 +279,16 @@ rule (modulo E) Proto3:
      ]
     --[
     Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
-            kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
-                 (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
+            kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
+                 (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
     ),
-    Match( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> ),
-    Sid( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> )
+    Match( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> ),
+    Sid( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> )
     ]->
      [
      !SessKey( ~ex,
-               kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
-                    (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
+               kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
+                    (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
      )
      ]
     variants (modulo AC)
@@ -476,8 +477,8 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
           solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #i )
             case Register_pk
             solve( !KU( kdf(<em('P', 'P')^(~ex*~ex.1*~ex.2), 
-                             em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
-                             (tag(pmult(~ex, 'P'))++tag(pmult(~ex.1, 'P'))++tag(pmult(~ex.2, 'P')))>)
+                             em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
+                             (tag(pmult(~ex, 'P'))+tag(pmult(~ex.1, 'P'))+tag(pmult(~ex.2, 'P')))>)
                    ) @ #vk )
               case Reveal_sessk_case_001
               by contradiction /* from formulas */
@@ -1615,8 +1616,8 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
           solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #i )
             case Register_pk
             solve( !KU( kdf(<em('P', 'P')^(~ex*~ex.1*~ex.2), 
-                             em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
-                             (tag(pmult(~ex, 'P'))++tag(pmult(~ex.1, 'P'))++tag(pmult(~ex.2, 'P')))>)
+                             em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
+                             (tag(pmult(~ex, 'P'))+tag(pmult(~ex.1, 'P'))+tag(pmult(~ex.2, 'P')))>)
                    ) @ #vk )
               case Reveal_sessk_case_001
               by contradiction /* from formulas */
@@ -2137,8 +2138,8 @@ next
         case Register_pk
         solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #i )
           case Register_pk
-          solve( !KU( kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
-                           (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
+          solve( !KU( kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
+                           (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
                  ) @ #vk )
             case Reveal_sessk_case_001
             by contradiction /* from formulas */
@@ -2650,20 +2651,35 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  Reveal_sessk
+Failed to derive Variable(s): sessKey
+  
+  Proto3
+Failed to derive Variable(s): ~eb, ~ec, XB, XC
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -2672,7 +2688,10 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 0.067436863s
+  processing time: 22.97s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)

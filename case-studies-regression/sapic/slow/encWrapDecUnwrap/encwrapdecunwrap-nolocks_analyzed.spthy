@@ -2,12 +2,13 @@ theory EncWrapDecUnwrap begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -89,6 +90,14 @@ solve( State_1111111( ) ▶₀ #i )
     qed
   qed
 qed
+
+
+
+
+
+
+
+
 
 
 
@@ -840,20 +849,62 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  lookupatthasa_0_11111121
+Failed to derive Variable(s): a.1
+  
+  lookupatthasa_0_1111121
+Failed to derive Variable(s): a.2
+  
+  inhsencmk_0_11112
+Failed to derive Variable(s): m.1, k.2
+  
+  lookupatthasa_0_111121
+Failed to derive Variable(s): a.3
+  
+  lookupkeyhaskp_0_11112111
+Failed to derive Variable(s): kp.1
+  
+  lookupatthasa_0_11121
+Failed to derive Variable(s): a.4
+  
+  lookupkeyhask_0_1112111
+Failed to derive Variable(s): k.3
+  
+  lookupatthasa_0_1121
+Failed to derive Variable(s): a1.1
+  
+  lookupkeyhask_0_112111
+Failed to derive Variable(s): k1.1
+  
+  lookupkeyhask_0_1121111
+Failed to derive Variable(s): k2.1
+  
+  inhsencmk_0_12
+Failed to derive Variable(s): m.3, k.4
+  
+  lookupatthasa_0_121
+Failed to derive Variable(s): a1.2
+  
+  lookupkeyhask_0_12111
+Failed to derive Variable(s): k1.2
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -862,7 +913,10 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 0.076968855s
+  processing time: 359.66s
+  
+  WARNING: 13 wellformedness check failed!
+           The analysis results might be wrong!
   
   can_obtain_key (exists-trace): verified (24 steps)
 

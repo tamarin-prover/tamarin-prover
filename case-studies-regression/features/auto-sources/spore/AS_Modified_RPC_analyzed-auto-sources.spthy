@@ -2,13 +2,14 @@ theory ModifiedAndrewSecureRPC begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, pred/1, sdec/2[destructor], senc/2,
-           snd/1[destructor], succ/1
+functions: fst/1, pair/2, pred/1, sdec/2, senc/2, snd/1, succ/1
 equations:
     fst(<x.1, x.2>) = x.1,
     pred(succ(x)) = x,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -857,6 +858,16 @@ solve( StateB( $A, $B, ~sk, xna, ~nb ) ▶₀ #i )
     qed
   qed
 qed
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1817,15 +1828,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -1834,7 +1845,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Modified_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Modified_RPC.spthy.tmp
-  processing time: 0.091701636s
+  processing time: 71.73s
   
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (9 steps)

@@ -35,7 +35,6 @@ module Theory.Constraint.Solver.Sources (
 import           Prelude                                 hiding (id, (.))
 import           Safe
 
-import           Data.Foldable                           (asum)
 import qualified Data.Map                                as M
 import qualified Data.Set                                as S
 
@@ -58,6 +57,7 @@ import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
 import           Theory.Constraint.Solver.Goals
+import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
 import           Theory.Constraint.System

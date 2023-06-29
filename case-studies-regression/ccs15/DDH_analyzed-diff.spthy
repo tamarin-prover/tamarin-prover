@@ -3,8 +3,10 @@ theory DDH begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], g/0, pair/2, snd/1[destructor]
+functions: fst/1, g/0, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -7043,10 +7045,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_2
-              MIRRORED
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case DDH_case_3
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              MIRRORED
             next
               case DDH_case_4
               by step( solve( !KU( ~x ) @ #vk.2 ) )
@@ -7105,10 +7107,10 @@ next
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
               next
                 case DDH_case_4
-                MIRRORED
+                by step( solve( !KU( ~y ) @ #vk.3 ) )
               next
                 case DDH_case_5
-                by step( solve( !KU( ~y ) @ #vk.3 ) )
+                MIRRORED
               next
                 case DDH_case_6
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
@@ -7165,10 +7167,10 @@ next
                 by step( solve( !KU( ~z ) @ #vk.2 ) )
               next
                 case DDH_case_6
-                MIRRORED
+                by step( solve( !KU( ~z ) @ #vk.3 ) )
               next
                 case DDH_case_7
-                by step( solve( !KU( ~z ) @ #vk.3 ) )
+                MIRRORED
               next
                 case c_exp
                 by step( solve( !KU( ~z ) @ #vk.4 ) )
@@ -7251,10 +7253,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_2
-              MIRRORED
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case DDH_case_3
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              MIRRORED
             next
               case DDH_case_4
               by step( solve( !KU( ~x ) @ #vk.2 ) )
@@ -7269,10 +7271,10 @@ next
               by step( solve( !KU( ~x ) @ #vk.2 ) )
             next
               case DDH_case_8
-              by step( solve( !KU( ~y ) @ #vk.3 ) )
+              by step( solve( !KU( ~x ) @ #vk.3 ) )
             next
               case DDH_case_9
-              by step( solve( !KU( ~x ) @ #vk.3 ) )
+              by step( solve( !KU( ~y ) @ #vk.3 ) )
             next
               case c_exp
               by step( solve( !KU( ~x ) @ #vk.4 ) )
@@ -7319,10 +7321,10 @@ next
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
               next
                 case DDH_case_4
-                MIRRORED
+                by step( solve( !KU( ~y ) @ #vk.3 ) )
               next
                 case DDH_case_5
-                by step( solve( !KU( ~y ) @ #vk.3 ) )
+                MIRRORED
               next
                 case DDH_case_6
                 by step( solve( !KU( ~x ) @ #vk.1 ) )
@@ -7391,19 +7393,19 @@ next
                 by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
                 case DDH_case_08
-                by step( solve( !KU( ~x ) @ #vk.1 ) )
-              next
-                case DDH_case_09
-                by step( solve( !KU( ~y ) @ #vk.1 ) )
-              next
-                case DDH_case_10
-                MIRRORED
-              next
-                case DDH_case_11
                 by step( solve( !KU( ~x ) @ #vk.3 ) )
               next
-                case DDH_case_12
+                case DDH_case_09
+                by step( solve( !KU( ~x ) @ #vk.1 ) )
+              next
+                case DDH_case_10
                 by step( solve( !KU( ~x ) @ #vk.2 ) )
+              next
+                case DDH_case_11
+                by step( solve( !KU( ~y ) @ #vk.1 ) )
+              next
+                case DDH_case_12
+                MIRRORED
               next
                 case DDH_case_13
                 by step( solve( !KU( ~y ) @ #vk.2 ) )
@@ -7556,15 +7558,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 9b1983ef654e3d0c6d13035da0cc1b4d336aa098, branch: subterm-new
-Compiled at: 2022-10-27 12:37:48.599599113 UTC
+Maude version 3.2.1
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -7573,7 +7575,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 0.062052181s
+  processing time: 3.64s
   
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 

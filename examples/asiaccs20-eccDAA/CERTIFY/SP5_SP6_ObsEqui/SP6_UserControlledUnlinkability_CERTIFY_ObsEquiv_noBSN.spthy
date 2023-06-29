@@ -32,7 +32,17 @@ functions:  accept/0, MAC/2, KDF_AES/1, KDF_EK/1,KDF_a/3, multp/2, plus/2, minus
 			 PkX/2, PkY/2, verifyCre1/4, verifyCre2/5,verifyCre3/4,verifyCre4/5,
 			 BSN/1, F1/1, F2/1, H_p/1,PointG1/2, QPub/2, QName/2, certData/2, Nonce/1
 			 
-
+tactic: diff_signatures_no_verify
+presort: C
+prio:
+		regex "!Pk\("
+		regex "!Ltk\("
+		regex "Correct"
+		regex "Shuffle"
+		regex "TPM_Public"
+		regex "TPM_EK_QPD"
+prio:
+		regex "~~>"
 // Protocol Restrictions (Axioms)
 
 //restriction equality: 	     "All #i    x y    .  Eq( x, y ) @ i ==> x = y"
@@ -267,7 +277,7 @@ rule Diff_DAA_QUOTE_no_verify:
 
 
 
-lemma diff_signatures_no_verify: exists-trace
+lemma diff_signatures_no_verify[heuristic={diff_signatures_no_verify}]: exists-trace
 "	Ex #t1 #t2 #t3 .
 		Issuer_Init() @ t1
 		& CreateSigmas() @ t2
