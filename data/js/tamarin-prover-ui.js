@@ -232,11 +232,11 @@ var ui = {
 		    var obj = $(olink);
 	            if (i == j) {
     		        obj.removeClass('inactive-option');
-		        obj.addClass('active-option');
-		    } else {
-		        obj.removeClass('active-option');
-		        obj.addClass('inactive-option');
-		    }
+		            obj.addClass('active-option');
+		        } else {
+		            obj.removeClass('active-option');
+		            obj.addClass('inactive-option');
+		        }
 	        }
                 $("a.active-link").click();
             });
@@ -257,6 +257,19 @@ var ui = {
             }
             $("a.active-link").click();
             mainDisplay.toggleOption(abbrv_toggle);
+        });
+
+        // Click handler for auto-sources' toggle
+        var auto_toggle = $('a#auto-toggle');
+        auto_toggle.click(function(ev) {
+            ev.preventDefault();
+            if ($.cookie("auto-sources")) {
+                $.cookie("auto-sources", null, { path: '/' });
+            } else {
+                $.cookie("auto-sources", true, { path: '/' });
+            }
+            $("a.active-link").click();
+            mainDisplay.toggleOption(auto_toggle);
         });
 
 
@@ -345,6 +358,14 @@ var ui = {
         } else {
             $("a#abbrv-toggle").addClass("disabled-option");
         }
+
+        if($.cookie("auto-sources")){
+            $("a#auto-toggle").addClass("active-options");
+        }
+        else{
+            $("a#auto-toggle").addClass("disabled-options");
+        }
+        
     },
 
     /**
@@ -706,6 +727,12 @@ var mainDisplay = {
         params = params.concat(
             { name: "simplification", value: $.cookie("simplification") }
         );
+
+        if($.cookie("auto-sources")){
+            params = params.concat(
+              { name: "auto-sources", value: ""}  
+            );
+        }
 
         // Rewrite image paths (if necessary)
         if(params.length > 0) {
