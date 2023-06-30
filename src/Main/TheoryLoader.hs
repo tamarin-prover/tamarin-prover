@@ -86,7 +86,7 @@ import qualified Accountability.Generation as Acc
 import GHC.Records (HasField(getField))
 
 import           TheoryObject                        (diffThyOptions)
-import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve)
+import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve,verboseOption)
 import Data.Maybe (fromMaybe, fromJust, isJust)
 
 import qualified Data.Set
