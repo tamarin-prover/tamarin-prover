@@ -6,7 +6,15 @@ builtins: diffie-hellman
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
+
+
+
+
+
+
 
 
 
@@ -32,14 +40,14 @@ rule (modulo E) Init[color=#ffffff, process="new sk.1;"]:
        z     = 'g'
   */
 
-rule (modulo E) inhelloServergagB_0_1111[color=#518040,
+rule (modulo E) inhelloServergagB_0_1111[color=#408041,
                                          process="in(<'helloServer', 'g'^=a.1, gB.1>);"]:
    [ State_1111( a.1, sk.1 ), In( <'helloServer', 'g'^a.1, gB.1> ) ]
   --[ Key( gB.1^a.1 ) ]->
    [ ]
 
   /*
-  rule (modulo AC) inhelloServergagB_0_1111[color=#518040,
+  rule (modulo AC) inhelloServergagB_0_1111[color=#408041,
                                             process="in(<'helloServer', 'g'^=a.1, gB.1>);"]:
      [ State_1111( a, sk ), In( <'helloServer', z, gB> ) ]
     --[ Key( z.1 ) ]->
@@ -296,8 +304,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -312,7 +320,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issueX-translation-crash.spthy
 
   output:          examples/sapic/fast/regression-tests/issueX-translation-crash.spthy.tmp
-  processing time: 0.57s
+  processing time: 0.47s
   
 
 ==============================================================================

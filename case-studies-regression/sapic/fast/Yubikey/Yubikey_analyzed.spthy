@@ -9,6 +9,8 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 /* looping facts with injective instances: L_CellLocked/2, L_PureState/2
@@ -671,6 +673,14 @@ qed
 
 
 
+
+
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="!"]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
@@ -703,7 +713,7 @@ rule (modulo E) p_1_[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
+rule (modulo E) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#408051,
                                                            process="in(<=L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)>);"]:
    [
    State_1111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -721,7 +731,7 @@ rule (modulo E) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
    ]
 
   /*
-  rule (modulo AC) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
+  rule (modulo AC) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#408051,
                                                               process="in(<=L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)>);"]:
      [
      State_1111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ),
@@ -737,7 +747,7 @@ rule (modulo E) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
      ]
   */
 
-rule (modulo E) inotc_0_1111111111111[color=#806040,
+rule (modulo E) inotc_0_1111111111111[color=#408051,
                                       process="in(otc.1);"]:
    [
    State_1111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -754,7 +764,7 @@ rule (modulo E) inotc_0_1111111111111[color=#806040,
    ]
 
   /*
-  rule (modulo AC) inotc_0_1111111111111[color=#806040,
+  rule (modulo AC) inotc_0_1111111111111[color=#408051,
                                          process="in(otc.1);"]:
      [
      State_1111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -770,7 +780,7 @@ rule (modulo E) inotc_0_1111111111111[color=#806040,
      ]
   */
 
-rule (modulo E) iftuplesecretidkotc_0_11111111111111[color=#806040,
+rule (modulo E) iftuplesecretidkotc_0_11111111111111[color=#408051,
                                                      process="if tuple.1=<secretid.1, k.1, otc.1>"]:
    [
    State_11111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -788,7 +798,7 @@ rule (modulo E) iftuplesecretidkotc_0_11111111111111[color=#806040,
 
   // loop breaker: [0]
   /*
-  rule (modulo AC) iftuplesecretidkotc_0_11111111111111[color=#806040,
+  rule (modulo AC) iftuplesecretidkotc_0_11111111111111[color=#408051,
                                                         process="if tuple.1=<secretid.1, k.1, otc.1>"]:
      [
      State_11111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -809,7 +819,7 @@ restriction Restr_ifSmallerotctc_0_111111111111111_1:
     (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW) ⇒
     (∃ z. x = (z+x.1))"
 
-rule (modulo E) ifSmallerotctc_0_111111111111111[color=#806040,
+rule (modulo E) ifSmallerotctc_0_111111111111111[color=#408051,
                                                  process="if Smaller( otc.1, tc.1 )"]:
    [
    State_111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -829,7 +839,7 @@ rule (modulo E) ifSmallerotctc_0_111111111111111[color=#806040,
    ]
 
   /*
-  rule (modulo AC) ifSmallerotctc_0_111111111111111[color=#806040,
+  rule (modulo AC) ifSmallerotctc_0_111111111111111[color=#408051,
                                                     process="if Smaller( otc.1, tc.1 )"]:
      [
      State_111111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -847,7 +857,7 @@ rule (modulo E) ifSmallerotctc_0_111111111111111[color=#806040,
      ]
   */
 
-rule (modulo E) eventLoginLpidktc_0_11111111111111111[color=#806040,
+rule (modulo E) eventLoginLpidktc_0_11111111111111111[color=#408051,
                                                       process="event Login( L_pid.1, k.1, tc.1 );"]:
    [
    State_11111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -861,7 +871,7 @@ rule (modulo E) eventLoginLpidktc_0_11111111111111111[color=#806040,
 
   // loop breaker: [1]
   /*
-  rule (modulo AC) eventLoginLpidktc_0_11111111111111111[color=#806040,
+  rule (modulo AC) eventLoginLpidktc_0_11111111111111111[color=#408051,
                                                          process="event Login( L_pid.1, k.1, tc.1 );"]:
      [
      State_11111111111111111( StateChannel, lock, L_pid, SL_pid,
@@ -874,7 +884,7 @@ rule (modulo E) eventLoginLpidktc_0_11111111111111111[color=#806040,
     // loop breaker: [1]
   */
 
-rule (modulo E) iftuplesecretidkotc_1_11111111111111[color=#806040,
+rule (modulo E) iftuplesecretidkotc_1_11111111111111[color=#408051,
                                                      process="if tuple.1=<secretid.1, k.1, otc.1>"]:
    [
    State_11111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -886,7 +896,7 @@ rule (modulo E) iftuplesecretidkotc_1_11111111111111[color=#806040,
    [ ]
 
   /*
-  rule (modulo AC) iftuplesecretidkotc_1_11111111111111[color=#806040,
+  rule (modulo AC) iftuplesecretidkotc_1_11111111111111[color=#408051,
                                                         process="if tuple.1=<secretid.1, k.1, otc.1>"]:
      [
      State_11111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -1016,7 +1026,7 @@ rule (modulo E) p_1_111111112111111[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#805140,
+rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#40805e,
                                                        process="lookup YL_pid.1 as sc.1"]:
    [
    State_11111111211111111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1034,7 +1044,7 @@ rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#805140,
 
   // loop breaker: [1]
   /*
-  rule (modulo AC) lookupYLpidassc_0_11111111211111111111[color=#805140,
+  rule (modulo AC) lookupYLpidassc_0_11111111211111111111[color=#40805e,
                                                           process="lookup YL_pid.1 as sc.1"]:
      [
      State_11111111211111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1052,7 +1062,7 @@ rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#805140,
     // loop breaker: [1]
   */
 
-rule (modulo E) insc_0_111111112111111111111[color=#805140,
+rule (modulo E) insc_0_111111112111111111111[color=#40805e,
                                              process="in(=sc.1);"]:
    [
    State_111111112111111111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1065,7 +1075,7 @@ rule (modulo E) insc_0_111111112111111111111[color=#805140,
 
   // loop breaker: [2]
   /*
-  rule (modulo AC) insc_0_111111112111111111111[color=#805140,
+  rule (modulo AC) insc_0_111111112111111111111[color=#40805e,
                                                 process="in(=sc.1);"]:
      [
      State_111111112111111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1078,7 +1088,7 @@ rule (modulo E) insc_0_111111112111111111111[color=#805140,
     // loop breaker: [2]
   */
 
-rule (modulo E) p_1_11111111211111111[color=#805140, process="!"]:
+rule (modulo E) p_1_11111111211111111[color=#40805e, process="!"]:
    [
    !Semistate_111111112111111111( StateChannel, L_pid.1, SL_pid.1,
                                   StateChannel.1, YL_pid.1, k.2, secretid.2
@@ -1095,7 +1105,7 @@ rule (modulo E) p_1_11111111211111111[color=#805140, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_11111111211111111[color=#805140, process="!"]:
+  rule (modulo AC) p_1_11111111211111111[color=#40805e, process="!"]:
      [
      !Semistate_111111112111111111( StateChannel, L_pid, SL_pid,
                                     StateChannel.1, YL_pid, k, secretid
@@ -1112,7 +1122,7 @@ rule (modulo E) p_1_11111111211111111[color=#805140, process="!"]:
      ]
   */
 
-rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#805140,
+rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#40805e,
                                                        process="lookup YL_pid.1 as tc.2"]:
    [
    State_11111111211111111121( StateChannel, L_pid.1, SL_pid.1,
@@ -1130,7 +1140,7 @@ rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#805140,
 
   // loop breaker: [1]
   /*
-  rule (modulo AC) lookupYLpidastc_0_11111111211111111121[color=#805140,
+  rule (modulo AC) lookupYLpidastc_0_11111111211111111121[color=#40805e,
                                                           process="lookup YL_pid.1 as tc.2"]:
      [
      State_11111111211111111121( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1148,7 +1158,7 @@ rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#805140,
     // loop breaker: [1]
   */
 
-rule (modulo E) insc_0_111111112111111111211[color=#805140,
+rule (modulo E) insc_0_111111112111111111211[color=#40805e,
                                              process="in(sc.2);"]:
    [
    State_111111112111111111211( StateChannel, L_pid.1, SL_pid.1,
@@ -1164,7 +1174,7 @@ rule (modulo E) insc_0_111111112111111111211[color=#805140,
 
   // loop breaker: [4]
   /*
-  rule (modulo AC) insc_0_111111112111111111211[color=#805140,
+  rule (modulo AC) insc_0_111111112111111111211[color=#40805e,
                                                 process="in(sc.2);"]:
      [
      State_111111112111111111211( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1192,14 +1202,20 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  inLpidnoncesencsecretidtcnprk_0_1111111111
+Failed to derive Variable(s): k.1, npr.1, secretid.1, tc.1
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -1214,7 +1230,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 10.10s
+  processing time: 9.82s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   secrecy_enc (all-traces): verified (18 steps)
   init_server (all-traces): verified (42 steps)

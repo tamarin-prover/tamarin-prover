@@ -13,6 +13,29 @@ equations:
     sdecSuc(k, iv, t, senc(k, iv, t, m)) = true,
     snd(<x.1, x.2>) = x.2
 
+tactic: Counter_Monotonicity
+presort: C
+prio: {id}
+  regex"=" | regex"<" | regex"last\(" | regex"DCtrIs\(d,C"
+prio: {id}
+  regex"DCtr"
+
+
+tactic: IV_Uniqueness
+presort: C
+prio: {id}
+  regex"=" | regex"<" | regex"last\("
+prio: {id}
+  regex"IV\("
+
+
+tactic: Key_IntegrityAndConfidentiality
+presort: C
+prio: {id}
+  regex"CreateKey\(ek,"
+
+
+
 
 
 /* looping facts with injective instances: DCtr/2 */
@@ -7814,7 +7837,8 @@ next
   qed
 qed
 
-lemma Counter_Monotonicity [use_induction, reuse]:
+lemma Counter_Monotonicity [heuristic={Counter_Monotonicity},
+                            use_induction, reuse]:
   all-traces
   "∀ d c C #before #later.
     (((DCtrIs( d, c ) @ #before) ∧ (DCtrIs( d, C ) @ #later)) ∧
@@ -10319,7 +10343,7 @@ next
   qed
 qed
 
-lemma IV_Uniqueness:
+lemma IV_Uniqueness [heuristic={IV_Uniqueness}]:
   all-traces
   "∀ iv #before #later.
     ((IV( iv ) @ #before) ∧ (IV( iv ) @ #later)) ⇒ (#later = #before)"
@@ -10616,7 +10640,8 @@ next
   qed
 qed
 
-lemma Key_IntegrityAndConfidentiality [use_induction, reuse]:
+lemma Key_IntegrityAndConfidentiality [heuristic={Key_IntegrityAndConfidentiality},
+                                       use_induction, reuse]:
   all-traces
   "(¬(∃ k l h #keyCreate #keyKU.
        (CreateKey( k, h, l ) @ #keyCreate) ∧ (!KU( k ) @ #keyKU))) ∧
@@ -12483,14 +12508,20 @@ qed
 
 
 
+
+
+
+
+
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -12505,7 +12536,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 126.42s
+  processing time: 94.42s
   
   origin (all-traces): verified (2087 steps)
   Counter_Monotonicity (all-traces): verified (876 steps)
