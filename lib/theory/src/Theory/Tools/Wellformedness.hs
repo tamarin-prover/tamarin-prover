@@ -492,13 +492,14 @@ factReports thy = concat
     
     
     -- Report a protocol fact occurs in an LHS but not in any RHS
+    factLhsOccurNoRhs ::  [WfError]
     factLhsOccurNoRhs = 
       case factLhsNoRhs of
         []            -> []
         facts         -> return $ (,) topic $ numbered' $
                           map (nest 2 . ruleAndFact ) facts
       where
-        topic = "Facts occur in an left-hand-side but not in any right-hand-side "
+        topic = "Facts occur in the left-hand-side but not in any right-hand-side "
         -- all the protocol facts in lhs but not in any rhs
         factLhsNoRhs = [fa | fa <-getFactLhsNoRhs 
                              (getFactSide rPrems ru) (getFactSide rConcs ru),
