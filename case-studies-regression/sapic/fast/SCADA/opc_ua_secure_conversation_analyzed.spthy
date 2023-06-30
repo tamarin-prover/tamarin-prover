@@ -11,6 +11,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verifyMac(mac(m, sk), m, sk) = true
 
+
+
 heuristic: p
 
 section{* The OPC UA Secure Conversation protocol *}
@@ -11154,6 +11156,16 @@ qed
 
 
 
+
+
+
+
+
+
+
+
+
+
 rule (modulo E) MessageIDRule[color=#ffffff, process="!"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
@@ -11248,19 +11260,19 @@ rule (modulo E) A_0_111111[color=#ffffff, process="A()"]:
      [ State_1111111( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_0_1111111[color=#804046, process="!"]:
+rule (modulo E) p_0_1111111[color=#40804a, process="!"]:
    [ State_1111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
   -->
    [ !Semistate_11111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111111[color=#804046, process="!"]:
+  rule (modulo AC) p_0_1111111[color=#40804a, process="!"]:
      [ State_1111111( ~prog_1, a, b, kEnc, kSign ) ]
     -->
      [ !Semistate_11111111( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_1_1111111[color=#804046, process="!"]:
+rule (modulo E) p_1_1111111[color=#40804a, process="!"]:
    [
    Fr( ~prog_11111111 ),
    !Semistate_11111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 )
@@ -11269,14 +11281,14 @@ rule (modulo E) p_1_1111111[color=#804046, process="!"]:
    [ State_11111111( ~prog_1, ~prog_11111111, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111111[color=#804046, process="!"]:
+  rule (modulo AC) p_1_1111111[color=#40804a, process="!"]:
      [ Fr( ~prog_11111111 ), !Semistate_11111111( ~prog_1, a, b, kEnc, kSign )
      ]
     --[ ProgressFrom_11111111( ~prog_11111111 ) ]->
      [ State_11111111( ~prog_1, ~prog_11111111, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) lockab_0_11111111[color=#804046,
+rule (modulo E) lockab_0_11111111[color=#40804a,
                                   process="lock <a.1, b.1>;"]:
    [
    State_11111111( ~prog_1, ~prog_11111111, a.1, b.1, kEnc.1, kSign.1 ),
@@ -11292,7 +11304,7 @@ rule (modulo E) lockab_0_11111111[color=#804046,
    ]
 
   /*
-  rule (modulo AC) lockab_0_11111111[color=#804046,
+  rule (modulo AC) lockab_0_11111111[color=#40804a,
                                      process="lock <a.1, b.1>;"]:
      [
      State_11111111( ~prog_1, ~prog_11111111, a, b, kEnc, kSign ), Fr( lock )
@@ -11304,7 +11316,7 @@ rule (modulo E) lockab_0_11111111[color=#804046,
      [ State_111111111( ~prog_1, ~prog_11111111, lock, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) incseq_0_111111111[color=#804046,
+rule (modulo E) incseq_0_111111111[color=#40804a,
                                    process="in('c',seq.1);"]:
    [
    Fr( ~prog_1111111111 ),
@@ -11322,7 +11334,7 @@ rule (modulo E) incseq_0_111111111[color=#804046,
    ]
 
   /*
-  rule (modulo AC) incseq_0_111111111[color=#804046,
+  rule (modulo AC) incseq_0_111111111[color=#40804a,
                                       process="in('c',seq.1);"]:
      [
      Fr( ~prog_1111111111 ),
@@ -11338,7 +11350,7 @@ rule (modulo E) incseq_0_111111111[color=#804046,
      ]
   */
 
-rule (modulo E) eventSeqSentabseq_0_1111111111[color=#804046,
+rule (modulo E) eventSeqSentabseq_0_1111111111[color=#40804a,
                                                process="event Seq_Sent( a.1, b.1, seq.1 );"]:
    [
    State_1111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1,
@@ -11353,7 +11365,7 @@ rule (modulo E) eventSeqSentabseq_0_1111111111[color=#804046,
    ]
 
   /*
-  rule (modulo AC) eventSeqSentabseq_0_1111111111[color=#804046,
+  rule (modulo AC) eventSeqSentabseq_0_1111111111[color=#40804a,
                                                   process="event Seq_Sent( a.1, b.1, seq.1 );"]:
      [
      State_1111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a, b,
@@ -11368,7 +11380,7 @@ rule (modulo E) eventSeqSentabseq_0_1111111111[color=#804046,
      ]
   */
 
-rule (modulo E) newm_0_11111111111[color=#804046, process="new m.1;"]:
+rule (modulo E) newm_0_11111111111[color=#40804a, process="new m.1;"]:
    [
    State_11111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1,
                       b.1, kEnc.1, kSign.1, seq.1
@@ -11383,7 +11395,7 @@ rule (modulo E) newm_0_11111111111[color=#804046, process="new m.1;"]:
    ]
 
   /*
-  rule (modulo AC) newm_0_11111111111[color=#804046, process="new m.1;"]:
+  rule (modulo AC) newm_0_11111111111[color=#40804a, process="new m.1;"]:
      [
      State_11111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a, b,
                         kEnc, kSign, seq
@@ -11398,7 +11410,7 @@ rule (modulo E) newm_0_11111111111[color=#804046, process="new m.1;"]:
      ]
   */
 
-rule (modulo E) eventSentabm_0_111111111111[color=#804046,
+rule (modulo E) eventSentabm_0_111111111111[color=#40804a,
                                             process="event Sent( a.1, b.1, m.1 );"]:
    [
    State_111111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1,
@@ -11413,7 +11425,7 @@ rule (modulo E) eventSentabm_0_111111111111[color=#804046,
    ]
 
   /*
-  rule (modulo AC) eventSentabm_0_111111111111[color=#804046,
+  rule (modulo AC) eventSentabm_0_111111111111[color=#40804a,
                                                process="event Sent( a.1, b.1, m.1 );"]:
      [
      State_111111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a,
@@ -11428,7 +11440,7 @@ rule (modulo E) eventSentabm_0_111111111111[color=#804046,
      ]
   */
 
-rule (modulo E) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color=#804046,
+rule (modulo E) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color=#40804a,
                                                                            process="out('r',<$MH, $SH, 
  senc(<seq.1, m.1, $pad, mac(<$MH, $SH, seq.1, m.1, $pad>, kSign.1)
       >,
@@ -11460,7 +11472,7 @@ rule (modulo E) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color
    ]
 
   /*
-  rule (modulo AC) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color=#804046,
+  rule (modulo AC) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color=#40804a,
                                                                               process="out('r',<$MH, $SH, 
  senc(<seq.1, m.1, $pad, mac(<$MH, $SH, seq.1, m.1, $pad>, kSign.1)
       >,
@@ -11488,7 +11500,7 @@ rule (modulo E) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color
      ]
   */
 
-rule (modulo E) unlockab_0_11111111111111[color=#804046,
+rule (modulo E) unlockab_0_11111111111111[color=#40804a,
                                           process="unlock <a.1, b.1>;"]:
    [
    State_11111111111111( $MH, $SH, $pad, ~prog_1, ~prog_11111111,
@@ -11506,7 +11518,7 @@ rule (modulo E) unlockab_0_11111111111111[color=#804046,
    ]
 
   /*
-  rule (modulo AC) unlockab_0_11111111111111[color=#804046,
+  rule (modulo AC) unlockab_0_11111111111111[color=#40804a,
                                              process="unlock <a.1, b.1>;"]:
      [
      State_11111111111111( $MH, $SH, $pad, ~prog_1, ~prog_11111111,
@@ -11524,7 +11536,7 @@ rule (modulo E) unlockab_0_11111111111111[color=#804046,
      ]
   */
 
-rule (modulo E) p_0_111111111111111[color=#804046, process="0"]:
+rule (modulo E) p_0_111111111111111[color=#40804a, process="0"]:
    [
    State_111111111111111( $MH, $SH, $pad, ~prog_1, ~prog_11111111,
                           ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, m.1, seq.1
@@ -11534,7 +11546,7 @@ rule (modulo E) p_0_111111111111111[color=#804046, process="0"]:
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111111111111[color=#804046, process="0"]:
+  rule (modulo AC) p_0_111111111111111[color=#40804a, process="0"]:
      [
      State_111111111111111( $MH, $SH, $pad, ~prog_1, ~prog_11111111,
                             ~prog_1111111111, lock, a, b, kEnc, kSign, m, seq
@@ -11564,19 +11576,19 @@ rule (modulo E) B_0_111112[color=#ffffff, process="B()"]:
      [ State_1111121( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_0_1111121[color=#628040, process="!"]:
+rule (modulo E) p_0_1111121[color=#40804a, process="!"]:
    [ State_1111121( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
   -->
    [ !Semistate_11111211( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111121[color=#628040, process="!"]:
+  rule (modulo AC) p_0_1111121[color=#40804a, process="!"]:
      [ State_1111121( ~prog_1, a, b, kEnc, kSign ) ]
     -->
      [ !Semistate_11111211( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_1_1111121[color=#628040, process="!"]:
+rule (modulo E) p_1_1111121[color=#40804a, process="!"]:
    [
    Fr( ~prog_11111211 ),
    !Semistate_11111211( ~prog_1, a.1, b.1, kEnc.1, kSign.1 )
@@ -11585,14 +11597,14 @@ rule (modulo E) p_1_1111121[color=#628040, process="!"]:
    [ State_11111211( ~prog_1, ~prog_11111211, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111121[color=#628040, process="!"]:
+  rule (modulo AC) p_1_1111121[color=#40804a, process="!"]:
      [ Fr( ~prog_11111211 ), !Semistate_11111211( ~prog_1, a, b, kEnc, kSign )
      ]
     --[ ProgressFrom_11111211( ~prog_11111211 ) ]->
      [ State_11111211( ~prog_1, ~prog_11111211, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) lockba_0_11111211[color=#628040,
+rule (modulo E) lockba_0_11111211[color=#40804a,
                                   process="lock <b.1, a.1>;"]:
    [
    State_11111211( ~prog_1, ~prog_11111211, a.1, b.1, kEnc.1, kSign.1 ),
@@ -11609,7 +11621,7 @@ rule (modulo E) lockba_0_11111211[color=#628040,
    ]
 
   /*
-  rule (modulo AC) lockba_0_11111211[color=#628040,
+  rule (modulo AC) lockba_0_11111211[color=#40804a,
                                      process="lock <b.1, a.1>;"]:
      [
      State_11111211( ~prog_1, ~prog_11111211, a, b, kEnc, kSign ), Fr( lock )
@@ -11621,7 +11633,7 @@ rule (modulo E) lockba_0_11111211[color=#628040,
      [ State_111112111( ~prog_1, ~prog_11111211, a, b, kEnc, kSign, lock ) ]
   */
 
-rule (modulo E) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#628040,
+rule (modulo E) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#40804a,
                                                        process="in('r',<MH.1, SH.1, senc(<seq.2, m.2, pad.1, xmac.1>, =kEnc.1)>);"]:
    [
    Fr( ~prog_1111121111 ),
@@ -11644,7 +11656,7 @@ rule (modulo E) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#628040,
    ]
 
   /*
-  rule (modulo AC) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#628040,
+  rule (modulo AC) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#40804a,
                                                           process="in('r',<MH.1, SH.1, senc(<seq.2, m.2, pad.1, xmac.1>, =kEnc.1)>);"]:
      [
      Fr( ~prog_1111121111 ),
@@ -11663,7 +11675,7 @@ rule (modulo E) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#628040,
      ]
   */
 
-rule (modulo E) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#628040,
+rule (modulo E) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#40804a,
                                                        process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)"]:
    [
    State_1111121111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1,
@@ -11678,7 +11690,7 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#628040,
    ]
 
   /*
-  rule (modulo AC) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#628040,
+  rule (modulo AC) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#40804a,
                                                           process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)"]:
      [
      State_1111121111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
@@ -11693,7 +11705,7 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#628040,
      ]
   */
 
-rule (modulo E) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#628040,
+rule (modulo E) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#40804a,
                                                        process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)"]:
    [
    State_1111121111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1,
@@ -11711,7 +11723,7 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#628040,
    ]
 
   /*
-  rule (modulo AC) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#628040,
+  rule (modulo AC) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#40804a,
                                                           process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)"]:
      [
      State_1111121111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
@@ -11729,7 +11741,7 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#628040,
      ]
   */
 
-rule (modulo E) eventSeqRecvabseq_0_11111211111[color=#628040,
+rule (modulo E) eventSeqRecvabseq_0_11111211111[color=#40804a,
                                                 process="event Seq_Recv( a.1, b.1, seq.2 );"]:
    [
    State_11111211111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1,
@@ -11744,7 +11756,7 @@ rule (modulo E) eventSeqRecvabseq_0_11111211111[color=#628040,
    ]
 
   /*
-  rule (modulo AC) eventSeqRecvabseq_0_11111211111[color=#628040,
+  rule (modulo AC) eventSeqRecvabseq_0_11111211111[color=#40804a,
                                                    process="event Seq_Recv( a.1, b.1, seq.2 );"]:
      [
      State_11111211111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
@@ -11759,7 +11771,7 @@ rule (modulo E) eventSeqRecvabseq_0_11111211111[color=#628040,
      ]
   */
 
-rule (modulo E) eventRecvabm_0_111112111111[color=#628040,
+rule (modulo E) eventRecvabm_0_111112111111[color=#40804a,
                                             process="event Recv( a.1, b.1, m.2 );"]:
    [
    State_111112111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1,
@@ -11774,7 +11786,7 @@ rule (modulo E) eventRecvabm_0_111112111111[color=#628040,
    ]
 
   /*
-  rule (modulo AC) eventRecvabm_0_111112111111[color=#628040,
+  rule (modulo AC) eventRecvabm_0_111112111111[color=#40804a,
                                                process="event Recv( a.1, b.1, m.2 );"]:
      [
      State_111112111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
@@ -11789,7 +11801,7 @@ rule (modulo E) eventRecvabm_0_111112111111[color=#628040,
      ]
   */
 
-rule (modulo E) unlockba_0_1111121111111[color=#628040,
+rule (modulo E) unlockba_0_1111121111111[color=#40804a,
                                          process="unlock <b.1, a.1>;"]:
    [
    State_1111121111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1,
@@ -11807,7 +11819,7 @@ rule (modulo E) unlockba_0_1111121111111[color=#628040,
    ]
 
   /*
-  rule (modulo AC) unlockba_0_1111121111111[color=#628040,
+  rule (modulo AC) unlockba_0_1111121111111[color=#40804a,
                                             process="unlock <b.1, a.1>;"]:
      [
      State_1111121111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH,
@@ -11825,7 +11837,7 @@ rule (modulo E) unlockba_0_1111121111111[color=#628040,
      ]
   */
 
-rule (modulo E) p_0_11111211111111[color=#628040, process="0"]:
+rule (modulo E) p_0_11111211111111[color=#40804a, process="0"]:
    [
    State_11111211111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1,
                          SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -11835,7 +11847,7 @@ rule (modulo E) p_0_11111211111111[color=#628040, process="0"]:
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111211111111[color=#628040, process="0"]:
+  rule (modulo AC) p_0_11111211111111[color=#40804a, process="0"]:
      [
      State_11111211111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH,
                            a, b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -11845,7 +11857,7 @@ rule (modulo E) p_0_11111211111111[color=#628040, process="0"]:
      [ ]
   */
 
-rule (modulo E) p_0_11111211112[color=#628040, process="0"]:
+rule (modulo E) p_0_11111211112[color=#40804a, process="0"]:
    [
    State_11111211112( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1,
                       a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -11855,7 +11867,7 @@ rule (modulo E) p_0_11111211112[color=#628040, process="0"]:
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111211112[color=#628040, process="0"]:
+  rule (modulo AC) p_0_11111211112[color=#40804a, process="0"]:
      [
      State_11111211112( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
                         b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -11955,14 +11967,113 @@ restriction reliable:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  MessageIDRule
+Failed to derive Variable(s): ~mid_
+  
+  p_1_
+Failed to derive Variable(s): ~prog_1
+  
+  newa_0_1
+Failed to derive Variable(s): ~prog_1, a.1
+  
+  newb_0_11
+Failed to derive Variable(s): ~prog_1, a.1, b.1
+  
+  newkSign_0_111
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kSign.1
+  
+  newkEnc_0_1111
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
+  
+  p_0_11111
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
+  
+  A_0_111111
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
+  
+  p_0_1111111
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
+  
+  p_1_1111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111111, a.1, b.1, kEnc.1, kSign.1
+  
+  lockab_0_11111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111111, lock, a.1, b.1, kEnc.1, kSign.1
+  
+  incseq_0_111111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, seq.1
+  
+  eventSeqSentabseq_0_1111111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, seq.1
+  
+  newm_0_11111111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, m.1, seq.1
+  
+  eventSentabm_0_111111111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, m.1, seq.1
+  
+  outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111
+Failed to derive Variable(s): $MH, $SH, $pad, ~mid_1111111111111, ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, m.1, seq.1
+  
+  unlockab_0_11111111111111
+Failed to derive Variable(s): $MH, $SH, $pad, ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, m.1, seq.1
+  
+  p_0_111111111111111
+Failed to derive Variable(s): $MH, $SH, $pad, ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, m.1, seq.1
+  
+  p_0_1111112
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
+  
+  B_0_111112
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
+  
+  p_0_1111121
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
+  
+  p_1_1111121
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, a.1, b.1, kEnc.1, kSign.1
+  
+  lockba_0_11111211
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, a.1, b.1, kEnc.1, kSign.1, lock.1
+  
+  inrMHSHsencseqmpadxmackEnc_0_111112111
+Failed to derive Variable(s): ~mid_111112111, ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
+  
+  ifxmacmacMHSHseqmpadkSign_0_1111121111
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
+  
+  ifxmacmacMHSHseqmpadkSign_1_1111121111
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
+  
+  eventSeqRecvabseq_0_11111211111
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
+  
+  eventRecvabm_0_111112111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
+  
+  unlockba_0_1111121111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
+  
+  p_0_11111211111111
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
+  
+  p_0_11111211112
+Failed to derive Variable(s): ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
+  
+  p_0_1111122
+Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -11977,7 +12088,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 138.94s
+  processing time: 62.92s
+  
+  WARNING: 32 wellformedness check failed!
+           The analysis results might be wrong!
   
   Executable (exists-trace): verified (36 steps)
   all_received_were_sent (all-traces): verified (18 steps)

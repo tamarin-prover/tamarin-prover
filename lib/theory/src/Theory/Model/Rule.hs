@@ -349,6 +349,7 @@ data RuleAttribute = RuleColor (RGB Rational) -- Color for display
                              -- TODO This type has no annotations, to avoid
                              -- dependency to Sapic.Annotations
                              -- need to see what we need here later.
+                  | IgnoreDerivChecks
        deriving( Eq, Ord, Show, Data, Generic)
 instance NFData RuleAttribute
 instance Binary RuleAttribute
@@ -1118,6 +1119,7 @@ prettyRuleAttribute attr = case attr of
         where f l a r rest _ = render $ prettyRuleRestr (g l) (g a) (g r) (h rest)
               g = map toLNFact
               h = map toLFormula
+    IgnoreDerivChecks -> text "derivchecks"
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String

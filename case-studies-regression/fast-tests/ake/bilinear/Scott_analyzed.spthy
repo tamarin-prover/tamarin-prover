@@ -10,6 +10,8 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
 section{* Scott: MTI-C0 like identity based key exchange protocol *}
 
 rule (modulo E) KGC_Setup:
@@ -1817,14 +1819,29 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  Init_1
+Failed to derive Variable(s): ~s
+  
+  Resp_1
+Failed to derive Variable(s): ~s
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -1839,7 +1856,10 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 14.82s
+  processing time: 18.71s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
   
   key_agreement_reachable (exists-trace): verified (10 steps)
   key_secrecy (all-traces): verified (520 steps)

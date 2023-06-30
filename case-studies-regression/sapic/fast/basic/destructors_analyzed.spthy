@@ -8,6 +8,8 @@ equations:
     sdec(k, senc(k, m)) = m,
     snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 section{* Testing the pattern matching with let destructors *}
@@ -64,6 +66,12 @@ solve( State_1111( k, x, m ) ▶₀ #t )
     by contradiction /* cyclic */
   qed
 qed
+
+
+
+
+
+
 
 
 
@@ -147,8 +155,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -163,7 +171,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/destructors.spthy
 
   output:          examples/sapic/fast/basic/destructors.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.14s
   
   else (exists-trace): verified (3 steps)
   main (exists-trace): verified (4 steps)

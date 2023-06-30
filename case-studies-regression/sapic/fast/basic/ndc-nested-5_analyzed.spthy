@@ -8,6 +8,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 heuristic: p
 
 section{* small example for progression function *}
@@ -165,6 +167,22 @@ next
   by contradiction /* from formulas */
 qed
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 rule (modulo E) MessageIDRule[color=#ffffff, process="+"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
@@ -293,14 +311,77 @@ restriction Progress__to_111_or_1211_or_2111_or_22111_or_221211:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  MessageIDRule
+Failed to derive Variable(s): ~mid_
+  
+  Init
+Failed to derive Variable(s): ~prog_
+  
+  eventA_0_11
+Failed to derive Variable(s): ~prog_
+  
+  p_0_111
+Failed to derive Variable(s): ~prog_
+  
+  p_0_12
+Failed to derive Variable(s): ~prog_
+  
+  p_1_12
+Failed to derive Variable(s): ~prog_
+  
+  eventB_0_121
+Failed to derive Variable(s): ~prog_
+  
+  p_0_1211
+Failed to derive Variable(s): ~prog_
+  
+  p_0_21
+Failed to derive Variable(s): ~prog_
+  
+  p_1_21
+Failed to derive Variable(s): ~prog_
+  
+  eventC_0_211
+Failed to derive Variable(s): ~prog_
+  
+  p_0_2111
+Failed to derive Variable(s): ~prog_
+  
+  p_0_22
+Failed to derive Variable(s): ~prog_
+  
+  p_1_22
+Failed to derive Variable(s): ~prog_
+  
+  eventD_0_2211
+Failed to derive Variable(s): ~prog_
+  
+  p_0_22111
+Failed to derive Variable(s): ~prog_
+  
+  p_0_2212
+Failed to derive Variable(s): ~prog_
+  
+  p_1_2212
+Failed to derive Variable(s): ~prog_
+  
+  eventE_0_22121
+Failed to derive Variable(s): ~prog_
+  
+  p_0_221211
+Failed to derive Variable(s): ~prog_
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -315,7 +396,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-5.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-5.spthy.tmp
-  processing time: 0.13s
+  processing time: 0.17s
+  
+  WARNING: 20 wellformedness check failed!
+           The analysis results might be wrong!
   
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)

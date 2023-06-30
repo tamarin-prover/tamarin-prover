@@ -451,7 +451,7 @@ opXor = symbol_ "XOR" <|> symbol_ "⊕"
 opLess :: Parser ()
 opLess = symbol_ "<"
 
--- | The multiset comparison operator @(<)@. 
+-- | The multiset comparison operator @(<)@.
 opLessTerm :: Parser ()
 opLessTerm = symbol_ "(<)"
 

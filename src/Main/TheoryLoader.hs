@@ -78,7 +78,6 @@ import           Control.Monad.Except
 import           Text.Read (readEither, readMaybe)
 import           Theory.Module (ModuleType (ModuleSpthy, ModuleMsr))
 import           qualified Data.Label as L
-import           Theory.Text.Parser.Token (parseString)
 import           Data.Bifunctor (Bifunctor(bimap))
 import           Data.Bitraversable (Bitraversable(bitraverse))
 import           Control.Monad.Catch (MonadCatch)
@@ -89,6 +88,13 @@ import GHC.Records (HasField(getField))
 import           TheoryObject                        (diffThyOptions)
 import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve)
 import Data.Maybe (fromMaybe, fromJust, isJust)
+
+import qualified Data.Set
+import Theory.Text.Parser.Token
+import Theory.Tools.MessageDerivationChecks
+
+import System.Directory.Internal.Prelude (timeout)
+--import Web.Types (TheoryPath(TheoryRules))
 
 import qualified Data.Set
 import Theory.Text.Parser.Token
@@ -155,6 +161,9 @@ theoryLoadFlags =
   , flagOpt "5" ["saturation","s"] (updateArg "SaturationLimit" ) "PositiveInteger"
       "Limits the number of saturations during precomputations (default 5)"
 
+  , flagOpt "5" ["derivcheck-timeout"] (updateArg "derivcheck-timeout" ) "INT"
+      "Set timeout for message derivation checks"
+
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
 --      "Turn on observational equivalence (default OFF)."
@@ -181,6 +190,7 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oParseOnlyMode     :: Bool
   , _oOpenChain         :: Integer
   , _oSaturation        :: Integer
+  , _oDerivationChecks  :: Int
 } deriving Show
 $(mkLabels [''TheoryLoadOptions])
 
@@ -202,6 +212,7 @@ defaultTheoryLoadOptions = TheoryLoadOptions {
   , _oParseOnlyMode     = False
   , _oOpenChain         = 10
   , _oSaturation        = 5
+  , _oDerivationChecks  = 5
 }
 
 toParserFlags :: TheoryLoadOptions -> [String]
@@ -230,6 +241,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
                          <*> parseOnlyMode
                          <*> openchain
                          <*> saturation
+                         <*> deriv
   where
     proveMode  = return $ argExists "prove" as
     lemmaNames = return $ findArg "prove" as ++ findArg "lemma" as
@@ -290,6 +302,13 @@ mkTheoryLoadOptions as = TheoryLoadOptions
     saturation = if not (null sat)
                    then return (fromMaybe satDefault (readMaybe (head sat) ::Maybe Integer))
                    else return satDefault
+    -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
+
+    derivchecks = findArg "derivcheck-timeout" as
+    derivDefault = L.get oDerivationChecks defaultTheoryLoadOptions
+    deriv = if not (null derivchecks)
+                   then return (fromMaybe derivDefault (readMaybe (head derivchecks) :: Maybe Int))
+                   else return derivDefault
     -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
 
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
@@ -357,7 +376,7 @@ loadTheory thyOpts input inFile = do
 
     withTheory     f t = bitraverse f return t
 
-closeTheory :: MonadError TheoryLoadError m => String -> TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
+closeTheory :: MonadIO m => MonadError TheoryLoadError m => String -> TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
 closeTheory version thyOpts sig srcThy = do
   let preReport = either (\t -> (Sapic.checkWellformedness t ++ Acc.checkWellformedness t))
                          (const []) srcThy
@@ -367,15 +386,30 @@ closeTheory version thyOpts sig srcThy = do
   let transReport = either (\t -> checkWellformedness t sig)
                            (\t -> checkWellformednessDiff t sig) transThy
 
-  let report = preReport ++ transReport
+  let wellformednessReport = preReport ++ transReport
+
+  checkedThy <- bitraverse (\t -> return $ addComment     (reportToDoc wellformednessReport) t)
+                           (\t -> return $ addDiffComment (reportToDoc wellformednessReport) t) transThy
+
+  when (quitOnWarning && (not $ null wellformednessReport)) (throwError $ WarningError wellformednessReport)
+
+  deducThy   <- bitraverse (return . addMessageDeductionRuleVariants)
+                           (return . addMessageDeductionRuleVariantsDiff) transThy
+
+  derivCheckSignature <- Control.Monad.Except.liftIO $ toSignatureWithMaude (get oMaudePath thyOpts) $ maudePublicSig (toSignaturePure sig)
+  variableReport <- case compare derivChecks 0 of
+    EQ -> pure $ Just []
+    _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
+      (\t-> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver) deducThy)
+
+  let report = wellformednessReport  ++ (if isJust variableReport then fromJust variableReport else [("Timed Out", Pretty.text "Derivation Checks")])
+
   checkedThy <- bitraverse (\t -> return $ addComment     (reportToDoc report) t)
-                           (\t -> return $ addDiffComment (reportToDoc report) t) transThy
+                           (\t -> return $ addDiffComment (reportToDoc report) t) deducThy
 
   when (quitOnWarning && (not $ null report)) (throwError $ WarningError report)
 
-  deducThy   <- bitraverse (return . addMessageDeductionRuleVariants)
-                           (return . addMessageDeductionRuleVariantsDiff) checkedThy
-  diffLemThy <- withDiffTheory (return . addDefaultDiffLemma) deducThy
+  diffLemThy <- withDiffTheory (return . addDefaultDiffLemma) checkedThy
   closedThy  <- bitraverse (\t -> return $ closeTheoryWithMaude     sig t autoSources)
                            (\t -> return $ closeDiffTheoryWithMaude sig t autoSources) diffLemThy
   partialThy <- bitraverse (return . (maybe id (\s -> applyPartialEvaluation     s autoSources) partialStyle))
@@ -388,9 +422,24 @@ closeTheory version thyOpts sig srcThy = do
   return (report, provedThyWithVersion)
 
   where
-    autoSources   = L.get oAutoSources thyOpts
-    partialStyle  = L.get oPartialEvaluation thyOpts
+    autoSources = L.get oAutoSources thyOpts
+    derivChecks = L.get oDerivationChecks thyOpts
+    partialStyle = L.get oPartialEvaluation thyOpts
     quitOnWarning = L.get oQuitOnWarning thyOpts
+
+    defaultProver = replaceSorryProver $ runAutoProver $ constructAutoProver defaultTheoryLoadOptions
+    defaultDiffProver = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver defaultTheoryLoadOptions
+    maudePublicSig s = Signature $ (getSignature s)
+      {stFunSyms = makepublic (stFunSyms (getSignature s))
+      , funSyms = makepublicsym (funSyms (getSignature s))
+      , irreducibleFunSyms = makepublicsym (irreducibleFunSyms (getSignature s))
+      , reducibleFunSyms = makepublicsym (reducibleFunSyms (getSignature s))}
+    getSignature s =  (Data.Label.get sigpMaudeSig s)
+    makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name,(int, Public, construct)))
+    makepublicsym  = Data.Set.map (\elem -> case elem of
+      NoEq (name, (int, _, constr)) -> NoEq (name,(int, Public, constr))
+      x -> x
+      )
 
     prover | L.get oProveMode thyOpts = replaceSorryProver $ runAutoProver $ constructAutoProver thyOpts
            | otherwise                = mempty

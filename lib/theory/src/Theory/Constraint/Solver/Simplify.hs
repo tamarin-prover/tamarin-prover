@@ -445,7 +445,7 @@ freshOrdering = do
                                       = concatMap (extractFreshNotBelowReducible reducible) as
       extractFreshNotBelowReducible _ t | isFreshVar t = [t]
       extractFreshNotBelowReducible _ _                = []
-      
+
 
 -- | Compute all less relations implied by injective fact instances.
 --
