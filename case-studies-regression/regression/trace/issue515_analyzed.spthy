@@ -95,8 +95,8 @@ Special fact usage:
 Generated from:
 Tamarin version 1.7.1
 Maude version 2.7.1
-Git revision: 37a9540e7a2ee0e4e5012f0891a8fd74f499831f (with uncommited changes), branch: issues515
-Compiled at: 2023-06-30 08:12:35.535963936 UTC
+Git revision: 95d22bd2f6715eb275e22469c70da216a2101a37 (with uncommited changes), branch: issues532
+Compiled at: 2023-06-30 08:50:22.603972825 UTC
 */
 
 end
@@ -111,7 +111,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue515.spthy
 
   output:          examples/regression/trace/issue515.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.09s
   
   WARNING: 14 wellformedness check failed!
            The analysis results might be wrong!
