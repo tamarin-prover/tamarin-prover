@@ -81,7 +81,9 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
           loopBreakers = L.get pracLoopBreakers ruACInfoOld
           rName i oldName = case oldName of
             FreshRule -> FreshRule
-            StandRule s -> StandRule $ s ++ "___VARIANT_" ++ show i
+            StandRule n -> case n of
+              NonSAPiCRuleName s -> StandRule $ NonSAPiCRuleName $ s ++ "___VARIANT_" ++ show i
+              SAPiCRuleName s -> StandRule $ SAPiCRuleName $ s ++ "___VARIANT_" ++ show i
 
           toClosedProtoRule (i, (ps', cs', as', nvs'))
             = ClosedProtoRule ruE (Rule (ruACInfo i) ps' cs' as' nvs')
