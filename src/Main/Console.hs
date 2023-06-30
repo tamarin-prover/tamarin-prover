@@ -339,6 +339,7 @@ helpAndExit tmode mayMsg = do
     putStrLn $ unlines
         [ separator
         , "To show help for differents commands, type tamarin-prover [Command] --help."
+        , separator
         , "See 'https://github.com/tamarin-prover/tamarin-prover/blob/master/README.md'"
         , "for usage instructions and pointers to examples."
         , separator
@@ -383,21 +384,21 @@ defaultMain firstMode otherModes = do
       {
         tmCmdArgsMode = (tmCmdArgsMode $ head otherModes)
         {
-          modeGroupModes = toGroup (map tmCmdArgsMode $ firstMode : (tail otherModes))
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
         }
       }
     intruderMode = (otherModes !! 1)
       {
         tmCmdArgsMode = (tmCmdArgsMode $ otherModes !! 1)
         {
-          modeGroupModes = toGroup (map tmCmdArgsMode $ firstMode : (head otherModes : last otherModes : []))
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
         }
       }
     testMode = (otherModes !! 2)
       {
         tmCmdArgsMode = (tmCmdArgsMode $ otherModes !! 2)
         {
-          modeGroupModes = toGroup (map tmCmdArgsMode $ firstMode : (init otherModes))
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
         }
       }
 
