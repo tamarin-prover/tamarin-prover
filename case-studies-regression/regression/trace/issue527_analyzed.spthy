@@ -117,11 +117,9 @@ Public names with mismatching capitalization
 
 Identifiers are case-sensitive, mismatched capitalizations are considered as different, i.e., 'ID' is different from 'id'. Check the capitalization of your identifiers.
 
-  1. rule "Two":  name 'first', rule "Four":  name 'firSt'
+  1. rule "Four":  name 'firSt', rule "Two":  name 'first'
   
-  2. rule "One":  name 'seconD', 'second',
-     rule "Two":  name 'second', rule "three":  name 'second',
-     rule "Four":  name 'second', 'second'
+  2. rule "One":  name 'seconD', 'second'
 
 Variable with mismatching sorts or capitalization
 =================================================
@@ -152,20 +150,11 @@ Possible reasons:
   
 Fact `b_test':
 
-  1. Rule `Two', capitalization  "B_TEST", 1, Linear
-       B_TEST( 'first' )
-  
-  2. Rule `three', capitalization  "B_TEST", 1, Linear
+  1. Rule `three', capitalization  "B_TEST", 1, Linear
        B_TEST( 'third' )
   
-  3. Rule `Four', capitalization  "B_TEST", 3, Linear
+  2. Rule `Four', capitalization  "B_TEST", 3, Linear
        B_TEST( 'firSt', 'second', m1 )
-  
-  4. Lemma `AB_key_honst', capitalization  "B_TEST", 3, Linear
-       Fact {factTag = ProtoFact Linear "B_TEST" 3, factAnnotations = fromList [], factTerms = [Bound 3,Bound 2,Bound 1]}
-  
-  5. Lemma `AB_key_honst', capitalization  "B_TEST", 3, Linear
-       Fact {factTag = ProtoFact Linear "B_TEST" 3, factAnnotations = fromList [], factTerms = [Bound 4,Bound 3,Bound 2]}
   
   
 Fact `oneresltingin':
@@ -180,12 +169,9 @@ Fact `oneresltingin':
 Fact `oneresultingin':
 
   1. Rule `One', capitalization  "OneResultingIn", 1, Linear
-       OneResultingIn( 'second' )
-  
-  2. Rule `One', capitalization  "OneResultingIn", 1, Linear
        OneResultingIn( 'seconD' )
   
-  3. Rule `Two', capitalization  "OneresultingIn", 1, Linear
+  2. Rule `Two', capitalization  "OneresultingIn", 1, Linear
        OneresultingIn( 'second' )
 
 Inexistant lemma actions
@@ -198,14 +184,27 @@ Inexistant lemma actions
   lemma `AB_key_honst' references action 
     fact "Register_pk" (arity 1, Linear) 
   but no rule has such an action.
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
+  Register_pk
+Failed to derive Variable(s): ltk
+  
+  Test_1
+Failed to derive Variable(s): m, pkB
+  
+  One
+Failed to derive Variable(s): ~Na
+  
+  Four
+Failed to derive Variable(s): m1
 */
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 2.7.1
-Git revision: 67b8ed565d80372c686296becc388b9c2af06f1c (with uncommited changes), branch: issues527
-Compiled at: 2023-06-15 09:28:47.464425645 UTC
+Git revision: 3759de6eabd9ede720530af43c1e8ccd2dc580b5 (with uncommited changes), branch: issues527
+Compiled at: 2023-06-30 09:58:13.513876994 UTC
 */
 
 end
@@ -220,9 +219,9 @@ summary of summaries:
 analyzed: examples/regression/trace/issue527.spthy
 
   output:          examples/regression/trace/issue527.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.11s
   
-  WARNING: 12 wellformedness check failed!
+  WARNING: 16 wellformedness check failed!
            The analysis results might be wrong!
   
   AB_key_honst (exists-trace): verified (2 steps)
