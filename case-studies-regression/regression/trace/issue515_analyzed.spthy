@@ -46,32 +46,57 @@ rule (modulo E) test5:
 /*
 WARNING: the following wellformedness checks failed!
 
-Special fact usage:
-  rule `test' uses disallowed facts on right-hand-side:
+Reserved names:
+  rule `test' contains facts with reserved names on left-hand-side:
+    K( x )
+  
+  rule `test' contains facts with reserved names on the middle:
+    !KU( x )
+  
+  rule `test' contains facts with reserved names on the right-hand-side:
     !KD( x )
   
+  rule `test2' contains facts with reserved names on the middle:
+    !KD( x )
+  
+  rule `test3' contains facts with reserved names on left-hand-side:
+    K( x )
+  
+  rule `test3' contains facts with reserved names on the middle:
+    In( x )
+  
+  rule `test3' contains facts with reserved names on the right-hand-side:
+    K( x )
+  
+  rule `test4' contains facts with reserved names on left-hand-side:
+    !KU( x )
+  
+  rule `test4' contains facts with reserved names on the middle:
+    !KU( x )
+  
+  rule `test5' contains facts with reserved names on left-hand-side:
+    !KD( x )
+  
+  rule `test5' contains facts with reserved names on the middle:
+    !KD( x )
+  
+  rule `test5' contains facts with reserved names on the right-hand-side:
+    !KU( x )
+
+Special fact usage:
   rule `test2' uses disallowed facts on left-hand-side:
     Out( x )
   
   rule `test2' uses disallowed facts on right-hand-side:
     In( x )
-  
-  rule `test4' uses disallowed facts on left-hand-side:
-    !KU( x )
-  
-  rule `test5' uses disallowed facts on left-hand-side:
-    !KD( x )
-  
-  rule `test5' uses disallowed facts on right-hand-side:
-    !KU( x )
 */
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 2.7.1
-Git revision: 67b8ed565d80372c686296becc388b9c2af06f1c (with uncommited changes), branch: issues527
-Compiled at: 2023-06-15 09:28:47.464425645 UTC
+Git revision: 37a9540e7a2ee0e4e5012f0891a8fd74f499831f (with uncommited changes), branch: issues515
+Compiled at: 2023-06-30 08:12:35.535963936 UTC
 */
 
 end
@@ -86,9 +111,9 @@ summary of summaries:
 analyzed: examples/regression/trace/issue515.spthy
 
   output:          examples/regression/trace/issue515.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.05s
   
-  WARNING: 6 wellformedness check failed!
+  WARNING: 14 wellformedness check failed!
            The analysis results might be wrong!
 
 ==============================================================================

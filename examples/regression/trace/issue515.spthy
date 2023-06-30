@@ -1,6 +1,15 @@
 theory issue515
 begin
 
+/** An example for issue 515 (https://github.com/tamarin-prover/tamarin-prover/issues/515)
+*   In this example:
+*    - rule "test" uses reserved names K, KU and KD, which should be reported.
+*    - rule "test2" uses disallowed facts: Out on the left-hand-side and In on the right-hand-side
+*    - rule "test3" uses reserved names K and In (in the middle)
+*    - rule "test4" and rule "test5" use reserved names though they don't have the same capitalization 
+*      with the reserved names.
+* */
+
 rule test:
 [ K(x) ] --[ KU(x) ]-> [ KD(x) ]
 
