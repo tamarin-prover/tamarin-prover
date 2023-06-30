@@ -262,7 +262,6 @@ var ui = {
         // Click handler for auto-sources' toggle
         var auto_toggle = $('a#auto-toggle');
         auto_toggle.click(function(ev) {
-            ev.preventDefault();
             if ($.cookie("auto-sources")) {
                 $.cookie("auto-sources", null, { path: '/' });
             } else {
@@ -730,7 +729,7 @@ var mainDisplay = {
 
         if($.cookie("auto-sources")){
             params = params.concat(
-              { name: "auto-sources", value: ""}  
+              { name: "no-auto-sources", value: ""}  
             );
         }
 
@@ -741,10 +740,6 @@ var mainDisplay = {
             var query_string = $.param(params);
             element.find("img").each(function(idx, elem) {
                 var img = $(elem);
-                //if (img.attr("src").indexOf("AUTO_typing")!= -1){
-                //   params.filter({name:"auto-sources",value :""});
-                //   $.cookie("auto-sources", null, { path: '/' });
-                //}
                 var path = img.attr("src") + "?" + query_string;
                 img.attr("src", path);
             });

@@ -369,7 +369,7 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
         cs = renderRow [ (Just (Right i), prettyLNFact c) | (i, c) <- enumConcs ru ]
 
         ruleLabel = case showAutoLabel of
-            False-> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
+            False -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
                     (brackets $ vcat $ punctuate comma $
                     map prettyLNFact $ filter isAutoSource 
                     $ filter isNotDiffAnnotation $ get rActs ru)
