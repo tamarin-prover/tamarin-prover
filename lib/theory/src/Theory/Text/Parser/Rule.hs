@@ -70,6 +70,7 @@ ruleAttribute = asum
     [ symbol "colour=" *> (Just . RuleColor <$> parseColor)
     , symbol "color="  *> (Just . RuleColor <$> parseColor)
     , symbol "process="  *> parseAndIgnore
+    , symbol "derivchecks" *> ignore
     ]
   where
     parseColor = do
@@ -81,6 +82,7 @@ ruleAttribute = asum
                         _ <-  symbol "\""
                         _ <- manyTill anyChar (try (symbol "\""))
                         return Nothing
+    ignore = return (Just IgnoreDerivChecks)
 
 ruleAttributesp :: Parser [RuleAttribute]
 ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute

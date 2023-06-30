@@ -1047,7 +1047,7 @@ safePartialAtomValuation ctxt sys =
                 case L.get sLastAtom sys of
                   Just j | nonUnifiableNodes i j -> Just False
                   _                              -> Nothing
-          
+
           Syntactic _                            -> Nothing
 
 -- | @impliedFormulas se imp@ returns the list of guarded formulas that are

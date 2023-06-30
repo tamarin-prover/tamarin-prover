@@ -8,6 +8,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 heuristic: p
 
 section{* small example for progression function *}
@@ -52,6 +54,20 @@ solve( State_1211( ~prog_, ~prog_121, k, m ) ▶₀ #t )
     qed
   qed
 qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -188,14 +204,47 @@ restriction Progress_121_to_12111:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  MessageIDRule
+Failed to derive Variable(s): ~mid_
+  
+  Init
+Failed to derive Variable(s): ~prog_
+  
+  newk_0_
+Failed to derive Variable(s): ~prog_, k.1
+  
+  inrsignmk_0_11
+Failed to derive Variable(s): ~mid_11, ~prog_, ~prog_111, k.1, m.1
+  
+  eventA_0_111
+Failed to derive Variable(s): ~prog_, ~prog_111, k.1, m.1
+  
+  p_0_1111
+Failed to derive Variable(s): ~prog_, ~prog_111, k.1, m.1
+  
+  inrm_0_12
+Failed to derive Variable(s): ~mid_12, ~prog_, ~prog_121, k.1, m.2
+  
+  outcm_0_121
+Failed to derive Variable(s): ~prog_, ~prog_121, k.1, m.2
+  
+  eventB_0_1211
+Failed to derive Variable(s): ~prog_, ~prog_121, k.1, m.2
+  
+  p_0_12111
+Failed to derive Variable(s): ~prog_, ~prog_121, k.1, m.2
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -210,7 +259,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini2.spthy
 
   output:          examples/sapic/fast/feature-progress/mini2.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.16s
+  
+  WARNING: 10 wellformedness check failed!
+           The analysis results might be wrong!
   
   A_impossible (all-traces): verified (2 steps)
   B_possible (exists-trace): verified (7 steps)

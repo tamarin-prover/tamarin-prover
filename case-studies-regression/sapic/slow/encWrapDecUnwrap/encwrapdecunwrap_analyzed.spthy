@@ -12,6 +12,8 @@ equations:
     sencSucc(senc(m, k), k) = true,
     snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 
@@ -14764,6 +14766,12 @@ qed
 
 
 
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="!"]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
@@ -15895,14 +15903,41 @@ restriction locking_6:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  lookupLhasv_0_111111211
+Failed to derive Variable(s): v.1
+  
+  lookupLhasv_0_11111211
+Failed to derive Variable(s): v.2
+  
+  lookupLhasv_0_1111211
+Failed to derive Variable(s): v.3
+  
+  lookupLhasv_0_111211
+Failed to derive Variable(s): v.4
+  
+  lookupLhasv_0_11211
+Failed to derive Variable(s): v1.1
+  
+  lookupLhasv_0_1121111
+Failed to derive Variable(s): v2.1
+  
+  inLhsencmk_0_12
+Failed to derive Variable(s): k.2, m.3
+  
+  lookupLhasv_0_1211
+Failed to derive Variable(s): v.5
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -15917,7 +15952,10 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 82.13s
+  processing time: 53.96s
+  
+  WARNING: 8 wellformedness check failed!
+           The analysis results might be wrong!
   
   dec_limits (all-traces): verified (290 steps)
   wrap_key_origins (all-traces): verified (1140 steps)

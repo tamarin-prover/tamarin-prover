@@ -224,7 +224,7 @@ instance HasFrees a => HasFrees (DiffProofStep a) where
     foldFreesOcc  _ _ = const mempty
     mapFrees f (DiffProofStep m i)  = DiffProofStep <$> mapFrees f m <*> mapFrees f i
 
-    
+
 ------------------------------------------------------------------------------
 -- Proof Trees
 ------------------------------------------------------------------------------
@@ -344,7 +344,7 @@ boundDiffProofDepth bound =
       | 0 < n     = LNode ps                     $ M.map (go (pred n)) cs
       | otherwise = diffSorry (Just $ "bound " ++ show bound ++ " hit") info
 
-      
+
 -- | Fold a proof.
 foldProof :: Monoid m => (ProofStep a -> m) -> Proof a -> m
 foldProof f =
@@ -392,7 +392,7 @@ data ProofStatus =
        | IncompleteProof    -- ^ There is a annotated sorry,
                             --   but no annotated solved step.
        | TraceFound         -- ^ There is an annotated solved step
-    deriving ( Show, Generic, NFData, Binary )
+    deriving ( Show, Generic, NFData, Binary, Eq )
 
 instance Semigroup ProofStatus where
     TraceFound <> _                        = TraceFound
@@ -498,7 +498,7 @@ checkDiffProof ctxt prover d sys prf@(LNode (DiffProofStep method info) cs) =
       where
         unhandledCase = mapDiffProofInfo ((,) Nothing) . prover d
 
-        
+
 -- | Annotate a proof with the constraint systems of all intermediate steps
 -- under the assumption that all proof steps are valid. If some proof steps
 -- might be invalid, then you must use 'checkProof', which handles them
@@ -963,7 +963,7 @@ cutOnSolvedDFSDiff prf0 =
           LNode pstep (M.fromList [(label, extractSolved ps subprf)])
         Nothing     ->
           error "Theory.Constraint.cutOnSolvedDFSDiff: impossible, extractSolved failed, invalid path"
-          
+
 -- | Search for attacks in a BFS manner.
 cutOnSolvedBFS :: Proof (Maybe a) -> Proof (Maybe a)
 cutOnSolvedBFS =

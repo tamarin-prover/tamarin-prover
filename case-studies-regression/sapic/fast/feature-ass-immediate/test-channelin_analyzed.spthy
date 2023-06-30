@@ -5,6 +5,8 @@ theory AssImmediateChannelIn begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 
@@ -20,6 +22,12 @@ solve( State_111( x ) ▶₀ #a )
   case inx_1_11
   by contradiction /* from formulas */
 qed
+
+
+
+
+
+
 
 rule (modulo E) Init[color=#ffffff, process="new x.1;"]:
    [ Fr( x.1 ) ] --[ Init( ) ]-> [ State_11( x.1 ), Out( x.1 ) ]
@@ -76,8 +84,8 @@ restriction in_event:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -92,7 +100,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
 
   output:          examples/sapic/fast/feature-ass-immediate/test-channelin.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.08s
   
   intuitiveTest (all-traces): verified (3 steps)
 

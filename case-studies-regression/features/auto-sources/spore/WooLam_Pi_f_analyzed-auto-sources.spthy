@@ -12,6 +12,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !Ltk( ~kxs, $X ) ]
 
@@ -307,6 +309,16 @@ solve( StateB2( A, $B, ~kbs, ~nb, msg ) ▶₁ #i )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
 /* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
@@ -555,8 +567,8 @@ qed
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -571,7 +583,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 0.52s
+  processing time: 0.69s
   
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)

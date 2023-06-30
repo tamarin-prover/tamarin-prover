@@ -8,6 +8,8 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 
@@ -355,6 +357,12 @@ by contradiction /* from formulas */
 
 
 
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="!"]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
@@ -664,14 +672,32 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  lookupatthasa_0_1121
+Failed to derive Variable(s): a.1
+  
+  lookupkeyhask_0_112111
+Failed to derive Variable(s): k.2
+  
+  lookupatthasa_0_121
+Failed to derive Variable(s): a1.1
+  
+  lookupkeyhask_0_12111
+Failed to derive Variable(s): k1.1
+  
+  lookupkeyhask_0_121111
+Failed to derive Variable(s): k2.1
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -686,7 +712,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 2.34s
+  processing time: 1.75s
+  
+  WARNING: 5 wellformedness check failed!
+           The analysis results might be wrong!
   
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
