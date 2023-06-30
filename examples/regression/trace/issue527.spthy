@@ -1,8 +1,14 @@
 theory issue527
 begin
-
+/*
+* Date:             June 2023
+* Status:           Working
+* Description :     This is an example for issue 527(https://github.com/tamarin-prover/tamarin-prover/issues/527)
+                    and for some modifications of layout of warnings.
+                    
+ */
 builtins: symmetric-encryption,  asymmetric-encryption
-/*sdec(senc(m,k),k) = m */
+
 
 rule Register_pk:
     [ Fr(~ltk) ]
