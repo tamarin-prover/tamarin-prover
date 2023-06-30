@@ -5,6 +5,8 @@ theory OperatorPrecedencePar begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 section{* A few test cases for operator precedence *}
@@ -23,6 +25,12 @@ solve( State_2( ) ▶₀ #c )
   case Init
   SOLVED // trace found
 qed
+
+
+
+
+
+
 
 rule (modulo E) eventA_0_1[color=#ffffff, process="event A( );"]:
    [ State_1( ) ] --[ A( ) ]-> [ State_11( ) ]
@@ -54,8 +62,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -70,7 +78,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-1.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-1.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.05s
   
   semicolon_binds_stronger_than_parallel (exists-trace): verified (3 steps)
 

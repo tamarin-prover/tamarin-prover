@@ -954,9 +954,9 @@ messageDiffSnippet s isdiff thy = vcat
 htmlThyPath :: RenderUrl    -- ^ The function for rendering Urls.
             -> TheoryInfo   -- ^ The info of the theory to render
             -> TheoryPath   -- ^ Path to render
-            -> Html
+            ->  Html
 htmlThyPath renderUrl info path =
-    go path
+  go path
   where
     thy  = tiTheory info
     tidx = tiIndex  info
@@ -982,13 +982,14 @@ htmlThyPath renderUrl info path =
 
     go (TheoryLemma _)         = pp $ text "Implement lemma pretty printing!"
 
-    go TheoryHelp              = [hamlet|
+    go TheoryHelp              = do
+      [hamlet|
         $newline never
         <p>
           Theory: #{get thyName $ tiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
           \ from #{show $ tiOrigin info})
-          \ #{preEscapedToMarkup wfErrors}
+          \ #{preEscapedToMarkup infoErrors}
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -1071,12 +1072,7 @@ htmlThyPath renderUrl info path =
                 Display this help message.
       |] renderUrl
          where
-             wfErrors = case report of
-                             [] -> ""
-                             _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-
-             report = checkWellformedness (removeTranslationItems (openTheory thy)) (get thySignature thy)
-                   ++ Acc.checkWellformedness (openTheory thy) -- FIXME: openTheory doesn't contain translated items, hence no warning is shown in the interactive mode
+             infoErrors = tiErrorsHtml info
 
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.
@@ -1125,7 +1121,7 @@ htmlDiffThyPath renderUrl info path =
           Theory: #{get diffThyName $ dtiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ dtiTime info}
           \ from #{show $ dtiOrigin info})
-          \ #{preEscapedToMarkup wfErrors}
+          \ #{preEscapedToMarkup infoErrors}
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -1208,12 +1204,7 @@ htmlDiffThyPath renderUrl info path =
                 Display this help message.
       |] renderUrl
          where
-             wfErrors = case report of
-                             [] -> ""
-                             _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             report = checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
-
-
+             infoErrors = dtiErrorsHtml info
 
 {-
 -- | Render debug information for the item in the theory given by the path.

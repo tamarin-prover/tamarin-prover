@@ -8,6 +8,8 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
+
+
 heuristic: p
 
 section{* small example for progression function *}
@@ -89,6 +91,22 @@ solve( State_122( ~prog_, s ) ▶₀ #t )
     qed
   qed
 qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 rule (modulo E) MessageIDRule[color=#ffffff, process="new s.1;"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
@@ -295,14 +313,65 @@ restriction Progress__to_12111_or_12121_or_1221:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  MessageIDRule
+Failed to derive Variable(s): ~mid_
+  
+  Init
+Failed to derive Variable(s): ~prog_
+  
+  news_0_
+Failed to derive Variable(s): ~prog_, s.1
+  
+  p_0_1
+Failed to derive Variable(s): ~prog_, s.1
+  
+  insertsHELLO_0_11
+Failed to derive Variable(s): ~prog_, s.1
+  
+  p_0_111
+Failed to derive Variable(s): ~prog_, s.1
+  
+  lookupsasx_0_12
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  lookupsasx_1_12
+Failed to derive Variable(s): ~prog_, s.1
+  
+  ifxHELLO_0_121
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  ifxHELLO_1_121
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  eventA_0_1211
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  p_0_12111
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  eventB_0_1212
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  p_0_12121
+Failed to derive Variable(s): ~prog_, s.1, x.1
+  
+  eventC_0_122
+Failed to derive Variable(s): ~prog_, s.1
+  
+  p_0_1221
+Failed to derive Variable(s): ~prog_, s.1
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -317,7 +386,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini5.spthy
 
   output:          examples/sapic/fast/feature-progress/mini5.spthy.tmp
-  processing time: 0.18s
+  processing time: 0.23s
+  
+  WARNING: 16 wellformedness check failed!
+           The analysis results might be wrong!
   
   A_possible (exists-trace): verified (9 steps)
   B_impossible (all-traces): verified (3 steps)

@@ -10,6 +10,8 @@ equations:
 
 
 
+
+
 /* looping facts with injective instances: Sender/1 */
 
 
@@ -125,14 +127,24 @@ next
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -147,7 +159,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.10s
   
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)

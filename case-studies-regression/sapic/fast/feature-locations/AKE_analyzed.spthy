@@ -13,6 +13,8 @@ equations:
     get_rep(rep(x.1, x.2)) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 
@@ -184,6 +186,16 @@ qed
 
 
 
+
+
+
+
+
+
+
+
+
+
 restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
   // safety formula
@@ -212,19 +224,19 @@ rule (modulo E) p_1_1[color=#ffffff, process="!"]:
      [ !Semistate_11( ), In( pkV ) ] --> [ !Semistate_11111( pkV ) ]
   */
 
-rule (modulo E) p_1_1111[color=#405280, process="!"]:
+rule (modulo E) p_1_1111[color=#408067, process="!"]:
    [ !Semistate_11111( pkV.1 ), Fr( k.1 ) ]
   --[ SessionP( pkV.1, k.1 ) ]->
    [ State_1111111( k.1, pkV.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111[color=#405280, process="!"]:
+  rule (modulo AC) p_1_1111[color=#408067, process="!"]:
      [ !Semistate_11111( pkV ), Fr( k ) ]
     --[ SessionP( pkV, k ) ]->
      [ State_1111111( k, pkV ) ]
   */
 
-rule (modulo E) eventPoutputaenckpkVrepaenckpkVlocpkV_0_1111111[color=#405280,
+rule (modulo E) eventPoutputaenckpkVrepaenckpkVlocpkV_0_1111111[color=#408067,
                                                                 process="event Poutput( aenc(k.1, pkV.1), rep(aenc(k.1, pkV.1), <'loc', pkV.1>) );"]:
    [ State_1111111( k.1, pkV.1 ) ]
   --[ Poutput( aenc(k.1, pkV.1), rep(aenc(k.1, pkV.1), <'loc', pkV.1>) )
@@ -232,7 +244,7 @@ rule (modulo E) eventPoutputaenckpkVrepaenckpkVlocpkV_0_1111111[color=#405280,
    [ Out( <aenc(k.1, pkV.1), rep(aenc(k.1, pkV.1), <'loc', pkV.1>)> ) ]
 
   /*
-  rule (modulo AC) eventPoutputaenckpkVrepaenckpkVlocpkV_0_1111111[color=#405280,
+  rule (modulo AC) eventPoutputaenckpkVrepaenckpkVlocpkV_0_1111111[color=#408067,
                                                                    process="event Poutput( aenc(k.1, pkV.1), rep(aenc(k.1, pkV.1), <'loc', pkV.1>) );"]:
      [ State_1111111( k, pkV ) ]
     --[ Poutput( aenc(k, pkV), rep(aenc(k, pkV), <'loc', pkV>) ) ]->
@@ -256,28 +268,28 @@ rule (modulo E) p_1_2[color=#ffffff, process="!"]:
      [ State_211111( skV ), Out( pk(skV) ) ]
   */
 
-rule (modulo E) incyphersigned_0_211111[color=#658040,
+rule (modulo E) incyphersigned_0_211111[color=#408052,
                                         process="in(<cypher.1, signed.2>);"]:
    [ State_211111( skV.1 ), In( <cypher.1, signed.2> ) ]
   --[ Test( ) ]->
    [ State_21111111( cypher.1, skV.1, signed.2 ) ]
 
   /*
-  rule (modulo AC) incyphersigned_0_211111[color=#658040,
+  rule (modulo AC) incyphersigned_0_211111[color=#408052,
                                            process="in(<cypher.1, signed.2>);"]:
      [ State_211111( skV ), In( <cypher, signed> ) ]
     --[ Test( ) ]->
      [ State_21111111( cypher, skV, signed ) ]
   */
 
-rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
+rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#408052,
                                                               process="if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)"]:
    [ State_21111111( cypher.1, skV.1, signed.2 ) ]
   --[ Pred_Eq( cypher.1, check_rep(signed.2, <'loc', pk(skV.1)>) ) ]->
    [ State_211111111( cypher.1, skV.1, signed.2 ) ]
 
   /*
-  rule (modulo AC) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
+  rule (modulo AC) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#408052,
                                                                  process="if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)"]:
      [ State_21111111( cypher, skV, signed ) ]
     --[ Pred_Eq( cypher, z ) ]->
@@ -294,7 +306,7 @@ rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
        z     = x.8
   */
 
-rule (modulo E) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[color=#658040,
+rule (modulo E) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[color=#408052,
                                                                              process="event Voutput( aenc(adec(cypher.1, skV.1:skey), pk(skV.1:skey)), signed.2
 );"]:
    [ State_211111111( cypher.1, skV.1, signed.2 ) ]
@@ -302,7 +314,7 @@ rule (modulo E) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[col
    [ State_2111111111( cypher.1, skV.1, signed.2 ) ]
 
   /*
-  rule (modulo AC) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[color=#658040,
+  rule (modulo AC) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[color=#408052,
                                                                                 process="event Voutput( aenc(adec(cypher.1, skV.1:skey), pk(skV.1:skey)), signed.2
 );"]:
      [ State_211111111( cypher, skV, signed ) ]
@@ -320,14 +332,14 @@ rule (modulo E) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[col
        z     = x.7
   */
 
-rule (modulo E) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#658040,
+rule (modulo E) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#408052,
                                                                      process="event SessionV( pk(skV.1:skey), adec(cypher.1, skV.1:skey) );"]:
    [ State_2111111111( cypher.1, skV.1, signed.2 ) ]
   --[ SessionV( pk(skV.1), adec(cypher.1, skV.1) ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#658040,
+  rule (modulo AC) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#408052,
                                                                         process="event SessionV( pk(skV.1:skey), adec(cypher.1, skV.1:skey) );"]:
      [ State_2111111111( cypher, skV, signed ) ]
     --[ SessionV( pk(skV), z ) ]->
@@ -344,14 +356,14 @@ rule (modulo E) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#6580
        z     = x.7
   */
 
-rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#658040,
+rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#408052,
                                                               process="if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)"]:
    [ State_21111111( cypher.1, skV.1, signed.2 ) ]
   --[ Pred_Not_Eq( cypher.1, check_rep(signed.2, <'loc', pk(skV.1)>) ) ]->
    [ ]
 
   /*
-  rule (modulo AC) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#658040,
+  rule (modulo AC) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#408052,
                                                                  process="if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)"]:
      [ State_21111111( cypher, skV, signed ) ]
     --[ Pred_Not_Eq( cypher, z ) ]->
@@ -386,8 +398,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -402,7 +414,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.33s
+  processing time: 0.35s
   
   can_run_p (exists-trace): verified (3 steps)
   can_run_v (exists-trace): verified (7 steps)
