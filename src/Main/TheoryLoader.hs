@@ -88,8 +88,14 @@ import GHC.Records (HasField(getField))
 
 import           TheoryObject                        (diffThyOptions)
 import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve,verboseOption)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, fromJust, isJust)
 
+import qualified Data.Set
+import Theory.Text.Parser.Token
+import Theory.Tools.MessageDerivationChecks
+
+import System.Directory.Internal.Prelude (timeout)
+--import Web.Types (TheoryPath(TheoryRules))
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
