@@ -734,11 +734,17 @@ var mainDisplay = {
             );
         }
 
+        
+
         // Rewrite image paths (if necessary)
         if(params.length > 0) {
             var query_string = $.param(params);
             element.find("img").each(function(idx, elem) {
                 var img = $(elem);
+                //if (img.attr("src").indexOf("AUTO_typing")!= -1){
+                   //params.filter({name:"auto-sources",value :""});
+                  // $.cookie("auto-sources", null, { path: '/' });
+                //}
                 var path = img.attr("src") + "?" + query_string;
                 img.attr("src", path);
             });
