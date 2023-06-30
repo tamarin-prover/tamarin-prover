@@ -6,6 +6,8 @@ builtins: xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 
@@ -443,6 +445,12 @@ qed
 
 
 
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="new ~k.1;"]:
    [ Fr( ~k.1 ) ] --[ Init( ) ]-> [ !Semistate_11( ~k.1 ) ]
 
@@ -451,40 +459,40 @@ rule (modulo E) Init[color=#ffffff, process="new ~k.1;"]:
      [ Fr( ~k ) ] --[ Init( ) ]-> [ !Semistate_11( ~k ) ]
   */
 
-rule (modulo E) newna_0_1111[color=#80404f, process="new ~na.1;"]:
+rule (modulo E) newna_0_1111[color=#408066, process="new ~na.1;"]:
    [ State_1111( ~k.1 ), Fr( ~na.1 ) ]
   --[ Challenge( ~na.1 ) ]->
    [ State_1111111( ~k.1, ~na.1 ), Out( ~na.1 ) ]
 
   /*
-  rule (modulo AC) newna_0_1111[color=#80404f, process="new ~na.1;"]:
+  rule (modulo AC) newna_0_1111[color=#408066, process="new ~na.1;"]:
      [ State_1111( ~k ), Fr( ~na ) ]
     --[ Challenge( ~na ) ]->
      [ State_1111111( ~k, ~na ), Out( ~na ) ]
   */
 
-rule (modulo E) inmnb_0_1111111[color=#80404f,
+rule (modulo E) inmnb_0_1111111[color=#408066,
                                 process="in(<m.1, nb.1>);"]:
    [ State_1111111( ~k.1, ~na.1 ), In( <m.1, nb.1> ) ]
   -->
    [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
 
   /*
-  rule (modulo AC) inmnb_0_1111111[color=#80404f,
+  rule (modulo AC) inmnb_0_1111111[color=#408066,
                                    process="in(<m.1, nb.1>);"]:
      [ State_1111111( ~k, ~na ), In( <m, nb> ) ]
     -->
      [ State_11111111( ~k, ~na, m, nb ) ]
   */
 
-rule (modulo E) ifhknanbm_0_11111111[color=#80404f,
+rule (modulo E) ifhknanbm_0_11111111[color=#408066,
                                      process="if h((~k.1⊕~na.1⊕nb.1))=m.1"]:
    [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
   --[ Pred_Eq( h((~k.1⊕~na.1⊕nb.1)), m.1 ) ]->
    [ State_111111111( ~k.1, ~na.1, m.1, nb.1 ) ]
 
   /*
-  rule (modulo AC) ifhknanbm_0_11111111[color=#80404f,
+  rule (modulo AC) ifhknanbm_0_11111111[color=#408066,
                                         process="if h((~k.1⊕~na.1⊕nb.1))=m.1"]:
      [ State_11111111( ~k, ~na, m, nb ) ]
     --[ Pred_Eq( h(z), m ) ]->
@@ -536,26 +544,26 @@ rule (modulo E) ifhknanbm_0_11111111[color=#80404f,
        z     = (x.9⊕~k.10)
   */
 
-rule (modulo E) eventAlivenak_0_111111111[color=#80404f,
+rule (modulo E) eventAlivenak_0_111111111[color=#408066,
                                           process="event Alive( ~na.1, ~k.1 );"]:
    [ State_111111111( ~k.1, ~na.1, m.1, nb.1 ) ]
   --[ Alive( ~na.1, ~k.1 ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventAlivenak_0_111111111[color=#80404f,
+  rule (modulo AC) eventAlivenak_0_111111111[color=#408066,
                                              process="event Alive( ~na.1, ~k.1 );"]:
      [ State_111111111( ~k, ~na, m, nb ) ] --[ Alive( ~na, ~k ) ]-> [ ]
   */
 
-rule (modulo E) ifhknanbm_1_11111111[color=#80404f,
+rule (modulo E) ifhknanbm_1_11111111[color=#408066,
                                      process="if h((~k.1⊕~na.1⊕nb.1))=m.1"]:
    [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
   --[ Pred_Not_Eq( h((~k.1⊕~na.1⊕nb.1)), m.1 ) ]->
    [ ]
 
   /*
-  rule (modulo AC) ifhknanbm_1_11111111[color=#80404f,
+  rule (modulo AC) ifhknanbm_1_11111111[color=#408066,
                                         process="if h((~k.1⊕~na.1⊕nb.1))=m.1"]:
      [ State_11111111( ~k, ~na, m, nb ) ] --[ Pred_Not_Eq( h(z), m ) ]-> [ ]
     variants (modulo AC)
@@ -613,62 +621,62 @@ rule (modulo E) p_1_1[color=#ffffff, process="!"]:
      [ !Semistate_11( ~k ) ] --> [ State_1121( ~k ), State_1111( ~k ) ]
   */
 
-rule (modulo E) inna_0_1121[color=#805d40, process="in(na.2);"]:
+rule (modulo E) inna_0_1121[color=#40806e, process="in(na.2);"]:
    [ State_1121( ~k.1 ), In( na.2 ), Fr( ~nb.2 ) ]
   -->
    [ State_112111( ~k.1, ~nb.2, na.2 ) ]
 
   /*
-  rule (modulo AC) inna_0_1121[color=#805d40, process="in(na.2);"]:
+  rule (modulo AC) inna_0_1121[color=#40806e, process="in(na.2);"]:
      [ State_1121( ~k ), In( na ), Fr( ~nb ) ]
     -->
      [ State_112111( ~k, ~nb, na ) ]
   */
 
-rule (modulo E) ifnazero_0_112111[color=#805d40, process="if na.2=zero"]:
+rule (modulo E) ifnazero_0_112111[color=#40806e, process="if na.2=zero"]:
    [ State_112111( ~k.1, ~nb.2, na.2 ) ] --[ Pred_Eq( na.2, zero ) ]-> [ ]
 
   /*
-  rule (modulo AC) ifnazero_0_112111[color=#805d40,
+  rule (modulo AC) ifnazero_0_112111[color=#40806e,
                                      process="if na.2=zero"]:
      [ State_112111( ~k, ~nb, na ) ] --[ Pred_Eq( na, zero ) ]-> [ ]
   */
 
-rule (modulo E) ifnazero_1_112111[color=#805d40, process="if na.2=zero"]:
+rule (modulo E) ifnazero_1_112111[color=#40806e, process="if na.2=zero"]:
    [ State_112111( ~k.1, ~nb.2, na.2 ) ]
   --[ Pred_Not_Eq( na.2, zero ) ]->
    [ State_1121112( ~k.1, ~nb.2, na.2 ) ]
 
   /*
-  rule (modulo AC) ifnazero_1_112111[color=#805d40,
+  rule (modulo AC) ifnazero_1_112111[color=#40806e,
                                      process="if na.2=zero"]:
      [ State_112111( ~k, ~nb, na ) ]
     --[ Pred_Not_Eq( na, zero ) ]->
      [ State_1121112( ~k, ~nb, na ) ]
   */
 
-rule (modulo E) eventNeqForExecnazero_0_1121112[color=#805d40,
+rule (modulo E) eventNeqForExecnazero_0_1121112[color=#40806e,
                                                 process="event NeqForExec( na.2, zero );"]:
    [ State_1121112( ~k.1, ~nb.2, na.2 ) ]
   --[ NeqForExec( na.2, zero ) ]->
    [ State_11211121( ~k.1, ~nb.2, na.2 ) ]
 
   /*
-  rule (modulo AC) eventNeqForExecnazero_0_1121112[color=#805d40,
+  rule (modulo AC) eventNeqForExecnazero_0_1121112[color=#40806e,
                                                    process="event NeqForExec( na.2, zero );"]:
      [ State_1121112( ~k, ~nb, na ) ]
     --[ NeqForExec( na, zero ) ]->
      [ State_11211121( ~k, ~nb, na ) ]
   */
 
-rule (modulo E) eventResponsek_0_11211121[color=#805d40,
+rule (modulo E) eventResponsek_0_11211121[color=#40806e,
                                           process="event Response( ~k.1 );"]:
    [ State_11211121( ~k.1, ~nb.2, na.2 ) ]
   --[ Response( ~k.1 ) ]->
    [ Out( <h((~k.1⊕~nb.2⊕na.2)), ~nb.2> ) ]
 
   /*
-  rule (modulo AC) eventResponsek_0_11211121[color=#805d40,
+  rule (modulo AC) eventResponsek_0_11211121[color=#40806e,
                                              process="event Response( ~k.1 );"]:
      [ State_11211121( ~k, ~nb, na ) ]
     --[ Response( ~k ) ]->
@@ -738,8 +746,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -754,7 +762,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 1.18s
+  processing time: 0.79s
   
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)

@@ -6,6 +6,8 @@ builtins: xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 
@@ -392,6 +394,12 @@ qed
 
 
 
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="new ~k.1;"]:
    [ Fr( ~k.1 ), Fr( ~id.1 ) ]
   --[ Init( ) ]->
@@ -402,68 +410,68 @@ rule (modulo E) Init[color=#ffffff, process="new ~k.1;"]:
      [ Fr( ~k ), Fr( ~id ) ] --[ Init( ) ]-> [ !Semistate_111( ~id, ~k ) ]
   */
 
-rule (modulo E) newr_0_11111[color=#404480, process="new ~r1.1;"]:
+rule (modulo E) newr_0_11111[color=#40805f, process="new ~r1.1;"]:
    [ State_11111( ~id.1, ~k.1 ), Fr( ~r1.1 ) ]
   --[ Challenge( ~r1.1, 'Reader' ) ]->
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), Out( ~r1.1 ) ]
 
   /*
-  rule (modulo AC) newr_0_11111[color=#404480, process="new ~r1.1;"]:
+  rule (modulo AC) newr_0_11111[color=#40805f, process="new ~r1.1;"]:
      [ State_11111( ~id, ~k ), Fr( ~r1 ) ]
     --[ Challenge( ~r1, 'Reader' ) ]->
      [ State_11111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
   */
 
-rule (modulo E) inxoredhash_0_11111111[color=#404480,
+rule (modulo E) inxoredhash_0_11111111[color=#40805f,
                                        process="in(xoredhash.1);"]:
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), In( xoredhash.1 ) ]
   -->
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
-  rule (modulo AC) inxoredhash_0_11111111[color=#404480,
+  rule (modulo AC) inxoredhash_0_11111111[color=#40805f,
                                           process="in(xoredhash.1);"]:
      [ State_11111111( ~id, ~k, ~r1 ), In( xoredhash ) ]
     -->
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
-rule (modulo E) ifxoredhashidhrk_0_111111111[color=#404480,
+rule (modulo E) ifxoredhashidhrk_0_111111111[color=#40805f,
                                              process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
-  rule (modulo AC) ifxoredhashidhrk_0_111111111[color=#404480,
+  rule (modulo AC) ifxoredhashidhrk_0_111111111[color=#40805f,
                                                 process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
      [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
-rule (modulo E) eventAlivekTag_0_1111111111[color=#404480,
+rule (modulo E) eventAlivekTag_0_1111111111[color=#40805f,
                                             process="event Alive( ~k.1, 'Tag' );"]:
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Alive( ~k.1, 'Tag' ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventAlivekTag_0_1111111111[color=#404480,
+  rule (modulo AC) eventAlivekTag_0_1111111111[color=#40805f,
                                                process="event Alive( ~k.1, 'Tag' );"]:
      [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Alive( ~k, 'Tag' ) ]->
      [ ]
   */
 
-rule (modulo E) ifxoredhashidhrk_1_111111111[color=#404480,
+rule (modulo E) ifxoredhashidhrk_1_111111111[color=#40805f,
                                              process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Not_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
    [ ]
 
   /*
-  rule (modulo AC) ifxoredhashidhrk_1_111111111[color=#404480,
+  rule (modulo AC) ifxoredhashidhrk_1_111111111[color=#40805f,
                                                 process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Not_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
@@ -520,8 +528,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -536,7 +544,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 0.98s
+  processing time: 0.61s
   
   recentalive_tag (all-traces): verified (100 steps)
   executable (exists-trace): verified (16 steps)
