@@ -584,7 +584,7 @@ restriction locking_2:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
   inrenewuserpknsk_0_111112
 Failed to derive Variable(s): nsk.1, sk.2
   

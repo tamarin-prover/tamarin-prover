@@ -203,8 +203,8 @@ Failed to derive Variable(s): m1
 Generated from:
 Tamarin version 1.7.1
 Maude version 2.7.1
-Git revision: 3759de6eabd9ede720530af43c1e8ccd2dc580b5 (with uncommited changes), branch: issues527
-Compiled at: 2023-06-30 09:58:13.513876994 UTC
+Git revision: 4b98299e4a9d45b005a55cefa35edd01c0ae0eb3 (with uncommited changes), branch: issues527
+Compiled at: 2023-07-03 08:19:31.808496576 UTC
 */
 
 end
@@ -219,7 +219,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue527.spthy
 
   output:          examples/regression/trace/issue527.spthy.tmp
-  processing time: 0.11s
+  processing time: 0.19s
   
   WARNING: 16 wellformedness check failed!
            The analysis results might be wrong!
