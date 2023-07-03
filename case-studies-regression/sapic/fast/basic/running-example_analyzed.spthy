@@ -675,7 +675,7 @@ restriction single_session:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
   lookupatthasa_0_1121
 Failed to derive Variable(s): a.1
   

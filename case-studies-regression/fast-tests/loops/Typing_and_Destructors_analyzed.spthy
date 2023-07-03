@@ -282,7 +282,9 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-Formula terms:
+Formula terms
+=============
+
   lemma `type_assertion' uses terms of the wrong form:
     `snd(Bound 1)', `snd(sdec(Bound 3,Bound 2))'
   
@@ -296,15 +298,15 @@ Formula terms:
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Maude version 2.7.1
+Git revision: 3759de6eabd9ede720530af43c1e8ccd2dc580b5 (with uncommited changes), branch: issues527
+Compiled at: 2023-06-30 09:58:13.513876994 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.2.1. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -313,7 +315,7 @@ summary of summaries:
 analyzed: examples/loops/Typing_and_Destructors.spthy
 
   output:          examples/loops/Typing_and_Destructors.spthy.tmp
-  processing time: 0.65s
+  processing time: 0.26s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
