@@ -910,14 +910,15 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
           (imageFormat yesod)
           (graphCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress ( not showAutosource) )
+          (graphStyle compact compress ( not showAutosource) autoTyping )
           (sequentToJSONPretty)
           (show simplificationLevel)
           (abbreviate)
           (tiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
-    graphStyle d c s  = dotStyle s d . compression c
+    graphStyle d c s True  = dotStyle True d . compression c
+    graphStyle d c s False  = dotStyle s d . compression c
     dotStyle s True = dotSystemCompact CompactBoringNodes s
     dotStyle s False = dotSystemCompact FullBoringNodes s
     compression True = compressSystem

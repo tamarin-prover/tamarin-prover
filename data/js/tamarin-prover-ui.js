@@ -271,6 +271,23 @@ var ui = {
             mainDisplay.toggleOption(auto_toggle);
         });
 
+        var proof = $("#proof");
+        var active = proof.find("a.active-link").first();
+
+        if(active.length > 0) {
+            var current = active.attr("href");
+            var path = theory.extractTheoryPath(current);
+            if (path.indexOf("AUTO_typing")!= -1) {
+                if ($.cookie("auto-typing")) {
+
+                    $.cookie("auto-typing",null,{ path:'/'});
+                }else{
+                    $.cookie("auto-typing",true,{ path:'/'});
+                }
+               
+            }
+        } 
+
 
         // Install event handlers
         events.installScrollHandler(
@@ -733,7 +750,13 @@ var mainDisplay = {
             );
         }
 
-        
+        if($.cookie("auto-typing")){
+            params = params.concat(
+              { name: "auto-typing", value: ""}  
+            );
+        }
+
+
 
         // Rewrite image paths (if necessary)
         if(params.length > 0) {
