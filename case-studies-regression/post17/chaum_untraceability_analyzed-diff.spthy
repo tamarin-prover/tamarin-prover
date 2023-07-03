@@ -13,6 +13,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Register_Bank_pk:
    [ Fr( ~ltkB ) ]
   --[ OnlyOnce( ) ]->
@@ -148,7 +150,13 @@ solve( St_C_2( 'c1', x1, s1 ) ▶₀ #i )
   qed
 qed
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  C_2
+Failed to derive Variable(s): ~skB
+*/
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -8695,8 +8703,8 @@ qed
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -8711,7 +8719,10 @@ summary of summaries:
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 51.62s
+  processing time: 36.36s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)

@@ -33,7 +33,6 @@ import           OpenTheory
 
 import           Theory.Constraint.Solver.Sources     as Sources (IntegerParameters(..))
 
-
 -- | Close a theory by closing its associated rule set and checking the proof
 -- skeletons and caching AC variants as well as precomputed case distinctions.
 --

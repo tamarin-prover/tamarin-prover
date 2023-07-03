@@ -17,6 +17,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Register_key_honest:
    [ Fr( ~ea ) ]
   --[ KeyReg( $A ) ]->
@@ -5145,14 +5147,40 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  I_Complete
+Failed to derive Variable(s): ~eb
+  
+  R_Activate
+Failed to derive Variable(s): ~ea
+  
+  R_Complete
+Failed to derive Variable(s): ~ea
+  
+  UM1_I_Complete
+Failed to derive Variable(s): ~eb
+  
+  UM1_R_Complete
+Failed to derive Variable(s): ~ea
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -5167,7 +5195,10 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 28.65s
+  processing time: 19.51s
+  
+  WARNING: 5 wellformedness check failed!
+           The analysis results might be wrong!
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)

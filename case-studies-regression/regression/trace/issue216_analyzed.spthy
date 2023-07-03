@@ -13,6 +13,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Get_pk:
    [ !Pk( Server, Auth, Sibling, pk ) ] --> [ Out( pk ) ]
 
@@ -4441,14 +4443,35 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+  Compromise_Secret_Channel
+Failed to derive Variable(s): ~n, pk, y
+  
+  Authenticator_1
+Failed to derive Variable(s): ~n
+  
+  Sibling_1
+Failed to derive Variable(s): ~n
+  
+  Authenticator_2
+Failed to derive Variable(s): ~n, y
+*/
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 334a0df7d8ae5ec03764051e4e8eef985c6a4080, branch: develop
-Compiled at: 2023-01-27 13:01:52.341920052 UTC
+Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
+Compiled at: 2023-06-26 11:54:20.223793825 UTC
 */
 
 end
@@ -4463,7 +4486,10 @@ summary of summaries:
 analyzed: examples/regression/trace/issue216.spthy
 
   output:          examples/regression/trace/issue216.spthy.tmp
-  processing time: 9.39s
+  processing time: 8.40s
+  
+  WARNING: 4 wellformedness check failed!
+           The analysis results might be wrong!
   
   ClientAuth (exists-trace): verified (16 steps)
   Client_Auth_Both_Responds_Or_Either_Revealed (all-traces): verified (481 steps)

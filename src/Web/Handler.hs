@@ -115,7 +115,7 @@ import           Debug.Trace                  (trace)
 import Control.Monad.Except (runExceptT)
 import Main.TheoryLoader
 import Main.Console (renderDoc)
-import Theory.Tools.Wellformedness (prettyWfErrorReport)
+import Theory.Tools.Wellformedness (prettyWfErrorReport, WfErrorReport)
 
 -- Quasi-quotation syntax changed from GHC 6 to 7,
 -- so we need this switch in order to support both
@@ -152,8 +152,9 @@ getTheory idx = do
 putTheory :: Maybe TheoryInfo     -- ^ Index of parent theory
           -> Maybe TheoryOrigin         -- ^ Origin of this theory
           -> ClosedTheory         -- ^ The new closed theory
+          -> String
           -> Handler TheoryIdx
-putTheory parent origin thy = do
+putTheory parent origin thy rep = do
     yesod <- getYesod
     liftIO $ modifyMVar (theoryVar yesod) $ \theories -> do
       time <- getZonedTime
@@ -164,7 +165,7 @@ putTheory parent origin thy = do
           newOrigin    = parentOrigin <|> origin <|> (Just Interactive)
           newThy       = Trace (
               TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
-                      (maybe (defaultAutoProver yesod) tiAutoProver parent))
+                      (maybe (defaultAutoProver yesod) tiAutoProver parent) rep)
       storeTheory yesod newThy idx
       return (M.insert idx newThy theories, idx)
 
@@ -172,8 +173,9 @@ putTheory parent origin thy = do
 putDiffTheory :: Maybe DiffTheoryInfo     -- ^ Index of parent theory
               -> Maybe TheoryOrigin         -- ^ Origin of this theory
               -> ClosedDiffTheory         -- ^ The new closed theory
+              -> String
               -> Handler TheoryIdx
-putDiffTheory parent origin thy = do
+putDiffTheory parent origin thy rep = do
     yesod <- getYesod
     liftIO $ modifyMVar (theoryVar yesod) $ \theories -> do
       time <- getZonedTime
@@ -184,7 +186,7 @@ putDiffTheory parent origin thy = do
           newOrigin    = parentOrigin <|> origin <|> (Just Interactive)
           newThy       = Diff (
               DiffTheoryInfo idx thy time parentIdx False (fromJust newOrigin)
-                      (maybe (defaultAutoProver yesod) dtiAutoProver parent))
+                      (maybe (defaultAutoProver yesod) dtiAutoProver parent) rep)
       storeTheory yesod newThy idx
       return (M.insert idx newThy theories, idx)
 
@@ -432,11 +434,12 @@ modifyTheory :: TheoryInfo                                -- ^ Theory to modify
              -> Handler Value
 modifyTheory ti f fpath errResponse = do
     res <- evalInThread (liftIO $ f (tiTheory ti))
+    rep <- pure $ tiErrorsHtml ti
     case res of
       Left e           -> return (excResponse e)
       Right Nothing    -> return (responseToJson errResponse)
       Right (Just thy) -> do
-        newThyIdx <- putTheory (Just ti) Nothing thy
+        newThyIdx <- putTheory (Just ti) Nothing thy rep
         newUrl <- getUrlRender <*> pure (OverviewR newThyIdx (fpath thy))
         return . responseToJson $ JsonRedirect newUrl
   where
@@ -451,11 +454,12 @@ modifyDiffTheory :: DiffTheoryInfo                                    -- ^ Theor
                  -> Handler Value
 modifyDiffTheory ti f fpath errResponse = do
     res <- evalInThread (liftIO $ f (dtiTheory ti))
+    rep <- pure $ dtiErrorsHtml ti
     case res of
       Left e           -> return (excResponse e)
       Right Nothing    -> return (responseToJson errResponse)
       Right (Just thy) -> do
-        newThyIdx <- putDiffTheory (Just ti) Nothing thy
+        newThyIdx <- putDiffTheory (Just ti) Nothing thy rep
         newUrl <- getUrlRender <*> pure (OverviewDiffR newThyIdx (fpath thy))
         return . responseToJson $ JsonRedirect newUrl
   where
@@ -506,8 +510,11 @@ postRootR = do
             case thyWithRep of
               Left err -> setMessage $ "Theory loading failed:\n" <> toHtml (show err)
               Right (report, thy) -> do
+                wfErrors <- case report of
+                  [] -> pure $ ""
+                  _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
                 void $ either (putTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo))
-                              (putDiffTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo)) thy
+                              (putDiffTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo)) thy wfErrors
                 setMessage $ toHtml $ "Loaded new theory!" ++
                                       " WARNING: ignoring the following wellformedness errors: " ++
                                       renderDoc (prettyWfErrorReport report)
@@ -811,7 +818,7 @@ getAutoProverDiffR idx extractor bound s =
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
 
-        
+
 -- | Run an autoprover on a given proof path.
 getAutoProverAllDiffR :: TheoryIdx
                -> SolutionExtractor
