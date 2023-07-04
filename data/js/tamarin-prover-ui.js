@@ -285,6 +285,14 @@ var ui = {
                     $.cookie("auto-typing",true,{ path:'/'});
                 }
                
+            }else{
+                if ($.cookie("auto-typing")) {
+
+                    $.cookie("auto-typing",null,{ path:'/'});
+                }else{
+                    $.cookie("auto-typing",true,{ path:'/'});
+                }
+                
             }
         } 
 
