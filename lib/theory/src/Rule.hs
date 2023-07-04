@@ -121,10 +121,10 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
-               -> Bool               -- ^ Diff or not
                -> Bool               -- ^ Verbose option
+               -> Bool               -- ^ Diff or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff verbose = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where

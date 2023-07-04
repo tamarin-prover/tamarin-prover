@@ -79,10 +79,10 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     parameters = Sources.IntegerParameters (L.get (openChainsLimit.diffThyOptions) thy0) (L.get (saturationLimit.diffThyOptions) thy0)
     h              = L.get diffThyHeuristic thy0
     t              = L.get diffThyTactic thy0
-    diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) True (L.get (verboseOption.diffThyOptions) thy0)
-    diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) True (L.get (verboseOption.diffThyOptions) thy0)
-    cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) False (L.get (verboseOption.diffThyOptions) thy0)
-    cacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) False (L.get (verboseOption.diffThyOptions) thy0)
+    diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) (L.get (verboseOption.diffThyOptions) thy0) True
+    diffCacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyDiffCacheRight thy0) (L.get (verboseOption.diffThyOptions) thy0) True
+    cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) (L.get (verboseOption.diffThyOptions) thy0) False
+    cacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) (L.get (verboseOption.diffThyOptions) thy0) False
 
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
@@ -177,7 +177,7 @@ closeTheoryWithMaude sig thy0 autoSources =
     h          = L.get thyHeuristic thy0
     t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
-    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) False (L.get (verboseOption.thyOptions) thy0)
+    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption.thyOptions) thy0) False
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
