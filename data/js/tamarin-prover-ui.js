@@ -262,6 +262,7 @@ var ui = {
         // Click handler for auto-sources' toggle
         var auto_toggle = $('a#auto-toggle');
         auto_toggle.click(function(ev) {
+            ev.preventDefault();
             if ($.cookie("auto-sources")) {
                 $.cookie("auto-sources", null, { path: '/' });
             } else {
@@ -384,10 +385,10 @@ var ui = {
         }
 
         if($.cookie("auto-sources")){
-            $("a#auto-toggle").addClass("active-options");
+            $("a#auto-toggle").addClass("active-option");
         }
         else{
-            $("a#auto-toggle").addClass("disabled-options");
+            $("a#auto-toggle").addClass("disabled-option");
         }
         
     },
@@ -752,15 +753,15 @@ var mainDisplay = {
             { name: "simplification", value: $.cookie("simplification") }
         );
 
-        if($.cookie("auto-sources")){
+        if($.cookie("auto-sources")== null){
             params = params.concat(
               { name: "no-auto-sources", value: ""}  
             );
         }
 
-        if($.cookie("auto-typing")){
+        if($.cookie("auto-typing")==null){
             params = params.concat(
-              { name: "auto-typing", value: ""}  
+              { name: "no-auto-typing", value: ""}  
             );
         }
 
