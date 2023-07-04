@@ -322,7 +322,7 @@ publicNamesReport thy =
     ppRuleAndName ((ruName, pub):rest) =
         text $ "rule " ++ show ruName ++ ": "++" name " ++
          show (pub) ++ concatMap ((", " ++) . show . snd) rest
-
+    ppRuleAndName [] =text ""
 
 -- | Report on capitalization of public names.
 publicNamesReportDiff :: OpenDiffTheory -> WfErrorReport
@@ -345,6 +345,7 @@ publicNamesReportDiff thy =
     ppRuleAndName ((ruName, pub):rest) =
         text $ "rule " ++ show ruName ++ ": "++" name " ++
          show (pub) ++ concatMap ((", " ++) . show . snd) rest
+    ppRuleAndName [] =text ""
 
 
 -- | Check whether a rule has unbound variables.
@@ -524,11 +525,11 @@ factReports thy = concat
     
     
     -- Report a protocol fact occurs in an LHS but not in any RHS
-    factLhsOccurNoRhs ::  [WfError]
+    factLhsOccurNoRhs :: WfErrorReport
     factLhsOccurNoRhs = 
       case factLhsNoRhs of
         []            -> []
-        facts         -> return $ (,) topic $ numbered' $
+        facts         -> return $ (,) (underlineTopic topic) $ numbered' $
                           map (nest 2 . ruleAndFact ) facts
       where
         topic = "Facts occur in the left-hand-side but not in any right-hand-side "
@@ -599,7 +600,7 @@ factReports thy = concat
 factReportsDiff :: OpenDiffTheory -> WfErrorReport
 factReportsDiff thy = concat
     [ reservedReport, reservedPrefixReport, freshFactArguments, specialFactsUsage
-    , factUsage, inexistentActions, inexistentActionsRestrictions
+    , factUsage, factLhsOccurNoRhs, inexistentActions, inexistentActionsRestrictions
     ]
   where
     ruleFacts ru =
@@ -734,6 +735,76 @@ factReportsDiff thy = concat
         ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyDiffCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+
+
+    -- | To bind a fact in LHS with his most similar fact in RHS. The most similar fact 
+    -- | in RHS has the minimum editing distance with it and the value of the distance
+    -- | is included between 1 and 3.
+    mostSimilarName :: [RuleAndFact]->[RuleAndFact]
+                      ->[(RuleAndFact,RuleAndFact)]
+    mostSimilarName xs xt = 
+        filter (\x -> isSimilar (fst x) $ snd x) 
+        $ foldr (\x acc-> ((,) x $ minEd x xt):acc) [] $
+        removeSame xt xs
+      where
+        -- To remove all the facts in lhs and also in rhs
+        removeSame :: [RuleAndFact] -> [RuleAndFact] ->[RuleAndFact]
+        removeSame li             = filter (\x -> (getName $ snd(x)) `notElem` 
+                                  ( map (getName.snd) li) ) 
+        -- to verify if the names of two facts are similar
+        isSimilar :: RuleAndFact-> RuleAndFact->Bool
+        isSimilar s t             = distance (snd s) t < 3
+        -- to get the fact in rhs which has the minimum editing distance
+        -- with a given fact  
+        minEd :: RuleAndFact->[RuleAndFact]->RuleAndFact
+        minEd s li                = head $
+                                    sortOn (\x -> distance (snd s) x) li
+        distance factL ruleRactR  = editDistance (getName factL) $ 
+                                    getName $ snd ruleRactR
+        tagName (tag,_,_)         = factTagName tag
+        getName fact              = tagName $ factInfo fact
+
+
+    factLhsOccurNoRhs :: WfErrorReport
+    factLhsOccurNoRhs = 
+      case factLhsNoRhs of
+        []            -> []
+        facts         -> return $ (,) (underlineTopic topic) $ numbered' $
+                          map (nest 2 . ruleAndFact ) facts
+      where
+        topic = "Facts occur in the left-hand-side but not in any right-hand-side "
+        -- all the protocol facts in lhs but not in any rhs
+        factLhsNoRhs = [fa | fa <-getFactLhsNoRhs 
+                            (getFactSide rPrems ru) (getFactSide rConcs ru),
+                            isProtoFact $ getFact fa]     
+                                                      
+        ru = diffThyProtoRules thy
+        -- get all the facts by their sides
+        getFactSide s = map (\x-> (,) (showRuleCaseName x) 
+                            $ get s x) 
+
+        -- for each fact on LHS, get his most similar fact in RHS
+        getFactLhsNoRhs :: [(String,[LNFact])]->[(String,[LNFact])]
+                          ->[(RuleAndFact,RuleAndFact)]                                  
+        getFactLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
+                                      $ regroup rfacts
+                                                
+        regroup :: [(String,[LNFact])] -> [RuleAndFact]
+        regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x)
+                      ++ acc) [] 
+        getFact ((_,factL),_) = factL
+        ruleAndFact ((ruName,factL),(ruNameR,factR)) =
+          text  ("in rule " ++ show ruName ++": "
+          ++ showFactInfo(factInfo factL)
+          ++ ". Perhaps you want to use the fact in rule "
+          ++ show ruNameR ++": "
+          ++ showFactInfo (factInfo factR)  ) 
+        showFactInfo (tag,arity,multi) =
+                  " factName "++quote (factTagName tag)
+                  ++ " arity: "++show arity
+                  ++ " multiplicity: "++show multi
+          
+
 
     inexistentActions = do
         EitherLemmaItem (s, l) <- {-trace ("Caches: " ++ show ((get diffThyCacheRight thy) ++ (get diffThyDiffCacheRight thy) ++ (get diffThyCacheLeft thy) ++ (get diffThyDiffCacheLeft thy))) $-} get diffThyItems thy
