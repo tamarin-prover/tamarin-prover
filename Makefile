@@ -398,7 +398,8 @@ auto-sources-case-studies:	$(AUTO_SOURCES_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue532.spthy
+
+REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue532.spthy
 
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 

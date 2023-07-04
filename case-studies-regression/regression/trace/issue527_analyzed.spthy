@@ -1,0 +1,230 @@
+theory issue527 begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, sdec/2, senc/2, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ] --> [ !Ltk( $A, ltk ), !Pk( $A, pk(~ltk) ) ]
+
+  /*
+  rule (modulo AC) Register_pk:
+     [ Fr( ~ltk ) ] --> [ !Ltk( $A, ltk.1 ), !Pk( $A, pk(~ltk) ) ]
+  */
+
+rule (modulo E) Test_1:
+   [ In( aenc(<'1', $A, m>, pkB) ), F( $X ), Vars( rhs ) ]
+  --[ Fr( $x ) ]->
+   [ F( $x ), Test_1( $A ) ]
+
+  // loop breaker: [1]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) One:
+   [ ]
+  --[ OneResultingIn( 'second' ), Fact( ) ]->
+   [ OneResultingIn( 'seconD' ), Out( <'1', $A, ~Na> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Two:
+   [ ] --[ B_TEST( 'first' ) ]-> [ OneresultingIn( 'second' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) three:
+   [ ] --[ B_TEST( 'third' ) ]-> [ OneResltingIn( 'second' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Four:
+   [ ]
+  --[ B_TEST( 'firSt', 'second', m1 ) ]->
+   [ OneresltingIn( 'second' ), Out( '1' ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) test:
+   [ K( x ) ] --[ !KU( x ) ]-> [ !KD( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma AB_key_honst:
+  exists-trace
+  "∃ A B k #i.
+    (((B_TEST( A, B, k ) @ #i) ∧
+      (∃ #j. (B_TEST( A, B, k ) @ #j) ∧ (#j < #i))) ∧
+     (¬(∃ #r. Register_pk( A ) @ #r))) ∧
+    (¬(∃ #a. Register_pk( B ) @ #a))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B k #i.
+  (B_TEST( A, B, k ) @ #i)
+ ∧
+  (∃ #j. (B_TEST( A, B, k ) @ #j) ∧ #j < #i) ∧
+  (∀ #r. (Register_pk( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #a. (Register_pk( B ) @ #a) ⇒ ⊥)"
+*/
+simplify
+SOLVED // trace found
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Unbound variables
+=================
+
+  rule `Register_pk' has unbound variables: 
+    ltk
+  
+  rule `One' has unbound variables: 
+    ~Na
+  
+  rule `Four' has unbound variables: 
+    m1
+
+Public names with mismatching capitalization
+============================================
+
+Identifiers are case-sensitive, mismatched capitalizations are considered as different, i.e., 'ID' is different from 'id'. Check the capitalization of your identifiers.
+
+  1. rule "Four":  name 'firSt', rule "Two":  name 'first'
+  
+  2. rule "One":  name 'seconD', 'second'
+
+Variable with mismatching sorts or capitalization
+=================================================
+
+Possible reasons:
+1. Identifiers are case sensitive, i.e.,'x' and 'X' are considered to be different.
+2. The same holds aren't used for sorts:, i.e., '$x', 'x', and '~x' are considered to be different.
+
+  rule `Register_pk': 
+    1. ~ltk, ltk
+  
+  rule `Test_1': 
+    1. $X, $x
+
+Special facts
+=============
+
+  rule `test' uses disallowed facts on right-hand-side:
+    !KD( x )
+
+Fact usage
+==========
+
+Possible reasons: 
+1. Fact names are case-sensitive, different capitalizations are considered as different facts, i.e., Fact() is different from FAct(). Check the capitalization of your fact names.
+2. Same fact is used with different arities, i.e., Fact('A','B') is different from Fact('A'). Check the arguments of your facts.
+ 
+  
+Fact `b_test':
+
+  1. Rule `three', capitalization  "B_TEST", 1, Linear
+       B_TEST( 'third' )
+  
+  2. Rule `Four', capitalization  "B_TEST", 3, Linear
+       B_TEST( 'firSt', 'second', m1 )
+  
+  
+Fact `oneresltingin':
+
+  1. Rule `three', capitalization  "OneResltingIn", 1, Linear
+       OneResltingIn( 'second' )
+  
+  2. Rule `Four', capitalization  "OneresltingIn", 1, Linear
+       OneresltingIn( 'second' )
+  
+  
+Fact `oneresultingin':
+
+  1. Rule `One', capitalization  "OneResultingIn", 1, Linear
+       OneResultingIn( 'seconD' )
+  
+  2. Rule `Two', capitalization  "OneresultingIn", 1, Linear
+       OneresultingIn( 'second' )
+
+Inexistant lemma actions
+========================
+
+  lemma `AB_key_honst' references action 
+    fact "Register_pk" (arity 1, Linear) 
+  but no rule has such an action.
+  
+  lemma `AB_key_honst' references action 
+    fact "Register_pk" (arity 1, Linear) 
+  but no rule has such an action.
+
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
+  Register_pk
+Failed to derive Variable(s): ltk
+  
+  Test_1
+Failed to derive Variable(s): m, pkB
+  
+  One
+Failed to derive Variable(s): ~Na
+  
+  Four
+Failed to derive Variable(s): m1
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 4b98299e4a9d45b005a55cefa35edd01c0ae0eb3 (with uncommited changes), branch: issues527
+Compiled at: 2023-07-03 08:19:31.808496576 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue527.spthy
+
+  output:          examples/regression/trace/issue527.spthy.tmp
+  processing time: 0.19s
+  
+  WARNING: 16 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  AB_key_honst (exists-trace): verified (2 steps)
+
+==============================================================================
+*/

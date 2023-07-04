@@ -202,7 +202,7 @@ restriction single_session:
 /*
 WARNING: the following wellformedness checks failed!
 
-Wellformedness-error in Process:
+Wellformedness-error in Process
   Variable bound twice: a.1:lol.
 */
 
