@@ -1,0 +1,51 @@
+theory YellowDiffTest
+begin
+
+builtins: hashing
+
+rule Start:
+    [Fr(~s)]
+  --[Start(~s, diff(fst(~s), <~s,~s>))]->
+    [State(~s, diff(~s, <~s,~s>))]
+
+rule End:
+    [State(s, t)]
+  --[End(s, t)]->
+    [Out(s), Out(h(t))]
+
+restriction Start2Complication:
+"∀ s t #i. Start(s, t)@i ==> s ⊏ t"
+
+lemma GreenYellow: exists-trace
+"∃ s t #i. End(s, t)@i"
+
+lemma RedYellow:
+"¬∃ s t #i. End(s, t)@i"
+
+lemma YellowRed: exists-trace
+"¬∀ s t #i. End(s, t)@i ==> <s,s> = t"
+
+lemma YellowGreen:
+"∀ s t #i. End(s, t)@i ==> <s,s> = t"
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
