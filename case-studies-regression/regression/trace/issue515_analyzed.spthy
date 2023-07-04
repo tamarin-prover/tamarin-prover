@@ -46,7 +46,9 @@ rule (modulo E) test5:
 /*
 WARNING: the following wellformedness checks failed!
 
-Reserved names:
+Reserved names
+==============
+
   rule `test' contains facts with reserved names on left-hand-side:
     K( x )
   
@@ -83,7 +85,9 @@ Reserved names:
   rule `test5' contains facts with reserved names on the right-hand-side:
     !KU( x )
 
-Special fact usage:
+Special facts
+=============
+
   rule `test2' uses disallowed facts on left-hand-side:
     Out( x )
   
@@ -95,8 +99,8 @@ Special fact usage:
 Generated from:
 Tamarin version 1.7.1
 Maude version 2.7.1
-Git revision: 95d22bd2f6715eb275e22469c70da216a2101a37 (with uncommited changes), branch: issues532
-Compiled at: 2023-06-30 08:50:22.603972825 UTC
+Git revision: 540947829dc81ce0bdca436a39b9505df5ad098f (with uncommited changes), branch: issues515
+Compiled at: 2023-07-04 08:07:23.693492291 UTC
 */
 
 end
@@ -111,7 +115,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue515.spthy
 
   output:          examples/regression/trace/issue515.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.14s
   
   WARNING: 14 wellformedness check failed!
            The analysis results might be wrong!
