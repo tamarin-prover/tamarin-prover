@@ -1,0 +1,65 @@
+theory issue527
+begin
+/*
+* Date:             June 2023
+* Status:           Working
+* Description :     This is an example for issue 527(https://github.com/tamarin-prover/tamarin-prover/issues/527)
+                    and for some modifications of layout of warnings.
+                    
+ */
+builtins: symmetric-encryption,  asymmetric-encryption
+
+
+rule Register_pk:
+    [ Fr(~ltk) ]
+  -->
+    [ !Ltk($A, ltk), !Pk($A, pk(~ltk)) ]
+
+rule Test_1:
+    [ In( aenc(<'1', $A, m>, pkB) ), F($X) ,  Vars(rhs) ] --[ Fr($x) ]-> [ F($x), Test_1($A) ]
+
+rule One:
+let 
+     m1 = <'1', $A, ~Na>
+in 
+     [ ]
+     --[OneResultingIn('second'),Fact() ]-> 
+     [OneResultingIn('seconD'),Out(m1)]
+
+rule Two:
+     [ ]
+     --[B_TEST('first') ]->
+     [OneresultingIn('second')]
+
+rule three:
+     [ ]
+     --[B_TEST('third') ]->
+     [OneResltingIn('second')]
+
+rule Four:
+let 
+     m='msg'
+in
+     [ ]
+     --[B_TEST('firSt','second',m1) ]->
+     [OneresltingIn('second'),Out('1')]
+
+
+rule test:
+[ K(x) ] --[ KU(x) ]-> [ KD(x) ]
+
+
+
+lemma AB_key_honst:
+     exists-trace
+    "Ex A B k #i. B_TEST(A, B, k) @ #i
+    & (Ex #j. B_TEST(A,B,k)@ #j & j<i)
+    & not(Ex #r. Register_pk(A) @r)
+    & not(Ex #a. Register_pk(B) @a) 
+    "
+
+end
+
+
+
+

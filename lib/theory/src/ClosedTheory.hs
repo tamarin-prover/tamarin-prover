@@ -18,7 +18,7 @@ import Prelude hiding (id, (.))
 import Text.PrettyPrint.Highlight
 
 
-import           Prelude                             hiding (id, (.))
+import           Prelude                             hiding (id, (.))                 
 
 
 -- import           Data.Typeable
@@ -103,6 +103,7 @@ getProofContext l thy = ProofContext
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
     (L.get lName l)
     ([ h | HideLemma h <- L.get lAttributes l])
+    ( L.get (verboseOption.thyOptions)         thy)
     False
     (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
     (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
@@ -147,6 +148,7 @@ getProofContextDiff s l thy = case s of
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
             False
+            False
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
   RHS -> ProofContext
@@ -161,6 +163,7 @@ getProofContextDiff s l thy = case s of
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
+            False
             False
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
@@ -218,6 +221,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
+            False
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
@@ -233,6 +237,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
+            False
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
