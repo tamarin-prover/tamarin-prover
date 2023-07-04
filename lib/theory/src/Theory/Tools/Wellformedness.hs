@@ -443,7 +443,7 @@ factReports thy = concat
                       , factTag fa `elem` [KUFact, KDFact]
                       || isKLogFact fa]
           check _   []  = mzero
-          check msg fas = return $ (,) "Reserved names" $
+          check msg fas = return $ (,) (underlineTopic "Reserved names") $
                text ("rule " ++ quote (showRuleCaseName ru))
                 <-> text ("contains facts with reserved names"++msg) $-$
                (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
@@ -547,7 +547,7 @@ factReports thy = concat
 -- | Report on facts usage.
 factReportsDiff :: OpenDiffTheory -> WfErrorReport
 factReportsDiff thy = concat
-    [ reservedReport, reservedPrefixReport, freshFactArguments, specialFactsUsage
+    [ reservedReport,reservedFactNameRules, reservedPrefixReport, freshFactArguments, specialFactsUsage
     , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
@@ -600,6 +600,29 @@ factReportsDiff thy = concat
       | map toLower name `elem` ["fr","ku","kd","out","in"] =
           return $ ppFa $-$ text ("show:" ++ show info)
     reservedFactName _ = Nothing
+
+    -- Check for usage of all type facts with reserved names
+    reservedFactNameRules :: WfErrorReport
+    reservedFactNameRules = do
+      ru <- diffThyProtoRules thy
+      let lfact = [fa| fa <- get rPrems ru
+                      , factTag fa `elem` [KUFact,KDFact] 
+                      || isKLogFact fa]
+          mfact = [fa | fa <- get rActs ru
+                      , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
+                      || isKLogFact fa]
+          rfact = [fa | fa <- get rConcs ru
+                      , factTag fa `elem` [KUFact, KDFact]
+                      || isKLogFact fa]
+          check _   []  = mzero
+          check msg fas = return $ (,) (underlineTopic "Reserved names") $
+               text ("rule " ++ quote (showRuleCaseName ru))
+                <-> text ("contains facts with reserved names"++msg) $-$
+               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
+
+      msum [ check " on left-hand-side:"  lfact
+            , check " on the middle:" mfact
+            , check " on the right-hand-side:" rfact ]
 
     -- Check for usage of protocol facts in rules with reserved prefixes in names
     reservedPrefixReport = do
