@@ -17,7 +17,6 @@ import Theory.Tools.Wellformedness (WfErrorReport)
 import Text.PrettyPrint.Class
 import qualified Text.PrettyPrint.Class as Pretty
 import ClosedTheory
-import qualified Debug.Trace as Debug
 import qualified Data.List as List
 
 -----------------------------------------------
