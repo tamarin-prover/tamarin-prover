@@ -122,15 +122,16 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> Bool               -- ^ Diff or not
+               -> Bool               -- ^ Verbose option
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff verbose = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
     ctxt0 = ProofContext
         sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing 
         (error "closeRuleCache: trace quantifier should not matter here")
-        (error "closeRuleCache: lemma name should not matter here") [] False isdiff
+        (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
 
     -- inj fact instances
