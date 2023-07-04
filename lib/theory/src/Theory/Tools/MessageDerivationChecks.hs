@@ -26,8 +26,6 @@ import qualified Data.List as List
 
 checkVariableDeducability :: OpenTranslatedTheory -> SignatureWithMaude -> Bool -> Prover -> IO WfErrorReport
 checkVariableDeducability thy sig sources prover =
-    -- This  trace is used for evaluating the results
-    Debug.trace ("[Variables]: " ++ show (map checkProofStatuses provenTheories) ++ "\n")
     return $ reportVars (map checkProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = theoryRules thy
@@ -42,8 +40,6 @@ checkVariableDeducability thy sig sources prover =
 
 diffCheckVariableDeducability :: OpenDiffTheory -> SignatureWithMaude -> Bool -> Prover -> DiffProver -> IO WfErrorReport
 diffCheckVariableDeducability thy sig sources prover diffprover =
-    -- This  trace is used for evaluating the results
-    Debug.trace ("[Variables]: " ++ show (map checkDiffProofStatuses provenTheories) ++ "\n")
     return $ reportDiffVars (map checkDiffProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = diffTheoryDiffRules thy
