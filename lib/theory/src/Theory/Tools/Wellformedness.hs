@@ -382,7 +382,7 @@ unboundReportDiff thy = do
 -- | Report on facts usage.
 factReports :: OpenTranslatedTheory -> WfErrorReport
 factReports thy = concat
-    [ reservedReport, freshFactArguments, specialFactsUsage
+    [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
     , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
@@ -430,6 +430,29 @@ factReports thy = concat
           return $ ppFa $-$ text ("show:" ++ show info)
     reservedFactName _ = Nothing
 
+    -- Check for usage of all type facts with reserved names
+    reservedFactNameRules = do
+      ru <- thyProtoRules thy
+      let lfact = [fa| fa <- get rPrems ru
+                      , factTag fa `elem` [KUFact,KDFact] 
+                      || isKLogFact fa]
+          mfact = [fa | fa <- get rActs ru
+                      , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
+                      || isKLogFact fa]
+          rfact = [fa | fa <- get rConcs ru
+                      , factTag fa `elem` [KUFact, KDFact]
+                      || isKLogFact fa]
+          check _   []  = mzero
+          check msg fas = return $ (,) (underlineTopic "Reserved names") $
+               text ("rule " ++ quote (showRuleCaseName ru))
+                <-> text ("contains facts with reserved names"++msg) $-$
+               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
+
+      msum [ check " on left-hand-side:"  lfact
+            , check " on the middle:" mfact
+            , check " on the right-hand-side:" rfact ]
+              
+    
     freshFactArguments = do
        ru                      <- thyProtoRules thy
        fa@(Fact FreshFact _ [m]) <- get rPrems ru
@@ -442,9 +465,9 @@ factReports thy = concat
     specialFactsUsage = do
        ru <- thyProtoRules thy
        let lhsf = [ fa | fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact, KDFact, OutFact] ]
+                      , factTag fa `elem` [OutFact] ]
            rhsf = [ fa | fa <- get rConcs ru
-                      , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
+                      , factTag fa `elem` [FreshFact,InFact] ]
            check _   []  = mzero
            check msg fas = return $ (,) (underlineTopic "Special facts") $
                text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
@@ -524,7 +547,7 @@ factReports thy = concat
 -- | Report on facts usage.
 factReportsDiff :: OpenDiffTheory -> WfErrorReport
 factReportsDiff thy = concat
-    [ reservedReport, reservedPrefixReport, freshFactArguments, specialFactsUsage
+    [ reservedReport,reservedFactNameRules, reservedPrefixReport, freshFactArguments, specialFactsUsage
     , factUsage, inexistentActions, inexistentActionsRestrictions
     ]
   where
@@ -577,6 +600,29 @@ factReportsDiff thy = concat
       | map toLower name `elem` ["fr","ku","kd","out","in"] =
           return $ ppFa $-$ text ("show:" ++ show info)
     reservedFactName _ = Nothing
+
+    -- Check for usage of all type facts with reserved names
+    reservedFactNameRules :: WfErrorReport
+    reservedFactNameRules = do
+      ru <- diffThyProtoRules thy
+      let lfact = [fa| fa <- get rPrems ru
+                      , factTag fa `elem` [KUFact,KDFact] 
+                      || isKLogFact fa]
+          mfact = [fa | fa <- get rActs ru
+                      , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
+                      || isKLogFact fa]
+          rfact = [fa | fa <- get rConcs ru
+                      , factTag fa `elem` [KUFact, KDFact]
+                      || isKLogFact fa]
+          check _   []  = mzero
+          check msg fas = return $ (,) (underlineTopic "Reserved names") $
+               text ("rule " ++ quote (showRuleCaseName ru))
+                <-> text ("contains facts with reserved names"++msg) $-$
+               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
+
+      msum [ check " on left-hand-side:"  lfact
+            , check " on the middle:" mfact
+            , check " on the right-hand-side:" rfact ]
 
     -- Check for usage of protocol facts in rules with reserved prefixes in names
     reservedPrefixReport = do
