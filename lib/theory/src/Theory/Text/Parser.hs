@@ -152,11 +152,8 @@ liftedAddCaseTest thy cTest =
 --        (but they should not, as they will not be exported)
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m OpenTheory
 liftedAddProtoRule thy ru
-    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
-        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
-        thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
-        thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
-        return thy''
+    | (StandRule (NonSAPiCRuleName rname))  <- get (preName . rInfo . oprRuleE) ru = addRule thy ru rname
+    | (StandRule (SAPiCRuleName rname)) <- get (preName . rInfo . oprRuleE) ru = addRule thy ru rname
     | otherwise = Catch.throwM TryingToAddFreshRule
             where
                 rfacts = get (preRestriction . rInfo)
@@ -169,6 +166,10 @@ liftedAddProtoRule thy ru
                 actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
                 fromRuleRestriction' rname (i,f) = fromRuleRestriction (rname ++ "_" ++ show i) f
                 counter = zip [1::Int ..]
+                addRule thry rule rname = do
+                    rformulasE <- mapM (liftedExpandFormula thry) (rfacts $ get oprRuleE rule)
+                    thy'      <- foldM addExpandedRestriction thry (restrictions rname rformulasE)
+                    liftedAddProtoRuleNoExpand thy' (addActions rname rformulasE)
 
 -- | Flag formulas
 
