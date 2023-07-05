@@ -146,6 +146,11 @@ var ui = {
         // Load display settings
         this.loadSettings();
 
+        // initialize thz cookie for not-init
+        if ($.cookie("not-init")) {
+            $.cookie("not-init",null,{path: "/"});
+        }
+
         // Navigation drop-down menus
         $("ul#navigation").superfish();
 
@@ -266,14 +271,15 @@ var ui = {
             var pathname =window.location.href;
             if ($.cookie("auto-sources")) {
                 // in lemma AUTO_typing, block the toogle  
-                if (pathname.indexOf("AUTO_typing")<0) {
+                //if (pathname.indexOf("AUTO_typing")<0) {
                     $.cookie("auto-sources", null, { path: '/' });  
-                    mainDisplay.toggleOption(auto_toggle);  
-                } 
+                    
+                //} 
             } else {
                 $.cookie("auto-sources", true, { path: '/' });
-                mainDisplay.toggleOption(auto_toggle);
+              
             }
+            mainDisplay.toggleOption(auto_toggle);  
             // to tell that this is a call from the toggle
             $.cookie("not-init",true,{path: "/"});
             $("a.active-link").click();
