@@ -19,7 +19,6 @@ module Theory.Tools.InjectiveFactInstances (
   , simpleInjectiveFactInstances
   ) where
 
--- import           Control.Applicative
 import           Control.Monad.Fresh
 import           Control.DeepSeq
 
@@ -35,7 +34,6 @@ import           Control.Applicative (empty)
 import           Debug.Trace
 
 import           Theory.Model
---import Control.DeepSeq (NFData)
 
 -- unspecified = there is no rule using this fact
 -- unstable = increasing and decreasing or not at all related inputs and outputs

@@ -270,7 +270,7 @@ splitSubterm reducible noRecurse subterm = S.toList <$> (if noRecurse then singl
     recurse std@(SubtermD st) = do
       res <- step st
       case res of
-        Just entries -> S.unions <$> mapM recurse (S.toList entries)  --TODO: think wether std should be added as well [intermediate results] (for negSplit)
+        Just entries -> S.unions <$> mapM recurse (S.toList entries)  --TODO: think whether std should be added as well [intermediate results] (for negSplit)
         Nothing -> return $ S.singleton std
     recurse x = return $ S.singleton x  -- for everything except SubtermD we stop the recursion
 
@@ -329,7 +329,7 @@ processACSubterm f (small, big) =
     lists = removeSame (sort $ flattenedACTerms f small, sort $ flattenedACTerms f big)
 
 
--- | evaluates wether the the subterm reduces to True/False under all substitutions
+-- | evaluates whether the subterm reduces to True/False under all substitutions
 -- If the correctness of the subterm depends on the substitutions, "Nothing" is returned
 -- If a subtermStore is given, possible cycles are checked as well (more computation time)
 isTrueFalse :: FunSig -> Maybe SubtermStore -> (LNTerm, LNTerm) -> Maybe Bool
