@@ -269,12 +269,8 @@ var ui = {
         auto_toggle.click(function(ev) {
             ev.preventDefault();
             var pathname =window.location.href;
-            if ($.cookie("auto-sources")) {
-                // in lemma AUTO_typing, block the toogle  
-                //if (pathname.indexOf("AUTO_typing")<0) {
-                    $.cookie("auto-sources", null, { path: '/' });  
-                    
-                //} 
+            if ($.cookie("auto-sources")) {      
+                $.cookie("auto-sources", null, { path: '/' });  
             } else {
                 $.cookie("auto-sources", true, { path: '/' });
               
