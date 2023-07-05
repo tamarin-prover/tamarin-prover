@@ -904,21 +904,19 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
       abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
       simplificationLevel <- fromMaybe "1" <$> lookupGetParam "simplification"
       showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
-      autoTyping <- isNothing <$> lookupGetParam "no-auto-typing"
       img <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
           (graphCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress ( not showAutosource) autoTyping )
+          (graphStyle compact compress ( not showAutosource) )
           (sequentToJSONPretty)
           (show simplificationLevel)
           (abbreviate)
           (tiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
-    graphStyle d c s False  = dotStyle True d . compression c
-    graphStyle d c s True  = dotStyle s d . compression c
+    graphStyle d c s = dotStyle s d . compression c
     dotStyle s True = dotSystemCompact CompactBoringNodes s
     dotStyle s False = dotSystemCompact FullBoringNodes s
     compression True = compressSystem
