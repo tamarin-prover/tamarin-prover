@@ -182,7 +182,7 @@ isGAction (GAction _ _) = True
 isGAction _             = False
 
 -- | Convert 'Atom's to 'GAtom's, if possible.
-atomToGAtom :: Show t => Atom t -> GAtom t  --TODO-NAT-GUARD: do we want to allow subterms as guards? (search for other TODO-NAT-GUARD)
+atomToGAtom :: Show t => Atom t -> GAtom t  --TODO-NAT-GUARD: do we want to allow subterms as guards? (search for other TODO-NAT-GUARD in this file) -- There is no proof for doing this, but if someone would prove it, this would make subterms stronger.
 atomToGAtom = conv
   where conv (EqE s t)     = GEqE s t
         conv (Action i f)  = GAction i f
@@ -513,7 +513,7 @@ formulaToGuarded fmOrig =
 
         conjActionsEqs (Conn And f1 f2)     = conjActionsEqs f1 ++ conjActionsEqs f2
         conjActionsEqs (Ato a@(Action _ _)) = [Left $ bvarToLVar a]
-        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]  --TODO-NAT-GUARD (search for other TODO-NAT-GUARD)
+        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]  --TODO-NAT-GUARD (search for other TODO-NAT-GUARD in this file)
         conjActionsEqs f                    = [Right f]
 
         -- Given a list of unguarded variables and a list of atoms, compute the

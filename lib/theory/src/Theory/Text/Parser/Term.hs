@@ -27,7 +27,7 @@ import           Data.Foldable              (asum)
 import qualified Data.Set                   as S
 import           Control.Category
 import           Control.Monad
-import           Text.Parsec                --hiding ((<|>))
+import           Text.Parsec
 import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token

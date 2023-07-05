@@ -69,7 +69,6 @@ module Theory.Tools.Wellformedness (
   , formulaTerms
   ) where
 
--- import           Debug.Trace
 
 import           Prelude                     hiding (id, (.))
 
@@ -96,7 +95,6 @@ import           Theory.Tools.RuleVariants
 import           Safe                        (lastMay)
 import           Items.OptionItem            (lemmasToProve)
 import           TheoryObject                (diffThyOptions)
-import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Types for error reports

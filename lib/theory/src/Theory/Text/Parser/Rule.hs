@@ -39,7 +39,6 @@ import           Theory.Text.Parser.Let
 import           Theory.Text.Parser.Fact
 import           Theory.Text.Parser.Term
 import           Theory.Text.Parser.Formula
---import           Theory.Sapic ( AnProcess(ProcessNull) )
 
 -- | Parse a "(modulo ..)" information.
 modulo :: String -> Parser ()

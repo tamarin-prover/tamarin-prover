@@ -501,7 +501,7 @@ freshOrdering = do
 -- These contradictions are only later handled by Contradictions.hs to yield meaningful user output.
 --
 -- executes simplifySubtermStore
--- removes all SubtermGoals and inserts the new ones (if the new ones are'nt [])
+-- removes all SubtermGoals and inserts the new ones (if the new ones aren't [])
 -- adds the equations from negSubterm splits
 -- determines wether anything has changed
 simpSubterms :: Reduction ChangeIndicator
