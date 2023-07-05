@@ -165,9 +165,9 @@ oneSym   = (oneSymString,(0,Public,Constructor))
 -- | The groupd identity
 dhNeutralSym = (dhNeutralSymString,(0,Public, Constructor))
 -- | Projection of first component of pair.
-fstSym   = (fstSymString,(1,Public,Destructor))
+fstSym   = (fstSymString,(1,Public,Constructor))
 -- | Projection of second component of pair.
-sndSym   = (sndSymString,(1,Public,Destructor))
+sndSym   = (sndSymString,(1,Public,Constructor))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
 pmultSym = (pmultSymString,(2,Public,Constructor))
 -- | The zero for XOR.
