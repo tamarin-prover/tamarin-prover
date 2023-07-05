@@ -263,13 +263,22 @@ var ui = {
         var auto_toggle = $('a#auto-toggle');
         auto_toggle.click(function(ev) {
             ev.preventDefault();
+            var pathname =window.location.href;
             if ($.cookie("auto-sources")) {
-                $.cookie("auto-sources", null, { path: '/' });
+                // in lemma AUTO_typing, block the toogle  
+                if (pathname.indexOf("AUTO_typing")<0) {
+                    $.cookie("auto-sources", null, { path: '/' });  
+                    mainDisplay.toggleOption(auto_toggle);  
+                } 
             } else {
                 $.cookie("auto-sources", true, { path: '/' });
+                mainDisplay.toggleOption(auto_toggle);
             }
+            // to tell that this is a call from the toggle
+            $.cookie("not-init",true,{path: "/"});
             $("a.active-link").click();
-            mainDisplay.toggleOption(auto_toggle);
+            // to reset
+            //$.cookie("not-init",null,{path: "/"});
         });
 
         var proof = $("#proof");
@@ -503,6 +512,24 @@ var events = {
               elementPath[4] = section;
               path = elementPath.join("/");
             }
+            // if is a call not from the toggle (the first time to enter in the lemma)
+            if ($.cookie("not-init")== null) {
+
+                if (path.indexOf("AUTO_typing")>0) {
+                    if ($.cookie("auto-sources")== null) {
+                        $.cookie("auto-sources",true,{path:'/'});
+                        mainDisplay.toggleOption($('a#auto-toggle'));
+                    }
+                    
+                }else{
+                    if ($.cookie("auto-sources")) {
+                        $.cookie("auto-sources",null,{path:'/'});
+                        mainDisplay.toggleOption($('a#auto-toggle'));
+                        
+                    }
+                }
+            }
+            
 
             mainDisplay.loadTarget(
                 path,
@@ -758,14 +785,6 @@ var mainDisplay = {
               { name: "no-auto-sources", value: ""}  
             );
         }
-
-        if($.cookie("auto-typing")==null){
-            params = params.concat(
-              { name: "no-auto-typing", value: ""}  
-            );
-        }
-
-
 
         // Rewrite image paths (if necessary)
         if(params.length > 0) {
