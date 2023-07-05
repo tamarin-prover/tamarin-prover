@@ -807,7 +807,7 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
   I_Complete
 Failed to derive Variable(s): ~eb
   
@@ -818,15 +818,15 @@ Failed to derive Variable(s): ~ea
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Maude version 2.7.1
+Git revision: 4b98299e4a9d45b005a55cefa35edd01c0ae0eb3 (with uncommited changes), branch: issues527
+Compiled at: 2023-07-03 08:19:31.808496576 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.2.1. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -835,7 +835,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_fix.spthy
 
   output:          examples/ake/dh/UM_one_pass_fix.spthy.tmp
-  processing time: 1.14s
+  processing time: 1.63s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

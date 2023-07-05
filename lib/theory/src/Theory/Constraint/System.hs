@@ -84,6 +84,7 @@ module Theory.Constraint.System (
   , pcMaudeHandle
   , pcDiffContext
   , pcTrueSubterm
+  , pcVerbose
   , pcConstantRHS
   , pcIsSapic
   , dpcPCLeft
@@ -721,6 +722,7 @@ data ProofContext = ProofContext
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
+       , _pcVerbose            :: Bool -- true if we want to show the achieved goal and formula
        , _pcDiffContext        :: Bool -- true if diff proof
        , _pcTrueSubterm        :: Bool -- true if in all rules the RHS is a subterm of the LHS
        , _pcConstantRHS        :: Bool -- true if there are rules with a constant RHS

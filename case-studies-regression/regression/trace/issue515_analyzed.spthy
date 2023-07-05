@@ -1,0 +1,124 @@
+theory issue515 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+/* looping facts with injective instances: K/1 */
+
+rule (modulo E) test:
+   [ K( x ) ] --[ !KU( x ) ]-> [ !KD( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) test2:
+   [ Out( x ) ] --[ !KD( x ) ]-> [ In( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) test3:
+   [ K( x ) ] --[ In( x ) ]-> [ K( x ) ]
+
+  // loop breaker: [0]
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) test4:
+   [ !KU( x ) ] --[ !KU( x ) ]-> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) test5:
+   [ !KD( x ) ] --[ !KD( x ) ]-> [ !KU( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Reserved names
+==============
+
+  rule `test' contains facts with reserved names on left-hand-side:
+    K( x )
+  
+  rule `test' contains facts with reserved names on the middle:
+    !KU( x )
+  
+  rule `test' contains facts with reserved names on the right-hand-side:
+    !KD( x )
+  
+  rule `test2' contains facts with reserved names on the middle:
+    !KD( x )
+  
+  rule `test3' contains facts with reserved names on left-hand-side:
+    K( x )
+  
+  rule `test3' contains facts with reserved names on the middle:
+    In( x )
+  
+  rule `test3' contains facts with reserved names on the right-hand-side:
+    K( x )
+  
+  rule `test4' contains facts with reserved names on left-hand-side:
+    !KU( x )
+  
+  rule `test4' contains facts with reserved names on the middle:
+    !KU( x )
+  
+  rule `test5' contains facts with reserved names on left-hand-side:
+    !KD( x )
+  
+  rule `test5' contains facts with reserved names on the middle:
+    !KD( x )
+  
+  rule `test5' contains facts with reserved names on the right-hand-side:
+    !KU( x )
+
+Special facts
+=============
+
+  rule `test2' uses disallowed facts on left-hand-side:
+    Out( x )
+  
+  rule `test2' uses disallowed facts on right-hand-side:
+    In( x )
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 2.7.1
+Git revision: 540947829dc81ce0bdca436a39b9505df5ad098f (with uncommited changes), branch: issues515
+Compiled at: 2023-07-04 08:07:23.693492291 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 2.7.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue515.spthy
+
+  output:          examples/regression/trace/issue515.spthy.tmp
+  processing time: 0.14s
+  
+  WARNING: 14 wellformedness check failed!
+           The analysis results might be wrong!
+
+==============================================================================
+*/

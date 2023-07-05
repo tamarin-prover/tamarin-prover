@@ -387,7 +387,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False False False False False S.empty [] 10 5
+defaultOption = Option False False False False False False False False S.empty [] 10 5
 
 
 
