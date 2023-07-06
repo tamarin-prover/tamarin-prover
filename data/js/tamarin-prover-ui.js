@@ -279,8 +279,6 @@ var ui = {
             // to tell that this is a call from the toggle
             $.cookie("not-init",true,{path: "/"});
             $("a.active-link").click();
-            // to reset
-            //$.cookie("not-init",null,{path: "/"});
         });
 
 
