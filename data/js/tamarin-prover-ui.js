@@ -268,7 +268,7 @@ var ui = {
         var auto_toggle = $('a#auto-toggle');
         auto_toggle.click(function(ev) {
             ev.preventDefault();
-            var pathname =window.location.href;
+            var pathname = window.location.href;
             if ($.cookie("auto-sources")) {      
                 $.cookie("auto-sources", null, { path: '/' });  
             } else {
@@ -492,18 +492,17 @@ var events = {
             }
             // if is a call not from the toggle (the first time to enter in the lemma)
             if ($.cookie("not-init")== null) {
-
+                // show annotation auto-sources for lemma AUTO_typing
                 if (path.indexOf("AUTO_typing")>0) {
                     if ($.cookie("auto-sources")== null) {
                         $.cookie("auto-sources",true,{path:'/'});
                         mainDisplay.toggleOption($('a#auto-toggle'));
                     }
-                    
+                // else, don't show annotations for other lemmas    
                 }else{
                     if ($.cookie("auto-sources")) {
                         $.cookie("auto-sources",null,{path:'/'});
                         mainDisplay.toggleOption($('a#auto-toggle'));
-                        
                     }
                 }
             }
