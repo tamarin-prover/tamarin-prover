@@ -164,6 +164,37 @@ underlineTopic :: String -> String
 underlineTopic topic = topic ++"\n" ++ 
                       (concat $ take (length topic) $ repeat "=")
                       ++"\n"
+
+-- | To get the informations of a fact
+factInfo :: Fact t -> (FactTag, Int, Multiplicity)
+factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
+
+-- | To bind a fact in LHS with his most similar fact in RHS. The most similar fact 
+-- | in RHS has the minimum editing distance with it and the value of the distance
+-- | is included between 1 and 3.
+mostSimilarName :: [RuleAndFact]->[RuleAndFact]
+                  ->[(RuleAndFact,RuleAndFact)]
+mostSimilarName xs xt = 
+    filter (\x -> isSimilar (fst x) $ snd x) 
+    $ foldr (\x acc-> ((,) x $ minEd x xt):acc) [] $
+    removeSame xt xs
+  where
+    -- To remove all the facts in lhs and also in rhs
+    removeSame :: [RuleAndFact] -> [RuleAndFact] ->[RuleAndFact]
+    removeSame li             = filter (\x -> (getName $ snd(x)) `notElem` 
+                              ( map (getName.snd) li) ) 
+    -- to verify if the names of two facts are similar
+    isSimilar :: RuleAndFact-> RuleAndFact->Bool
+    isSimilar s t             = distance (snd s) t < 3
+    -- to get the fact in rhs which has the minimum editing distance
+    -- with a given fact  
+    minEd :: RuleAndFact->[RuleAndFact]->RuleAndFact
+    minEd s li                = head $
+                                sortOn (\x -> distance (snd s) x) li
+    distance factL ruleRactR  = editDistance (getName factL) $ 
+                                getName $ snd ruleRactR
+    tagName (tag,_,_)         = factTagName tag
+    getName fact              = tagName $ factInfo fact
 ------------------------------------------------------------------------------
 -- Checks
 ------------------------------------------------------------------------------
@@ -417,8 +448,6 @@ factReports thy = concat
     -- mangle facts with terms with bound variables and such without them
     extFactInfo fa = (prettyLNFact fa, factInfo fa)
 
-    factInfo :: Fact t -> (FactTag, Int, Multiplicity)
-    factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 
     --- Check for usage of protocol facts with reserved names
     reservedReport = do
@@ -496,32 +525,6 @@ factReports thy = concat
           ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
 
     
-    -- | To bind a fact in LHS with his most similar fact in RHS. The most similar fact 
-    -- | in RHS has the minimum editing distance with it and the value of the distance
-    -- | is included between 1 and 3.
-    mostSimilarName :: [RuleAndFact]->[RuleAndFact]
-                      ->[(RuleAndFact,RuleAndFact)]
-    mostSimilarName xs xt = 
-        filter (\x -> isSimilar (fst x) $ snd x) 
-        $ foldr (\x acc-> ((,) x $ minEd x xt):acc) [] $
-        removeSame xt xs
-      where
-        -- To remove all the facts in lhs and also in rhs
-        removeSame :: [RuleAndFact] -> [RuleAndFact] ->[RuleAndFact]
-        removeSame li             = filter (\x -> (getName $ snd(x)) `notElem` 
-                                  ( map (getName.snd) li) ) 
-        -- to verify if the names of two facts are similar
-        isSimilar :: RuleAndFact-> RuleAndFact->Bool
-        isSimilar s t             = distance (snd s) t < 3
-        -- to get the fact in rhs which has the minimum editing distance
-        -- with a given fact  
-        minEd :: RuleAndFact->[RuleAndFact]->RuleAndFact
-        minEd s li                = head $
-                                    sortOn (\x -> distance (snd s) x) li
-        distance factL ruleRactR  = editDistance (getName factL) $ 
-                                    getName $ snd ruleRactR
-        tagName (tag,_,_)         = factTagName tag
-        getName fact              = tagName $ factInfo fact
     
     
     -- Report a protocol fact occurs in an LHS but not in any RHS
@@ -635,8 +638,6 @@ factReportsDiff thy = concat
     -- mangle facts with terms with bound variables and such without them
     extFactInfo fa = (prettyLNFact fa, factInfo fa)
 
-    factInfo :: Fact t -> (FactTag, Int, Multiplicity)
-    factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 
     -- Check for usage of protocol facts with reserved names
     reservedReport = do
@@ -735,34 +736,6 @@ factReportsDiff thy = concat
         ++ (do ru <- get diffThyDiffCacheRight thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyDiffCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
-
-
-    -- | To bind a fact in LHS with his most similar fact in RHS. The most similar fact 
-    -- | in RHS has the minimum editing distance with it and the value of the distance
-    -- | is included between 1 and 3.
-    mostSimilarName :: [RuleAndFact]->[RuleAndFact]
-                      ->[(RuleAndFact,RuleAndFact)]
-    mostSimilarName xs xt = 
-        filter (\x -> isSimilar (fst x) $ snd x) 
-        $ foldr (\x acc-> ((,) x $ minEd x xt):acc) [] $
-        removeSame xt xs
-      where
-        -- To remove all the facts in lhs and also in rhs
-        removeSame :: [RuleAndFact] -> [RuleAndFact] ->[RuleAndFact]
-        removeSame li             = filter (\x -> (getName $ snd(x)) `notElem` 
-                                  ( map (getName.snd) li) ) 
-        -- to verify if the names of two facts are similar
-        isSimilar :: RuleAndFact-> RuleAndFact->Bool
-        isSimilar s t             = distance (snd s) t < 3
-        -- to get the fact in rhs which has the minimum editing distance
-        -- with a given fact  
-        minEd :: RuleAndFact->[RuleAndFact]->RuleAndFact
-        minEd s li                = head $
-                                    sortOn (\x -> distance (snd s) x) li
-        distance factL ruleRactR  = editDistance (getName factL) $ 
-                                    getName $ snd ruleRactR
-        tagName (tag,_,_)         = factTagName tag
-        getName fact              = tagName $ factInfo fact
 
 
     factLhsOccurNoRhs :: WfErrorReport
