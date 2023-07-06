@@ -1066,7 +1066,7 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
   Proto2
 Failed to derive Variable(s): ltkB, ltkC
 */

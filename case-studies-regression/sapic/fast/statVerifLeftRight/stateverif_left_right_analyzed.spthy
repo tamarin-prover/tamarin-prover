@@ -1970,7 +1970,7 @@ restriction locking_1:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
+The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
   lookupFstatussasstatus_0_11111121111
 Failed to derive Variable(s): status.1
   

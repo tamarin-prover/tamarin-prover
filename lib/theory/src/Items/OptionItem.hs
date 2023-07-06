@@ -20,7 +20,8 @@ import Theory.Model.Fact
 -- | Note: setOption below assumes all values to be boolean
 data Option = Option
         {
-          _transAllowPatternMatchinginLookup   :: Bool
+          _verboseOption     :: Bool
+        , _transAllowPatternMatchinginLookup   :: Bool
         , _transProgress            :: Bool
         , _transReliable            :: Bool
         , _transReport            :: Bool
