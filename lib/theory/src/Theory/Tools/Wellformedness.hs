@@ -175,8 +175,9 @@ factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 mostSimilarName :: [RuleAndFact]->[RuleAndFact]
                   ->[(RuleAndFact,RuleAndFact)]
 mostSimilarName xs xt = 
-    filter (\x -> isSimilar (fst x) $ snd x) 
-    $ foldr (\x acc-> ((,) x $ minEd x xt):acc) [] $
+    map (\x -> (,) (fst3 x) $ snd3 x )
+    $ filter isSimilar  
+    $ foldr (\x acc-> (minEd x xt):acc) [] $
     removeSame xt xs
   where
     -- To remove all the facts in lhs and also in rhs
@@ -184,13 +185,18 @@ mostSimilarName xs xt =
     removeSame li             = filter (\x -> (getName $ snd(x)) `notElem` 
                               ( map (getName.snd) li) ) 
     -- to verify if the names of two facts are similar
-    isSimilar :: RuleAndFact-> RuleAndFact->Bool
-    isSimilar s t             = distance (snd s) t < 3
+    isSimilar :: (RuleAndFact, RuleAndFact, Int)->Bool
+    isSimilar rfd             = (thd3 rfd) < 3
     -- to get the fact in rhs which has the minimum editing distance
-    -- with a given fact  
-    minEd :: RuleAndFact->[RuleAndFact]->RuleAndFact
-    minEd s li                = head $
-                                sortOn (\x -> distance (snd s) x) li
+    -- with a given fact and the distance between the two facts  
+    minEd :: RuleAndFact->[RuleAndFact]->(RuleAndFact, RuleAndFact, Int)
+    minEd s li                =  (s,factminEd,d)
+        where (factminEd,d) = head $ sortOn snd $ saveEd s li
+    -- to calculate the distance between a given fact and the facts of a list, 
+    -- also save each fact in the list and his editing distance to the given fact
+    -- as a tuple  
+    saveEd :: RuleAndFact-> [RuleAndFact] -> [(RuleAndFact, Int)]
+    saveEd s li = map (\x ->(,) x $ distance (snd s) x) li
     distance factL ruleRactR  = editDistance (getName factL) $ 
                                 getName $ snd ruleRactR
     tagName (tag,_,_)         = factTagName tag
