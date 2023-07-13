@@ -14,6 +14,7 @@ module Theory.Constraint.System.Dot (
   , dotSystemLoose
   , dotSystemCompact
   , compressSystem
+  , simplifySystem
   , BoringNodeStyle(..)
   ) where
 
@@ -462,6 +463,24 @@ compressSystem se0 =
     foldl' (flip tryHideNodeId) se (frees (get sLessAtoms se, get sNodes se))
   where
     se = dropEntailedOrdConstraints se0
+
+--
+simplifySystem :: Int -> System -> System
+simplifySystem i sys 
+    | i==1 = transitiveReduction sys
+    | otherwise = sys
+
+-- |Simplify the system by transitive reduction
+transitiveReduction :: System -> System
+transitiveReduction sys = 
+    if D.cyclic oldLesses
+        then sys
+        else  modify sLessAtoms 
+            ( S.intersection ( S.fromList newLesses) )sys
+    where 
+        oldLesses = rawLessRel sys 
+        newLesses = D.transRed oldLesses
+
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
 -- transfer node; i.e., a node annotated with a rule that is one of the

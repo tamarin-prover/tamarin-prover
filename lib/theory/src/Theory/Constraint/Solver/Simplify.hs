@@ -74,8 +74,6 @@ simplifySystem = do
         removeSolvedSplitGoals
         -- Add ordering constraint from injective facts
         addNonInjectiveFactInstances
-        -- Apply transitive reduction for the lesses
-        transitiveReduction
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -515,19 +513,6 @@ addNonInjectiveFactInstances = do
   let list = nonInjectiveFactInstances ctxt se
   mapM_ (uncurry insertLess) list
 
--- Simplify the lesses by using the algo transitive reduction
-transitiveReduction ::  Reduction ()
-transitiveReduction = do
-      sys <- gets id
-      oldLessAtoms <- gets (get sLessAtoms)
-      let oldLesses = rawLessRel sys 
-      if D.cyclic oldLesses
-        then return ()
-        else do
-            let newLesses = D.transRed oldLesses
-                edges = rawEdgeRel sys
-            modM sLessAtoms $ S.intersection ( S.fromList newLesses) 
-            
 
 
  

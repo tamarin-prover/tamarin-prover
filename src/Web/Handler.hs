@@ -95,6 +95,7 @@ import qualified Blaze.ByteString.Builder     as B
 import qualified Data.ByteString.Char8        as BS
 import qualified Data.Map                     as M
 import qualified Data.Text                    as T
+import qualified Data.Text.Read               as R
 import qualified Data.Text.Encoding           as T (encodeUtf8, decodeUtf8)
 import qualified Data.Text.Lazy.Encoding      as TLE
 import qualified Data.Traversable             as Tr
@@ -908,18 +909,19 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
           (imageFormat yesod)
           (graphCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress)
+          (graphStyle compact compress ( read $ T.unpack simplificationLevel))
           (sequentToJSONPretty)
           (show simplificationLevel)
           (abbreviate)
           (tiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
-    graphStyle d c = dotStyle d . compression c
+    graphStyle d c s= dotStyle d .simplifySystem s. compression c
     dotStyle True = dotSystemCompact CompactBoringNodes
     dotStyle False = dotSystemCompact FullBoringNodes
     compression True = compressSystem
     compression False = id
+    
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
@@ -938,14 +940,14 @@ getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
           (imageFormat yesod)
           (snd $ graphCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress)
+          (graphStyle compact compress ( read $ T.unpack simplificationLevel))
           (show simplificationLevel)
           (abbreviate)
           (dtiTheory ti) path
           (mirror)
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
-    graphStyle d c = dotStyle d . compression c
+    graphStyle d c s= dotStyle d .simplifySystem s. compression c
     dotStyle True = dotSystemCompact CompactBoringNodes
     dotStyle False = dotSystemCompact FullBoringNodes
     compression True = compressSystem
