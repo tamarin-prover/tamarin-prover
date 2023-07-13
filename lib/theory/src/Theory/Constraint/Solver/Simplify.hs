@@ -74,7 +74,7 @@ simplifySystem = do
         removeSolvedSplitGoals
         -- Add ordering constraint from injective facts
         addNonInjectiveFactInstances
-        -- Apply transitive reduction for lesses
+        -- Apply transitive reduction for the lesses
         transitiveReduction
   where
     go n changes0
@@ -515,26 +515,19 @@ addNonInjectiveFactInstances = do
   let list = nonInjectiveFactInstances ctxt se
   mapM_ (uncurry insertLess) list
 
--- optimal : use topsort in data.graph to make a faster prog
+-- Simplify the lesses by using the algo transitive reduction
 transitiveReduction ::  Reduction ()
 transitiveReduction = do
       sys <- gets id
       oldLessAtoms <- gets (get sLessAtoms)
-    -- get all the lesses of system and apply topological sort
-      let oldLesses = rawLessRel sys -- [vertex]
+      let oldLesses = rawLessRel sys 
       if D.cyclic oldLesses
         then return ()
         else do
             let newLesses = D.transRed oldLesses
                 edges = rawEdgeRel sys
             modM sLessAtoms $ S.intersection ( S.fromList newLesses) 
-            --modifiedLesses <- gets (get sLessAtoms)  
-           -- return $ if oldLessAtoms == modifiedLesses
-             --       then Unchanged
-             --       else Changed
+            
 
 
- --rawLessRel se = S.toList (L.get sLessAtoms se) ++ rawEdgeRel se
-
---getLessAtom :: [(NodeId,NodeId)]->[(NodeId,NodeId)]->[(NodeId,NodeId)]
---getLessAtom edge less = filter (\x-> x `elem` edge) less
+ 
