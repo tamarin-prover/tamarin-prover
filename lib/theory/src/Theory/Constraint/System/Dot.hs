@@ -464,13 +464,15 @@ compressSystem se0 =
   where
     se = dropEntailedOrdConstraints se0
 
---
+-- | Simplify the system up to the sent level, for level 1, we will simplify
+-- | the lesses of system by transitive reduction
 simplifySystem :: Int -> System -> System
 simplifySystem i sys 
     | i==1 = transitiveReduction sys
     | otherwise = sys
 
--- |Simplify the system by transitive reduction
+-- | Simplify the system by transitive reduction but not for a system which has
+-- | a graph cyclic
 transitiveReduction :: System -> System
 transitiveReduction sys = 
     if D.cyclic oldLesses
@@ -480,7 +482,6 @@ transitiveReduction sys =
     where 
         oldLesses = rawLessRel sys 
         newLesses = D.transRed oldLesses
-
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
 -- transfer node; i.e., a node annotated with a rule that is one of the
