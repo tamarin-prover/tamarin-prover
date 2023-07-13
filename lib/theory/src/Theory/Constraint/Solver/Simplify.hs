@@ -33,6 +33,8 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
+import qualified Data.Graph                         as G 
+import qualified Extension.Data.Label                 as L
 import           Data.Maybe                         (mapMaybe)
 
 import           Control.Basics
@@ -72,6 +74,8 @@ simplifySystem = do
         removeSolvedSplitGoals
         -- Add ordering constraint from injective facts
         addNonInjectiveFactInstances
+        -- Apply transitive reduction for lesses
+        transitiveReduction
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -95,7 +99,7 @@ simplifySystem = do
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
               c9 <- freshOrdering
-
+              
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
                     [ ("unique fresh instances (DG4)",        c1)
@@ -510,3 +514,27 @@ addNonInjectiveFactInstances = do
   ctxt <- ask
   let list = nonInjectiveFactInstances ctxt se
   mapM_ (uncurry insertLess) list
+
+-- optimal : use topsort in data.graph to make a faster prog
+transitiveReduction ::  Reduction ()
+transitiveReduction = do
+      sys <- gets id
+      oldLessAtoms <- gets (get sLessAtoms)
+    -- get all the lesses of system and apply topological sort
+      let oldLesses = rawLessRel sys -- [vertex]
+      if D.cyclic oldLesses
+        then return ()
+        else do
+            let newLesses = D.transRed oldLesses
+                edges = rawEdgeRel sys
+            modM sLessAtoms $ S.intersection ( S.fromList newLesses) 
+            --modifiedLesses <- gets (get sLessAtoms)  
+           -- return $ if oldLessAtoms == modifiedLesses
+             --       then Unchanged
+             --       else Changed
+
+
+ --rawLessRel se = S.toList (L.get sLessAtoms se) ++ rawEdgeRel se
+
+--getLessAtom :: [(NodeId,NodeId)]->[(NodeId,NodeId)]->[(NodeId,NodeId)]
+--getLessAtom edge less = filter (\x-> x `elem` edge) less
