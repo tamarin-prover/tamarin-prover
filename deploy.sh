@@ -39,6 +39,8 @@ do
 done
 cp tex/tamarin-manual.pdf $CHECKOUT/$BRANCH/tex/tamarin-manual.pdf
 cp index.html $CHECKOUT/$BRANCH/index.html
+# put index.html also to root directory
+cp index.html $CHECKOUT/index.html
 
 # If there are no changes to the compiled book (e.g. this is a README update) then just bail.
 if [[ -z `git -C $CHECKOUT status --porcelain` ]]; then
