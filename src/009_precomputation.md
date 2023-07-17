@@ -205,6 +205,10 @@ of the loaded theory in two ways:
    protocol rules. All added annotations start with ``AUTO_IN_`` or
    ``AUTO_OUT_``, and can be seen, e.g., by clicking on
    ``Multiset rewriting rules`` in interactive mode.
+   Note that these annotations are by default hidden in the graphs in
+   interactive mode, except during the proof of the sources lemma, to reduce
+   the size of the graphs. One can manually make them visible or invisible using
+   the Options button on the top right of the page.
 2. By splitting protocol rules into their variants w.r.t. the equational theory,
    if these variants exists. This is necessary to be able to place the
    annotations. When exporting such a theory from Tamarin using, e.g., the
