@@ -55,6 +55,8 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 
+import           Utils.Misc
+
 
 -- | Apply CR-rules that don't result in case splitting until the constraint
 -- system does not change anymore.
@@ -162,7 +164,8 @@ exploitUniqueMsgOrder = do
     kdConcs   <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKDConcs)
     kuActions <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKUActions)
     -- We can add all elements where we have an intersection
-    F.mapM_ (uncurry insertLess) $ M.intersectionWith (,) kdConcs kuActions
+    F.mapM_ (uncurry3 insertLess) (M.map (\(x,y)->(x,y,"user-specified"))  
+              $ M.intersectionWith (,) kdConcs kuActions )
 
 -- | CR-rules *DG4*, *N5_u*, and *N5_d*: enforcing uniqueness of *Fresh* rule
 -- instances, *KU*-actions, and *KD*-conclusions.
@@ -420,10 +423,10 @@ freshOrdering = do
   reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
   let origins = concatMap getFreshFactVars nodes
   let uses = M.fromListWith (++) $ concatMap (getFreshVarsNotBelowReducible reducible) nodes
-  let newLesses = [(i,j) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
+  let newLesses = [(i,j,"induced by fresh values") | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
 
   oldLesses <- gets (get sLessAtoms)
-  mapM_ (uncurry insertLess) newLesses
+  mapM_ (uncurry3 insertLess) newLesses
   modifiedLesses <- gets (get sLessAtoms)
   return $ if oldLesses == modifiedLesses
     then Unchanged
@@ -510,8 +513,8 @@ addNonInjectiveFactInstances :: Reduction ()
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
-  let list = nonInjectiveFactInstances ctxt se
-  mapM_ (uncurry insertLess) list
+  let list = map (\(x,y)-> (x,y,"user-specified")) $ nonInjectiveFactInstances ctxt se
+  mapM_ (uncurry3 insertLess) list
 
 
 

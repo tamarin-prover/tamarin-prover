@@ -44,6 +44,7 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty       (opAction)
 
+import           Utils.Misc
 -- | 'True' iff the dotted system will be a non-empty graph.
 nonEmptyGraph :: System -> Bool
 nonEmptyGraph sys = not $
@@ -248,7 +249,7 @@ dotSystemLoose se =
     dotChain (src, tgt) =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
-    dotLess (src, tgt) = do
+    dotLess (src, tgt, _) = do
         srcId <- dotNode src
         tgtId <- dotNode tgt
         liftDot $ D.edge srcId tgtId
@@ -436,7 +437,7 @@ dotSystemCompact boringStyle se =
     dotChain (src, tgt) =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
-    dotLess (src, tgt) = do
+    dotLess (src, tgt, _) = do
         srcId <- dotNodeCompact boringStyle src
         tgtId <- dotNodeCompact boringStyle tgt
         liftDot $ D.edge srcId tgtId
@@ -454,7 +455,7 @@ dropEntailedOrdConstraints se =
     modify sLessAtoms (S.filter (not . entailed)) se
   where
     edges               = rawEdgeRel se
-    entailed (from, to) = to `S.member` D.reachableSet [from] edges
+    entailed (from, to, _) = to `S.member` D.reachableSet [from] edges
 
 -- | Unsound compression of the sequent that drops fully connected learns and
 -- knows nodes.
@@ -478,10 +479,11 @@ transitiveReduction sys =
     if D.cyclic oldLesses
         then sys
         else  modify sLessAtoms 
-            ( S.intersection ( S.fromList newLesses) )sys
+            ( S.intersection ( S.fromList newLesses) ) sys
     where 
         oldLesses = rawLessRel sys 
-        newLesses = D.transRed oldLesses
+        newLesses =[(x,y,z)| (x,y,z)<- S.toList $ get sLessAtoms sys,
+                            (x,y) `elem` (D.transRed oldLesses)]
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
 -- transfer node; i.e., a node annotated with a rule that is one of the
@@ -508,7 +510,7 @@ tryHideNodeId v se = fromMaybe se $ do
     hideAction = do
         guard $  not (null kuActions)
               && all eligibleTerm kuActions
-              && all (\(i, j) -> not (i == j)) lNews
+              && all (\(i, j, _) -> not (i == j)) lNews
               && notOccursIn (standardActionAtoms)
               && notOccursIn (get sLastAtom)
               && notOccursIn (get sEdges)
@@ -526,9 +528,9 @@ tryHideNodeId v se = fromMaybe se $ do
 
         removeAction m (i, fa, _) = M.delete (ActionG i fa) m
 
-        lIns  = selectPart sLessAtoms ((v ==) . snd)
-        lOuts = selectPart sLessAtoms ((v ==) . fst)
-        lNews = [ (i, j) | (i, _) <- lIns, (_, j) <- lOuts ]
+        lIns  = selectPart sLessAtoms ((v ==) . snd3)
+        lOuts = selectPart sLessAtoms ((v ==) . fst3)
+        lNews = [ (i, j, r) | (i, _, r) <- lIns, (_, j, r) <- lOuts ]
 
     -- hide a rule, if it is not "too complicated"
     hideRule :: RuleACInst -> Maybe System

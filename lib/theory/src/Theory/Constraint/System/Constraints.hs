@@ -21,6 +21,7 @@ module Theory.Constraint.System.Constraints (
   , NodePrem
   , NodeConc
   , Edge(..)
+  , Reason
   , Less
 
   -- * Goal constraints
@@ -73,9 +74,10 @@ data Edge = Edge {
     , eTgt :: NodePrem
     }
   deriving (Show, Ord, Eq, Data, Typeable, Generic, NFData, Binary)
-
+-- | A reason to explain the less, user-specified”, “induced by fresh values
+type Reason = String
 -- | A *⋖* constraint between 'NodeId's.
-type Less = (NodeId, NodeId)
+type Less = (NodeId, NodeId, Reason)
 
 -- Instances
 ------------
@@ -193,7 +195,7 @@ prettyEdge (Edge c p) =
 
 -- | Pretty print a less-atom as @src < tgt@.
 prettyLess :: HighlightDocument d => Less -> d
-prettyLess (i, j) = prettyNAtom $ Less (varTerm i) (varTerm j)
+prettyLess (i, j, r) = (prettyNAtom $ Less (varTerm i) (varTerm j)) <> colon <-> text r
 
 -- | Pretty print a goal.
 prettyGoal :: HighlightDocument d => Goal -> d
