@@ -2,7 +2,7 @@
 set -e # Exit with nonzero exit code if anything fails
 
 # Set up some git information.
-REPO=`git config remote.${1:=origin}.url`
+REPO=`git config remote.${1:-origin}.url`
 SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 SHA=`git rev-parse --verify HEAD`
 BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -16,8 +16,8 @@ function doCompile {
     make pdf
 }
 
-if [ [$BRANCH != $MASTER_BRANCH] -o [$BRANCH != $DEVELOP_BRANCH] ]; then
-    echo "Please use this script on branch $MASTER_BRANCH or $DEVELOP_BRANCH only. You seem to be on $BRANCH."
+if [ "$BRANCH" != "$MASTER_BRANCH" && "$BRANCH" != "$DEVELOP_BRANCH" ]; then
+    echo "Please use this script on branch '$MASTER_BRANCH' or '$DEVELOP_BRANCH' only. You seem to be on '$BRANCH'."
     exit 0
 fi
 
@@ -39,6 +39,8 @@ do
 done
 cp tex/tamarin-manual.pdf $CHECKOUT/$BRANCH/tex/tamarin-manual.pdf
 cp index.html $CHECKOUT/$BRANCH/index.html
+# put index.html also to root directory
+cp index.html $CHECKOUT/index.html
 
 # If there are no changes to the compiled book (e.g. this is a README update) then just bail.
 if [[ -z `git -C $CHECKOUT status --porcelain` ]]; then
