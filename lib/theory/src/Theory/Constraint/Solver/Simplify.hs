@@ -164,7 +164,7 @@ exploitUniqueMsgOrder = do
     kdConcs   <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKDConcs)
     kuActions <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKUActions)
     -- We can add all elements where we have an intersection
-    F.mapM_ (uncurry3 insertLess) (M.map (\(x,y)->(x,y,"user-specified"))  
+    F.mapM_ (uncurry3 insertLess) (M.map (\(x,y)->(x,y, NormalForm))  
               $ M.intersectionWith (,) kdConcs kuActions )
 
 -- | CR-rules *DG4*, *N5_u*, and *N5_d*: enforcing uniqueness of *Fresh* rule
@@ -423,7 +423,7 @@ freshOrdering = do
   reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
   let origins = concatMap getFreshFactVars nodes
   let uses = M.fromListWith (++) $ concatMap (getFreshVarsNotBelowReducible reducible) nodes
-  let newLesses = [(i,j,"induced by fresh values") | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
+  let newLesses = [(i,j,Fresh) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
 
   oldLesses <- gets (get sLessAtoms)
   mapM_ (uncurry3 insertLess) newLesses
@@ -513,7 +513,7 @@ addNonInjectiveFactInstances :: Reduction ()
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
-  let list = map (\(x,y)-> (x,y,"user-specified")) $ nonInjectiveFactInstances ctxt se
+  let list = map (\(x,y)-> (x,y,InjectiveFacts)) $ nonInjectiveFactInstances ctxt se
   mapM_ (uncurry3 insertLess) list
 
 

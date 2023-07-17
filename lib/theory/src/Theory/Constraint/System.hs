@@ -269,7 +269,7 @@ import qualified Extension.Data.Label                 as L
 
 import           Logic.Connectives
 import           Theory.Constraint.Solver.AnnotatedGoals
-import           Theory.Constraint.System.Constraints
+import           Theory.Constraint.System.Constraints 
 --import           Theory.Constraint.Solver.Heuristics
 import           Theory.Model
 import           Theory.Text.Pretty

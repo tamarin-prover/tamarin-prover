@@ -264,7 +264,7 @@ labelNodeId = \i rules parent -> do
           -- corresponding KU-actions before this node.
         _ | isKUFact fa -> do
               j <- freshLVar "vk" LSortNode
-              insertLess j i "user-specified"
+              insertLess j i NormalForm
               void (insertAction j fa)
 
           -- Store premise goal for later processing using CR-rule *DG2_2*
@@ -386,7 +386,7 @@ insertAction i fa@(Fact _ ann _) = do
     requiresKU t = do
       j <- freshLVar "vk" LSortNode
       let faKU = kuFactAnn ann t
-      insertLess j i "user-specified"
+      insertLess j i NormalForm
       void (insertAction j faKU)
 
 -- | Insert a 'Less' atom. @insertLess i j@ means that *i < j* is added.
@@ -407,7 +407,7 @@ insertAtom :: LNAtom -> Reduction ChangeIndicator
 insertAtom ato = case ato of
     EqE x y       -> solveTermEqs SplitNow [Equal x y]
     Action i fa   -> insertAction (ltermNodeId' i) fa
-    Less i j      -> do insertLess (ltermNodeId' i) (ltermNodeId' j) "user-specified"
+    Less i j      -> do insertLess (ltermNodeId' i) (ltermNodeId' j) Formula
                         return Unchanged
     Last i        -> insertLast (ltermNodeId' i)
     Syntactic _   -> return Unchanged

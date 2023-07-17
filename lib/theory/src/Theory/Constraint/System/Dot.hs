@@ -40,7 +40,7 @@ import           Control.Monad.State      (StateT, evalStateT)
 import qualified Text.Dot                 as D
 import           Text.PrettyPrint.Class
 
-import           Theory.Constraint.System
+import           Theory.Constraint.System 
 import           Theory.Model
 import           Theory.Text.Pretty       (opAction)
 
@@ -530,7 +530,7 @@ tryHideNodeId v se = fromMaybe se $ do
 
         lIns  = selectPart sLessAtoms ((v ==) . snd3)
         lOuts = selectPart sLessAtoms ((v ==) . fst3)
-        lNews = [ (i, j, r) | (i, _, r) <- lIns, (_, j, r) <- lOuts ]
+        lNews = [ (i, j, NormalForm) | (i, _, _) <- lIns, (_, j, _) <- lOuts ] --Not sure, to check
 
     -- hide a rule, if it is not "too complicated"
     hideRule :: RuleACInst -> Maybe System
