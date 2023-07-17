@@ -16,8 +16,8 @@ function doCompile {
     make pdf
 }
 
-if [ [$BRANCH != $MASTER_BRANCH] -o [$BRANCH != $DEVELOP_BRANCH] ]; then
-    echo "Please use this script on branch $MASTER_BRANCH or $DEVELOP_BRANCH only. You seem to be on $BRANCH."
+if [ "$BRANCH" != "$MASTER_BRANCH" && "$BRANCH" != "$DEVELOP_BRANCH" ]; then
+    echo "Please use this script on branch '$MASTER_BRANCH' or '$DEVELOP_BRANCH' only. You seem to be on '$BRANCH'."
     exit 0
 fi
 
