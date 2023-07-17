@@ -71,6 +71,7 @@ well as the left and right instances of a rule in diff-mode.
     rule_attr   := ('color=' | 'colour=') hexcolor
     let_block   := 'let' (msg_var '=' msetterm)+ 'in'
     msg_var     := ident ['.' natural] [':' 'msg']
+    hexcolor    := "'" ["#"] hexdigit{6} "'" | ["#"] hexdigit{6}
 
 Rule annotations do not influence the rule's semantics. A color is represented
 as a triplet of 8 bit hexadecimal values optionally
