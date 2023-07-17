@@ -76,7 +76,7 @@ data Edge = Edge {
   deriving (Show, Ord, Eq, Data, Typeable, Generic, NFData, Binary)
 
 -- | A reason to explain the less, user-specified”, “induced by fresh values
-data Reason = Fresh | Formula | InjectiveFacts | NormalForm
+data Reason = Fresh | Formula | InjectiveFacts | NormalForm | Adversary
       deriving (Ord, Eq, Data, Typeable, Generic, NFData, Binary)
 
 -- | A *⋖* constraint between 'NodeId's.
@@ -89,6 +89,7 @@ instance Show Reason where
     show Formula            = "formula"
     show InjectiveFacts     = "injective facts"
     show NormalForm         = "normal form condition"
+    show Adversary          = "adversary"
 
 instance Apply LNSubst Reason where
     apply = const id
@@ -193,7 +194,7 @@ instance Apply LNSubst Goal where
 ------------------------------------------------------------------------------
 -- | Pretty print a reason
 prettyReason :: HighlightDocument d => Reason -> d
-prettyReason r = text $ "reduced by " ++ show r
+prettyReason r = text $ "induced by " ++ show r
     
 -- | Pretty print a node.
 prettyNode :: HighlightDocument d => (NodeId, RuleACInst) -> d

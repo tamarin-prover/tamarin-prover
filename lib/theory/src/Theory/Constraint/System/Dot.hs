@@ -530,7 +530,7 @@ tryHideNodeId v se = fromMaybe se $ do
 
         lIns  = selectPart sLessAtoms ((v ==) . snd3)
         lOuts = selectPart sLessAtoms ((v ==) . fst3)
-        lNews = [ (i, j, NormalForm) | (i, _, _) <- lIns, (_, j, _) <- lOuts ] --Not sure, to check
+        lNews = [ (i, j, NormalForm) | (i, _, _) <- lIns, (_, j, _) <- lOuts ] 
 
     -- hide a rule, if it is not "too complicated"
     hideRule :: RuleACInst -> Maybe System
