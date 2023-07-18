@@ -249,11 +249,20 @@ dotSystemLoose se =
     dotChain (src, tgt) =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
-    dotLess (src, tgt, _) = do
+    dotLess (src, tgt, reason) = do
         srcId <- dotNode src
         tgtId <- dotNode tgt
-        liftDot $ D.edge srcId tgtId
-            [("color","black"),("style","dotted")] -- FIXME: Reactivate,("constraint","false")]
+        case reason of
+            Adversary -> liftDot $ D.edge srcId tgtId
+                    [("color","red"),("style","dotted")]
+            Formula  -> liftDot $ D.edge srcId tgtId
+                    [("color","black"),("style","dotted")]
+            Fresh -> liftDot $ D.edge srcId tgtId
+                    [("color","darkgrey"),("style","dotted")] 
+            InjectiveFacts ->liftDot $ D.edge srcId tgtId
+                    [("color","purple"),("style","dotted")]
+            NormalForm ->liftDot $ D.edge srcId tgtId
+                    [("color","orange"),("style","dotted")] -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
 
     dotGenEdge style src tgt = do
@@ -455,12 +464,22 @@ dotSystemCompact boringStyle showAutosource se =
     dotChain (src, tgt) =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
-    dotLess (src, tgt, _) = do
+    dotLess (src, tgt, reason) = do
         srcId <- dotNodeCompact boringStyle showAutosource src
         tgtId <- dotNodeCompact boringStyle showAutosource tgt
-        liftDot $ D.edge srcId tgtId
-            [("color","black"),("style","dotted")] -- FIXME: reactivate ,("constraint","false")]
+        case reason of
+            Adversary -> liftDot $ D.edge srcId tgtId
+                    [("color","red"),("style","dotted")]
+            Formula  -> liftDot $ D.edge srcId tgtId
+                    [("color","black"),("style","dotted")]
+            Fresh -> liftDot $ D.edge srcId tgtId
+                    [("color","darkgrey"),("style","dotted")] 
+            InjectiveFacts ->liftDot $ D.edge srcId tgtId
+                    [("color","purple"),("style","dotted")]
+            NormalForm ->liftDot $ D.edge srcId tgtId
+                    [("color","orange"),("style","dotted")] -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
+        
 
 
 ------------------------------------------------------------------------------
