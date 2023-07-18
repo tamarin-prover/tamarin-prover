@@ -474,7 +474,7 @@ specialised inductive proof method.
 
 We start by motivating the need for an inductive proof method on a simple example with two rules and one lemma:
 
-~~~~ {.tamarin slice="code/InductionExample.spthy" lower=5 upper=23}
+~~~~ {.tamarin slice="code/InductionExample.spthy" lower=8 upper=19}
 ~~~~
 
 If we try to prove this with Tamarin without using induction (comment
@@ -496,6 +496,23 @@ be preceded in traces by some other action facts. For example, induction can
 help to prove that some later protocol step is always preceded by the
 initialization step of the corresponding protocol role, with similar parameters.
 
+Induction, however, does not work for all types of lemmas.
+Let us investigate the limitations of induction now as well.
+Consider another rule and lemma, added to the model from above.
+
+~~~~ {.tamarin slice="code/InductionExample.spthy" lower=21 upper=27}
+~~~~
+
+Tamarin will fail to prove the `AlwaysStartsWhenEnds` lemma, although we apply induction.
+The induction hypothesis here is that `AlwaysStartsWhenEnds` holds but not at the last time-point; or more detailed: If there is an `End(x)` but not at the last time-point, then there is a `Start(x)` but not at the last time-point.
+
+We cannot apply this induction hypothesis fruitfully, though, as there will be always only one instance of `End(~x)`, which will be at the last time-point.
+Intuitively speaking, induction can only be applied fruitfully if the facts, on which the lemma "depends" (e.g., on the left-hand side of an implication), occur multiple times in the trace.
+Usually, this applies to facts that "loop".
+
+Often, one can engineer around this restriction by connecting non-looping facts to looping facts using auxiliary lemmas.
+In the above example, the `AlwaysStarts` lemma provides such a connection.
+If you mark it as a `reuse` lemma, you can easily prove `AlwaysStartsWhenEnds` without induction.
 
 Integrated Preprocessor {#sec:integrated-preprocessor}
 -----------------------
