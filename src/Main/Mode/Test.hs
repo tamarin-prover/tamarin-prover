@@ -21,6 +21,7 @@ import           Main.Environment
 
 import qualified Term.UnitTests                  as Term (tests)
 import Data.Maybe (isJust)
+import Data.Either (isRight)
 
 
 -- | Self-test mode.
@@ -45,8 +46,8 @@ run :: TamarinMode -> Arguments -> IO ()
 run _thisMode as = do
     putStrLn $ "Self-testing the " ++ programName ++ " installation."
     nextTopic "Testing the availability of the required tools"
-    maybeSucessMaude <- ensureMaude as
-    let successMaude = isJust maybeSucessMaude
+    eitherSucessMaude <- ensureMaude as
+    let successMaude = isRight eitherSucessMaude
 #ifndef NO_GUI
     putStrLn ""
     maybeSuccessGraphVizDot <- ensureGraphVizDot as
