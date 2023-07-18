@@ -21,7 +21,6 @@ import           Main.Environment
 
 import qualified Term.UnitTests                  as Term (tests)
 import Data.Maybe (isJust)
-import Data.Either (isRight)
 
 
 -- | Self-test mode.
