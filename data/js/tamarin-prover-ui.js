@@ -146,6 +146,11 @@ var ui = {
         // Load display settings
         this.loadSettings();
 
+        // initialize thz cookie for not-init
+        if ($.cookie("not-init")) {
+            $.cookie("not-init",null,{path: "/"});
+        }
+
         // Navigation drop-down menus
         $("ul#navigation").superfish();
 
@@ -232,11 +237,11 @@ var ui = {
 		    var obj = $(olink);
 	            if (i == j) {
     		        obj.removeClass('inactive-option');
-		        obj.addClass('active-option');
-		    } else {
-		        obj.removeClass('active-option');
-		        obj.addClass('inactive-option');
-		    }
+		            obj.addClass('active-option');
+		        } else {
+		            obj.removeClass('active-option');
+		            obj.addClass('inactive-option');
+		        }
 	        }
                 $("a.active-link").click();
             });
@@ -258,6 +263,24 @@ var ui = {
             $("a.active-link").click();
             mainDisplay.toggleOption(abbrv_toggle);
         });
+
+        // Click handler for auto-sources' toggle
+        var auto_toggle = $('a#auto-toggle');
+        auto_toggle.click(function(ev) {
+            ev.preventDefault();
+            var pathname = window.location.href;
+            if ($.cookie("auto-sources")) {      
+                $.cookie("auto-sources", null, { path: '/' });  
+            } else {
+                $.cookie("auto-sources", true, { path: '/' });
+              
+            }
+            mainDisplay.toggleOption(auto_toggle);  
+            // to tell that this is a call from the toggle
+            $.cookie("not-init",true,{path: "/"});
+            $("a.active-link").click();
+        });
+
 
 
         // Install event handlers
@@ -345,6 +368,14 @@ var ui = {
         } else {
             $("a#abbrv-toggle").addClass("disabled-option");
         }
+
+        if($.cookie("auto-sources")){
+            $("a#auto-toggle").addClass("active-option");
+        }
+        else{
+            $("a#auto-toggle").addClass("disabled-option");
+        }
+        
     },
 
     /**
@@ -457,6 +488,23 @@ var events = {
               elementPath[4] = section;
               path = elementPath.join("/");
             }
+            // if is a call not from the toggle (the first time to enter in the lemma)
+            if ($.cookie("not-init")== null) {
+                // show annotation auto-sources for lemma AUTO_typing
+                if (path.indexOf("AUTO_typing")>0) {
+                    if ($.cookie("auto-sources")== null) {
+                        $.cookie("auto-sources",true,{path:'/'});
+                        mainDisplay.toggleOption($('a#auto-toggle'));
+                    }
+                // else, don't show annotations for other lemmas    
+                }else{
+                    if ($.cookie("auto-sources")) {
+                        $.cookie("auto-sources",null,{path:'/'});
+                        mainDisplay.toggleOption($('a#auto-toggle'));
+                    }
+                }
+            }
+            
 
             mainDisplay.loadTarget(
                 path,
@@ -706,6 +754,12 @@ var mainDisplay = {
         params = params.concat(
             { name: "simplification", value: $.cookie("simplification") }
         );
+
+        if($.cookie("auto-sources")== null){
+            params = params.concat(
+              { name: "no-auto-sources", value: ""}  
+            );
+        }
 
         // Rewrite image paths (if necessary)
         if(params.length > 0) {

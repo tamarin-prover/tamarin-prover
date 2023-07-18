@@ -904,25 +904,25 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
       compress <- isNothing <$> lookupGetParam "uncompress"
       abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
       simplificationLevel <- fromMaybe "1" <$> lookupGetParam "simplification"
+      showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
       img <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
           (graphCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress ( read $ T.unpack simplificationLevel))
+          (graphStyle compact compress ( not showAutosource) ( read $ T.unpack simplificationLevel) )
           (sequentToJSONPretty)
           (show simplificationLevel)
           (abbreviate)
           (tiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
-    graphStyle d c s= dotStyle d .simplifySystem s. compression c
-    dotStyle True = dotSystemCompact CompactBoringNodes
-    dotStyle False = dotSystemCompact FullBoringNodes
+    graphStyle d c s l= dotStyle s d .simplifySystem l. compression c
+    dotStyle s True = dotSystemCompact CompactBoringNodes s
+    dotStyle s False = dotSystemCompact FullBoringNodes s
     compression True = compressSystem
     compression False = id
     
-
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
 getTheoryGraphDiffR idx path = getTheoryGraphDiffR' idx path False
@@ -935,21 +935,22 @@ getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
       compress <- isNothing <$> lookupGetParam "uncompress"
       abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
       simplificationLevel <- fromMaybe "1" <$> lookupGetParam "simplification"
+      showAutosource <- isNothing <$> lookupGetParam "auto-sources"
       img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
           (snd $ graphCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress ( read $ T.unpack simplificationLevel))
+          (graphStyle compact compress showAutosource (read $ T.unpack simplificationLevel))
           (show simplificationLevel)
           (abbreviate)
           (dtiTheory ti) path
           (mirror)
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
-    graphStyle d c s= dotStyle d .simplifySystem s. compression c
-    dotStyle True = dotSystemCompact CompactBoringNodes
-    dotStyle False = dotSystemCompact FullBoringNodes
+    graphStyle d c s l= dotStyle s d .simplifySystem l. compression c
+    dotStyle s True = dotSystemCompact CompactBoringNodes s
+    dotStyle s False = dotSystemCompact FullBoringNodes s
     compression True = compressSystem
     compression False = id
 
