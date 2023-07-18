@@ -57,7 +57,6 @@ module Main.Console (
   ) where
 
 import           Data.Maybe
-import           Data.Either
 import           Data.Version                    (showVersion)
 import           Data.Time
 import           Data.List
@@ -150,13 +149,13 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
                      else putStrLn ""
                    return Nothing
 
-ensureMaude :: Arguments -> IO (Either String String)
+ensureMaude :: Arguments -> IO (Bool, String)
 ensureMaude as = do
     putStrLn $ "maude tool: '" ++ maude ++ "'"
     t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" False True
     t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" False True
     (_, out, _) <- readProcessWithExitCode maude ["--version"] ""
-    return (if isNothing t1 || isNothing t2 then Left (if out == "" then "unknown version\n" else init out ++ " (unsuported)\n") else Right (maybe' t1))
+    return (if isNothing t1 || isNothing t2 then (False, (if out == "" then "unknown version\n" else init out ++ " (unsuported)\n")) else (True, out))
   where
     maude = maudePath as
     checkVersion out _
@@ -168,9 +167,6 @@ ensureMaude as = do
 
     checkInstall _ []  = Right "OK."
     checkInstall _ err = Left  $ errMsg err
-
-    maybe' (Just a) = a
-    maybe' Nothing = "Version of Maude Not Found\n"
 
 --  Maude versions prior to 2.7.1 are no longer supported,
 --  because the 'get variants' command is incompatible.
@@ -189,13 +185,9 @@ ensureMaude as = do
 ensureMaudeAndGetVersion :: Arguments -> IO String
 ensureMaudeAndGetVersion as = do
           -- Ensure Maude version and get Maude version 
-          eitherMaudeVersion <- ensureMaude as
-          let maudeVersion = either' eitherMaudeVersion
+          (_, maudeVersion) <- ensureMaude as
           -- Get String for version and put it in the arguments __version__
           getVersionIO maudeVersion
-            where 
-              either' (Left a) = a 
-              either' (Right a) = a
 
 ------------------------------------------------------------------------------
 -- Static constants for the tamarin-prover
