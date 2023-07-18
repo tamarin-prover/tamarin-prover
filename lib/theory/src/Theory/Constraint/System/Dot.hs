@@ -22,7 +22,7 @@ import           Data.Char                (isSpace)
 import           Data.Color
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
-import           Data.List                (find,foldl',intersect,isPrefixOf)
+import           Data.List                (find,foldl',intersect,isPrefixOf, intercalate)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
@@ -240,7 +240,7 @@ dotSystemLoose se =
         mapM_ dotNode     $ M.keys   $ get sNodes     se
         mapM_ dotEdge     $ S.toList $ get sEdges     se
         mapM_ dotChain    $            unsolvedChains se
-        mapM_ dotLess     $ S.toList $ get sLessAtoms se
+        mapM_ dotLess     $ S.toList (reasonToColor  $ get sLessAtoms    se)
   where
     dotEdge  (Edge src tgt)  = do
         mayNid <- M.lookup (src,tgt) `liftM` getM dsSingles
@@ -249,20 +249,12 @@ dotSystemLoose se =
     dotChain (src, tgt) =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
-    dotLess (src, tgt, reason) = do
+    dotLess (src, tgt, color) = do
         srcId <- dotNode src
         tgtId <- dotNode tgt
-        case reason of
-            Adversary -> liftDot $ D.edge srcId tgtId
-                    [("color","red"),("style","dotted")]
-            Formula  -> liftDot $ D.edge srcId tgtId
-                    [("color","black"),("style","dotted")]
-            Fresh -> liftDot $ D.edge srcId tgtId
-                    [("color","darkgrey"),("style","dotted")] 
-            InjectiveFacts ->liftDot $ D.edge srcId tgtId
-                    [("color","purple"),("style","dotted")]
-            NormalForm ->liftDot $ D.edge srcId tgtId
-                    [("color","orange"),("style","dotted")] -- FIXME: Reactivate,("constraint","false")]
+        liftDot $ D.edge srcId tgtId 
+                [("color",color),("style","dotted")]
+             -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
 
     dotGenEdge style src tgt = do
@@ -441,7 +433,7 @@ dotSystemCompact boringStyle showAutosource se =
         mapM_ (dotNodeCompact boringStyle showAutosource . fst) $ unsolvedActionAtoms se
         F.mapM_ dotEdge                            $ get sEdges        se
         F.mapM_ dotChain                           $ unsolvedChains    se
-        F.mapM_ dotLess                            $ get sLessAtoms    se
+        F.mapM_ dotLess                          (reasonToColor  $ get sLessAtoms    se)
   where
     missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
     dotPremC prem = dotOnce dsPrems prem $ missingNode "invtrapezium" $ prettyNodePrem prem
@@ -464,24 +456,37 @@ dotSystemCompact boringStyle showAutosource se =
     dotChain (src, tgt) =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
-    dotLess (src, tgt, reason) = do
+    dotLess (src, tgt, color) = do
+        
         srcId <- dotNodeCompact boringStyle showAutosource src
         tgtId <- dotNodeCompact boringStyle showAutosource tgt
-        case reason of
-            Adversary -> liftDot $ D.edge srcId tgtId
-                    [("color","red"),("style","dotted")]
-            Formula  -> liftDot $ D.edge srcId tgtId
-                    [("color","black"),("style","dotted")]
-            Fresh -> liftDot $ D.edge srcId tgtId
-                    [("color","darkgrey"),("style","dotted")] 
-            InjectiveFacts ->liftDot $ D.edge srcId tgtId
-                    [("color","purple"),("style","dotted")]
-            NormalForm ->liftDot $ D.edge srcId tgtId
-                    [("color","orange"),("style","dotted")] -- FIXME: Reactivate,("constraint","false")]
+        liftDot $ D.edge srcId tgtId [("color",color),("style","dotted")]
+            -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
         
 
-
+-- | To get the color style for each less
+reasonToColor :: S.Set (NodeId, NodeId, Reason)
+                -> S.Set (NodeId,NodeId,String)
+reasonToColor l = S.fromList ( map getAllRToC $ 
+                  groupOn  (\(x,y,_)->(x,y)) $ S.toList l)
+    where 
+        toColor :: Reason -> String
+        toColor r = case r of 
+             Adversary      -> "red"
+             Formula        -> "black"
+             Fresh          -> "darkgrey"
+             InjectiveFacts -> "purple"
+             NormalForm     -> "orange"
+        allRtoColors :: [Reason] -> String
+        allRtoColors r = (intercalate ":" $ map toColor r)++per
+            where
+                len = length r
+                per = case len >1 of
+                    True -> ";"++ show (1/fromIntegral len)
+                    False -> ""
+        getAllRToC :: [Less]-> (NodeId,NodeId,String)
+        getAllRToC (x:xs) = (fst3 x, snd3 x, allRtoColors $ map thd3 (x:xs))
 ------------------------------------------------------------------------------
 -- Compressed versions of a sequent
 ------------------------------------------------------------------------------
