@@ -351,57 +351,51 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
                                                                       (Just _, Just s, Just sys') -> applyStep meth s sys'
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
-        DiffUnfinishable
-          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> let mirrorSyss = getMirrorDG ctxt s sys'
-                                                                                                         mirrorCtxt = eitherProofContext ctxt (opposite s)
-                                                                                                         allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
-                                                                                                     in if isSolved s sys'
-                                                                                                        && not allSubtermsFinished
-                                                                                                        then return M.empty
-                                                                                                        else Nothing
-                                                                      (_ , _ , _)                 -> Nothing
-          | otherwise                                         -> Nothing
         DiffMirrored
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> let mirrorSyss = getMirrorDG ctxt s sys'
-                                                                                                         mirrorCtxt = eitherProofContext ctxt (opposite s)
-                                                                                                         allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
-                                                                                                     in if isTrivial sys'
-                                                                                                        && allSubtermsFinished
-                                                                                                        && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TTrue)
+                                                                      (Just _, Just s, Just sys') -> if isTrivial sys' && allSubtermsFinished && (fst (evaluateRestrictions ctxt sys mirrorSyss (isSolved s sys')) == TTrue)
                                                                                                         then return M.empty
                                                                                                         else Nothing
+                                                                                                    where
+                                                                                                        mirrorSyss = getMirrorDG ctxt s sys'
+                                                                                                        mirrorCtxt = eitherProofContext ctxt (opposite s)
+                                                                                                        allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
                                                                       (_ , _ , _)                 -> Nothing                                                       
           | otherwise                                         -> Nothing
         DiffAttack
           | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
-                                                                      (Just _, Just s, Just sys') -> let mirrorSyss = getMirrorDG ctxt s sys'
-                                                                                                         mirrorCtxt = eitherProofContext ctxt (opposite s)
-                                                                                                         allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
-                                                                                                     in if (isSolved s sys')
-                                                                                                        && allSubtermsFinished
-                                                                                                        && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse)
-                                                                                                        then return M.empty
-                                                                                                        else if (not (contradictorySystem (eitherProofContext ctxt s) sys'))
-                                                                                                             && allSubtermsFinished
-                                                                                                             && (isTrivial sys')
-                                                                                                             && (fst (getMirrorDGandEvaluateRestrictions ctxt sys (isSolved s sys')) == TFalse) then
-                                                                                                        -- here the system is trivial, has no mirror and restrictions do not get in the way.
+                                                                      (Just _, Just s, Just sys') -> if (isSolved s sys' || (isTrivial sys' && not (contradictorySystem (eitherProofContext ctxt s) sys'))) &&
+                                                                                                        (allSubtermsFinished && (fst (evaluateRestrictions ctxt sys mirrorSyss (isSolved s sys')) == TFalse))
+                                                                                                      then return M.empty
+                                                                                                        -- In the second case, the system is trivial, has no mirror and restrictions do not get in the way.
                                                                                                         -- If we solve arbitrarily the last remaining trivial goals,
-                                                                                                        -- then there will be an attack.
-                                                                                                        return M.empty
-                                                                                                        else Nothing
+                                                                                                        -- then there will be an attack.                                                                                                        then 
+                                                                                                      else Nothing
+                                                                                                        where
+                                                                                                          mirrorSyss = getMirrorDG ctxt s sys'
+                                                                                                          mirrorCtxt = eitherProofContext ctxt (opposite s)
+                                                                                                          allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
                                                                       (_ , _ , _)                 -> Nothing
           | otherwise                                         -> Nothing
         DiffRuleEquivalence
           | (L.get dsProofType sys) == Nothing                -> Just ruleEquivalence
           | otherwise                                         -> Nothing
+        DiffUnfinishable
+          | (L.get dsProofType sys) == (Just RuleEquivalence) -> case (L.get dsCurrentRule sys, L.get dsSide sys, L.get dsSystem sys) of
+                                                                      (Just _, Just s, Just sys') -> if isSolved s sys' && not allSubtermsFinished
+                                                                                                        then return M.empty
+                                                                                                        else Nothing
+                                                                                                      where
+                                                                                                        mirrorSyss = getMirrorDG ctxt s sys'
+                                                                                                        mirrorCtxt = eitherProofContext ctxt (opposite s)
+                                                                                                        allSubtermsFinished = finishedSubterms (eitherProofContext ctxt s) sys' && all (finishedSubterms mirrorCtxt) mirrorSyss
+                                                                      (_ , _ , _)                 -> Nothing
+          | otherwise                                         -> Nothing
           
   where
-    protoRules       = (L.get dpcProtoRules  ctxt)
-    destrRules       = (L.get dpcDestrRules  ctxt)
-    constrRules      = (L.get dpcConstrRules ctxt)
+    protoRules       = L.get dpcProtoRules  ctxt
+    destrRules       = L.get dpcDestrRules  ctxt
+    constrRules      = L.get dpcConstrRules ctxt
 
     protoRulesAC :: Side -> [RuleAC]
     protoRulesAC LHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCLeft  ctxt)

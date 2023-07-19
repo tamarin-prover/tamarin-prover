@@ -173,6 +173,7 @@ module Theory.Constraint.System (
   , isCorrectDG
   , getMirrorDG
   , getMirrorDGandEvaluateRestrictions
+  , evaluateRestrictions
   , doRestrictionsHold
   , filterRestrictions
 
@@ -1176,7 +1177,16 @@ data Trivalent = TTrue | TFalse | TUnknown deriving (Show, Eq)
 -- | Computes the mirror dependency graph and evaluates whether the restrictions hold.
 -- Returns Just True and a list of mirrors if all hold, Just False and a list of attacks (if found) if at least one does not hold and Nothing otherwise.
 getMirrorDGandEvaluateRestrictions :: DiffProofContext -> DiffSystem -> Bool -> (Trivalent, [System])
-getMirrorDGandEvaluateRestrictions dctxt dsys isSolved =
+getMirrorDGandEvaluateRestrictions dctxt dsys isSolved = 
+    case (L.get dsSide dsys, L.get dsSystem dsys) of
+          (Nothing,   _       ) -> (TFalse, [])
+          (Just _ , Nothing   ) -> (TFalse, [])
+          (Just side, Just sys) -> evaluateRestrictions dctxt dsys (getMirrorDG dctxt side sys) isSolved
+
+-- | Evaluates whether the restrictions hold. Assumes that the mirrors have been correctly computed.
+-- Returns Just True and a list of mirrors if all hold, Just False and a list of attacks (if found) if at least one does not hold and Nothing otherwise.
+evaluateRestrictions :: DiffProofContext -> DiffSystem -> [System] -> Bool -> (Trivalent, [System])
+evaluateRestrictions dctxt dsys mirrors isSolved =
     case (L.get dsSide dsys, L.get dsSystem dsys) of
         (Nothing,   _       ) -> (TFalse, [])
         (Just _ , Nothing   ) -> (TFalse, [])
@@ -1190,13 +1200,13 @@ getMirrorDGandEvaluateRestrictions dctxt dsys isSolved =
                         else
                             (TFalse, concat $ map snd $ filter (\x -> fst x == TFalse) evals)
             where
-                mirrors = getMirrorDG dctxt side sys
                 oppositeCtxt = eitherProofContext dctxt (opposite side)
                 restrictions = filterRestrictions oppositeCtxt sys $ restrictions' (opposite side) $ L.get dpcRestrictions dctxt
                 evals = map (\x -> doRestrictionsHold oppositeCtxt x restrictions isSolved) mirrors
 
                 restrictions' _  []               = []
                 restrictions' s' ((s'', form):xs) = if s' == s'' then form ++ (restrictions' s' xs) else (restrictions' s' xs)
+
 
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
