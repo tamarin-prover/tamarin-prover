@@ -22,7 +22,7 @@ import           Data.Char                (isSpace)
 import           Data.Color
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
-import           Data.List                (find,foldl',intersect,isPrefixOf, intercalate)
+import           Data.List                (find,foldl',intersect,isPrefixOf, intercalate,sort)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
@@ -247,13 +247,13 @@ dotSystemLoose se =
         maybe (dotGenEdge [] src tgt) (const $ return ()) mayNid
 
     dotChain (src, tgt) =
-        dotGenEdge [("style","dashed"),("color","green")] src tgt
+        dotGenEdge [("style","dotted"),("color","green")] src tgt
 
     dotLess (src, tgt, color) = do
         srcId <- dotNode src
         tgtId <- dotNode tgt
         liftDot $ D.edge srcId tgtId 
-                [("color",color),("style","dotted")]
+                [("color",color),("style","dashed")]
              -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
 
@@ -454,20 +454,20 @@ dotSystemCompact boringStyle showAutosource se =
         liftDot $ D.edge srcId tgtId style
 
     dotChain (src, tgt) =
-        dotGenEdge [("style","dashed"),("color","green")] src tgt
+        dotGenEdge [("style","dotted"),("color","green")] src tgt
 
     dotLess (src, tgt, color) = do
         
         srcId <- dotNodeCompact boringStyle showAutosource src
         tgtId <- dotNodeCompact boringStyle showAutosource tgt
-        liftDot $ D.edge srcId tgtId [("color",color),("style","dotted")]
+        liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
             -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
         
 
--- | To get the color style for each less
+-- | To get the color style for each less 
 reasonToColor :: S.Set (NodeId, NodeId, Reason)
-                -> S.Set (NodeId,NodeId,String)
+                -> S.Set (NodeId, NodeId, String)
 reasonToColor l = S.fromList ( map getAllRToC $ 
                   groupOn  (\(x,y,_)->(x,y)) $ S.toList l)
     where 
@@ -475,18 +475,31 @@ reasonToColor l = S.fromList ( map getAllRToC $
         toColor r = case r of 
              Adversary      -> "red"
              Formula        -> "black"
-             Fresh          -> "darkgrey"
+             Fresh          -> "blue3"
              InjectiveFacts -> "purple"
-             NormalForm     -> "orange"
+             NormalForm     -> "darkorange3"
         allRtoColors :: [Reason] -> String
         allRtoColors r = (intercalate ":" $ map toColor r)++per
             where
                 len = length r
                 per = case len >1 of
-                    True -> ";"++ show (1/fromIntegral len)
+                    True -> ";" ++ show (1/fromIntegral len)
                     False -> ""
+        -- to show all the reasons with their colors
         getAllRToC :: [Less]-> (NodeId,NodeId,String)
-        getAllRToC (x:xs) = (fst3 x, snd3 x, allRtoColors $ map thd3 (x:xs))
+        getAllRToC [] = error "empty list"
+        getAllRToC (x:xs) = (fst3 x, snd3 x, 
+                        allRtoColors (reverse (sort $ map thd3 (x:xs))))
+        
+        -- |Or else, to show only the most important reason, we can use
+        -- |the function below, at the same time, we need remove function
+        -- |"allRtoColors"
+
+        -- getAllRToC :: [Less]-> (NodeId,NodeId,String)
+        -- getAllRToC (x:xs) = (fst3 x, snd3 x, 
+        --                 toColor $ head (sort $ map thd3 (x:xs)))
+        
+                
 ------------------------------------------------------------------------------
 -- Compressed versions of a sequent
 ------------------------------------------------------------------------------
@@ -511,7 +524,7 @@ compressSystem se0 =
 -- | the lesses of system by transitive reduction
 simplifySystem :: Int -> System -> System
 simplifySystem i sys 
-    | i==1 = transitiveReduction sys
+    | i==3 = transitiveReduction sys
     | otherwise = sys
 
 -- | Simplify the system by transitive reduction but not for a system which has
@@ -572,7 +585,7 @@ tryHideNodeId v se = fromMaybe se $ do
 
         lIns  = selectPart sLessAtoms ((v ==) . snd3)
         lOuts = selectPart sLessAtoms ((v ==) . fst3)
-        lNews = [ (i, j, NormalForm) | (i, _, _) <- lIns, (_, j, _) <- lOuts ] 
+        lNews = [ (i, j, r) | (i, _, _) <- lIns, (_, j, r) <- lOuts ] 
 
     -- hide a rule, if it is not "too complicated"
     hideRule :: RuleACInst -> Maybe System

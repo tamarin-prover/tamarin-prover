@@ -75,8 +75,9 @@ data Edge = Edge {
     }
   deriving (Show, Ord, Eq, Data, Typeable, Generic, NFData, Binary)
 
--- | A reason to explain the less, user-specified”, “induced by fresh values
-data Reason = Fresh | Formula | InjectiveFacts | NormalForm | Adversary
+-- | A reason to explain the less
+-- | Order is from the most important to the least important 
+data Reason = Formula | InjectiveFacts | Fresh | Adversary | NormalForm
       deriving (Ord, Eq, Data, Typeable, Generic, NFData, Binary)
 
 -- | A *⋖* constraint between 'NodeId's.
