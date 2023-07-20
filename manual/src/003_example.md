@@ -384,7 +384,7 @@ Here the fact `!KU( ~t.1 )` has three sources, the first one is the rule
 the necessary `!Ltk` fact. The other two sources are given below.
  
 ![FirstExample Case Distinctions 2 of 
-3](../images/tamarin-tutorial-case-distinctions-2.jpg 
+3](../images/tamarin-tutorial-case-distinctions-2.png 
  "FirstExample Case Distinctions 2 of 3"){width=70%}\
 
 ![FirstExample Case Distinctions 3 of 
