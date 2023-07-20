@@ -59,6 +59,7 @@ module Term.LTerm (
   , getMsgVar
   , freshToConst
   , variableToConst
+  , natToFreshVars
   , niFactors
   , flattenedACTerms
   , containsPrivate
@@ -398,6 +399,12 @@ freshToConst t = case viewTerm t of
     Lit _                                    -> t
     FApp f as                                -> termViewToTerm $ FApp f (map freshToConst as)
 
+-- | Replaces all Nat variables with fresh variables with the same name.
+natToFreshVars :: LNTerm -> LNTerm
+natToFreshVars t = case viewTerm t of
+    Lit (Var (LVar name LSortNat idx)) -> varTerm (LVar name LSortFresh idx)
+    Lit _                              -> t
+    FApp f as                          -> termViewToTerm $ FApp f (map natToFreshVars as)
 
 -- | Given a variable returns a constant containing its name and type
 variableToConst :: LVar -> LNTerm
