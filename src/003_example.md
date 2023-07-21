@@ -456,7 +456,7 @@ lemmas in the same way.
 As you may have noticed, there can be lots of different types of arrows, which additionally can be colored differently.
 
 There are normal (solid) arrows (in black or gray), which are used to represent the origins of protocol facts (for linear or persistent facts).
-There are also solid orange arrows, which represent steps where the adversary extracts values from a message he received.
+There are also solid red orange arrows, which represent steps where the adversary extracts values from a message he received.
 
 Then there dashed arrows, representing ordering constraints between two actions, and their colors indicate the reasons for the constraint : 
 
