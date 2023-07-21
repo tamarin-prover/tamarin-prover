@@ -463,7 +463,7 @@ Then there dashed arrows, representing ordering constraints between two actions,
 - Black dashed arrows represent an ordering constraint stemming from formulas, for example from the current lemma or a restriction.
 - Dark blue indicates an ordering constraint deduced from a fresh value: since fresh values are unique, all rule instances using a fresh value must appear after the instance that created the value.
 - Red dashed arrows are used to represent steps where the adversary composes values.
- - Dark orange represents an ordering constraint implied by Tamarin's normal form conditions.
+- Dark orange represents an ordering constraint implied by Tamarin's normal form conditions.
 - Purple denotes an ordering constraint originating from an injective fact instance, see [injective-instances](011_advanced-features.html#reasoning-about-exclusivity-facts-symbols-with-injective-instances) . 
 
 Dashed edges can be colored with multiple colors at a time, which means that there are several ordering constraints at the same time.
