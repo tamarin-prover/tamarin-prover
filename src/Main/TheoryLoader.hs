@@ -93,15 +93,16 @@ import qualified Data.Set
 import Theory.Text.Parser.Token
 import Theory.Tools.MessageDerivationChecks
 
-import System.Directory.Internal.Prelude (timeout)
+-- import System.Directory.Internal.Prelude (timeout)
 --import Web.Types (TheoryPath(TheoryRules))
 
 import qualified Data.Set
 import Theory.Text.Parser.Token
 import Theory.Tools.MessageDerivationChecks
 
-import System.Directory.Internal.Prelude (timeout)
+import System.Timeout (timeout)
 import Control.Exception (evaluate)
+import Control.DeepSeq (NFData, force)
 --import Web.Types (TheoryPath(TheoryRules))
 
 ------------------------------------------------------------------------------
@@ -400,7 +401,7 @@ closeTheory version thyOpts sig srcThy = do
   derivCheckSignature <- Control.Monad.Except.liftIO $ toSignatureWithMaude (get oMaudePath thyOpts) $ maudePublicSig (toSignaturePure sig)
   variableReport <- case compare derivChecks 0 of
     EQ -> pure $ Just []
-    _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ evaluate $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
+    _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ evaluate . force $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
       (\t-> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver) deducThy)
 
   let report = wellformednessReport  ++ (fromMaybe [(underlineTopic "Derivation Checks", Pretty.text "Derivation checks timed out. Use --derivcheck-timeout=INT to configure timeout, 0 to deactivate.")] variableReport)
