@@ -23,9 +23,9 @@ import qualified Data.List as List
 -- DerivationChecks
 -----------------------------------------------
 
-checkVariableDeducability :: OpenTranslatedTheory -> SignatureWithMaude -> Bool -> Prover -> IO WfErrorReport
+checkVariableDeducability :: OpenTranslatedTheory -> SignatureWithMaude -> Bool -> Prover -> WfErrorReport
 checkVariableDeducability thy sig sources prover =
-    return $ reportVars (map checkProofStatuses provenTheories) originalRules freeVars
+    reportVars (map checkProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = theoryRules thy
         provenTheories =  map (proveTheory (const True) prover) closedTheories
@@ -37,9 +37,9 @@ checkVariableDeducability thy sig sources prover =
         premises = map (map (fmap replacePrivate)) $ premsOfThyRules thy
         freeVars = freesInThyRules thy
 
-diffCheckVariableDeducability :: OpenDiffTheory -> SignatureWithMaude -> Bool -> Prover -> DiffProver -> IO WfErrorReport
+diffCheckVariableDeducability :: OpenDiffTheory -> SignatureWithMaude -> Bool -> Prover -> DiffProver -> WfErrorReport
 diffCheckVariableDeducability thy sig sources prover diffprover =
-    return $ reportDiffVars (map checkDiffProofStatuses provenTheories) originalRules freeVars
+    reportDiffVars (map checkDiffProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = diffTheoryDiffRules thy
         provenTheories =  map (proveDiffTheory (const True) prover diffprover) closedTheories

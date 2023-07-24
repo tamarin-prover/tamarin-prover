@@ -101,6 +101,7 @@ import Theory.Text.Parser.Token
 import Theory.Tools.MessageDerivationChecks
 
 import System.Directory.Internal.Prelude (timeout)
+import Control.Exception (evaluate)
 --import Web.Types (TheoryPath(TheoryRules))
 
 ------------------------------------------------------------------------------
@@ -162,7 +163,7 @@ theoryLoadFlags =
       "Limits the number of saturations during precomputations (default 5)"
 
   , flagOpt "5" ["derivcheck-timeout"] (updateArg "derivcheck-timeout" ) "INT"
-      "Set timeout for message derivation checks"
+      "Set timeout for message derivation checks in sec (default 5). 0 deactivates check."
 
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
@@ -399,7 +400,7 @@ closeTheory version thyOpts sig srcThy = do
   derivCheckSignature <- Control.Monad.Except.liftIO $ toSignatureWithMaude (get oMaudePath thyOpts) $ maudePublicSig (toSignaturePure sig)
   variableReport <- case compare derivChecks 0 of
     EQ -> pure $ Just []
-    _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
+    _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ evaluate $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
       (\t-> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver) deducThy)
 
   let report = wellformednessReport  ++ (if isJust variableReport then fromJust variableReport else [("Timed Out", Pretty.text "Derivation Checks")])
