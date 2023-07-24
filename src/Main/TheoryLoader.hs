@@ -403,7 +403,7 @@ closeTheory version thyOpts sig srcThy = do
     _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ evaluate $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
       (\t-> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver) deducThy)
 
-  let report = wellformednessReport  ++ (if isJust variableReport then fromJust variableReport else [("Timed Out", Pretty.text "Derivation Checks")])
+  let report = wellformednessReport  ++ (fromMaybe [(underlineTopic "Derivation Checks", Pretty.text "Derivation checks timed out. Use --derivcheck-timeout=INT to configure timeout, 0 to deactivate.")] variableReport)
 
   checkedThy <- bitraverse (\t -> return $ addComment     (reportToDoc report) t)
                            (\t -> return $ addDiffComment (reportToDoc report) t) deducThy

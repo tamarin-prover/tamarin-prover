@@ -65,6 +65,7 @@ module Theory.Tools.Wellformedness (
   , checkWellformednessDiff
 
   , prettyWfErrorReport
+  , underlineTopic
 
   , formulaTerms
   ) where
@@ -226,7 +227,7 @@ formulaToGuardedTyped = formulaToGuarded
 
 -- | generate nat sort errors
 natSortErrors :: [LNTerm] -> WfErrorReport
-natSortErrors itemsTerms = [ ("natSorts", prettyLNTerm err <> text " in term " <> prettyLNTerm t <> text " must be of sort nat") | t <- itemsTerms, err <- nonWellSorted t]
+natSortErrors itemsTerms = [ (underlineTopic "Nat Sorts", prettyLNTerm err <> text " in term " <> prettyLNTerm t <> text " must be of sort nat") | t <- itemsTerms, err <- nonWellSorted t]
 
 -- | check nat-Sorting (i.e., below + is only nat)
 natWellSortedReport :: OpenTranslatedTheory -> WfErrorReport
