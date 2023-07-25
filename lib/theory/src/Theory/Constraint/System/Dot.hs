@@ -520,8 +520,11 @@ compressSystem se0 =
   where
     se = dropEntailedOrdConstraints se0
 
--- | Simplify the system up to the sent level, for level 1, we will simplify
--- | the lesses of system by transitive reduction
+-- | Simplify the system up to the sent level, 
+-- | for level 3, we will simplify the lesses of system by transitive reduction
+-- | for level 2, we will apply the transitive reduction but keep the 
+-- | formula constraint 
+-- | for level 1, there's no transitive reduction applied
 simplifySystem :: Int -> System -> System
 simplifySystem i sys 
     | i==2 = transitiveReduction sys False
@@ -529,7 +532,7 @@ simplifySystem i sys
     | otherwise = sys
 
 -- | Simplify the system by transitive reduction (constraint of formula won't  
--- | be applied) but not for a system which has a graph cyclic
+-- | be applied if totalRed is False) but not for a system which has a graph cyclic
 transitiveReduction :: System -> Bool -> System
 transitiveReduction sys totalRed= 
     if D.cyclic oldLesses
