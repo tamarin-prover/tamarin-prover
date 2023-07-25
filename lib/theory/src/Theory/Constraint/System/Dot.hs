@@ -524,31 +524,28 @@ compressSystem se0 =
 -- | the lesses of system by transitive reduction
 simplifySystem :: Int -> System -> System
 simplifySystem i sys 
-    | i==2 = transitiveReduction sys
-    | i==3 = transitiveReduction sys
+    | i==2 = transitiveReduction sys False
+    | i==3 = transitiveReduction sys True
     | otherwise = sys
 
 -- | Simplify the system by transitive reduction (constraint of formula won't  
 -- | be applied) but not for a system which has a graph cyclic
-transitiveReduction :: System -> System
-transitiveReduction sys = 
+transitiveReduction :: System -> Bool -> System
+transitiveReduction sys totalRed= 
     if D.cyclic oldLesses
         then sys
         else   modify sLessAtoms 
-            ( S.intersection ( S.fromList ( addFormula formulaLesses newLesses)) ) sys
+            ( S.intersection ( S.fromList newLesses) ) sys
     where 
         oldLessesWithR = S.toList $ get sLessAtoms sys
         oldLesses = rawLessRel sys 
-        formulaLesses = [(x,y,z)| (x,y,z)<- oldLessesWithR, z == Formula]
-        newLesses =[(x,y,z)| (x,y,z)<- oldLessesWithR,
-                            (x,y) `elem` (D.transRed oldLesses)]
-        -- | to preserve the formula constraint
-        addFormula :: [Less]-> [Less]->[Less]
-        addFormula [] s = s
-        addFormula (x:xs) s =
-            if  x `elem` s
-                then addFormula xs s
-                else addFormula xs (x:s)
+        newLesses = 
+            case totalRed of 
+                True ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
+                            (x,y) `elem` (D.transRed oldLesses) ]
+                False ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
+                            (x,y) `elem` (D.transRed oldLesses) || z == Formula]
+        
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
 -- transfer node; i.e., a node annotated with a rule that is one of the
