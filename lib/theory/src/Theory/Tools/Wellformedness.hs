@@ -218,7 +218,7 @@ sortsClashCheck info t = case clashesOn removeSort id $ frees t of
     reason = "Possible reasons:\n"++
               "1. Identifiers are case sensitive, i.e.,"++
               "'x' and 'X' are considered to be different.\n"++ 
-              "2. The same holds aren't used for sorts:, "++
+              "2. The same holds for sorts:, "++
               "i.e., '$x', 'x', and '~x' are considered to be different.\n"
     removeSort lv = (lowerCase (lvarName lv), lvarIdx lv)
 
