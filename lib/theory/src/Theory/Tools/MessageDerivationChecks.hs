@@ -11,7 +11,7 @@ import TheoryObject
 import Theory.Model
 import Theory.Proof
 import Prover
-import Data.Maybe ( fromJust, fromMaybe, maybeToList, mapMaybe )
+import Data.Maybe ( fromJust, fromMaybe, catMaybes, mapMaybe )
 import Data.List
 import Theory.Tools.Wellformedness (WfErrorReport, underlineTopic)
 import Text.PrettyPrint.Class
@@ -105,27 +105,37 @@ addDiffLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma ->  addLemmaDiff LH
 -----------------------------------------------
 
 reportVars :: [[ProofStatus]] -> [OpenProtoRule] -> [[LVar]] -> WfErrorReport
-reportVars analysisresults rules vars = [(underlineTopic "Message Derivation Checks",
+reportVars analysisresults rules vars = case rulesAndVars of
+    []     -> []
+    errors -> [(underlineTopic "Message Derivation Checks",
         text $ "The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
-        ++ intercalate "\n\n" (zipWith3 (\results rule vars ->
-            if List.any ( /= TraceFound) results && List.all ( /= IgnoreDerivChecks) (ruleAttributes $ L.get oprRuleE rule)
-                then generateError results rule vars
-                else "")
-            analysisresults rules vars))]
+        ++ errors)]
     where
+        rulesAndVars :: String
+        rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars ->
+            if List.any ( /= TraceFound) results && List.all ( /= IgnoreDerivChecks) (ruleAttributes $ L.get oprRuleE rule)
+                then Just $ generateError results rule vars
+                else Nothing)
+            analysisresults rules vars)
+
         generateError :: [ProofStatus] -> OpenProtoRule -> [LVar] -> String
         generateError results rule vars = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get oprRuleE rule)))
                 ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars))
 
 reportDiffVars :: [[ProofStatus]] -> [DiffProtoRule] -> [[LVar]] -> WfErrorReport
-reportDiffVars analysisresults rules vars = [(underlineTopic "Message Derivation Checks",
+reportDiffVars analysisresults rules vars = case rulesAndVars of
+    []     -> []
+    errors -> [(underlineTopic "Message Derivation Checks",
         text $ "The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
-        ++ intercalate "\n\n" (zipWith3 (\results rule vars ->
-            if List.any ( /= TraceFound) results && List.all ( /= IgnoreDerivChecks) (ruleAttributes $ L.get dprRule rule)
-                then generateError results rule vars
-                else "")
-            analysisresults rules vars))]
+        ++ errors)]
     where
+        rulesAndVars :: String
+        rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars ->
+            if List.any ( /= TraceFound) results && List.all ( /= IgnoreDerivChecks) (ruleAttributes $ L.get dprRule rule)
+                then Just $ generateError results rule vars
+                else Nothing)
+            analysisresults rules vars)
+
         generateError :: [ProofStatus] -> DiffProtoRule -> [LVar] -> String
         generateError results rule vars = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get dprRule rule)))
                 ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars))
