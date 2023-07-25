@@ -40,7 +40,7 @@ import           Data.Maybe
 -- | Transitive reduction for a DAG
 transRed :: Ord a => [(a,a)] -> [(a,a)]
 transRed dag =
-     foldl' visit []( mapMaybe indexToRel indexV)
+     foldl' visit [] ( mapMaybe indexToRel indexV)
     where
         topoOrdDag = toposort dag
         i = [1.. (length topoOrdDag -1)]

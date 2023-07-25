@@ -903,7 +903,7 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
       compact <- isNothing <$> lookupGetParam "uncompact"
       compress <- isNothing <$> lookupGetParam "uncompress"
       abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
-      simplificationLevel <- fromMaybe "1" <$> lookupGetParam "simplification"
+      simplificationLevel <- fromMaybe "2" <$> lookupGetParam "simplification"
       showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
       img <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
@@ -934,7 +934,7 @@ getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
       compact <- isNothing <$> lookupGetParam "uncompact"
       compress <- isNothing <$> lookupGetParam "uncompress"
       abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
-      simplificationLevel <- fromMaybe "1" <$> lookupGetParam "simplification"
+      simplificationLevel <- fromMaybe "2" <$> lookupGetParam "simplification"
       showAutosource <- isNothing <$> lookupGetParam "auto-sources"
       img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
