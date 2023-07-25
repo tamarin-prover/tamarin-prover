@@ -151,7 +151,7 @@ var ui = {
             $.cookie("not-init",null,{path: "/"});
         }
 
-        $.cookie("simplification", 1, { path: '/' });
+        $.cookie("simplification", 2, { path: '/' });
         // Navigation drop-down menus
         $("ul#navigation").superfish();
 
@@ -352,7 +352,7 @@ var ui = {
 
 	/* If no simplification level specified yet, default to 1 */
 	if ($.cookie("simplification") == null) {
-	    $.cookie("simplification", 1, { path: '/' });
+	    $.cookie("simplification", 2, { path: '/' });
 	}
 	/* Add buttons for each of the simplification levels */
 	for (var i=0;i<4;i++) {
