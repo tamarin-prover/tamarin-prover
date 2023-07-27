@@ -174,6 +174,7 @@ factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 -- | is included between 1 and 3.
 mostSimilarName :: [RuleAndFact]->[RuleAndFact]
                   ->[(RuleAndFact,RuleAndFact,Bool)]
+mostSimilarName xs [] = map (\x->(x,x,False)) xs
 mostSimilarName xs xt = 
     map isSimilar  
     $ foldr (\x acc-> (minEd x xt):acc) [] $
@@ -580,7 +581,7 @@ factReports thy = concat
 
         -- for each fact on LHS, get his most similar fact in RHS
         getFactLhsNoRhs :: [(String,[LNFact])]->[(String,[LNFact])]
-                          ->[(RuleAndFact,RuleAndFact,Bool)]                                  
+                          ->[(RuleAndFact,RuleAndFact,Bool)]                   
         getFactLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
                                       $ regroup rfacts
                                                 
