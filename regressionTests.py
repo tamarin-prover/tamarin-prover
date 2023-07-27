@@ -42,7 +42,7 @@ def iterFolder(folder):
 
 ## functions for cutting and parsing part of the proof ##
 def parseTest(lines, tester):
-	keywords = ["rule", "lemma", "/*", "*/", "restriction", "section", "text", "equations", "builtins", "functions", "end", "heuristic", "predicate", "options", "process"]
+	keywords = ["rule", "lemma", "/*", "*/", "restriction", "section", "text", "equations", "builtins", "functions", "end", "heuristic", "predicate", "options", "process", "macros"]
 	try:
 		for key in keywords:
 			if(tester != key):
@@ -84,6 +84,15 @@ def parseFile(path):
 		equations = list(filter(None, equations))
 	except Exception as ex:
 		return f"Parse error - equations: {path}"
+
+	## parse macros ##
+	try:
+		splitEq = proof.split("macros:")[-1]
+		macros = parseTest(splitEq, "macros")
+		macros = macros.splitlines()
+		macros = list(filter(None, macros))
+	except Exception as ex:
+		return f"Parse error - macros: {path}"
 	
 	## parse functions ##
 	try:
@@ -138,7 +147,7 @@ def parseFile(path):
 		parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]  # convert types
 		parsed = list(zip(*parsed))             # transpose matrix
 		if (parsed == []): parsed = [[],[],[]]  #
-		return (parsed[0], parsed[1], parsed[2], float(times[0]), proof, equations, func, warning, rules, builtins)
+		return (parsed[0], parsed[1], parsed[2], float(times[0]), proof, equations, func, warning, rules, builtins, macros)
 
 	except Exception as ex:
 		return f"Parse error - lemmas: {path}"
@@ -162,14 +171,14 @@ def parseFiles(pathB):
 	parsedA = parseFile(pathA)
 	if type(parsedA) == str:
 		return parsedA
-	(lemmasA, resA, stepsA, timeA, proofA, equationsA, funcA, warningA, rulesA, builtinsA) = parsedA
-	(lemmasB, resB, stepsB, timeB, proofB, equationsB, funcB, warningB, rulesB, builtinsB) = parsedB
+	(lemmasA, resA, stepsA, timeA, proofA, equationsA, funcA, warningA, rulesA, builtinsA, macrosA) = parsedA
+	(lemmasB, resB, stepsB, timeB, proofB, equationsB, funcB, warningB, rulesB, builtinsB, macrosB) = parsedB
 
 	## check compatibility ##
 	if lemmasA != lemmasB:
 		return f"The lemmas for {pathA} cannot be compared, they are different."
 
-	return (lemmasA, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB)
+	return (lemmasA, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB, macrosA, macrosB)
 
 
 
@@ -193,7 +202,7 @@ def compare():
 			logging.error(color(colors.RED + colors.BOLD, parsed))
 			majorDifferences = True
 			continue
-		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB) = parsed
+		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB, macrosA, macrosB) = parsed
 
 		## proofs differ ##
 		if proofA != proofB:
@@ -204,7 +213,7 @@ def compare():
 				logging.debug(output.split("\n<   processing time")[0])
 
 		if settings.verbose >= 3:
-		## Equations differ ## 
+			## Equations differ ## 
 			if equationsA != equationsB:
 				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
 				if len(equationsA) != len(equationsB):
@@ -216,6 +225,20 @@ def compare():
 								logging.error(color(colors.RED + colors.BOLD, f"The equation changed from {equationsA[i]} to {equationsB[i]}"))
 					else:
 						logging.error(color(colors.RED + colors.BOLD, f"One or multiple equations do not match!"))
+				majorDifferences = True
+			
+			## Macros differ ##
+			if macrosA != macrosB:
+				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
+				if len(macrosA) != len(macrosB):
+					logging.error(color(colors.RED + colors.BOLD, f"The number of macros are not equal!"))
+				else:
+					if settings.verbose >= 6:
+						for i in range(len(macrosA)):
+							if macrosA[i] != macrosB[i]:
+								logging.error(color(colors.RED + colors.BOLD, f"The macro changed from {macrosA[i]} to {macrosB[i]}"))
+					else:
+						logging.error(color(colors.RED + colors.BOLD, f"One or multiple macros do not match!"))
 				majorDifferences = True
 
 			## Rules differ ##
@@ -324,6 +347,7 @@ def compare():
 		logging.warning("The functions did not change")
 		logging.warning("The builtins did not change")
 		logging.warning("The equations did not change")
+		logging.warning("The macros did not change")
 		logging.warning("The warnings did not change")
 	return True
 
@@ -340,7 +364,7 @@ def getArguments():
 	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
 	parser.add_argument("-r", "--repeat", help = "Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements", type=int, default=1)
 	parser.add_argument("-v", "--verbose", 
-		help="Level of verbosity, values are from 0 to 6. Default is 3\n" +
+		help="Level of verbosity, values are from 0 to 6. Default is 2\n" +
 			"0: show only critical error output and changes of verified vs. trace found\n" +
 			"1: show summary of time and step differences\n" +
 			"2: show step differences for changed lemmas\n" +
