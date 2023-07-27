@@ -384,7 +384,7 @@ Here the fact `!KU( ~t.1 )` has three sources, the first one is the rule
 the necessary `!Ltk` fact. The other two sources are given below.
  
 ![FirstExample Case Distinctions 2 of 
-3](../images/tamarin-tutorial-case-distinctions-2.jpg 
+3](../images/tamarin-tutorial-case-distinctions-2.png 
  "FirstExample Case Distinctions 2 of 3"){width=70%}\
 
 ![FirstExample Case Distinctions 3 of 
@@ -452,6 +452,27 @@ Finished](../images/tamarin-tutorial-lemma-1-finished.png
 The lemma is now colored in green as it was successfully proven. If we had 
 found a counterexample, it would be colored in red. You can prove the other 
 lemmas in the same way.
+
+As you may have noticed, there can be lots of different types of arrows, which additionally can be colored differently.
+
+There are normal (solid) arrows (in black or gray), which are used to represent the origins of protocol facts (for linear or persistent facts).
+There are also solid red orange arrows, which represent steps where the adversary extracts values from a message he received.
+
+Then there dashed arrows, representing ordering constraints between two actions, and their colors indicate the reasons for the constraint : 
+
+- Black dashed arrows represent an ordering constraint stemming from formulas, for example from the current lemma or a restriction.
+- Dark blue indicates an ordering constraint deduced from a fresh value: since fresh values are unique, all rule instances using a fresh value must appear after the instance that created the value.
+- Red dashed arrows are used to represent steps where the adversary composes values.
+- Dark orange represents an ordering constraint implied by Tamarin's normal form conditions.
+- Purple denotes an ordering constraint originating from an injective fact instance, see [injective-instances](011_advanced-features.html#reasoning-about-exclusivity-facts-symbols-with-injective-instances) . 
+
+Dashed edges can be colored with multiple colors at a time, which means that there are several ordering constraints at the same time.
+
+For example, a black and blue dashed arrow indicates that there are two constraints: one deduced from a formula, and one deduced from a fresh value appearing in the rule instances.
+
+Finally, in intermediate proof steps, there can also be dotted green arrows, which are used during Tamarin's proof search to represent incomplete adversary deduction steps.
+
+Note that by default Tamarin does not show all rules and arrows to simplify the graphs, but this can be adjusted using the Options button on the top right of the page.
 
 Running Tamarin on the Command Line
 -----------------------------------
