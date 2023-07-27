@@ -121,6 +121,31 @@ sides.
 As the above example indicates, macros may use the left-hand sides of
 earlier defined macros.
 
+### Global macros {#sec:macros}
+
+Sometimes, even let can be repetitive to write down if we want to use them in multiples rules.
+`macros` keyword can be used for global macros that can be applied to all rules. 
+Macros are defined like this following example: 
+
+	macros: macro1(x) = h(x), macro2(x, y) = <x, y>, ... macro7() = $A
+
+`macro` is the name of the macro, used to call it. 
+`(x)` is the parameters. Here, it is called `x` and can be used on the right term. 
+The right-hand of the `=` sign is the output, it can be any term. 
+To use it in a rule, you can put it on a Fact (see below). For example: 
+
+	[ In(macro1(~ltk)) ] --[ ... ]-> [ Out(macro2(pkA, pkB)) ]
+
+It works similarly as the equations. So, when we call them, it will replace everything by the right term.
+A macro can call another macro, if the last one was made before the first one.
+For example: 
+  
+	macros: innerMacro(x, y) = <x, y>, hashMacro(x, y) = h(innerMacro)
+
+Note that the following snippet would call an error: 
+  
+	macros: hashMacro(x, y) = h(innerMacro), innerMacro(x, y) = <x, y>
+
 
 Facts
 -----

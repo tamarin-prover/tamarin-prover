@@ -105,6 +105,12 @@ in a bottom-up fashion. For example,
 This becomes a lot less confusing if you keep the set of variables on the
 left-hand side separate from the free variables on the right-hand side.
 
+Macros works similarly to let-block but globally. They can be used in every
+rules. 
+
+    macros      := 'macros' ':' macro (',' macro)*
+    macro       := ident '(' [(var) (',' var)*] ')' '=' term 
+
 Restrictions specify restrictions on the set of traces considered, i.e., they filter
 the set of traces of a protocol. The formula of a restriction is available as an
 assumption in the proofs of *all* security properties specified in this
