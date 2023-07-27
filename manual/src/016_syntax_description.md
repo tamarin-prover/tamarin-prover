@@ -64,7 +64,7 @@ The tactics allow the user to write their own heuristics based on the lemmas the
                                  (function)+
     deprio                := 'deprio' ':' ['{'post_ranking'}']
                                  (function)+
-    standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's' 
+    standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
     post_ranking          := 'smallest' | 'id'                   
     function              := and_function [ '|' and_function]*
     and_function          := not_function [ '&' not_function]*
@@ -105,11 +105,10 @@ in a bottom-up fashion. For example,
 This becomes a lot less confusing if you keep the set of variables on the
 left-hand side separate from the free variables on the right-hand side.
 
-Macros works similarly to let-block but globally. They can be used in every
-rules. 
+Macros works similarly to let-blocks, but apply globally to all rules.
 
     macros      := 'macros' ':' macro (',' macro)*
-    macro       := ident '(' [(var) (',' var)*] ')' '=' term 
+    macro       := ident '(' [(var) (',' var)*] ')' '=' term
 
 Restrictions specify restrictions on the set of traces considered, i.e., they filter
 the set of traces of a protocol. The formula of a restriction is available as an
@@ -139,7 +138,7 @@ quantifier.
 
 In observational equivalence mode, lemmas can be associated to one side.
 
-    lemma_attr      := '[' ('sources' | 'reuse' | 'use_induction' | 
+    lemma_attr      := '[' ('sources' | 'reuse' | 'use_induction' |
                             'hide_lemma=' ident | 'heuristic=' heuristic |
                             'left' | 'right') ']'
 
