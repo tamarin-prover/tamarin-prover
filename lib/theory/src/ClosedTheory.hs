@@ -16,6 +16,7 @@ import Theory.Proof
 import TheoryObject
 import Prelude hiding (id, (.))
 import Text.PrettyPrint.Highlight
+import Term.Macro
 
 
 import           Prelude                             hiding (id, (.))                 
@@ -303,7 +304,16 @@ getDiffSource RHS True  RefinedSource = L.get (crcRefinedSources . diffThyDiffCa
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
 closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, [ClosedProtoRule])
-closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd ruE)
+closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd [] ruE)
+
+-- | Apply macro to a diff protocol rule.
+applyMacroInDiffProtoRule :: [Macro]-> DiffProtoRule -> DiffProtoRule
+applyMacroInDiffProtoRule mcs (DiffProtoRule ruE sides) = DiffProtoRule (applyMacroInRule mcs ruE) sides
+
+-- | Apply macro to an open protocol rule.
+applyMacroInProtoRule :: [Macro]-> OpenProtoRule -> OpenProtoRule
+applyMacroInProtoRule mcs (OpenProtoRule ruE variants) = OpenProtoRule (applyMacroInRule mcs ruE) variants
+
 
 -- -- | Convert a lemma to the corresponding guarded formula.
 -- lemmaToGuarded :: Lemma p -> Maybe LNGuarded

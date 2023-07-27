@@ -21,7 +21,7 @@ import           Data.Char                (isSpace)
 import           Data.Color
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
-import           Data.List                (find,foldl',intersect,isPrefixOf)
+import           Data.List                (find,foldl',intersect)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
@@ -314,8 +314,8 @@ data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
 
 
 -- | Dot a node in record based (compact) format.
-dotNodeCompact :: BoringNodeStyle ->Bool -> NodeId -> SeDot D.NodeId
-dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
+dotNodeCompact :: BoringNodeStyle -> NodeId -> SeDot D.NodeId
+dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
     let hasOutgoingEdge =
             or [ v == v' | Edge (v', _) _ <- S.toList $ get sEdges se ]
@@ -332,7 +332,7 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
               nodeColor = maybe "white" rgbToHex color
               attrs     = [("fillcolor", nodeColor),("style","filled")
                             , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
-          ids <- mkNode ru attrs hasOutgoingEdge showAutosource
+          ids <- mkNode ru attrs hasOutgoingEdge
           let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
               concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
           modM dsPrems $ M.union $ M.fromList prems
@@ -347,10 +347,10 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
 
-    mkNode  :: RuleACInst -> [(String, String)] -> Bool -> Bool
+    mkNode  :: RuleACInst -> [(String, String)] -> Bool 
       -> ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
-       [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
-    mkNode ru attrs hasOutgoingEdge showAutoLabel
+         [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
+    mkNode ru attrs hasOutgoingEdge
       -- single node, share node-id for all premises and conclusions
       | boringStyle == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
@@ -368,30 +368,12 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
         as = renderRow [ (Nothing,        ruleLabel ) ]
         cs = renderRow [ (Just (Right i), prettyLNFact c) | (i, c) <- enumConcs ru ]
 
-        ruleLabel = case showAutoLabel of
-            True -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
-                    (brackets $ vcat $ punctuate comma $
-                    map prettyLNFact $ filter isAutoSource 
-                    $ filter isNotDiffAnnotation $ get rActs ru)
-            False -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
-                    (brackets $ vcat $ punctuate comma $
-                    map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
+        ruleLabel =
+            prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
+            (brackets $ vcat $ punctuate comma $
+                map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
 
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
-
-        -- check if a fact is from auto-source
-        isAutoSource ::  LNFact -> Bool
-        isAutoSource (Fact tag _ _) =not $ hasAutoLabel (showFactTag $ tag)
-            
-        -- check if a fact has the label of auto-source 
-        hasAutoLabel :: String -> Bool
-        hasAutoLabel f 
-            | "AUTO_IN_TERM_" `isPrefixOf` f  = True
-            | "AUTO_IN_FACT_" `isPrefixOf` f  = True
-            | "AUTO_OUT_TERM_" `isPrefixOf` f = True
-            | "AUTO_OUT_FACT_" `isPrefixOf` f = True
-            | otherwise = False
-        
 
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
@@ -421,13 +403,13 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
 
 -- | Dot a sequent in compact form (one record per rule), if there is anything
 -- to draw.
-dotSystemCompact :: BoringNodeStyle ->Bool -> System -> D.Dot ()
-dotSystemCompact boringStyle showAutosource se =
+dotSystemCompact :: BoringNodeStyle -> System -> D.Dot ()
+dotSystemCompact boringStyle se =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
     (`runReaderT` (se, nodeColorMap (M.elems $ get sNodes se))) $ do
         liftDot $ setDefaultAttributes
-        mapM_ (dotNodeCompact boringStyle showAutosource) $ M.keys $ get sNodes       se
-        mapM_ (dotNodeCompact boringStyle showAutosource . fst) $ unsolvedActionAtoms se
+        mapM_ (dotNodeCompact boringStyle) $ M.keys $ get sNodes       se
+        mapM_ (dotNodeCompact boringStyle . fst) $ unsolvedActionAtoms se
         F.mapM_ dotEdge                            $ get sEdges        se
         F.mapM_ dotChain                           $ unsolvedChains    se
         F.mapM_ dotLess                            $ get sLessAtoms    se
@@ -454,8 +436,8 @@ dotSystemCompact boringStyle showAutosource se =
         dotGenEdge [("style","dashed"),("color","green")] src tgt
 
     dotLess (src, tgt) = do
-        srcId <- dotNodeCompact boringStyle showAutosource src
-        tgtId <- dotNodeCompact boringStyle showAutosource tgt
+        srcId <- dotNodeCompact boringStyle src
+        tgtId <- dotNodeCompact boringStyle tgt
         liftDot $ D.edge srcId tgtId
             [("color","black"),("style","dotted")] -- FIXME: reactivate ,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.

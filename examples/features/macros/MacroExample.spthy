@@ -1,0 +1,71 @@
+theory MacroExemple
+begin 
+
+builtins: hashing, asymmetric-encryption 
+macros: encrypt(x, y) = aenc(x, y), decrypt(x, y) = adec(x, y), hashdec(x, y) = h(decrypt(x, y))
+
+rule Register_pk: 
+  [ Fr(~ltk) ]
+-->
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+rule Get_pk:
+  [ !Pk(A, pubkey) ]
+-->
+  [ Out(pubkey)  ]
+
+rule Reveal_ltk:
+  [ !Ltk(A, ltk) ]
+--[ LtkReveal(A) ]->
+  [ Out(ltk) ]
+
+rule Client_1:
+  [Fr(~k)
+  , !Pk($S, pkS) ]
+-->
+  [ Client_1($S, ~k)
+  , Out(encrypt(~k, pkS)) ]
+
+rule Client_2:
+  [ Client_1(S, k)
+  , In(h(k)) ]
+--[ SessKeyC(S, k) ]->
+  []
+
+rule Serv_1: 
+  [ !Ltk($S, ~ltkS)
+  , In(request) ]
+--[ AnswerRequest($S, decrypt(request, ~ltkS)) ]->
+  [ Out(hashdec(request, ~ltkS)) ]
+
+lemma Client_session_key_secrecy:
+" not(
+    Ex S k #i #j.
+      SessKeyC(S, k) @ #i 
+      & K(k) @ #j
+      & not(Ex #r. LtkReveal(S) @ r)
+  ) "
+
+lemma Client_auth:
+" (All S k #i. SessKeyC(S, k) @ #i
+  ==> ((Ex #a. AnswerRequest(S, k) @ a) | (Ex #r. LtkReveal(S) @ r & r < i)
+    )
+  ) "
+
+lemma Client_auth_injective:
+" ( All S k #i. SessKeyC(S, k) @ #i
+    ==>
+    ((Ex #a. AnswerRequest(S, k) @ a & (All #j. SessKeyC(S, k) @ #j ==> #i = #j)
+      )
+    | (Ex #r. LtkReveal(S) @ r & r < i)
+    )
+  ) "
+
+lemma Client_session_key_honest_setup:
+exists-trace
+" Ex S k #i.
+  SessKeyC(S, k) @ #i 
+  & not(Ex #r. LtkReveal(S) @ r)
+"
+
+end

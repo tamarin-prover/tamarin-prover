@@ -46,6 +46,7 @@ import           Theory.Text.Parser.Token
 import           Theory.Text.Parser.Accountability
 import           Theory.Text.Parser.Lemma
 import           Theory.Text.Parser.Rule
+import           Theory.Text.Parser.Macro
 import Theory.Text.Parser.Exceptions
 import Theory.Text.Parser.Signature
 import Theory.Text.Parser.Tactics
@@ -232,6 +233,8 @@ theory inFile = do
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
+      , do thy' <- liftedAddMacros thy =<< macros
+           addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< restriction msgvar nodevar
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
@@ -344,6 +347,10 @@ theory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default tactic already defined"
 
+    liftedAddMacros thy m = case addMacros m thy of 
+        Just thy' -> return thy'
+        Nothing   -> fail $ "macro already defined"
+
 -- | Parse a diff theory.
 diffTheory :: Maybe FilePath
        -> Parser OpenDiffTheory
@@ -376,6 +383,8 @@ diffTheory inFile = do
            addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems inFile0 thy'
+      , do thy' <- liftedAddDiffMacros thy =<< macros
+           addItems inFile0 thy'
       , do thy' <- liftedAddRestriction' thy =<< diffRestriction
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction' thy =<< legacyDiffAxiom
@@ -470,6 +479,10 @@ diffTheory inFile = do
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
+
+    liftedAddDiffMacros thy m = case addDiffMacros m thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "macros already defined"
 
     liftedAddLemma' thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of

@@ -1,0 +1,24 @@
+theory OracleRanking
+
+begin
+
+heuristic: o "../heuristic/oracle-default"
+
+macros: test() = ~x
+
+rule test:
+  [ Fr(test()) ]--[ A(test()) ]->[ Out(test()) ]
+
+lemma default:
+  exists-trace
+  "Ex x #i. A(x)@i"
+
+lemma oracle1 [heuristic=o "../heuristic/oracle-1"]:
+  exists-trace
+  "Ex x #i. A(x)@i"
+
+lemma oracle2 [heuristic=O "../heuristic/oracle-2"]:
+  exists-trace
+  "Ex x #i. A(x)@i"
+
+end
