@@ -189,6 +189,7 @@ module Theory.Constraint.System (
   -- ** Temporal ordering
   , sLessAtoms
 
+  , getLessAtoms
   , rawLessRel
   , rawEdgeRel
 
@@ -274,7 +275,7 @@ import qualified Extension.Data.Label                 as L
 
 import           Logic.Connectives
 import           Theory.Constraint.Solver.AnnotatedGoals
-import           Theory.Constraint.System.Constraints
+import           Theory.Constraint.System.Constraints 
 --import           Theory.Constraint.Solver.Heuristics
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -284,6 +285,7 @@ import           Theory.Tools.InjectiveFactInstances
 
 import           System.FilePath
 import           Text.Show.Functions()
+import           Utils.Misc 
 
 ----------------------------------------------------------------------
 -- ClassifiedRules
@@ -373,7 +375,7 @@ data GoalStatus = GoalStatus
 data System = System
     { _sNodes          :: M.Map NodeId RuleACInst
     , _sEdges          :: S.Set Edge
-    , _sLessAtoms      :: S.Set (NodeId, NodeId)
+    , _sLessAtoms      :: S.Set (NodeId, NodeId, Reason)
     , _sLastAtom       :: Maybe NodeId
     , _sSubtermStore   :: SubtermStore
     , _sEqStore        :: EqStore
@@ -1394,11 +1396,11 @@ getAllMatchingPrems _   _     []  = []
 
 -- | Given a system and a node, gives the list of all nodes that have a "less" edge to this node
 getAllLessPreds :: System -> NodeId -> [NodeId]
-getAllLessPreds sys nid = map fst $ filter (\(_, y) -> nid == y) (S.toList (L.get sLessAtoms sys))
+getAllLessPreds sys nid = map fst3 $ filter (\(_, y, _) -> nid == y) (S.toList (L.get sLessAtoms sys))
 
 -- | Given a system and a node, gives the list of all nodes that have a "less" edge to this node
 getAllLessSucs :: System -> NodeId -> [NodeId]
-getAllLessSucs sys nid = map snd $ filter (\(x, _) -> nid == x) (S.toList (L.get sLessAtoms sys))
+getAllLessSucs sys nid = map snd3 $ filter (\(x, _, _) -> nid == x) (S.toList (L.get sLessAtoms sys))
 
 -- | Given a system, returns all node premises that have no incoming edge
 getOpenNodePrems :: System -> [NodePrem]
@@ -1579,7 +1581,18 @@ rawEdgeRel sys = map (nodeConcNode *** nodePremNode) $
 -- (possibly using the 'Less' relation) from @from@ to @to@ in @se@ without
 -- appealing to transitivity.
 rawLessRel :: System -> [(NodeId,NodeId)]
-rawLessRel se = S.toList (L.get sLessAtoms se) ++ rawEdgeRel se
+rawLessRel se = getLessRel (S.toList (L.get sLessAtoms se) )++ rawEdgeRel se
+
+-- | Gets the relation of the lesses
+getLessRel :: [Less] -> [(NodeId, NodeId)]
+getLessRel = map (\(x,y,_)->(x,y))
+
+getLessAtoms :: System -> S.Set (NodeId, NodeId)
+getLessAtoms sys = S.fromList $ map (\(x,y,_) -> (x,y)) 
+                  ( S.toList $ L.get sLessAtoms sys)
+-- | Gets the reason of a less
+getLessReason :: Less -> Reason
+getLessReason = thd3
 
 -- | Returns a predicate that is 'True' iff the first argument happens before
 -- the second argument in all models of the sequent.
@@ -1590,7 +1603,7 @@ alwaysBefore sys =
     lessRel   = rawLessRel sys
     check i j =
          -- speed-up check by first checking less-atoms
-         ((i, j) `S.member` L.get sLessAtoms sys)
+         ((i, j) `S.member` getLessAtoms sys)
       || (j `S.member` D.reachableSet [i] lessRel)
 
 -- | 'True' iff the given node id is guaranteed to be instantiated to an

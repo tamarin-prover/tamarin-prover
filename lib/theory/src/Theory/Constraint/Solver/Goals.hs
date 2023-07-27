@@ -261,7 +261,7 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
     requiresKU t = do
         j <- freshLVar "vk" LSortNode
         let faKU = kuFact t
-        insertLess j i
+        insertLess j i Adversary
         void (insertAction j faKU)
 
 -- | CR-rules *DG_{2,P}* and *DG_{2,d}*: solve a premise with a direct edge

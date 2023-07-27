@@ -99,6 +99,8 @@ import Theory.Tools.MessageDerivationChecks
 import qualified Data.Set
 import Theory.Text.Parser.Token
 import Theory.Tools.MessageDerivationChecks
+import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve)
+import Data.Maybe (fromMaybe)
 
 import System.Timeout (timeout)
 import Control.Exception (evaluate)
@@ -363,10 +365,10 @@ loadTheory thyOpts input inFile = do
 
     parse p = parseString (toParserFlags thyOpts) inFile p input
 
-    translate | isMSRModule   = Sapic.typeTheory
-                              >=> Sapic.translate
-                              >=> Acc.translate
-              | otherwise     = return
+    translate | isMSRModule = Sapic.typeTheory
+                          >=> Sapic.translate
+                          >=> Acc.translate
+              | otherwise   = return
 
     isDiffMode   = L.get oDiffMode thyOpts
     isMSRModule  = L.get oOutputModule thyOpts == Just ModuleMsr

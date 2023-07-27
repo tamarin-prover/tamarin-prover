@@ -21,6 +21,7 @@ module Theory.Constraint.System.Constraints (
   , NodePrem
   , NodeConc
   , Edge(..)
+  , Reason(..)
   , Less
 
   -- * Goal constraints
@@ -74,12 +75,31 @@ data Edge = Edge {
     }
   deriving (Show, Ord, Eq, Data, Typeable, Generic, NFData, Binary)
 
+-- | A reason to explain the less
+-- | Order is from the most important to the least important 
+data Reason = Formula | InjectiveFacts | Fresh | Adversary | NormalForm
+      deriving (Ord, Eq, Data, Typeable, Generic, NFData, Binary)
+
 -- | A *⋖* constraint between 'NodeId's.
-type Less = (NodeId, NodeId)
+type Less = (NodeId, NodeId, Reason)
 
 -- Instances
 ------------
+instance Show Reason where
+    show Fresh              = "fresh value"
+    show Formula            = "formula"
+    show InjectiveFacts     = "injective facts"
+    show NormalForm         = "normal form condition"
+    show Adversary          = "adversary"
 
+instance Apply LNSubst Reason where
+    apply = const id
+
+instance HasFrees Reason where
+    foldFrees = const mempty
+    foldFreesOcc  _ _ = const mempty
+    mapFrees  = const pure
+    
 instance Apply LNSubst Edge where
     apply subst (Edge from to) = Edge (apply subst from) (apply subst to)
 
@@ -182,7 +202,10 @@ instance Apply LNSubst Goal where
 ------------------------------------------------------------------------------
 -- Pretty printing                                                          --
 ------------------------------------------------------------------------------
-
+-- | Pretty print a reason
+prettyReason :: HighlightDocument d => Reason -> d
+prettyReason r = text $ "induced by " ++ show r
+    
 -- | Pretty print a node.
 prettyNode :: HighlightDocument d => (NodeId, RuleACInst) -> d
 prettyNode (v,ru) = prettyNodeId v <> colon <-> prettyRuleACInst ru
@@ -202,7 +225,7 @@ prettyEdge (Edge c p) =
 
 -- | Pretty print a less-atom as @src < tgt@.
 prettyLess :: HighlightDocument d => Less -> d
-prettyLess (i, j) = prettyNAtom $ Less (varTerm i) (varTerm j)
+prettyLess (i, j, r) = (prettyNAtom $ Less (varTerm i) (varTerm j)) <> colon <-> prettyReason r
 
 -- | Pretty print a goal.
 prettyGoal :: HighlightDocument d => Goal -> d

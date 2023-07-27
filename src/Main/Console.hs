@@ -149,12 +149,13 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
                      else putStrLn ""
                    return Nothing
 
-ensureMaude :: Arguments -> IO (Maybe String)
+ensureMaude :: Arguments -> IO (Bool, String)
 ensureMaude as = do
     putStrLn $ "maude tool: '" ++ maude ++ "'"
     t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" False True
     t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" False True
-    return (if isNothing t1 || isNothing t2 then Nothing else t1)
+    (_, out, _) <- readProcessWithExitCode maude ["--version"] ""
+    return (if isNothing t1 || isNothing t2 then (False, (if out == "" then "unknown version\n" else init out ++ " (unsuported)\n")) else (True, out))
   where
     maude = maudePath as
     checkVersion out _
@@ -169,7 +170,7 @@ ensureMaude as = do
 
 --  Maude versions prior to 2.7.1 are no longer supported,
 --  because the 'get variants' command is incompatible.
-    supportedVersions = ["2.7.1", "3.0", "3.1", "3.2.1", "3.2.2"]
+    supportedVersions = ["2.7.1", "3.0", "3.1", "3.2.1", "3.2.2", "3.3", "3.3.1"]
 
     errMsg' = errMsg $ "'" ++ maude ++ "' executable not found / does not work"
 
@@ -184,8 +185,7 @@ ensureMaude as = do
 ensureMaudeAndGetVersion :: Arguments -> IO String
 ensureMaudeAndGetVersion as = do
           -- Ensure Maude version and get Maude version 
-          maybeMaudeVersion <- ensureMaude as
-          let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
+          (_, maudeVersion) <- ensureMaude as
           -- Get String for version and put it in the arguments __version__
           getVersionIO maudeVersion
 

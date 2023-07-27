@@ -340,7 +340,7 @@ def getArguments():
 	parser.add_argument("-d", "--directory", help = "The directory to compare the test results with. The default is case-studies-regression", type=str, default="case-studies-regression")
 	parser.add_argument("-r", "--repeat", help = "Repeat everything r times (except for 'stack install'). This gives more confidence in time measurements", type=int, default=1)
 	parser.add_argument("-v", "--verbose", 
-		help="Level of verbosity, values are from 0 to 6. Default is 2\n" +
+		help="Level of verbosity, values are from 0 to 6. Default is 3\n" +
 			"0: show only critical error output and changes of verified vs. trace found\n" +
 			"1: show summary of time and step differences\n" +
 			"2: show step differences for changed lemmas\n" +

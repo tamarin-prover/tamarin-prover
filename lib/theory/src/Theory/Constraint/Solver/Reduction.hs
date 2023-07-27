@@ -105,6 +105,7 @@ import           Logic.Connectives
 import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
 import           Theory.Model
+import           Utils.Misc
 
 ------------------------------------------------------------------------------
 -- The constraint reduction monad
@@ -263,7 +264,7 @@ labelNodeId = \i rules parent -> do
           -- corresponding KU-actions before this node.
         _ | isKUFact fa -> do
               j <- freshLVar "vk" LSortNode
-              insertLess j i
+              insertLess j i Adversary
               void (insertAction j fa)
 
           -- Store premise goal for later processing using CR-rule *DG2_2*
@@ -385,12 +386,12 @@ insertAction i fa@(Fact _ ann _) = do
     requiresKU t = do
       j <- freshLVar "vk" LSortNode
       let faKU = kuFactAnn ann t
-      insertLess j i
+      insertLess j i Adversary
       void (insertAction j faKU)
 
 -- | Insert a 'Less' atom. @insertLess i j@ means that *i < j* is added.
-insertLess :: NodeId -> NodeId -> Reduction ()
-insertLess i j = modM sLessAtoms (S.insert (i, j))
+insertLess :: NodeId -> NodeId -> Reason-> Reduction ()
+insertLess i j r = modM sLessAtoms (S.insert (i, j, r))
 
 -- | Insert a 'Subterm' atom. *x ⊏ y* is added to the SubtermStore
 insertSubterm :: LNTerm -> LNTerm -> Reduction ()
@@ -415,7 +416,7 @@ insertAtom ato = case ato of
     EqE x y       -> void $ solveTermEqs SplitNow [Equal x y]
     Subterm x y   -> insertSubterm x y
     Action i fa   -> void $ insertAction (ltermNodeId' i) fa
-    Less i j      -> insertLess (ltermNodeId' i) (ltermNodeId' j)
+    Less i j      -> insertLess (ltermNodeId' i) (ltermNodeId' j) Formula
     Last i        -> void $ insertLast (ltermNodeId' i)
     Syntactic _   -> return ()
 
@@ -665,7 +666,7 @@ conjoinSystem sys = do
     joinSets sLemmas
     joinSets sEdges
     F.mapM_ insertLast                 $ get sLastAtom    sys
-    F.mapM_ (uncurry insertLess)       $ get sLessAtoms   sys
+    F.mapM_  (uncurry3 insertLess)     $ get sLessAtoms   sys
     -- split-goals are not valid anymore
     mapM_   (uncurry insertGoalStatus) $ filter (not . isSplitGoal . fst) $ M.toList $ get sGoals sys
     F.mapM_ insertFormula $ get sFormulas sys
