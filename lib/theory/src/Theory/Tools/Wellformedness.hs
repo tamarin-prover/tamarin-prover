@@ -173,10 +173,9 @@ factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 -- | in RHS has the minimum editing distance with it and the value of the distance
 -- | is included between 1 and 3.
 mostSimilarName :: [RuleAndFact]->[RuleAndFact]
-                  ->[(RuleAndFact,RuleAndFact)]
+                  ->[(RuleAndFact,RuleAndFact,Bool)]
 mostSimilarName xs xt = 
-    map (\x -> (,) (fst3 x) $ snd3 x )
-    $ filter isSimilar  
+    map isSimilar  
     $ foldr (\x acc-> (minEd x xt):acc) [] $
     removeSame xt xs
   where
@@ -185,8 +184,12 @@ mostSimilarName xs xt =
     removeSame li             = filter (\x -> (getName $ snd(x)) `notElem` 
                               ( map (getName.snd) li) ) 
     -- to verify if the names of two facts are similar
-    isSimilar :: (RuleAndFact, RuleAndFact, Int)->Bool
-    isSimilar rfd             = (thd3 rfd) < 3
+    isSimilar :: (RuleAndFact, RuleAndFact, Int)
+                ->(RuleAndFact, RuleAndFact, Bool)
+    isSimilar rfd             = 
+          if (thd3 rfd) < 3
+            then (fst3 rfd, snd3 rfd, True)
+            else (fst3 rfd, snd3 rfd, False)
     -- to get the fact in rhs which has the minimum editing distance
     -- with a given fact and the distance between the two facts  
     minEd :: RuleAndFact->[RuleAndFact]->(RuleAndFact, RuleAndFact, Int)
@@ -577,20 +580,23 @@ factReports thy = concat
 
         -- for each fact on LHS, get his most similar fact in RHS
         getFactLhsNoRhs :: [(String,[LNFact])]->[(String,[LNFact])]
-                          ->[(RuleAndFact,RuleAndFact)]                                  
+                          ->[(RuleAndFact,RuleAndFact,Bool)]                                  
         getFactLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
                                       $ regroup rfacts
                                                 
         regroup :: [(String,[LNFact])] -> [RuleAndFact]
         regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x)
                        ++ acc) [] 
-        getFact ((_,factL),_) = factL
-        ruleAndFact ((ruName,factL),(ruNameR,factR)) =
-          text  ("in rule " ++ show ruName ++": "
-           ++ showFactInfo(factInfo factL)
-           ++ ". Perhaps you want to use the fact in rule "
-           ++ show ruNameR ++": "
-           ++ showFactInfo (factInfo factR)  ) 
+        getFact ((_,factL),_,_) = factL
+        ruleAndFact ((ruName,factL),(ruNameR,factR),status) =
+          if status == True
+            then text  ("in rule " ++ show ruName ++": "
+                  ++ showFactInfo(factInfo factL)
+                  ++ ". Perhaps you want to use the fact in rule "
+                  ++ show ruNameR ++": "
+                  ++ showFactInfo (factInfo factR)  ) 
+            else text  ("in rule " ++ show ruName ++": "
+                  ++ showFactInfo(factInfo factL))
         showFactInfo (tag,arity,multi) =
                   " factName "++quote (factTagName tag)
                   ++ " arity: "++show arity
@@ -800,9 +806,9 @@ factReportsDiff thy = concat
         topic = "Facts occur in the left-hand-side but not in any right-hand-side "
         -- all the protocol facts in lhs but not in any rhs
         factLhsNoRhs = [fa | fa <-getFactLhsNoRhs 
-                            (getFactSide rPrems ru) (getFactSide rConcs ru),
-                            isProtoFact $ getFact fa]     
-                                                      
+                             (getFactSide rPrems ru) (getFactSide rConcs ru),
+                             isProtoFact $ getFact fa]     
+                                                       
         ru = diffThyProtoRules thy
         -- get all the facts by their sides
         getFactSide s = map (\x-> (,) (showRuleCaseName x) 
@@ -810,20 +816,23 @@ factReportsDiff thy = concat
 
         -- for each fact on LHS, get his most similar fact in RHS
         getFactLhsNoRhs :: [(String,[LNFact])]->[(String,[LNFact])]
-                          ->[(RuleAndFact,RuleAndFact)]                                  
+                          ->[(RuleAndFact,RuleAndFact,Bool)]                                  
         getFactLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
                                       $ regroup rfacts
                                                 
         regroup :: [(String,[LNFact])] -> [RuleAndFact]
         regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x)
-                      ++ acc) [] 
-        getFact ((_,factL),_) = factL
-        ruleAndFact ((ruName,factL),(ruNameR,factR)) =
-          text  ("in rule " ++ show ruName ++": "
-          ++ showFactInfo(factInfo factL)
-          ++ ". Perhaps you want to use the fact in rule "
-          ++ show ruNameR ++": "
-          ++ showFactInfo (factInfo factR)  ) 
+                       ++ acc) [] 
+        getFact ((_,factL),_,_) = factL
+        ruleAndFact ((ruName,factL),(ruNameR,factR),status) =
+          if status == True
+            then text  ("in rule " ++ show ruName ++": "
+                  ++ showFactInfo(factInfo factL)
+                  ++ ". Perhaps you want to use the fact in rule "
+                  ++ show ruNameR ++": "
+                  ++ showFactInfo (factInfo factR)  ) 
+            else text  ("in rule " ++ show ruName ++": "
+                  ++ showFactInfo(factInfo factL))
         showFactInfo (tag,arity,multi) =
                   " factName "++quote (factTagName tag)
                   ++ " arity: "++show arity
