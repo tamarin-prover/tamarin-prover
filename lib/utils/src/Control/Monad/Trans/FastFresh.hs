@@ -101,6 +101,9 @@ instance MonadError e m => MonadError e (FreshT m) where
 instance MonadThrow m => MonadThrow (FreshT m) where
     throwM     = lift . throwM
 
+instance MonadCatch m => MonadCatch (FreshT m) where
+    catch m f = FreshT $ catch (unFreshT m) (unFreshT . f)
+
 instance MonadReader r m => MonadReader r (FreshT m) where
     ask       = lift ask
     local f m = FreshT $ local f $ unFreshT m

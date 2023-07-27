@@ -33,6 +33,8 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
+import qualified Data.Graph                         as G 
+import qualified Extension.Data.Label                 as L
 import           Data.Maybe                         (mapMaybe)
 
 import           Control.Basics
@@ -52,6 +54,8 @@ import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
+
+import           Utils.Misc
 
 
 -- | Apply CR-rules that don't result in case splitting until the constraint
@@ -95,7 +99,7 @@ simplifySystem = do
               c7 <- evalFormulaAtoms
               c8 <- insertImpliedFormulas
               c9 <- freshOrdering
-
+              
               -- Report on looping behaviour if necessary
               let changes = filter ((Changed ==) . snd) $
                     [ ("unique fresh instances (DG4)",        c1)
@@ -160,7 +164,8 @@ exploitUniqueMsgOrder = do
     kdConcs   <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKDConcs)
     kuActions <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKUActions)
     -- We can add all elements where we have an intersection
-    F.mapM_ (uncurry insertLess) $ M.intersectionWith (,) kdConcs kuActions
+    F.mapM_ (uncurry3 insertLess) (M.map (\(x,y)->(x,y, NormalForm))  
+              $ M.intersectionWith (,) kdConcs kuActions )
 
 -- | CR-rules *DG4*, *N5_u*, and *N5_d*: enforcing uniqueness of *Fresh* rule
 -- instances, *KU*-actions, and *KD*-conclusions.
@@ -418,10 +423,10 @@ freshOrdering = do
   reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
   let origins = concatMap getFreshFactVars nodes
   let uses = M.fromListWith (++) $ concatMap (getFreshVarsNotBelowReducible reducible) nodes
-  let newLesses = [(i,j) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
+  let newLesses = [(i,j,Fresh) | (fr, i) <- origins, j <- M.findWithDefault [] fr uses]
 
   oldLesses <- gets (get sLessAtoms)
-  mapM_ (uncurry insertLess) newLesses
+  mapM_ (uncurry3 insertLess) newLesses
   modifiedLesses <- gets (get sLessAtoms)
   return $ if oldLesses == modifiedLesses
     then Unchanged
@@ -508,5 +513,9 @@ addNonInjectiveFactInstances :: Reduction ()
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
-  let list = nonInjectiveFactInstances ctxt se
-  mapM_ (uncurry insertLess) list
+  let list = map (\(x,y)-> (x,y,InjectiveFacts)) $ nonInjectiveFactInstances ctxt se
+  mapM_ (uncurry3 insertLess) list
+
+
+
+ 

@@ -19,5 +19,5 @@ rule r3:
   [LongFactNameExact() ] --> [OneResultingIn('second')]
 
 rule r4:
-  [ ] --> [TwoResultingIn('second')]
+  [NotInAnyRHS() ] --> [TwoResultingIn('second')]
 end

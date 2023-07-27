@@ -146,11 +146,12 @@ var ui = {
         // Load display settings
         this.loadSettings();
 
-        // initialize thz cookie for not-init
+        // initialize the cookie for not-init
         if ($.cookie("not-init")) {
             $.cookie("not-init",null,{path: "/"});
         }
 
+        $.cookie("simplification", 2, { path: '/' });
         // Navigation drop-down menus
         $("ul#navigation").superfish();
 
@@ -351,10 +352,10 @@ var ui = {
 
 	/* If no simplification level specified yet, default to 1 */
 	if ($.cookie("simplification") == null) {
-	    $.cookie("simplification", 10, { path: '/' });
+	    $.cookie("simplification", 2, { path: '/' });
 	}
 	/* Add buttons for each of the simplification levels */
-	for (var i=0;i<10;i++) {
+	for (var i=0;i<4;i++) {
 	    var linkname = "a#lvl"+i+"-toggle";
 	    if (parseInt($.cookie("simplification")) == i) {
                 $(linkname).addClass("active-option");

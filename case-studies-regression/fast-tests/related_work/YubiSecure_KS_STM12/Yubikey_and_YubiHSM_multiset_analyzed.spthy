@@ -1241,6 +1241,15 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "YSM_AEAD_RANDOM_GENERATE":  factName `YSM_AEAD_RANDOM_GENERATE' arity: 1 multiplicity: Persistent
+  
+  2. in rule "YSM_AEAD_GENERATE":  factName `YSM_AEAD_GENERATE' arity: 1 multiplicity: Persistent
+  
+  3. in rule "YSM_AES_ESC_BLOCK_ENCRYPT":  factName `YSM_AES_ESC_BLOCK_ENCRYPT' arity: 1 multiplicity: Persistent
+
 The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
   YSM_AEAD_YUBIKEY_OTP_DECODE
 Failed to derive Variable(s): N
@@ -1249,15 +1258,15 @@ Failed to derive Variable(s): N
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Maude version 2.7.1
+Git revision: 43a00382d32032f238b20b5293eb15219df3aef4 (with uncommited changes), branch: fix532
+Compiled at: 2023-07-26 13:44:49.000956908 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.2.1. OK.
+ checking version: 2.7.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -1266,9 +1275,9 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 8.96s
+  processing time: 7.56s
   
-  WARNING: 1 wellformedness check failed!
+  WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
   transitivity (all-traces): verified (2 steps)
