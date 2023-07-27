@@ -107,11 +107,13 @@ setProcessNames pn = mappendProcessParsedAnnotation (mempty {processnames = pn})
 instance (Apply s SapicTerm) => (Apply s (ProcessAnnotation v)) where
     apply = applyAnn
 
-newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
-    deriving (Typeable, Monoid,Semigroup,Show)
+-- newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
+--     deriving (Typeable, Monoid,Semigroup,Show)
 
 newtype AnProcess ann = AnProcess (LProcess ann)
     deriving (Typeable, Show)
+
+type AnnotatedProcess = LProcess (ProcessAnnotation LVar)
 
 -- This instance is useful for modifying annotations, but not for much more.
 instance Functor AnProcess where

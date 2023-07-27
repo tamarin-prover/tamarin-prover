@@ -1,0 +1,15 @@
+theory LockingRestriction
+begin
+
+let P = event Ignore();
+        lock 'P';
+        event A();
+        unlock 'P'
+
+process:
+  lock 'P'; !P // replication forbidden, should give exception with offending subprocess
+
+lemma ANotReachable:
+  "not Ex #t. A()@t"
+
+end
