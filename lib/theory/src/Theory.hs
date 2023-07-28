@@ -26,6 +26,8 @@ module Theory (
   , pBody
   , pVars
   , addFunctionTypingInfo
+  , addMacros
+  , addDiffMacros
   , clearFunctionTypingInfos
 
   -- * Options
@@ -246,6 +248,7 @@ module Theory (
   , prettyOpenTheory
   , prettyOpenTranslatedTheory
   , prettyOpenDiffTheory
+  , prettyMacros
 
   , prettyOpenProtoRule
   , prettyDiffRule

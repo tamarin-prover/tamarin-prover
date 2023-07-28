@@ -922,7 +922,7 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
     dotStyle s False = dotSystemCompact FullBoringNodes s
     compression True = compressSystem
     compression False = id
-    
+
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
 getTheoryGraphDiffR idx path = getTheoryGraphDiffR' idx path False
