@@ -465,7 +465,8 @@ publicNamesReport' rules =
     ppRuleAndName ((ruName, pub):rest) =
         text $ "rule " ++ show ruName ++ ": "++" name " ++
          show (pub) ++ concatMap ((", " ++) . show . snd) rest
-
+    ppRuleAndName [] = text "Error: empty clash"
+    
 publicNamesReport :: OpenTranslatedTheory -> WfErrorReport
 publicNamesReport thy = publicNamesReport' $ thyProtoRules thy
 

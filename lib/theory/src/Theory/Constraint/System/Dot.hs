@@ -40,7 +40,7 @@ import           Control.Monad.State      (StateT, evalStateT)
 import qualified Text.Dot                 as D
 import           Text.PrettyPrint.Class
 
-import           Theory.Constraint.System 
+import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty       (opAction)
 
@@ -252,7 +252,7 @@ dotSystemLoose se =
     dotLess (src, tgt, color) = do
         srcId <- dotNode src
         tgtId <- dotNode tgt
-        liftDot $ D.edge srcId tgtId 
+        liftDot $ D.edge srcId tgtId
                 [("color",color),("style","dashed")]
              -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
@@ -278,9 +278,10 @@ nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
       [ (get rInfo ru, case find colorAttr $ ruleAttributes ru of
-            Just (RuleColor c)  -> c
-            Just (Process   _)  -> hsvToRGB $ getColor (gIdx, mIdx)
-            Nothing             -> hsvToRGB $ getColor (gIdx, mIdx))
+            Just (RuleColor c)     -> c
+            Just (Process   _)     -> hsvToRGB $ getColor (gIdx, mIdx)
+            Just IgnoreDerivChecks -> hsvToRGB $ getColor (gIdx, mIdx)
+            Nothing                -> hsvToRGB $ getColor (gIdx, mIdx))
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
     groupIdx ru | isDestrRule ru                   = 0
@@ -300,8 +301,9 @@ nodeColorMap rules =
 -- Note: Currently RuleColors are the only Rule Attributes, so the second line is
 -- commented out to remove the redundant pattern compiler warning. If more are added,
 -- the second line can be uncommented.
-    colorAttr (RuleColor _) = True
-    colorAttr (Process   _) = False
+    colorAttr (RuleColor _)     = True
+    colorAttr (Process   _)     = False
+    colorAttr IgnoreDerivChecks = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational
@@ -374,7 +376,7 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
         ruleLabel = case showAutoLabel of
             True -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
                     (brackets $ vcat $ punctuate comma $
-                    map prettyLNFact $ filter isAutoSource 
+                    map prettyLNFact $ filter isAutoSource
                     $ filter isNotDiffAnnotation $ get rActs ru)
             False -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
                     (brackets $ vcat $ punctuate comma $
@@ -385,16 +387,16 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
         -- check if a fact is from auto-source
         isAutoSource ::  LNFact -> Bool
         isAutoSource (Fact tag _ _) =not $ hasAutoLabel (showFactTag $ tag)
-            
+
         -- check if a fact has the label of auto-source 
         hasAutoLabel :: String -> Bool
-        hasAutoLabel f 
+        hasAutoLabel f
             | "AUTO_IN_TERM_" `isPrefixOf` f  = True
             | "AUTO_IN_FACT_" `isPrefixOf` f  = True
             | "AUTO_OUT_TERM_" `isPrefixOf` f = True
             | "AUTO_OUT_FACT_" `isPrefixOf` f = True
             | otherwise = False
-        
+
 
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
@@ -457,40 +459,38 @@ dotSystemCompact boringStyle showAutosource se =
         dotGenEdge [("style","dotted"),("color","green")] src tgt
 
     dotLess (src, tgt, color) = do
-        
+
         srcId <- dotNodeCompact boringStyle showAutosource src
         tgtId <- dotNodeCompact boringStyle showAutosource tgt
         liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
             -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
-        
+
 
 -- | To get the color style for each less 
 reasonToColor :: S.Set (NodeId, NodeId, Reason)
                 -> S.Set (NodeId, NodeId, String)
-reasonToColor l = S.fromList ( map getAllRToC $ 
+reasonToColor l = S.fromList ( map getAllRToC $
                   groupOn  (\(x,y,_)->(x,y)) $ S.toList l)
-    where 
+    where
         toColor :: Reason -> String
-        toColor r = case r of 
+        toColor r = case r of
              Adversary      -> "red"
              Formula        -> "black"
              Fresh          -> "blue3"
              InjectiveFacts -> "purple"
              NormalForm     -> "darkorange3"
         allRtoColors :: [Reason] -> String
-        allRtoColors r = (intercalate ":" $ map toColor r)++per
+        allRtoColors r = intercalate ":" (map toColor r)++per
             where
                 len = length r
-                per = case len >1 of
-                    True -> ";" ++ show (1/fromIntegral len)
-                    False -> ""
+                per = if len >1 then ";" ++ show ((1 :: Double)/fromIntegral len) else ""
         -- to show all the reasons with their colors
         getAllRToC :: [Less]-> (NodeId,NodeId,String)
         getAllRToC [] = error "empty list"
-        getAllRToC (x:xs) = (fst3 x, snd3 x, 
+        getAllRToC (x:xs) = (fst3 x, snd3 x,
                         allRtoColors (reverse (sort $ map thd3 (x:xs))))
-        
+
         -- |Or else, to show only the most important reason, we can use
         -- |the function below, at the same time, we need remove function
         -- |"allRtoColors"
@@ -498,8 +498,8 @@ reasonToColor l = S.fromList ( map getAllRToC $
         -- getAllRToC :: [Less]-> (NodeId,NodeId,String)
         -- getAllRToC (x:xs) = (fst3 x, snd3 x, 
         --                 toColor $ head (sort $ map thd3 (x:xs)))
-        
-                
+
+
 ------------------------------------------------------------------------------
 -- Compressed versions of a sequent
 ------------------------------------------------------------------------------
@@ -526,7 +526,7 @@ compressSystem se0 =
 -- | formula constraint 
 -- | for level 1, there's no transitive reduction applied
 simplifySystem :: Int -> System -> System
-simplifySystem i sys 
+simplifySystem i sys
     | i==2 = transitiveReduction sys False
     | i==3 = transitiveReduction sys True
     | otherwise = sys
@@ -534,21 +534,21 @@ simplifySystem i sys
 -- | Simplify the system by transitive reduction (constraint of formula won't  
 -- | be applied if totalRed is False) but not for a system which has a graph cyclic
 transitiveReduction :: System -> Bool -> System
-transitiveReduction sys totalRed= 
+transitiveReduction sys totalRed=
     if D.cyclic oldLesses
         then sys
-        else   modify sLessAtoms 
+        else   modify sLessAtoms
             ( S.intersection ( S.fromList newLesses) ) sys
-    where 
+    where
         oldLessesWithR = S.toList $ get sLessAtoms sys
-        oldLesses = rawLessRel sys 
-        newLesses = 
-            case totalRed of 
+        oldLesses = rawLessRel sys
+        newLesses =
+            case totalRed of
                 True ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
                             (x,y) `elem` (D.transRed oldLesses) ]
                 False ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
                             (x,y) `elem` (D.transRed oldLesses) || z == Formula]
-        
+
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
 -- transfer node; i.e., a node annotated with a rule that is one of the
@@ -595,7 +595,7 @@ tryHideNodeId v se = fromMaybe se $ do
 
         lIns  = selectPart sLessAtoms ((v ==) . snd3)
         lOuts = selectPart sLessAtoms ((v ==) . fst3)
-        lNews = [ (i, j, r) | (i, _, _) <- lIns, (_, j, r) <- lOuts ] 
+        lNews = [ (i, j, r) | (i, _, _) <- lIns, (_, j, r) <- lOuts ]
 
     -- hide a rule, if it is not "too complicated"
     hideRule :: RuleACInst -> Maybe System

@@ -583,9 +583,9 @@ frees = sortednub . freesList
 -- then variables that occur in equal contexts in t and s are probably renamings of
 -- each other.
 varOccurences :: HasFrees a => a -> [(LVar, S.Set Occurence)]
-varOccurences t =
-    map (\((v,ctx1):rest) -> (v, S.fromList (ctx1:(map snd rest)))) . groupOn fst . sortOn fst
-    . foldFreesOcc (\ c v -> [(v,c)]) [] $ t
+varOccurences =
+    map (\((v,ctx1):rest) -> (v, S.fromList (ctx1:map snd rest))) . groupOn fst . sortOn fst
+    . foldFreesOcc (\ c v -> [(v,c)]) []
 
 -- | @someInst t@ returns an instance of @t@ where all free variables whose
 -- binding is not yet determined by the caller are replaced with fresh

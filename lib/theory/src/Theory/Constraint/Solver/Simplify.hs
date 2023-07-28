@@ -28,23 +28,15 @@ import           Debug.Trace
 import           Prelude                            hiding (id, (.))
 
 import qualified Data.DAG.Simple                    as D
--- import           Data.Data
--- import           Data.Either                        (partitionEithers)
 import qualified Data.Foldable                      as F
 import           Data.List
 import qualified Data.Map                           as M
--- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
-import           Data.Maybe                         (mapMaybe, listToMaybe, maybeToList)
-import           Data.Bifunctor                     (bimap)
-import           Safe                               (atMay, headMay)
-import qualified Data.Graph                         as G 
-import qualified Extension.Data.Label               as L
+import           Data.Maybe                         (mapMaybe, listToMaybe)
 
 import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
--- import           Control.Monad.Fresh
 import           Control.Monad.Reader
 import           Control.Monad.State                (gets)
 

@@ -9,23 +9,17 @@
 -- Helpers for inspecting the environment of the Tamarin prover.
 module Main.Environment where
 
-import           Data.Char                       (isSpace, toLower)
+import           Data.Char                       (toLower)
 import           Data.List
-import           Data.Maybe                      (fromMaybe, isNothing, isJust)
+import           Data.Maybe                      (fromMaybe, isJust)
 
 import           Control.Exception               as E
 
 import           System.Console.CmdArgs.Explicit
 import           System.Environment
-import           System.Exit
-import           System.IO
 import           System.Process
 
 import           Main.Console
-
--- For tamarin, git version, compile time...
-import Data.Version (showVersion)
-import Paths_tamarin_prover (version)
 
 ------------------------------------------------------------------------------
 -- Retrieving the paths to required tools.

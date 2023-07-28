@@ -2,8 +2,6 @@
 -- Copyright   : (c) 2023 - Thiebaux Valentin
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
--- Portability : portable
 --
 -- Parsing macros
 ------------------------------------------------------------------------------

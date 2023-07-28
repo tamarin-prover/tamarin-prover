@@ -190,6 +190,7 @@ module Theory.Constraint.System (
   , sLessAtoms
 
   , getLessAtoms
+  , getLessReason
   , rawLessRel
   , rawEdgeRel
 
