@@ -95,7 +95,6 @@ import qualified Blaze.ByteString.Builder     as B
 import qualified Data.ByteString.Char8        as BS
 import qualified Data.Map                     as M
 import qualified Data.Text                    as T
-import qualified Data.Text.Read               as R
 import qualified Data.Text.Encoding           as T (encodeUtf8, decodeUtf8)
 import qualified Data.Text.Lazy.Encoding      as TLE
 import qualified Data.Traversable             as Tr
@@ -116,7 +115,7 @@ import           Debug.Trace                  (trace)
 import Control.Monad.Except (runExceptT)
 import Main.TheoryLoader
 import Main.Console (renderDoc)
-import Theory.Tools.Wellformedness (prettyWfErrorReport, WfErrorReport)
+import Theory.Tools.Wellformedness (prettyWfErrorReport)
 
 -- Quasi-quotation syntax changed from GHC 6 to 7,
 -- so we need this switch in order to support both

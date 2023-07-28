@@ -60,7 +60,7 @@ import           Data.Maybe
 import           Data.Version                    (showVersion)
 import           Data.Time
 import           Data.List
-import           Data.Char                       (isSpace, toLower)
+import           Data.Char                       (isSpace)
 import           Safe
 
 import           Control.Monad
@@ -69,7 +69,6 @@ import           Control.Exception               as E
 import           System.Console.CmdArgs.Explicit
 import           System.Console.CmdArgs.Text
 import           System.Exit
-import           System.FilePath
 import           System.IO
 import           System.Process
 
@@ -223,7 +222,7 @@ versionStr = unlines
     [ programName
     , " "
     , showVersion version
-    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2020"
+    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2023"
     ]
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"

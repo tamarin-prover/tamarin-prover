@@ -3,8 +3,6 @@
 -- Copyright   : (c) 2023 - Thiebaux Valentin
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
---
 -- Macro substitution and application
 
 module Term.Macro (
@@ -12,11 +10,7 @@ module Term.Macro (
     , applyMacros
 ) where
 
-import           Term.Maude.Process
 import           Term.Substitution
-import           Term.SubtermRule
-import           Term.Positions
-import           Term.LTerm
 
 import qualified Data.ByteString            as B
 
@@ -28,7 +22,7 @@ macroToFunSym (op, args, _) = NoEq (op, (length args, Private, Destructor))
 
 -- | Apply and substitute the macro on a LNTerm
 applyMacro :: FunSym -> [LVar] -> LNTerm -> LNTerm -> LNTerm
-applyMacro mc margs mout t@(viewTerm -> FApp f targs)
+applyMacro mc margs mout (viewTerm -> FApp f targs)
     | mc == f = apply (substFromList $ zip margs (map (applyMacro mc margs mout) targs)) mout
     | otherwise = fApp f $ map (applyMacro mc margs mout) targs
 applyMacro _ _ _ t = t
