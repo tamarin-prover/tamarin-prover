@@ -9,6 +9,13 @@ should find attack:
 - after watching one run and storing data
 - uses nb'=na+nb+na'
  ((( na'+k+nb'= na'+k + na +nb+na' = k + na + nb )))
+
+ * Initial Protocol:    features/xor/CRxor.spthy
+ * Modeler:             Thiebaux Valentin
+ * Date:                July 2023
+ *
+ * Status: 	working
+ * Used to test macros with Restriction
 */
 
 builtins: xor,hashing

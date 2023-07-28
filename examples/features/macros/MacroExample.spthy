@@ -1,6 +1,15 @@
 theory MacroExemple
 begin 
 
+/*
+ * Protocol:     Basic protocol (tamarin manual example)
+ * Modeler:      Thiebaux Valentin
+ * Date:         July 2023
+ *
+ * Status: 	working
+ * Used to test macros.
+*/
+
 builtins: hashing, asymmetric-encryption 
 macros: encrypt(x, y) = aenc(x, y), decrypt(x, y) = adec(x, y), hashdec(x, y) = h(decrypt(x, y))
 

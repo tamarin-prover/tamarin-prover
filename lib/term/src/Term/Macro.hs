@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-} 
 -- |
--- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
+-- Copyright   : (c) 2023 - Thiebaux Valentin
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>

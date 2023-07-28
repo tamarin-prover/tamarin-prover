@@ -2,13 +2,13 @@ theory MacroDiffprobEnc
 begin
 
 /*
- * Protocol:     Probabilistic encryption
- * Modeler:      Jannik Dreier and Ralf Sasse
- * Described in: Automated Symbolic Proofs of Observational Equivalence [CCS'15]
- * Date:         April 2015
+ * Initial Protocol:     Probabilistic encryption
+ * Initial Modeler:      Jannik Dreier and Ralf Sasse in features/equivalence/probEnc.spthy
+ * Modeler:              Thiebaux Valentin
+ * Date:                 July 2023
  *
  * Status: 	working
-// Observational equivalence is proven automatically in less than 0.4 seconds.
+ * Used to test macros with diff.
  */
 
 functions: penc/3, pdec/2, pk/1

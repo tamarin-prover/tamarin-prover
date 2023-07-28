@@ -1,6 +1,5 @@
 -- |
--- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
---               contributing in 2019: Robert Künnemann, Johannes Wocker
+-- Copyright   : (c) 2023 - Thiebaux Valentin
 -- License     : GPL v3 (see LICENSE)
 --
 -- Maintainer  : Simon Meier <iridcode@gmail.com>

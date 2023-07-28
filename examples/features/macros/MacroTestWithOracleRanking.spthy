@@ -2,6 +2,15 @@ theory OracleRanking
 
 begin
 
+/*
+ * Initial Protocol:    features/heuristic/OracleRanking.spthy     
+ * Modeler:             Thiebaux Valentin
+ * Date:                July 2023
+ *
+ * Status: 	            working
+ * Used to test macros with heuristic.
+*/
+
 heuristic: o "../heuristic/oracle-default"
 
 macros: test() = ~x

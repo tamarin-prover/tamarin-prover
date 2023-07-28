@@ -1073,6 +1073,15 @@ htmlThyPath renderUrl info path =
                 \ selected to work.
             <tr>
               <td>
+                <span class="keys">s/S
+              <td>
+                Apply the autoprove method to all lemmas.
+                \ <span class="keys">s</span>
+                \ stops after finding a solution, and
+                \ <span class="keys">S</span>
+                \ searches for all solutions.
+            <tr>
+              <td>
                 <span class="keys">?
               <td>
                 Display this help message.
@@ -1203,6 +1212,15 @@ htmlDiffThyPath renderUrl info path =
                 \ Needs to have a #
                 <tt>sorry
                 \ selected to work.
+            <tr>
+              <td>
+                <span class="keys">s/S
+              <td>
+                Apply the autoprove method to all lemmas.
+                \ <span class="keys">s</span>
+                \ stops after finding a solution, and
+                \ <span class="keys">S</span>
+                \ searches for all solutions.
             <tr>
               <td>
                 <span class="keys">?

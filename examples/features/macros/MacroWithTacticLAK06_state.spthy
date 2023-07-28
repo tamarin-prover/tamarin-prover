@@ -1,7 +1,7 @@
 theory MacroWithTacticLAK06_state
 begin
 
-// This theory models LAK06 as taken from "Attacks on RFID protocols" v1.1
+// Initial : This theory models LAK06 as taken from "Attacks on RFID protocols" v1.1
 // from Aug 6, 2009, by Ton van Deursen and Sasa Radomirovic
 //
 // This model considers two pairs of Reader/Tag that can play
@@ -10,6 +10,14 @@ begin
 // Still, it shows that noninjective agreement
 // for the Reader is indeed violated (valid attack found!). The proof for
 // noninjective agreement for the Tag only holds in this very restricted model.
+/*
+* Initial Protocol:   csf18-xor/LAK06_state.spthy
+* Modeler:            Thiebaux Valentin
+* Date:               July 2023
+*
+* Status: 	working
+* Used to test macros with tactic.
+*/
 
 builtins: xor, hashing
 macros: commit(x, y, z) = <'R','T',<x,y,z>>

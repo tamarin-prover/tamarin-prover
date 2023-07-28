@@ -50,28 +50,26 @@ rRuleToCtxtStRule (lhs `RRule` rhs)
                             []       -> Nothing
                             pos      -> Just $ CtxtStRule lhs (StRhs pos rhs)
   where
-
+    subterms :: [LNTerm] -> [LNTerm] -> Int -> [Position]
+    subterms []     _    _ = []
+    subterms (t:ts) done i = (concat $ map 
+        (\(x, y) -> (map (x:) (findSubterm y t []))) terms) 
+            ++ subterms ts (done++[t]) (i+1)  
+      where 
+        terms = (zip [i..] ts) ++ (zip [0..] done)
     
     constantPositions (viewTerm -> FApp _ args) 
         | containsPrivate lhs = positions lhs
         | otherwise           = case subterms args [] 1 of
                                      []  -> positions lhs
                                      pos -> pos
-
-    subterms :: [LNTerm] -> [LNTerm] -> Int -> [Position]
-    subterms []     _    _ = []
-    subterms (t:ts) done i = (concat $ map 
-        (\(x, y) -> (map (x:) (findSubterm y t []))) terms) 
-            ++ subterms ts (done++[t]) (i+1)  
-        where 
-        terms = (zip [i..] ts) ++ (zip [0..] done) 
-
+    
     findSubterm :: LNTerm -> LNTerm -> Position -> [Position]
     findSubterm lst r rpos | lst == r            = [reverse rpos]
     findSubterm (viewTerm -> FApp _ args) r rpos =
         concat $ zipWith (\lst i -> findSubterm lst r (i:rpos)) args [0..]
     findSubterm (viewTerm -> Lit _)         _ _  = []
-
+    
     -- Given a term l, finds all ocurrences of r in l.
     -- If r does not occur in l, returns the occurrences of subterms of r.
     -- Returns Nothing if some variable in r does never appear in l.

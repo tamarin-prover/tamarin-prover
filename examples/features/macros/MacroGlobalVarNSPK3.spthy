@@ -6,20 +6,20 @@ builtins: asymmetric-encryption
 macros: globalVar() = $R
 
 /*
-   Protocol:    The classic three message version of the
-                flawed Needham-Schroeder Public Key Protocol
-   Modeler:     Simon Meier
-   Date:        September 2012
+   Initial Protocol:    The classic three message version of the
+                        flawed Needham-Schroeder Public Key Protocol
+   Initial Modeler:     Simon Meier in classic/NSLPK3.spthy
+   Modeler:             Thiebaux Valentin 
+   Date:                September 2012
 
-   Source:      Gavin Lowe. Breaking and fixing the Needham-Schroeder
-                public-key protocol using FDR. In Tiziana Margaria and
-                Bernhard Steffen, editors, TACAS, volume 1055 of Lecture Notes
-                in Computer Science, pages 147–166.  Springer, 1996.
+  Source:               Gavin Lowe. Breaking and fixing the Needham-Schroeder
+                        public-key protocol using FDR. In Tiziana Margaria and
+                        Bernhard Steffen, editors, TACAS, volume 1055 of Lecture Notes
+                        in Computer Science, pages 147–166.  Springer, 1996.
 
-   Status:      working
+  Status:               working
 
-   Note that we are using explicit global constants for discerning the
-   different encryption instead of the implicit sources.
+   Using to test macros with global variable. 
  */
 
 
