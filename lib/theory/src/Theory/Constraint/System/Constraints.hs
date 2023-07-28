@@ -28,6 +28,7 @@ module Theory.Constraint.System.Constraints (
   , Goal(..)
   , isActionGoal
   , isStandardActionGoal
+  , isSubtermGoal
   , isPremiseGoal
   , isChainGoal
   , isSplitGoal

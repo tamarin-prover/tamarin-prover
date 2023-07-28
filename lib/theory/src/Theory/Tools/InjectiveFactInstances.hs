@@ -21,19 +21,22 @@ module Theory.Tools.InjectiveFactInstances (
 
 import           Control.Monad.Fresh
 import           Control.DeepSeq
+import           Control.Applicative (empty)
 
 import           GHC.Generics        (Generic)
+
 import           Data.Label          as L
 import qualified Data.Set            as S
 import qualified Data.Map            as M
 import           Data.List
 import           Data.Maybe
 import           Data.Binary
-import           Safe                (headMay)
-import           Control.Applicative (empty)
-import           Debug.Trace
 
 import           Theory.Model
+
+import           Safe                (headMay)
+
+-- import           Debug.Trace
 
 -- unspecified = there is no rule using this fact
 -- unstable = increasing and decreasing or not at all related inputs and outputs
@@ -148,7 +151,7 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
         firstTerm          = headMay . factTerms
 
         -- duplicateFirstTerms are the first terms that appear at least twice - i.e. the corresponding fact cannot be injective
-        allFirstTerms = sort [t | c <- copies, let Just t = firstTerm c]
+        allFirstTerms = sort $ mapMaybe firstTerm copies
         duplicateFirstTerms = S.fromList [a | (a, b) <- zip (drop 1 allFirstTerms) (take (length allFirstTerms - 1) allFirstTerms), a==b]
 
         -- behaves like allCopiesGuarded, but specific to one conclusion instead of all conclusions
