@@ -28,7 +28,6 @@ import Control.Monad.Bind
 
 import Control.Basics
 
-import Data.Maybe
 import qualified Data.Set as S
 
 import qualified Data.ByteString as B

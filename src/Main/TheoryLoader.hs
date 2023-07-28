@@ -50,7 +50,7 @@ import           Data.Char                           (toLower)
 import           Data.Label
 import           Data.List                           (isPrefixOf, intercalate, find)
 import qualified Data.Set
-import           Data.Maybe                          (fromMaybe, fromJust, isJust)
+import           Data.Maybe                          (fromMaybe)
 import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
 import qualified Data.Label as L
@@ -59,7 +59,7 @@ import           Data.Bitraversable (Bitraversable(bitraverse))
 
 import           Control.Category
 import           Control.Exception (evaluate)
-import           Control.DeepSeq (NFData, force)
+import           Control.DeepSeq (force)
 
 import           System.Console.CmdArgs.Explicit
 import           System.Timeout (timeout)
@@ -96,7 +96,6 @@ import qualified Accountability as Acc
 import qualified Accountability.Generation as Acc
 
 import           GHC.Records (HasField(getField))
-import           System.Directory.Internal.Prelude (timeout)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
