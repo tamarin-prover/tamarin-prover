@@ -860,10 +860,13 @@ reqCasesDiffSnippet renderUrl tidx s kind isdiff thy = vcat $
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
 rulesSnippet thy = vcat
-    [ ppWithHeader "Fact Symbols with Injective Instances" $
+    [ if null(theoryMacros thy) then text empty
+                                else ppWithHeader "Macros" $ 
+        (prettyMacros $ theoryMacros thy)
+    , ppWithHeader "Fact Symbols with Injective Instances" $
         fsepList (text . showFactTagArity) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
-        vsep $ map prettyRuleAC msrRules
+        (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
         vsep $ map prettyRestriction $ theoryRestrictions thy
     ]
@@ -918,10 +921,13 @@ rulesDiffSnippet thy = vcat
 -- | Build the Html document showing the either rules of the diff theory.
 rulesDiffSnippetSide :: HtmlDocument d => Side -> Bool -> ClosedDiffTheory -> d
 rulesDiffSnippetSide s isdiff thy = vcat
-    [ ppWithHeader "Fact Symbols with Injective Instances" $
+    [ if null(diffTheoryMacros thy) then text empty
+                                     else ppWithHeader "Macros" $
+        (prettyMacros $ diffTheoryMacros thy)
+    ,ppWithHeader "Fact Symbols with Injective Instances" $
         fsepList (text . showFactTagArity) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
-        vsep $ map prettyRuleAC msrRules
+        (if null(diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
         vsep $ map prettyRestriction $ diffTheorySideRestrictions s thy
     ]
