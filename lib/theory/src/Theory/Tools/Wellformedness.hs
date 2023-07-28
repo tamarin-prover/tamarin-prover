@@ -179,7 +179,7 @@ mostSimilarName lhs rhs =
     removeSame l r = filter (\x -> factInfo (snd x) `notElem` rhsFacts) l
       where
         rhsFacts = map (factInfo . snd) r
-    
+
     -- to verify if the names of two facts are similar enough
     isSimilar :: (RuleAndFact, Maybe (RuleAndFact, Int))
                 ->(RuleAndFact, Maybe RuleAndFact)
@@ -358,9 +358,9 @@ ruleSortsReportDiff thy = do
 --       clashes f xs = map head $ filter (\x -> length x >= 2) (grp f xs)
 
 -- | Report on fresh names.
-freshNamesReport :: OpenTranslatedTheory -> WfErrorReport
-freshNamesReport thy = do
-    ru <- thyProtoRules thy
+freshNamesReport' :: [ProtoRuleE] -> WfErrorReport
+freshNamesReport' rules = do
+    ru <- rules
     case filter ((LSortFresh ==) . sortOfName) $ universeBi ru of
       []    -> []
       names -> return $ (,) (underlineTopic "Fresh names") $ fsep $
@@ -369,61 +369,41 @@ freshNamesReport thy = do
         : punctuate comma (map (nest 2 . text . show) names)
 
 -- | Report on fresh names.
+freshNamesReport :: OpenTranslatedTheory -> WfErrorReport
+freshNamesReport thy = freshNamesReport' $ thyProtoRules thy
+
+-- | Report on fresh names.
 freshNamesReportDiff :: OpenDiffTheory -> WfErrorReport
-freshNamesReportDiff thy = do
-    ru <- diffThyProtoRules thy
-    case filter ((LSortFresh ==) . sortOfName) $ universeBi ru of
-      []    -> []
-      names -> return $ (,) (underlineTopic "Fresh names") $ fsep $
-          text ( "rule " ++ quote (showRuleCaseName ru) ++ ": " ++
-                 "fresh names are not allowed in rule:" )
-        : punctuate comma (map (nest 2 . text . show) names)
+freshNamesReportDiff thy = freshNamesReport' $ diffThyProtoRules thy
 
 -- | Report on capitalization of public names.
-publicNamesReport :: OpenTranslatedTheory -> WfErrorReport
-publicNamesReport thy =
+publicNamesReport' :: [ProtoRuleE] -> WfErrorReport
+publicNamesReport' rules =
     case findClashes publicNames of
       []      -> []
       clashes -> return $ (,) (topic++notif) $ numbered' $
           map (nest 2 .fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
   where
-    topic       = (underlineTopic "Public names with mismatching capitalization") ++ "\n"
+    topic       = underlineTopic "Public names with mismatching capitalization" ++ "\n"
     notif       = "Identifiers are case-sensitive, "++
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
                   "Check the capitalization of your identifiers.\n"
     publicNames = do
-        ru <- thyProtoRules thy
+        ru <- rules
         (,) (showRuleCaseName ru) <$>
-            (filter ((LSortPub ==) . sortOfName) $ universeBi ru)
+            filter ((LSortPub ==) . sortOfName) (universeBi ru)
     findClashes   = clashesOn (map toLower . show . snd) (show . snd)
     ppRuleAndName ((ruName, pub):rest) =
         text $ "rule " ++ show ruName ++ ": "++" name " ++
          show (pub) ++ concatMap ((", " ++) . show . snd) rest
 
+publicNamesReport :: OpenTranslatedTheory -> WfErrorReport
+publicNamesReport thy = publicNamesReport' $ thyProtoRules thy
 
 -- | Report on capitalization of public names.
 publicNamesReportDiff :: OpenDiffTheory -> WfErrorReport
-publicNamesReportDiff thy =
-    case findClashes publicNames of
-      []      -> []
-      clashes -> return $ (,) (topic++notif) $ numbered' $
-          map (nest 2 . fsep . punctuate comma . map ppRuleAndName.  (groupOn fst)) clashes
-  where
-    topic       = (underlineTopic "Public names with mismatching capitalization") ++ "\n"
-    notif       = "Identifiers are case-sensitive, "++
-                  "mismatched capitalizations are considered as different, "++
-                  "i.e., 'ID' is different from 'id'. "++
-                  "Check the capitalization of your identifiers.\n"
-    publicNames = do
-        ru <- diffThyProtoRules thy
-        (,) (showRuleCaseName ru) <$>
-            (filter ((LSortPub ==) . sortOfName) $ universeBi ru)
-    findClashes   = clashesOn (map toLower . show . snd) (show . snd)
-    ppRuleAndName ((ruName, pub):rest) =
-        text $ "rule " ++ show ruName ++ ": "++" name " ++
-         show (pub) ++ concatMap ((", " ++) . show . snd) rest
-
+publicNamesReportDiff thy = publicNamesReport' $ diffThyProtoRules thy
 
 -- | Check whether a rule has unbound variables.
 unboundCheck :: Document b => String -> Rule ProtoRuleEInfo -> [([Char], b)]
@@ -431,7 +411,7 @@ unboundCheck info ru
     | null unboundVars = []
     | otherwise        = return $
         ( underlineTopic "Unbound variables"
-        , text info $-$ (nest 2 $ prettyVarList unboundVars) )
+        , text info $-$ nest 2 (prettyVarList unboundVars) )
   where
     boundVars   = S.fromList $ frees (get rPrems ru)
     originatesFromLookup v = any (match v) $ get preAttributes $ get rInfo ru
@@ -457,6 +437,55 @@ unboundReportDiff thy = do
     unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++
                   " has unbound variables: "
                  ) ru
+
+-- Check for usage of all type facts with reserved names
+reservedFactNameRules' :: [ProtoRuleE] -> WfErrorReport
+reservedFactNameRules' rules = do
+  ru <- rules
+  let lfact = [fa| fa <- get rPrems ru
+                  , factTag fa `elem` [KUFact,KDFact]
+                  || isKLogFact fa]
+      mfact = [fa | fa <- get rActs ru
+                  , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
+                  || isKLogFact fa]
+      rfact = [fa | fa <- get rConcs ru
+                  , factTag fa `elem` [KUFact, KDFact]
+                  || isKLogFact fa]
+      check _   []  = mzero
+      check msg fas = return $ (,) (underlineTopic "Reserved names") $
+            text ("rule " ++ quote (showRuleCaseName ru))
+            <-> text ("contains facts with reserved names"++msg) $-$
+            nest 2 (fsep $ punctuate comma $ map prettyLNFact fas)
+  
+  msum [ check " on left-hand-side:"  lfact
+        , check " on the middle:" mfact
+        , check " on the right-hand-side:" rfact ]
+
+-- Check for the usage of special facts at wrong positions
+specialFactsUsage' :: [ProtoRuleE] -> WfErrorReport
+specialFactsUsage' rules = do
+    ru <- rules
+    let lhsf = [ fa | fa <- get rPrems ru
+                  , factTag fa == OutFact ]
+        rhsf = [ fa | fa <- get rConcs ru
+                  , factTag fa `elem` [FreshFact,InFact] ]
+        check _   []  = mzero
+        check msg fas = return $ (,) (underlineTopic "Special facts") $
+            text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
+            nest 2 (fsep $ punctuate comma $ map prettyLNFact fas)
+
+    msum [ check "uses disallowed facts on left-hand-side:"  lhsf
+        , check "uses disallowed facts on right-hand-side:" rhsf ]
+
+
+freshFactArguments' :: [ProtoRuleE] -> WfErrorReport
+freshFactArguments' rules = do
+    ru                        <- rules
+    fa@(Fact FreshFact _ [m]) <- get rPrems ru
+    guard (not (isMsgVar m || isFreshVar m))
+    return $ (,) (underlineTopic "Fr facts must only use a fresh- or a msg-variable") $
+        text ("rule " ++ quote (showRuleCaseName ru)) <->
+        text "fact:" <-> prettyLNFact fa
 
 -- | Report on facts usage.
 factReports :: OpenTranslatedTheory -> WfErrorReport
@@ -491,9 +520,6 @@ factReports thy = concat
     -- mangle facts with terms with bound variables and such without them
     extFactInfo fa = (prettyLNFact fa, factInfo fa)
 
-    factInfo :: Fact t -> (FactTag, Int, Multiplicity)
-    factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
-
     --- Check for usage of protocol facts with reserved names
     reservedReport = do
         (origin, fas) <- theoryFacts
@@ -510,50 +536,12 @@ factReports thy = concat
     reservedFactName _ = Nothing
 
     -- Check for usage of all type facts with reserved names
-    reservedFactNameRules = do
-      ru <- thyProtoRules thy
-      let lfact = [fa| fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact,KDFact]
-                      || isKLogFact fa]
-          mfact = [fa | fa <- get rActs ru
-                      , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
-                      || isKLogFact fa]
-          rfact = [fa | fa <- get rConcs ru
-                      , factTag fa `elem` [KUFact, KDFact]
-                      || isKLogFact fa]
-          check _   []  = mzero
-          check msg fas = return $ (,) (underlineTopic "Reserved names") $
-               text ("rule " ++ quote (showRuleCaseName ru))
-                <-> text ("contains facts with reserved names"++msg) $-$
-               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
+    reservedFactNameRules = reservedFactNameRules' $ thyProtoRules thy
 
-      msum [ check " on left-hand-side:"  lfact
-            , check " on the middle:" mfact
-            , check " on the right-hand-side:" rfact ]
-
-
-    freshFactArguments = do
-       ru                      <- thyProtoRules thy
-       fa@(Fact FreshFact _ [m]) <- get rPrems ru
-       guard (not (isMsgVar m || isFreshVar m))
-       return $ (,) (underlineTopic "Fr facts must only use a fresh- or a msg-variable") $
-           text ("rule " ++ quote (showRuleCaseName ru)) <->
-           text "fact:" <-> prettyLNFact fa
+    freshFactArguments = freshFactArguments' $ thyProtoRules thy
 
     -- Check for the usage of special facts at wrong positions
-    specialFactsUsage = do
-       ru <- thyProtoRules thy
-       let lhsf = [ fa | fa <- get rPrems ru
-                      , factTag fa `elem` [OutFact] ]
-           rhsf = [ fa | fa <- get rConcs ru
-                      , factTag fa `elem` [FreshFact,InFact] ]
-           check _   []  = mzero
-           check msg fas = return $ (,) (underlineTopic "Special facts") $
-               text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
-               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
-
-       msum [ check "uses disallowed facts on left-hand-side:"  lhsf
-            , check "uses disallowed facts on right-hand-side:" rhsf ]
+    specialFactsUsage = specialFactsUsage' $ thyProtoRules thy
 
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
@@ -666,9 +654,6 @@ factReportsDiff thy = concat
     -- mangle facts with terms with bound variables and such without them
     extFactInfo fa = (prettyLNFact fa, factInfo fa)
 
-    factInfo :: Fact t -> (FactTag, Int, Multiplicity)
-    factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
-
     -- Check for usage of protocol facts with reserved names
     reservedReport = do
         (origin, fas) <- theoryFacts
@@ -686,26 +671,7 @@ factReportsDiff thy = concat
 
     -- Check for usage of all type facts with reserved names
     reservedFactNameRules :: WfErrorReport
-    reservedFactNameRules = do
-      ru <- diffThyProtoRules thy
-      let lfact = [fa| fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact,KDFact]
-                      || isKLogFact fa]
-          mfact = [fa | fa <- get rActs ru
-                      , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
-                      || isKLogFact fa]
-          rfact = [fa | fa <- get rConcs ru
-                      , factTag fa `elem` [KUFact, KDFact]
-                      || isKLogFact fa]
-          check _   []  = mzero
-          check msg fas = return $ (,) (underlineTopic "Reserved names") $
-               text ("rule " ++ quote (showRuleCaseName ru))
-                <-> text ("contains facts with reserved names"++msg) $-$
-               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
-
-      msum [ check " on left-hand-side:"  lfact
-            , check " on the middle:" mfact
-            , check " on the right-hand-side:" rfact ]
+    reservedFactNameRules = reservedFactNameRules' $ diffThyProtoRules thy
 
     -- Check for usage of protocol facts in rules with reserved prefixes in names
     reservedPrefixReport = do
@@ -722,28 +688,10 @@ factReportsDiff thy = concat
           return $ ppFa $-$ text (show info)
     reservedPrefixFactName _ = Nothing
 
-    freshFactArguments = do
-       ru                      <- diffThyProtoRules thy
-       fa@(Fact FreshFact _ [m]) <- get rPrems ru
-       guard (not (isMsgVar m || isFreshVar m))
-       return $ (,) (underlineTopic "Fr facts must only use a fresh- or a msg-variable") $
-           text ("rule " ++ quote (showRuleCaseName ru)) <->
-           text "fact:" <-> prettyLNFact fa
+    freshFactArguments = freshFactArguments' $ diffThyProtoRules thy
 
     -- Check for the usage of special facts at wrong positions
-    specialFactsUsage = do
-       ru <- diffThyProtoRules thy
-       let lhsf = [ fa | fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact, KDFact, OutFact] ]
-           rhsf = [ fa | fa <- get rConcs ru
-                      , factTag fa `elem` [FreshFact, KUFact, KDFact, InFact] ]
-           check _   []  = mzero
-           check msg fas = return $ (,) (underlineTopic "Special facts") $
-               text ("rule " ++ quote (showRuleCaseName ru)) <-> text msg $-$
-               (nest 2 $ fsep $ punctuate comma $ map prettyLNFact fas)
-
-       msum [ check "uses disallowed facts on left-hand-side of rule:"  lhsf
-            , check "uses disallowed facts on right-hand-side of rule:" rhsf ]
+    specialFactsUsage = specialFactsUsage' $ diffThyProtoRules thy
 
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
