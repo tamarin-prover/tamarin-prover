@@ -984,7 +984,7 @@ addAction (Rule info prems concs acts nvs) act =
 
 -- | Apply macros into a rule
 applyMacroInRule :: [Macro] -> Rule i -> Rule i
-applyMacroInRule mcs (Rule info ruPrems ruConcs ruActs nvars) = Rule info mRuPrems mRuConcs mRuActs mRuNewVars
+applyMacroInRule mcs (Rule info ruPrems ruConcs ruActs _) = Rule info mRuPrems mRuConcs mRuActs mRuNewVars
   where 
     mRuPrems   = map (applyMacroInFact mcs) ruPrems
     mRuConcs   = map (applyMacroInFact mcs) ruConcs

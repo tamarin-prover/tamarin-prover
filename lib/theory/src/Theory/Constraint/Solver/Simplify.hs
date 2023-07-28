@@ -33,8 +33,6 @@ import           Data.List
 import qualified Data.Map                           as M
 -- import           Data.Monoid                        (Monoid(..))
 import qualified Data.Set                           as S
-import qualified Data.Graph                         as G 
-import qualified Extension.Data.Label                 as L
 import           Data.Maybe                         (mapMaybe)
 
 import           Control.Basics

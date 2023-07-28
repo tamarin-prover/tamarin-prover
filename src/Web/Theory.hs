@@ -79,12 +79,10 @@ import           Logic.Connectives
 import           Theory
 import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
-import           Theory.Tools.Wellformedness
 import           TheoryObject
 
 import           Web.Settings
 import           Web.Types
-import qualified Accountability.Generation as Acc
 
 ------------------------------------------------------------------------------
 -- Various other functions
