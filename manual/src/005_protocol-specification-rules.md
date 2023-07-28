@@ -145,7 +145,7 @@ will become
 
 	[ In(h(~ltk)) ] --[ ... ]-> [ Out(<pkA, pkB>) ]
 
-after the macros have been applied
+after the above macros have been applied.
 
 A macro can call a second macro, if the second one was defined before.
 For example, one can define the following two macros:
