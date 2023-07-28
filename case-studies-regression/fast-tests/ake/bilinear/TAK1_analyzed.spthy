@@ -42,7 +42,7 @@ rule (modulo E) Reveal_sessk:
 
 rule (modulo E) Proto1:
    [ Fr( ~ex ) ]
-  --[ Origin( ~ex, pmult(~ex, 'P') ), Participants( ($A+$B+$C) ) ]->
+  --[ Origin( ~ex, pmult(~ex, 'P') ), Participants( ($A++$B++$C) ) ]->
    [ PState1( ~ex, $A, $B, $C ), Out( pmult(~ex, 'P') ), !EphKey( ~ex ) ]
 
   /* has exactly the trivial AC variant */
@@ -258,16 +258,16 @@ rule (modulo E) Proto3:
    ]
   --[
   Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
-          kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A+$B+$C), 
-               (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+          kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A++$B++$C), 
+               (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
   ),
-  Match( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> ),
-  Sid( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> )
+  Match( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> ),
+  Sid( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> )
   ]->
    [
    !SessKey( ~ex,
-             kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A+$B+$C), 
-                  (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+             kdf(<emXBXC^~ex, em(pmult(~eb, 'P'), pmult(~ec, 'P'))^~ea, ($A++$B++$C), 
+                  (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
    )
    ]
 
@@ -279,16 +279,16 @@ rule (modulo E) Proto3:
      ]
     --[
     Accept( ~ex, $A, $B, $C, pmult(~ex, 'P'), tag(XB), tag(XC),
-            kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
-                 (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+            kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
+                 (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
     ),
-    Match( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> ),
-    Sid( ~ex, <(tag(XB)+tag(XC)+tag(pmult(~ex, 'P'))), ($A+$B+$C)> )
+    Match( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> ),
+    Sid( ~ex, <(tag(XB)++tag(XC)++tag(pmult(~ex, 'P'))), ($A++$B++$C)> )
     ]->
      [
      !SessKey( ~ex,
-               kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
-                    (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+               kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
+                    (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
      )
      ]
     variants (modulo AC)
@@ -477,8 +477,8 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
           solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #i )
             case Register_pk
             solve( !KU( kdf(<em('P', 'P')^(~ex*~ex.1*~ex.2), 
-                             em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
-                             (tag(pmult(~ex, 'P'))+tag(pmult(~ex.1, 'P'))+tag(pmult(~ex.2, 'P')))>)
+                             em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
+                             (tag(pmult(~ex, 'P'))++tag(pmult(~ex.1, 'P'))++tag(pmult(~ex.2, 'P')))>)
                    ) @ #vk )
               case Reveal_sessk_case_001
               by contradiction /* from formulas */
@@ -1616,8 +1616,8 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
           solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #i )
             case Register_pk
             solve( !KU( kdf(<em('P', 'P')^(~ex*~ex.1*~ex.2), 
-                             em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
-                             (tag(pmult(~ex, 'P'))+tag(pmult(~ex.1, 'P'))+tag(pmult(~ex.2, 'P')))>)
+                             em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
+                             (tag(pmult(~ex, 'P'))++tag(pmult(~ex.1, 'P'))++tag(pmult(~ex.2, 'P')))>)
                    ) @ #vk )
               case Reveal_sessk_case_001
               by contradiction /* from formulas */
@@ -2138,8 +2138,8 @@ next
         case Register_pk
         solve( !Pk( $C, pmult(~x.1, 'P') ) ▶₃ #i )
           case Register_pk
-          solve( !KU( kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A+$B+$C), 
-                           (tag(XB)+tag(XC)+tag(pmult(~ex, 'P')))>)
+          solve( !KU( kdf(<z, em('P', 'P')^(~ea*~x*~x.1), ($A++$B++$C), 
+                           (tag(XB)++tag(XC)++tag(pmult(~ex, 'P')))>)
                  ) @ #vk )
             case Reveal_sessk_case_001
             by contradiction /* from formulas */
@@ -2660,11 +2660,15 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  Reveal_sessk
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Reveal_sessk: 
 Failed to derive Variable(s): sessKey
-  
-  Proto3
+
+Rule Proto3: 
 Failed to derive Variable(s): ~eb, ~ec, XB, XC
 */
 
@@ -2672,8 +2676,8 @@ Failed to derive Variable(s): ~eb, ~ec, XB, XC
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 0bae6da59a0dc9ff65d82792478deb61a5dcaf90 (with uncommited changes), branch: subterm-new
+Compiled at: 2023-07-27 11:42:57.499991562 UTC
 */
 
 end
@@ -2688,9 +2692,9 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 46.04s
+  processing time: 43.71s
   
-  WARNING: 2 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   session_key_establish (exists-trace): verified (17 steps)

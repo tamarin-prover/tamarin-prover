@@ -95,8 +95,9 @@ import           Theory.Sapic
 import           Theory.Tools.RuleVariants
 import           Safe                        (lastMay)
 import           Items.OptionItem            (lemmasToProve)
-import           TheoryObject                (diffThyOptions)
+import           TheoryObject                (diffThyOptions, prettyVarList, theoryMacros, diffTheoryMacros)
 import           Utils.Misc
+import           Term.Macro
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -125,20 +126,16 @@ prettyWfErrorReport =
 -- | All protocol rules of a theory.
 -- thyProtoRules :: OpenTranslatedTheory ->
 thyProtoRules :: OpenTranslatedTheory -> [ProtoRuleE]
-thyProtoRules thy = [ get oprRuleE ru | RuleItem ru <- get thyItems thy ]
+thyProtoRules thy = [ applyMacroInRule (theoryMacros thy) (get oprRuleE ru) | RuleItem ru <- get thyItems thy ]
 
 -- | All protocol rules of a theory.
 -- thyProtoRules :: OpenTranslatedTheory ->
 diffThyProtoRules :: OpenDiffTheory -> [ProtoRuleE]
-diffThyProtoRules thy = [ get dprRule ru | DiffRuleItem ru <- get diffThyItems thy ]
+diffThyProtoRules thy = [ applyMacroInRule (diffTheoryMacros thy) (get dprRule ru) | DiffRuleItem ru <- get diffThyItems thy ]
 
 -- | Lower-case a string.
 lowerCase :: String -> String
 lowerCase = map toLower
-
--- | Pretty-print a comma, separated list of 'LVar's.
-prettyVarList :: Document d => [LVar] -> d
-prettyVarList = fsep . punctuate comma . map prettyLVar
 
 -- | Pretty-print a comma, separated list of 'LNTerms's.
 prettyLNTermList :: Document d => [LNTerm] -> d
@@ -164,7 +161,7 @@ quote cs = '`' : cs ++ "'"
 
 -- | add double underline to the topic
 underlineTopic :: String -> String
-underlineTopic topic = topic ++"\n" ++ 
+underlineTopic topic = topic ++"\n" ++
                       (concat $ take (length topic) $ repeat "=")
                       ++"\n"
 
@@ -172,41 +169,82 @@ underlineTopic topic = topic ++"\n" ++
 factInfo :: Fact t -> (FactTag, Int, Multiplicity)
 factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 
--- | To bind a fact in LHS with his most similar fact in RHS. The most similar fact 
--- | in RHS has the minimum editing distance with it and the value of the distance
--- | is included between 1 and 3.
+-- | To bind a list of premise facts with their most similar conclusion facts. The most similar fact 
+-- | has the minimual editing distance and the value of the distance must be
+-- | between between 1 and 3. If no such fact exists, Nothing is returned.
 mostSimilarName :: [RuleAndFact]->[RuleAndFact]
-                  ->[(RuleAndFact,RuleAndFact,Bool)]
-mostSimilarName xs xt = 
-    map isSimilar  
-    $ foldr (\x acc-> (minEd x xt):acc) [] $
-    removeSame xt xs
+                  ->[(RuleAndFact, Maybe RuleAndFact)]
+mostSimilarName lhs rhs =
+    map (isSimilar . flip minimalEdFact rhs) $ removeSame lhs rhs
   where
     -- To remove all the facts in lhs and also in rhs
     removeSame :: [RuleAndFact] -> [RuleAndFact] ->[RuleAndFact]
-    removeSame li             = filter (\x -> (getName $ snd(x)) `notElem` 
-                              ( map (getName.snd) li) ) 
-    -- to verify if the names of two facts are similar
-    isSimilar :: (RuleAndFact, RuleAndFact, Int)
-                ->(RuleAndFact, RuleAndFact, Bool)
-    isSimilar rfd             = 
-          if (thd3 rfd) < 3
-            then (fst3 rfd, snd3 rfd, True)
-            else (fst3 rfd, snd3 rfd, False)
+    removeSame l r = filter (\x -> factInfo (snd x) `notElem` rhsFacts) l
+      where
+        rhsFacts = map (factInfo . snd) r
+    
+    -- to verify if the names of two facts are similar enough
+    isSimilar :: (RuleAndFact, Maybe (RuleAndFact, Int))
+                ->(RuleAndFact, Maybe RuleAndFact)
+    isSimilar (rf, Nothing)                = (rf, Nothing)
+    isSimilar (rf, Just (rfs, i)) | i <= 3 = (rf, Just rfs)
+    isSimilar (rf, _)                      = (rf, Nothing)
+
     -- to get the fact in rhs which has the minimum editing distance
     -- with a given fact and the distance between the two facts  
-    minEd :: RuleAndFact->[RuleAndFact]->(RuleAndFact, RuleAndFact, Int)
-    minEd s li                =  (s,factminEd,d)
-        where (factminEd,d) = head $ sortOn snd $ saveEd s li
-    -- to calculate the distance between a given fact and the facts of a list, 
+    minimalEdFact :: RuleAndFact->[RuleAndFact]->(RuleAndFact, Maybe (RuleAndFact, Int))
+    minimalEdFact lFact rFacts      =  (lFact, listToMaybe $ sortOn snd $ edDistances lFact rFacts)
+
+    -- Calculates the distance between a given fact and the facts of a list, 
     -- also save each fact in the list and his editing distance to the given fact
     -- as a tuple  
-    saveEd :: RuleAndFact-> [RuleAndFact] -> [(RuleAndFact, Int)]
-    saveEd s li = map (\x ->(,) x $ distance (snd s) x) li
-    distance factL ruleRactR  = editDistance (getName factL) $ 
-                                getName $ snd ruleRactR
-    tagName (tag,_,_)         = factTagName tag
-    getName fact              = tagName $ factInfo fact
+    edDistances :: RuleAndFact-> [RuleAndFact] -> [(RuleAndFact, Int)]
+    edDistances s li = map (\x ->(,) x $ distance (snd s) x) li
+      where
+        distance factL factR  = editDistance (getName factL) (getName $ snd factR)
+        getName fact          = factTagName $ getFactTag fact
+
+
+-- Report a protocol fact occurs in an LHS but not in any RHS
+factLhsOccurNoRhs' :: [ProtoRuleE] -> WfErrorReport
+factLhsOccurNoRhs' ru =
+  case factLhsNoRhs of
+    []            -> []
+    facts         -> return $ (,) (underlineTopic topic) $ numbered' $
+                      map (nest 2 . showRuleAndFact ) facts
+  where
+    topic = "Facts occur in the left-hand-side but not in any right-hand-side "
+    -- all the protocol facts in lhs but not in any rhs
+    factLhsNoRhs = getFactLhsNoRhs (getFacts rPrems ru) (getFacts rConcs ru)
+
+    -- get all the facts by their sides
+    getFacts s = map (\x-> (,) (showRuleCaseName x)
+                        $ filter isProtoFact $ get s x)
+
+    -- for each fact on LHS, get his most similar fact in RHS
+    getFactLhsNoRhs :: [(String,[LNFact])]->[(String,[LNFact])]
+                      ->[(RuleAndFact,Maybe RuleAndFact)]
+    getFactLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts)
+                                  (regroup rfacts)
+
+    regroup :: [(String,[LNFact])] -> [RuleAndFact]
+    regroup = foldr (\x acc -> zip (repeat $ fst x) (snd x)
+                    ++ acc) []
+
+    showRuleAndFact ((ruName,factL),Just (ruNameR,factR)) =
+      text  ("in rule " ++ show ruName ++": "
+              ++ showFactInfo (factInfo factL)
+              ++ ". Perhaps you want to use the fact in rule "
+              ++ show ruNameR ++": "
+              ++ showFactInfo (factInfo factR)  )
+    showRuleAndFact ((ruName,factL),Nothing) =
+      text  ("in rule " ++ show ruName ++": "
+              ++ showFactInfo (factInfo factL))
+    showFactInfo (tag,arity,multi) =
+              " factName "++quote (factTagName tag)
+              ++ " arity: "++show arity
+              ++ " multiplicity: "++show multi
+
 ------------------------------------------------------------------------------
 -- Checks
 ------------------------------------------------------------------------------
@@ -223,7 +261,7 @@ sortsClashCheck info t = case clashesOn removeSort id $ frees t of
     topic = (underlineTopic "Variable with mismatching sorts or capitalization")++"\n"
     reason = "Possible reasons:\n"++
               "1. Identifiers are case sensitive, i.e.,"++
-              "'x' and 'X' are considered to be different.\n"++ 
+              "'x' and 'X' are considered to be different.\n"++
               "2. The same holds for sorts:, "++
               "i.e., '$x', 'x', and '~x' are considered to be different.\n"
     removeSort lv = (lowerCase (lvarName lv), lvarIdx lv)
@@ -301,9 +339,9 @@ natWellSortedReportDiff thy = natSortErrors itemsTerms
 
 
 --- | Check that the protocol rule variants are correct.
-variantsCheck :: MaudeHandle -> String -> OpenProtoRule -> WfErrorReport
-variantsCheck _   _    (OpenProtoRule _ [])     = []
-variantsCheck hnd info (OpenProtoRule ruE ruAC) =
+variantsCheck :: MaudeHandle -> [Macro] -> String -> OpenProtoRule -> WfErrorReport
+variantsCheck _   _      _    (OpenProtoRule _ [])     = []
+variantsCheck hnd macros info (OpenProtoRule ruE ruAC) =
   if sameVariantsUpToActions ruAC recomputedVariants then
     []
   else
@@ -315,14 +353,14 @@ variantsCheck hnd info (OpenProtoRule ruE ruAC) =
             )
   where
     recomputedVariants = map (get cprRuleAC) $ unfoldRuleVariants $
-      ClosedProtoRule ruE (variantsProtoRule hnd ruE)
+      ClosedProtoRule ruE (variantsProtoRule hnd (applyMacroInRule macros ruE))
     sameVariantsUpToActions parsed computed = all (\x -> any (equalUpToAddedActions x) computed) parsed
 
 -- | Report on missing or different variants.
 ruleVariantsReport :: SignatureWithMaude -> OpenTranslatedTheory -> WfErrorReport
 ruleVariantsReport sig thy = do
     ru <- [ ru | RuleItem ru <- get thyItems thy ]
-    variantsCheck hnd ("rule " ++ quote (showRuleCaseName (get oprRuleE ru)) ++
+    variantsCheck hnd (theoryMacros thy) ("rule " ++ quote (showRuleCaseName (get oprRuleE ru)) ++
                      " cannot confirm manual variants:") ru
   where
     hnd = get sigmMaudeHandle sig
@@ -332,9 +370,9 @@ ruleVariantsReportDiff :: SignatureWithMaude -> OpenDiffTheory -> WfErrorReport
 ruleVariantsReportDiff sig thy = do
     lrRu <- [ get dprLeftRight ru | DiffRuleItem ru <- get diffThyItems thy ]
     case lrRu of
-      Just (lr, rr) -> (variantsCheck hnd ("left rule " ++ quote (showRuleCaseName (get oprRuleE lr)) ++
+      Just (lr, rr) -> (variantsCheck hnd (diffTheoryMacros thy) ("left rule " ++ quote (showRuleCaseName (get oprRuleE lr)) ++
                      " cannot confirm manual variants:") lr) ++
-                      (variantsCheck hnd ("right rule " ++ quote (showRuleCaseName (get oprRuleE rr)) ++
+                      (variantsCheck hnd (diffTheoryMacros thy) ("right rule " ++ quote (showRuleCaseName (get oprRuleE rr)) ++
                       " cannot confirm manual variants:") rr)
       Nothing -> []
   where
@@ -345,13 +383,13 @@ leftRightRuleReportDiff :: OpenDiffTheory -> WfErrorReport
 leftRightRuleReportDiff thy = do
     ru <- [ ru | DiffRuleItem ru <- get diffThyItems thy ]
     case get dprLeftRight ru of
-      Just ((OpenProtoRule lr _), _) | not (equalUpToAddedActions lr (getLeftRule (get dprRule ru))) -> return $
+      Just ((OpenProtoRule lr _), _) | not (equalUpToAddedActions lr (getLeftRule (applyMacroInRule (diffTheoryMacros thy) (get dprRule ru)))) -> return $
               ( (underlineTopic "Left rule")
               , text "Inconsistent left rule" $-$ (nest 2 $ prettyProtoRuleE lr)
                 $--$ text "w.r.t." $--$
                 (nest 2 $ prettyProtoRuleE (get dprRule ru))
               )
-      Just (_, (OpenProtoRule rr _)) | not (equalUpToAddedActions rr (getRightRule (get dprRule ru))) -> return $
+      Just (_, (OpenProtoRule rr _)) | not (equalUpToAddedActions rr (getRightRule (applyMacroInRule (diffTheoryMacros thy) (get dprRule ru)))) -> return $
               ( (underlineTopic "Right rule")
               , text "Inconsistent right rule" $-$ (nest 2 $ prettyProtoRuleE rr)
                 $--$ text "w.r.t." $--$
@@ -418,7 +456,7 @@ publicNamesReport thy =
           map (nest 2 .fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
   where
     topic       = (underlineTopic "Public names with mismatching capitalization") ++ "\n"
-    notif       = "Identifiers are case-sensitive, "++ 
+    notif       = "Identifiers are case-sensitive, "++
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
                   "Check the capitalization of your identifiers.\n"
@@ -430,7 +468,7 @@ publicNamesReport thy =
     ppRuleAndName ((ruName, pub):rest) =
         text $ "rule " ++ show ruName ++ ": "++" name " ++
          show (pub) ++ concatMap ((", " ++) . show . snd) rest
-    ppRuleAndName [] =text ""
+
 
 -- | Report on capitalization of public names.
 publicNamesReportDiff :: OpenDiffTheory -> WfErrorReport
@@ -441,7 +479,7 @@ publicNamesReportDiff thy =
           map (nest 2 . fsep . punctuate comma . map ppRuleAndName.  (groupOn fst)) clashes
   where
     topic       = (underlineTopic "Public names with mismatching capitalization") ++ "\n"
-    notif       = "Identifiers are case-sensitive, "++ 
+    notif       = "Identifiers are case-sensitive, "++
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
                   "Check the capitalization of your identifiers.\n"
@@ -453,7 +491,6 @@ publicNamesReportDiff thy =
     ppRuleAndName ((ruName, pub):rest) =
         text $ "rule " ++ show ruName ++ ": "++" name " ++
          show (pub) ++ concatMap ((", " ++) . show . snd) rest
-    ppRuleAndName [] =text ""
 
 
 -- | Check whether a rule has unbound variables.
@@ -476,8 +513,7 @@ unboundCheck info ru
 -- | Report on sort clashes.
 unboundReport :: OpenTranslatedTheory -> WfErrorReport
 unboundReport thy = do
-    RuleItem ru' <- get thyItems thy
-    let ru = get oprRuleE ru'
+    ru <- thyProtoRules thy
     unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++
                   " has unbound variables: "
                  ) ru
@@ -485,12 +521,10 @@ unboundReport thy = do
 -- | Report on sort clashes.
 unboundReportDiff :: OpenDiffTheory -> WfErrorReport
 unboundReportDiff thy = do
-    DiffRuleItem ru' <- get diffThyItems thy
-    let ru = get dprRule ru'
+    ru <- diffThyProtoRules thy
     unboundCheck ("rule " ++ quote (showRuleCaseName ru) ++
                   " has unbound variables: "
                  ) ru
-
 
 -- | Report on facts usage.
 factReports :: OpenTranslatedTheory -> WfErrorReport
@@ -510,8 +544,8 @@ factReports thy = concat
     theoryFacts = -- sortednubOn (fst &&& (snd . snd)) $
           do ruleFacts <$> get thyCache thy
       <|> ((do
-             RuleItem ru <- get thyItems thy
-             return $ ruleFacts $ get oprRuleE ru)
+             ru <- thyProtoRules thy
+             return $ ruleFacts $ ru)
           ++ (do
              RuleItem ru <- get thyItems thy
              ruAC <- get oprRuleAC ru
@@ -525,6 +559,8 @@ factReports thy = concat
     -- mangle facts with terms with bound variables and such without them
     extFactInfo fa = (prettyLNFact fa, factInfo fa)
 
+    factInfo :: Fact t -> (FactTag, Int, Multiplicity)
+    factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 
     --- Check for usage of protocol facts with reserved names
     reservedReport = do
@@ -545,7 +581,7 @@ factReports thy = concat
     reservedFactNameRules = do
       ru <- thyProtoRules thy
       let lfact = [fa| fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact,KDFact] 
+                      , factTag fa `elem` [KUFact,KDFact]
                       || isKLogFact fa]
           mfact = [fa | fa <- get rActs ru
                       , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
@@ -562,8 +598,8 @@ factReports thy = concat
       msum [ check " on left-hand-side:"  lfact
             , check " on the middle:" mfact
             , check " on the right-hand-side:" rfact ]
-              
-    
+
+
     freshFactArguments = do
        ru                      <- thyProtoRules thy
        fa@(Fact FreshFact _ [m]) <- get rPrems ru
@@ -590,15 +626,15 @@ factReports thy = concat
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
     factUsage = do
-       clash <- clashesOn factIdentifier (snd . snd) theoryFacts' 
+       clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
        let (_, (_, (factName, _, _))) = head clash
-           name =quote( map toLower $ factTagName factName  )        
+           name =quote ( map toLower $ factTagName factName  )
        return $ (,) (topic++p1++p2) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
            (origin, (ppFa, (tag, arity, multipl))) <- clash
            return $ text (origin ++
                           ", capitalization  " ++ show (factTagName tag) ++
                           ", " ++ show arity ++", " ++ show multipl)
-                    $-$ nest 2 ppFa 
+                    $-$ nest 2 ppFa
       where
         topic = (underlineTopic "Fact usage") ++ "\n"
         p1    = "Possible reasons: \n"++
@@ -621,55 +657,12 @@ factReports thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do RuleItem ru <- get thyItems thy; get rActs $ get oprRuleE ru)
+        : (do ru <- thyProtoRules thy; get rActs ru)
           ++ (do RuleItem ru <- get thyItems thy; racs <- get oprRuleAC ru; get rActs racs)
 
-    
-    
-    
     -- Report a protocol fact occurs in an LHS but not in any RHS
     factLhsOccurNoRhs :: WfErrorReport
-    factLhsOccurNoRhs = 
-      case factLhsNoRhs of
-        []            -> []
-        facts         -> return $ (,) (underlineTopic topic) $ numbered' $
-                          map (nest 2 . ruleAndFact ) facts
-      where
-        topic = "Facts occur in the left-hand-side but not in any right-hand-side "
-        -- all the protocol facts in lhs but not in any rhs
-        factLhsNoRhs = [fa | fa <-getFactLhsNoRhs 
-                             (getFactSide rPrems ru) (getFactSide rConcs ru),
-                             isProtoFact $ getFact fa]     
-                                                       
-        ru = thyProtoRules thy
-        -- get all the facts by their sides
-        getFactSide s = map (\x-> (,) (showRuleCaseName x) 
-                            $ get s x) 
-
-        -- for each fact on LHS, get his most similar fact in RHS
-        getFactLhsNoRhs :: [(String,[LNFact])]->[(String,[LNFact])]
-                          ->[(RuleAndFact,RuleAndFact,Bool)]                                  
-        getFactLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
-                                      $ regroup rfacts
-                                                
-        regroup :: [(String,[LNFact])] -> [RuleAndFact]
-        regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x)
-                       ++ acc) [] 
-        getFact ((_,factL),_,_) = factL
-        ruleAndFact ((ruName,factL),(ruNameR,factR),status) =
-          if status == True
-            then text  ("in rule " ++ show ruName ++": "
-                  ++ showFactInfo(factInfo factL)
-                  ++ ". Perhaps you want to use the fact in rule "
-                  ++ show ruNameR ++": "
-                  ++ showFactInfo (factInfo factR)  ) 
-            else text  ("in rule " ++ show ruName ++": "
-                  ++ showFactInfo(factInfo factL))
-        showFactInfo (tag,arity,multi) =
-                  " factName "++quote (factTagName tag)
-                  ++ " arity: "++show arity
-                  ++ " multiplicity: "++show multi
-        
+    factLhsOccurNoRhs = factLhsOccurNoRhs' $ thyProtoRules thy
 
     inexistentActions = do
         LemmaItem l <- get thyItems thy
@@ -705,7 +698,7 @@ factReports thy = concat
 -- | Report on facts usage.
 factReportsDiff :: OpenDiffTheory -> WfErrorReport
 factReportsDiff thy = concat
-    [ reservedReport, reservedFactNameRules, reservedPrefixReport, freshFactArguments, specialFactsUsage
+    [ reservedReport,reservedFactNameRules, reservedPrefixReport, freshFactArguments, specialFactsUsage
     , factUsage, factLhsOccurNoRhs, inexistentActions, inexistentActionsRestrictions
     ]
   where
@@ -717,9 +710,9 @@ factReportsDiff thy = concat
     -- agrees with the arity of the function as given by the signature is
     -- enforced by the parser and implicitly checked in 'factArity'.
 
-    theoryDiffRuleFacts = (do
-              DiffRuleItem ru <- get diffThyItems thy
-              return $ ruleFacts $ get dprRule ru)
+    theoryDiffRuleFacts = do
+              ru <- diffThyProtoRules thy
+              return $ ruleFacts ru
 
     theoryParsedRuleFacts = (do
               EitherRuleItem (_, ru) <- get diffThyItems thy
@@ -741,6 +734,8 @@ factReportsDiff thy = concat
     -- mangle facts with terms with bound variables and such without them
     extFactInfo fa = (prettyLNFact fa, factInfo fa)
 
+    factInfo :: Fact t -> (FactTag, Int, Multiplicity)
+    factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 
     -- Check for usage of protocol facts with reserved names
     reservedReport = do
@@ -762,7 +757,7 @@ factReportsDiff thy = concat
     reservedFactNameRules = do
       ru <- diffThyProtoRules thy
       let lfact = [fa| fa <- get rPrems ru
-                      , factTag fa `elem` [KUFact,KDFact] 
+                      , factTag fa `elem` [KUFact,KDFact]
                       || isKLogFact fa]
           mfact = [fa | fa <- get rActs ru
                       , factTag fa `elem` [KUFact,KDFact,InFact,OutFact,FreshFact]
@@ -823,13 +818,13 @@ factReportsDiff thy = concat
     factUsage = do
        clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
        let (_, (_, (factName, _, _))) = head clash
-           name =quote( map toLower $ factTagName factName  )        
+           name =quote ( map toLower $ factTagName factName  )
        return $ (,) (topic++p1++p2) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
            (origin, (ppFa, (tag, arity, multipl))) <- clash
            return $ text (origin ++
                           ", capitalization  " ++ show (factTagName tag) ++
                           ", " ++ show arity ++", " ++ show multipl)
-                    $-$ nest 2 ppFa 
+                    $-$ nest 2 ppFa
       where
         topic = (underlineTopic "Fact usage" ) ++ "\n"
         p1    = "Possible reasons: \n"++
@@ -850,7 +845,7 @@ factReportsDiff thy = concat
           kLogFact undefined
         : dedLogFact undefined
         : kuFact undefined
-        : (do DiffRuleItem ruO <- get diffThyItems thy; let ru = get dprRule ruO in Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
+        : (do ru <- diffThyProtoRules thy; Fact {factTag = ProtoFact Linear ("DiffProto" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do
           DiffRuleItem ruO <- get diffThyItems thy
           case get dprLeftRight ruO of
@@ -863,50 +858,8 @@ factReportsDiff thy = concat
         ++ (do ru <- get diffThyCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
         ++ (do ru <- get diffThyDiffCacheLeft thy; Fact {factTag = ProtoFact Linear ("DiffIntr" ++ getRuleName ru) 0, factAnnotations = S.empty, factTerms = []} : get rActs ru)
 
-
     factLhsOccurNoRhs :: WfErrorReport
-    factLhsOccurNoRhs = 
-      case factLhsNoRhs of
-        []            -> []
-        facts         -> return $ (,) (underlineTopic topic) $ numbered' $
-                          map (nest 2 . ruleAndFact ) facts
-      where
-        topic = "Facts occur in the left-hand-side but not in any right-hand-side "
-        -- all the protocol facts in lhs but not in any rhs
-        factLhsNoRhs = [fa | fa <-getFactLhsNoRhs 
-                             (getFactSide rPrems ru) (getFactSide rConcs ru),
-                             isProtoFact $ getFact fa]     
-                                                       
-        ru = diffThyProtoRules thy
-        -- get all the facts by their sides
-        getFactSide s = map (\x-> (,) (showRuleCaseName x) 
-                            $ get s x) 
-
-        -- for each fact on LHS, get his most similar fact in RHS
-        getFactLhsNoRhs :: [(String,[LNFact])]->[(String,[LNFact])]
-                          ->[(RuleAndFact,RuleAndFact,Bool)]                                  
-        getFactLhsNoRhs lfacts rfacts = mostSimilarName (regroup lfacts) 
-                                      $ regroup rfacts
-                                                
-        regroup :: [(String,[LNFact])] -> [RuleAndFact]
-        regroup = foldr (\x acc -> (zip (repeat $ fst x) $ snd x)
-                       ++ acc) [] 
-        getFact ((_,factL),_,_) = factL
-        ruleAndFact ((ruName,factL),(ruNameR,factR),status) =
-          if status == True
-            then text  ("in rule " ++ show ruName ++": "
-                  ++ showFactInfo(factInfo factL)
-                  ++ ". Perhaps you want to use the fact in rule "
-                  ++ show ruNameR ++": "
-                  ++ showFactInfo (factInfo factR)  ) 
-            else text  ("in rule " ++ show ruName ++": "
-                  ++ showFactInfo(factInfo factL))
-        showFactInfo (tag,arity,multi) =
-                  " factName "++quote (factTagName tag)
-                  ++ " arity: "++show arity
-                  ++ " multiplicity: "++show multi
-          
-
+    factLhsOccurNoRhs = factLhsOccurNoRhs' $ diffThyProtoRules thy
 
     inexistentActions = do
         EitherLemmaItem (s, l) <- {-trace ("Caches: " ++ show ((get diffThyCacheRight thy) ++ (get diffThyDiffCacheRight thy) ++ (get diffThyCacheLeft thy) ++ (get diffThyDiffCacheLeft thy))) $-} get diffThyItems thy
@@ -1280,15 +1233,15 @@ findNotProvedLemmas lemmaArgsNames lemmasInTheory = foldl (\acc x -> if not (arg
       -- A filter to check if a lemma (str) is in the list of lemmas from the theory
       argFilter :: String -> Bool
       argFilter str = any (lemmaChecker str) lemmasInTheory
-    
+
 
 -- | Check that all the lemmas in the arguments are lemmas of the theory and return an error if not
   -----------------------
 checkIfLemmasInTheory :: Theory sig c r p s  -> WfErrorReport
-checkIfLemmasInTheory thy 
+checkIfLemmasInTheory thy
         | lemmaArgsNames == [[]] = []
         | null notProvedLemmas = []
-        | otherwise = 
+        | otherwise =
             [(topic, vcat
             [ text $ "--> '" ++ intercalate "', '" notProvedLemmas ++ "'"  ++ " from arguments "
               ++ "do(es) not correspond to a specified lemma in the theory "
@@ -1305,10 +1258,10 @@ checkIfLemmasInTheory thy
 -- | Check that all the lemmas in the arguments are lemmas of the diffTheory and return an error if not
   -----------------------
 checkIfLemmasInDiffTheory :: DiffTheory sig c r r2 p p2  -> WfErrorReport
-checkIfLemmasInDiffTheory thy 
+checkIfLemmasInDiffTheory thy
         | lemmaArgsNames == [[]] = []
         | null notProvedLemmas = []
-        | otherwise = 
+        | otherwise =
             [(topic, vcat
             [ text $ "--> '" ++ intercalate "', '"  notProvedLemmas ++ "'"  ++ " from arguments "
               ++ "do(es) not correspond to a specified lemma in the theory "

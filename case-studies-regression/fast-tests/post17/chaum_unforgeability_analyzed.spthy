@@ -136,11 +136,15 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  B_1
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule B_1: 
 Failed to derive Variable(s): ~x, r
-  
-  S_1
+
+Rule S_1: 
 Failed to derive Variable(s): ~ltkB
 */
 
@@ -148,8 +152,8 @@ Failed to derive Variable(s): ~ltkB
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 0bae6da59a0dc9ff65d82792478deb61a5dcaf90 (with uncommited changes), branch: subterm-new
+Compiled at: 2023-07-27 11:42:57.499991562 UTC
 */
 
 end
@@ -164,9 +168,9 @@ summary of summaries:
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          examples/post17/chaum_unforgeability.spthy.tmp
-  processing time: 0.24s
+  processing time: 0.26s
   
-  WARNING: 2 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   exec (exists-trace): verified (6 steps)

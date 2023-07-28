@@ -27,15 +27,15 @@ checkVariableDeducability :: OpenTranslatedTheory -> SignatureWithMaude -> Bool 
 checkVariableDeducability thy sig sources prover =
     reportVars (map checkProofStatuses provenTheories) originalRules freeVars
     where
-        originalRules = theoryRules thy
+        originalRules = map (applyMacroInProtoRule (theoryMacros thy)) $ theoryRules thy
         provenTheories =  map (proveTheory (const True) prover) closedTheories
         closedTheories = map (\t -> closeTheoryWithMaude sig t sources) modifiedTheories
         modifiedTheories =  zipWith3 (\r l t -> (addRules [r] . addLemmas l ) t)  newRules newLemmas (repeat emptyPublicThy)
         emptyPublicThy = makeFunsPublic (toSignaturePure sig) $ deleteRulesAndLemmasFromTheory thy
         newRules = zipWith3 (\idx freevs prems -> generateRule freevs (premisesToOut prems) idx) [0..] freeVars premises
         newLemmas = zipWith3 (\idx freevs _-> generateSeparatedLemmas idx freevs) [0..] freeVars premises
-        premises = map (map (fmap replacePrivate)) $ premsOfThyRules thy
-        freeVars = freesInThyRules thy
+        premises = map (map (fmap replacePrivate)) $ premsOfThyRules originalRules
+        freeVars = freesInThyRules originalRules
 
 diffCheckVariableDeducability :: OpenDiffTheory -> SignatureWithMaude -> Bool -> Prover -> DiffProver -> WfErrorReport
 diffCheckVariableDeducability thy sig sources prover diffprover =
@@ -150,14 +150,14 @@ checkDiffProofStatuses thy = map (foldProof proofStepStatus . L.get lProof . snd
 -- Convenience getter functions
 -----------------------------------------------
 
-freesInThyRules :: Theory sig c OpenProtoRule p s -> [[LVar]]
-freesInThyRules thy = map (frees . L.get oprRuleE) $ theoryRules thy
+freesInThyRules :: [OpenProtoRule] -> [[LVar]]
+freesInThyRules rules = map (frees . L.get oprRuleE) rules
 
-premsOfThyRules :: Theory sig c OpenProtoRule p s -> [[LNFact]]
-premsOfThyRules thy = map (L.get rPrems . L.get oprRuleE) $ theoryRules thy
+premsOfThyRules :: [OpenProtoRule] -> [[LNFact]]
+premsOfThyRules rules = map (L.get rPrems . L.get oprRuleE) rules
 
-concsOfThyRules :: Theory sig c OpenProtoRule p s -> [[LNFact]]
-concsOfThyRules thy = map (L.get rConcs . L.get oprRuleE ) $ theoryRules thy
+concsOfThyRules :: [OpenProtoRule] -> [[LNFact]]
+concsOfThyRules rules = map (L.get rConcs . L.get oprRuleE ) rules
 
 difffreesInThyRules :: DiffTheory sig c r OpenProtoRule p p2 -> Side -> [[LVar]]
 difffreesInThyRules thy side = map (frees . L.get oprRuleE) $ diffTheorySideRules side thy

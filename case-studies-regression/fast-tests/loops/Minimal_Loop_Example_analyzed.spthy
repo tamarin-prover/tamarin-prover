@@ -97,7 +97,7 @@ next
     case Start
     solve( A( ~n ) ▶₀ #i )
       case Loop
-      by contradiction /* cyclic */
+      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -165,8 +165,8 @@ qed
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 0bae6da59a0dc9ff65d82792478deb61a5dcaf90 (with uncommited changes), branch: subterm-new
+Compiled at: 2023-07-27 11:42:57.499991562 UTC
 */
 
 end
@@ -181,7 +181,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.12s
   
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)

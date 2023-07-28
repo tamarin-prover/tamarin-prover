@@ -86,7 +86,7 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
 
     checkProof = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
-    diffRules  = diffTheoryDiffRules thy0
+    diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy0)) $ diffTheoryDiffRules thy0
     leftOpenRules  = map (addProtoRuleLabel . getLeftProtoRule)  diffRules
     rightOpenRules = map (addProtoRuleLabel . getRightProtoRule) diffRules
 
@@ -108,6 +108,7 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
       (DiffLemmaItem . fmap skeletonToIncrementalDiffProof)
       (\(s, l) -> EitherLemmaItem (s, fmap skeletonToIncrementalProof l))
       EitherRestrictionItem
+      DiffMacroItem
       DiffTextItem
 
     unfoldClosedRules :: [DiffTheoryItem DiffProtoRule [ClosedProtoRule] IncrementalDiffProof IncrementalProof] -> [DiffTheoryItem DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof]
@@ -117,6 +118,7 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     unfoldClosedRules       (EitherLemmaItem i:is) = EitherLemmaItem i:unfoldClosedRules is
     unfoldClosedRules (EitherRestrictionItem i:is) = EitherRestrictionItem i:unfoldClosedRules is
     unfoldClosedRules          (DiffTextItem i:is) = DiffTextItem i:unfoldClosedRules is
+    unfoldClosedRules         (DiffMacroItem i:is) = DiffMacroItem i:unfoldClosedRules is
     unfoldClosedRules                           [] = []
 
     -- Name of the auto-generated lemma
@@ -190,11 +192,12 @@ closeTheoryWithMaude sig thy0 autoSources =
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers $ unfoldClosedRules
        ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem
-       (RuleItem . closeProtoRule hnd)
+       (RuleItem . closeProtoRule hnd (theoryMacros thy0))
        RestrictionItem
        (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
        PredicateItem
+       MacroItem
        TranslationItem
 
     unfoldClosedRules :: [TheoryItem [ClosedProtoRule] IncrementalProof s] -> [TheoryItem ClosedProtoRule IncrementalProof s]
@@ -203,6 +206,7 @@ closeTheoryWithMaude sig thy0 autoSources =
     unfoldClosedRules       (LemmaItem i:is) = LemmaItem i:unfoldClosedRules is
     unfoldClosedRules        (TextItem i:is) = TextItem i:unfoldClosedRules is
     unfoldClosedRules   (PredicateItem i:is) = PredicateItem i:unfoldClosedRules is
+    unfoldClosedRules       (MacroItem i:is) = MacroItem i:unfoldClosedRules is
     unfoldClosedRules       (TranslationItem i:is) = TranslationItem i:unfoldClosedRules is
     unfoldClosedRules                     [] = []
 
