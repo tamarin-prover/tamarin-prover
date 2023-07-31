@@ -101,12 +101,13 @@ In Tamarin, the sort of a variable is expressed using prefixes:
 
  *    `~x`  denotes  `x:fresh`
  *    `$x`  denotes  `x:pub`
+ *    `%x`  denotes  `x:nat`
  *    `#i`  denotes  `i:temporal`
  *    `m`   denotes  `m:msg`
 
 Moreover, a string constant `'c'` denotes a public name in `pub`,
-which is a fixed, global constant. We have a top sort `msg` and two
-incomparable subsorts `fresh` and `pub` of that top sort. Timepoint
+which is a fixed, global constant. We have a top sort `msg` and three
+incomparable subsorts `fresh`, `pub` and `nat` of that top sort. Timepoint
 variables of sort `temporal` are unconnected.
 
 The above rule can therefore be read as follows. First, generate

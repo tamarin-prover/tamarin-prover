@@ -43,7 +43,7 @@ enable it to parse terms containing exponentiations, e.g.,  g ^ x.
                     | 'hashing' | 'symmetric-encryption'
                     | 'asymmetric-encryption' | 'signing'
                     | 'bilinear-pairing' | 'xor'
-                    | 'multiset' | 'revealing-signing'
+                    | 'multiset' | 'natural-numbers' | 'revealing-signing'
 
 A global heuristic sets the default heuristic that will be used when autoproving
 lemmas in the file. The specified goal ranking can be any of those discussed in
@@ -159,7 +159,7 @@ It indicates the proof method used at each step, which may include multiple case
     node_var       := ['#'] ident ['.' natural]      // temporal sort prefix
                     | ident ['.' natural] ':' 'node' // temporal sort suffix
     natural        := digit+
-    natural_sub    := ('₀'|'₁'|'₂'|'₃'|'₄'|'₅'|'₆'|'₇'|'₈'|'₉')+
+    natural_subscr := ('₀'|'₁'|'₂'|'₃'|'₄'|'₅'|'₆'|'₇'|'₈'|'₉')+
 
 Formal comments are used to make the input more readable. In contrast
 to `/*...*/` and `//...` comments, formal comments are stored and output
@@ -182,7 +182,8 @@ arguments of an n-ary function application must agree with the arity given in
 the function definition.
 
     tupleterm := '<' msetterm (',' msetterm)* '>'
-    msetterm  := xorterm ('+' xorterm)*
+    msetterm  := natterm (('++' | '+') natterm)*
+    natterm   := xorterm ('%+' xorterm)*
     xorterm   := multterm (('XOR' | ⊕) multterm)*
     multterm  := expterm ('*' expterm)*
     expterm   := term    ('^' term   )*
@@ -235,14 +236,15 @@ guards.
     disjunction := conjunction (('|' | '∨') conjunction)* // left-associative
     conjunction := negation (('&' | '∧') negation)*       // left-associative
     negation    := ['not' | '¬'] atom
-    atom        := '⊥' | 'F' | '⊤' | 'T'        // true or false
-                 | '(' formula ')'          // nested formula
-                 | 'last' '(' node_var ')'  // 'last' temporal variable for induction
-                 | fact '@' node_var        // action
-                 | node_var '<' node_var    // ordering of temporal variables
-                 | msetterm '=' msetterm    // equality of terms
-                 | node_var '=' node_var    // equality of temporal variables
-                 | ('Ex' | '∃' | 'All' | '∀') // quantified formula
+    atom        := '⊥' | 'F' | '⊤' | 'T'           // true or false
+                 | '(' formula ')'                 // nested formula
+                 | 'last' '(' node_var ')'         // 'last' temporal variable for induction
+                 | fact '@' node_var               // action
+                 | node_var '<' node_var           // ordering of temporal variables
+                 | msetterm '=' msetterm           // equality of terms
+                 | msetterm ('<<' | '⊏') msetterm  // subterm relation
+                 | node_var '=' node_var           // equality of temporal variables
+                 | ('Ex' | '∃' | 'All' | '∀')      // quantified formula
                         lvar+ '.' formula
 
     lvar        := node_var | nonnode_var

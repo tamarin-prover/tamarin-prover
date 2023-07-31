@@ -154,13 +154,13 @@ Sometimes partial deconstructions can be removed by applying some modelling tric
    sure if this transformation is sound, you may write a lemma to ensure that
    the rule can still fire.
 
-   Example: Counter values are public knowledge, so adding `In(c)` to the
+   Example: Hashes of a public value are public knowledge, so adding `In(p)` to the
    second rule helps here:
 
    ```
-   [] --> [Counter('1')]
+   [] --> [HashChain('hi')]
 
-   [Counter(c)] --> [Counter(c+'1'), Out(c+'1')]
+   [HashChain(p)] --> [HashChain(h(p)), Out(h(p))]
 
    ```
 
