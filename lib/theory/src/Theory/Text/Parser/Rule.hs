@@ -21,7 +21,6 @@ where
 import           Prelude                    hiding (id, (.))
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Char8      as BC
-import           Data.Foldable              (asum)
 import           Data.Label
 import           Data.Either
 import           Data.Maybe
@@ -36,11 +35,10 @@ import           Text.Parsec                hiding ((<|>))
 import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
-import Theory.Text.Parser.Let
-import Theory.Text.Parser.Fact
-import Theory.Text.Parser.Term
-import Theory.Text.Parser.Formula
-
+import           Theory.Text.Parser.Let
+import           Theory.Text.Parser.Fact
+import           Theory.Text.Parser.Term
+import           Theory.Text.Parser.Formula
 
 -- | Parse a "(modulo ..)" information.
 modulo :: String -> Parser ()
@@ -71,6 +69,7 @@ ruleAttribute = asum
     [ symbol "colour=" *> (Just . RuleColor <$> parseColor)
     , symbol "color="  *> (Just . RuleColor <$> parseColor)
     , symbol "process="  *> parseAndIgnore
+    , symbol "derivchecks" *> ignore
     ]
   where
     parseColor = do
@@ -82,6 +81,7 @@ ruleAttribute = asum
                         _ <-  symbol "\""
                         _ <- manyTill anyChar (try (symbol "\""))
                         return Nothing
+    ignore = return (Just IgnoreDerivChecks)
 
 ruleAttributesp :: Parser [RuleAttribute]
 ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute

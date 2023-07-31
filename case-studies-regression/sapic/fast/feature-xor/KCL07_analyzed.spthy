@@ -3,8 +3,10 @@ theory KCL07 begin
 // Function signature and definition of the equational theory E
 
 builtins: xor
-functions: fst/1[destructor], h/1, pair/2, snd/1[destructor]
+functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -392,6 +394,12 @@ qed
 
 
 
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="new ~k.1;"]:
    [ Fr( ~k.1 ), Fr( ~id.1 ) ]
   --[ Init( ) ]->
@@ -402,68 +410,68 @@ rule (modulo E) Init[color=#ffffff, process="new ~k.1;"]:
      [ Fr( ~k ), Fr( ~id ) ] --[ Init( ) ]-> [ !Semistate_111( ~id, ~k ) ]
   */
 
-rule (modulo E) newr_0_11111[color=#404480, process="new ~r1.1;"]:
+rule (modulo E) newr_0_11111[color=#40805f, process="new ~r1.1;"]:
    [ State_11111( ~id.1, ~k.1 ), Fr( ~r1.1 ) ]
   --[ Challenge( ~r1.1, 'Reader' ) ]->
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), Out( ~r1.1 ) ]
 
   /*
-  rule (modulo AC) newr_0_11111[color=#404480, process="new ~r1.1;"]:
+  rule (modulo AC) newr_0_11111[color=#40805f, process="new ~r1.1;"]:
      [ State_11111( ~id, ~k ), Fr( ~r1 ) ]
     --[ Challenge( ~r1, 'Reader' ) ]->
      [ State_11111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
   */
 
-rule (modulo E) inxoredhash_0_11111111[color=#404480,
+rule (modulo E) inxoredhash_0_11111111[color=#40805f,
                                        process="in(xoredhash.1);"]:
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), In( xoredhash.1 ) ]
   -->
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
-  rule (modulo AC) inxoredhash_0_11111111[color=#404480,
+  rule (modulo AC) inxoredhash_0_11111111[color=#40805f,
                                           process="in(xoredhash.1);"]:
      [ State_11111111( ~id, ~k, ~r1 ), In( xoredhash ) ]
     -->
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
-rule (modulo E) ifxoredhashidhrk_0_111111111[color=#404480,
+rule (modulo E) ifxoredhashidhrk_0_111111111[color=#40805f,
                                              process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
-  rule (modulo AC) ifxoredhashidhrk_0_111111111[color=#404480,
+  rule (modulo AC) ifxoredhashidhrk_0_111111111[color=#40805f,
                                                 process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
      [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
-rule (modulo E) eventAlivekTag_0_1111111111[color=#404480,
+rule (modulo E) eventAlivekTag_0_1111111111[color=#40805f,
                                             process="event Alive( ~k.1, 'Tag' );"]:
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Alive( ~k.1, 'Tag' ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventAlivekTag_0_1111111111[color=#404480,
+  rule (modulo AC) eventAlivekTag_0_1111111111[color=#40805f,
                                                process="event Alive( ~k.1, 'Tag' );"]:
      [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Alive( ~k, 'Tag' ) ]->
      [ ]
   */
 
-rule (modulo E) ifxoredhashidhrk_1_111111111[color=#404480,
+rule (modulo E) ifxoredhashidhrk_1_111111111[color=#40805f,
                                              process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Not_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
    [ ]
 
   /*
-  rule (modulo AC) ifxoredhashidhrk_1_111111111[color=#404480,
+  rule (modulo AC) ifxoredhashidhrk_1_111111111[color=#40805f,
                                                 process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Not_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
@@ -514,26 +522,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-xor/KCL07.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
-
-  output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 1.747509274s
-  recentalive_tag (all-traces): verified (100 steps)
-  executable (exists-trace): verified (16 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -541,7 +544,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 1.747509274s
+  processing time: 0.73s
+  
   recentalive_tag (all-traces): verified (100 steps)
   executable (exists-trace): verified (16 steps)
 

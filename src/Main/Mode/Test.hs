@@ -45,8 +45,7 @@ run :: TamarinMode -> Arguments -> IO ()
 run _thisMode as = do
     putStrLn $ "Self-testing the " ++ programName ++ " installation."
     nextTopic "Testing the availability of the required tools"
-    maybeSucessMaude <- ensureMaude as
-    let successMaude = isJust maybeSucessMaude
+    (successMaude, _) <- ensureMaude as
 #ifndef NO_GUI
     putStrLn ""
     maybeSuccessGraphVizDot <- ensureGraphVizDot as

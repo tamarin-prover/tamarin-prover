@@ -1,0 +1,270 @@
+theory MacroExemple begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+
+
+macros:
+    encrypt( x, y ) = aenc(x,y)
+    decrypt( x, y ) = adec(x,y)
+    hashdec( x, y ) = h(decrypt(x,y))
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Get_pk:
+   [ !Pk( A, pubkey ) ] --> [ Out( pubkey ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Client_1:
+   [ Fr( ~k ), !Pk( $S, pkS ) ]
+  -->
+   [ Client_1( $S, ~k ), Out( encrypt(~k, pkS) ) ]
+
+  /*
+  rule (modulo AC) Client_1:
+     [ Fr( ~k ), !Pk( $S, pkS ) ]
+    -->
+     [ Client_1( $S, ~k ), Out( aenc(~k, pkS) ) ]
+  */
+
+rule (modulo E) Client_2:
+   [ Client_1( S, k ), In( h(k) ) ] --[ SessKeyC( S, k ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Serv_1:
+   [ !Ltk( $S, ~ltkS ), In( request ) ]
+  --[ AnswerRequest( $S, decrypt(request, ~ltkS) ) ]->
+   [ Out( hashdec(request, ~ltkS) ) ]
+
+  /*
+  rule (modulo AC) Serv_1:
+     [ !Ltk( $S, ~ltkS ), In( request ) ]
+    --[ AnswerRequest( $S, z ) ]->
+     [ Out( h(z) ) ]
+    variants (modulo AC)
+    1. ~ltkS = ~ltkS.5
+       request
+             = request.5
+       z     = adec(request.5, ~ltkS.5)
+    
+    2. ~ltkS = ~x.5
+       request
+             = aenc(x.6, pk(~x.5))
+       z     = x.6
+  */
+
+lemma Client_session_key_secrecy:
+  all-traces
+  "¬(∃ S k #i #j.
+      ((SessKeyC( S, k ) @ #i) ∧ (K( k ) @ #j)) ∧
+      (¬(∃ #r. LtkReveal( S ) @ #r)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S k #i #j.
+  (SessKeyC( S, k ) @ #i) ∧ (K( k ) @ #j)
+ ∧
+  ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥"
+*/
+simplify
+solve( Client_1( S, k ) ▶₀ #i )
+  case Client_1
+  solve( !KU( ~k ) @ #vk.1 )
+    case Client_1
+    solve( !KU( ~ltk ) @ #vk.2 )
+      case Reveal_ltk
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma Client_auth:
+  all-traces
+  "∀ S k #i.
+    (SessKeyC( S, k ) @ #i) ⇒
+    ((∃ #a. AnswerRequest( S, k ) @ #a) ∨
+     (∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S k #i.
+  (SessKeyC( S, k ) @ #i)
+ ∧
+  (∀ #a. (AnswerRequest( S, k ) @ #a) ⇒ ⊥) ∧
+  (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #i))"
+*/
+simplify
+solve( Client_1( S, k ) ▶₀ #i )
+  case Client_1
+  solve( !KU( h(~k) ) @ #vk )
+    case Serv_1
+    solve( !KU( aenc(~k, pk(~ltkS)) ) @ #vk.1 )
+      case Client_1
+      by contradiction /* from formulas */
+    next
+      case c_aenc
+      solve( !KU( ~k ) @ #vk.2 )
+        case Client_1
+        solve( !KU( ~ltk ) @ #vk.4 )
+          case Reveal_ltk
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case c_h
+    solve( !KU( ~k ) @ #vk.1 )
+      case Client_1
+      solve( !KU( ~ltk ) @ #vk.2 )
+        case Reveal_ltk
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+lemma Client_auth_injective:
+  all-traces
+  "∀ S k #i.
+    (SessKeyC( S, k ) @ #i) ⇒
+    ((∃ #a.
+       (AnswerRequest( S, k ) @ #a) ∧
+       (∀ #j. (SessKeyC( S, k ) @ #j) ⇒ (#i = #j))) ∨
+     (∃ #r. (LtkReveal( S ) @ #r) ∧ (#r < #i)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ S k #i.
+  (SessKeyC( S, k ) @ #i)
+ ∧
+  (∀ #a.
+    (AnswerRequest( S, k ) @ #a)
+   ⇒
+    ∃ #j. (SessKeyC( S, k ) @ #j) ∧ ¬(#i = #j)) ∧
+  (∀ #r. (LtkReveal( S ) @ #r) ⇒ ¬(#r < #i))"
+*/
+simplify
+solve( Client_1( S, k ) ▶₀ #i )
+  case Client_1
+  solve( !KU( h(~k) ) @ #vk )
+    case Serv_1
+    solve( !KU( aenc(~k, pk(~ltkS)) ) @ #vk.1 )
+      case Client_1
+      solve( (#i < #j)  ∥ (#j < #i) )
+        case case_1
+        solve( Client_1( $S, ~k ) ▶₀ #j )
+          case Client_1
+          by contradiction /* cyclic */
+        qed
+      next
+        case case_2
+        solve( Client_1( $S, ~k ) ▶₀ #j )
+          case Client_1
+          by contradiction /* cyclic */
+        qed
+      qed
+    next
+      case c_aenc
+      solve( !KU( ~k ) @ #vk.2 )
+        case Client_1
+        solve( !KU( ~ltk ) @ #vk.4 )
+          case Reveal_ltk
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  next
+    case c_h
+    solve( !KU( ~k ) @ #vk.1 )
+      case Client_1
+      solve( !KU( ~ltk ) @ #vk.2 )
+        case Reveal_ltk
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+lemma Client_session_key_honest_setup:
+  exists-trace
+  "∃ S k #i. (SessKeyC( S, k ) @ #i) ∧ (¬(∃ #r. LtkReveal( S ) @ #r))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ S k #i. (SessKeyC( S, k ) @ #i) ∧ ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥"
+*/
+simplify
+solve( Client_1( S, k ) ▶₀ #i )
+  case Client_1
+  solve( !KU( h(~k) ) @ #vk )
+    case Serv_1
+    solve( !KU( aenc(~k, pk(~ltkS)) ) @ #vk.1 )
+      case Client_1
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features//macros/MacroExample.spthy
+
+  output:          examples/features//macros/MacroExample.spthy.tmp
+  processing time: 0.17s
+  
+  Client_session_key_secrecy (all-traces): verified (5 steps)
+  Client_auth (all-traces): verified (11 steps)
+  Client_auth_injective (all-traces): verified (15 steps)
+  Client_session_key_honest_setup (exists-trace): verified (5 steps)
+
+==============================================================================
+*/

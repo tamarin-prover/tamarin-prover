@@ -4,7 +4,7 @@ theory AKE
 
 begin
 
-builtins: asymmetric-encryption,locations-report
+builtins: dest-pairing,dest-asymmetric-encryption,locations-report
 
 functions: first/1
 

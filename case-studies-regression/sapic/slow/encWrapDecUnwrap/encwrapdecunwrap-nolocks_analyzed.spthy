@@ -2,12 +2,13 @@ theory EncWrapDecUnwrap begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -89,6 +90,14 @@ solve( State_1111111( ) ▶₀ #i )
     qed
   qed
 qed
+
+
+
+
+
+
+
+
 
 
 
@@ -840,25 +849,67 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule lookupatthasa_0_11111121: 
+Failed to derive Variable(s): a.1
+
+Rule lookupatthasa_0_1111121: 
+Failed to derive Variable(s): a.2
+
+Rule inhsencmk_0_11112: 
+Failed to derive Variable(s): m.1, k.2
+
+Rule lookupatthasa_0_111121: 
+Failed to derive Variable(s): a.3
+
+Rule lookupkeyhaskp_0_11112111: 
+Failed to derive Variable(s): kp.1
+
+Rule lookupatthasa_0_11121: 
+Failed to derive Variable(s): a.4
+
+Rule lookupkeyhask_0_1112111: 
+Failed to derive Variable(s): k.3
+
+Rule lookupatthasa_0_1121: 
+Failed to derive Variable(s): a1.1
+
+Rule lookupkeyhask_0_112111: 
+Failed to derive Variable(s): k1.1
+
+Rule lookupkeyhask_0_1121111: 
+Failed to derive Variable(s): k2.1
+
+Rule inhsencmk_0_12: 
+Failed to derive Variable(s): m.3, k.4
+
+Rule lookupatthasa_0_121: 
+Failed to derive Variable(s): a1.2
+
+Rule lookupkeyhask_0_12111: 
+Failed to derive Variable(s): k1.2
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
-
-  output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 1002.717088171s
-  can_obtain_key (exists-trace): verified (24 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -866,7 +917,11 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 1002.717088171s
+  processing time: 400.01s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   can_obtain_key (exists-trace): verified (24 steps)
 
 ==============================================================================

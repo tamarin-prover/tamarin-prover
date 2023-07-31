@@ -16,7 +16,7 @@ theory SSH
 
 begin
 
-builtins: diffie-hellman, symmetric-encryption, signing
+builtins: dest-pairing, diffie-hellman, dest-symmetric-encryption, dest-signing
 
 functions: hash/1, kdfPtoS/1, kdfStoP/1, nest/1, ishash/1 [destructor], issign/2 [destructor], isnest/1 [destructor]
 
@@ -118,12 +118,12 @@ let remoteP(pkS,~remote:channel) =
 		let <lvl,ms,'sign_req'> = sdec(signreq,kSP) in
                 out(senc(<nest(lvl),ms,'sign_req'>,kSP2));
 		in(signans2);
-		let <sig3,lvl,'sign_ans'> = sdec(signans2,kPS2) in
+		let <sig3,lvlr,'sign_ans'> = sdec(signans2,kPS2) in
                 // let <lvlf3,dump3>= getMess(sig3) in
 //     	        if issign(sig3,pkP)=true then
 //		if isnest(lvl) = true then
 		event Test(sig3);
-		out(senc( <sig3,lvl,'sign_ans'>,kPS))
+		out(senc( <sig3,lvlr,'sign_ans'>,kPS))
 
 		)
 		)

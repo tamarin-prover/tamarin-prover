@@ -3,8 +3,10 @@ theory Scott begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing
-functions: fst/1[destructor], hp/1, kdf/1, pair/2, snd/1[destructor]
+functions: fst/1, hp/1, kdf/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -97,6 +99,9 @@ rule (modulo E) Init_2:
     6. ~ex   = ~ex.18
        Y     = x.30^(x.31*inv((~ex.18*x.32)))
        z     = x.30^(x.31*inv(x.32))
+    
+    7. Y     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) Resp_1:
@@ -151,6 +156,9 @@ rule (modulo E) Resp_1:
     6. ~ey   = ~ey.375
        X     = x.744^(x.745*inv((~ey.375*x.746)))
        z     = x.744^(x.745*inv(x.746))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 restriction notneutral:
@@ -500,6 +508,9 @@ next
             by solve( !KU( ~ex ) @ #vk.10 )
           next
             case Init_1_case_03
+            by solve( !KU( ~ex ) @ #vk.11 )
+          next
+            case Init_1_case_04
             solve( !KU( em(hp($A), hp($B))^(~s*x) ) @ #vk.2 )
               case Init_1_case_01
               by solve( !KU( ~x ) @ #vk.10 )
@@ -781,10 +792,10 @@ next
               by contradiction /* non-normal bilinear pairing rule instance */
             next
               case Reveal_ltk_case_10
-              by contradiction /* from formulas */
+              by contradiction /* non-normal bilinear pairing rule instance */
             next
               case Reveal_ltk_case_11
-              by contradiction /* non-normal bilinear pairing rule instance */
+              by contradiction /* from formulas */
             next
               case Reveal_ltk_case_12
               by contradiction /* from formulas */
@@ -793,10 +804,10 @@ next
               by contradiction /* non-normal bilinear pairing rule instance */
             next
               case Reveal_ltk_case_14
-              by contradiction /* from formulas */
+              by contradiction /* non-normal bilinear pairing rule instance */
             next
               case Reveal_ltk_case_15
-              by contradiction /* non-normal bilinear pairing rule instance */
+              by contradiction /* from formulas */
             next
               case Reveal_ltk_case_16
               by contradiction /* from formulas */
@@ -807,9 +818,6 @@ next
                 by contradiction /* from formulas */
               qed
             qed
-          next
-            case Init_1_case_04
-            by solve( !KU( ~ex ) @ #vk.11 )
           next
             case Init_1_case_05
             by solve( !KU( ~ex ) @ #vk.11 )
@@ -1114,6 +1122,9 @@ next
             case c_exp
             by solve( !KU( ~ex ) @ #vk.15 )
           qed
+        next
+          case split_case_7
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -1217,6 +1228,9 @@ next
             by solve( !KU( ~ey ) @ #vk.11 )
           next
             case Resp_1_case_03
+            by solve( !KU( ~ey ) @ #vk.12 )
+          next
+            case Resp_1_case_04
             solve( !KU( em(hp($A), hp($B))^(~x*x.1) ) @ #vk.2 )
               case Init_1_case_01
               by solve( !KU( ~x.1 ) @ #vk.10 )
@@ -1498,10 +1512,10 @@ next
               by contradiction /* non-normal bilinear pairing rule instance */
             next
               case Reveal_ltk_case_10
-              by contradiction /* from formulas */
+              by contradiction /* non-normal bilinear pairing rule instance */
             next
               case Reveal_ltk_case_11
-              by contradiction /* non-normal bilinear pairing rule instance */
+              by contradiction /* from formulas */
             next
               case Reveal_ltk_case_12
               by contradiction /* from formulas */
@@ -1510,10 +1524,10 @@ next
               by contradiction /* non-normal bilinear pairing rule instance */
             next
               case Reveal_ltk_case_14
-              by contradiction /* from formulas */
+              by contradiction /* non-normal bilinear pairing rule instance */
             next
               case Reveal_ltk_case_15
-              by contradiction /* non-normal bilinear pairing rule instance */
+              by contradiction /* from formulas */
             next
               case Reveal_ltk_case_16
               by contradiction /* from formulas */
@@ -1525,9 +1539,6 @@ next
               qed
             qed
           next
-            case Resp_1_case_04
-            by solve( !KU( ~ey ) @ #vk.12 )
-          next
             case Resp_1_case_05
             by solve( !KU( ~ey ) @ #vk.12 )
           next
@@ -1538,13 +1549,13 @@ next
             by solve( !KU( ~ey ) @ #vk.12 )
           next
             case Resp_1_case_08
-            solve( !KU( ~x ) @ #vk.13 )
+            solve( !KU( ~x ) @ #vk.14 )
               case Reveal_master_key
               by contradiction /* from formulas */
             qed
           next
             case Resp_1_case_09
-            solve( !KU( ~x ) @ #vk.14 )
+            solve( !KU( ~x ) @ #vk.13 )
               case Reveal_master_key
               by contradiction /* from formulas */
             qed
@@ -1795,6 +1806,9 @@ next
             case c_exp
             by solve( !KU( ~ey ) @ #vk.15 )
           qed
+        next
+          case split_case_7
+          by contradiction /* from formulas */
         qed
       qed
     qed
@@ -1805,26 +1819,40 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Init_1: 
+Failed to derive Variable(s): ~s
+
+Rule Resp_1: 
+Failed to derive Variable(s): ~s
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/bilinear/Scott.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/bilinear/Scott.spthy
-
-  output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 19.741494243s
-  key_agreement_reachable (exists-trace): verified (10 steps)
-  key_secrecy (all-traces): verified (518 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1832,9 +1860,13 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 19.741494243s
+  processing time: 9.62s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   key_agreement_reachable (exists-trace): verified (10 steps)
-  key_secrecy (all-traces): verified (518 steps)
+  key_secrecy (all-traces): verified (520 steps)
 
 ==============================================================================
 */

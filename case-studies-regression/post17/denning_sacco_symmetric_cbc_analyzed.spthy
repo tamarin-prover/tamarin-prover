@@ -2,13 +2,14 @@ theory dsscbc begin
 
 // Function signature and definition of the equational theory E
 
-functions: dec/2, enc/2, fst/1[destructor], pair/2, prefix/1,
-           snd/1[destructor]
+functions: dec/2, enc/2, fst/1, pair/2, prefix/1, snd/1
 equations:
     dec(enc(M, k), k) = M,
     fst(<x.1, x.2>) = x.1,
     prefix(enc(<X, Y>, k)) = enc(X, k),
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -121,26 +122,27 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/post17/denning_sacco_symmetric_cbc.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
-
-  output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
-  processing time: 0.295976167s
-  executable (exists-trace): verified (8 steps)
-  sessionsmatch (all-traces): falsified - found trace (4 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -148,7 +150,8 @@ summary of summaries:
 analyzed: examples/post17/denning_sacco_symmetric_cbc.spthy
 
   output:          examples/post17/denning_sacco_symmetric_cbc.spthy.tmp
-  processing time: 0.295976167s
+  processing time: 0.37s
+  
   executable (exists-trace): verified (8 steps)
   sessionsmatch (all-traces): falsified - found trace (4 steps)
 

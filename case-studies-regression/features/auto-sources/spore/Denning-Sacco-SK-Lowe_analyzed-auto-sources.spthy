@@ -2,12 +2,13 @@ theory Denning_Sacco_Lowe_SK begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], h/1, pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, h/1, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -612,7 +613,19 @@ solve( StateA2( A, B, xkab ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -701,29 +714,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
-
-  output:          examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy.tmp
-  processing time: 7.48200313s
-  executability (exists-trace): verified (9 steps)
-  secrecy (all-traces): verified (38 steps)
-  noninjectiveagreement_B (all-traces): verified (28 steps)
-  noninjectiveagreement_A (all-traces): verified (26 steps)
-  injectiveagreement_B (all-traces): verified (32 steps)
-  injectiveagreement_A (all-traces): falsified - found trace (9 steps)
-  AUTO_typing (all-traces): verified (21 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -731,7 +734,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK-Lowe.spthy.tmp
-  processing time: 7.48200313s
+  processing time: 2.13s
+  
   executability (exists-trace): verified (9 steps)
   secrecy (all-traces): verified (38 steps)
   noninjectiveagreement_B (all-traces): verified (28 steps)

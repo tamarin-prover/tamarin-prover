@@ -2,10 +2,9 @@ theory licensing begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, ask/2, check_rep/2[destructor],
-           dec/1, dec1/1, dec2/1, fst/1[destructor], get_rep/1[destructor], ok/2,
-           pair/2, pk/1, prg/1, rep/2[private,destructor], report/1, run/2,
-           sdec/2[destructor], senc/2, snd/1[destructor], tkn/1
+functions: adec/2, aenc/2, ask/2, check_rep/2[destructor], dec/1, dec1/1,
+           dec2/1, fst/1, get_rep/1[destructor], ok/2, pair/2, pk/1, prg/1,
+           rep/2[private,destructor], report/1, run/2, sdec/2, senc/2, snd/1, tkn/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     check_rep(rep(x.1, x.2), x.2) = x.1,
@@ -13,6 +12,8 @@ equations:
     get_rep(rep(x.1, x.2)) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: s
 
@@ -598,6 +599,20 @@ qed
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
   // safety formula
@@ -648,7 +663,7 @@ rule (modulo E) p_1_111[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) insencprgprogsharedkey_0_111111111[color=#804046,
+rule (modulo E) insencprgprogsharedkey_0_111111111[color=#408053,
                                                    process="in(senc(prg(prog2.1), =shared_key.1));"]:
    [
    State_111111111( prog.1, shared_key.1, skV.1 ),
@@ -658,7 +673,7 @@ rule (modulo E) insencprgprogsharedkey_0_111111111[color=#804046,
    [ !Semistate_11111111111( prog.1, prog2.1, shared_key.1, skV.1 ) ]
 
   /*
-  rule (modulo AC) insencprgprogsharedkey_0_111111111[color=#804046,
+  rule (modulo AC) insencprgprogsharedkey_0_111111111[color=#408053,
                                                       process="in(senc(prg(prog2.1), =shared_key.1));"]:
      [
      State_111111111( prog, shared_key, skV ),
@@ -668,7 +683,7 @@ rule (modulo E) insencprgprogsharedkey_0_111111111[color=#804046,
      [ !Semistate_11111111111( prog, prog2, shared_key, skV ) ]
   */
 
-rule (modulo E) p_1_1111111111[color=#804046, process="!"]:
+rule (modulo E) p_1_1111111111[color=#408053, process="!"]:
    [
    !Semistate_11111111111( prog.1, prog2.1, shared_key.1, skV.1 ),
    In( input.1 ), In( senc(tkn(token.1), shared_key.1) ), Fr( x.1 )
@@ -682,7 +697,7 @@ rule (modulo E) p_1_1111111111[color=#804046, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_1111111111[color=#804046, process="!"]:
+  rule (modulo AC) p_1_1111111111[color=#408053, process="!"]:
      [
      !Semistate_11111111111( prog, prog2, shared_key, skV ), In( input ),
      In( senc(tkn(token), shared_key) ), Fr( x )
@@ -694,7 +709,7 @@ rule (modulo E) p_1_1111111111[color=#804046, process="!"]:
      ]
   */
 
-rule (modulo E) insencokxtkntokensharedkey_0_111111111111111[color=#804046,
+rule (modulo E) insencokxtkntokensharedkey_0_111111111111111[color=#408053,
                                                              process="in(senc(ok(=x.1, tkn(=token.1)), =shared_key.1));"]:
    [
    State_111111111111111( input.1, prog.1, prog2.1, shared_key.1, skV.1,
@@ -706,7 +721,7 @@ rule (modulo E) insencokxtkntokensharedkey_0_111111111111111[color=#804046,
    [ Out( run(prog2.1, input.1) ) ]
 
   /*
-  rule (modulo AC) insencokxtkntokensharedkey_0_111111111111111[color=#804046,
+  rule (modulo AC) insencokxtkntokensharedkey_0_111111111111111[color=#408053,
                                                                 process="in(senc(ok(=x.1, tkn(=token.1)), =shared_key.1));"]:
      [
      State_111111111111111( input, prog, prog2, shared_key, skV, token, x ),
@@ -742,7 +757,7 @@ rule (modulo E) p_1_112[color=#ffffff, process="!"]:
      [ State_11211111( prog, skV ), Out( pk(skV) ) ]
   */
 
-rule (modulo E) inaencsharedkeypkskVsigned_0_11211111[color=#406880,
+rule (modulo E) inaencsharedkeypkskVsigned_0_11211111[color=#40807f,
                                                       process="in(<aenc(shared_key.2, pk(=skV.2)), signed.1>);"]:
    [
    State_11211111( prog.1, skV.2 ),
@@ -752,7 +767,7 @@ rule (modulo E) inaencsharedkeypkskVsigned_0_11211111[color=#406880,
    [ State_112111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
 
   /*
-  rule (modulo AC) inaencsharedkeypkskVsigned_0_11211111[color=#406880,
+  rule (modulo AC) inaencsharedkeypkskVsigned_0_11211111[color=#40807f,
                                                          process="in(<aenc(shared_key.2, pk(=skV.2)), signed.1>);"]:
      [ State_11211111( prog, skV ), In( <aenc(shared_key, pk(skV)), signed> )
      ]
@@ -760,7 +775,7 @@ rule (modulo E) inaencsharedkeypkskVsigned_0_11211111[color=#406880,
      [ State_112111111( prog, signed, shared_key, skV ) ]
   */
 
-rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#406880,
+rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#40807f,
                                                                        process="if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)"]:
    [ State_112111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   --[
@@ -771,7 +786,7 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#40
    [ State_1121111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
 
   /*
-  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#406880,
+  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#40807f,
                                                                           process="if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)"]:
      [ State_112111111( prog, signed, shared_key, skV ) ]
     --[ Pred_Eq( aenc(shared_key, pk(skV)), z ) ]->
@@ -788,7 +803,7 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#40
        z     = x.8
   */
 
-rule (modulo E) eventSessionVpkskVsharedkey_0_1121111111[color=#406880,
+rule (modulo E) eventSessionVpkskVsharedkey_0_1121111111[color=#40807f,
                                                          process="event SessionV( pk(skV.2), shared_key.2 );"]:
    [ State_1121111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   --[ SessionV( pk(skV.2), shared_key.2 ) ]->
@@ -798,7 +813,7 @@ rule (modulo E) eventSessionVpkskVsharedkey_0_1121111111[color=#406880,
    ]
 
   /*
-  rule (modulo AC) eventSessionVpkskVsharedkey_0_1121111111[color=#406880,
+  rule (modulo AC) eventSessionVpkskVsharedkey_0_1121111111[color=#40807f,
                                                             process="event SessionV( pk(skV.2), shared_key.2 );"]:
      [ State_1121111111( prog, signed, shared_key, skV ) ]
     --[ SessionV( pk(skV), shared_key ) ]->
@@ -808,7 +823,7 @@ rule (modulo E) eventSessionVpkskVsharedkey_0_1121111111[color=#406880,
      ]
   */
 
-rule (modulo E) p_1_112111111111[color=#406880, process="!"]:
+rule (modulo E) p_1_112111111111[color=#40807f, process="!"]:
    [
    !Semistate_1121111111111( prog.1, signed.1, shared_key.2, skV.2 ),
    Fr( token.2 )
@@ -820,7 +835,7 @@ rule (modulo E) p_1_112111111111[color=#406880, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_112111111111[color=#406880, process="!"]:
+  rule (modulo AC) p_1_112111111111[color=#40807f, process="!"]:
      [ !Semistate_1121111111111( prog, signed, shared_key, skV ), Fr( token )
      ]
     --[ Token( token ) ]->
@@ -830,7 +845,7 @@ rule (modulo E) p_1_112111111111[color=#406880, process="!"]:
      ]
   */
 
-rule (modulo E) insencaskxtkntokensharedkey_0_1121111111111111[color=#406880,
+rule (modulo E) insencaskxtkntokensharedkey_0_1121111111111111[color=#40807f,
                                                                process="in(senc(ask(x.2, tkn(token2.1)), =shared_key.2));"]:
    [
    State_1121111111111111( prog.1, signed.1, shared_key.2, skV.2, token.2 ),
@@ -844,7 +859,7 @@ rule (modulo E) insencaskxtkntokensharedkey_0_1121111111111111[color=#406880,
    ]
 
   /*
-  rule (modulo AC) insencaskxtkntokensharedkey_0_1121111111111111[color=#406880,
+  rule (modulo AC) insencaskxtkntokensharedkey_0_1121111111111111[color=#40807f,
                                                                   process="in(senc(ask(x.2, tkn(token2.1)), =shared_key.2));"]:
      [
      State_1121111111111111( prog, signed, shared_key, skV, token ),
@@ -857,7 +872,7 @@ rule (modulo E) insencaskxtkntokensharedkey_0_1121111111111111[color=#406880,
      ]
   */
 
-rule (modulo E) iftkntokentkntoken_0_11211111111111111[color=#406880,
+rule (modulo E) iftkntokentkntoken_0_11211111111111111[color=#40807f,
                                                        process="if tkn(token.2)=tkn(token2.1)"]:
    [
    State_11211111111111111( prog.1, signed.1, token2.1, shared_key.2, skV.2,
@@ -868,7 +883,7 @@ rule (modulo E) iftkntokentkntoken_0_11211111111111111[color=#406880,
    [ Out( senc(ok(x.2, tkn(token.2)), shared_key.2) ) ]
 
   /*
-  rule (modulo AC) iftkntokentkntoken_0_11211111111111111[color=#406880,
+  rule (modulo AC) iftkntokentkntoken_0_11211111111111111[color=#40807f,
                                                           process="if tkn(token.2)=tkn(token2.1)"]:
      [
      State_11211111111111111( prog, signed, token2, shared_key, skV, token, x
@@ -878,7 +893,7 @@ rule (modulo E) iftkntokentkntoken_0_11211111111111111[color=#406880,
      [ Out( senc(ok(x, tkn(token)), shared_key) ) ]
   */
 
-rule (modulo E) iftkntokentkntoken_1_11211111111111111[color=#406880,
+rule (modulo E) iftkntokentkntoken_1_11211111111111111[color=#40807f,
                                                        process="if tkn(token.2)=tkn(token2.1)"]:
    [
    State_11211111111111111( prog.1, signed.1, token2.1, shared_key.2, skV.2,
@@ -889,7 +904,7 @@ rule (modulo E) iftkntokentkntoken_1_11211111111111111[color=#406880,
    [ ]
 
   /*
-  rule (modulo AC) iftkntokentkntoken_1_11211111111111111[color=#406880,
+  rule (modulo AC) iftkntokentkntoken_1_11211111111111111[color=#40807f,
                                                           process="if tkn(token.2)=tkn(token2.1)"]:
      [
      State_11211111111111111( prog, signed, token2, shared_key, skV, token, x
@@ -899,7 +914,7 @@ rule (modulo E) iftkntokentkntoken_1_11211111111111111[color=#406880,
      [ ]
   */
 
-rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#406880,
+rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#40807f,
                                                                        process="if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)"]:
    [ State_112111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   --[
@@ -910,7 +925,7 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#40
    [ ]
 
   /*
-  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#406880,
+  rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#40807f,
                                                                           process="if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)"]:
      [ State_112111111( prog, signed, shared_key, skV ) ]
     --[ Pred_Not_Eq( aenc(shared_key, pk(skV)), z ) ]->
@@ -939,27 +954,40 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule p_1_111: 
+Failed to derive Variable(s): skV.1
+
+Rule insencprgprogsharedkey_0_111111111: 
+Failed to derive Variable(s): prog2.1
+
+Rule p_1_1111111111: 
+Failed to derive Variable(s): token.1
+
+Rule insencaskxtkntokensharedkey_0_1121111111111111: 
+Failed to derive Variable(s): token2.1, x.2
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-locations/licensing.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-locations/licensing.spthy
-
-  output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 4.633126128s
-  attested_comput (all-traces): verified (19 steps)
-  unique (all-traces): verified (104 steps)
-  final (all-traces): verified (44 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -967,7 +995,11 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 4.633126128s
+  processing time: 2.54s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   attested_comput (all-traces): verified (19 steps)
   unique (all-traces): verified (104 steps)
   final (all-traces): verified (44 steps)

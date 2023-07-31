@@ -257,7 +257,7 @@ baseTransComb c an p tildex
         in
         let fa = Conn Imp (Ato (EqE (fmapTerm (fmap Free) t1) (fmapTerm (fmap Free) t2))) (TF False) in
         let tildexl =  freeset t1or `union` tildex in
-        let faN = fold (hinted forall) fa freevars in
+        let faN = fold (hinted forAll) fa freevars in
         let pos = p++[1] in
         if elsBranch then
           ([

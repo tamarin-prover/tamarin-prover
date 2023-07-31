@@ -3,9 +3,12 @@ theory CH07_UK2 begin
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
-functions: fst/1[destructor], h/1, lh/1, pair/2, rh/1, rot/2,
-           snd/1[destructor]
+functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -14,7 +17,7 @@ rule (modulo E) setup:
   --[ OnlyOnce( 'setup' ) ]->
    [
    Transcript( <~k1, ~id1>, 'learning' ),
-   Reader( (<~k1, ~id1>+<~k2, ~id2>), 'guessing' ),
+   Reader( (<~k1, ~id1>++<~k2, ~id2>), 'guessing' ),
    TagRun( diff(<~k1, ~id1>, <~k2, ~id2>), 'guessing' )
    ]
 
@@ -28,7 +31,7 @@ rule (modulo E) transcript:
    ]
 
 rule (modulo E) initiatereader:
-   [ Reader( (d1+d2), phase ), Fr( ~r0 ) ]
+   [ Reader( (d1++d2), phase ), Fr( ~r0 ) ]
   --[ Phase( phase ) ]->
    [ ReaderRun( d1, phase ) ]
 
@@ -116,7 +119,17 @@ solve( Response( x, 'Tag' ) @ #j )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule reader2: 
+Failed to derive Variable(s): hash
+*/
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -1514,7 +1527,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case reader1
       by step( contradiction /* impossible chain */ )
     next
@@ -1554,7 +1567,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case reader1
       by step( contradiction /* impossible chain */ )
     next
@@ -12595,7 +12608,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( Reader( (d1+d2), phase ) ▶₀ #i ) )
+    step( solve( Reader( (d1++d2), phase ) ▶₀ #i ) )
       case setup_case_1
       MIRRORED
     next
@@ -12605,7 +12618,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( Reader( (d1+d2), phase ) ▶₀ #i ) )
+    step( solve( Reader( (d1++d2), phase ) ▶₀ #i ) )
       case setup_case_1
       MIRRORED
     next
@@ -17985,25 +17998,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/CH07-UK2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
-
-  output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 334.441658118s
-  RHS :  executable (exists-trace): verified (5 steps)
-  LHS :  executable (exists-trace): verified (5 steps)
-  DiffLemma:  Observational_equivalence : verified (5973 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -18011,7 +18018,11 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK2.spthy.tmp
-  processing time: 334.441658118s
+  processing time: 60.01s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (5973 steps)

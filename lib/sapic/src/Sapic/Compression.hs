@@ -52,31 +52,30 @@ getConcsRules fact = List.partition  (List.any (sameName fact) . L.get rConcs)
 
 -- Get the list of all state facts produced by a rule
 getProducedFacts :: [Rule ProtoRuleEInfo] -> S.Set (Fact LNTerm)
-getProducedFacts rules =
-  facts
+getProducedFacts rules = facts
   where
     facts = List.foldl (\acc (Rule _ _ rconc _ _) ->
                               List.foldl (flip S.insert) acc (List.filter isStateProcessFact rconc)
                            ) S.empty rules
 
 mergeInfo :: ProtoRuleEInfo -> ProtoRuleEInfo -> ProtoRuleEInfo
-mergeInfo info info2 =
+mergeInfo (ProtoRuleEInfo (StandRule name) attr res) (ProtoRuleEInfo (StandRule name2) attr2 res2) =
   ProtoRuleEInfo (StandRule (mergeStand name name2)) (mergeAttr attr attr2) (res ++ res2)
- where ProtoRuleEInfo (StandRule name ) attr  res  = info
-       ProtoRuleEInfo (StandRule name2) attr2 res2 = info2
+ where
        mergeStand n _ = n  -- ++ "_" ++ n'
        -- NOTE: concatenating makes veryyyy big name rules, that completely make the the graphs unreadble
        -- NOTE: if we reintroduce Yavor's Dot output, recall 9e7e99fe070776172bd09cb977e8d3a83da3ed51
        mergeAttr a a' =  let completeList = a ++ a' in
                             take 1 [i |  i@(RuleColor _) <- completeList]
                          ++ take 1 [i |  i@(Process   _) <- completeList]
+mergeInfo _ _ = error "FreshRule(s) passed to mergeInfo"
 
 
 canMerge  :: Bool -> Rule ProtoRuleEInfo -> Rule ProtoRuleEInfo -> Bool
 canMerge compEvents r1 r2
-  | (any isSapicNoCompress ract) && (any isSapicNoCompress ract2)  = False  -- we cannot merge rules if it makes events be simulataneous
+  | any isSapicNoCompress ract && any isSapicNoCompress ract2  = False  -- we cannot merge rules if it makes events be simulataneous
 
-  | not(compEvents) && (ract /= []) && (ract2 /= [])  = False  -- we cannot merge rules if it makes events be simulataneous
+  | not compEvents && (ract /= []) && (ract2 /= [])  = False  -- we cannot merge rules if it makes events be simulataneous
   | (List.length rprem2' > 1) && (List.length rconc >1) = False   -- we cannot merge rules if we are breaking asynchronous behavior (i.e u->v,w and w,r->t cannot be compress, as r might be produced byi
   | (List.length rconc > 1) && (ract2 /= []) = False   -- we cannot merge rules if we are breaking asynchronous behavior (i.e u->v,w, and v-E->t cannot be compressed, else an event that could have happened with w before E cannot do so anymore.
   | List.any isOutFact rconc && List.any isOutFact rconc2 = False -- we cannot merge rules if two Out become simultaneous (might break the fact that the attacker can know smth and not smth else at a timepoint
@@ -91,7 +90,7 @@ canMerge compEvents r1 r2
 merge:: Bool -> Rule ProtoRuleEInfo -> Rule ProtoRuleEInfo -> S.Set (Rule ProtoRuleEInfo) ->S.Set (Rule ProtoRuleEInfo)
 merge compEvents rule1 rule2 ruleset =
   if canMerge compEvents rule1 rule2 then
-    Rule (mergeInfo rinfo rinfo2) newprem newrconc (List.union ract ract2) (rnew++rnew2) `S.insert` ruleset
+    Rule (mergeInfo rinfo rinfo2) newprem newrconc (ract `List.union` ract2) (rnew++rnew2) `S.insert` ruleset
   else
     rule1 `S.insert` (rule2 `S.insert` ruleset)
   where Rule rinfo rprem rconc ract rnew = rule1
@@ -140,5 +139,5 @@ pathCompression compEvents msr =
   return $ filterDeadend $ compress compEvents [initfact] S.empty msr
   where initfact = Sapic.Facts.factToFact (State LState [] S.empty)
          -- in the end, we remove the useless dangling rules
-        filterDeadend rs = List.filter (\  (Rule _ _ rconc ract _) ->
-                                          not(null ract && null rconc)  ) rs
+        filterDeadend = List.filter (\  (Rule _ _ rconc ract _) ->
+                                          not (null ract && null rconc)  )

@@ -21,6 +21,7 @@ import qualified Extension.Data.Label                as L
 
 import           Theory.Model
 import           Theory.Proof
+import           Theory.Tools.InjectiveFactInstances
 
 ------------------------------------------------------------------------------
 -- Commented sets of rewriting rules
@@ -64,7 +65,7 @@ data ClosedRuleCache = ClosedRuleCache
        { _crcRules               :: ClassifiedRules
        , _crcRawSources          :: [Source]
        , _crcRefinedSources      :: [Source]
-       , _crcInjectiveFactInsts  :: S.Set FactTag
+       , _crcInjectiveFactInsts  :: S.Set (FactTag, [[MonotonicBehaviour]])
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 

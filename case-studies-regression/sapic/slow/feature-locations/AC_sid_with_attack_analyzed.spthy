@@ -2,14 +2,15 @@ theory AC_sid begin
 
 // Function signature and definition of the equational theory E
 
-functions: check_rep/2[destructor], fst/1[destructor],
-           get_rep/1[destructor], list/2, pair/2, prog/3, rep/2[private,destructor],
-           report/1, snd/1[destructor]
+functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
+           pair/2, prog/3, rep/2[private,destructor], report/1, snd/1
 equations:
     check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     get_rep(rep(x.1, x.2)) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -169,6 +170,16 @@ qed
 
 
 
+
+
+
+
+
+
+
+
+
+
 restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'l'))"
   // safety formula
@@ -216,19 +227,19 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) p_1_111111111[color=#405280, process="!"]:
+rule (modulo E) p_1_111111111[color=#408067, process="!"]:
    [ !Semistate_1111111111( init.1, sid.1, state.1 ), Fr( lock ) ]
   --[ Lock_0( '0', lock, state.1 ), Lock( '0', lock, state.1 ) ]->
    [ State_11111111111( lock, init.1, sid.1, state.1 ) ]
 
   /*
-  rule (modulo AC) p_1_111111111[color=#405280, process="!"]:
+  rule (modulo AC) p_1_111111111[color=#408067, process="!"]:
      [ !Semistate_1111111111( init, sid, state ), Fr( lock ) ]
     --[ Lock_0( '0', lock, state ), Lock( '0', lock, state ) ]->
      [ State_11111111111( lock, init, sid, state ) ]
   */
 
-rule (modulo E) lookupstateasipo_0_11111111111[color=#405280,
+rule (modulo E) lookupstateasipo_0_11111111111[color=#408067,
                                                process="lookup state.1 as ipo.1"]:
    [
    State_11111111111( lock, init.1, sid.1, state.1 ), In( ip.1 ), Fr( r.1 )
@@ -238,14 +249,14 @@ rule (modulo E) lookupstateasipo_0_11111111111[color=#405280,
    ]
 
   /*
-  rule (modulo AC) lookupstateasipo_0_11111111111[color=#405280,
+  rule (modulo AC) lookupstateasipo_0_11111111111[color=#408067,
                                                   process="lookup state.1 as ipo.1"]:
      [ State_11111111111( lock, init, sid, state ), In( ip ), Fr( r ) ]
     --[ IsIn( state, ipo ) ]->
      [ State_11111111111111( lock, init, ip, ipo, r, sid, state ) ]
   */
 
-rule (modulo E) eventPoutputprogripipoipipo_0_11111111111111[color=#405280,
+rule (modulo E) eventPoutputprogripipoipipo_0_11111111111111[color=#408067,
                                                              process="event Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> );"]:
    [ State_11111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
    ]
@@ -258,7 +269,7 @@ rule (modulo E) eventPoutputprogripipoipipo_0_11111111111111[color=#405280,
    ]
 
   /*
-  rule (modulo AC) eventPoutputprogripipoipipo_0_11111111111111[color=#405280,
+  rule (modulo AC) eventPoutputprogripipoipipo_0_11111111111111[color=#408067,
                                                                 process="event Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> );"]:
      [ State_11111111111111( lock, init, ip, ipo, r, sid, state ) ]
     --[ Poutput( <prog(r, ip, ipo), ip, ipo> ) ]->
@@ -268,7 +279,7 @@ rule (modulo E) eventPoutputprogripipoipipo_0_11111111111111[color=#405280,
      ]
   */
 
-rule (modulo E) insertstateprogripipolistipipo_0_1111111111111111[color=#405280,
+rule (modulo E) insertstateprogripipolistipipo_0_1111111111111111[color=#408067,
                                                                   process="insert state.1,<prog(r.1, ip.1, ipo.1), list(ip.1, ipo.1)>;"]:
    [
    State_1111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
@@ -279,14 +290,14 @@ rule (modulo E) insertstateprogripipolistipipo_0_1111111111111111[color=#405280,
    ]
 
   /*
-  rule (modulo AC) insertstateprogripipolistipipo_0_1111111111111111[color=#405280,
+  rule (modulo AC) insertstateprogripipolistipipo_0_1111111111111111[color=#408067,
                                                                      process="insert state.1,<prog(r.1, ip.1, ipo.1), list(ip.1, ipo.1)>;"]:
      [ State_1111111111111111( lock, init, ip, ipo, r, sid, state ) ]
     --[ Insert( state, <prog(r, ip, ipo), list(ip, ipo)> ) ]->
      [ State_11111111111111111( lock, init, ip, ipo, r, sid, state ) ]
   */
 
-rule (modulo E) unlockstate_0_11111111111111111[color=#405280,
+rule (modulo E) unlockstate_0_11111111111111111[color=#408067,
                                                 process="unlock state.1;"]:
    [
    State_11111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
@@ -295,21 +306,21 @@ rule (modulo E) unlockstate_0_11111111111111111[color=#405280,
    [ ]
 
   /*
-  rule (modulo AC) unlockstate_0_11111111111111111[color=#405280,
+  rule (modulo AC) unlockstate_0_11111111111111111[color=#408067,
                                                    process="unlock state.1;"]:
      [ State_11111111111111111( lock, init, ip, ipo, r, sid, state ) ]
     --[ Unlock_0( '0', lock, state ), Unlock( '0', lock, state ) ]->
      [ ]
   */
 
-rule (modulo E) lookupstateasipo_1_11111111111[color=#405280,
+rule (modulo E) lookupstateasipo_1_11111111111[color=#408067,
                                                process="lookup state.1 as ipo.1"]:
    [ State_11111111111( lock, init.1, sid.1, state.1 ) ]
   --[ IsNotSet( state.1 ) ]->
    [ ]
 
   /*
-  rule (modulo AC) lookupstateasipo_1_11111111111[color=#405280,
+  rule (modulo AC) lookupstateasipo_1_11111111111[color=#408067,
                                                   process="lookup state.1 as ipo.1"]:
      [ State_11111111111( lock, init, sid, state ) ]
     --[ IsNotSet( state ) ]->
@@ -352,14 +363,14 @@ rule (modulo E) p_1_112111[color=#ffffff, process="!"]:
      [ State_112111111( init, r_sid, sid, state ) ]
   */
 
-rule (modulo E) ifsidcheckreprsidl_0_112111111[color=#658040,
+rule (modulo E) ifsidcheckreprsidl_0_112111111[color=#408052,
                                                process="if sid.2=check_rep(r_sid.2, 'l')"]:
    [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
   --[ Pred_Eq( sid.2, check_rep(r_sid.2, 'l') ) ]->
    [ !Semistate_11211111111( init.1, r_sid.2, sid.2, state.2 ) ]
 
   /*
-  rule (modulo AC) ifsidcheckreprsidl_0_112111111[color=#658040,
+  rule (modulo AC) ifsidcheckreprsidl_0_112111111[color=#408052,
                                                   process="if sid.2=check_rep(r_sid.2, 'l')"]:
      [ State_112111111( init, r_sid, sid, state ) ]
     --[ Pred_Eq( sid, z ) ]->
@@ -372,20 +383,20 @@ rule (modulo E) ifsidcheckreprsidl_0_112111111[color=#658040,
        z     = x.8
   */
 
-rule (modulo E) p_1_1121111111[color=#658040, process="!"]:
+rule (modulo E) p_1_1121111111[color=#408052, process="!"]:
    [ !Semistate_11211111111( init.1, r_sid.2, sid.2, state.2 ), Fr( lock.1 )
    ]
   --[ Lock_1( '1', lock.1, state.2 ), Lock( '1', lock.1, state.2 ) ]->
    [ State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
 
   /*
-  rule (modulo AC) p_1_1121111111[color=#658040, process="!"]:
+  rule (modulo AC) p_1_1121111111[color=#408052, process="!"]:
      [ !Semistate_11211111111( init, r_sid, sid, state ), Fr( lock ) ]
     --[ Lock_1( '1', lock, state ), Lock( '1', lock, state ) ]->
      [ State_112111111111( init, lock, r_sid, sid, state ) ]
   */
 
-rule (modulo E) lookupstateasipo_0_112111111111[color=#658040,
+rule (modulo E) lookupstateasipo_0_112111111111[color=#408052,
                                                 process="lookup state.2 as ipo.2"]:
    [
    State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ),
@@ -399,7 +410,7 @@ rule (modulo E) lookupstateasipo_0_112111111111[color=#658040,
    ]
 
   /*
-  rule (modulo AC) lookupstateasipo_0_112111111111[color=#658040,
+  rule (modulo AC) lookupstateasipo_0_112111111111[color=#408052,
                                                    process="lookup state.2 as ipo.2"]:
      [
      State_112111111111( init, lock, r_sid, sid, state ), In( ip ),
@@ -413,7 +424,7 @@ rule (modulo E) lookupstateasipo_0_112111111111[color=#658040,
      ]
   */
 
-rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#658040,
+rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#408052,
                                                              process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')"]:
    [
    State_112111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
@@ -428,7 +439,7 @@ rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#658040,
    ]
 
   /*
-  rule (modulo AC) ifoipsidcheckrepsignediosl_0_112111111111111[color=#658040,
+  rule (modulo AC) ifoipsidcheckrepsignediosl_0_112111111111111[color=#408052,
                                                                 process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')"]:
      [
      State_112111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
@@ -451,7 +462,7 @@ rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#658040,
        z     = x.13
   */
 
-rule (modulo E) eventVoutputoipipo_0_1121111111111111[color=#658040,
+rule (modulo E) eventVoutputoipipo_0_1121111111111111[color=#408052,
                                                       process="event Voutput( <o.2, ip.2, ipo.2> );"]:
    [
    State_1121111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
@@ -466,7 +477,7 @@ rule (modulo E) eventVoutputoipipo_0_1121111111111111[color=#658040,
    ]
 
   /*
-  rule (modulo AC) eventVoutputoipipo_0_1121111111111111[color=#658040,
+  rule (modulo AC) eventVoutputoipipo_0_1121111111111111[color=#408052,
                                                          process="event Voutput( <o.2, ip.2, ipo.2> );"]:
      [
      State_1121111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
@@ -481,7 +492,7 @@ rule (modulo E) eventVoutputoipipo_0_1121111111111111[color=#658040,
      ]
   */
 
-rule (modulo E) insertstateolistipipo_0_11211111111111111[color=#658040,
+rule (modulo E) insertstateolistipipo_0_11211111111111111[color=#408052,
                                                           process="insert state.2,<o.2, list(ip.2, ipo.2)>;"]:
    [
    State_11211111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
@@ -496,7 +507,7 @@ rule (modulo E) insertstateolistipipo_0_11211111111111111[color=#658040,
    ]
 
   /*
-  rule (modulo AC) insertstateolistipipo_0_11211111111111111[color=#658040,
+  rule (modulo AC) insertstateolistipipo_0_11211111111111111[color=#408052,
                                                              process="insert state.2,<o.2, list(ip.2, ipo.2)>;"]:
      [
      State_11211111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
@@ -511,7 +522,7 @@ rule (modulo E) insertstateolistipipo_0_11211111111111111[color=#658040,
      ]
   */
 
-rule (modulo E) unlockstate_0_112111111111111111[color=#658040,
+rule (modulo E) unlockstate_0_112111111111111111[color=#408052,
                                                  process="unlock state.2;"]:
    [
    State_112111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
@@ -522,7 +533,7 @@ rule (modulo E) unlockstate_0_112111111111111111[color=#658040,
    [ ]
 
   /*
-  rule (modulo AC) unlockstate_0_112111111111111111[color=#658040,
+  rule (modulo AC) unlockstate_0_112111111111111111[color=#408052,
                                                     process="unlock state.2;"]:
      [
      State_112111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
@@ -533,7 +544,7 @@ rule (modulo E) unlockstate_0_112111111111111111[color=#658040,
      [ ]
   */
 
-rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#658040,
+rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#408052,
                                                              process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')"]:
    [
    State_112111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
@@ -548,7 +559,7 @@ rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#658040,
    ]
 
   /*
-  rule (modulo AC) ifoipsidcheckrepsignediosl_1_112111111111111[color=#658040,
+  rule (modulo AC) ifoipsidcheckrepsignediosl_1_112111111111111[color=#408052,
                                                                 process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')"]:
      [
      State_112111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
@@ -571,7 +582,7 @@ rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#658040,
        z     = x.13
   */
 
-rule (modulo E) eventFail_0_1121111111111112[color=#658040,
+rule (modulo E) eventFail_0_1121111111111112[color=#408052,
                                              process="event Fail( );"]:
    [
    State_1121111111111112( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
@@ -582,7 +593,7 @@ rule (modulo E) eventFail_0_1121111111111112[color=#658040,
    [ ]
 
   /*
-  rule (modulo AC) eventFail_0_1121111111111112[color=#658040,
+  rule (modulo AC) eventFail_0_1121111111111112[color=#408052,
                                                 process="event Fail( );"]:
      [
      State_1121111111111112( init, lock, signedios, ip, ipo, o, r_sid, sid,
@@ -593,28 +604,28 @@ rule (modulo E) eventFail_0_1121111111111112[color=#658040,
      [ ]
   */
 
-rule (modulo E) lookupstateasipo_1_112111111111[color=#658040,
+rule (modulo E) lookupstateasipo_1_112111111111[color=#408052,
                                                 process="lookup state.2 as ipo.2"]:
    [ State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
   --[ IsNotSet( state.2 ) ]->
    [ ]
 
   /*
-  rule (modulo AC) lookupstateasipo_1_112111111111[color=#658040,
+  rule (modulo AC) lookupstateasipo_1_112111111111[color=#408052,
                                                    process="lookup state.2 as ipo.2"]:
      [ State_112111111111( init, lock, r_sid, sid, state ) ]
     --[ IsNotSet( state ) ]->
      [ ]
   */
 
-rule (modulo E) ifsidcheckreprsidl_1_112111111[color=#658040,
+rule (modulo E) ifsidcheckreprsidl_1_112111111[color=#408052,
                                                process="if sid.2=check_rep(r_sid.2, 'l')"]:
    [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
   --[ Pred_Not_Eq( sid.2, check_rep(r_sid.2, 'l') ) ]->
    [ ]
 
   /*
-  rule (modulo AC) ifsidcheckreprsidl_1_112111111[color=#658040,
+  rule (modulo AC) ifsidcheckreprsidl_1_112111111[color=#408052,
                                                   process="if sid.2=check_rep(r_sid.2, 'l')"]:
      [ State_112111111( init, r_sid, sid, state ) ]
     --[ Pred_Not_Eq( sid, z ) ]->
@@ -684,25 +695,34 @@ restriction locking_1:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule lookupstateasipo_0_11111111111: 
+Failed to derive Variable(s): ipo.1
+
+Rule lookupstateasipo_0_112111111111: 
+Failed to derive Variable(s): ipo.2
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
-
-  output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 77.497069458s
-  attested_comput (exists-trace): verified (31 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -710,7 +730,11 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 77.497069458s
+  processing time: 27.22s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   attested_comput (exists-trace): verified (31 steps)
 
 ==============================================================================

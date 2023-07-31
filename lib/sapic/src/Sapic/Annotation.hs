@@ -85,15 +85,17 @@ mayMerge Nothing Nothing = Nothing
 
 instance Monoid (ProcessAnnotation v) where
     mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True False mempty Nothing
-    mappend p1 p2 = ProcessAnnotation
-        (parsingAnn p1 `mappend` parsingAnn p2)
-        (lock p1 `mappend` lock p2)
-        (unlock p1 `mappend` unlock p2)
-        (secretChannel p1 `mappend` secretChannel p2)
+
+instance Semigroup (ProcessAnnotation v) where
+  (<>)  p1 p2 = ProcessAnnotation
+        (parsingAnn p1 <> parsingAnn p2)
+        (lock p1 <> lock p2)
+        (unlock p1 <> unlock p2)
+        (secretChannel p1 <> secretChannel p2)
         (mayMerge (destructorEquation p1) (destructorEquation p2))
         (elseBranch p2)
         (pureState p1 || pureState p2)
-        (stateChannel p1 `mappend` stateChannel p2)
+        (stateChannel p1 <> stateChannel p2)
         (mayMerge (isStateChannel p1) (isStateChannel p2))
 
 getProcessNames :: GoodAnnotation ann => ann -> [String]
@@ -102,18 +104,16 @@ getProcessNames = processnames . getProcessParsedAnnotation
 setProcessNames :: GoodAnnotation a => [String] -> a -> a
 setProcessNames pn = mappendProcessParsedAnnotation (mempty {processnames = pn})
 
-
-instance Semigroup (ProcessAnnotation v) where
-    (<>) =  mappend
-
 instance (Apply s SapicTerm) => (Apply s (ProcessAnnotation v)) where
     apply = applyAnn
 
-newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
-    deriving (Typeable, Monoid,Semigroup,Show)
+-- newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
+--     deriving (Typeable, Monoid,Semigroup,Show)
 
-data AnProcess ann = AnProcess (LProcess ann)
+newtype AnProcess ann = AnProcess (LProcess ann)
     deriving (Typeable, Show)
+
+type AnnotatedProcess = LProcess (ProcessAnnotation LVar)
 
 -- This instance is useful for modifying annotations, but not for much more.
 instance Functor AnProcess where
@@ -153,4 +153,4 @@ toAnProcess = unAnProcess . fmap f . AnProcess
 toProcess :: GoodAnnotation an => LProcess an -> PlainProcess
 toProcess = unAnProcess . fmap f . AnProcess
     where
-        f l = getProcessParsedAnnotation l
+        f = getProcessParsedAnnotation

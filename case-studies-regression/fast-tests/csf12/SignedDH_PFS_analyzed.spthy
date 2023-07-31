@@ -3,12 +3,13 @@ theory SignedDH_PFS begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], pair/2, pk/1, sign/2, snd/1[destructor],
-           true/0, verify/3[destructor]
+functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
 
 
 
@@ -83,6 +84,9 @@ rule (modulo E) Init_2:
     6. ~ekI  = ~ekI.12
        Y     = x.18^(x.19*inv((~ekI.12*x.20)))
        z     = x.18^(x.19*inv(x.20))
+    
+    7. Y     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) Resp:
@@ -125,6 +129,9 @@ rule (modulo E) Resp:
     6. ~ekR  = ~ekR.66
        X     = x.126^(x.127*inv((~ekR.66*x.128)))
        z     = x.126^(x.127*inv(x.128))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 lemma Perfect_Forward_Secrecy:
@@ -207,25 +214,48 @@ next
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Init_2: 
+Failed to derive Variable(s): ltkR
+
+Rule Resp: 
+Failed to derive Variable(s): ltkI
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf12/SignedDH_PFS.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf12/SignedDH_PFS.spthy
-
-  output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.568179352s
-  Perfect_Forward_Secrecy (all-traces): verified (23 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -233,7 +263,11 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.568179352s
+  processing time: 0.34s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   Perfect_Forward_Secrecy (all-traces): verified (23 steps)
 
 ==============================================================================

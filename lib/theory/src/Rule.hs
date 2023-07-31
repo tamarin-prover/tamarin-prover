@@ -27,6 +27,7 @@ import           Theory.Tools.RuleVariants
 import           Theory.Tools.IntruderRules
 
 import           Term.Positions
+import           Term.Macro
 import Theory.Constraint.Solver.Sources (IntegerParameters)
 
 
@@ -90,9 +91,11 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
 
 -- | Close a protocol rule; i.e., compute AC variant and source assertion
 -- soundness sequent, if required.
-closeProtoRule :: MaudeHandle -> OpenProtoRule -> [ClosedProtoRule]
-closeProtoRule hnd (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd ruE)]
-closeProtoRule _   (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
+closeProtoRule :: MaudeHandle -> [Macro] -> OpenProtoRule -> [ClosedProtoRule]
+-- if there are no macros, we do not call applyMacroInRule to make sure that new vars are not overwritten (important for diff mode)
+closeProtoRule hnd []     (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd ruE)]
+closeProtoRule hnd macros (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd (applyMacroInRule macros ruE))]
+closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
 
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
 --   Should be parallelized like the variant computation for protocol rules (JD)
@@ -121,21 +124,29 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> SignatureWithMaude -- ^ Signature of theory.
                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
+               -> Bool               -- ^ Verbose option
                -> Bool               -- ^ Diff or not
+               -> Bool               -- ^ isSapic or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
     ctxt0 = ProofContext
-        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing
+        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing 
         (error "closeRuleCache: trace quantifier should not matter here")
-        (error "closeRuleCache: lemma name should not matter here") [] isdiff
+        (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
+        isSapic
 
+    -- Maude handle
+    hnd = L.get sigmMaudeHandle sig
+    reducibles = reducibleFunSyms $ mhMaudeSig hnd
+
+    forcedInjFacts' = S.map (\x -> (x, replicate (factTagArity x) [Unspecified])) forcedInjFacts
     -- inj fact instances
-    injFactInstances = forcedInjFacts `S.union`
-        simpleInjectiveFactInstances (L.get cprRuleE <$> protoRules)
+    injFactInstances = forcedInjFacts' `S.union`
+        simpleInjectiveFactInstances reducibles (L.get cprRuleE <$> protoRules)
 
     -- precomputing the case distinctions: we make sure to only add safety
     -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
@@ -143,9 +154,6 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
     safetyRestrictions = filter isSafetyFormula restrictions
     rawSources         = precomputeSources parameters ctxt0 safetyRestrictions
     refinedSources     = refineWithSourceAsms parameters typAsms ctxt0 rawSources
-
-    -- Maude handle
-    hnd = L.get sigmMaudeHandle sig
 
     -- close intruder rules
     intrRulesAC = concat $ map (closeIntrRule hnd) intrRules

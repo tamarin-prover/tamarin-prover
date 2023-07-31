@@ -3,8 +3,10 @@ theory Chen_Kudla begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing
-functions: fst/1[destructor], h/1, hp/1, kdf/1, pair/2, snd/1[destructor]
+functions: fst/1, h/1, hp/1, kdf/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -511,25 +513,43 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Reveal_session_key: 
+Failed to derive Variable(s): sek
+
+Rule Init_2: 
+Failed to derive Variable(s): ~s1, ~s2
+
+Rule Resp_1: 
+Failed to derive Variable(s): ~msk
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/bilinear/Chen_Kudla_eCK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
-
-  output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 55.372479208s
-  key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -537,7 +557,11 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 55.372479208s
+  processing time: 22.66s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ==============================================================================

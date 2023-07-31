@@ -79,11 +79,10 @@ import           Logic.Connectives
 import           Theory
 import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
-import           Theory.Tools.Wellformedness
+import           TheoryObject
 
 import           Web.Settings
 import           Web.Types
-import qualified Accountability.Generation as Acc
 
 ------------------------------------------------------------------------------
 -- Various other functions
@@ -100,12 +99,14 @@ applyMethodAtPath thy lemmaName proofPath prover i = do
         sys   = psInfo (root subProof)
         heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
+        tactic = selectTactic prover ctxt
+    methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPath thy lemmaName proofPath
-      (oneStepProver method                        `mappend`
-       replaceSorryProver (oneStepProver Simplify) `mappend`
-       replaceSorryProver (contradictionProver)    `mappend`
+      (oneStepProver method                            `mappend`
+       replaceSorryProver (oneStepProver Simplify)     `mappend`
+       replaceSorryProver (contradictionProver)        `mappend`
+       replaceSorryProver (oneStepProver Unfinishable) `mappend`
        replaceSorryProver (oneStepProver Solved)
       )
 
@@ -120,12 +121,14 @@ applyMethodAtPathDiff thy s lemmaName proofPath prover i = do
         sys   = psInfo (root subProof)
         heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankProofMethods ranking ctxt) <$> sys
+        tactic = selectTactic prover ctxt
+    methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPathDiff thy s lemmaName proofPath
-      (oneStepProver method                        `mappend`
-       replaceSorryProver (oneStepProver Simplify) `mappend`
-       replaceSorryProver (contradictionProver)    `mappend`
+      (oneStepProver method                            `mappend`
+       replaceSorryProver (oneStepProver Simplify)     `mappend`
+       replaceSorryProver (contradictionProver)        `mappend`
+       replaceSorryProver (oneStepProver Unfinishable) `mappend`
        replaceSorryProver (oneStepProver Solved)
       )
 
@@ -140,13 +143,15 @@ applyDiffMethodAtPath thy lemmaName proofPath prover i = do
         sys   = dpsInfo (root subProof)
         heuristic = selectDiffHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
-    methods <- (map fst . rankDiffProofMethods ranking ctxt) <$> sys
+        tactic = selectDiffTactic prover ctxt
+    methods <- (map fst . rankDiffProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyDiffProverAtPath thy lemmaName proofPath
       (oneStepDiffProver method                        `mappend`
        replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify)) `mappend`
        replaceDiffSorryProver (contradictionDiffProver)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)
+       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)    `mappend`
+       replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
@@ -210,7 +215,7 @@ preformatted cl = withTag "div" [("class", classes cl)]
 proofIndex :: HtmlDocument d
            => RenderUrl
            -> (ProofPath -> Route WebUI)         -- ^ Relative addressing function
-           -> Proof (Maybe System, Maybe Bool) -- ^ The annotated incremental proof
+           -> Proof (Maybe System, ProofStepColor) -- ^ The annotated incremental proof
            -> d
 proofIndex renderUrl mkRoute =
     prettyProofWith ppStep ppCase . insertPaths
@@ -219,10 +224,11 @@ proofIndex renderUrl mkRoute =
 
     ppStep step =
            case fst $ psInfo step of
-               (Nothing, _)    -> superfluousStep
-               (_, Nothing)    -> stepLink ["sorry-step"]
-               (_, Just True)  -> stepLink ["hl_good"]
-               (_, Just False) -> stepLink ["hl_bad"]
+               (Nothing, _)  -> superfluousStep
+               (_, Unmarked) -> stepLink ["sorry-step"]
+               (_, Green)    -> stepLink ["hl_good"]
+               (_, Yellow)   -> stepLink ["hl_medium"]
+               (_, Red)      -> stepLink ["hl_bad"]
         <> case psMethod step of
                Sorry _ -> emptyDoc
                _       -> removeStep
@@ -241,7 +247,7 @@ proofIndex renderUrl mkRoute =
 diffProofIndex :: HtmlDocument d
            => RenderUrl
            -> (ProofPath -> Route WebUI)          -- ^ Relative addressing function
-           -> DiffProof (Maybe DiffSystem, Maybe Bool) -- ^ The annotated incremental proof
+           -> DiffProof (Maybe DiffSystem, ProofStepColor) -- ^ The annotated incremental proof
            -> d
 diffProofIndex renderUrl mkRoute =
     prettyDiffProofWith ppStep ppCase . insertPathsDiff
@@ -250,10 +256,11 @@ diffProofIndex renderUrl mkRoute =
 
     ppStep step =
            case fst $ dpsInfo step of
-               (Nothing, _)    -> superfluousStep
-               (_, Nothing)    -> stepLink ["sorry-step"]
-               (_, Just True)  -> stepLink ["hl_good"]
-               (_, Just False) -> stepLink ["hl_bad"]
+               (Nothing, _)  -> superfluousStep
+               (_, Unmarked) -> stepLink ["sorry-step"]
+               (_, Green)    -> stepLink ["hl_good"]
+               (_, Yellow)   -> stepLink ["hl_medium"]
+               (_, Red)      -> stepLink ["hl_bad"]
         <> case dpsMethod step of
                DiffSorry _ -> emptyDoc
                _           -> removeStep
@@ -368,6 +375,8 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     , text ""
     , ruleLink
     , text ""
+    , tacticLink
+    , text ""
     , reqCasesLink "Raw sources" RawSource
     , text ""
     , reqCasesLink "Refined sources " RefinedSource
@@ -397,6 +406,7 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     ruleLink            = overview ruleLinkMsg rulesInfo TheoryRules
     ruleLinkMsg         = "Multiset rewriting rules" ++
                           if null(theoryRestrictions thy) then "" else " and restrictions"
+    tacticLink          = overview "Tactic(s)" (text "") TheoryTactic
 
     reqCasesLink name k = overview name (casesInfo k) (TheorySource k 0 0)
 
@@ -522,7 +532,8 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         subCases
   where
     prettyApplicableProofMethods sys = case proofMethods sys of
-        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        [] | finishedSubterms ctxt sys  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        []                              -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
@@ -574,7 +585,8 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectHeuristic (tiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    proofMethods            = rankProofMethods ranking ctxt
+    tactic                 = selectTactic (tiAutoProver ti) ctxt
+    proofMethods            = rankProofMethods ranking tactic ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -613,7 +625,8 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
         subCases
   where
     prettyApplicableProofMethods sys = case proofMethods sys of
-        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        [] | finishedSubterms ctxt sys  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        []                              -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
@@ -666,7 +679,8 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectHeuristic (dtiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    proofMethods            = rankProofMethods ranking ctxt
+    tactic                 = selectTactic (dtiAutoProver ti) ctxt
+    proofMethods            = rankProofMethods ranking tactic ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -705,9 +719,12 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         ] ++
         subCases
   where
-    prettyApplicableDiffProofMethods sys = case diffProofMethods sys of
-        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
-        pms ->
+    prettyApplicableDiffProofMethods sys = case (diffProofMethods sys, get dsSide sys, get dsSystem sys) of
+        ([], Nothing, _)                                                                  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], _, Nothing)                                                                  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], Just side, Just sys') | finishedSubterms (eitherProofContext ctxt side) sys' -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], _, _)                                                                           -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
+        (pms, _, _) ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
@@ -725,12 +742,17 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
            then [ text "", withTag "h3" [] (text "mirror:") ] ++
                 [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
                 [ text "" ]
-           else if dpsMethod (root prf) == DiffAttack
-                then [ text "", withTag "h3" [] (text "attack:") ] ++
-                        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
-                        [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirror graphs violates a restriction, this graph is shown.)" ] ++
-                        [ text "" ]
-                else []
+        else if dpsMethod (root prf) == DiffAttack
+           then [ text "", withTag "h3" [] (text "attack:") ] ++
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirror graphs violates a restriction, this graph is shown.)" ] ++
+                [ text "" ]
+        else if dpsMethod (root prf) == DiffUnfinishable
+           then [ text "", withTag "h3" [] (text "mirror:") ] ++
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "The proof cannot be finished as there are reducible operators at the top of subterms in the subterm store." ] ++
+                [ text "" ]
+           else []
 
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
@@ -771,7 +793,8 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
     depth                   = length proofPath
     heuristic               = selectDiffHeuristic (dtiAutoProver ti) ctxt
     ranking                 = useHeuristic heuristic depth
-    diffProofMethods        = rankDiffProofMethods ranking ctxt
+    tactic                 = selectDiffTactic (dtiAutoProver ti) ctxt
+    diffProofMethods        = rankDiffProofMethods ranking tactic ctxt
     subCases                = concatMap refSubCase $ M.toList $ children prf
     refSubCase (name, prf') =
         [ withTag "h4" [] (text "Case" <-> text name)
@@ -850,16 +873,24 @@ reqCasesDiffSnippet renderUrl tidx s kind isdiff thy = vcat $
 -- | Build the Html document showing the rules of the theory.
 rulesSnippet :: HtmlDocument d => ClosedTheory -> d
 rulesSnippet thy = vcat
-    [ ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showFactTagArity) injFacts
+    [ if null(theoryMacros thy) then text empty
+                                else ppWithHeader "Macros" $ 
+        (prettyMacros $ theoryMacros thy)
+    , ppWithHeader "Fact Symbols with Injective Instances" $
+        fsepList (text . showInjFact) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
-        vsep $ map prettyRuleAC msrRules
+        (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
         vsep $ map prettyRestriction $ theoryRestrictions thy
     ]
   where
     msrRules   = get crProtocol $ getClassifiedRules thy
     injFacts   = S.toList $ getInjectiveFactInsts thy
+    showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ concat (intersperse "," ("id":positions)) ++ ")"
+      where positions = [case bb of
+                          [b] -> show b
+                          _   -> "(" ++ concat (intersperse "," (map show bb)) ++ ")"
+                        | bb <- behaviours ]
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -876,6 +907,15 @@ messageSnippet thy = vcat
     ]
   where
     ppRules l = map prettyRuleAC $ get l $ getClassifiedRules thy
+    ppSection header s =
+      withTag "h2" [] (text header) $$ withTag "p"
+        [("class","monospace rules")]
+        (vcat (intersperse (text "") $ s))
+
+-- | Build the Html document showing the message theory.
+tacticSnippet :: HtmlDocument d => ClosedTheory -> d
+tacticSnippet thy = ppSection "Tactic(s)" (map prettyTactic $ get thyTactic thy)
+  where
     ppSection header s =
       withTag "h2" [] (text header) $$ withTag "p"
         [("class","monospace rules")]
@@ -899,16 +939,24 @@ rulesDiffSnippet thy = vcat
 -- | Build the Html document showing the either rules of the diff theory.
 rulesDiffSnippetSide :: HtmlDocument d => Side -> Bool -> ClosedDiffTheory -> d
 rulesDiffSnippetSide s isdiff thy = vcat
-    [ ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showFactTagArity) injFacts
+    [ if null(diffTheoryMacros thy) then text empty
+                                     else ppWithHeader "Macros" $
+        (prettyMacros $ diffTheoryMacros thy)
+    ,ppWithHeader "Fact Symbols with Injective Instances" $
+        fsepList (text . showInjFact) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
-        vsep $ map prettyRuleAC msrRules
+        (if null(diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
         vsep $ map prettyRestriction $ diffTheorySideRestrictions s thy
     ]
   where
     msrRules = get crProtocol $ getDiffClassifiedRules s isdiff thy
     injFacts = S.toList $ getDiffInjectiveFactInsts s isdiff thy
+    showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ concat (intersperse "," ("id":positions)) ++ ")"
+      where positions = [case bb of
+                          [b] -> show b
+                          _   -> "(" ++ concat (intersperse "," (map show bb)) ++ ")"
+                        | bb <- behaviours ]
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -935,9 +983,9 @@ messageDiffSnippet s isdiff thy = vcat
 htmlThyPath :: RenderUrl    -- ^ The function for rendering Urls.
             -> TheoryInfo   -- ^ The info of the theory to render
             -> TheoryPath   -- ^ Path to render
-            -> Html
+            ->  Html
 htmlThyPath renderUrl info path =
-    go path
+  go path
   where
     thy  = tiTheory info
     tidx = tiIndex  info
@@ -952,6 +1000,7 @@ htmlThyPath renderUrl info path =
 
     go TheoryRules             = pp $ rulesSnippet thy
     go TheoryMessage           = pp $ messageSnippet thy
+    go TheoryTactic            = pp $ tacticSnippet thy 
     go (TheorySource kind _ _) = pp $ reqCasesSnippet renderUrl tidx kind thy
 
     go (TheoryProof l p)       = pp $
@@ -962,13 +1011,14 @@ htmlThyPath renderUrl info path =
 
     go (TheoryLemma _)         = pp $ text "Implement lemma pretty printing!"
 
-    go TheoryHelp              = [hamlet|
+    go TheoryHelp              = do
+      [hamlet|
         $newline never
         <p>
           Theory: #{get thyName $ tiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ tiTime info}
           \ from #{show $ tiOrigin info})
-          \ #{preEscapedToMarkup wfErrors}
+          \ #{preEscapedToMarkup infoErrors}
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -1046,17 +1096,21 @@ htmlThyPath renderUrl info path =
                 \ selected to work.
             <tr>
               <td>
+                <span class="keys">s/S
+              <td>
+                Apply the autoprove method to all lemmas.
+                \ <span class="keys">s</span>
+                \ stops after finding a solution, and
+                \ <span class="keys">S</span>
+                \ searches for all solutions.
+            <tr>
+              <td>
                 <span class="keys">?
               <td>
                 Display this help message.
       |] renderUrl
          where
-             wfErrors = case report of
-                             [] -> ""
-                             _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-
-             report = checkWellformedness (removeTranslationItems (openTheory thy)) (get thySignature thy)
-                   ++ Acc.checkWellformedness (openTheory thy) -- FIXME: openTheory doesn't contain translated items, hence no warning is shown in the interactive mode
+             infoErrors = tiErrorsHtml info
 
 -- | Render the item in the given theory given by the supplied path.
 htmlDiffThyPath :: RenderUrl    -- ^ The function for rendering Urls.
@@ -1105,7 +1159,7 @@ htmlDiffThyPath renderUrl info path =
           Theory: #{get diffThyName $ dtiTheory info}
           \ (Loaded at #{formatTime defaultTimeLocale "%T" $ dtiTime info}
           \ from #{show $ dtiOrigin info})
-          \ #{preEscapedToMarkup wfErrors}
+          \ #{preEscapedToMarkup infoErrors}
         <div id="help">
           <h3>Quick introduction
           <noscript>
@@ -1183,17 +1237,21 @@ htmlDiffThyPath renderUrl info path =
                 \ selected to work.
             <tr>
               <td>
+                <span class="keys">s/S
+              <td>
+                Apply the autoprove method to all lemmas.
+                \ <span class="keys">s</span>
+                \ stops after finding a solution, and
+                \ <span class="keys">S</span>
+                \ searches for all solutions.
+            <tr>
+              <td>
                 <span class="keys">?
               <td>
                 Display this help message.
       |] renderUrl
          where
-             wfErrors = case report of
-                             [] -> ""
-                             _  -> "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-             report = checkWellformednessDiff (openDiffTheory thy) (get diffThySignature thy)
-
-
+             infoErrors = dtiErrorsHtml info
 
 {-
 -- | Render debug information for the item in the theory given by the path.
@@ -1393,7 +1451,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
             lem <- lookupDiffLemma lemma thy
             let ctxt = getDiffProofContext lem thy
             side <- get dsSide diffSequent
-            let isSolved s sys' = (rankProofMethods GoalNrRanking (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
+            let isSolved s sys' = (rankProofMethods GoalNrRanking [defaultTactic] (eitherProofContext ctxt s) sys') == [] -- checks if the system is solved
             nsequent <- get dsSystem diffSequent
             -- Here we can potentially get Nothing if there is no mirror DG
             let sequentList = snd $ getMirrorDGandEvaluateRestrictions ctxt diffSequent (isSolved side nsequent)
@@ -1461,6 +1519,7 @@ titleThyPath thy path = go path
     go TheoryHelp                       = "Theory: " ++ get thyName thy
     go TheoryRules                      = "Multiset rewriting rules and restrictions"
     go TheoryMessage                    = "Message theory"
+    go TheoryTactic                     = "Tactics"
     go (TheorySource RawSource _ _)     = "Raw sources"
     go (TheorySource RefinedSource _ _) = "Refined sources"
     go (TheoryLemma l)                  = "Lemma: " ++ l
@@ -1547,7 +1606,8 @@ nextThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextThyPath thy = go
   where
     go TheoryHelp                       = TheoryMessage
-    go TheoryMessage                    = TheoryRules
+    go TheoryMessage                    = TheoryTactic
+    go TheoryTactic                     = TheoryRules
     go TheoryRules                      = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)     = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource _ _) = fromMaybe TheoryHelp firstLemma
@@ -1639,7 +1699,8 @@ prevThyPath thy = go
   where
     go TheoryHelp                        = TheoryHelp
     go TheoryMessage                     = TheoryHelp
-    go TheoryRules                       = TheoryMessage
+    go TheoryTactic                      = TheoryMessage
+    go TheoryRules                       = TheoryTactic
     go (TheorySource RawSource _ _)      = TheoryRules
     go (TheorySource RefinedSource _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)
@@ -1737,9 +1798,10 @@ prevDiffThyPath thy = go
 
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
-isInterestingMethod (Sorry _) = True
-isInterestingMethod Solved    = True
-isInterestingMethod _         = False
+isInterestingMethod (Sorry _)    = True
+isInterestingMethod Solved       = True
+isInterestingMethod Unfinishable = True
+isInterestingMethod _            = False
 
 -- | Interesting diff proof methods that are not skipped by next/prev-smart.
 isInterestingDiffMethod :: DiffProofMethod -> Bool
@@ -1752,7 +1814,8 @@ nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextSmartThyPath thy = go
   where
     go TheoryHelp                         = TheoryMessage
-    go TheoryMessage                      = TheoryRules
+    go TheoryMessage                      = TheoryTactic
+    go TheoryTactic                       = TheoryRules
     go TheoryRules                        = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)       = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource   _ _) = fromMaybe TheoryHelp firstLemma
@@ -1850,7 +1913,8 @@ prevSmartThyPath thy = go
   where
     go TheoryHelp                          = TheoryHelp
     go TheoryMessage                       = TheoryHelp
-    go TheoryRules                         = TheoryMessage
+    go TheoryTactic                        = TheoryMessage
+    go TheoryRules                         = TheoryTactic
     go (TheorySource RawSource _ _)        = TheoryRules
     go (TheorySource RefinedSource   _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)
@@ -2004,26 +2068,30 @@ getPrevElement f (x:xs) = go x xs
 
 -- | Translate a proof status returned by 'annotateLemmaProof' to a
 -- corresponding CSS class.
-markStatus :: HtmlDocument d => (Maybe System, Maybe Bool) -> d -> d
-markStatus (Nothing, _         ) = withTag "span" [("class","hl_superfluous")]
-markStatus (Just _,  Just True ) = withTag "span" [("class","hl_good")]
-markStatus (Just _,  Just False) = withTag "span" [("class","hl_bad")]
-markStatus (Just _,  Nothing   ) = id
+markStatus :: HtmlDocument d => (Maybe System, ProofStepColor) -> d -> d
+markStatus (Nothing, _       ) = withTag "span" [("class","hl_superfluous")]
+markStatus (Just _,  Green   ) = withTag "span" [("class","hl_good")]
+markStatus (Just _,  Red     ) = withTag "span" [("class","hl_bad")]
+markStatus (Just _,  Yellow  ) = withTag "span" [("class","hl_medium")]
+markStatus (Just _,  Unmarked) = id
 
 -- | Translate a diff proof status returned by 'annotateLemmaProof' to a
 -- corresponding CSS class.
-markStatusDiff :: HtmlDocument d => (Maybe DiffSystem, Maybe Bool) -> d -> d
-markStatusDiff (Nothing, _         ) = withTag "span" [("class","hl_superfluous")]
-markStatusDiff (Just _,  Just True ) = withTag "span" [("class","hl_good")]
-markStatusDiff (Just _,  Just False) = withTag "span" [("class","hl_bad")]
-markStatusDiff (Just _,  Nothing   ) = id
+markStatusDiff :: HtmlDocument d => (Maybe DiffSystem, ProofStepColor) -> d -> d
+markStatusDiff (Nothing, _       ) = withTag "span" [("class","hl_superfluous")]
+markStatusDiff (Just _,  Green   ) = withTag "span" [("class","hl_good")]
+markStatusDiff (Just _,  Red     ) = withTag "span" [("class","hl_bad")]
+markStatusDiff (Just _,  Yellow  ) = withTag "span" [("class","hl_medium")]
+markStatusDiff (Just _,  Unmarked) = id
 
+
+data ProofStepColor = Unmarked | Green | Red | Yellow
 
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children
 -- are (a) all annotated and (b) contain no sorry steps.
 annotateLemmaProof :: Lemma IncrementalProof
-                   -> Proof (Maybe System, Maybe Bool)
+                   -> Proof (Maybe System, ProofStepColor)
 annotateLemmaProof lem =
 --     error (show (get lProof lem) ++ " - " ++ show prf)
     mapProofInfo (second interpret) prf
@@ -2037,18 +2105,19 @@ annotateLemmaProof lem =
         incomplete = if isNothing (psInfo step) then [IncompleteProof] else []
 
     interpret status = case (get lTraceQuantifier lem, status) of
-      (_,           IncompleteProof)   -> Nothing
-      (_,           UndeterminedProof) -> Nothing
-      (AllTraces,   TraceFound)        -> Just False
-      (AllTraces,   CompleteProof)     -> Just True
-      (ExistsTrace, TraceFound)        -> Just True
-      (ExistsTrace, CompleteProof)     -> Just False
+      (_,           IncompleteProof)   -> Unmarked
+      (_,           UndeterminedProof) -> Unmarked
+      (_,           UnfinishableProof) -> Yellow
+      (AllTraces,   TraceFound)        -> Red
+      (AllTraces,   CompleteProof)     -> Green
+      (ExistsTrace, TraceFound)        -> Green
+      (ExistsTrace, CompleteProof)     -> Red
 
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children
 -- are (a) all annotated and (b) contain no sorry steps.
 annotateDiffLemmaProof :: DiffLemma IncrementalDiffProof
-                   -> DiffProof (Maybe DiffSystem, Maybe Bool)
+                   -> DiffProof (Maybe DiffSystem, ProofStepColor)
 annotateDiffLemmaProof lem =
     mapDiffProofInfo (second interpret) prf
   where
@@ -2061,7 +2130,8 @@ annotateDiffLemmaProof lem =
         incomplete = if isNothing (dpsInfo step) then [IncompleteProof] else []
 
     interpret status = case status of
-      IncompleteProof   -> Nothing
-      UndeterminedProof -> Nothing
-      TraceFound        -> Just False
-      CompleteProof     -> Just True
+      IncompleteProof   -> Unmarked
+      UndeterminedProof -> Unmarked
+      UnfinishableProof -> Yellow
+      TraceFound        -> Red
+      CompleteProof     -> Green

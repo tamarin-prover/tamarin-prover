@@ -2,13 +2,14 @@ theory DecWrapDestr begin
 
 // Function signature and definition of the equational theory E
 
-functions: encSucc/2, fst/1[destructor], pair/2, sdec/2[destructor],
-           senc/2, snd/1[destructor], true/0
+functions: encSucc/2, fst/1, pair/2, sdec/2, senc/2, snd/1, true/0
 equations:
     encSucc(senc(x, y), y) = true,
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -188,51 +189,12 @@ next
                         case insertkeyhk_0_1111111
                         solve( State_1111111( h1, ~n.1 ) ▶₀ #t2.3 )
                           case newh_0_1111
-                          solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3)  ∥ (#vr.11 < #t2.1) )
+                          solve( (#t2.3 < #t2.1)  ∥ (#t2.3 = #t2.1) )
                             case case_1
                             by contradiction /* from formulas */
                           next
                             case case_2
                             by solve( Insert( <'att', ~n.2>, 'wrap' ) @ #t2.1 )
-                          next
-                            case case_3
-                            solve( Insert( <'att', ~n.2>, 'wrap' ) @ #t2.3 )
-                              case insertatthwrap_0_111211
-                              solve( State_111211( lock, ~n.2 ) ▶₀ #t2.3 )
-                                case inh_0_1112
-                                solve( !KU( ~n.2 ) @ #vk.2 )
-                                  case eventDecUsingksdecck_0_11211111
-                                  by contradiction /* from formulas */
-                                next
-                                  case eventWrapkk_0_1211111
-                                  solve( !KU( ~n.3 ) @ #vk.4 )
-                                    case eventDecUsingksdecck_0_11211111
-                                    by contradiction /* from formulas */
-                                  next
-                                    case eventWrapkk_0_1211111
-                                    solve( Insert( <'key', h2>, k2 ) @ #t2.4 )
-                                      case insertkeyhk_0_1111111
-                                      solve( State_1111111( h2, k2 ) ▶₀ #t2.4 )
-                                        case newh_0_1111
-                                        by solve( (#vr.21, 0) ~~> (#vk.1, 0) )
-                                      qed
-                                    qed
-                                  next
-                                    case insertatthdec_0_11111111
-                                    solve( Insert( <'key', h2>, k2 ) @ #t2.4 )
-                                      case insertkeyhk_0_1111111
-                                      solve( State_1111111( h2, k2 ) ▶₀ #t2.4 )
-                                        case newh_0_1111
-                                        by solve( (#vr.21, 0) ~~> (#vk.1, 0) )
-                                      qed
-                                    qed
-                                  qed
-                                next
-                                  case insertatthdec_0_11111111
-                                  by contradiction /* cyclic */
-                                qed
-                              qed
-                            qed
                           qed
                         qed
                       qed
@@ -562,6 +524,12 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 by contradiction /* from formulas */
+
+
+
+
+
+
 
 
 
@@ -938,29 +906,43 @@ restriction locking_0:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule lookupatthasa_0_1121: 
+Failed to derive Variable(s): a.1
+
+Rule lookupkeyhask_0_112111: 
+Failed to derive Variable(s): k.2
+
+Rule lookupatthasa_0_121: 
+Failed to derive Variable(s): a1.1
+
+Rule lookupkeyhask_0_12111: 
+Failed to derive Variable(s): k1.1
+
+Rule lookupkeyhask_0_121111: 
+Failed to derive Variable(s): k2.1
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
-
-  output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 6.205374228s
-  can_create_key (exists-trace): verified (3 steps)
-  can_obtain_wrapping (exists-trace): verified (11 steps)
-  dec_limits (all-traces): verified (59 steps)
-  cannot_obtain_key_ind (all-traces): verified (34 steps)
-  cannot_obtain_key (all-traces): verified (2 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -968,10 +950,14 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 6.205374228s
+  processing time: 2.43s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
-  dec_limits (all-traces): verified (59 steps)
+  dec_limits (all-traces): verified (46 steps)
   cannot_obtain_key_ind (all-traces): verified (34 steps)
   cannot_obtain_key (all-traces): verified (2 steps)
 

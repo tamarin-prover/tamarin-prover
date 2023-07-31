@@ -2,12 +2,13 @@ theory Destructors begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, pair/2, sdec/2[destructor], senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(k, senc(k, m)) = m,
     snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -65,6 +66,12 @@ solve( State_1111( k, x, m ) ▶₀ #t )
     by contradiction /* cyclic */
   qed
 qed
+
+
+
+
+
+
 
 
 
@@ -142,27 +149,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/destructors.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/destructors.spthy
-
-  output:          examples/sapic/fast/basic/destructors.spthy.tmp
-  processing time: 0.070352302s
-  else (exists-trace): verified (3 steps)
-  main (exists-trace): verified (4 steps)
-  main2 (all-traces): verified (7 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -170,7 +171,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/destructors.spthy
 
   output:          examples/sapic/fast/basic/destructors.spthy.tmp
-  processing time: 0.070352302s
+  processing time: 0.23s
+  
   else (exists-trace): verified (3 steps)
   main (exists-trace): verified (4 steps)
   main2 (all-traces): verified (7 steps)

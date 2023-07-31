@@ -63,6 +63,9 @@ rule coerce:
 
 rule pub:
    [ ] --[ KU( $x ) ]-> [ KU( $x ) ]
+   
+rule nat:
+   [ ] --[ KU( x:nat ) ]-> [ KU( x:nat ) ]
 
 rule gen_fresh:
    [ Fr( ~x ) ] --[ KU( ~x ) ]-> [ KU( ~x ) ]
@@ -83,6 +86,7 @@ specialIntruderRules :: Bool -> [IntrRuleAC]
 specialIntruderRules diff =
     [ kuRule CoerceRule      [kdFact x_var]                 (x_var)         [] 
     , kuRule PubConstrRule   []                             (x_pub_var)     [(x_pub_var)]
+    , kuRule NatConstrRule   []                             (x_nat_var)     [(x_nat_var)]
     , kuRule FreshConstrRule [freshFact x_fresh_var] (x_fresh_var)          []
     , Rule ISendRule [kuFact x_var]  [inFact x_var] [kLogFact x_var]        []
     , Rule IRecvRule [outFact x_var] [kdFact x_var] []                      []
@@ -95,6 +99,7 @@ specialIntruderRules diff =
 
     x_var       = varTerm (LVar "x"  LSortMsg   0)
     x_pub_var   = varTerm (LVar "x"  LSortPub   0)
+    x_nat_var   = varTerm (LVar "x"  LSortNat   0)
     x_fresh_var = varTerm (LVar "x"  LSortFresh 0)
 
 

@@ -198,10 +198,13 @@ headerTpl info = [whamlet|
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
+            <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
             <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
             <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
+            
+            
   |]
   where
             -- <li><a id=debug-toggle href="#">Debug pane</a>
@@ -240,10 +243,12 @@ headerDiffTpl info = [whamlet|
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
+            <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
             <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
             <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
+           
   |]
   where
             -- <li><a id=debug-toggle href="#">Debug pane</a>

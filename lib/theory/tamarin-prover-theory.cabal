@@ -10,9 +10,10 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
                     Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-maintainer:         Cas Cremers <cremers@cispa.de>,
+maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
+                    Cas Cremers <cremers@cispa.de>
 copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2018
 
 synopsis:           Security protocol types and constraint solver library for the tamarin prover.
@@ -43,6 +44,8 @@ library
     build-depends:
         aeson
       , aeson-pretty
+      , array
+      , attoparsec
       , base
       , binary
       , bytestring
@@ -54,8 +57,12 @@ library
       , mtl
       , parallel
       , parsec
+      , pretty
       , process
+      , regex-pcre-builtin
+      , regex-posix
       , safe
+      , split
       , text
       , transformers
       , uniplate
@@ -75,11 +82,11 @@ library
       Theory.Constraint.Solver
       Theory.Constraint.Solver.Sources
       Theory.Constraint.Solver.Contradictions
+      Theory.Constraint.Solver.AnnotatedGoals
       Theory.Constraint.Solver.Goals
       Theory.Constraint.Solver.ProofMethod
       Theory.Constraint.Solver.Reduction
       Theory.Constraint.Solver.Simplify
-      Theory.Constraint.Solver.Heuristics
 
       Theory.Constraint.System
       Theory.Constraint.System.Constraints
@@ -110,13 +117,16 @@ library
       Theory.Text.Parser.Token
       Theory.Text.Parser.Restriction
       Theory.Text.Parser.Signature
+      Theory.Text.Parser.Macro 
 
+      Theory.Tools.MessageDerivationChecks
       Theory.Tools.AbstractInterpretation
       Theory.Tools.EquationStore
       Theory.Tools.InjectiveFactInstances
       Theory.Tools.IntruderRules
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
+      Theory.Tools.SubtermStore
       Theory.Tools.Wellformedness
       TheoryObject
       Lemma
@@ -147,6 +157,7 @@ library
       Theory.Text.Parser.Proof
       Theory.Text.Parser.Rule
       Theory.Text.Parser.Sapic
+      Theory.Text.Parser.Tactics
       Theory.Text.Parser.Term
       Theory.Sapic.PlainProcess
       Theory.Sapic.Substitution

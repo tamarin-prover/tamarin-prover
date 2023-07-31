@@ -2,8 +2,10 @@ theory OperatorPrecedenceNDC begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -23,6 +25,12 @@ solve( State_( ) ▶₀ #c )
   case Init
   SOLVED // trace found
 qed
+
+
+
+
+
+
 
 rule (modulo E) Init[color=#ffffff, process="+"]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
@@ -48,25 +56,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/operator-precedence-2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
-
-  output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.010272693s
-  semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -74,7 +78,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.010272693s
+  processing time: 0.06s
+  
   semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
 
 ==============================================================================

@@ -2,13 +2,15 @@ theory TPM_Envelope begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, fst/1[destructor], h/1, pair/2,
-           pk/1, sign/2, snd/1[destructor], true/0, verify/3[destructor]
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sign/2, snd/1,
+           true/0, verify/3
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
 
 
 
@@ -6131,27 +6133,51 @@ solve( Alice1( n ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Alice2: 
+Failed to derive Variable(s): pk
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
-
-  output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 40.844027965s
-  types (all-traces): verified (13 steps)
-  PCR_Write_charn (all-traces): verified (60 steps)
-  Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -6159,7 +6185,11 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 40.844027965s
+  processing time: 14.09s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   types (all-traces): verified (13 steps)
   PCR_Write_charn (all-traces): verified (60 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)

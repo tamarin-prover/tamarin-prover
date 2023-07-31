@@ -27,6 +27,19 @@ functions:
 	KDF/2	 // KDF		 --> K_ausf, K_seaf, XRES*
 //	SHA256/2 // KDF		 --> HXRES*
 
+tactic: observational_equivalence
+prio:
+    regex ".*!Pk\(.*"
+prio:
+    regex ".* UE\( <.*"
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*splitEqs\(.*"
+prio:
+    regex ".*!KD\(.*"
+prio:
+    regex ".*!KU\(.*"
 
 /************************************/
 /*     Initialization Rules         */

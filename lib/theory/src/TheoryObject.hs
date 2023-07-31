@@ -21,6 +21,7 @@ module TheoryObject (
   , thyCache
   , thyItems
   , thyOptions
+  , thyIsSapic
   , diffThyName
   , diffThyInFile
   , diffThyItems
@@ -30,8 +31,11 @@ module TheoryObject (
   , diffThyDiffCacheLeft
   , diffThyDiffCacheRight
   , diffThyOptions
+  , diffThyIsSapic
   , thyHeuristic
   , diffThyHeuristic
+  , thyTactic
+  , diffThyTactic
   , DiffLemma(..)
   , ProcessDef(..)
   , Predicate(..)
@@ -51,13 +55,13 @@ module TheoryObject (
   , theoryProcesses
   , theoryProcessDefs
   , theoryPredicates
+  , theoryMacros
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , diffTheoryLemmas
   , diffTheorySideLemmas
   , diffTheoryDiffLemmas
-  , theoryConfigBlock
-  , diffTheoryConfigBlock
+  , diffTheoryMacros
   , expandFormula
   , expandRestriction
   , expandLemma
@@ -73,6 +77,10 @@ module TheoryObject (
   , addDiffLemma
   , addHeuristic
   , addDiffHeuristic
+  , addTactic
+  , addDiffTactic
+  , addMacros
+  , addDiffMacros
   , removeLemma
   , removeLemmaDiff
   , removeDiffLemma
@@ -103,13 +111,15 @@ module TheoryObject (
   , filterLemma
   , lookupFunctionTypingInfo
   , prettyTheory
+  , prettyMacros
   , prettyTranslationElement
   , prettyProcessDef
   , prettyEitherRestriction
   , lookupExportInfo
   , prettyRestriction
   , prettyProcess
-  , prettyConfigBlock
+  , prettyTactic
+  , prettyVarList
   , theoryCaseTests
   , theoryAccLemmas
   , addAccLemma
@@ -118,11 +128,12 @@ module TheoryObject (
   , lookupCaseTest
   ) where
 
-import Theory.Constraint.Solver.Heuristics
+--import Theory.Constraint.Solver.Heuristics
 import Data.Label as L
 import Theory.Model.Restriction
 import Theory.Model.Fact
 import Term.LTerm
+import Term.Macro
 import Theory.Constraint.Solver
 
 import Items.OptionItem
@@ -133,7 +144,7 @@ import Items.AccLemmaItem
 import Lemma
 import qualified Data.Label.Poly
 import qualified Data.Label.Total as Data.Label.Point
-
+import qualified Data.ByteString.Char8      as BC
 
 
 import           Prelude                             hiding (id, (.))
@@ -160,20 +171,18 @@ import Items.ExportInfo
 import qualified Data.Set as S
 import Theory.Syntactic.Predicate
 import Data.ByteString.Char8 (unpack)
-import Items.AccLemmaItem (prettyAccLemma)
-import Items.CaseTestItem (prettyCaseTest)
-
 
 -- | A theory contains a single set of rewriting rules modeling a protocol
 -- and the lemmas that
 data Theory sig c r p s = Theory {
          _thyName      :: String
-       , _thyInFile    :: String
-       , _thyHeuristic :: [GoalRanking]
+       , _thyHeuristic :: [GoalRanking ProofContext]
+       , _thyTactic    :: [Tactic ProofContext]
        , _thySignature :: sig
        , _thyCache     :: c
        , _thyItems     :: [TheoryItem r p s]
        , _thyOptions   :: Option
+       , _thyIsSapic   :: Bool
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -183,8 +192,8 @@ $(mkLabels [''Theory])
 -- | A diff theory contains a set of rewriting rules with diff modeling two instances
 data DiffTheory sig c r r2 p p2 = DiffTheory {
          _diffThyName           :: String
-       , _diffThyInFile         :: String
-       , _diffThyHeuristic      :: [GoalRanking]
+       , _diffThyHeuristic      :: [GoalRanking ProofContext]
+       , _diffThyTactic        :: [Tactic ProofContext]
        , _diffThySignature      :: sig
        , _diffThyCacheLeft      :: c
        , _diffThyCacheRight     :: c
@@ -192,6 +201,7 @@ data DiffTheory sig c r r2 p p2 = DiffTheory {
        , _diffThyDiffCacheRight :: c
        , _diffThyItems          :: [DiffTheoryItem r r2 p p2]
        , _diffThyOptions        :: Option
+       , _diffThyIsSapic        :: Bool
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 $(mkLabels [''DiffTheory])
@@ -207,39 +217,41 @@ filterSide s l = case l of
 
 -- | Fold a theory item.
 foldTheoryItem
-    :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a) -> (ConfigBlock -> a) -> (Predicate -> a) -> (s -> a)
+    :: (r -> a) -> (Restriction -> a) -> (Lemma p -> a) -> (FormalComment -> a) -> (Predicate -> a) -> ([Macro] -> a) -> (s -> a)
     -> TheoryItem r p s -> a
-foldTheoryItem fRule fRestriction fLemma fText fConfigBlock fPredicate fTranslationItem i = case i of
+foldTheoryItem fRule fRestriction fLemma fText fPredicate fMacroItem fTranslationItem i = case i of
     RuleItem ru   -> fRule ru
     LemmaItem lem -> fLemma lem
     TextItem txt  -> fText txt
     ConfigBlockItem b -> fConfigBlock b
     RestrictionItem rstr  -> fRestriction rstr
     PredicateItem     p  -> fPredicate p
+    MacroItem m -> fMacroItem m
     TranslationItem s -> fTranslationItem s
 
 -- | Fold a theory item.
 foldDiffTheoryItem
-    :: (r -> a) -> ((Side, r2) -> a) -> (DiffLemma p -> a) -> ((Side, Lemma p2) -> a) -> ((Side, Restriction) -> a) -> (FormalComment -> a) -> (ConfigBlock -> a)
+    :: (r -> a) -> ((Side, r2) -> a) -> (DiffLemma p -> a) -> ((Side, Lemma p2) -> a) -> ((Side, Restriction) -> a) -> ([Macro] -> a) -> (FormalComment -> a)
     -> DiffTheoryItem r r2 p p2 -> a
-foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fText fConfigBlock i = case i of
+foldDiffTheoryItem fDiffRule fEitherRule fDiffLemma fEitherLemma fRestriction fMacroItem fText i = case i of
     DiffRuleItem ru   -> fDiffRule ru
     EitherRuleItem (side, ru) -> fEitherRule (side, ru)
     DiffLemmaItem lem -> fDiffLemma lem
     EitherLemmaItem (side, lem) -> fEitherLemma (side, lem)
     EitherRestrictionItem (side, rstr)  -> fRestriction (side, rstr)
+    DiffMacroItem m -> fMacroItem m
     DiffTextItem txt  -> fText txt
     DiffConfigBlockItem b -> fConfigBlock b
 
 -- | Map a theory item.
 mapTheoryItem :: (r -> r') -> (p -> p') -> TheoryItem r p s -> TheoryItem r' p' s
 mapTheoryItem f g =
-    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem ConfigBlockItem PredicateItem TranslationItem
+    foldTheoryItem (RuleItem . f) RestrictionItem (LemmaItem . fmap g) TextItem PredicateItem MacroItem TranslationItem
 
 -- | Map a diff theory item.
 mapDiffTheoryItem :: (r -> r') -> ((Side, r2) -> (Side, r2')) -> (DiffLemma p -> DiffLemma p') -> ((Side, Lemma p2) -> (Side, Lemma p2')) -> DiffTheoryItem r r2 p p2 -> DiffTheoryItem r' r2' p' p2'
 mapDiffTheoryItem f g h i =
-    foldDiffTheoryItem (DiffRuleItem . f) (EitherRuleItem . g) (DiffLemmaItem . h) (EitherLemmaItem . i) EitherRestrictionItem DiffTextItem DiffConfigBlockItem
+    foldDiffTheoryItem (DiffRuleItem . f) (EitherRuleItem . g) (DiffLemmaItem . h) (EitherLemmaItem . i) EitherRestrictionItem DiffMacroItem DiffTextItem
 
 -- | Map a process
 mapMProcesses :: Monad m => (PlainProcess -> m(PlainProcess)) -> Theory sig c r p TranslationElement -> m (Theory sig c r p TranslationElement)
@@ -270,7 +282,7 @@ mapMProcessesDef f thy = do
 -- | All rules of a theory.
 theoryRules :: Theory sig c r p s -> [r]
 theoryRules =
-    foldTheoryItem return (const []) (const []) (const []) (const[]) (const []) (const []) <=< L.get thyItems
+    foldTheoryItem return (const []) (const []) (const []) (const []) (const []) (const []) <=< L.get thyItems
 
 -- | All diff rules of a theory.
 diffTheoryDiffRules :: DiffTheory sig c r r2 p p2 -> [r]
@@ -292,6 +304,10 @@ rightTheoryRules :: DiffTheory sig c r r2 p p2 -> [r2]
 rightTheoryRules =
     foldDiffTheoryItem (const []) (\(x, y) -> if (x == RHS) then [y] else []) (const []) (const []) (const []) (const []) (const []) <=< L.get diffThyItems
 
+-- | All macros of a theory.
+theoryMacros :: Theory sig c r p s -> [Macro]
+theoryMacros =
+    foldTheoryItem (const []) (const []) (const []) (const []) (const []) (\m -> m) (const []) <=< L.get thyItems
 
 -- | All restrictions of a theory.
 theoryRestrictions :: Theory sig c r p s -> [Restriction]
@@ -328,7 +344,7 @@ theoryFunctionTypingInfos t = [ i | FunctionTypingInfo i <- translationElements 
 
 -- | All process definitions of a theory.
 theoryPredicates :: Theory sig c r p s -> [Predicate]
-theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) (const []) return (const []) <=< L.get thyItems
+theoryPredicates =  foldTheoryItem (const []) (const []) (const []) (const []) return (const []) (const []) <=< L.get thyItems
 
 -- | All export info definitions of a theory.
 theoryExportInfos :: Theory sig c b p TranslationElement -> [ExportInfo]
@@ -351,6 +367,11 @@ diffTheoryRestrictions :: DiffTheory sig c r r2 p p2 -> [(Side, Restriction)]
 diffTheoryRestrictions =
     foldDiffTheoryItem (const []) (const []) (const []) (const []) return (const []) (const []) <=< L.get diffThyItems
 
+-- | All macros of a diff theory.
+diffTheoryMacros :: DiffTheory sig c r r2 p p2 -> [Macro]
+diffTheoryMacros =
+    foldDiffTheoryItem (const []) (const []) (const []) (const []) (const []) (\m -> m) (const []) <=< L.get diffThyItems
+
 -- | All restrictions of one side of a theory.
 diffTheorySideRestrictions :: Side -> DiffTheory sig c r r2 p p2 -> [Restriction]
 diffTheorySideRestrictions s =
@@ -370,14 +391,6 @@ diffTheorySideLemmas s =
 diffTheoryDiffLemmas :: DiffTheory sig c r r2 p p2 -> [DiffLemma p]
 diffTheoryDiffLemmas =
     foldDiffTheoryItem (const []) (const []) return (const []) (const []) (const []) (const []) <=< L.get diffThyItems
-
--- | The configuration block of a theory.
-theoryConfigBlock :: Theory sig c r p s -> ConfigBlock
-theoryConfigBlock = foldTheoryItem (const[]) (const[]) (const[]) (const[]) id (const[]) (const[]) <=< L.get thyItems
-
--- | The configuration block of a theory.
-diffTheoryConfigBlock :: DiffTheory sig c r r2 p p2 -> ConfigBlock
-diffTheoryConfigBlock = foldDiffTheoryItem (const[]) (const[]) (const[]) (const[]) (const[]) (const[]) id <=< L.get diffThyItems
 
 
 expandRestriction :: Theory sig c r p s -> ProtoRestriction SyntacticLNFormula
@@ -411,6 +424,14 @@ addProcess l = modify thyItems (++ [TranslationItem (ProcessItem l)])
 addFunctionTypingInfo :: SapicFunSym -> Theory sig c r p TranslationElement -> Theory sig c r p TranslationElement
 addFunctionTypingInfo l = modify thyItems (++ [TranslationItem $ FunctionTypingInfo l])
 
+-- | Add new Macros.
+addMacros :: [Macro] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addMacros m thy = return $ modify thyItems (++ [MacroItem m]) thy
+
+-- | Add new Macros.
+addDiffMacros :: [Macro] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffMacros m thy = return $ modify diffThyItems (++ [DiffMacroItem m]) thy
+
 -- | Remove all Function Typing information in Theory
 clearFunctionTypingInfos :: Theory sig c r p TranslationElement -> Theory sig c r p TranslationElement
 clearFunctionTypingInfos = modify thyItems (filter f)
@@ -431,10 +452,9 @@ addAccLemma aLem thy = do
 
 
 -- | Add a new process expression.
-addExportInfo :: ExportInfo -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
+addExportInfo :: ExportInfo -> Theory sig c r p TranslationElement -> (Theory sig c r p TranslationElement)
 addExportInfo eInfo thy = do
-    guard (isNothing $ lookupExportInfo (L.get eTag eInfo) thy)
-    return $ modify thyItems (++ [TranslationItem (ExportInfoItem eInfo)]) thy
+  modify thyItems (++ [TranslationItem (ExportInfoItem eInfo)]) thy
 
 -- search process
 findProcess :: String -> Theory sig c r p TranslationElement -> Maybe (Theory sig c r p TranslationElement)
@@ -479,6 +499,7 @@ filterLemma lemmaSelector = modify thyItems (concatMap fItem)
                              (return . TextItem)
                              (return . ConfigBlockItem)
                              (return . PredicateItem)
+                             (return . MacroItem)
                              (return . TranslationItem)
     check l = do guard (lemmaSelector l); return (LemmaItem l)
 
@@ -495,13 +516,22 @@ addDiffLemma l thy = do
     return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
 
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
-addHeuristic :: [GoalRanking] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
-addHeuristic h (Theory n f [] sig c i o) = Just (Theory n f h sig c i o)
+addHeuristic :: [GoalRanking ProofContext] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addHeuristic h (Theory n [] t sig c i o sapic) = Just (Theory n h t sig c i o sapic)
 addHeuristic _ _ = Nothing
 
-addDiffHeuristic :: [GoalRanking] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
-addDiffHeuristic h (DiffTheory n f [] sig cl cr dcl dcr i opt) = Just (DiffTheory n f h sig cl cr dcl dcr i opt)
+addDiffHeuristic :: [GoalRanking ProofContext] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffHeuristic h (DiffTheory n [] t sig cl cr dcl dcr i opt sapic) = Just (DiffTheory n h t sig cl cr dcl dcr i opt sapic)
 addDiffHeuristic _ _ = Nothing
+
+addTactic :: Tactic ProofContext -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addTactic t (Theory n h [] sig c i o sapic) = Just (Theory n h [t] sig c i o sapic)
+addTactic t (Theory n h l sig c i o sapic) = Just (Theory n h (l++[t]) sig c i o sapic)
+-- addTactic _ _ = Nothing
+
+addDiffTactic :: Tactic ProofContext -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffTactic t (DiffTheory n h [] sig cl cr dcl dcr i o sapic) = Just (DiffTheory n h [t] sig cl cr dcl dcr i o sapic)
+addDiffTactic t (DiffTheory n h l sig cl cr dcl dcr i o sapic) = Just (DiffTheory n h (l++[t]) sig cl cr dcl dcr i o sapic)
 
 -- | Remove a lemma by name. Fails, if the lemma does not exist.
 removeLemma :: String -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -515,6 +545,7 @@ removeLemma lemmaName thy = do
                              (return . TextItem)
                              (return . ConfigBlockItem)
                              (return . PredicateItem)
+                             (return . MacroItem)
                              (return . TranslationItem)
     check l = do guard (L.get lName l /= lemmaName); return (LemmaItem l)
 
@@ -529,6 +560,7 @@ removeLemmaDiff s lemmaName thy = do
                                  (return . DiffLemmaItem)
                                  check
                                  (return . EitherRestrictionItem)
+                                 (return . DiffMacroItem)
                                  (return . DiffTextItem)
                                  (return . DiffConfigBlockItem)
     check (s', l) = do guard (L.get lName l /= lemmaName || s'/=s); return (EitherLemmaItem (s, l))
@@ -544,6 +576,7 @@ removeDiffLemma lemmaName thy = do
                                  check
                                  (return . EitherLemmaItem)
                                  (return . EitherRestrictionItem)
+                                 (return . DiffMacroItem)
                                  (return . DiffTextItem)
                                  (return . DiffConfigBlockItem)
 
@@ -574,8 +607,8 @@ lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p TranslationElement -> Ma
 lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.
-lookupExportInfo :: String -> Theory sig c r p TranslationElement -> Maybe ExportInfo
-lookupExportInfo tag = find ((tag ==) . L.get eTag) . theoryExportInfos
+lookupExportInfo :: String -> Theory sig c r p TranslationElement -> [ExportInfo]
+lookupExportInfo tag = filter ((tag ==) . L.get eTag) . theoryExportInfos
 
 -- | Find the restriction with the given name.
 lookupRestrictionDiff :: Side -> String -> DiffTheory sig c r r2 p p2 -> Maybe Restriction
@@ -628,6 +661,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy
     , lineComment_ "Function signature and definition of the equational theory E"
     , ppSig $ L.get thySignature thy
+    , if thyT == [] then text "" else vcat $ map prettyTactic thyT
     , if null thyH then text "" else text "heuristic: " <> text (prettyGoalRankings thyH)
     , ppCache $ L.get thyCache thy
     ] ++
@@ -635,8 +669,9 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy = vsep $
     [ kwEnd ]
   where
     ppItem = foldTheoryItem
-        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyConfigBlock prettyPredicate ppSap
+        ppRule prettyRestriction (prettyLemma ppPrf) (uncurry prettyFormalComment) prettyPredicate prettyMacros ppSap
     thyH = L.get thyHeuristic thy
+    thyT = L.get thyTactic thy
 
 
 prettyTranslationElement :: HighlightDocument d => TranslationElement -> d
@@ -691,10 +726,25 @@ prettyPredicate p = kwPredicate <> colon <-> text (factstr ++ "<=>" ++ formulast
 prettyProcess :: HighlightDocument d => PlainProcess -> d
 prettyProcess = prettySapic
 
-
 prettyProcessDef :: HighlightDocument d => ProcessDef -> d
 prettyProcessDef pDef = text "let " <-> text (L.get pName pDef) <-> text " = " <-> prettySapic (L.get pBody pDef)
 
+-- | Pretty-print a comma, separated list of 'LVar's.
+prettyVarList :: Document d => [LVar] -> d
+prettyVarList = fsep . punctuate comma . map prettyLVar
+
+-- | Pretty print all macros
+prettyMacros :: HighlightDocument d => [Macro] -> d 
+prettyMacros m = if m == [] then text empty else vcat (keyword_ "macros:" : map prettyMacro m)
+
+-- | Pretty print a macro.
+prettyMacro :: HighlightDocument d => Macro -> d
+prettyMacro (op, args, out) = vcat [ppNonEmptyList (\ds -> sep (map (nest 4) ds)) 
+                              text ([BC.unpack op ++ "("]) <-> prettyVarList args <-> text (") = " ++ show(out))]
+    where
+        ppNonEmptyList _   _  [] = emptyDoc
+        ppNonEmptyList hdr pp xs = hdr $ punctuate comma $ map pp xs
+    --"\t" ++ BC.unpack op ++ "(" ++ show (args) ++ ") = " ++ show(out) ++ "\n"
 
 -- | Pretty print a restriction.
 prettyRestriction :: HighlightDocument d => Restriction -> d
@@ -714,6 +764,26 @@ prettyEitherRestriction (s, rstr) =
   where
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
--- | Pretty print a configuration block. 
-prettyConfigBlock :: HighlightDocument d => ConfigBlock -> d
-prettyConfigBlock cb = text "configuration: " <> doubleQuotes (text cb)
+prettyTactic :: HighlightDocument d => Tactic ProofContext -> d
+prettyTactic tactic = kwTactic <> colon <> space <> (text $ _name tactic) 
+    $-$ kwPresort <> colon <> space <> (char $ goalRankingToChar $ _presort tactic) $-$ sep
+        [ ppTabTab  "prio"  (map stringRankingPrio $ _prios tactic) (map stringsPrio $ _prios tactic)
+        , ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic)
+        , char '\n'
+        ]
+   where 
+
+        -- pretty print for a prio block
+        ppTab "prio" (rankingName,xs) = kwPrio <> colon <> space <> braces (text rankingName) $-$ (nest 2 $ vcat $ map prettify (map words xs))
+        ppTab "deprio" (rankingName,xs) = kwDeprio <> colon <> space <> braces (text rankingName) $-$ (nest 2 $ vcat $ map prettify (map words xs))
+        ppTab _ _ = emptyDoc
+
+        ppTabTab _ _ [] = emptyDoc
+        ppTabTab param rankingName listFunctions = vcat (map (ppTab param) (zip rankingName listFunctions))
+
+        prettify :: HighlightDocument d => [String] -> d
+        prettify []    = emptyDoc
+        prettify ("|":t) = (operator_ " | ") <> prettify t-- if (s == "|") || (s == "&") || (s == "not") then (operator_ s) <> prettify t else text s <> prettify t
+        prettify ("&":t) = (operator_ " & ") <> prettify t
+        prettify ("not":t) = (operator_ "not ") <> prettify t
+        prettify (s:t) = text s <> prettify t

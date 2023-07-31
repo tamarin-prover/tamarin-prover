@@ -2,14 +2,16 @@ theory SpliceAS_2 begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, dec/1, fst/1[destructor], inc/1,
-           pair/2, pk/1, sign/2, snd/1[destructor], true/0, verify/3[destructor]
+functions: adec/2, aenc/2, dec/1, fst/1, inc/1, pair/2, pk/1, sign/2,
+           snd/1, true/0, verify/3
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     dec(inc(x)) = x,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
 
 
 
@@ -598,7 +600,44 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule AS_send_key: 
+Failed to derive Variable(s): ~ltkY
+
+Rule C_to_S: 
+Failed to derive Variable(s): ~ltkAS
+
+Rule S_to_AS: 
+Failed to derive Variable(s): ltkC
+
+Rule S_to_C: 
+Failed to derive Variable(s): ~ltkAS
+*/
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -777,29 +816,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/SpliceAS_2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
-
-  output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 17.166558031s
-  executability (exists-trace): verified (21 steps)
-  Secrecy (all-traces): falsified - found trace (16 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (22 steps)
-  agreement_B (all-traces): verified (14 steps)
-  injectiveagreement_A (all-traces): falsified - found trace (16 steps)
-  agreement_A (all-traces): falsified - found trace (16 steps)
-  AUTO_typing (all-traces): verified (34 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -807,7 +836,11 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 17.166558031s
+  processing time: 5.60s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)
   injectiveagreement_B (all-traces): falsified - found trace (22 steps)

@@ -2,14 +2,16 @@ theory CTA begin
 
 // Function signature and definition of the equational theory E
 
-functions: comb/2, dec/2, enc/2, fst/1[destructor], h/1, pair/2, pdec/2,
-           pk/1, plus/2, snd/1[destructor], split/2, transform/1
+functions: comb/2, dec/2, enc/2, fst/1, h/1, pair/2, pdec/2, pk/1,
+           plus/2, snd/1, split/2, transform/1
 equations:
     comb(pdec(c, sk1), pdec(c, sk2)) = dec(c, plus(sk1, sk2)),
     dec(enc(m, pk(sk)), sk) = m,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     transform(pdec(c, pk)) = dec(c, pk)
+
+
 
 
 
@@ -4441,29 +4443,46 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Compromise_Secret_Channel: 
+Failed to derive Variable(s): ~n, pk, y
+
+Rule Authenticator_1: 
+Failed to derive Variable(s): ~n
+
+Rule Sibling_1: 
+Failed to derive Variable(s): ~n
+
+Rule Authenticator_2: 
+Failed to derive Variable(s): ~n, y
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/regression/trace/issue216.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/trace/issue216.spthy
-
-  output:          examples/regression/trace/issue216.spthy.tmp
-  processing time: 26.482596682s
-  ClientAuth (exists-trace): verified (16 steps)
-  Client_Auth_Both_Responds_Or_Either_Revealed (all-traces): verified (481 steps)
-  Client_Auth_Both_Responds_Or_Both_Revealed_Or_Communication_Compromised (all-traces): verified (882 steps)
-  Client_Auth_Both_Responds_Or_Both_Revealed (all-traces): falsified - found trace (11 steps)
-  Client_Auth_Both_Always_Responds (all-traces): falsified - found trace (10 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -4471,7 +4490,11 @@ summary of summaries:
 analyzed: examples/regression/trace/issue216.spthy
 
   output:          examples/regression/trace/issue216.spthy.tmp
-  processing time: 26.482596682s
+  processing time: 7.15s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   ClientAuth (exists-trace): verified (16 steps)
   Client_Auth_Both_Responds_Or_Either_Revealed (all-traces): verified (481 steps)
   Client_Auth_Both_Responds_Or_Both_Revealed_Or_Communication_Compromised (all-traces): verified (882 steps)

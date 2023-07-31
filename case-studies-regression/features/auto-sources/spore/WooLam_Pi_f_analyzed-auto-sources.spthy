@@ -2,12 +2,13 @@ theory WooLamPi_f begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, sdec/2[destructor], senc/2,
-           snd/1[destructor]
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
 equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -308,7 +309,17 @@ solve( StateB2( A, $B, ~kbs, ~nb, msg ) ▶₁ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -552,27 +563,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
-
-  output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 2.208744232s
-  executability (exists-trace): verified (10 steps)
-  Secrecy (all-traces): verified (10 steps)
-  injectiveagreement_B (all-traces): verified (17 steps)
-  agreement_B (all-traces): verified (13 steps)
-  AUTO_typing (all-traces): verified (48 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -580,7 +583,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 2.208744232s
+  processing time: 0.79s
+  
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)
   injectiveagreement_B (all-traces): verified (17 steps)

@@ -2,8 +2,7 @@ theory issue223 begin
 
 // Function signature and definition of the equational theory E
 
-functions: commit/3, fake/4, fst/1[destructor], open/3, pair/2, pk/1,
-           snd/1[destructor]
+functions: commit/3, fake/4, fst/1, open/3, pair/2, pk/1, snd/1
 equations:
     commit(ni2, fake(ni1, r, sk, ni2), pk(sk)) = commit(ni1, r, pk(sk)),
     fake(ni2, fake(ni1, r, sk, ni2), sk, ni3) = fake(ni1, r, sk, ni3),
@@ -11,6 +10,10 @@ equations:
     open(commit(ni, r, pk(sk)), r, sk) = ni,
     open(commit(ni1, r, pk(sk)), fake(ni1, r, sk, ni2), sk) = ni2,
     snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -22,7 +25,7 @@ rule (modulo E) Attack3:
    Out( fake(~ni1, ~rnd1, ~ltkV1, ~ni1) ), Out( ~ltkV1 )
    ]
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -3234,23 +3237,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/regression/diff/issue223.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/diff/issue223.spthy
-
-  output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 8.343639432s
-  DiffLemma:  Observational_equivalence : verified (1082 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -3258,7 +3257,8 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 8.343639432s
+  processing time: 2.92s
+  
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 
 ==============================================================================

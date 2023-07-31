@@ -2,8 +2,10 @@ theory Minimal_Loop_Example begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -95,7 +97,7 @@ next
     case Start
     solve( A( ~n ) ▶₀ #i )
       case Loop
-      by contradiction /* cyclic */
+      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -151,29 +153,27 @@ induction
   SOLVED // trace found
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/loops/Minimal_Loop_Example.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/Minimal_Loop_Example.spthy
-
-  output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.040462244s
-  Start_before_Loop (all-traces): verified (8 steps)
-  Start_before_Stop (all-traces): verified (4 steps)
-  Loop_before_Stop (all-traces): verified (9 steps)
-  Stop_unique (all-traces): verified (12 steps)
-  Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -181,7 +181,8 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.040462244s
+  processing time: 0.07s
+  
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)

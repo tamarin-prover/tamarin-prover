@@ -18,6 +18,10 @@ module Term.Builtin.Rules (
   , signatureRules
   , revealSignatureRules
   , locationReportRules
+  , pairDestRules
+  , symEncDestRules
+  , asymEncDestRules
+  , signatureDestRules
   -- * Convenience export
   , module Term.Builtin.Signature
 ) where
@@ -26,6 +30,7 @@ import Term.LTerm
 import Term.SubtermRule
 import Term.Builtin.Signature
 import Term.Builtin.Convenience
+import Term.Term.FunctionSymbols
 
 import qualified Data.Set as S
 import Data.Set (Set)
@@ -89,7 +94,7 @@ xorRules = S.fromList
     zero  = fAppZero
 
 -- | The rewriting rules for standard subterm operators that are builtin.
-pairRules, symEncRules, asymEncRules, signatureRules, revealSignatureRules, locationReportRules :: Set (CtxtStRule)
+pairRules, symEncRules, asymEncRules, signatureRules, pairDestRules, symEncDestRules, asymEncDestRules, signatureDestRules, revealSignatureRules, locationReportRules :: Set (CtxtStRule)
 pairRules = S.fromList
     [ fAppFst (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
     , fAppSnd (fAppPair (x1,x2)) `CtxtStRule` (StRhs [[0,1]] x2) ]
@@ -101,3 +106,9 @@ revealSignatureRules = S.fromList [ revealVerify (revealSign (x1,x2), x1, pk x2)
 locationReportRules = S.fromList [ check_rep (rep (x1,x2), x2) `CtxtStRule` (StRhs [[0,0]] x1),
                                    get_rep (rep (x1,x2)) `CtxtStRule` (StRhs [[0,0]] x1)
                                  ]
+pairDestRules = S.fromList
+    [ fAppNoEq fstDestSym [fAppPair (x1,x2)] `CtxtStRule` (StRhs [[0,0]] x1)
+    , fAppNoEq sndDestSym [fAppPair (x1,x2)] `CtxtStRule` (StRhs [[0,1]] x2) ]
+symEncDestRules    = S.fromList [ fAppNoEq sdecDestSym [senc (x1,x2), x2]     `CtxtStRule` (StRhs [[0,0]] x1) ]
+asymEncDestRules   = S.fromList [ fAppNoEq adecDestSym [aenc (x1, pk x2), x2] `CtxtStRule` (StRhs [[0,0]] x1) ]
+signatureDestRules = S.fromList [ fAppNoEq verifyDestSym [sign (x1,x2), x1, pk x2] `CtxtStRule` (StRhs [[0,0]] trueC) ]

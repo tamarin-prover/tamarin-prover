@@ -41,6 +41,25 @@ equations: sdecSuc( k,iv,t,senc(k,iv,t,m) ) = true()
 equations: getIV(          senc(k,iv,t,m) ) = iv
 equations: getTag(         senc(k,iv,t,m) ) = t
 
+tactic: Counter_Monotonicity
+presort: C
+prio:
+    regex " = " | regex " < " | regex "last\(" | regex "DCtrIs\( d, C"
+prio:
+    regex "DCtr" 
+
+tactic: IV_Uniqueness
+presort: C
+prio:
+    regex " = " | regex " < " | regex "last\("
+prio:
+    regex "IV\( "
+
+tactic: Key_IntegrityAndConfidentiality
+presort: C
+prio:
+    regex "CreateKey\( ek,"
+
 /* RESTRICTIONS */
 restriction UniqueInteger:
 "All n #i #j . IsInteger(n)@i & IsInteger(n)@j ==> #i=#j"
@@ -278,12 +297,12 @@ exists-trace // where a key is imported even if it was not shared
     */
 
 // w/ oracle 
-lemma Counter_Monotonicity[use_induction,reuse]:
+lemma Counter_Monotonicity[heuristic={Counter_Monotonicity}, use_induction,reuse]:
 "All d c C #before #later . DCtrIs(d,c)@before & DCtrIs(d,C)@later & #before<#later ==>
     Ex z . C=c+z"
 
 // w/ oracle and using Counter_Monotonicity 
-lemma IV_Uniqueness:
+lemma IV_Uniqueness[heuristic={IV_Uniqueness}]:
 "All iv #before #later . 
     IV(iv)@before & IV(iv)@later ==> #later=#before"
 
@@ -292,7 +311,7 @@ lemma Key_UsageImpliesInitialization:
 "All d k l h #keyUse . UseKey(d,k,h,l)@keyUse ==>
         Ex #keyInit . InitKey(d,k,h,l)@keyInit & #keyInit<#keyUse"
 
-lemma Key_IntegrityAndConfidentiality[use_induction,reuse]:
+lemma Key_IntegrityAndConfidentiality[heuristic={Key_IntegrityAndConfidentiality},use_induction,reuse]:
 " // created keys are never known 
 ( not Ex k l h #keyCreate #keyKU . CreateKey(k,h,l)@keyCreate & KU(k)@keyKU )
 & // initialized keys were created (and thus also never known) 

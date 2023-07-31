@@ -2,8 +2,10 @@ theory InEventRestrictionPrivateChannel begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], pair/2, snd/1[destructor]
+functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 heuristic: p
 
@@ -32,6 +34,12 @@ solve( State_( ) ▶₀ #a )
     by contradiction /* from formulas */
   qed
 qed
+
+
+
+
+
+
 
 rule (modulo E) Init[color=#ffffff, process="event A( );"]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
@@ -83,25 +91,28 @@ restriction in_event:
       (∀ #t1 xp.
         (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "inca_0_1":  factName `Message' arity: 2 multiplicity: Linear
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
-
-  output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.036844654s
-  test (all-traces): verified (5 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -109,7 +120,11 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.036844654s
+  processing time: 0.08s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   test (all-traces): verified (5 steps)
 
 ==============================================================================

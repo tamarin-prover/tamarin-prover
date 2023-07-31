@@ -35,7 +35,6 @@ module Theory.Constraint.Solver.Sources (
 import           Prelude                                 hiding (id, (.))
 import           Safe
 
-import           Data.Foldable                           (asum)
 import qualified Data.Map                                as M
 import qualified Data.Set                                as S
 
@@ -58,6 +57,7 @@ import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
 import           Theory.Constraint.Solver.Goals
+import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.Solver.Simplify
 import           Theory.Constraint.System
@@ -161,6 +161,7 @@ solveAllSafeGoals ths' openChainsLimit =
         -- Uncomment to get more extensive case splitting
         SplitG _      -> doSplit --extensiveSplitting &&
         -- SplitG _      -> False
+        SubtermG _    -> doSplit
 
     usefulGoal (_, (_, Useful)) = True
     usefulGoal _                = False
@@ -424,7 +425,13 @@ precomputeSources parameters ctxt restrictions =
     absMsgFacts :: [LNTerm]
     absMsgFacts = asum $ sortednub $
       [ return $ varTerm (LVar "t" LSortFresh 1)
+      -- Bilinear pairing
       , if enableBP msig then return $ fAppC EMap $ nMsgVars (2::Int) else []
+      -- Natural numbers
+      , if enableNat msig then
+          [ fAppNoEq natOneSym []
+          , fAppAC NatPlus [varTerm (LVar "t" LSortNat 1), varTerm (LVar "t" LSortNat 2)] ]
+          else []
       , [ fAppNoEq o $ nMsgVars k
         | o@(_,(k,priv,_)) <- S.toList . noEqFunSyms  $ msig
         , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]

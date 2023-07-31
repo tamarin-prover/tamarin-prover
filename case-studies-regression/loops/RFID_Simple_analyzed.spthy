@@ -2,12 +2,13 @@ theory RFID_Simple begin
 
 // Function signature and definition of the equational theory E
 
-functions: adec/2[destructor], aenc/2, fst/1[destructor], pair/2, pk/1,
-           snd/1[destructor]
+functions: adec/2, aenc/2, fst/1, pair/2, pk/1, snd/1
 equations:
     adec(aenc(x.1, pk(x.2)), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -507,28 +508,33 @@ solve( !KU( ~x ) @ #vk )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/loops/RFID_Simple.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/RFID_Simple.spthy
-
-  output:          examples/loops/RFID_Simple.spthy.tmp
-  processing time: 0.617392087s
-  types (all-traces): verified (86 steps)
-  Device_ToBob (all-traces): verified (12 steps)
-  Device_Init_Use_Set (all-traces): verified (18 steps)
-  reachability_left (exists-trace): verified (8 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -536,7 +542,8 @@ summary of summaries:
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          examples/loops/RFID_Simple.spthy.tmp
-  processing time: 0.617392087s
+  processing time: 0.48s
+  
   types (all-traces): verified (86 steps)
   Device_ToBob (all-traces): verified (12 steps)
   Device_Init_Use_Set (all-traces): verified (18 steps)

@@ -2,6 +2,18 @@ theory KCL07_untrac begin
 
 builtins: xor, hashing, multiset
 
+tactic: recentalive_tag
+prio:
+    regex ".*TagRun\(.*"
+prio:
+    regex ".*Tag\(.*"
+
+tactic: Observational_equivalence
+prio:
+    regex ".*TagRun\(.*"
+prio:
+    regex ".*Tag\(.*"
+
 /*
 KCL07: Reader R, RFID tag T, shared knowledge k, ID
 
@@ -92,7 +104,7 @@ restriction max_number_of_tags_tag_reader:
   "All a b c d #i. Reader(a+b+c+d)@i ==> F"
 
 // AUTOMATICALLY PROVEN WITH ORACLE KCL07-untrac-oracle [left+right]
-lemma recentalive_tag:
+lemma recentalive_tag[heuristic={recentalive_tag}]:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
 // MANUAL EXPLORATION FINDS TRACE (2017-11-09, 73593dd9747f3320384227ff086f7fca0f75c488) on BOTH, see KCL07-untrac-manual-execution-left.spthy and KCL07-untrac-manual-execution-left.spthy

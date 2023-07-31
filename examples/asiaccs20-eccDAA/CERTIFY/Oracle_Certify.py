@@ -160,13 +160,27 @@ elif lemma[0:19]=="oracle_auth_secrecy":
     elif re.match('.*In_S\( \$A,.*', line): rank[109].append(num)
     elif re.match('.*In_S\( \$AS,.*', line): rank[109].append(num)
     elif re.match('.*In_S\( \$PS,.*', line): rank[109].append(num)
-    elif re.match('.*_State_.*', line): rank[109].append(num)
-    elif re.match('.*\!Pk\(.*', line): rank[109].append(num)
-    elif re.match('.*createDAAKey\'>', line): rank[108].append(num)
-    elif re.match('.*createPrimary\'\)', line): rank[108].append(num)
-    elif re.match('.*returnEK\'>', line): rank[108].append(num)
-    elif re.match('.*returnDAAKey\'>', line): rank[108].append(num)
-    elif re.match('.*In_S\(.*', line): rank[107].append(num)
+    elif re.match('.*_State_.*', line): 
+        rank[109].append(num)
+        print ("Ahi") 
+    elif re.match('.*\!Pk\(.*', line): 
+        rank[109].append(num)
+        print ("Aho") 
+    elif re.match('.*createDAAKey\'>', line): 
+        rank[108].append(num)
+        print ("on rentre")
+    elif re.match('.*createPrimary\'\)', line): 
+        rank[108].append(num)
+        print ("du ")
+    elif re.match('.*returnEK\'>', line): 
+        rank[108].append(num)
+        print ("boulot")
+    elif re.match('.*returnDAAKey\'>', line): 
+        rank[108].append(num)
+        print ("!!!")
+    elif re.match('.*In_S\(.*', line): 
+        rank[107].append(num)
+        print ("Hello",line)
     elif re.match('.*\!KU\( pk\( KDF_EK\(~TPM_EK.*', line): rank[100].append(num)
     elif re.match('.*\!KU\( KDF_EK\(~TPM_EK.*', line): rank[100].append(num)
     elif re.match('.*\!KU\( curlyK\(~K_2\) \)', line): rank[91].append(num)

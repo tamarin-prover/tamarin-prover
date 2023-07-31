@@ -2,12 +2,13 @@ theory mini1 begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1[destructor], h/1, pair/2, pk/1, sign/2,
-           snd/1[destructor], true/0, verify/3[destructor]
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
 
 heuristic: p
 
@@ -54,6 +55,22 @@ solve( State_211( ~prog_, n ) ▶₀ #t )
     by solve( State_( ~prog_ ) ▶₀ #j )
   qed
 qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 rule (modulo E) MessageIDRule[color=#ffffff, process="+"]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
@@ -156,26 +173,55 @@ restriction reliable:
   "∀ #i x y.
     (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule MessageIDRule: 
+Failed to derive Variable(s): ~mid_
+
+Rule Init: 
+Failed to derive Variable(s): ~prog_
+
+Rule inrm_0_1: 
+Failed to derive Variable(s): ~mid_1, ~prog_, m.1
+
+Rule eventA_0_11: 
+Failed to derive Variable(s): ~prog_, m.1
+
+Rule p_0_111: 
+Failed to derive Variable(s): ~prog_, m.1
+
+Rule newn_0_2: 
+Failed to derive Variable(s): ~prog_, n.1
+
+Rule outrn_0_21: 
+Failed to derive Variable(s): ~mid_21, ~prog_, n.1
+
+Rule eventB_0_211: 
+Failed to derive Variable(s): ~prog_, n.1
+
+Rule p_0_2111: 
+Failed to derive Variable(s): ~prog_, n.1
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-progress/mini1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-progress/mini1.spthy
-
-  output:          examples/sapic/fast/feature-progress/mini1.spthy.tmp
-  processing time: 0.070445154s
-  A_possible (exists-trace): verified (5 steps)
-  B_impossible (all-traces): verified (4 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -183,7 +229,11 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini1.spthy
 
   output:          examples/sapic/fast/feature-progress/mini1.spthy.tmp
-  processing time: 0.070445154s
+  processing time: 0.14s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   A_possible (exists-trace): verified (5 steps)
   B_impossible (all-traces): verified (4 steps)
 

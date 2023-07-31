@@ -1,0 +1,136 @@
+theory ParserTests
+begin
+
+
+builtins: natural-numbers, multiset, diffie-hellman, xor, bilinear-pairing, hashing
+
+functions: mypair/2, myfst/1, mysnd/1
+equations: myfst(mypair(a,b))=a, mysnd(mypair(a,b))=b
+
+rule Create:
+    [ Fr(~s) ]
+  --[ Start(~s) ]->
+    [ Counter(~s, 1:nat) ]
+
+rule Inc:
+    [ In(%x), Counter(s, %x)]
+  --[ Number(%x) ]->
+    [ Counter(s, (%x %+ 1:nat))]
+
+rule AttackerMsg:
+    [ In(x) ]
+  --[ Value(x) ]->
+    [ ]
+
+rule AttackerPub:
+    [ In($x) ]
+  --[ PubValue($x) ]->
+    [ ]
+
+rule AttackerNat:
+    [ In(x), Counter(~s, x) ]
+  --[ NatValue(x) ]->
+    [ ]
+
+rule InOut:
+  let
+    a  = %x %+ 1:nat %+ %1
+    b  = %1
+    c  = 1:nat
+    y  = (x:nat %+ 1:nat)
+    %z = (%x %+ 1:nat)
+  in
+  [In(%x), In(%x %+ %1 %+ %1 %+ 1:nat)]--[Out(<a, b, c, %x, y, %z>)]->[]
+
+// test of S_nat-chain
+// here we see its full potential!
+// without this rule, the proof needed ~5 steps, now it directly simplifies
+lemma SnatChain:
+"All %a %b #i #j. Number(%a)@i & Number(%b)@j ⇒ %a ⊏ %b | %b ⊏ (1:nat %+ %a)"
+
+// test of S_nat (this should fail)
+//lemma WrongSnat:
+//"All %a %b #i #j. Number(%a)@i & Number(%b)@j ⇒ not(%a ⊏ %b | %b ⊏ %a)"
+
+// tests natSubtermEqualities in EquationStore
+// this cuts down some useless branches (but the depth of the proof tree is the same)
+//lemma WrongSnatImplied:
+//"All %a %b #i #j. Number(%a)@i & Number(%b)@j ⇒ not(%a ⊏ (%b %+ 1:nat) & (1:nat %+ 1:nat %+ 1:nat) ⊏ (%b %+ %a) & %b ⊏ (1:nat %+ 1:nat %+ 1:nat))"
+
+// test of S_subterm-neg-recurse
+lemma SnegRecurse:
+"All a #i. Value(a)@i ⇒ a ⊏ <a, a>"
+
+// test of S_subterm-neg-ac-recurse
+lemma SnegACRecurse:
+"All a #i. Value(a)@i ⇒ a ⊏ (a ++ a)"
+
+// test of S_subterm-neg
+lemma Sneg:
+"All a b #i #j. Value(a)@i & Value(b)@j ⇒ not(<a,a> ⊏ b) | a ⊏ b"
+
+// test of S_subterm-invalid
+// if a and b are swapped, it fails (correctly)
+// is it normal that there is an existential formula left?
+lemma Sinvalid:
+"All a b #i #j. PubValue(a)@i & Value(b)@j ⇒ not(b ⊏ a)"
+
+// test of S_subterm-chain
+lemma Schain:
+"All a b #i #j. Value(a)@i & Value(b)@j ⇒ not(<a,a> ⊏ b & b ⊏ a)"
+
+// test of S_subterm-recurse
+// (you don't really see it because of direct simplification)
+lemma SRecurse:
+"All a #i. Value(a)@i ⇒ not(<a,a,a> ⊏ <a,a>)"
+
+// test of S_subterm-ac-recurse
+// (you don't really see it because of direct simplification)
+lemma SACRecurse:
+"All a #i. Value(a)@i ⇒ not(a++a++a ⊏ a++a)"
+
+// showcase of performSplit > splitSubterms
+// should fail
+//lemma WrongSplitSubterms:
+//"All a b #i #j. Value(a)@i & Value(b)@j ⇒ not(a ⊏ <b,b,b,b> & b ⊏ a)"
+
+// works but why?
+// it should rather show a contradiction: subterm-cyclic
+// -> this is because of the recurseSubterms > "shorthand for rule S_subterm-chain"
+lemma testEqual:
+"All a #i. Value(a)@i ⇒ not(a ⊏ a)"
+
+
+lemma arityOneDeduction:
+"All a b #i #j. Value(a)@i & Value(b)@j ⇒ not( not(a ⊏ b) & a ⊏ h(b) & not(a=b) )"
+
+lemma antiCharlie:
+"All %a %b #i #j. Number(%a)@i & Number(%b)@j ⇒  not (%a ⊏ (%b %+ 1:nat) & %b ⊏ (%a %+ 1:nat) & not (%a = %b))"
+
+
+//lemma partialAtomValuation:
+
+
+
+
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

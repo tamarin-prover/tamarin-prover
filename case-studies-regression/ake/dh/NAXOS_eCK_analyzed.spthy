@@ -3,8 +3,10 @@ theory NAXOS_eCK begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1[destructor], h1/1, h2/1, pair/2, snd/1[destructor]
+functions: fst/1, h1/1, h2/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -134,6 +136,10 @@ rule (modulo E) Init_2:
         Y     = x.698^(x.699*inv((x.700*h1(<~ex.354, ~ea.352>))))
         z     = x.698^(~ea.352*x.699*inv((x.700*h1(<~ex.354, ~ea.352>))))
         z.1   = x.698^(x.699*inv(x.700))
+    
+    15. Y     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Resp_1:
@@ -246,6 +252,10 @@ rule (modulo E) Resp_1:
         X     = x.874^(x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
         z     = x.874^(~eb.440*x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
         z.1   = x.874^(x.875*inv(x.876))
+    
+    15. X     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Sessk_reveal:
@@ -726,25 +736,40 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Init_2: 
+Failed to derive Variable(s): ~eb
+
+Rule Resp_1: 
+Failed to derive Variable(s): ~lkI
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/dh/NAXOS_eCK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/dh/NAXOS_eCK.spthy
-
-  output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 5.187080124s
-  eCK_key_secrecy (all-traces): verified (136 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -752,7 +777,11 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK.spthy
 
   output:          examples/ake/dh/NAXOS_eCK.spthy.tmp
-  processing time: 5.187080124s
+  processing time: 2.09s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   eCK_key_secrecy (all-traces): verified (136 steps)
 
 ==============================================================================

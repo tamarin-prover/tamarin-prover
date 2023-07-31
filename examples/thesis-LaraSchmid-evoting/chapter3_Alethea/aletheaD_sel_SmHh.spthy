@@ -50,6 +50,7 @@ decp(encp(x,r,pk(sk)),sk)=x,
 ver(sg(m, sk), pk(sk)) = m 
 
 
+
 /* ==========
 Channel rules
 ============= */

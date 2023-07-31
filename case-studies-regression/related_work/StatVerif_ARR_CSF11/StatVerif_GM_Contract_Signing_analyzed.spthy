@@ -2,14 +2,16 @@ theory StatVerif_GM_Contract_Signing begin
 
 // Function signature and definition of the equational theory E
 
-functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1[destructor],
-           pair/2, pcs/3, pk/1, sign/2, snd/1[destructor], true/0
+functions: check_getmsg/2, checkpcs/5, convertpcs/2, fst/1, pair/2,
+           pcs/3, pk/1, sign/2, snd/1, true/0
 equations:
     check_getmsg(pk(xsk), sign(xsk, xm)) = xm,
     checkpcs(xc, pk(xsk), ypk, zpk, pcs(sign(xsk, xc), ypk, zpk)) = true,
     convertpcs(zsk, pcs(sign(xsk, xc), ypk, pk(zsk))) = sign(xsk, xc),
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
+
+
 
 
 
@@ -390,28 +392,40 @@ qed
 
 
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Witness_Aborted: 
+Failed to derive Variable(s): ct, sk1, ysk
+
+Rule Witness_Resolved: 
+Failed to derive Variable(s): ct, sk1, sk2
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.0. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
-
-  output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.566912329s
-  aborted_and_resolved_exclusive (all-traces): verified (7 steps)
-  aborted_contract_reachable (exists-trace): verified (8 steps)
-  resolved1_contract_reachable (exists-trace): verified (9 steps)
-  resolved2_contract_reachable (exists-trace): verified (9 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -419,7 +433,11 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.566912329s
+  processing time: 0.74s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

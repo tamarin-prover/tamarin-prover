@@ -22,6 +22,13 @@ module Main.Console (
 
   , helpAndExit
 
+  -- * Maude Version
+  , maudePath
+  , ensureMaude
+  , ensureMaudeAndGetVersion
+  , testProcess
+  , commandLine
+
   -- * Argument parsing
   , Arguments
   , ArgKey
@@ -52,13 +59,18 @@ module Main.Console (
 import           Data.Maybe
 import           Data.Version                    (showVersion)
 import           Data.Time
+import           Data.List
+import           Data.Char                       (isSpace)
 import           Safe
 
 import           Control.Monad
+import           Control.Exception               as E
 
 import           System.Console.CmdArgs.Explicit
 import           System.Console.CmdArgs.Text
 import           System.Exit
+import           System.IO
+import           System.Process
 
 import qualified Text.PrettyPrint.Class          as PP
 
@@ -66,8 +78,115 @@ import           Paths_tamarin_prover (version)
 
 import           Language.Haskell.TH
 import           Development.GitRev
-import           Theory.Module
-import           Data.List
+
+------------------------------------------------------------------------------
+-- Maude version functions - previously in Environment.hs
+------------------------------------------------------------------------------
+
+-- | Path to maude tool
+maudePath :: Arguments -> FilePath
+maudePath = fromMaybe "maude" . findArg "withMaude"
+
+getVersionIO :: String -> IO String
+getVersionIO maudeVersion = do
+              let tamarinVersion = showVersion version
+              let versionExport = "Generated from:\nTamarin version " ++ tamarinVersion
+                        ++  "\nMaude version " ++ maudeVersion ++ gitVersion
+                        ++ "\n" ++ compileTime
+              return versionExport
+
+commandLine :: String -> [String] -> String
+commandLine prog args = unwords $ prog : args
+
+testProcess
+  :: (String -> String -> Either String String)
+     -- ^ Analysis of stdout, stderr. Use 'Left' to report error.
+  -> String         -- ^ Default error message to display to the user.
+  -> String         -- ^ Test description to display.
+  -> FilePath       -- ^ Process to start
+  -> [String]       -- ^ Arguments
+  -> String         -- ^ Stdin
+  -> Bool           -- ^ Whether to ignore ExitFailure
+  -> Bool           -- ^ Whether Maude is being tested - hard fail for exceptions on Maude.
+  -> IO (Maybe String)    -- ^ String with the process output, if test was successful
+testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = do
+    putStr testName
+    hFlush stdout
+    handle handler $ do
+        (exitCode, out, err) <- readProcessWithExitCode prog args inp
+        let errMsg reason = do
+                putStrLn reason
+                putStrLn $ "Detailed results from testing '" ++ prog ++ "'"
+                putStrLn $ " command: " ++ commandLine prog args
+                putStrLn $ " stdin:   " ++ inp
+                putStrLn $ " stdout:  " ++ out
+                putStrLn $ " stderr:  " ++ err
+                return Nothing
+
+        let check' = case check out err of
+                      Left msg     -> errMsg msg
+                      Right msg    -> do putStrLn msg
+                                         return (Just out)
+
+        if not ignoreExitCode
+           then case exitCode of
+                  ExitFailure code -> errMsg $
+                    "failed with exit code " ++ show code ++ "\n\n" ++ defaultMsg
+                  ExitSuccess      -> check'
+           else check'
+
+  where
+    handler :: IOException -> IO (Maybe String)
+    handler exception =
+                do putStrLn "caught exception while executing:"
+                   putStrLn $ commandLine prog args
+                   putStrLn $ "with input: " ++ inp
+                   putStrLn $ "Exception: "
+                   putStrLn $ "   " ++ show exception
+                   if maudeTest then
+                     error "Maude is not installed. Ensure Maude is available and on the path."
+                     else putStrLn ""
+                   return Nothing
+
+ensureMaude :: Arguments -> IO (Bool, String)
+ensureMaude as = do
+    putStrLn $ "maude tool: '" ++ maude ++ "'"
+    t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" False True
+    t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" False True
+    (_, out, _) <- readProcessWithExitCode maude ["--version"] ""
+    return (if isNothing t1 || isNothing t2 then (False, (if out == "" then "unknown version\n" else init out ++ " (unsuported)\n")) else (True, out))
+  where
+    maude = maudePath as
+    checkVersion out _
+      | strip out `elem` supportedVersions = Right (strip out ++ ". OK.")
+      | otherwise                          = Left  $ errMsg $
+          " 'maude --version' returned unsupported version '" ++ strip out ++ "'"
+
+    strip = reverse . dropWhile isSpace . reverse
+
+    checkInstall _ []  = Right "OK."
+    checkInstall _ err = Left  $ errMsg err
+
+--  Maude versions prior to 2.7.1 are no longer supported,
+--  because the 'get variants' command is incompatible.
+    supportedVersions = ["2.7.1", "3.0", "3.1", "3.2.1", "3.2.2", "3.3", "3.3.1"]
+
+    errMsg' = errMsg $ "'" ++ maude ++ "' executable not found / does not work"
+
+    errMsg reason = unlines
+          [ "WARNING:"
+          , ""
+          , reason
+          , " Please install one of the following versions of Maude: " ++ intercalate ", " supportedVersions
+          ]
+
+-- Maude Version
+ensureMaudeAndGetVersion :: Arguments -> IO String
+ensureMaudeAndGetVersion as = do
+          -- Ensure Maude version and get Maude version 
+          (_, maudeVersion) <- ensureMaude as
+          -- Get String for version and put it in the arguments __version__
+          getVersionIO maudeVersion
 
 ------------------------------------------------------------------------------
 -- Static constants for the tamarin-prover
@@ -78,9 +197,9 @@ gitVersion :: String
 gitVersion = concat
   [ "Git revision: "
     , $(gitHash)
-    , case $(gitDirty) of
-          True  -> " (with uncommited changes)"
-          False -> ""
+    , if $(gitDirty) then
+          " (with uncommited changes)"
+      else ""
     , ", branch: "
     , $(gitBranch)
   ]
@@ -103,10 +222,8 @@ versionStr = unlines
     [ programName
     , " "
     , showVersion version
-    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2020"
+    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2023"
     ]
-  , gitVersion
-  , compileTime
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"
   , "are welcome to redistribute it according to its LICENSE, see"
@@ -207,7 +324,9 @@ tamarinMode name help adaptMode run0 = TamarinMode
   where
     run thisMode as
       | argExists "help"    as = helpAndExit thisMode Nothing
-      | argExists "version" as = putStrLn versionStr
+      | argExists "version" as = do putStrLn versionStr
+                                    versionMaude <- ensureMaudeAndGetVersion as
+                                    putStrLn versionMaude
       | otherwise              = run0 thisMode as
 
 -- | Disply help message of a tamarin mode and exit.
@@ -216,9 +335,10 @@ helpAndExit tmode mayMsg = do
     putStrLn $ showText (Wrap lineWidth)
              $ helpText header HelpFormatOne (tmCmdArgsMode tmode)
     -- output example info
-    when (tmIsMainMode tmode) $ do
-      putStrLn $ unlines
+    putStrLn $ unlines
         [ separator
+        , "To show help for differents commands, type tamarin-prover [Command] --help."
+        , separator
         , "See 'https://github.com/tamarin-prover/tamarin-prover/blob/master/README.md'"
         , "for usage instructions and pointers to examples."
         , separator
@@ -237,7 +357,8 @@ defaultMain firstMode otherModes = do
     case findArg "mode" as of
       Nothing   -> error $ "defaultMain: impossible - mode not set"
       Just name -> headNote "defaultMain: impossible - no mode found" $ do
-          tmode <- (mainMode : otherModes)
+          allModes <- [interMode:intruderMode:testMode:[]]
+          tmode <- (mainMode : allModes)
           guard (tmName tmode == name)
           return $ tmRun tmode tmode as
   where
@@ -257,6 +378,27 @@ defaultMain firstMode otherModes = do
               }
           }
       , tmIsMainMode = True
+      }
+    interMode = (head otherModes)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ head otherModes)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
+        }
+      }
+    intruderMode = (otherModes !! 1)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ otherModes !! 1)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
+        }
+      }
+    testMode = (otherModes !! 2)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ otherModes !! 2)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
+        }
       }
 
 
