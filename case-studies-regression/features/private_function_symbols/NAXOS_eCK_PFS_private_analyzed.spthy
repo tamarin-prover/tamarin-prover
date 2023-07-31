@@ -3,8 +3,12 @@ theory NAXOS_eCK begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1, h1/1, h2/1, pair/2, sk/1 [private], snd/1
+functions: fst/1, h1/1, h2/1, pair/2, sk/1[private,destructor], snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
 
 
 
@@ -124,6 +128,10 @@ rule (modulo E) Init_2:
         Y     = x.594^(x.595*inv((x.596*sk($A.299))))
         z     = x.594^(x.595*inv(x.596))
         z.1   = x.594^(x.595*h1(<~ex.301, sk($A.299)>)*inv((x.596*sk($A.299))))
+    
+    15. Y     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Resp_1:
@@ -236,6 +244,10 @@ rule (modulo E) Resp_1:
         X     = x.931^(x.932*inv((x.933*sk($B.468))))
         z     = x.931^(x.932*inv(x.933))
         z.1   = x.931^(x.932*h1(<~ey.469, sk($B.468)>)*inv((x.933*sk($B.468))))
+    
+    15. X     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Sessk_reveal:
@@ -336,25 +348,33 @@ solve( (∃ matchingSession #i3 matchingRole.
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
-
-  output:          examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy.tmp
-  processing time: 2.088628863s
-  eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -362,7 +382,8 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy.tmp
-  processing time: 2.088628863s
+  processing time: 1.12s
+  
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
 ==============================================================================

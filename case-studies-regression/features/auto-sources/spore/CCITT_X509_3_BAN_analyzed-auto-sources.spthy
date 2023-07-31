@@ -12,6 +12,12 @@ equations:
 
 
 
+
+
+
+
+
+
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ]
   --[ Register( $X, ~ltk ) ]->
@@ -516,30 +522,54 @@ solve( !Pk( $B, pk(~ltkB) ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule A_send_1: 
+Failed to derive Variable(s): ~ltkB
+
+Rule B_receive_1: 
+Failed to derive Variable(s): ~ltkA
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
-
-  output:          examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy.tmp
-  processing time: 4.433134401s
-  Secrecy (all-traces): verified (24 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (13 steps)
-  agreement_B (all-traces): verified (7 steps)
-  injectiveagreement_A (all-traces): falsified - found trace (23 steps)
-  agreement_A (all-traces): verified (8 steps)
-  Session_key_honest_setup (exists-trace): verified (23 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -547,7 +577,11 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_3_BAN.spthy.tmp
-  processing time: 4.433134401s
+  processing time: 3.60s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   Secrecy (all-traces): verified (24 steps)
   injectiveagreement_B (all-traces): falsified - found trace (13 steps)
   agreement_B (all-traces): verified (7 steps)

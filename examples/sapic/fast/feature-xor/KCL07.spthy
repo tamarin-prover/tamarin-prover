@@ -42,6 +42,7 @@ let Tag =
    out( <~id XOR ~r2, h(<r1,~k>) XOR ~r2>)
 
 
+process:
 new ~k; new ~id;  (!Reader || !Tag)
 
 

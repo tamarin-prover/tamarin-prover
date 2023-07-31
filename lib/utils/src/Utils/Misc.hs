@@ -29,10 +29,16 @@ module Utils.Misc (
   -- * unsafeEq
   , unsafeEq
 
+  -- * String operations
+  , editDistance
+
   -- * triples
   , fst3
   , snd3
   , thd3
+
+  -- * uncurry
+  , uncurry3
 
 ) where
 
@@ -66,6 +72,10 @@ snd3 (_, x, _) = x
 -- | @thd3 (x, y, z)@ returns the third element @z@ of the triple
 thd3 :: (a, b, c) -> c
 thd3 (_, _, x) = x
+
+-- | @uncurry3 f (a,b,c)@ uncurry a function which has three param
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 f (a, b, c) = f a b c
 
 -- | @noDuplicates xs@ returns @True@ if the list @xs@ contains no duplicates
 noDuplicates :: (Ord a) => [a] -> Bool
@@ -152,3 +162,17 @@ twoPartitions (x:xs) = (map addToFirst ps) ++ (map addToSecond ps)
         addToFirst  (a, b) = (x:a, b)
         addToSecond (a, b) = (a, x:b)
         ps = twoPartitions xs
+
+
+-- | Calculate the editing distance between two strings
+editDistance :: String-> String -> Int
+editDistance s t = 
+    d !!(length s)!!(length t)  
+    where d = [ [ dist m n | n <- [0..length t] ] | m <- [0..length s] ]
+          dist i 0 = i
+          dist 0 j = j
+          dist i j = minimum [ d!!(i-1)!!j+1
+                             , d!!i!!(j-1)+1
+                             , d!!(i-1)!!(j-1) + (if s!!(i-1)==t!!(j-1) 
+                                                  then 0 else 1) 
+                             ]

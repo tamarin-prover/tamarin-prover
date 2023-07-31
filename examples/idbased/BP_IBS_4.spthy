@@ -29,7 +29,26 @@ builtins: bilinear-pairing
 functions: idsign/2, idverify/3, IBPriv/2, IBPub/2, GetIBMasterPublicKey/1, true/0, KDF/1
 equations: idverify(idsign(m,IBPriv(A, IBMasterPrivateKey)),m,IBPub(A, GetIBMasterPublicKey(IBMasterPrivateKey))) = true
 
-
+tactic: mainSourceLemma  
+prio:
+  regex ".*St_.*\(.*"  
+prio:
+  regex ".*KU\( ~.*"  
+prio:
+  regex ".*~~>.*" 
+prio:
+  regex ".*KU\( KDF\(.*" 
+prio:
+  regex ".*KU\( IBPriv\(.*"
+prio:
+  regex ".*KU\( idsign\(.*"
+prio:
+  regex ".*KU\( em\(.*" | regex ".*KU\( pmult\(.*"  
+prio:
+  regex ".*!IB_.*"
+prio:
+  regex ".*splitEqs\(.*"
+    
 /**** Setup Key Escrow ****/
 // Reveals the identity based private key of an agent A
 rule Reveal_IB_SIGN_privkey:

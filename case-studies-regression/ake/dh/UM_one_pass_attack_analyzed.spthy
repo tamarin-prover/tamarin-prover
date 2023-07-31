@@ -8,6 +8,12 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
+
+
 rule (modulo E) Register_key_honest:
    [ Fr( ~ea ) ]
   --[ KeyReg( $A ) ]->
@@ -100,6 +106,9 @@ rule (modulo E) R_Complete:
     6. ~eb   = ~eb.139
        X     = x.271^(x.272*inv((~eb.139*x.273)))
        z     = x.271^(x.272*inv(x.273))
+    
+    7. X     = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) R_Expire:
@@ -319,26 +328,42 @@ solve( (¬(role = 'I'))  ∥
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule I_Complete: 
+Failed to derive Variable(s): ~eb
+
+Rule R_Complete: 
+Failed to derive Variable(s): ~ea
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/dh/UM_one_pass_attack.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/dh/UM_one_pass_attack.spthy
-
-  output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 2.634166692s
-  key_agreement_reachable (exists-trace): verified (10 steps)
-  CK_secure (all-traces): falsified - found trace (19 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -346,7 +371,11 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 2.634166692s
+  processing time: 2.39s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
 

@@ -21,7 +21,6 @@ where
 import           Prelude                    hiding (id, (.))
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Char8      as BC
-import           Data.Foldable              (asum)
 import           Data.Label
 import           Data.Either
 import           Data.Maybe
@@ -36,12 +35,10 @@ import           Text.Parsec                hiding ((<|>))
 import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
-import Theory.Text.Parser.Let
-import Theory.Text.Parser.Fact
-import Theory.Text.Parser.Term
-import Theory.Text.Parser.Formula
-
-
+import           Theory.Text.Parser.Let
+import           Theory.Text.Parser.Fact
+import           Theory.Text.Parser.Term
+import           Theory.Text.Parser.Formula
 
 -- | Parse a "(modulo ..)" information.
 modulo :: String -> Parser ()
@@ -72,6 +69,7 @@ ruleAttribute = asum
     [ symbol "colour=" *> (Just . RuleColor <$> parseColor)
     , symbol "color="  *> (Just . RuleColor <$> parseColor)
     , symbol "process="  *> parseAndIgnore
+    , symbol "derivchecks" *> ignore
     ]
   where
     parseColor = do
@@ -83,6 +81,7 @@ ruleAttribute = asum
                         _ <-  symbol "\""
                         _ <- manyTill anyChar (try (symbol "\""))
                         return Nothing
+    ignore = return (Just IgnoreDerivChecks)
 
 ruleAttributesp :: Parser [RuleAttribute]
 ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute
@@ -106,7 +105,7 @@ diffRule = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0,rs0) <- genericRule
+    (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
     leftRight  <- optionMaybe ( (,) <$> (symbol "left"  *> protoRule) <*> (symbol "right" *> protoRule))
     return $ DiffProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) leftRight
@@ -120,7 +119,7 @@ protoRule = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0,rs0) <- genericRule
+    (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
     variants <- option [] $ symbol "variants" *> commaSep1 protoRuleAC
     return $ OpenProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) variants
@@ -140,7 +139,7 @@ protoRuleAC = do
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
-    (ps0,as0,cs0,rs0) <- genericRule
+    (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,_) = apply subst (ps0,as0,cs0,rs0)
     return $ Rule ri ps cs as (newVariables ps $ cs ++ as)
 
@@ -148,7 +147,7 @@ protoRuleAC = do
 intrRule :: Parser IntrRuleAC
 intrRule = do
     info <- try (symbol "rule" *> moduloAC *> intrInfo <* colon)
-    (ps,as,cs,[]) <- genericRule -- intruder rules should not introduce restrictions.
+    (ps,as,cs,[]) <- genericRule msgvar nodevar -- intruder rules should not introduce restrictions.
     return $ Rule info ps cs as (newVariables ps cs)
   where
     intrInfo = do
@@ -164,18 +163,21 @@ intrRule = do
 embeddedRestriction :: Parser a -> Parser a
 embeddedRestriction factParser = symbol "_restrict" *> parens factParser <?> "restriction"
 
-factOrRestr ::  Parser (Either SyntacticLNFormula LNFact)
-factOrRestr = Right <$> fact llit
-              <|> Left <$> embeddedRestriction standardFormula
+-- factOrRestr ::  Parser (Either SyntacticLNFormula LNFact)
+factOrRestr :: (Ord v, Hinted v) => Parser v -> Parser v
+                -> Parser (Either (SyntacticNFormula v) (NFact v))
+factOrRestr varp nodep = Right <$> fact (vlit varp)
+              <|> Left <$> embeddedRestriction (standardFormula varp nodep)
 
-genericRule :: Parser ([LNFact], [LNFact], [LNFact], [SyntacticLNFormula]) --- lhs, actions, rhs, restrictions
-genericRule = do
-    lhs         <- list (fact llit)
+
+genericRule :: (Ord v, Hinted v) => Parser v -> Parser v -> Parser ([Fact (NTerm v)], [Fact (NTerm v)], [Fact (NTerm v)], [SyntacticFormula (String, LSort) Name v]) --- lhs, actions, rhs, restrictions
+genericRule varp nodep = do
+    lhs         <- list (fact (vlit varp))
     actsAndRsts <-
         (   (pure [] <* symbol "-->")
-        <|> (symbol "--[" *> commaSep factOrRestr <* symbol "]->")
+        <|> (symbol "--[" *> commaSep (factOrRestr varp nodep) <* symbol "]->")
         )
-    rhs <- list (fact llit)
+    rhs <- list (fact (vlit varp))
     return (lhs, rights actsAndRsts, rhs, lefts actsAndRsts)
 
 {-

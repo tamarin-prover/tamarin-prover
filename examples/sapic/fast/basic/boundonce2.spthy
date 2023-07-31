@@ -1,0 +1,8 @@
+theory BoundOnce
+begin
+
+// x is bound twice and should be renamed appropriately
+process:
+new x; new x
+
+end

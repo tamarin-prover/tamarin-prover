@@ -34,11 +34,17 @@ module Theory.Text.Parser.Token (
 
   , freshName
   , pubName
+  , natName
 
+
+  , typep
   , sortedLVar
   , lvar
   , msgvar
   , nodevar
+  , sapicvar
+  , sapicpatternvar
+  , sapicnodevar
 
   , letIdentifier
 
@@ -52,6 +58,7 @@ module Theory.Text.Parser.Token (
 
   , opConcat
   , opEqual
+  , opSubterm
   , opLess
   , opAt
   , opForall
@@ -80,6 +87,7 @@ module Theory.Text.Parser.Token (
   , opSlash
   , opMinus
   , opPlus
+  , opUnion
   , opLeftarrow
   , opRightarrow
   , opLongleftarrow
@@ -109,11 +117,10 @@ module Theory.Text.Parser.Token (
   , parseFile
   , parseFileWState
   , parseString
-  ) where
+  ,opLessTerm) where
 
 import           Prelude             hiding (id, (.))
 
-import           Data.Foldable       (asum)
 -- import           Data.Label
 -- import           Data.Binary
 import           Data.List (foldl')
@@ -134,6 +141,8 @@ import qualified Text.Parsec.Token   as T
 import           Theory
 import qualified Control.Monad.Catch as Catch
 import Data.Functor.Identity
+import Theory.Sapic.Pattern
+import Theory.Sapic
 
 
 ------------------------------------------------------------------------------
@@ -350,10 +359,11 @@ sortedLVar ss =
 
     mkPrefixParser s = do
         case s of
-          LSortMsg   -> pure ()
-          LSortPub   -> void $ char '$'
-          LSortFresh -> void $ char '~'
-          LSortNode  -> void $ char '#'
+          LSortMsg       -> pure ()
+          LSortPub       -> void $ char '$'
+          LSortFresh     -> void $ char '~'
+          LSortNode      -> void $ char '#'
+          LSortNat       -> void $ char '%'
         (n, i) <- indexedIdentifier
         return (LVar n s i)
 
@@ -363,7 +373,7 @@ lvar = sortedLVar [minBound..]
 
 -- | Parse a non-node variable.
 msgvar :: Parser LVar
-msgvar = sortedLVar [LSortFresh, LSortPub, LSortMsg]
+msgvar = sortedLVar [LSortFresh, LSortPub, LSortNat, LSortMsg]
 
 -- | Parse a graph node variable.
 nodevar :: Parser NodeId
@@ -379,6 +389,45 @@ freshName = try (symbol "~" *> singleQuoted identifier)
 -- | Parse a literal public name, e.g., @'n'@.
 pubName :: Parser String
 pubName = singleQuoted identifier
+
+-- | Parse a literal nat name, e.g. @%'n'@.
+natName :: Parser String
+natName = try (symbol "%" *> singleQuoted identifier)
+
+-- | Parse a Sapic Type
+typep :: Parser SapicType
+typep = ( try (symbol defaultSapicTypeS) *> return Nothing)
+            <|> Just <$> identifier
+
+-- | Parse a variable in sapic that is typed:
+--   first parse for lvar, then parse for one more type
+--   so:
+--   ~x: foo
+--   $x: bar
+--   x: foo
+--   are all valid, but
+--   x: pub: foo
+--   is not
+sapicvar :: Parser SapicLVar
+sapicvar = do
+        v <- lvar
+        t <- option Nothing $ colon *> typep
+        return (SapicLVar v t)
+
+sapicpatternvar :: Parser PatternSapicLVar
+sapicpatternvar = do
+        eq <- option False parseq
+        v  <- sapicvar
+        return (if eq then PatternMatch v else PatternBind v)
+        where parseq = do
+                _ <- opEqual
+                return True
+
+
+sapicnodevar :: Parser SapicLVar
+sapicnodevar = do
+    v <- nodevar
+    return (SapicLVar v defaultSapicNodeType)
 
 
 -- Term Operators
@@ -399,9 +448,13 @@ opExp = symbol_ "^"
 opMult :: Parser ()
 opMult = symbol_ "*"
 
--- | The addition operator @*@.
+-- | The addition operator @%+@.
 opPlus :: Parser ()
-opPlus = symbol_ "+"
+opPlus = symbol_ "%+"
+
+-- | The multiset operator @+@.
+opUnion :: Parser ()
+opUnion = symbol_ "++" <|> symbol_ "+"
 
 -- | The cons operator @*@.
 opConcat :: Parser ()
@@ -415,6 +468,10 @@ opXor = symbol_ "XOR" <|> symbol_ "⊕"
 opLess :: Parser ()
 opLess = symbol_ "<"
 
+-- | The multiset comparison operator @(<)@.
+opLessTerm :: Parser ()
+opLessTerm = symbol_ "(<)"
+
 -- | The action-at-timepoint operator \@.
 opAt :: Parser ()
 opAt = symbol_ "@"
@@ -422,6 +479,10 @@ opAt = symbol_ "@"
 -- | The equality operator @=@.
 opEqual :: Parser ()
 opEqual = symbol_ "="
+
+-- | The equality operator @=@.
+opSubterm :: Parser ()
+opSubterm = symbol_ "<<" <|> symbol_ "⊏"
 
 -- | The logical-forall operator @All@ or @∀@.
 opForall :: Parser ()

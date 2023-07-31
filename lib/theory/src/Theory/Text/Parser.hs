@@ -17,16 +17,19 @@ module Theory.Text.Parser (
   , parseOpenTheoryString
   , parseOpenDiffTheory
   , parseOpenDiffTheoryString
+  , theory
+  , diffTheory
   , parseLemma
   , parseRestriction
   , parseIntruderRules
+  , liftedAddLemma
   , liftedAddProtoRule
   , liftedAddRestriction
   ) where
 
 import           Prelude                    hiding (id, (.))
-import           Data.Foldable              (asum)
 import           Data.Label
+import           Data.Maybe
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import           System.FilePath
@@ -40,10 +43,13 @@ import           Text.PrettyPrint.Class     (render)
 import           Theory
 import           Theory.Text.Parser.Token
 
+import           Theory.Text.Parser.Accountability
 import           Theory.Text.Parser.Lemma
 import           Theory.Text.Parser.Rule
+import           Theory.Text.Parser.Macro
 import Theory.Text.Parser.Exceptions
 import Theory.Text.Parser.Signature
+import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
 
@@ -82,10 +88,9 @@ parseLemma = parseString [] "<unknown source>" (lemma Nothing)
 -- Parsing Theories
 ------------------------------------------------------------------------------
 
-
 liftedExpandFormula :: Catch.MonadThrow m =>
                        Theory sig c r p s -> SyntacticLNFormula -> m LNFormula
-liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula thy
+liftedExpandFormula thy = liftEitherToEx UndefinedPredicate . expandFormula (theoryPredicates thy)
 
 liftedExpandLemma :: Catch.MonadThrow m => Theory sig c r p1 s
                      -> ProtoLemma SyntacticLNFormula p2 -> m (ProtoLemma LNFormula p2)
@@ -123,6 +128,19 @@ liftedAddLemma thy lem = do
                                          -- ++ " in lemma: "
                                          -- ++ get lName lem
                                          -- ++ "."
+
+liftedAddAccLemma :: Catch.MonadThrow m =>
+                     Theory sig c r p TranslationElement
+                     -> AccLemma -> m (Theory sig c r p TranslationElement)
+liftedAddAccLemma thy lem =
+   liftMaybeToEx (DuplicateItem $ TranslationItem $ AccLemmaItem lem) (addAccLemma lem thy)
+
+liftedAddCaseTest :: Catch.MonadThrow m =>
+                     Theory sig c r p TranslationElement
+                     -> CaseTest -> m (Theory sig c r p TranslationElement)
+liftedAddCaseTest thy cTest =
+   liftMaybeToEx (DuplicateItem $ TranslationItem $ CaseTestItem cTest) (addCaseTest cTest thy)
+
 
 -- | Add new protocol rule and introduce restrictions for _restrict contruct
 --  1. expand syntactic restrict constructs
@@ -199,24 +217,36 @@ theory inFile = do
     addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
            addItems inFile0 thy'
+      , do thy' <- liftedAddTactic thy =<< tactic False
+           addItems inFile0 thy'
       , do thy' <- builtins thy
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
       , do thy' <- options thy
            addItems inFile0 thy'
-      , do functions
+      , do fs <- functions
            msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
+           let thy' = foldl (flip addFunctionTypingInfo) thy fs in
+             addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
       , do equations
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
---           addItems inFile0 flags thy'
-      , do thy' <- liftedAddRestriction thy =<< restriction
+--           addItems flags thy'
+      , do thy' <- liftedAddMacros thy =<< macros
+           addItems inFile0 thy'
+      , do thy' <- liftedAddRestriction thy =<< restriction msgvar nodevar
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
            addItems inFile0 thy'
            -- add legacy deprecation warning output
+      , do test <- caseTest
+           thy' <- liftedAddCaseTest thy test
+           addItems inFile0 thy'
+      , do accLem <- lemmaAcc workDir
+           let tests = mapMaybe (flip lookupCaseTest $ thy) (get aCaseIdentifiers accLem)
+           thy' <- liftedAddAccLemma thy (defineCaseTests accLem tests)
+           addItems inFile0 thy'
       , do thy' <- liftedAddLemma thy =<< lemma workDir
            addItems inFile0 thy'
       , do ru <- protoRule
@@ -228,11 +258,19 @@ theory inFile = do
            addItems inFile0 (addIntrRuleACs [r] thy)
       , do c <- formalComment
            addItems inFile0 (addFormalComment c thy)
-      , do procc <- process thy                          -- try parsing a process
-           addItems inFile0 (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems inFile0 call)
+      , do procc <- toplevelprocess thy                          -- try parsing a process
+           addItems inFile0 (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
            addItems inFile0 thy'
+      , do
+           lem <- equivLemma thy
+           addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
+      , do
+           lem <- diffEquivLemma thy
+           addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
       , do thy' <- preddeclaration thy
+           addItems inFile0 (thy')
+      , do thy'  <- export thy
            addItems inFile0 (thy')
       , do ifdef inFile0 thy
       , do define inFile0 thy
@@ -305,6 +343,14 @@ theory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
+    liftedAddTactic thy t = case addTactic t thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default tactic already defined"
+
+    liftedAddMacros thy m = case addMacros m thy of 
+        Just thy' -> return thy'
+        Nothing   -> fail $ "macro already defined"
+
 -- | Parse a diff theory.
 diffTheory :: Maybe FilePath
        -> Parser OpenDiffTheory
@@ -322,11 +368,14 @@ diffTheory inFile = do
     addItems inFile0 thy = asum
       [ do thy' <- liftedAddHeuristic thy =<< heuristic True workDir
            addItems inFile0 thy'
+      , do thy' <- liftedAddTactic thy =<< tactic True
+           addItems inFile0 thy'
       , do
            diffbuiltins
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
-      , do functions
+      , do _ <- functions -- typing affects only SAPIC translation, hence functions
+                          -- are only added to maude signature, but not to theory.
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
       , do equations
@@ -334,6 +383,8 @@ diffTheory inFile = do
            addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems inFile0 thy'
+      , do thy' <- liftedAddDiffMacros thy =<< macros
+           addItems inFile0 thy'
       , do thy' <- liftedAddRestriction' thy =<< diffRestriction
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction' thy =<< legacyDiffAxiom
@@ -417,6 +468,10 @@ diffTheory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default heuristic already defined"
 
+    liftedAddTactic thy t = case addDiffTactic t thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "default tactic already defined"
+
     liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName $ get dprRule ru)
@@ -424,6 +479,10 @@ diffTheory inFile = do
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "duplicate Diff Lemma: " ++ render (prettyDiffLemmaName ru)
+
+    liftedAddDiffMacros thy m = case addDiffMacros m thy of
+        Just thy' -> return thy'
+        Nothing   -> fail $ "macros already defined"
 
     liftedAddLemma' thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of

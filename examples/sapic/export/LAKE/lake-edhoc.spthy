@@ -1,0 +1,125 @@
+/*
+ * Protocol:    LAKE
+   https://datatracker.ietf.org/doc/html/draft-ietf-lake-edhoc-02
+
+   A lightweight DH based key exchange.
+
+   It comes with two possible modes, either a signature is used for
+   authentication, or a long term dh key. This file present the signature only
+   version.
+
+   Proverif : everything in a few seconds.
+
+   Tamarin : everything in 1 minutes on colosseus.
+*/
+
+theory edhoc
+
+begin
+
+builtins: dest-pairing, diffie-hellman, dest-signing, dest-symmetric-encryption
+
+functions: hash/1,hkdfextract/2, hkdfexpand(bitstring,bitstring):skey
+
+let I2(~skI:skey) =         // Initiator using signatures
+    new ~a;
+    let gA = 'g'^~a in
+    out(<'m2',gA, 'C_I','AD'>);
+    in(<'C_I',gB,rC_R,cypher_2>);
+    let TH_2 = hash(<'m2',gA,'C_I','AD','C_I',gB,rC_R>) in
+    let PRK_2e = hkdfextract('null', gB^~a) in
+    let K_2e:skey = hkdfexpand(PRK_2e, <TH_2,'TagK_2e'>) in
+    let PRK_3e2m = PRK_2e in
+    let K_2m:skey = hkdfexpand(PRK_3e2m, <TH_2,'TagK_2m'>) in
+    // decypher using K_2e
+    let plaintext_2 = sdec(cypher_2,K_2e) in
+    let <pkR,signed,rAD_2> = plaintext_2 in
+    let MAC_2 = senc(<TH_2,pkR,rAD_2>,K_2m) in
+    if verify(signed,< pkR,TH_2,rAD_2,MAC_2>,pkR) = true then
+        let TH_3 = hash(<TH_2,cypher_2,rC_R>) in
+	let PRK_4x3m = PRK_3e2m in
+        event AcceptI(pk(~skI),pkR,PRK_3e2m,PRK_4x3m);
+        let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
+        let MAC_3 = senc(<TH_3,pk(~skI),'AD_3'>,K_3m) in
+        let Signed3 = sign(<pk(~skI),TH_3,'AD_3',MAC_3> ,~skI) in
+        let K_3ae:skey = hkdfexpand(PRK_3e2m, <TH_3,'TagK_3ae'>) in
+        out(<rC_R,senc(< pk(~skI), Signed3, 'AD_3'>, K_3ae ),'AD_3'>)
+
+let R(~skR:skey) =
+    in(<mcorr,gA,rC_I,rAD>);
+    new ~b;
+    let gB = 'g'^~b in
+    let TH_2 = hash(<mcorr,gA,rC_I,rAD,rC_I,gB,'C_R'>) in
+    let PRK_2e = hkdfextract('null', gA^~b) in
+    let K_2e:skey = hkdfexpand(PRK_2e, <TH_2,'TagK_2e'>) in
+    if mcorr = 'm1' then   // we merge mcorr = 1 and mcorr =3, static DH auth used
+       out('notimplementedyet')
+//       out(senc( <pk(~skS),MAC_2 >  ,K_2e))
+    else
+       let PRK_3e2m = PRK_2e in
+       let K_2m:skey = hkdfexpand(PRK_3e2m, <TH_2,'TagK_2m'>) in
+       let MAC_2 = senc(<TH_2,pk(~skR),'AD_2'>,K_2m) in
+       let Signed2 = sign(<pk(~skR),TH_2,'AD_2',MAC_2> ,~skR) in
+       let cypher_2 = senc( <pk(~skR),Signed2,'AD_2' >  ,K_2e) in
+       event DerivedR(pk(~skR),PRK_3e2m);
+       out(<rC_I,gB,'C_R',cypher_2>);
+       in(<'C_R', cypher_3,rAD_3>);
+       let TH_3 = hash(<TH_2,cypher_2,'C_R'>) in
+       let PRK_4x3m = PRK_3e2m in
+       let K_3ae:skey = hkdfexpand(PRK_3e2m, <TH_3,'TagK_3ae'>) in
+       let plaintext_3 = sdec(cypher_3,K_3ae) in
+       let <pkI,Signed3,=rAD_3> = plaintext_3 in
+
+       let K_3m:skey = hkdfexpand(PRK_4x3m, <TH_3,'TagK_3m'>) in
+       let MAC_3 = senc(<TH_3,pkI,rAD_3>,K_3m) in
+       if verify(Signed3, <pkI,TH_3,rAD_3,MAC_3 > , pkI) = true then
+          event AcceptR(pkI,pk(~skR),PRK_4x3m)
+
+process:
+!(new ~skR:skey; new ~skI:skey; out(<pk(~skR),pk(~skI)>);
+  event Honnest(pk(~skR), 'Resp');
+  event Honnest(pk(~skI), 'Init');
+       !(I2(~skI) | R(~skR) )
+)
+
+lemma secretR[reuse]: //secrecy of the key
+   "(not (Ex pkI pkR k4 #i #j #l. (AcceptR(pkI,pkR,k4)@i & KU(k4)@j & Honnest(pkI, 'Init')@l ) ))"
+
+lemma secretI[reuse]: //secrecy of the key
+   "(not (Ex pkI pkR k3 k4 #i #j #l. (AcceptI(pkI,pkR,k3,k4)@i & KU(k4)@j & Honnest(pkR, 'Resp')@l ) ))"
+
+
+lemma executableR: // sanity check
+  exists-trace
+ "Ex pkI pkR k3 #i. AcceptR(pkI,pkR,k3)@i"
+
+
+lemma executableI: // sanity check
+  exists-trace
+  "Ex pkI pkR k3 k4 #i. AcceptI(pkI,pkR,k3,k4)@i"
+
+lemma executableIhonnest: // sanity check
+  exists-trace
+  "Ex pkI pkR k3 k4 #i #l. (AcceptI(pkI,pkR,k3,k4)@i & Honnest(pkR, 'Resp')@l) "
+
+lemma executableRhonnest:
+  exists-trace
+   "Ex pkI pkR k4 #i #l. (AcceptR(pkI,pkR,k4)@i & Honnest(pkI, 'Init')@l ) "
+
+lemma false_dishonnestnoauthRI:  // should be false as the attacker can play initiator
+ "All pkI pkR k4 #i. AcceptR(pkI,pkR,k4)@i ==>
+    (Ex #j k3. j<i & (AcceptI(pkI,pkR,k3,k4)@j))"
+
+lemma false_dishonnestnoauthIR:  // should be false, as attacker can play responder
+ "All pkI pkR k3 k4 #i. AcceptI(pkI,pkR,k3,k4)@i ==>
+    (Ex #j. j<i & (DerivedR(pkR,k3)@j))"
+
+lemma honnestauthRI:  // should be true
+ "All pkI pkR k4 #i #l. AcceptR(pkI,pkR,k4)@i & Honnest(pkI, 'Init')@l ==>
+    (Ex #j k3. j<i & (AcceptI(pkI,pkR,k3,k4)@j))"
+
+lemma honnestauthIR:  // should be true
+ "All pkI pkR k3 k4 #i #l. AcceptI(pkI,pkR,k3,k4)@i & Honnest(pkR, 'Resp')@l ==>
+    (Ex #j. j<i & (DerivedR(pkR,k3)@j))"
+
+end

@@ -6,6 +6,9 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt, Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -147,7 +150,7 @@ dropNameHintsLNSubstVFresh subst =
 -- Instances
 ------------
 
-instance Apply SplitId where
+instance Apply LNSubst SplitId where
     apply _ = id
 
 instance HasFrees EqStore where
@@ -160,8 +163,8 @@ instance HasFrees EqStore where
                 <*> mapFrees f nextSplitId
 
 
-instance Apply EqStore where
-    apply subst (EqStore a b c) = EqStore (compose subst a) (fmap (fmap $ S.map $ flip composeVFresh subst) b) (apply subst c)
+instance Apply LNSubst EqStore where
+    apply subst (EqStore a b c) = EqStore (compose subst a) (fmap (fmap $ S.map $ flip composeVFresh subst) b) (apply subst c) 
 
 
 -- Equation Store

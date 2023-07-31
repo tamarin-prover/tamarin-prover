@@ -182,6 +182,7 @@ getRuleType r
     | isIEqualityRule r = "isIEqualityRule"
     | isConstrRule r    = "isConstrRule"
     | isPubConstrRule r = "isPubConstrRule"
+    | isNatConstrRule r = "isNatConstrRule"
     | isFreshRule r     = "isFreshRule"
     | isIRecvRule r     = "isIRecvRule"
     | isISendRule r     = "isISendRule"
@@ -392,7 +393,7 @@ sequentToJSONGraphs pretty label se =
                           ++ (map (unsolvedActionAtomsToJSONGraphNode pretty) $ unsolvedActionAtoms se)
                           ++ (missingNodesToJSONGraphNodes se $ S.toList $ L.get sEdges se)
               , jgEdges = (map (edgeToJSONGraphEdge se) $ S.toList $ L.get sEdges se)
-                          ++ (map lessAtomsToJSONGraphEdge $ S.toList $ L.get sLessAtoms se)
+                          ++ (map lessAtomsToJSONGraphEdge $ S.toList $ getLessAtoms se)
                           ++ (map unsolvedchainToJSONGraphEdge $ unsolvedChains se)
               } 
           ] 

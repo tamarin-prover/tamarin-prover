@@ -143,6 +143,1269 @@ functions:
 	KDF/2,	 // KDF		 --> K_ausf, K_seaf, XRES*
 	SHA256/2 // KDF		 --> HXRES*
 
+tactic: sqn_many
+presort: C
+prio:
+    regex ".*St_1_UE\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+    regex ".*Sqn_HSS\(.*"
+    
+
+tactic: sqn_ue_nodecrease
+presort: C
+prio:  
+    regex ".*\(last\(#j.*"
+prio:
+    regex ".*Sqn_UE_Change\(.*"
+prio:
+    regex ".*\(#vr < #i\).*"
+prio:
+    regex ".*Sqn_UE\(.*count.1.*"
+
+
+tactic: secrecy_ue_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*~~>*"
+prio:    
+    regex ".*St_.*\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*Sec\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: secrecy_ue_kseaf
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: secrecy_ue_supi
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*=.*=.*=.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*RcvS\(.*\'aia\'.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+    regex ".*!KU\( f1\(KDF\(KDF\(.*"
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+
+tactic: secrecy_hss_no_k
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*=.*=.*=.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+    regex ".*Sec\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*RcvS\(.*"
+    regex ".*!KU\( SHA256\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: secrecy_hss_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, '1',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*=.*=.*=.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+    regex ".*Sec\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*RcvS\(.*"
+    regex ".*!KU\( SHA256\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: secrecy_hss_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*=.*=.*=.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+    regex ".*Sec\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    /*regex ".*RcvS\(.*"              pour une raison mystérieuse ça fait passer le lemme*/
+    regex ".*!KU\( SHA256\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: secrecy_hss_kseaf_noChanRev_noKeyRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*=.*=.*=.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+    regex ".*Sec\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    //regex ".*RcvS\(.*"
+    regex ".*!KU\( SHA256\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: secrecy_seaf
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*=.*=.*=.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+    regex ".*Sec\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*RcvS\(.*"
+    regex ".*!KU\( SHA256\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*=.*=.*=.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+    regex ".*Sec\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*RcvS\(.*"
+    regex ".*!KU\( SHA256\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: secrecy_seaf_kseaf_noChanRev_noKeyRev
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+    regex ".*=.*=.*=.*"
+    regex ".*~~>*"
+prio:
+    regex ".*St_.*\(.*"
+    regex ".*Sec\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*RcvS\(.*"
+    regex ".*!KU\( SHA256\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+
+tactic: weakagreement_hss_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+prio:
+    regex ".*RcvS\(.*\'ac\'.*"
+prio:
+    regex ".*RcvS\(.*\'aia\'.*"
+prio:
+    regex ".*RcvS\(.*\'air\'.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+
+tactic: weakagreement_hss_seaf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+prio:
+    regex ".*St_1_SEAF\(.*"
+    regex ".*Sec\( .*"
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+prio:
+    regex ".*!KU\( f1\(~k.*"
+prio:
+    regex ".*!KU\( \(f5\(~k.*"
+    regex ".*!KD\( \(f5\(~k.*"
+prio:
+    regex ".*!KU\( ~sqn.*"
+prio:
+    regex ".*RcvS\(.*\'ac\'.*"
+prio:
+    regex ".*RcvS\(.*\'aia\'.*"
+prio:
+    regex ".*RcvS\(.*\'air\'.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+
+tactic: noninjectiveagreement_hss_seaf_supi_noRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+prio:
+    regex ".*St_1_SEAF\(.*"
+    regex ".*Sec\( .*"
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+prio:
+    regex ".*!KU\( f1\(~k.*"
+prio:
+    regex ".*!KU\( \(f5\(~k.*"
+    regex ".*!KD\( \(f5\(~k.*"
+prio:
+    regex ".*!KU\( ~sqn.*"
+prio:
+    regex ".*RcvS\(.*\'ac\'.*"
+prio:
+    regex ".*RcvS\(.*\'aia\'.*"
+prio:
+    regex ".*RcvS\(.*\'air\'.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+
+tactic: noninjectiveagreement
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+prio:
+    regex ".*RcvS\(.*\'ac\'.*"
+prio:
+    regex ".*RcvS\(.*\'aia\'.*"
+prio:
+    regex ".*RcvS\(.*\'air\'.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+
+tactic: injective_agreemeent
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*St_1_UE\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*!KU\( KDF\(<f3.*"
+prio:
+    regex ".*RcvS\(.*<\'ac\'.*"
+
+tactic: cleanAttack
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+prio:
+    regex ".*!KU\( f5\(.*" | regex ".*!KU\( f5_star\(.* " | regex ".*!KU\( f3\(.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*!KU\( KDF\(KDF\(<f3.*"
+prio:
+    regex ".*\(#.*= #.*\).*\(#.*= #.*\).*\(#.*= #.*\).*"
+prio:
+    regex ".*St_1_UE\(.*"
+    regex ".*St_2_UE\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*CommitConf\(.*"
+prio:
+    regex ".*~~.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+    regex ".*!KU\( f1\(~.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( \(f5\(~k,.*"
+    regex ".*!KD\( \(f5\(~k,.*"
+prio:
+    regex ".*!KU\( f1\(K.*"
+prio:
+    regex ".*!KU\( ~RAND.*"
+
+tactic: tactic_0
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( f2\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5\(.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*CommitConf\(.*"
+prio:
+    regex ".*St_2_SEAF\(.*"
+    regex ".*St_3_SEAF\(.*"
+    regex ".*St_4_SEAF\(.*"
+    regex ".*St_1_UE\(.*"
+    regex ".*St_2_UE\(.*"
+prio:
+    regex ".*!KU\( f1\(KDF\(KDF\(.*"
+    regex ".*!KU\( KDF\(KDF\(.*"
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*RcvS\(.*<\'aia\'.*"
+
+tactic: injectiveagreement_hss_seaf_kseaf_noChanRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*RcvS\(.*"
+
+tactic: tactic_1
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*CommitConf\(.*"
+    regex ".*St_1_UE\(.*"
+    regex ".*St_2_UE\(.*"
+prio:
+    regex ".*!KU\( \(f5\(~k,.*"
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f3\(.*"
+    regex ".*!KU\( f4\(.*"
+    regex ".*!KU\( f5_star\(.*"
+prio:
+    regex ".*!KU\( f1\(~.*"
+prio:
+    regex ".*!KU\( f1\(K.*"
+prio:
+    regex ".*!KU\( KDF\(KDF\(.*"
+    regex ".*!KU\( KDF\(<f3.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+    regex ".*!KU\( ~sqn_roo.*"
+
+tactic: weakagreement_ue_seaf_keyConf_noRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( f5\(.*" | regex ".*!KU\( f5_star\(.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*St_2_UE\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+    regex ".*!KU\( KDF\(KDF\(<f3\(.*"
+    regex ".*!KU\( f1\(KDF\(KDF\(<f3\(~k.*"
+    regex ".*!KU\( f3\(~k*"
+prio:
+    regex ".*St_1_UE\(.*"
+    regex ".*St_1_SEAF\(.*"
+    regex ".*St_3_SEAF\(.*"
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*RcvS\( ~idSN.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!Ltk_Sym\(.*"
+prio:
+    regex ".*!KU\( f4\(.*"
+prio:
+    regex ".*St_2_SEAF\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( ~RAN.*"
+prio:
+    regex ".*!KU\( ~sup.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( ~sup.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+
+tactic: weakagreement_ue_seaf_noRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( f5\(.*" | regex ".*!KU\( f5_star\(.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*St_1_UE\(.*"
+    regex ".*St_2_UE\(.*"
+    regex ".*St_3_SEAF\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*RcvS\( ~idSN.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*!Ltk_Sym\(.*"
+prio:
+    regex ".*!KU\( f4\(.*"
+prio:
+    regex ".*St_2_SEAF\(.*"
+    regex ".*St_1_HSS\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( ~RAN.*"
+prio:
+    regex ".*!KU\( ~sup.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( ~sup.*"
+prio:
+    regex ".*!KU\( ~sk.*"
+
+tactic: tactic_2
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( ~sk_HN.*"
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( f5\(.*"
+    regex ".*!KU\( f5_star\(.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*~~.*"
+    regex ".*=.*=.*=.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*St_3_SEAF\(.*"
+    regex ".*St_4_SEAF\(.*"
+prio:
+    regex ".*RcvS\(.*<\'aca\'.*"
+prio:
+    regex ".*RcvS\(.*<\'ac\'.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+    regex ".*!KU\( KDF\(KDF\(<.*"
+prio:
+    regex ".*!KU\( f3\(.*"
+prio:
+    regex ".*RcvS\(.*<\'aia\'.*"
+prio:
+    regex ".*RcvS\(.*<\'air\'.*"
+prio:
+    regex ".*!KU\( \(f5\(~k.*"
+    regex ".*!KD\( \(f5\(~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( f1\(~.*"
+prio:
+    regex ".*!KU\( f1\(K.*"
+
+tactic: tactic_3
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( ~sk_HN.*"
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( f5\(.*" | regex ".*!KU\( f5_star\(.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*~~.*"
+    regex ".*=.*=.*=.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*St_3_SEAF\(.*"
+    regex ".*St_4_SEAF\(.*"
+prio:
+    regex ".*RcvS\(.*<\'aca\'.*"
+prio:
+    regex ".*RcvS\(.*<\'ac\'.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+    regex ".*!KU\( KDF\(KDF\(<.*"
+prio:
+    regex ".*!KU\( f3\(.*"
+prio:
+    regex ".*RcvS\(.*<\'aia\'.*"
+prio:
+    regex ".*RcvS\(.*<\'air\'.*"
+prio:
+    regex ".*!KU\( \(f5\(~k.*"
+    regex ".*!KD\( \(f5\(~k.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( pk\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( f1\(~.*"
+prio:
+    regex ".*!KU\( f1\(K.*"
+
+tactic: tactic_4
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( ~sk_HN.*"
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( f5\(.*" | regex ".*!KU\( f5_star\(.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*!KU\( KDF\(KDF\(<f3\(.*"
+prio:
+    regex ".*=.*=.*=.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*~~>.*"
+prio:
+    regex ".*St_4_SEAF\(.*"
+    regex ".*St_3_SEAF\(.*"
+prio:
+    regex ".*RcvS\(.*<\'aia\'.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*RcvS\(.*<\'air\'.*"
+prio:
+    regex ".*!KU\( KDF\(<f3\(.*"
+prio:
+    regex ".*!KU\( f3\(.*"
+prio:
+    regex ".*!KU\( ~RAND.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*"
+prio:
+    regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*St_1_SEAF\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( ~idHN.*"
+prio:
+    regex ".*!KU\( ~idSN.*"
+prio:
+    regex ".*RcvS\(.*<\'aca\'.*"
+prio:
+    regex ".*RcvS\(.*<\'ac\'.*"
+
+tactic: tactic_5
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( ~sk_HN.*"
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( f3\(~k,.*"
+    regex ".*!KU\( f5\(~k,.*"
+prio:
+    regex ".*St_3_SEAF\(.*"
+prio:
+    regex ".*!KU\( KDF\(KDF\(<f3\(~k,.*"
+    regex ".*!KU\( KDF\(<f3\(~k,.*~sqn_root.*"
+prio:
+    regex ".*RcvS\(.*\'aia\'.*"
+prio:
+    regex ".*Commit\(.*"
+    regex ".*CommitConf\(.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( SHA256\(.*"
+    regex ".*!KU\( KDF\(<f3\(~k, .*"
+
+tactic: injectiveagreement_seaf_hss_kseaf_keyConf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( ~sk_HN.*"
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*=.*=.*=.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*!KU\( f2\(~k.*"
+    regex ".*!KU\( f3\(~k.*"
+    regex ".*!KU\( f4\(~k.*"
+    regex ".*!KU\( f5\(~k.*"
+prio:
+    regex ".*St_4_SEAF\(.*"
+    regex ".*St_3_SEAF\(.*"
+prio:
+    regex ".*RcvS\(.*~idHN, ~idSN,.*\'aia\'.*"
+prio:
+    regex ".*CommitConf\(.*"
+    regex ".*Commit\(.*"
+prio:
+    regex ".*RcvS\(.*~idHN, ~idSN,.*"
+    regex ".*RcvS\(.*~idSN, ~idHN,.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( f1\(~.*"
+prio:
+    regex ".*!KU\( f1\(K.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( SHA256\(.*"
+prio:
+    regex ".*!KU\( pk\(~sk.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( aenc\(<.*"
+prio:
+    regex ".*!KU\( \(f5\(.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+
+tactic: injectiveagreement_seaf_hss_kseaf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( ~sk_HN.*"
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*=.*=.*=.*"
+prio:
+    regex ".*St_3_SEAF\(.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*Commit\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*"
+
+tactic: tactic_6
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( ~sk_HN.*"
+    regex ".*Sqn_HSS\(.*~sqn_root, ~sqn_root.*"
+    regex ".*Sqn_HSS\(.*,.*,.*,.*,.* ~.*"
+    regex ".*Sqn_UE\(.*, \'1\',.*"
+    regex ".*Sqn_UE\(.*, ~sqn_root, ~sqn_root,.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*!KU\( f5\(.*" | regex ".*!KU\( f5_star\(.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*St_1_UE\(.*"
+    regex ".*St_1_SEAF\(.*"
+prio:
+    regex ".*Sqn_UE\(.*, SqnUE, ~sqn_root, count.*"
+    regex ".*Sqn_UE\(.*, \(\'1\'\+count\), ~sqn_root, count\.1.*"
+    regex ".*Sqn_UE\(.*, \(\'1\'\+x\), ~sqn_root, count.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*" | regex ".*!KD\( \(f5\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*!KU\( ~supi.*"
+prio:
+    regex ".*!KU\( aenc\(.*"
+
+
+tactic: executability_honest
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*St_2_SEAF\(.*"
+    regex ".*St_3_SEAF\(.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*Sqn_HSS\(.*"
+    regex ".*Sqn_UE\(.*"
+prio:
+    regex ".*!KU\( f5_star\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*!KU\( f3\(.*"
+prio:
+    regex ".*!KU\( f5\(~k.*"
+prio:
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*"
+    regex ".*!KD\( \(f5\(.*"
+
+
+tactic: tactic_7
+presort: C
+prio:
+    regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!HSS\(.*"
+prio:
+    regex ".*=.*=.*"
+prio:
+    regex ".*<.*=.*"
+prio:
+    regex ".*HSS_Resync_End\(.*"
+prio:
+    regex ".*!KU\( f5\(.*" | regex ".*!KU\( f5_star\(.*"
+    regex ".*!KU\( ~sqn_root.*"
+prio:
+    regex ".*St_1_UE\(.*"
+    regex ".*St_1_HSS\(.*"
+    regex ".*St_2_SEAF\(.*"
+    regex ".*St_3_SEAF\(.*"
+prio:
+    regex ".*Sqn_UE\(.*"
+    regex ".*Sqn_HSS\(.*"
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*!Ltk_Sym\(.*"
+prio:
+    regex ".*RcvS\(.*"
+prio:
+    regex ".*!KU\( KDF\(.*"
+prio:
+    regex ".*!KU\( f3\(.*"
+prio:
+    regex ".*!KU\( f1_star\(.*"
+prio:
+    regex ".*!KU\( f1\(.*"
+prio:
+    regex ".*!KU\( \(f5\(.*"
+    regex ".*!KD\( \(f5\(.*"
+    regex ".*!KU\( \(f5_star\(.*"
+    regex ".*!KD\( \(f5_star\(.*"
 
 /************************************/
 /*    Channel: SEAF .<->. HSS       */
@@ -684,13 +1947,13 @@ lemma rand_autn_src [sources]:
 
 
 // proof (automatic) (~1 sec)
-lemma sqn_ue_invariance [use_induction, sources]:
+lemma sqn_ue_invariance [heuristic={sqn_many}, use_induction, sources]:
 	" All supi HN Sqn sqn_root count #i.
 		Sqn_UE_Invariance(supi, HN, Sqn, sqn_root, count)@i
 			==> sqn_root + count = Sqn"
 
 // proof (automatic) (~1 sec)
-lemma sqn_hss_invariance [use_induction, sources]:
+lemma sqn_hss_invariance [heuristic={sqn_many}, use_induction, sources]:
 	" All HN supi Sqn sqn_root count #i.
 		Sqn_HSS_Invariance(HN, supi, Sqn, sqn_root, count)@i
 			==> sqn_root + count = Sqn "
@@ -700,19 +1963,19 @@ lemma sqn_hss_invariance [use_induction, sources]:
 /************************************/
 
 // proof (automatic) (~1 sec)
-lemma sqn_ue_src [use_induction, reuse]:
+lemma sqn_ue_src [heuristic={sqn_many}, use_induction, reuse]:
 	" All supi HN Sqn sqn_root count #i.
 		Sqn_UE_Invariance(supi, HN, Sqn, sqn_root, count)@i
 			==> (Ex #j. Sqn_Create(supi, HN, sqn_root)@j & j < i) "
 
 // proof (automatic) (~1 sec)
-lemma sqn_hss_src [reuse]:
+lemma sqn_hss_src [heuristic={sqn_many}, reuse]:
 	" All HN supi Sqn sqn_root count #i.
 		Sqn_HSS_Invariance(HN, supi, Sqn, sqn_root, count)@i
 			==> (Ex #j. Sqn_Create(supi, HN, sqn_root)@j & j < i) "
 
 // proof (automatic) (~2 min)
-lemma sqn_ue_nodecrease [use_induction, reuse]:
+lemma sqn_ue_nodecrease [use_induction, reuse, heuristic={sqn_ue_nodecrease}]:
 	" (All supi HN Sqni Sqnj #i #j.
 		(Sqn_UE_Change(supi, HN, Sqnj)@j &
 		 Sqn_UE_Change(supi, HN, Sqni)@i &
@@ -743,7 +2006,7 @@ lemma sqn_ue_unique [reuse, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 
 // This lemma shows a normal execution without resync.
 // proof (automatic) (~20 sec)
-lemma executability_honest:
+lemma executability_honest [heuristic={executability_honest}]:
 	exists-trace
 	" Ex #i. SEAF_End()@i
 		& not (Ex X data #r. Rev(X,data)@r)
@@ -781,7 +2044,7 @@ lemma executability_keyConf_honest:
 				      Start_HSS_Session(HN2)@k ==> #j = #k)"
 
 // proof (automatic) (~2 min)
-lemma executability_desync:
+lemma executability_desync[heuristic={tactic_7}]:
 	exists-trace
 	" Ex dif #i.
                   HSS_Resync_End(dif)@i
@@ -801,7 +2064,7 @@ lemma executability_desync:
 				      Start_HSS_Session(HN2)@k ==> #j = #k)"
 
 // proof (automatic) (~5 min)
-lemma executability_resync:
+lemma executability_resync[heuristic={tactic_7}]:
 	exists-trace
 	" Ex #i1 #i2 #i3 #i4 X.
 		  Start_HSS_Session(X)@i1
@@ -847,7 +2110,7 @@ lemma executability_resync:
 /********************************************/
 
 // attack (stored)
-lemma weakagreement_ue_seaf_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma weakagreement_ue_seaf_noRev [heuristic={weakagreement_ue_seaf_noRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'UE','SEAF',t>)@i
 			==> (Ex t2 #j. Running(b, a, t2)@j)
 			    | (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
@@ -857,7 +2120,7 @@ lemma weakagreement_ue_seaf_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_
 /********************************************/
 
 // attack (stored)
-lemma weakagreement_ue_seaf_keyConf_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma weakagreement_ue_seaf_keyConf_noRev [heuristic={weakagreement_ue_seaf_keyConf_noRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. CommitConf(a,b,<'UE','SEAF',t>)@i
 			==> (Ex t2 #j. Running(b, a, t2)@j)
 			    | (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
@@ -867,7 +2130,7 @@ lemma weakagreement_ue_seaf_keyConf_noRev [hide_lemma=sqn_ue_nodecrease, hide_le
 /********************************************/
 
 // attack (stored)
-lemma weakagreement_ue_hss_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src/*, hide_lemma=sqn_ue_nodecrease*/]:
+lemma weakagreement_ue_hss_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [heuristic={tactic_1}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src/*, hide_lemma=sqn_ue_nodecrease*/]:
 	" All a b t #i. Commit(a,b,<'UE','HSS',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i)
@@ -887,7 +2150,7 @@ lemma injectiveagreement_ue_hss_supi_noRev [hide_lemma=sqn_ue_src, hide_lemma=sq
 */
 
 // attack (stored)
-lemma cleanAttack_injectiveagreement_ue_hss_supi_noRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma cleanAttack_injectiveagreement_ue_hss_supi_noRev [heuristic={cleanAttack}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i.
 		( Commit(a,b,<'UE','HSS',<'supi', t>>)@i &
 		 (All UE1 UE2 UE3 #j #k #l. Start_UE_Session(UE1)@j &
@@ -905,19 +2168,19 @@ lemma cleanAttack_injectiveagreement_ue_hss_supi_noRev [hide_lemma=sqn_ue_src, h
              	| (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma noninjectiveagreement_ue_hss_supi_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_ue_hss_supi_noKeyRev [heuristic={injective_agreemeent}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'UE','HSS',<'supi', t>>)@i
     		==> (Ex #j. Running(b,a,<'UE','HSS',<'supi', t>>)@j)
              	    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma noninjectiveagreement_ue_hss_kseaf_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_ue_hss_kseaf_noRev [heuristic={tactic_6}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'UE','HSS',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'UE','HSS',<'K_seaf', t>>)@j)
              	    | (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma noninjectiveagreement_ue_hss_snname_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_ue_hss_snname_noRev [heuristic={tactic_6}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'UE','HSS',<'snname', t>>)@i
     		==> (Ex #j. Running(b,a,<'UE','HSS',<'snname', t>>)@j)
              	    | (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
@@ -927,7 +2190,7 @@ lemma noninjectiveagreement_ue_hss_snname_noRev [hide_lemma=sqn_ue_nodecrease, h
 /********************************************/
 
 // attack (stored)
-lemma weakagreement_ue_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src/*, hide_lemma=sqn_ue_nodecrease*/]:
+lemma weakagreement_ue_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [heuristic={tactic_1}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src/*, hide_lemma=sqn_ue_nodecrease*/]:
 	" All a b t #i. CommitConf(a,b,<'UE','HSS',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i)
@@ -936,7 +2199,7 @@ lemma weakagreement_ue_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hid
            	| (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // proof (automatic) (~12 min)
-lemma injectiveagreement_ue_hss_kseaf_keyConf_noKeyRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_ue_nodecrease]:
+lemma injectiveagreement_ue_hss_kseaf_keyConf_noKeyRev [heuristic={tactic_0}, hide_lemma=sqn_ue_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. CommitConf(a,b,<'UE','HSS',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'UE','HSS',<'K_seaf', t>>)@j 
         	     & j < i
@@ -945,7 +2208,7 @@ lemma injectiveagreement_ue_hss_kseaf_keyConf_noKeyRev [hide_lemma=sqn_ue_src, h
              	| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) "
 
 // proof (automatic) (~30 sec)
-lemma noninjectiveagreement_ue_hss_snname_keyConf_noKeyRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_ue_nodecrease]:
+lemma noninjectiveagreement_ue_hss_snname_keyConf_noKeyRev [heuristic={tactic_0}, hide_lemma=sqn_ue_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. CommitConf(a,b,<'UE','HSS',<'snname', t>>)@i
     		==> (Ex #j. Running(b,a,<'UE','HSS',<'snname', t>>)@j)
              	| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) "
@@ -962,7 +2225,7 @@ lemma injectiveagreement_ue_hss_keyConf_supi_noRev [hide_lemma=sqn_ue_src, hide_
 */
 
 // attack (stored)
-lemma cleanAttack_injectiveagreement_ue_hss_keyConf_supi_noRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma cleanAttack_injectiveagreement_ue_hss_keyConf_supi_noRev [heuristic={cleanAttack}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i.
 		(CommitConf(a,b,<'UE','HSS',<'supi', t>>)@i &
 		(All UE1 UE2 UE3 #j #k #l. Start_UE_Session(UE1)@j &
@@ -980,7 +2243,7 @@ lemma cleanAttack_injectiveagreement_ue_hss_keyConf_supi_noRev [hide_lemma=sqn_u
              	| (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
 
 // proof (automatic) (~15 sec)
-lemma noninjectiveagreement_ue_hss_keyConf_supi_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_ue_hss_keyConf_supi_noKeyRev [heuristic={tactic_0}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. CommitConf(a,b,<'UE','HSS',<'supi', t>>)@i
     		==> (Ex #j. Running(b,a,<'UE','HSS',<'supi', t>>)@j)
              	    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) "
@@ -991,7 +2254,7 @@ lemma noninjectiveagreement_ue_hss_keyConf_supi_noKeyRev [hide_lemma=sqn_ue_node
 /********************************************/
 
 // attack (stored)
-lemma noninjectiveagreement_seaf_ue_kseaf_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_seaf_ue_kseaf_noRev [heuristic={tactic_4}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'SEAF','UE',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','UE',<'K_seaf', t>>)@j)
              	    | (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
@@ -1008,7 +2271,7 @@ lemma injectiveagreement_seaf_ue_supi_noRev [hide_lemma=sqn_ue_src, hide_lemma=s
 */
 
 // attack (stored)
-lemma cleanAttack_injectiveagreement_seaf_ue_supi_noRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma cleanAttack_injectiveagreement_seaf_ue_supi_noRev [heuristic={tactic_3}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. 
 		(Commit(a,b,<'SEAF','UE',<'supi', t>>)@i &
 		(All UE1 UE2 UE3 #j #k #l. Start_UE_Session(UE1)@j &
@@ -1026,14 +2289,14 @@ lemma cleanAttack_injectiveagreement_seaf_ue_supi_noRev [hide_lemma=sqn_ue_src, 
              	| (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma noninjectiveagreement_seaf_ue_supi_noKeyRev_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_seaf_ue_supi_noKeyRev_noChanRev [heuristic={tactic_2}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'SEAF','UE',<'supi', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','UE',<'supi', t>>)@j)
              	| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i)  "
 
 // attack (stored)
-lemma weakagreement_seaf_ue_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_seaf_ue_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev [heuristic={tactic_3}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. Commit(a,b,<'SEAF','UE',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
@@ -1042,7 +2305,7 @@ lemma weakagreement_seaf_ue_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev [hide_lemma=
            	| (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma weakagreement_seaf_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_seaf_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [heuristic={tactic_3}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. Commit(a,b,<'SEAF','UE',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i)
@@ -1051,7 +2314,7 @@ lemma weakagreement_seaf_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma
            	| (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma weakagreement_seaf_ue_noKeyRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_seaf_ue_noKeyRev_noChanRev [heuristic={tactic_2}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. Commit(a,b,<'SEAF','UE',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
@@ -1063,20 +2326,20 @@ lemma weakagreement_seaf_ue_noKeyRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemm
 /********************************************/
 
 // attack (stored)
-lemma noninjectiveagreement_seaf_ue_kseaf_keyConf_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_seaf_ue_kseaf_keyConf_noRev [heuristic={tactic_4}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','UE',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','UE',<'K_seaf', t>>)@j)
              	    | (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma noninjectiveagreement_seaf_ue_keyConf_supi_noKeyRev_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_seaf_ue_keyConf_supi_noKeyRev_noChanRev [heuristic={tactic_2}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','UE',<'supi', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','UE',<'supi', t>>)@j)
              	    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
 		    | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
 // attack (stored)
-lemma weakagreement_seaf_ue_KeyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_seaf_ue_KeyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev [heuristic={tactic_3}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','UE',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
@@ -1085,14 +2348,14 @@ lemma weakagreement_seaf_ue_KeyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev [hid
            	| (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma weakagreement_seaf_ue_KeyConf_noKeyRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_seaf_ue_KeyConf_noKeyRev_noChanRev [heuristic={tactic_2}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','UE',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
 // attack (stored)
-lemma weakagreement_seaf_ue_KeyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_seaf_ue_KeyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [heuristic={tactic_3}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','UE',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i)
@@ -1106,7 +2369,7 @@ lemma weakagreement_seaf_ue_KeyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hi
 /********************************************/
 
 // attack (automatic) (~10 sec)
-lemma weakagreement_seaf_hss_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_seaf_hss_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [heuristic={tactic_5}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. Commit(a,b,<'SEAF','HSS',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
@@ -1115,13 +2378,13 @@ lemma weakagreement_seaf_hss_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [hide_lemma
            	| (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma noninjectiveagreement_seaf_hss_kseaf_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_seaf_hss_kseaf_noChanRev [heuristic={tactic_5}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'SEAF','HSS',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','HSS',<'K_seaf', t>>)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
 // attack (stored)
-lemma injectiveagreement_seaf_hss_kseaf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma injectiveagreement_seaf_hss_kseaf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev [heuristic={injectiveagreement_seaf_hss_kseaf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'SEAF','HSS',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','HSS',<'K_seaf', t>>)@j 
         	     & j < i
@@ -1133,7 +2396,7 @@ lemma injectiveagreement_seaf_hss_kseaf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev
 		| (Ex X k #r. Rev(X, <'skHN',k>)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma injectiveagreement_seaf_hss_kseaf_noKeyRev_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma injectiveagreement_seaf_hss_kseaf_noKeyRev_noChanRev [heuristic={tactic_5}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'SEAF','HSS',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','HSS',<'K_seaf', t>>)@j 
         	     & j < i
@@ -1143,7 +2406,7 @@ lemma injectiveagreement_seaf_hss_kseaf_noKeyRev_noChanRev [hide_lemma=sqn_ue_no
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma noninjectiveagreement_seaf_hss_supi_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_seaf_hss_supi_noChanRev [heuristic={tactic_5}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'SEAF','HSS',<'supi', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','HSS',<'supi', t>>)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
@@ -1153,7 +2416,7 @@ lemma noninjectiveagreement_seaf_hss_supi_noChanRev [hide_lemma=sqn_ue_nodecreas
 /********************************************/
 
 // attack (automatic) (~30 sec)
-lemma weakagreement_seaf_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_seaf_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [heuristic={tactic_5}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','HSS',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
@@ -1162,13 +2425,13 @@ lemma weakagreement_seaf_hss_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [hi
            	| (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma noninjectiveagreement_seaf_hss_kseaf_keyConf_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_seaf_hss_kseaf_keyConf_noChanRev [heuristic={tactic_5}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','HSS',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','HSS',<'K_seaf', t>>)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
 // attack (stored)
-lemma injectiveagreement_seaf_hss_kseaf_keyConf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma injectiveagreement_seaf_hss_kseaf_keyConf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev [heuristic={injectiveagreement_seaf_hss_kseaf_keyConf_noChanRev_noSqnRev_noSupiRev_noAsyKeyRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','HSS',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','HSS',<'K_seaf', t>>)@j 
         	     & j < i
@@ -1180,7 +2443,7 @@ lemma injectiveagreement_seaf_hss_kseaf_keyConf_noChanRev_noSqnRev_noSupiRev_noA
 		| (Ex X k #r. Rev(X, <'skHN',k>)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 min)
-lemma injectiveagreement_seaf_hss_kseaf_keyConf_noKeyRev_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma injectiveagreement_seaf_hss_kseaf_keyConf_noKeyRev_noChanRev [heuristic={tactic_5}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','HSS',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','HSS',<'K_seaf', t>>)@j 
         	     & j < i
@@ -1190,7 +2453,7 @@ lemma injectiveagreement_seaf_hss_kseaf_keyConf_noKeyRev_noChanRev [hide_lemma=s
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma noninjectiveagreement_seaf_hss_keyConf_supi_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_seaf_hss_keyConf_supi_noChanRev [heuristic={tactic_5}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. CommitConf(a,b,<'SEAF','HSS',<'supi', t>>)@i
     		==> (Ex #j. Running(b,a,<'SEAF','HSS',<'supi', t>>)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
@@ -1201,7 +2464,7 @@ lemma noninjectiveagreement_seaf_hss_keyConf_supi_noChanRev [hide_lemma=sqn_ue_n
 /********************************/
 
 // proof (automatic) (~1 min)
-lemma injectiveagreement_hss_ue_kseaf_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma injectiveagreement_hss_ue_kseaf_noKeyRev [heuristic={injective_agreemeent}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'HSS','UE',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'HSS','UE',<'K_seaf', t>>)@j 
         	     & j < i
@@ -1210,7 +2473,7 @@ lemma injectiveagreement_hss_ue_kseaf_noKeyRev [hide_lemma=sqn_ue_nodecrease, hi
              	| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma weakagreement_hss_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_hss_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [heuristic={weakagreement_hss_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. Commit(a,b,<'HSS','UE',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i)
@@ -1219,13 +2482,13 @@ lemma weakagreement_hss_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma=
            	| (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // proof (automatic) (~10 sec)
-lemma noninjectiveagreement_hss_ue_supi_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_hss_ue_supi_noKeyRev [heuristic={noninjectiveagreement},hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'HSS','UE',<'supi', t>>)@i
     		==> (Ex #j. Running(b,a,<'HSS','UE',<'supi', t>>)@j)
 		| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma noninjectiveagreement_hss_ue_snname_noKeyRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_ue_nodecrease]:
+lemma noninjectiveagreement_hss_ue_snname_noKeyRev [heuristic={noninjectiveagreement}, hide_lemma=sqn_ue_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. Commit(a,b,<'HSS','UE',<'snname', t>>)@i
     		==> (Ex #j. Running(b,a,<'HSS','UE',<'snname', t>>)@j)
              	| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) "
@@ -1235,7 +2498,7 @@ lemma noninjectiveagreement_hss_ue_snname_noKeyRev [hide_lemma=sqn_ue_src, hide_
 /********************************/
 
 // proof (automatic) (~1 sec)
-lemma injectiveagreement_hss_seaf_kseaf_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma injectiveagreement_hss_seaf_kseaf_noChanRev [heuristic={injectiveagreement_hss_seaf_kseaf_noChanRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'HSS','SEAF',<'K_seaf', t>>)@i
     		==> (Ex #j. Running(b,a,<'HSS','SEAF',<'K_seaf', t>>)@j 
         	     & j < i
@@ -1244,7 +2507,7 @@ lemma injectiveagreement_hss_seaf_kseaf_noChanRev [hide_lemma=sqn_ue_nodecrease,
 		| (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
 // attack (stored)
-lemma weakagreement_hss_seaf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
+lemma weakagreement_hss_seaf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [heuristic={weakagreement_hss_seaf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev}, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease]:
 	" All a b t #i. Commit(a,b,<'HSS','SEAF',t>)@i
 		==> (Ex t2 #j. Running(b,a, t2)@j)
 		| (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
@@ -1253,7 +2516,7 @@ lemma weakagreement_hss_seaf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [hide_lemma
            	| (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma noninjectiveagreement_hss_seaf_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma noninjectiveagreement_hss_seaf_supi_noRev [heuristic={noninjectiveagreement_hss_seaf_supi_noRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All a b t #i. Commit(a,b,<'HSS','SEAF',<'supi', t>>)@i
     		==> (Ex #j. Running(b,a,<'HSS','SEAF',<'supi', t>>)@j)
 		| (Ex X data #r. Rev(X,data)@r & Honest(X)@i) "
@@ -1271,7 +2534,7 @@ lemma secrecy_ue_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src
 */
 
 // attack (stored)
-lemma cleanAttack_secrecy_ue_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma cleanAttack_secrecy_ue_supi_noRev [heuristic={secrecy_ue_supi}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i.
 		(Secret(<'UE', supi>, 'supi', t)@i &
 		 (All UE1 UE2 UE3 #j #k #l. Start_UE_Session(UE1)@j &
@@ -1286,7 +2549,7 @@ lemma cleanAttack_secrecy_ue_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemm
         	    | (Ex X data #r. Rev(X, data)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma secrecy_ue_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_ue_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [heuristic={secrecy_ue_supi}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'UE', supi>, 'supi', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r)
@@ -1294,7 +2557,7 @@ lemma secrecy_ue_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [hide_lemma=sqn_ue_no
            	    | (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma secrecy_ue_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_ue_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev [heuristic={secrecy_ue_supi}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'UE', supi>, 'supi', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r)
@@ -1311,7 +2574,7 @@ lemma secrecy_ue_supi_keyConf_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sq
 */
 
 // attack (stored)
-lemma cleanAttack_secrecy_ue_supi_keyConf_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma cleanAttack_secrecy_ue_supi_keyConf_noRev [heuristic={secrecy_ue_supi}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i.
 		(SecretConf(<'UE', supi>, 'supi', t)@i & 
 		(All UE1 UE2 UE3 #j #k #l. Start_UE_Session(UE1)@j &
@@ -1326,14 +2589,14 @@ lemma cleanAttack_secrecy_ue_supi_keyConf_noRev [hide_lemma=sqn_ue_nodecrease, h
         	    | (Ex X data #r. Rev(X, data)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma secrecy_ue_kseaf_noKeyRev_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_ue_kseaf_noKeyRev_noChanRev [heuristic={secrecy_ue_kseaf}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'UE', supi>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) 
 		    | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
 
 // attack (stored)
-lemma secrecy_ue_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_ue_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [heuristic={secrecy_ue_kseaf}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'UE', supi>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
 		    | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i)
@@ -1342,7 +2605,7 @@ lemma secrecy_ue_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn_
            	    | (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma secrecy_ue_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_ue_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev [heuristic={secrecy_ue_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'UE', supi>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
 		    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) 
@@ -1361,7 +2624,7 @@ lemma secrecy_ue_k_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src
 /********************************/
 
 // attack (stored)
-lemma secrecy_hss_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_hss_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev [heuristic={secrecy_hss_no_k}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All idHN t #i. Secret(<'HSS', idHN>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) 
@@ -1370,7 +2633,7 @@ lemma secrecy_hss_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn_
            	    | (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma secrecy_hss_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_hss_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [heuristic={secrecy_hss_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All idHN t #i. Secret(<'HSS', idHN>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) 
@@ -1379,7 +2642,7 @@ lemma secrecy_hss_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn
            	    | (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma secrecy_hss_kseaf_noChanRev_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_hss_kseaf_noChanRev_noKeyRev [heuristic={secrecy_hss_kseaf_noChanRev_noKeyRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All idHN t #i. Secret(<'HSS', idHN>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) 
@@ -1394,7 +2657,7 @@ lemma secrecy_hss_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_sr
 */
 
 // attack (stored)
-lemma cleanAttack_secrecy_hss_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma cleanAttack_secrecy_hss_supi_noRev [heuristic={secrecy_hss_no_k}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All idHN t #i.
 		(Secret(<'HSS', idHN>, 'supi', t)@i &
 		(All UE1 UE2 UE3 #j #k #l. Start_UE_Session(UE1)@j &
@@ -1409,7 +2672,7 @@ lemma cleanAttack_secrecy_hss_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lem
         	    | (Ex X data #r. Rev(X, data)@r & Honest(X)@i) "
 
 // proof (automatic) (~1 sec)
-lemma secrecy_hss_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_hss_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [heuristic={secrecy_hss_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'HSS', supi>, 'supi', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r)
@@ -1417,7 +2680,7 @@ lemma secrecy_hss_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [hide_lemma=sqn_ue_n
            	    | (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma secrecy_hss_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_hss_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev [heuristic={secrecy_hss_no_k}, hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'HSS', supi>, 'supi', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r)
@@ -1436,14 +2699,14 @@ lemma secrecy_hss_k_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_sr
 /********************************/
 
 // proof (automatic) (~1 sec)
-lemma secrecy_seaf_kseaf_noChanRev_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_seaf_kseaf_noChanRev_noKeyRev [heuristic={secrecy_seaf_kseaf_noChanRev_noKeyRev},hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All idSN t #i. Secret(<'SEAF', idSN>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) 
 		    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma secrecy_seaf_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_seaf_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [heuristic={secrecy_seaf},hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All idSN t #i. Secret(<'SEAF', idSN>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) 
@@ -1452,7 +2715,7 @@ lemma secrecy_seaf_kseaf_noChanRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sq
            	    | (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma secrecy_seaf_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_seaf_kseaf_noKeyRev_noSupiRev_noSqnRev_noAsyKeyRev [heuristic={secrecy_seaf},hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All idSN t #i. Secret(<'SEAF', idSN>, 'key', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i) 
@@ -1469,7 +2732,7 @@ lemma secrecy_seaf_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_s
 */
 
 // attack (stored)
-lemma cleanAttack_secrecy_seaf_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma cleanAttack_secrecy_seaf_supi_noRev [heuristic={secrecy_seaf},hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All idSN t #i. 
 		(Secret(<'SEAF', idSN>, 'supi', t)@i &
 		(All UE1 UE2 UE3 #j #k #l. Start_UE_Session(UE1)@j &
@@ -1485,7 +2748,7 @@ lemma cleanAttack_secrecy_seaf_supi_noRev [hide_lemma=sqn_ue_nodecrease, hide_le
 
 
 // proof (automatic) (~1 sec)
-lemma secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [heuristic={secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev},hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'SEAF', supi>, 'supi', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r)
@@ -1493,7 +2756,7 @@ lemma secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noAsyKeyRev [hide_lemma=sqn_ue_
            	    | (Ex X s #r. Rev(X, <'supi',s>)@r & Honest(X)@i) "
 
 // attack (stored)
-lemma secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
+lemma secrecy_seaf_supi_noChanRevAtAll_noSupiRev_noKeyRev_noSqnRev [heuristic={secrecy_seaf},hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src]:
 	" All supi t #i. Secret(<'SEAF', supi>, 'supi', t)@i
 		==> not (Ex #j. K(t)@j)
         	    | (Ex X #r. Rev(X, 'secureChannel')@r)

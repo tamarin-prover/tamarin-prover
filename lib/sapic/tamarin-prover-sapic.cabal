@@ -65,14 +65,20 @@ library
         Sapic.Annotation
       , Sapic.Exceptions
       , Sapic.ProcessUtils
+      , Sapic.Bindings
       , Sapic.Locks
       , Sapic.SecretChannels
+      , Sapic.Compression
+      , Sapic.LetDestructors
       , Sapic.Facts
       , Sapic.Basetranslation
       , Sapic.ProgressFunction
       , Sapic.ProgressTranslation
       , Sapic.ReliableChannelTranslation
       , Sapic.Report
+      , Sapic.States
+      , Sapic.Typing
+      , Sapic.Warnings
       , Sapic
 
     other-modules:

@@ -1,10 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE TypeSynonymInstances #-}
--- {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -18,16 +18,18 @@ module Sapic.Annotation (
     , AnnotatedProcess
     , annLock
     , annSecretChannel
+    , annDestructorEquation
     , annUnlock
     , toAnProcess
     , toProcess
-    , AnLVar (..)
-    , GoodAnnotation
+    , AnVar (..)
+    , AnProcess (..)
+    , unAnProcess
     , getProcessNames
     , setProcessNames
-) where
+    ,annElse) where
 import           Data.Data
--- import Data.Maybe
+-- import Data.List
 -- import Data.Foldable
 -- import Control.Exception
 -- import Control.Monad.Fresh
@@ -43,80 +45,112 @@ import           Data.Binary
 -- import Control.Monad.Trans.FastFresh
 -- import Control.Monad.Trans.FastFresh
 import Term.LTerm
+import Term.Substitution
 
 -- | Variables used to annotate locks. Encapsulated in newtype because of
 -- Semigroup instance below
-newtype AnLVar = AnLVar LVar
+newtype AnVar v = AnVar v
      deriving( Typeable, Data, Generic, Binary, Show )
      -- original definition: deriving( Typeable, Data, Generic, NFData, Binary )
 
-instance Semigroup AnLVar where  -- override annotations if necessary
+instance Semigroup (AnVar v) where  -- override annotations if necessary
     (<>) _ b = b
 
 -- | Annotations used in the translation
-data ProcessAnnotation = ProcessAnnotation {
-    processnames :: [String] -- processes identifiers recovered from "let P = "  bindings
-  , lock :: Maybe AnLVar     -- Fresh variables annotating locking action and unlocking actions.
-  , unlock :: Maybe AnLVar   -- Matching actions should have the same variables.
-  , secretChannel :: Maybe AnLVar   -- If a channel is secret, we can perform a silent transition.
-  , location :: Maybe SapicTerm -- The location of a process, for the IEE extention.
+-- Reuses ProcessParsedAnnotation
+data ProcessAnnotation v = ProcessAnnotation {
+    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes
+                                             -- processes identifiers recovered from "let P = "  bindings
+  , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
+  , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.
+  , secretChannel :: Maybe (AnVar v)   -- If a channel is secret, we can perform a silent transition.
+  , destructorEquation :: Maybe (LNTerm, LNTerm) -- the two terms that can be matched to model a let binding with a destructor on the right hand side.
+  , elseBranch         :: Bool --- do we have a non-zero else branch? Used for let translation
+  , pureState :: Bool -- anotates locks, inserts and lookup that correspond to a Pure state, so that they are optimized.
+                      -- A pure state corresponds to a process of form `insert k,v` or `lock k; lookup k; .. ; insert k,v; unlock k` or similar (see States.hs)
+  , stateChannel ::  Maybe (AnVar v) -- anotates state operations with the corresponding name identifier when possible.
+  , isStateChannel :: Maybe SapicTerm -- annotates binding of channels that corresponds to state channels with their corresponding identifier.
   } deriving (Show, Typeable)
 
-
--- | Any annotation that is good enough to be converted back into a Process
---  can at least recover the names of the processes used to bind
---  subprocesses
--- annotate the multiset rewrite rules with:
---      - the Name or Names of the process (e.g., [A, B] in let B = 0 let A = B | 0)
-class GoodAnnotation a where
-    getProcessNames :: a ->  [String]
-    setProcessNames :: [String] -> a -> a
-
-instance GoodAnnotation ProcessAnnotation
+instance GoodAnnotation (ProcessAnnotation v)
     where
-        getProcessNames = processnames
-        setProcessNames pn an = an { processnames = pn }
+        getProcessParsedAnnotation = parsingAnn
+        setProcessParsedAnnotation pn an = an { parsingAnn = pn }
+        defaultAnnotation   = mempty
 
-instance Monoid ProcessAnnotation where
-    mempty = ProcessAnnotation [] Nothing Nothing Nothing Nothing
-    mappend p1 p2 = ProcessAnnotation
-        (processnames p1 `mappend` processnames p2)
-        (lock p1 `mappend` lock p2)
-        (unlock p1 `mappend` unlock p2)
-        (secretChannel p1 `mappend` secretChannel p2)
-        (location p2)
+mayMerge :: Maybe a -> Maybe a -> Maybe a
+mayMerge t@(Just _) _ = t
+mayMerge _ t@(Just _) = t
+mayMerge Nothing Nothing = Nothing
 
-instance Semigroup ProcessAnnotation where
-    (<>) p1 p2 = ProcessAnnotation
-        (processnames p1 `mappend` processnames p2)
+instance Monoid (ProcessAnnotation v) where
+    mempty = ProcessAnnotation mempty mempty mempty mempty Nothing True False mempty Nothing
+
+instance Semigroup (ProcessAnnotation v) where
+  (<>)  p1 p2 = ProcessAnnotation
+        (parsingAnn p1 <> parsingAnn p2)
         (lock p1 <> lock p2)
         (unlock p1 <> unlock p2)
         (secretChannel p1 <> secretChannel p2)
-        (location p2)
+        (mayMerge (destructorEquation p1) (destructorEquation p2))
+        (elseBranch p2)
+        (pureState p1 || pureState p2)
+        (stateChannel p1 <> stateChannel p2)
+        (mayMerge (isStateChannel p1) (isStateChannel p2))
 
-newtype AnnotatedProcess = AnProcess ProcessAnnotation
-    deriving (Typeable, Monoid,Semigroup,Show)
+getProcessNames :: GoodAnnotation ann => ann -> [String]
+getProcessNames = processnames . getProcessParsedAnnotation
+
+setProcessNames :: GoodAnnotation a => [String] -> a -> a
+setProcessNames pn = mappendProcessParsedAnnotation (mempty {processnames = pn})
+
+instance (Apply s SapicTerm) => (Apply s (ProcessAnnotation v)) where
+    apply = applyAnn
+
+-- newtype AnnotatedProcess = LProcess (ProcessAnnotation LVar)
+--     deriving (Typeable, Monoid,Semigroup,Show)
+
+newtype AnProcess ann = AnProcess (LProcess ann)
+    deriving (Typeable, Show)
+
+type AnnotatedProcess = LProcess (ProcessAnnotation LVar)
+
+-- This instance is useful for modifying annotations, but not for much more.
+instance Functor AnProcess where
+    fmap f (AnProcess process) = AnProcess (f' process)
+        where
+        f' (ProcessNull an) = ProcessNull (f an)
+        f' (ProcessAction a an p)   =  ProcessAction a (f an) (f' p)
+        f' (ProcessComb c an pl pr)  = ProcessComb c (f an) (f' pl) (f' pr)
+
+unAnProcess :: AnProcess ann -> LProcess ann
+unAnProcess (AnProcess p) = p
 
 -- | quickly create Annotations from variable names for locking and
 -- unlocking
-annLock :: AnLVar -> ProcessAnnotation
-annLock v = ProcessAnnotation { processnames = [], lock = Just v, unlock = Nothing, secretChannel = Nothing, location = Nothing }
-annUnlock :: AnLVar -> ProcessAnnotation
-annUnlock v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Just v , secretChannel = Nothing, location = Nothing}
-annSecretChannel :: AnLVar -> ProcessAnnotation
-annSecretChannel v = ProcessAnnotation { processnames = [], lock = Nothing, unlock = Nothing, secretChannel = Just v, location = Nothing}
--- | Convert to and from Process, i.e., AnProcess with processnames only.
-toAnProcess :: Process -> AnProcess ProcessAnnotation
-toAnProcess = fmap f
-    where
-        f l =
-          let (names, loc) = getNamesLoc l in
-          ProcessAnnotation { processnames = names, lock = Nothing, unlock = Nothing, secretChannel = Nothing, location = loc}
-        getNamesLoc [] = ([], Nothing)
-        getNamesLoc ((ProcessLoc x):xs) = let (names,_) = getNamesLoc xs in (names,Just x)
-        getNamesLoc ((ProcessName x):xs) = let (names,loc) = getNamesLoc xs in (x:names,loc)
+annLock :: AnVar v -> ProcessAnnotation v
+annLock v = mempty {lock = Just v}
 
-toProcess :: GoodAnnotation an => AnProcess an -> Process
-toProcess = fmap f
+annUnlock :: AnVar v -> ProcessAnnotation v
+annUnlock v = mempty {unlock = Just v}
+
+annSecretChannel :: AnVar v -> ProcessAnnotation v
+annSecretChannel v = mempty { secretChannel = Just v}
+
+annDestructorEquation :: LNTerm -> LNTerm -> Bool -> ProcessAnnotation v
+annDestructorEquation v1 v2 b =  mempty { destructorEquation = Just (v1, v2), elseBranch = b }
+
+annElse ::  Bool -> ProcessAnnotation v
+annElse b = mempty {elseBranch = b}
+
+-- | Convert to and from Process, i.e., LProcess with processnames only.
+toAnProcess :: GoodAnnotation an => PlainProcess -> LProcess an
+toAnProcess = unAnProcess . fmap f . AnProcess
+  where
+        -- f :: ProcessParsedAnnotation -> an
+        f l = setProcessParsedAnnotation l defaultAnnotation
+
+toProcess :: GoodAnnotation an => LProcess an -> PlainProcess
+toProcess = unAnProcess . fmap f . AnProcess
     where
-        f l = map ProcessName $ getProcessNames l
+        f = getProcessParsedAnnotation

@@ -10,6 +10,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !Ltk( ~kxs, $X ) ]
 
@@ -366,7 +370,17 @@ solve( !Ltk( ~kas, A ) ▶₁ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -433,29 +447,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
-
-  output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 0.575962947s
-  executability (exists-trace): verified (9 steps)
-  Secrecy (all-traces): verified (30 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (9 steps)
-  agreement_B (all-traces): verified (9 steps)
-  injectiveagreement_S (all-traces): falsified - found trace (9 steps)
-  agreement_S (all-traces): verified (7 steps)
-  AUTO_typing (all-traces): verified (14 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -463,7 +467,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 0.575962947s
+  processing time: 0.68s
+  
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)
   injectiveagreement_B (all-traces): falsified - found trace (9 steps)

@@ -1,0 +1,14 @@
+theory MinValueEq
+begin
+
+rule AttackerMsg:
+    [ In(x) ]
+  --[ Value(x) ]->
+    [ ]
+
+// should fail
+lemma WrongEquality:
+"All a b #i #j. Value(a)@i & Value(b)@j ⇒ a=b"
+
+
+end

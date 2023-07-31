@@ -51,6 +51,30 @@ axiom only_fallible_humansU:
   	"not (Ex H x #k. H_role(H,x) @k)"
 #endif
 
+tactic: functional 
+presort: C
+prio:
+  regex "AgSt_S7"
+prio:
+  regex "AgSt"
+prio:
+  regex "~skD"
+prio:
+  regex "~skS"
+
+tactic: message_authentication
+prio:
+  regex "AgSt_S11\("
+prio:
+  regex "~rS"
+prio:
+  regex "~rD"
+prio:
+  regex "!KU\( ~vc"
+prio:
+  regex "!HK\( 'Human', 'vc', ~vc"
+prio:
+	regex "InitK\( 'Human', 'm',"
 
 /* untrained human rules*/ 
 // insecure channels
@@ -291,7 +315,7 @@ axiom OnlyOneDevice: // one Human only has one device
 
 /* Functionality Lemma */
 
-lemma functional: exists-trace
+lemma functional[heuristic={functional}]: exists-trace
 	"(All H1 H2 #i #j. Setup(H1) @i & Setup(H2) @j ==> #i = #j) 
 	& (Ex #k #n S m 
 		.
@@ -302,7 +326,7 @@ lemma functional: exists-trace
 
 /* Message Authentication */
 
-lemma message_authentication:
+lemma message_authentication[heuristic={message_authentication}]:
 	"All S m #k. Commit(S,'Human',m) @k ==> 
 		(Ex mn #i. Send('Human',mn,m) @i & i < k)" 
 

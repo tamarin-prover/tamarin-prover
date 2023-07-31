@@ -1,0 +1,158 @@
+theory NeedhamSchroeder
+
+/*
+ * Protocol:    Needham Schroeder Lowe for Secret Establising, without
+ *              Server
+ *
+ * Tamarin status : sanity1 and sanity2, < 1 sec
+ *                  source lemma, < 2 sec on cluster
+ *                  secrecy, 1 min on cluster
+ *  tamarin-prover nsl-no_as-untagged.spthy --prove
+ * Proverif status : < 1 sec
+    tamarin-prover nsl-no_as-untagged.spthy -m=proverif > nsl-reach.pv; proverif nsl-reach.pv
+  Proverif cannot be proved on:
+    tamarin-prover nsl-no_as-untagged.spthy -m=proverifequiv > nsl-ind.pv; proverif nsl-ind.pv
+
+
+  DeepSec proves strong secrecy in a second
+    tamarin-prover nsl-no_as-untagged.spthy -m=deepsec > nsl-ind.dps; deepsec nsl-ind.dps
+
+ */
+
+begin
+
+builtins: dest-pairing
+
+functions: pk/1, aenc/2, adec/2[destructor]
+
+equations: adec(aenc(m,pk(sk)),sk)=m
+
+let P(skA)=        event HonestA(pk(skA));
+        out(pk(skA));
+        !( in(pkB);
+        new Na;
+        event OUT_I_1(aenc(<Na,pk(skA)>,pkB));
+        out(aenc( <Na,pk(skA) > ,pkB));
+	in(cypher);
+	let mess = adec(cypher,skA) in
+	let <=Na,xNb,=pkB> = mess in
+        event IN_I_2_nr(xNb,aenc(<Na,xNb,pkB>,pk(skA)));
+        new k;
+        event OUT_I_2(aenc(<xNb,k>,pkB));
+        out(aenc(<xNb,k>,pkB));
+        event SessionA(pk(skA),pkB,k)
+        )
+
+let Q(skB) =
+         in(cypher1);
+	   let mess1 = adec(cypher1,skB) in
+           let <xNa,pkA> = mess1 in
+           event IN_R_1_ni(xNa,aenc(<xNa,pkA>,pk(skB)));
+	   new Nb;
+           event OUT_R_1(aenc(<xNa,Nb,pk(skB)>,pkA));
+           out(aenc(<xNa,Nb,pk(skB)>,pkA));
+	   in(cypher2);
+	   let mess2 = adec(cypher2,skB) in
+	   let <=Nb,xk> = mess2 in
+           event SessionB(pkA,pk(skB),xk)
+
+
+let Qleak(skB,Nb,token,pkA) =
+         in(cypher1);
+	   let mess1 = adec(cypher1,skB) in
+           let <xNa,=pkA> = mess1 in
+           out(aenc(<xNa,Nb,pk(skB)>,pkA));
+	   in(cypher2);
+	   let mess2 = adec(cypher2,skB) in
+	   let <=Nb,xk> = mess2 in
+           event SessionB(pkA,pk(skB),xk);
+	   out(token)
+
+
+
+
+
+process:
+! ( new skA; P(skA)
+)
+||
+! ( new skB;       event HonestB(pk(skB));
+        out(pk(skB)); !  Q(skB)
+)
+
+
+
+lemma source [sources, reuse, output=[msr]]:
+  " (All ni m1 #i.
+       IN_R_1_ni( ni, m1) @ i
+       ==>
+       ( (Ex #j. KU(ni) @ j & j < i)
+       | (Ex #j. OUT_I_1( m1 ) @ j)
+       | (Ex #j. OUT_I_2( m1 ) @ j)
+       )
+    )
+  & (All nr m2 #i.
+       IN_I_2_nr( nr, m2) @ i
+       ==>
+       ( (Ex #j. KU(nr) @ j & j < i)
+       | (Ex #j. OUT_R_1( m2 ) @ j)
+       )
+    )
+"
+lemma secrecy[reuse, output=[proverif,msr]]:
+        "not (
+                Ex pka pkb k #t1 #t2 #i1 #i2.
+                 SessionA(pka,pkb,k)@t1
+                & KU(k)@t2
+                &  HonestA(pka)@i1
+                & HonestB(pkb)@i2
+        )"
+
+lemma sanity1: //make sure that a valid protocol run exists
+  exists-trace
+  "Ex pka pkb k #t1 . SessionA(pka,pkb,k)@t1"
+
+lemma sanity2:
+  exists-trace
+  "Ex pka pkb k #t1 . SessionB(pka,pkb,k)@t1"
+
+
+
+equivLemma:
+
+ ( new skA; ( !( P(skA))
+|
+ ( new skB;
+        out(pk(skB)); ! (  new Nb; new test; Qleak(skB,Nb,test,pk(skA))) )
+))
+
+ ( new skA; ( !( P(skA))
+|
+ ( new skB;
+        out(pk(skB)); ! (  new Nb; new test; Qleak(skB,Nb,Nb,pk(skA))) )
+))
+
+
+/*
+The source lemma bellow was true in the pattern matching based version, but is not in the new version.
+Indeed, IN_R_1_ni may in fact accept messages either from the first or the second output of I, as they both have the same shape.
+
+lemma source [sources, reuse]:
+  " (All ni m1 #i.
+       IN_R_1_ni( ni, m1) @ i
+       ==>
+       ( (Ex #j. KU(ni) @ j & j < i)
+       | (Ex #j. OUT_I_1( m1 ) @ j)
+       )
+    )
+  & (All nr m2 #i.
+       IN_I_2_nr( nr, m2) @ i
+       ==>
+       ( (Ex #j. KU(nr) @ j & j < i)
+       | (Ex #j. OUT_R_1( m2 ) @ j)
+       )
+    )
+"
+*/
+
+end

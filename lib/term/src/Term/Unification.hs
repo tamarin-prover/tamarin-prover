@@ -44,12 +44,14 @@ module Term.Unification (
   , enableDH
   , enableBP
   , enableMSet
+  , enableNat
   , enableXor
   , enableDiff
   , enableConc
   , minimalMaudeSig
   , enableDiffMaudeSig
   , dhMaudeSig
+  , natMaudeSig
   , bpMaudeSig
   , xorMaudeSig
   , concatMaudeSig
@@ -58,6 +60,10 @@ module Term.Unification (
   , symEncMaudeSig
   , asymEncMaudeSig
   , signatureMaudeSig
+  , pairDestMaudeSig
+  , symEncDestMaudeSig
+  , asymEncDestMaudeSig
+  , signatureDestMaudeSig  
   , locationReportMaudeSig
   , revealSignatureMaudeSig
   , hashMaudeSig
@@ -86,6 +92,7 @@ import           Data.Map (Map)
 import           System.IO.Unsafe (unsafePerformIO)
 
 
+import           Term.Term.FunctionSymbols
 import           Term.Rewriting.Definitions
 import           Term.Substitution
 import qualified Term.Maude.Process as UM
@@ -243,6 +250,13 @@ unifyRaw l0 r0 = do
        (Lit (Var vl),  _            ) -> elim vl r
        (_,             Lit (Var vr) ) -> elim vr l
        (Lit (Con cl),  Lit (Con cr) ) -> guard (cl == cr)
+       -- Special cases for builtin naturals: Make sure to perform unification
+       -- via Maude if we have 1:nat on the left-/right-hand side.
+       (FApp (NoEq lfsym) [], FApp (AC NatPlus) _) ->
+          guard (lfsym == natOneSym) >> tell [Equal l r]
+       (FApp (AC NatPlus) _, FApp (NoEq rfsym) []) ->
+          guard (rfsym == natOneSym) >> tell [Equal l r]
+       -- General cases / function application
        (FApp (NoEq lfsym) largs, FApp (NoEq rfsym) rargs) ->
            guard (lfsym == rfsym && length largs == length rargs)
            >> sequence_ (zipWith unifyRaw largs rargs)

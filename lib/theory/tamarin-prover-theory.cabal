@@ -10,9 +10,10 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
                     Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-maintainer:         Cas Cremers <cremers@cispa.de>,
+maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
+                    Cas Cremers <cremers@cispa.de>
 copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2018
 
 synopsis:           Security protocol types and constraint solver library for the tamarin prover.
@@ -43,6 +44,8 @@ library
     build-depends:
         aeson
       , aeson-pretty
+      , array
+      , attoparsec
       , base
       , binary
       , bytestring
@@ -54,8 +57,12 @@ library
       , mtl
       , parallel
       , parsec
+      , pretty
       , process
+      , regex-pcre-builtin
+      , regex-posix
       , safe
+      , split
       , text
       , transformers
       , uniplate
@@ -70,15 +77,16 @@ library
     exposed-modules:
       Theory
       Theory.Proof
+      Theory.ProofSkeleton
 
       Theory.Constraint.Solver
       Theory.Constraint.Solver.Sources
       Theory.Constraint.Solver.Contradictions
+      Theory.Constraint.Solver.AnnotatedGoals
       Theory.Constraint.Solver.Goals
       Theory.Constraint.Solver.ProofMethod
       Theory.Constraint.Solver.Reduction
       Theory.Constraint.Solver.Simplify
-      Theory.Constraint.Solver.Heuristics
 
       Theory.Constraint.System
       Theory.Constraint.System.Constraints
@@ -86,6 +94,11 @@ library
       Theory.Constraint.System.JSON
       Theory.Constraint.System.Guarded
 
+      Theory.Sapic.Term
+      Theory.Sapic.Pattern
+      Theory.Sapic.Process
+      Theory.Sapic.Position
+      Theory.Sapic.Annotation
       Theory.Sapic
       Theory.Sapic.Print
 
@@ -97,20 +110,45 @@ library
       Theory.Model.Signature
       Theory.Model.Restriction
 
+      Theory.Module
+
       Theory.Text.Pretty
       Theory.Text.Parser
       Theory.Text.Parser.Token
       Theory.Text.Parser.Restriction
+      Theory.Text.Parser.Signature
+      Theory.Text.Parser.Macro 
 
+      Theory.Tools.MessageDerivationChecks
       Theory.Tools.AbstractInterpretation
       Theory.Tools.EquationStore
       Theory.Tools.InjectiveFactInstances
       Theory.Tools.IntruderRules
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
+      Theory.Tools.SubtermStore
       Theory.Tools.Wellformedness
+      TheoryObject
+      Lemma
+      OpenTheory
+      ClosedTheory
+      Rule
+      Prover
+      Items.LemmaItem
+      Items.OpenTheoryItem
+      Items.OptionItem
+      Items.RuleItem
+      Items.ProcessItem
+      Items.TheoryItem
+      Items.ExportInfo
+      Items.CaseTestItem
+      Items.AccLemmaItem
+      Pretty
+
 
     other-modules:
+      Theory.Syntactic.Predicate
+      Theory.Text.Parser.Accountability
       Theory.Text.Parser.Exceptions
       Theory.Text.Parser.Fact
       Theory.Text.Parser.Formula
@@ -119,5 +157,7 @@ library
       Theory.Text.Parser.Proof
       Theory.Text.Parser.Rule
       Theory.Text.Parser.Sapic
-      Theory.Text.Parser.Signature
+      Theory.Text.Parser.Tactics
       Theory.Text.Parser.Term
+      Theory.Sapic.PlainProcess
+      Theory.Sapic.Substitution

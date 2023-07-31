@@ -11,6 +11,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Create_Key:
    [ Fr( ~sk ) ]
   --[ Secret( $A, $B, ~sk ) ]->
@@ -882,7 +886,21 @@ solve( StateB( $A, $B, ~sk, xna, ~nb ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -1522,29 +1540,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/AS_RPC.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
-
-  output:          examples/features/auto-sources/spore/AS_RPC.spthy.tmp
-  processing time: 40.523810508s
-  secrecy (all-traces): verified (187 steps)
-  injectiveagreement_A (all-traces): falsified - found trace (16 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (7 steps)
-  noninjectiveagreement_A (all-traces): falsified - found trace (10 steps)
-  noninjectiveagreement_B (all-traces): falsified - found trace (7 steps)
-  Session_key_honest_setup (exists-trace): verified (15 steps)
-  AUTO_typing (all-traces): verified (146 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1552,7 +1560,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_RPC.spthy.tmp
-  processing time: 40.523810508s
+  processing time: 29.23s
+  
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (16 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

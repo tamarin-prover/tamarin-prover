@@ -1,14 +1,19 @@
 theory AC_sid
-/* Use Tamarin command line option '--heuristic=p' */
 
 // In this example, instead of passing along a hash of all the inputss and outputs
 // The server only has  a session identifier.
 
+// Tamarin takes a long time, Proverif says cannot be proved
+
 begin
+
+//options: translation-state-optimisation
 
 builtins: locations-report
 
 functions: prog/3,list/2
+
+heuristic:p
 
 predicates:
 Report(x,y) <=> not  (y= 'l')
@@ -17,7 +22,7 @@ let r =                                        // The remote server who runs the
     (new sid;
     let r_sid = report (sid) in
     out(<sid,r_sid>);
-	
+
     !(lock state; lookup state as ipo in
 	in(ip); new r; let o = prog(r,ip,ipo) in   // computation of the new output
 	let x = report (<o,ip,sid>) in             // report call of the IEE
@@ -30,24 +35,25 @@ let r =                                        // The remote server who runs the
 let v =   // The verifier
     in(<sid,r_sid>);
     if  sid = check_rep(r_sid,'l') then
-                                 
+
 	!(lock state; lookup state as ipo in
 	in(ip); in(<o,signedios>);
-	if <o,ip,sid>= check_rep(signedios,'l') then // verification of the validity of the report 
+	if <o,ip,sid>= check_rep(signedios,'l') then // verification of the validity of the report
 		(event Voutput(<o,ip,ipo>);
 		insert state,<o,list(ip,ipo)>;
 		unlock state)
-	else  
+	else
 		event Fail())
 
 
+process:
 new init;
  ( !(new state;  insert state,init; !r) || !(new state;  insert state,init; !v)  )
 
 /*
-lemma can_run_v: //for sanity 
- 	exists-trace 
-	"Ex #t h .Voutput(h)@t" 
+lemma can_run_v: //for sanity
+ 	exists-trace
+	"Ex #t h .Voutput(h)@t"
 */
 
 // Attested computation theorem

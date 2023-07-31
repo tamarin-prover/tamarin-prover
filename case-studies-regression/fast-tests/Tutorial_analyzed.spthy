@@ -10,6 +10,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
 
@@ -222,28 +224,35 @@ solve( Client_1( S, k ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/Tutorial.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/Tutorial.spthy
-
-  output:          examples/Tutorial.spthy.tmp
-  processing time: 0.150810671s
-  Client_session_key_secrecy (all-traces): verified (5 steps)
-  Client_auth (all-traces): verified (11 steps)
-  Client_auth_injective (all-traces): verified (15 steps)
-  Client_session_key_honest_setup (exists-trace): verified (5 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -251,7 +260,8 @@ summary of summaries:
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.150810671s
+  processing time: 0.16s
+  
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)
   Client_auth_injective (all-traces): verified (15 steps)

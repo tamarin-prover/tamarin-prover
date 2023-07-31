@@ -45,17 +45,19 @@ import Data.Attoparsec.ByteString.Char8
 -- | Pretty print an 'LSort'.
 ppLSort :: LSort -> ByteString
 ppLSort s = case s of
-    LSortPub   -> "Pub"
-    LSortFresh -> "Fresh"
-    LSortMsg   -> "Msg"
-    LSortNode  -> "Node"
+    LSortPub       -> "Pub"
+    LSortFresh     -> "Fresh"
+    LSortMsg       -> "Msg"
+    LSortNat       -> "TamNat"
+    LSortNode      -> "Node"
 
 ppLSortSym :: LSort -> ByteString
 ppLSortSym lsort = case lsort of
-    LSortFresh -> "f"
-    LSortPub   -> "p"
-    LSortMsg   -> "c"
-    LSortNode  -> "n"
+    LSortFresh     -> "f"
+    LSortPub       -> "p"
+    LSortMsg       -> "c"
+    LSortNode      -> "n"
+    LSortNat       -> "t"
 
 parseLSortSym :: ByteString -> Maybe LSort
 parseLSortSym s = case s of
@@ -63,16 +65,37 @@ parseLSortSym s = case s of
     "p"  -> Just LSortPub
     "c"  -> Just LSortMsg
     "n"  -> Just LSortNode
+    "t"  -> Just LSortNat
     _    -> Nothing
 
 -- | Used to prevent clashes with predefined Maude function symbols
 --   like @true@
 funSymPrefix :: ByteString
-funSymPrefix = "tamX"
+funSymPrefix = "tam"
 
--- | Prefix for private function symbols.
-funSymPrefixPriv :: ByteString
-funSymPrefixPriv = "tamP"
+-- | Encode attributes in additional prefix
+funSymEncodeAttr :: Privacy -> Constructability -> ByteString
+funSymEncodeAttr priv constr  = f priv <> g constr
+    where
+        f Private = "P"
+        f Public  = "X"
+        g Constructor = "C"
+        g Destructor = "D"
+
+-- | Decode string @funSymPrefix || funSymEncodeAttr p c || ident@ into
+--   @(ident,p,c)@
+funSymDecode :: ByteString -> (ByteString, Privacy, Constructability)
+funSymDecode s = (ident,priv,constr)
+    where
+        prefixLen      = BC.length funSymPrefix
+        (eAttr,ident)  = BC.splitAt 2 (BC.drop prefixLen s) 
+        (priv,constr)  = case eAttr of
+                            "PD" -> (Private,Destructor)
+                            "PC" -> (Private,Constructor)
+                            "XD" -> (Public,Destructor)
+                            _    -> (Public,Constructor)
+
+         
 
 -- | Replace underscores "_" with minus "-" for Maude.
 replaceUnderscore :: ByteString -> ByteString
@@ -96,18 +119,19 @@ replaceMinus s = BC.map f s
 replaceMinusFun :: NoEqSym -> NoEqSym
 replaceMinusFun (s, p) = (replaceMinus s, p)
 
+
 -- | Pretty print an AC symbol for Maude.
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
     funSymPrefix <> case o of
-                      Mult  -> "mult"
-                      Union -> "mun"
-                      Xor   -> "xor"
+                      Mult    -> multSymString 
+                      Union   -> munSymString
+                      Xor     -> xorSymString
+                      NatPlus -> natPlusSymString
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
-ppMaudeNoEqSym (o,(_,Private)) = funSymPrefixPriv <> replaceUnderscore o
-ppMaudeNoEqSym (o,(_,Public))  = funSymPrefix     <> replaceUnderscore o
+ppMaudeNoEqSym (o,(_,prv,cnstr))  = funSymPrefix <> funSymEncodeAttr prv cnstr <> replaceUnderscore o
 
 -- | Pretty print a C symbol for Maude.
 ppMaudeCSym :: CSym -> ByteString
@@ -144,9 +168,10 @@ ppTheory :: MaudeSig -> ByteString
 ppTheory msig = BC.unlines $
     [ "fmod MSG is"
     , "  protecting NAT ."
-    , "  sort Pub Fresh Msg Node TOP ."
+    , "  sort Pub Fresh Msg Node TamNat TOP ."
     , "  subsort Pub < Msg ."
     , "  subsort Fresh < Msg ."
+    , "  subsort TamNat < Msg ."
     , "  subsort Msg < TOP ."
     , "  subsort Node < TOP ."
     -- constants
@@ -154,6 +179,7 @@ ppTheory msig = BC.unlines $
     , "  op p : Nat -> Pub ."
     , "  op c : Nat -> Msg ."
     , "  op n : Nat -> Node ."
+    , "  op t : Nat -> TamNat ."
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
     , "  op cons : TOP TOP -> TOP ."
@@ -161,32 +187,39 @@ ppTheory msig = BC.unlines $
     ++
     (if enableMSet msig
        then
-       [ theoryOp "mun : Msg Msg -> Msg [comm assoc]" ]
+       [ theoryOpAC "mun : Msg Msg -> Msg [comm assoc]" ]
        else [])
     ++
     (if enableConc msig
        then
-       [ theoryOp "concat : Msg Msg -> Msg [assoc]" ]
+       [ theoryOpA "concat : Msg Msg -> Msg [assoc]" ]
        else [])
     ++
     (if enableDH msig
        then
-       [ theoryOp "one : -> Msg"
-       , theoryOp "exp : Msg Msg -> Msg"
-       , theoryOp "mult : Msg Msg -> Msg [comm assoc]"
-       , theoryOp "inv : Msg -> Msg" ]
+       [ theoryOpEq "one : -> Msg"
+       , theoryOpEq "DH-neutral  : -> Msg"       
+       , theoryOpEq "exp : Msg Msg -> Msg"
+       , theoryOpAC "mult : Msg Msg -> Msg [comm assoc]"
+       , theoryOpEq "inv : Msg -> Msg" ]
        else [])
     ++
     (if enableBP msig
        then
-       [ theoryOp "pmult : Msg Msg -> Msg"
-       , theoryOp "em : Msg Msg -> Msg [comm]" ]
+       [ theoryOpEq "pmult : Msg Msg -> Msg"
+       , theoryOpC "em : Msg Msg -> Msg [comm]" ]
        else [])
     ++
     (if enableXor msig
        then
-       [ theoryOp "zero : -> Msg"
-       , theoryOp "xor : Msg Msg -> Msg [comm assoc]" ]
+       [ theoryOpEq "zero : -> Msg"
+       , theoryOpAC "xor : Msg Msg -> Msg [comm assoc]" ]
+       else [])
+    ++    
+    (if enableNat msig
+       then
+       [ theoryOpEq "tone : -> TamNat"
+       , theoryOpAC "tplus : TamNat TamNat -> TamNat [comm assoc]" ]
        else [])
     ++
     map theoryFunSym (S.toList $ (stFunSyms msig))
@@ -195,11 +228,16 @@ ppTheory msig = BC.unlines $
     ++
     [ "endfm" ]
   where
-    theoryOpNoEq priv fsort =
-        "  op " <> (if (priv==Private) then funSymPrefixPriv else funSymPrefix) <> fsort <>" ."
-    theoryOp = theoryOpNoEq Public
-    theoryFunSym (s,(ar,priv)) =
-        theoryOpNoEq priv (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
+    maybeEncode (Just (priv,cnstr)) = funSymEncodeAttr priv cnstr
+    maybeEncode Nothing             = ""
+    theoryOp attr fsort =
+        "  op " <> funSymPrefix <> maybeEncode attr <> fsort <>" ."
+    theoryOpEq = theoryOp (Just (Public,Constructor))
+    theoryOpAC = theoryOp Nothing
+    theoryOpA  = theoryOp Nothing    
+    theoryOpC  = theoryOp Nothing
+    theoryFunSym (s,(ar,priv,cnstr)) =
+        theoryOp  (Just(priv,cnstr)) (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " [variant] ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
@@ -261,6 +299,7 @@ parseSort :: Parser LSort
 parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
+         <|> string "TamNat"   *> return LSortNat
          <|> string "M"        *> -- FIXME: why?
                (    string "sg"  *> return LSortMsg )
 
@@ -285,21 +324,23 @@ parseTerm msig = choice
           error $ "Maude.Parser.parseTerm: unknown function "
                   ++ "symbol `"++ show op ++"', not in "
                   ++ show allowedfunSyms
-      where prefixLen      = BC.length funSymPrefix
-            special        = ident `elem` ["list"]
-            priv           = if (not special) && BC.isPrefixOf funSymPrefixPriv ident
-                               then Private else Public
-            op             = (if special then ident else BC.drop prefixLen ident
-                             , ( length args, priv))
-            allowedfunSyms = (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
+      where 
+            special             = ident `elem` ["list" ]
+            (ident',priv,cnstr) = funSymDecode ident
+            op                  = if special then 
+                                        (ident , (length args,Public,Constructor))
+                                  else  (ident', (length args, priv, cnstr))
+            allowedfunSyms = [natOneSym]
+                ++ (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 
     parseFApp ident =
         appIdent <$> sepBy1 (parseTerm msig) (string ", ") <* string ")"
       where
-        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult  args
-                       | ident == ppMaudeACSym Union      = fAppAC Union args
+        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult    args
+                       | ident == ppMaudeACSym Union      = fAppAC Union   args
+                       | ident == ppMaudeACSym NatPlus    = fAppAC NatPlus args
                        | ident == ppMaudeACSym Xor        = fAppAC Xor   args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
                        | ident == ppMaudeASym  Concat     = fAppA  Concat  args

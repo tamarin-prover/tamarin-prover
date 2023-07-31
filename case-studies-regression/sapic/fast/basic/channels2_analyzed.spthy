@@ -5,7 +5,13 @@ theory ChannelTestTwo begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
+
+
+
+
 
 lemma received:
   all-traces "¬(∃ #i. Reached( ) @ #i)"
@@ -14,67 +20,63 @@ guarded formula characterizing all counter-examples:
 "∃ #i. (Reached( ) @ #i)"
 */
 simplify
-by solve( State_111( a, c ) ▶₀ #i )
+solve( Semistate_1111( a, c ) ▶₀ #i )
+  case Init
+  by solve( Ack( ~n.1, ~n ) ▶₁ #i )
+qed
 
-rule (modulo E) Init[color=#ffffff, process="new c;"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
 
-  /* has exactly the trivial AC variant */
 
-rule (modulo E) newc_0_[color=#ffffff, process="new c;"]:
-   [ State_( ), Fr( c ) ] --> [ State_1( c ) ]
 
-  /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_1[color=#6c8040, process="new a;"]:
-   [ State_1( c ), Fr( a ) ] --> [ State_11( a, c ) ]
 
-  /* has exactly the trivial AC variant */
 
-rule (modulo E) outca_0_11[color=#6c8040, process="out(c,a);"]:
-   [ State_11( a, c ) ] --> [ Message( c, a ), Semistate_111( a, c ) ]
+rule (modulo E) Init[color=#ffffff, process="new c.1;"]:
+   [ Fr( c.1 ), Fr( a.1 ) ]
+  --[ Init( ) ]->
+   [ Message( c.1, a.1 ), Semistate_1111( a.1, c.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="new c.1;"]:
+     [ Fr( c ), Fr( a ) ]
+    --[ Init( ) ]->
+     [ Message( c, a ), Semistate_1111( a, c ) ]
+  */
 
-rule (modulo E) outca_1_11[color=#6c8040, process="out(c,a);"]:
-   [ Semistate_111( a, c ), Ack( c, a ) ] --> [ State_111( a, c ) ]
+rule (modulo E) outca_1_111[color=#408051, process="out(c.1,a.1);"]:
+   [ Semistate_1111( a.1, c.1 ), Ack( c.1, a.1 ) ] --[ Reached( ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventReached_0_111[color=#6c8040,
-                                   process="event Reached( );"]:
-   [ State_111( a, c ) ] --[ Reached( ) ]-> [ State_1111( a, c ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1111[color=#6c8040, process="0"]:
-   [ State_1111( a, c ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) outca_1_111[color=#408051, process="out(c.1,a.1);"]:
+     [ Semistate_1111( a, c ), Ack( c, a ) ] --[ Reached( ) ]-> [ ]
+  */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "outca_1_111":  factName `Ack' arity: 2 multiplicity: Linear
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/channels2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/channels2.spthy
-
-  output:          examples/sapic/fast/basic/channels2.spthy.tmp
-  processing time: 0.059260669s
-  received (all-traces): verified (2 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -82,8 +84,12 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels2.spthy
 
   output:          examples/sapic/fast/basic/channels2.spthy.tmp
-  processing time: 0.059260669s
-  received (all-traces): verified (2 steps)
+  processing time: 0.07s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  received (all-traces): verified (3 steps)
 
 ==============================================================================
 */

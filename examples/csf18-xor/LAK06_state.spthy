@@ -13,6 +13,91 @@ begin
 
 builtins: xor, hashing
 
+tactic: helpingUpdateKey
+presort: s
+prio:
+    regex ".*ReaderK\(.*"
+prio:
+    regex ".*TagK\(.*"
+
+
+tactic: helpingOutNotKey
+presort: s
+prio:
+    regex ".*!Tag\(.*" | regex ".*!Reader\(.*" | regex ".*ReaderState1\(.*"
+deprio:
+    regex ".*TagK\(.*"
+
+tactic: helpingSecrecy
+presort: s
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*!KU\( h\(~k.*"
+prio:
+    regex ".*!KU\( h\(k0\).*" | regex ".*!KU\( h\(h\(k0"
+prio:
+    regex ".*!K.\(.*r1\.1.*" | regex ".*!K.\(.*r1.*" | regex ".*!K.\(\(.*z1\.1.*"
+    regex ".*!K.\(\(.*z1.*" | regex ".*!K.\(\(.*~r0\.1.*" | regex ".*!K.\(\(.*~r0.*"
+    regex ".*!K.\( \(.*~r0\.1.*" |regex ".*!K.\( \(.*~r0.*" | regex ".*!K.\( ~r.*"
+    regex ".*!K.\( \(z.1" | regex ".*!K.\( \(h\(k0.*h\(.*" | regex ".*!K.\(.*x.*h.*"          
+prio:
+    regex ".*!KU\(.*r1\.1.*" | regex ".*!KU\(.*r1.*"
+prio:
+    regex ".*!Tag\(.*" | regex ".*!Reader\(.*" | regex ".*ReaderState1\(.*" | regex ".*TagState1\(.*"
+prio:
+    regex ".*ReaderState1\(.*" | regex ".*TagState1\(.*"
+prio:
+    regex ".*!K.\( \(x.*h\(k0"
+prio:
+    regex ".*splitEqs\(2\.*"
+prio:
+    regex ".*splitEqs\(3\.*"
+
+tactic: noninjectiveagreementTAG
+presort: s
+prio:
+    regex ".*~~>.*"
+prio:
+    regex ".*Running\(.*" | regex ".*splitEqs\(7.*"  
+prio:
+    regex ".*!KU\( ~k.*" | regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( h\(~k.*" | regex ".*!KU\( ~k.*"
+prio:
+    regex ".*!KU\( h\(k0\).*" | regex ".*!KU\( h\(h\(k0"
+prio:
+    regex ".*!K.\(.*r1\.1.*" | regex ".*!K.\(.*r1.*" | regex ".*!K.\(\(.*z1\.1.*"
+    regex ".*!K.\(\(.*z1.*" | regex ".*!K.\(\(.*~r0\.1.*" | regex ".*!K.\(\(.*~r0.*"
+    regex ".*!K.\( \(.*~r0\.1.*" |regex ".*!K.\( \(.*~r0.*" | regex ".*!K.\( ~r.*"
+    regex ".*!K.\( \(z.1" | regex ".*!K.\( \(h\(k0.*h\(.*" | regex ".*!K.\(.*x.*h.*"          
+prio:
+    regex ".*!KU\(.*r1\.1.*" | regex ".*!KU\(.*r1.*"
+prio:
+    regex ".*!Tag\(.*" | regex ".*!Reader\(.*" | regex ".*ReaderState1\(.*" | regex ".*TagState1\(.*"
+prio:
+    regex ".*ReaderState1\(.*" | regex ".*TagState1\(.*"
+prio:
+    regex ".*!K.\( \(x.*h\(k0"
+prio:
+    regex ".*splitEqs\(2\.*"
+prio:
+    regex ".*splitEqs\(3\.*"
+prio:
+    regex ".*Running\(.*" | regex ".*splitEqs\(7.*"
+    regex ".*!K.\(.*x\.1.*"
+
+tactic: noninjectiveagreementREADER
+presort: s   
+deprio: 
+    regex ".*Update\(.*"
+
+  
+tactic: executable
+presort: s
+deprio:
+    regex ".*Update\(.*"
+
 /*
   T: k
   R: k, k0
@@ -117,7 +202,7 @@ restriction onylOnce:
 // PROVEN, quick manual proof that could be automatized very easily.
 // AUTOPROOF with associated oracle (LAK_state-oracle)
 // --> only prioritize ReaderK() and TagK() goals and then full auto mode,
-lemma helpingUpdateKey[use_induction, reuse]: // usage of a key ---> key has been updated or created before
+lemma helpingUpdateKey[heuristic={helpingUpdateKey}, use_induction, reuse]: // usage of a key ---> key has been updated or created before
   "All k r #i. 
      Key(k, r)@i ==>
        ( (Ex #j. Update(k, r)@j & #j < #i))"
@@ -129,23 +214,23 @@ lemma helpingStackHash[use_induction, reuse]: // no Out(h(key))
  & (All k r #i. ((Update(k, r)@i ==> Ex k0. k = h(k0))))"
 
 // PROVEN, semi-manual proof: quite long but a lot of sub-cases can be proved auto. using the associated oracle
-lemma helpingSecrecy[use_induction, reuse]:
+lemma helpingSecrecy[heuristic={helpingSecrecy}, use_induction, reuse]:
   "All k r #i. Key(k, r)@i ==> not(Ex #j. KU(k)@j)"
 
 // PROVEN, manual proof (straightforward), see associated file
-lemma executable:
+lemma executable[heuristic={executable}]:
   exists-trace
   " (Ex #i. FinTag()@i)
   & (All x #i1 #i2. OnlyOnce(x)@i1 & OnlyOnce(x)@i2 ==> #i1 = #i2)"
 
 // PROVEN, semi-manual proof: quite long but a lot of sub-cases can be proved auto. using the associated oracle
-lemma noninjectiveagreementTAG[use_induction]:
+lemma noninjectiveagreementTAG[heuristic={noninjectiveagreementTAG}, use_induction]:
   "All t #i. 
     Commit(<'T','R',t>) @i
     ==> (Ex #j. Running(<'T','R',t>) @j)"
 
 // FALSIFIED, attack found automatically 
-lemma noninjectiveagreementREADER[use_induction]:
+lemma noninjectiveagreementREADER[heuristic={noninjectiveagreementREADER}, use_induction]:
   "All t #i. 
     Commit(<'R','T',t>) @i
     ==> (Ex #j. Running(<'R','T',t>) @j)"

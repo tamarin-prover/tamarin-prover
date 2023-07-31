@@ -8,6 +8,10 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
 rule (modulo E) testsend:
    [ Fr( ~x ), Fr( ~y ), Fr( ~z ) ]
   --[ OnlyOnce( ), Secret( ~x ) ]->
@@ -66,25 +70,27 @@ solve( !KU( ~x ) @ #vk )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/xor/basicfunctionality/xor2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/xor/basicfunctionality/xor2.spthy
-
-  output:          examples/features/xor/basicfunctionality/xor2.spthy.tmp
-  processing time: 0.14813302s
-  secrecybroken (all-traces): falsified - found trace (5 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -92,7 +98,8 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor2.spthy
 
   output:          examples/features/xor/basicfunctionality/xor2.spthy.tmp
-  processing time: 0.14813302s
+  processing time: 0.14s
+  
   secrecybroken (all-traces): falsified - found trace (5 steps)
 
 ==============================================================================

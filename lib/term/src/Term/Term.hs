@@ -18,14 +18,17 @@ module Term.Term (
     -- ** Smart constructors
     , fAppOne
     , fAppZero
+    , fAppDHNeutral
     , fAppDiff
     , fAppExp
     , fAppInv
     , fAppPMult
     , fAppEMap
+    , fAppUnion
     , fAppPair
     , fAppFst
     , fAppSnd
+    , fAppNatOne
 
     -- ** Destructors and classifiers
     , isPair
@@ -44,6 +47,7 @@ module Term.Term (
 
     -- ** "Protected" subterms
     , allProtSubterms
+    , elemNotBelowReducible
 
     -- * AC, C, and NonAC funcion symbols
     , FunSym(..)
@@ -51,6 +55,7 @@ module Term.Term (
     , ASym(..)
     , CSym(..)
     , Privacy(..)
+    , Constructability(..)
     , NoEqSym
 
     -- ** Signatures
@@ -59,12 +64,16 @@ module Term.Term (
 
     -- ** concrete symbols strings
     , diffSymString
+    , munSymString 
     , expSymString
     , invSymString
     , pmultSymString
     , emapSymString
     , unionSymString
+    , natPlusSymString
+    , natOneSymString
     , oneSymString
+    , dhNeutralSymString
     , multSymString
     , zeroSymString
     , xorSymString
@@ -74,16 +83,20 @@ module Term.Term (
     , diffSym
     , expSym
     , pmultSym
+    , natOneSym
     , oneSym
     , zeroSym
+    , dhNeutralSym
 
     -- ** concrete signatures
     , dhFunSig
     , bpFunSig
     , msetFunSig
+    , natFunSig
     , xorFunSig
     , concatFunSig
     , pairFunSig
+    , pairFunDestSig    
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig
@@ -92,12 +105,12 @@ module Term.Term (
 
     , module Term.Term.Classes
     , module Term.Term.Raw
-
     ) where
 
 -- import           Data.Monoid
 -- import           Data.Foldable (foldMap)
 
+import qualified Data.Set as S
 import qualified Data.ByteString.Char8 as BC
 import           Extension.Data.ByteString ()
 
@@ -115,8 +128,15 @@ import           Term.Term.Raw
 fAppOne :: Term a
 fAppOne = fAppNoEq oneSym []
 
+fAppDHNeutral :: Term a
+fAppDHNeutral = fAppNoEq dhNeutralSym []
+
 fAppZero :: Term a
 fAppZero = fAppNoEq zeroSym []
+
+-- | Smart constructors for one on naturals.
+fAppNatOne :: Term a
+fAppNatOne  = fAppNoEq natOneSym []
 
 -- | Smart constructors for diff, pair, exp, pmult, and emap.
 fAppDiff, fAppPair, fAppExp, fAppPMult :: (Term a, Term a) -> Term a
@@ -124,8 +144,9 @@ fAppDiff (x,y)  = fAppNoEq diffSym  [x, y]
 fAppPair (x,y)  = fAppNoEq pairSym  [x, y]
 fAppExp  (b,e)  = fAppNoEq expSym   [b, e]
 fAppPMult (s,p) = fAppNoEq pmultSym [s, p]
-fAppEMap :: Ord a => (Term a, Term a) -> Term a
+fAppEMap,fAppUnion :: Ord a => (Term a, Term a) -> Term a
 fAppEMap  (x,y) = fAppC    EMap     [x, y]
+fAppUnion (x,y) = fAppAC    Union     [x, y]
 
 -- | Smart constructors for inv, fst, and snd.
 fAppInv, fAppFst, fAppSnd :: Term a -> Term a
@@ -184,11 +205,11 @@ isUnion _                       = False
 
 -- | 'True' iff the term is a nullary, public function.
 isNullaryPublicFunction :: Term a -> Bool
-isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public))) _) = True
+isNullaryPublicFunction (viewTerm -> FApp (NoEq (_, (0, Public,_))) _) = True
 isNullaryPublicFunction _                                            = False
 
 isPrivateFunction :: Term a -> Bool
-isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private))) _) = True
+isPrivateFunction (viewTerm -> FApp (NoEq (_, (_,Private,_))) _) = True
 isPrivateFunction _                                            = False
 
 -- | 'True' iff the term is an AC-operator.
@@ -226,8 +247,9 @@ getRightTerm t = getSide DiffRight t
 -- NB: here anything but a pair or an AC symbol is protected!
 ----------------------------------------------------------------------
 
--- Given a term, compute all protected subterms, i.e. all terms
--- which top symbol is a function, but not a pair, nor an AC symbol, nor an A symbol
+-- | Given a term, compute all protected subterms, i.e. all terms
+-- which top symbol is a function, but not a pair, nor an AC symbol
+-- nor an A symbol  
 allProtSubterms :: Show a => Term a -> [Term a]
 allProtSubterms t@(viewTerm -> FApp _ as) | isPair t || isAC t || isA t
         = concatMap allProtSubterms as
@@ -235,6 +257,16 @@ allProtSubterms t@(viewTerm -> FApp _ as) | otherwise
         = t:concatMap allProtSubterms as
 
 allProtSubterms _                                     = []
+
+-- | Is term @inner@ in term @outer@ and not below a reducible function symbol?
+-- This is used for the Subterm relation
+elemNotBelowReducible :: Eq a => FunSig -> Term a -> Term a -> Bool
+elemNotBelowReducible _ inner outer
+                      | inner == outer = True
+elemNotBelowReducible reducible inner (viewTerm -> FApp f as)
+                      | f `S.notMember` reducible
+                            = any (elemNotBelowReducible reducible inner) as
+elemNotBelowReducible _ _ _ = False
 
 ----------------------------------------------------------------------
 -- Pretty printing
@@ -254,22 +286,23 @@ prettyTerm ppLit = ppTerm
   where
     ppTerm t = case viewTerm t of
         Lit l                                     -> ppLit l
-        FApp (AC o)        ts                     -> ppTerms (ppACOp o) 1 "(" ")" ts
+        FApp (AC o)            ts                 -> ppTerms (ppACOp o) 1 "(" ")" ts
         FApp (A  o)        ts                     -> ppTerms (ppAOp o)  1 "(" ")" ts
-        FApp (NoEq s)      [t1,t2] | s == expSym  -> ppTerm t1 <> text "^" <> ppTerm t2
-        FApp (NoEq s)      [t1,t2] | s == diffSym -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
-        FApp (NoEq s)      _       | s == pairSym -> ppTerms ", " 1 "<" ">" (split t)
---        FApp (NoEq s)      _       | s == consSym -> ppTerms "; " 1 "[|" "|]" (splitCons t)
+        FApp (NoEq s)   [t1,t2] | s == expSym     -> ppTerm t1 <> text "^" <> ppTerm t2
+        FApp (NoEq s)   [t1,t2] | s == diffSym    -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
+        FApp (NoEq s)   []      | s == natOneSym  -> text "%1"
+        FApp (NoEq s)   _       | s == pairSym    -> ppTerms ", " 1 "<" ">" (split t)
         FApp (NoEq (f, _)) []                     -> text (BC.unpack f)
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
         FApp List          ts                     -> ppFun "LIST" ts
 
-    ppACOp Mult  = "*"
-    ppACOp Union = "+"
-    ppACOp Xor   = "⊕"
-    ppAOp  Concat   = "||"
-
+    ppACOp Mult    = "*"
+    ppACOp Xor     = "⊕"
+    ppACOp Union   = "++"
+    ppACOp NatPlus = "%+"
+    ppAOp  Concat   = "||"                     
+ 
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .
             map (nest n) . punctuate (text sepa) . map ppTerm $ ts

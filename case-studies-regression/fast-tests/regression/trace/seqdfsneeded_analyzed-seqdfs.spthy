@@ -7,6 +7,8 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
 lemma slow:
   exists-trace "∃ #t. End( ) @ #t"
 /*
@@ -132,25 +134,42 @@ rule (modulo E) amplify_decoy_case3:
   // loop breaker: [0]
   /* has exactly the trivial AC variant */
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule finish: 
+Failed to derive Variable(s): ~x
+
+Rule step_2: 
+Failed to derive Variable(s): ~x
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/regression/trace/seqdfsneeded.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/regression/trace/seqdfsneeded.spthy
-
-  output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.185597766s
-  slow (exists-trace): verified (24 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -158,7 +177,11 @@ summary of summaries:
 analyzed: examples/regression/trace/seqdfsneeded.spthy
 
   output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.185597766s
+  processing time: 0.13s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   slow (exists-trace): verified (24 steps)
 
 ==============================================================================

@@ -1,0 +1,179 @@
+/*
+ * Protocol: OCSPS
+ * Modeler:  Robert Künnemann and Kevin Morio
+ * Date:     Sep 2020
+ * Source:   Based on RFC6066
+ * Status:   working
+ */
+
+theory OCSPS_MSR
+begin
+
+functions:
+    pk/1
+  , sk/1[private]
+  , sig/2
+  , verify/3
+  , true/0
+  , extract/1
+  , id/1
+
+equations:
+    verify(sig(m, sk(i)), m, pk(sk(i))) = true
+  , extract(sig(m, sk(i))) = m
+  , id(pk(sk(x))) = x
+
+
+
+/*********************************************
+Specification
+*********************************************/
+
+rule Init:
+    [ ]
+  --[ Responder($rs), CA($ca) ]->
+    [ !RS($rs, sk($rs), pk(sk($ca)))
+    , Out(pk(sk($rs)))
+    , !RSpk(pk(sk($rs)))
+    , !CApk(pk(sk($ca)))
+    , !CAsk(sk($ca)) ]
+
+rule RS_resp:
+    let
+        resp = <pk(sk($rs)), cert, status, $tn>
+    in
+    [ !RS($rs, skRS, pkCA)
+    , In(cert)
+    , CertStatus($s, cert, status) ]
+  --[ IsTrue(verify(cert, extract(cert), pkCA))
+    , Time($tn)
+    , ValidStatus(resp) ]->
+    [ Out(<resp, sig(resp, skRS)>) ]
+
+rule C_receive:
+    let
+        resp = <pkRS, cert, status, ts>
+    in
+    [ In(<resp, resp_sig, server_sig>)
+    , !RSpk(pkRS) ]
+  --[ IsTrue(verify(resp_sig, resp, pkRS))
+    , IsTrue(verify(server_sig, resp, extract(cert))) ]->
+    [ C(ts, cert, status) ]
+
+rule C_judge_good:
+    [ C(ts, cert, 'good') ]
+  --[ Judged(ts, cert) ]->
+    [ ]
+
+rule C_judge_revoked:
+    [ C(ts, cert, 'revoked') ]
+  --[ Blame(id(extract(cert)))
+    , Judged(ts, cert) ]->
+    [ ]
+
+rule S_init:
+    let
+        cert = sig(pk(sk($s)), skCA)
+        skS = sk($s)
+    in
+    [ !CAsk(skCA) ]
+  --[ Server($s)
+    , Secret(cert, skS) ]->
+    [ CertStatus($s, cert, 'good')
+    , Out(pk(skS))
+    , Out(cert)
+    , !S($s, cert) ]
+
+rule S_honest:
+    let
+        resp = <pkRS, cert, status, t>
+    in
+    [ In(<resp, resp_sig>)
+    , !S($s, cert)
+    , !RSpk(pkRS) ]
+  --[ IsTrue(verify(resp_sig, resp, pkRS)) ]->
+    [ Out(<resp, resp_sig, sig(resp, sk($s))>) ]
+
+rule S_corrupt:
+    // wlog: must exist (from S-init) but can only be removed here..
+    [ CertStatus($s, cert, 'good') ]
+  --[ Corrupted($s)
+    , Time($tn)
+    , NewTime($tn)
+    , Revealed(sk($s)) ]->
+    [ CertStatus($s, cert, 'revoked')
+    , Out(sk($s)) ]
+
+rule RS_corrupt:
+    [ !RS($rs, skRS, pkCS) ]
+  --[ Corrupted($rs) ]->
+    [ Out(skRS) ]
+
+
+
+/*********************************************
+Restrictions
+*********************************************/
+
+restriction isTrue:
+    "All #i t. IsTrue(t)@i ==> t = true()"
+
+restriction clockGuideTime:
+    "All ts #t1 #t3. Time(ts)@t1 & Time(ts)@t3 &  #t1 < #t3
+         ==> ( All ts2 #t2. Time(ts2)@t2 & #t1 < #t2 & #t2<#t3 ==> ts2=ts )"
+
+restriction NewTime:
+    "All ts #i #j . NewTime(ts)@i &  Time(ts)@j ==> #i < #j | #i = #j "
+
+// CA must ensure that there is only one certificate per server, otherwise, you
+// could just register certificate for same secret.
+restriction CA_single_registration:
+    "All c cp skS  #i #j. Secret(c, skS)@i & Secret(cp, skS)@j ==> #i = #j"
+
+// comment for untrusted RS
+restriction RS_trusted:
+    "not Ex x #i #j. Corrupted(x)@i & Responder(x)@j"
+
+restriction one_role:
+    "not (Ex x #i #j. Responder(x)@i & Server(x)@j)"
+
+
+
+/*********************************************
+Accountability lemmas
+*********************************************/
+
+test blamed:
+  "Ex #i. Blame(x)@i"
+
+lemma acc:
+  blamed accounts for
+    "not(Ex c sk t #i #j #k #l. Judged(t, c)@i & Secret(c, sk)@j
+                              & Revealed(sk)@k & Time(t)@l & #k < #l)"
+
+
+
+/*********************************************
+Results
+*********************************************/
+
+/*
+==============================================================================
+summary of summaries:
+
+analyzed: ocsps-msr.spthy
+
+  acc_blamed_suff (exists-trace): verified (7 steps)
+  acc_verif_empty (all-traces): verified (22 steps)
+  acc_blamed_verif_nonempty (all-traces): verified (14 steps)
+  acc_blamed_min (all-traces): verified (2 steps)
+  acc_blamed_uniq (all-traces): verified (14 steps)
+  acc_blamed_inj (all-traces): verified (1 steps)
+  acc_blamed_single (exists-trace): verified (7 steps)
+
+==============================================================================
+*/
+
+
+
+end

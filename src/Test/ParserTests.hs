@@ -39,7 +39,7 @@ testParseFile optionalProver inpFile = TestLabel inpFile $ TestCase $ do
         Nothing                  ->
             return  (thy0, prettyOpenTheory thy0)
         Just (maudePath, prover) -> do
-            closedThy <- proveTheory (const True) prover <$> closeTheory maudePath (removeSapicItems thy0) False
+            closedThy <- proveTheory (const True) prover <$> closeTheory maudePath (removeTranslationItems thy0) False
             return $ ( normalizeTheory $ openTheory closedThy
                      , prettyClosedTheory closedThy)
     thy' <- parse "pretty printed theory:" (render thyPretty)
@@ -59,7 +59,7 @@ testParseFile optionalProver inpFile = TestLabel inpFile $ TestCase $ do
     parse msg str = case parseOpenTheoryString [] str  of
         Left err  -> do _ <- assertFailure $ withLineNumbers $ indent $ show err
                         return (error "testParseFile: dead code")
-        Right thy -> normalizeTheory <$> openTranslatedTheory <$> addMessageDeductionRuleVariants (removeSapicItems thy)
+        Right thy -> normalizeTheory <$> openTranslatedTheory <$> (return $ addMessageDeductionRuleVariants (removeTranslationItems thy))
       where
         withLineNumbers err =
             unlines $ zipWith (\i l -> nr (show i) ++ l) [(1::Int)..] ls

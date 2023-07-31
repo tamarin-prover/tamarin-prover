@@ -12,6 +12,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) PCR_Init:
    [ Fr( ~aik ) ]
   --[ PCR_Init( ), PCR_Write( 'pcr0' ) ]->
@@ -390,33 +394,31 @@ next
   by sorry
 qed
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Alice2: 
+Failed to derive Variable(s): pk
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ccs15/Attack_TPM_Envelope.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
-
-  output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.424763932s
-  RHS :  types (all-traces): analysis incomplete (1 steps)
-  LHS :  types (all-traces): analysis incomplete (1 steps)
-  RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
-  LHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)
-  RHS :  executable (exists-trace): analysis incomplete (1 steps)
-  LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  RHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  LHS :  Secret_and_Denied_exclusive (all-traces): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (75 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -424,7 +426,10 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.424763932s
+  processing time: 0.45s
+  
+  WARNING: 1 wellformedness check failed!
+  
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)
   RHS :  PCR_Write_charn (all-traces): analysis incomplete (1 steps)

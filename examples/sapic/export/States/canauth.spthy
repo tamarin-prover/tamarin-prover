@@ -1,0 +1,118 @@
+theory CANauth
+begin
+
+section{* CANauth protocol *}
+
+/*
+   Proverif: everything in seconds.
+     But answer cannot be proved on last example.
+
+   Tamarin: ?
+
+*/
+builtins: dest-pairing, multiset
+
+options: translation-state-optimisation
+
+functions: hmac(bitstring,bitstring):bitstring
+
+/* Desired properties : ---------------------------------------------------------------------------
+We now prove that for all sk, msg, msg', i, i':
+  1) If the event Received(sk,msg,i) is triggered then the event Sent(sk,msg,i) was too.
+  2) If two events Received(sk,msg',i') and Received(sk,msg,i) are triggered then
+        msg = msg' if and only if i = i'
+-----------------------------------------------------------------------------------------------*/
+
+lemma false_Received:
+  "not(Ex sk msg i #u. Received(sk,msg,i) @u)"
+
+
+// lemma loopB[reuse]:
+//   "All cell k #i. Read(cell,k)@i ==>  (k='zero' | Ex #j. (InitC(cell)@j) )"
+
+// lemma monoSent[reuse,use_induction]:
+//   "All sk m m2 i j #u #v. Sent(sk,m,i)@u & Sent(sk,m2,j)@v & u < v ==> i (<) j"
+
+lemma true_Received_only_if_Send[reuse,use_induction]:
+  "All sk msg i #u.
+         Received(sk,msg,i) @u
+   ==> ( Ex #v. Sent(sk,msg,i) @v)"
+
+// lemma multset_base[reuse]:
+//   "All z. 'zero' + z = 'zero' ==> F"
+
+
+lemma true_wellformed_Received[use_induction]:
+  "All sk msg1 i1 msg2 i2 #u #v.
+   ( Received(sk,msg1,i1) @u & Received(sk,msg2,i2) @v )
+   ==> ((      msg1 = msg2  &      i1 = i2  )
+     | ( (not msg1 = msg2) & (not i1 = i2) ))"
+
+
+/* The protocol */
+
+let ReceiverA =
+  lock cellA;
+  lookup cellA as i:nat in
+  event Read(cellA,i);
+  in(<msg,'SIGN',j:nat,h>);
+  if i (<) j then
+    if h = hmac(sk,<j,msg>)
+    then
+      event Received(sk,msg,j);
+      insert cellA, j;
+      unlock cellA
+    else       insert cellA, i; unlock cellA
+  else       insert cellA, i; unlock cellA
+
+let SenderA =
+  lock cellA;
+  lookup cellA as i:nat in
+  event Read(cellA,i);
+  new msg;
+  event Sent(sk,msg,i+'one');
+  out(<msg,'SIGN',i+'one',hmac(sk,<i+'one',msg>)>);
+  insert cellA, i+'one';
+  unlock cellA
+
+let ReceiverB =
+  lock cellB;
+  lookup cellB as i:nat in
+  event Read(cellB,i);
+  in(<msg,'SIGN',j:nat,h>);
+  if i (<) j then
+    if h = hmac(sk,<j,msg>)
+    then
+      event Received(sk,msg,j);
+      insert cellB, j;
+      unlock cellB
+    else       insert cellB, i; unlock cellB
+  else       insert cellB, i; unlock cellB
+
+let SenderB =
+  lock cellB;
+  lookup cellB as i:nat in
+  event Read(cellB,i);
+  new msg;
+  let j:nat = i+'one' in
+  event Sent(sk,msg,j);
+  out(<msg,'SIGN',i+'one',hmac(sk,<i+'one',msg>)>);
+  insert cellB, i+'one';
+  unlock cellB
+
+  /* We generate an unbounded number of sessions, each with two senders and two receivers    */
+  /* sharing a private key and two cell names. However, these Receivers and Senders are only */
+  /* roles for an (unbounded) number of agents playing them, since in the CANauth protocol   */
+  /* nothing links one role to one specific agent. For each session, the protocol            */
+  /* defines two roles A and B, each with it's own cell 'cell_A' and 'cell_B'. These cells   */
+  /* differ from one sesion to an other one. Consequently, the modeling models an unbounded  */
+  /* number of agents, each talking to an unbounded number of agents, and so using an        */
+  /* unbounded number of cells.                                                              */
+process:
+!( new sk;
+   new cellA; insert cellA, 'zero'; event InitC(cellA);
+   new cellB; insert cellB, 'zero'; event InitC(cellB);
+   ! ( ReceiverA || SenderA || ReceiverB || SenderB )
+)
+
+end

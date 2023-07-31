@@ -6,7 +6,7 @@ section{* The PKI-example *}
 /*
  * Protocol:    Running example from Abstraction by set
  *              membership by S. Mödersheim
- * Modeler:     Robert Kunnemann 
+ * Modeler:     Robert Kunnemann
  * Date:        Januar 2013
  *
  * Status:  working
@@ -25,10 +25,10 @@ let Client=
         unlock <'USER',user>;
         out(<'renew',user,pk(~nsk)>);
         out(sign(<'renew',user,pk(~nsk)>,~sk));
-        in(sign(<'confirm',sign(<'renew',user,pk(~nsk)>,~sk)>,pki));
+        in(sign(<'confirm',sign(<'renew',=user,pk(=~nsk)>,=~sk)>,=pki));
         event Revoked(~sk);
         out(~sk)
-                
+
 let Server=
 (
 ( /* Create Honest Keys */
@@ -41,11 +41,11 @@ let Server=
                 event HonestKey(~sk);
         unlock <'SERVER',user>;
         out(pk(~sk))
-) 
-|| 
+)
+||
 ( /* Revoke key */
         in(<'renew',user,pk(nsk)>);
-        in(sign(<'renew',user,pk(nsk)>,sk));
+        in(sign(<'renew',=user,pk(=nsk)>,sk));
         lock <'SERVER',user>;
         lookup <'SERVER',pki,user> as pksk in
                 if pksk = pk(sk) then
@@ -56,7 +56,8 @@ let Server=
 )
 )
 
-!(new pki; ! Server || (new user; out(user); ! Client) ) 
+process:
+!(new pki; ! Server || (new user; out(user); ! Client))
 
 lemma Knows_Honest_Key_imp_Revoked:
   "All sk #i #d. HonestKey(sk) @ i & K(sk) @ d ==>

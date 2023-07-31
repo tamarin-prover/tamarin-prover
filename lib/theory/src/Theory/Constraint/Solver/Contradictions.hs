@@ -2,6 +2,7 @@
 {-# LANGUAGE ViewPatterns    #-}
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE FlexibleContexts#-}
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -62,6 +63,7 @@ import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 -- | Reasons why a constraint 'System' can be contradictory.
 data Contradiction =
     Cyclic                         -- ^ The paths are cyclic.
+  | SubtermCyclic                  -- ^ The subterm predicates form a cycle
   | NonNormalTerms                 -- ^ Has terms that are not in normal form.
   -- | NonLastNode                    -- ^ Has a non-silent node after the last node.
   | ForbiddenExp                   -- ^ Forbidden Exp-down rule instance
@@ -89,23 +91,25 @@ contradictorySystem ctxt = not . null . contradictions ctxt
 contradictions :: ProofContext -> System -> [Contradiction]
 contradictions ctxt sys = F.asum
     -- CR-rule **
-    [ guard (D.cyclic $ rawLessRel sys)             *> pure Cyclic
+    [ guard (D.cyclic $ rawLessRel sys)                            *> pure Cyclic
+    -- CR-rule *S_Subterm-Chain-Fail*
+    , guard (L.get isContradictory subtermStore)                   *> pure SubtermCyclic
     -- CR-rule *N1*
-    , guard (hasNonNormalTerms sig sys)             *> pure NonNormalTerms
+    , guard (hasNonNormalTerms sig sys)                            *> pure NonNormalTerms
     -- FIXME: add CR-rule
-    , guard (hasForbiddenKD sys)                    *> pure ForbiddenKD
+    , guard (hasForbiddenKD sys)                                   *> pure ForbiddenKD
     -- FIXME: add CR-rule
-    , guard (hasImpossibleChain ctxt sys)           *> pure ImpossibleChain
+    , guard (hasImpossibleChain ctxt sys)                          *> pure ImpossibleChain
     -- CR-rule *N7*
-    , guard (enableDH msig && hasForbiddenExp sys)  *> pure ForbiddenExp
+    , guard (enableDH msig && hasForbiddenExp sys)                 *> pure ForbiddenExp
     -- FIXME: add CR-rule
-    , guard (enableBP msig && hasForbiddenBP sys)   *> pure ForbiddenBP
+    , guard (enableBP msig && hasForbiddenBP sys)                  *> pure ForbiddenBP
     -- New CR-Rule *N6'*
-    , guard (hasForbiddenChain sys)                 *> pure ForbiddenChain
+    , guard (hasForbiddenChain sys)                                *> pure ForbiddenChain
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
-    , guard (eqsIsFalse $ L.get sEqStore sys)       *> pure IncompatibleEqs
+    , guard (eqsIsFalse $ L.get sEqStore sys)                      *> pure IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
-    , guard (S.member gfalse $ L.get sFormulas sys) *> pure FormulasFalse
+    , guard (S.member gfalse $ L.get sFormulas sys)                *> pure FormulasFalse
     ]
     ++
     -- This rule is not yet documented. It removes constraint systems that
@@ -119,6 +123,7 @@ contradictions ctxt sys = F.asum
   where
     sig  = L.get pcSignature ctxt
     msig = mhMaudeSig . L.get pcMaudeHandle $ ctxt
+    subtermStore = L.get sSubtermStore sys
 
 -- | New normal form condition:
 -- We do not allow @KD(t)@ facts if @t@ does not contain
@@ -145,9 +150,9 @@ maybeNonNormalTerms :: MaudeHandle -> System -> [LNTerm]
 maybeNonNormalTerms hnd se =
     sortednub . concatMap getTerms . M.elems . L.get sNodes $ se
     where getTerms (Rule _ ps cs as nvs) = do
-          f <- ps++cs++as
-          t <- factTerms f ++ nvs
-          maybeNotNfSubterms (mhMaudeSig hnd) t
+           f <- ps++cs++as
+           t <- factTerms f ++ nvs
+           maybeNotNfSubterms (mhMaudeSig hnd) t
 
 substCreatesNonNormalTerms :: MaudeHandle -> System -> LNSubst -> LNSubstVFresh -> Bool
 substCreatesNonNormalTerms hnd sys fsubst =
@@ -167,13 +172,17 @@ substCreatesNonNormalTerms hnd sys fsubst =
 --
 --   i < j < k
 --
--- and let there be an edge from (i,u) to (k,w) for some indices u and v
+-- and let there be an edge from (i,u) to (k,w) for some indices u and v,
+-- as well as an injectif fact `f(t,...)` in the conclusion (i,u).
 --
--- Then, we have a contradiction if both the premise (k,w) that requires a
--- fact 'f(t,...)' and there is a premise (j,v) requiring a fact 'f(t,...)'.
+-- Then, we have a contradiction either if:
+--  1) both the premises (k,w) and (j,v) requires a
+-- fact 'f(t,...)'.
+--  2) both the conclusions (i,u) and (j,v) produce a fact `f(t,..)`.
 --
--- These two premises would have to be merged, but cannot due to the ordering
--- constraint 'j < k'.
+-- In the first case, (k,w) and (j,v) would have to be merged, and in the second
+-- case (i,u) and (j,v) would have to be merged, but the merging contradicts the
+-- temporal orderings.
 nonInjectiveFactInstances :: ProofContext -> System -> [(NodeId, NodeId, NodeId)]
 nonInjectiveFactInstances ctxt se = do
     Edge c@(i, _) (k, _) <- S.toList $ L.get sEdges se
@@ -182,7 +191,7 @@ nonInjectiveFactInstances ctxt se = do
         kTerm              = firstTerm kFaPrem
         conflictingFact fa = factTag fa == kTag && firstTerm fa == kTerm
 
-    guard (kTag `S.member` L.get pcInjectiveFactInsts ctxt)
+    guard (kTag `S.member` S.map fst (L.get pcInjectiveFactInsts ctxt))
     j <- S.toList $ D.reachableSet [i] less
 
     let isCounterExample = (j /= i) && (j /= k) &&
@@ -190,7 +199,7 @@ nonInjectiveFactInstances ctxt se = do
 
         -- FIXME: There should be a weaker version of the rule that just
         -- introduces the constraint 'k < j || k == j' here.
-        checkRule jRu    = any conflictingFact (L.get rPrems jRu) &&
+        checkRule jRu    = any conflictingFact (L.get rPrems jRu ++ L.get rConcs jRu) &&
                            (k `S.member` D.reachableSet [j] less
                              || isLast se k)
 
@@ -286,9 +295,9 @@ hasForbiddenChain sys =
         -- and whether we do not have an equality rule instance at the end
         is_not_equality <- pure $ not $ isIEqualityRule $ nodeRule (fst p) sys
         -- get all KU-facts with the same msg var
-        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys 
+        ku_start        <- pure $ filter (\x -> (fst x) == t_start) $ map (\(i, _, m) -> (m, i)) $ allKUActions sys
         -- and check whether any of them happens before the KD-conclusion
-        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start 
+        ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start
         return (is_msg_var && is_not_equality && ku_before)
 
 -- Diffie-Hellman and Bilinear Pairing
@@ -428,6 +437,7 @@ isForbiddenDEMapOrder sys (i, ruDEMap) = fromMaybe False $ do
 prettyContradiction :: Document d => Contradiction -> d
 prettyContradiction contra = case contra of
     Cyclic                       -> text "cyclic"
+    SubtermCyclic                -> text "contradictory subterm store"
     IncompatibleEqs              -> text "incompatible equalities"
     NonNormalTerms               -> text "non-normal terms"
     ForbiddenExp                 -> text "non-normal exponentiation rule instance"

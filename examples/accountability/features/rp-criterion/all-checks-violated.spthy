@@ -1,0 +1,23 @@
+theory AllChecksViolated
+begin
+
+functions:
+    f/1
+  , g/1
+
+rule A:
+   [ ]
+ --[ A(f(g(<$x, 'x'>)))
+   , Corrupted($x) ]->
+   [ ]
+
+restriction A:
+    "not Ex x #i. A(x)@i"
+
+test A:
+  "Ex #i. A(x)@i"
+
+lemma acc:
+  A accounts for "not Ex x #i. A(x)@i"
+
+end

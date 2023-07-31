@@ -11,19 +11,31 @@ module Sapic.Facts (
    , TransFact(..)
    , SpecialPosition(..)
    , AnnotatedRule(..)
+   , FactType(..)
    , mapAct
    , StateKind(..)
    , isSemiState
    , isState
+   , isFrFact
+   , isOutFact
+   , isStateFact
+   , isLetFact
+   , isLockFact
    , isNonSemiState
    , addVarToState
    , factToFact
    , actionToFact
    , actionToFactFormula
+   , pureStateFactTag
+   , pureStateLockFactTag
    , toRule
    , varMID
    , varProgress
    , msgVarProgress
+   , patternInsFilter
+   , nonPatternInsFilter
+   , isPattern
+   , hasPattern
    , propagateNames
 ) where
 -- import Data.Maybe
@@ -45,24 +57,25 @@ import Data.Char
 import Data.Bits
 import qualified Data.Set as S
 import Data.Color
+import qualified Data.List              as List
 -- import Control.Monad.Trans.FastFresh
 
 -- | Facts that are used as actions
 data TransAction =
   -- base translation
   InitEmpty
-  --    storage
-  | IsIn SapicTerm LVar
-  | IsNotSet SapicTerm
-  | InsertA SapicTerm SapicTerm
-  | DeleteA SapicTerm
+  -- storage
+  | IsIn LNTerm LVar
+  | IsNotSet LNTerm
+  | InsertA LNTerm LNTerm
+  | DeleteA LNTerm
   -- locks
-  | LockUnnamed SapicTerm LVar
-  | LockNamed SapicTerm LVar
-  | UnlockUnnamed SapicTerm LVar
-  | UnlockNamed SapicTerm LVar
+  | LockUnnamed LNTerm LVar
+  | LockNamed LNTerm LVar
+  | UnlockUnnamed LNTerm LVar
+  | UnlockNamed LNTerm LVar
   -- in_event restriction
-  | ChannelIn SapicTerm
+  | ChannelIn LNTerm
   | EventEmpty
   -- support for msrs
   | TamarinAct LNFact
@@ -73,8 +86,8 @@ data TransAction =
   | ProgressFrom ProcessPosition
   | ProgressTo ProcessPosition ProcessPosition
   -- reliable channels
-  | Send ProcessPosition SapicTerm
-  | Receive ProcessPosition SapicTerm
+  | Send ProcessPosition LNTerm
+  | Receive ProcessPosition LNTerm
   -- to implement with accountability extension
   --- | InitId
   --- | StopId
@@ -87,14 +100,18 @@ data TransAction =
 -- than one MSR step, i.e., messages over private channels.
 data StateKind  = LState | PState | LSemiState | PSemiState
   deriving Eq
-data TransFact =  Fr LVar | In SapicTerm
-            | Out SapicTerm
-            | Message SapicTerm SapicTerm
-            | Ack SapicTerm SapicTerm
+data TransFact =  Fr LVar | In LNTerm
+            | Out LNTerm
+            | FLet ProcessPosition LNTerm (S.Set LVar)
+            | Message LNTerm LNTerm
+            | Ack LNTerm LNTerm
             | State StateKind ProcessPosition (S.Set LVar)
             | MessageIDSender ProcessPosition
             | MessageIDReceiver ProcessPosition
             | TamarinFact LNFact
+            -- pure storage
+            | PureCell LNTerm LNTerm
+            | CellLocked LNTerm LNTerm
 
 data SpecialPosition = InitPosition -- initial position, is logically the predecessor of []
                      | NoPosition -- no real position, e.g., message id rule
@@ -102,7 +119,7 @@ data SpecialPosition = InitPosition -- initial position, is logically the predec
 -- | annotated rules know:
 data AnnotatedRule ann = AnnotatedRule {
       processName  :: Maybe String    -- optional name for rules that are not bound to a process, e.g., Init
-    , process      :: AnProcess ann   -- process this rules was generated for
+    , process      :: LProcess ann   -- process this rules was generated for
     , position     :: Either ProcessPosition SpecialPosition -- position of this process in top-level process
     , prems        :: [TransFact]     -- Facts/actions to be translated
     , acts         :: [TransAction]
@@ -110,6 +127,10 @@ data AnnotatedRule ann = AnnotatedRule {
     , restr        :: [SyntacticLNFormula]
     , index        :: Int             -- Index to distinguish multiple rules originating from the same process
 }
+
+-- | Fact types used by the MSR to ProverIf translation.
+data FactType = GET | IN | NEW | EVENT | INSERT | OUT
+  deriving Eq
 
 -- | applies function acting on rule taple on annotated rule.
 mapAct :: (([TransFact], [TransAction], [TransFact],[SyntacticLNFormula])
@@ -131,7 +152,7 @@ isNonSemiState (State kind _ _) = not $ isSemiState kind
 isNonSemiState _ = False
 
 isState :: TransFact -> Bool
-isState (State _ _ _) = True
+isState (State {}) = True
 isState _ = False
 
 addVarToState :: LVar -> TransFact -> TransFact
@@ -181,34 +202,32 @@ varMsgId p = LVar n s i
           s = LSortFresh
           i = 0
 
--- actionToFact :: TransAction -> Fact t
-actionToFact :: TransAction -> Fact (VTerm Name LVar)
+actionToFact :: TransAction -> Fact LNTerm
 actionToFact InitEmpty = protoFact Linear "Init" []
-  --- | Not implemented yet: progress
-  --- | StopId
-  --- | EventEmpty
-  --- | EventId
-actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p ,t]
+  --  | StopId
+  --  | EventEmpty
+  --  | EventId
+actionToFact (Send p t) = protoFact Linear "Send" [varTerm $ varMsgId p, t]
 actionToFact (Receive p t) = protoFact Linear "Receive" [varTerm $ varMsgId p ,t]
 actionToFact (IsIn t v)   =  protoFact Linear "IsIn" [t,varTerm v]
 actionToFact (IsNotSet t )   =  protoFact Linear "IsNotSet" [t]
 actionToFact (InsertA t1 t2)   =  protoFact Linear "Insert" [t1,t2]
 actionToFact (DeleteA t )   =  protoFact Linear "Delete" [t]
 actionToFact (ChannelIn t)   =  protoFact Linear "ChannelIn" [t]
-actionToFact (EventEmpty)   =   protoFact Linear "Event" []
-actionToFact (PredicateA f)   =  mapFactName (\s -> "Pred_" ++ s) f
-actionToFact (NegPredicateA f)   =  mapFactName (\s -> "Pred_Not_" ++ s) f
+actionToFact EventEmpty   =   protoFact Linear "Event" []
+actionToFact (PredicateA f)   =  mapFactName ("Pred_" ++) f
+actionToFact (NegPredicateA f)   =  mapFactName ("Pred_Not_" ++) f
 actionToFact (LockNamed t v)   = protoFact Linear (lockFactName v) [lockPubTerm v,varTerm v, t ]
 actionToFact (LockUnnamed t v)   = protoFact Linear "Lock" [lockPubTerm v, varTerm v, t ]
 actionToFact (UnlockNamed t v) = protoFact Linear (unlockFactName v) [lockPubTerm v,varTerm v,t]
 actionToFact (UnlockUnnamed t v) = protoFact Linear "Unlock" [lockPubTerm v,varTerm v,t]
 actionToFact (ProgressFrom p) = protoFact Linear ("ProgressFrom_"++prettyPosition p) [varTerm $ varProgress p]
-actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) $ [varTerm $ varProgress pf]
+actionToFact (ProgressTo p pf) = protoFact Linear ("ProgressTo_"++prettyPosition p) [varTerm $ varProgress pf]
 actionToFact (TamarinAct f) = f
 
 toFreeMsgVariable :: LVar -> BVar LVar
 toFreeMsgVariable (LVar name LSortFresh id') = Free $ LVar name LSortMsg id'
-toFreeMsgVariable v = Free $ v
+toFreeMsgVariable v = Free v
 
 actionToFactFormula :: TransAction -> Fact (Term (Lit Name (BVar LVar)))
 actionToFactFormula = fmap (fmap $ fmap toFreeMsgVariable) . actionToFact
@@ -222,10 +241,13 @@ varMID p = LVar n s i
                 -- We could also compute it from the position as before,
                 -- but I don't see an advantage (yet)
 
-factToFact :: TransFact -> Fact SapicTerm
-factToFact (Fr v) = freshFact $ varTerm (v)
+factToFact :: TransFact -> Fact LNTerm
+factToFact (Fr v) = freshFact $ varTerm v
 factToFact (In t) = inFact t
 factToFact (Out t) = outFact t
+factToFact (FLet p t vars) = protoFact Linear ("Let"++ "_" ++ prettyPosition p) (t:ts)
+      where
+        ts = map varTerm (S.toList vars)
 factToFact (Message t t') = protoFact Linear "Message" [t, t']
 factToFact (Ack t t') = protoFact Linear "Ack" [t, t']
 factToFact (MessageIDSender p) = protoFact Linear "MID_Sender" [ varTerm $ varMID p ]
@@ -235,18 +257,69 @@ factToFact (State kind p vars) = protoFact (multiplicity kind) (name kind ++ "_"
         name k = if isSemiState k then "Semistate" else "State"
         ts = map varTerm (S.toList vars)
 factToFact (TamarinFact f) = f
+factToFact (PureCell t1 t2) = protoFact Linear "L_PureState" [t1, t2]
+factToFact (CellLocked t1 t2) = protoFact Linear "L_CellLocked" [t1, t2]
+
+
+pureStateFactTag :: FactTag
+pureStateFactTag =  ProtoFact Linear "L_PureState" 2
+
+pureStateLockFactTag :: FactTag
+pureStateLockFactTag =  ProtoFact Linear "L_CellLocked" 2
+
+
+isOutFact :: Fact t -> Bool
+isOutFact (Fact OutFact _ _) = True
+isOutFact _                 = False
+
+isFrFact :: Fact t -> Bool
+isFrFact (Fact FreshFact _ _) = True
+isFrFact _                 = False
+
+
+isLetFact :: Fact LNTerm -> Bool
+isLetFact (Fact (ProtoFact _ name _) _ _) =
+  "Let" `List.isPrefixOf` name
+isLetFact _ = False
+
+
+isStateFact :: Fact LNTerm -> Bool
+isStateFact (Fact (ProtoFact _ name _) _ _) =
+  "State" `List.isPrefixOf` name
+  ||
+  "Semistate" `List.isPrefixOf` name
+isStateFact _ = False
+
+isLockFact :: Fact LNTerm -> Bool
+isLockFact (Fact (ProtoFact _ name _) _ _) =
+  "L_CellLocked" `List.isPrefixOf` name
+isLockFact _ = False
+
+patternInsFilter :: LNFact -> Bool
+patternInsFilter f = isInFact f && hasPattern f
+
+nonPatternInsFilter :: LNFact -> Bool
+nonPatternInsFilter f = isInFact f && not (hasPattern f)
+
+isPattern :: Term l -> Bool
+isPattern t = case viewTerm t of
+    Lit _ -> False
+    _     -> True
+
+hasPattern :: LNFact -> Bool
+hasPattern (Fact _ _ ts) = any isPattern ts
 
 prettyEitherPositionOrSpecial:: Either ProcessPosition SpecialPosition -> String
 prettyEitherPositionOrSpecial (Left pos) = prettyPosition pos
 prettyEitherPositionOrSpecial (Right InitPosition) = "Init"
 prettyEitherPositionOrSpecial (Right NoPosition) = ""
 
-getTopLevelName :: (GoodAnnotation an) => AnProcess an -> [String]
+getTopLevelName :: (GoodAnnotation an) => Process an v -> [String]
 getTopLevelName (ProcessNull ann) = getProcessNames ann
 getTopLevelName (ProcessComb _ ann _ _) = getProcessNames ann
 getTopLevelName (ProcessAction _ ann _) = getProcessNames ann
 
-propagateNames :: (GoodAnnotation ann) => AnProcess ann -> AnProcess ann
+propagateNames :: (GoodAnnotation an) => Process an v-> Process an v
 propagateNames = propagate' []
     where
       propagate' n (ProcessComb c an pl pr) = ProcessComb c
@@ -275,7 +348,7 @@ colorHash :: (Fractional t, Ord t) => String -> RGB t
 colorHash s = RGB r g b
       where
         nthByte x n = (x `shiftR` (8*n)) .&. 0xff
-        [r,g,b] = map ((/255) . fromIntegral . nthByte (crc32 s)) [0,1,2]
+        (r,g,b) = fmap ((/255) . fromIntegral . nthByte (crc32 s)) (0,1,2)
 
 -- Computes a color for a list of strings by first computing
 -- the CRC32 checksum of each string and then interpolating the
@@ -293,11 +366,11 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
 
 toRule :: GoodAnnotation ann => AnnotatedRule ann -> Rule ProtoRuleEInfo
 toRule AnnotatedRule{..} = -- this is a Record Wildcard
-          Rule (ProtoRuleEInfo (StandRule name ) attr restr) l r a (newVariables l r)
+          Rule (ProtoRuleEInfo (StandRule name) attr restr) l r a (newVariables l r)
           where
             name = case processName of
                 Just s -> s
-                Nothing -> 
+                Nothing ->
                          unNull (stripNonAlphanumerical (prettySapicTopLevel process))
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
@@ -308,4 +381,3 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
             r = map factToFact concs
             stripNonAlphanumerical = filter isAlpha
             unNull s = if null s then "p" else s
-

@@ -18,6 +18,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Register_Voter_pk1:
    [ Fr( ~ltkV ) ]
   -->
@@ -84,11 +88,11 @@ rule (modulo E) T_1_sync:
    Fr( fr )
    ]
   --[ T_1_sync( ) ]->
-   [ Select_vote( ($vote1+$vote2+fr) ) ]
+   [ Select_vote( ($vote1++$vote2++fr) ) ]
 
 rule (modulo E) select_vote:
-   [ Select_vote( ($v+z) ) ]
-  --[ Select_vote( ($v+z) ) ]->
+   [ Select_vote( ($v++z) ) ]
+  --[ Select_vote( ($v++z) ) ]->
    [ Out( $v ), Select_vote( z ) ]
 
 restriction onlyOnce [right]:
@@ -100,37 +104,37 @@ restriction onlyOnce [left]:
   // safety formula
 
 restriction select_limited_votes [right]:
-  "∀ a b c d #i. (Select_vote( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Select_vote( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction select_limited_votes [left]:
-  "∀ a b c d #i. (Select_vote( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Select_vote( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 lemma exec [right]:
   exists-trace
   "∃ x y #i #j.
-    ((Select_vote( (x+y) ) @ #i) ∧ (Select_vote( x ) @ #j)) ∧ (¬(#i = #j))"
+    ((Select_vote( (x++y) ) @ #i) ∧ (Select_vote( x ) @ #j)) ∧ (¬(#i = #j))"
 /*
 guarded formula characterizing all satisfying traces:
 "∃ x y #i #j.
-  (Select_vote( (x+y) ) @ #i) ∧ (Select_vote( x ) @ #j) ∧ ¬(#i = #j)"
+  (Select_vote( (x++y) ) @ #i) ∧ (Select_vote( x ) @ #j) ∧ ¬(#i = #j)"
 */
 simplify
 solve( (#i < #j)  ∥ (#j < #i) )
   case case_1
-  solve( Select_vote( ($v+y+z) ) @ #i )
+  solve( Select_vote( ($v++y++z) ) @ #i )
     case select_vote_case_1
-    solve( Select_vote( ($v+z) ) ▶₀ #j )
+    solve( Select_vote( ($v++z) ) ▶₀ #j )
       case select_vote
-      solve( Select_vote( ($v+$y+z) ) ▶₀ #i )
+      solve( Select_vote( ($v++$y++z) ) ▶₀ #i )
         case T_1_sync_case_1
         solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA) ) @ #vk.2 )
           case c_sign
           solve( !KU( sign(blind(tdcommit($y, ~r2, ~td.1), ~b.1), ~ltkA)
                  ) @ #vk.5 )
             case c_sign
-            solve( Select_vote( ($v+~z+$v.1) ) ▶₀ #vr )
+            solve( Select_vote( ($v++~z++$v.1) ) ▶₀ #vr )
               case T_1_sync_case_1
               solve( !KU( ~ltkA ) @ #vk.6 )
                 case Register_Admin_pk
@@ -153,27 +157,27 @@ qed
 lemma exec [left]:
   exists-trace
   "∃ x y #i #j.
-    ((Select_vote( (x+y) ) @ #i) ∧ (Select_vote( x ) @ #j)) ∧ (¬(#i = #j))"
+    ((Select_vote( (x++y) ) @ #i) ∧ (Select_vote( x ) @ #j)) ∧ (¬(#i = #j))"
 /*
 guarded formula characterizing all satisfying traces:
 "∃ x y #i #j.
-  (Select_vote( (x+y) ) @ #i) ∧ (Select_vote( x ) @ #j) ∧ ¬(#i = #j)"
+  (Select_vote( (x++y) ) @ #i) ∧ (Select_vote( x ) @ #j) ∧ ¬(#i = #j)"
 */
 simplify
 solve( (#i < #j)  ∥ (#j < #i) )
   case case_1
-  solve( Select_vote( ($v+y+z) ) @ #i )
+  solve( Select_vote( ($v++y++z) ) @ #i )
     case select_vote_case_1
-    solve( Select_vote( ($v+z) ) ▶₀ #j )
+    solve( Select_vote( ($v++z) ) ▶₀ #j )
       case select_vote
-      solve( Select_vote( ($v+$y+z) ) ▶₀ #i )
+      solve( Select_vote( ($v++$y++z) ) ▶₀ #i )
         case T_1_sync_case_1
         solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA) ) @ #vk.2 )
           case c_sign
           solve( !KU( sign(blind(tdcommit($y, ~r2, ~td.1), ~b.1), ~ltkA)
                  ) @ #vk.5 )
             case c_sign
-            solve( Select_vote( ($v+~z+$v.1) ) ▶₀ #vr )
+            solve( Select_vote( ($v++~z++$v.1) ) ▶₀ #vr )
               case T_1_sync_case_1
               solve( !KU( ~ltkA ) @ #vk.6 )
                 case Register_Admin_pk
@@ -193,7 +197,20 @@ solve( (#i < #j)  ∥ (#j < #i) )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule V_2: 
+Failed to derive Variable(s): ~ltkA
+
+Rule V_3: 
+Failed to derive Variable(s): ~ltkA
+*/
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -3342,7 +3359,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -3427,7 +3444,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -5720,7 +5737,7 @@ next
       case select_vote
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case Var_pub_v
-        step( solve( Select_vote( ($v+z) ) ▶₀ #vr ) )
+        step( solve( Select_vote( ($v++z) ) ▶₀ #vr ) )
           case T_1_sync_case_1
           step( solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA)
                        ) @ #vk.4 ) )
@@ -6078,7 +6095,7 @@ next
           qed
         next
           case select_vote
-          step( solve( Select_vote( ($v+z+$v.1) ) ▶₀ #vr.1 ) )
+          step( solve( Select_vote( ($v++z++$v.1) ) ▶₀ #vr.1 ) )
             case T_1_sync_case_1
             step( solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA)
                          ) @ #vk.4 ) )
@@ -8649,7 +8666,7 @@ next
       case select_vote
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case Var_pub_v
-        step( solve( Select_vote( ($v+z) ) ▶₀ #vr ) )
+        step( solve( Select_vote( ($v++z) ) ▶₀ #vr ) )
           case T_1_sync_case_1
           step( solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA)
                        ) @ #vk.4 ) )
@@ -9007,7 +9024,7 @@ next
           qed
         next
           case select_vote
-          step( solve( Select_vote( ($v+z+$v.1) ) ▶₀ #vr.1 ) )
+          step( solve( Select_vote( ($v++z++$v.1) ) ▶₀ #vr.1 ) )
             case T_1_sync_case_1
             step( solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA)
                          ) @ #vk.4 ) )
@@ -10291,7 +10308,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( Select_vote( ($v+z) ) ▶₀ #i ) )
+    step( solve( Select_vote( ($v++z) ) ▶₀ #i ) )
       case T_1_sync_case_1
       step( solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA)
                    ) @ #vk.3 ) )
@@ -10553,7 +10570,7 @@ next
       qed
     next
       case select_vote
-      step( solve( Select_vote( ($v+z+$v.1) ) ▶₀ #vr ) )
+      step( solve( Select_vote( ($v++z++$v.1) ) ▶₀ #vr ) )
         case T_1_sync_case_1
         step( solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA)
                      ) @ #vk.3 ) )
@@ -10821,7 +10838,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( Select_vote( ($v+z) ) ▶₀ #i ) )
+    step( solve( Select_vote( ($v++z) ) ▶₀ #i ) )
       case T_1_sync_case_1
       step( solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA)
                    ) @ #vk.3 ) )
@@ -11083,7 +11100,7 @@ next
       qed
     next
       case select_vote
-      step( solve( Select_vote( ($v+z+$v.1) ) ▶₀ #vr ) )
+      step( solve( Select_vote( ($v++z++$v.1) ) ▶₀ #vr ) )
         case T_1_sync_case_1
         step( solve( !KU( sign(blind(tdcommit($v, ~r1, ~td), ~b), ~ltkA)
                      ) @ #vk.3 ) )
@@ -11362,25 +11379,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/post17/okamoto_vote_privacy.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/post17/okamoto_vote_privacy.spthy
-
-  output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 103.143473541s
-  RHS :  exec (exists-trace): verified (12 steps)
-  LHS :  exec (exists-trace): verified (12 steps)
-  DiffLemma:  Observational_equivalence : verified (3701 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -11388,7 +11399,11 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 103.143473541s
+  processing time: 42.01s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)
   DiffLemma:  Observational_equivalence : verified (3701 steps)

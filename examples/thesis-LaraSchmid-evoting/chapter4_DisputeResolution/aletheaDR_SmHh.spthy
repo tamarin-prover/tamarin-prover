@@ -69,7 +69,234 @@ decp(encp(x,r,pk(sk)),sk)=x,
 ver(sg(m, sk), pk(sk)) = m 
 
 
+tactic: indivVerif_v 
+prio:
+  regex "~~>"
+prio:
+  regex "In_S"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
 
+tactic: indivVerif_b 
+prio:
+  regex "~~>"
+prio:
+  regex "In_S"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: DRvoterC 
+prio:
+  regex "~~>"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex " 'S', <'b'"
+prio:
+  regex " In_A( $BB, <'b'"
+prio:
+  regex "!KU( sg(encp(v"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: DRvoterT 
+prio:
+  regex "~~>"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex " 'S', <'b'"
+prio:
+  regex " In_A( $BB, <'b'"
+prio:
+  regex "!KU( sg(encp(v"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: Uniqueness 
+prio:
+  regex "~~>"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex " 'S', <'b'"
+prio:
+  regex " In_A( $BB, <'b'"
+prio:
+  regex "!KU( sg(encp(v"
+prio:
+  regex "AgSt"
+prio:
+  regex "In_S"
+prio:
+  regex "In_A"
+prio:
+  regex "'pkD'"
+prio:
+  regex " !KU( sg(cp(v"
+prio:
+  regex "In_A( $S"
+prio:
+  regex " In_A( 'S', <'pkD'"
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "'bs'"
+prio:
+  regex "!KU( ~skS"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "In_A( $S, <'vs'"
+
+tactic: secretSskD 
+prio:
+  regex "~~>"
+prio:
+  regex "!KU( ~sskD"
+prio:
+  regex "'zkp'"
+prio:
+  regex "'b'"
+prio:
+  regex "In_S"
+prio:
+  regex "!KU( ~sk"
+prio:
+  regex "~sskD"
+prio:
+  regex "AgSt"
+prio:
+  regex "!KU( ~skD"
+prio:
+  regex "!KU( sg(cp("
+prio:
+  regex "'pr'"
+prio:
+  regex "'bs'"
+prio:
+  regex "sg(cp("
+prio:
+  regex "In_A"
+prio:
+  regex "In_S"
+prio:
+  regex "~~>"
+prio:
+  regex "cp("
+
+tactic: EligVerif_DR 
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "In_A( 'BB'"
+
+
+tactic: ballotsFromVoters 
+prio:
+  regex "'zkp'"
+prio:
+  regex "In_S"
+prio:
+  regex "~sskD"
+prio:
+  regex "~skS"
+prio:
+  regex "~sskD"
+prio:
+  regex "h("
+prio:
+  regex "encp("
+
+tactic: Tall_As_Rec_D 
+prio:
+  regex "AgSt_A0"
+prio:
+  regex "In_A( 'BB'"
 
 /* ==========
 Channel rules
@@ -323,7 +550,7 @@ lemma functional: exists-trace
 Individual verifiability properties
 =================================*/
 
-lemma indivVerif_v: 
+lemma indivVerif_v[heuristic={indivVerif_v}]: 
 	"All H v #i b #j .
 		Vote(H,v) @i 			
 		& Verify(H,b,b ) @j	
@@ -331,7 +558,7 @@ lemma indivVerif_v:
 		BB_rec(BB,<'b', b  >) @l 	
 		& b = sg(encp(v,r,pkS),sskD) " 	
 
-lemma indivVerif_b: 
+lemma indivVerif_b[heuristic={indivVerif_b}]: 
 	"All H b #j .
 		Verify(H,b,b ) @j	
 	==> Ex BB #l . 
@@ -342,7 +569,7 @@ lemma indivVerif_b:
 Dispute Resolution Properties
 ===========================*/
 
-lemma DRvoterC: 
+lemma DRvoterC[heuristic={DRvoterC}]: 
 	"All H b #j b1  .
 		Verify(H,b,b1 ) @j 
 	==> ( Ex BB #k .					
@@ -363,7 +590,7 @@ lemma DRvoterC:
 		)"
 
 // As BB is honest, BB_recorded is always executed before End(), i.e., k<j holds as required by [1]. We thus omit this for optimization.
-lemma DRvoterT: 
+lemma DRvoterT[heuristic={DRvoterT}]: 
 	"All H b #i #j.
 		Ballot(H,b) @i & End() @j & i<j 
 	==> (  Ex BB #k .					
@@ -385,7 +612,7 @@ lemma DRvoterT:
 
 
 
-lemma Uniqueness:  
+lemma Uniqueness[heuristic={Uniqueness}]:  
 "All #i bs BB
 	. 
 	// not exists b. Faulty(S,b)
@@ -415,20 +642,20 @@ lemma Uniqueness:
 /*================================
 Universal verifiability properties
 ================================*/
-lemma secretSskD [reuse]:
+lemma secretSskD [reuse, heuristic={secretSskD}]:
 "All sskD #i.
 	SecretKeyD(sskD) @i
 ==> not (Ex #j. K(sskD) @j)"
 
 
-lemma ballotsFromVoters [reuse]:
+lemma ballotsFromVoters [reuse, heuristic={ballotsFromVoters}]:
 "All S b #i.
 	Learn_S_ballot(S,b) @i
 ==> (Ex H S2 #j.
 	Comm_H_ballot(H,S2,b) @j)"
 
 
-lemma Tall_As_Rec_D:  
+lemma Tall_As_Rec_D[heuristic={Tall_As_Rec_D}]:  
 "All A #a spkD p votes ballots bPrimes sk xa ra
 	. 
 	Learn_A_spkDSG(A, <'spkD', spkD >) @a
@@ -448,7 +675,7 @@ lemma Tall_As_Rec_D:
 	& ballots = sg(encp(votes,r1,pk(sk)),sskD1)	
      )"	
 
-lemma EligVerif_DR:  
+lemma EligVerif_DR[heuristic={EligVerif_DR}]:  
 "All A #a votes sk xa ra . 
 	Learn_A_Vs(A,<'v', votes >) @a
 	//by application of rule, A1 is checked

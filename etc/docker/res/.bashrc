@@ -1,0 +1,1 @@
+cat /opt/protocolplatform/README

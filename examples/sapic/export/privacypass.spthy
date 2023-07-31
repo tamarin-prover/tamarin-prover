@@ -1,0 +1,132 @@
+
+/*
+ * Protocol:    Privacy Pass
+   https://tools.ietf.org/html/draft-davidson-pp-protocol-01
+
+   We verify both reachability and equivalence properties.
+
+   Proverif: everything in a second
+    tamarin-prover privacypass.spthy -m=proverif > pp-reach.pv; proverif pp-reach.pv
+    tamarin-prover privacypass.spthy -m=proverifequiv > pp-ind.pv; proverif pp-ind.pv
+
+   Tamarin : everything in a few seconds
+    tamarin-prover privacypass.spthy --prove
+
+
+We rely on a an abstract VOPRF, has described in
+https://tools.ietf.org/html/draft-irtf-cfrg-voprf-03#section-4.2.2
+To follow the notations of privacy pass, we rename k as sk and Y has pkV(sk),
+
+VOPRF
+Setup phase
+V --------- P
+            new sk ;
+ <-- pkV(sk) ------
+
+
+Evalution phase
+V(x,aux,pkS) ----------- P(sk,pkV(sk))
+(r,M) = VBlind(x)
+   ------------ M  --------->
+                       ZD = VEvaluate(sk,pkV(sk),M)
+  <-------- ZD -------------
+N = VUnblind(r,pkS,M,ZD)
+ret VFinalize(x,pkS,N,aux)
+
+ZD = VEvaluate(sk,pkV(sk),M)
+VFinalize(x, pkV(sk) , VUnblind(r,pkV(sk),M,ZD), aux)
+      == H_2(H_2(DST, x .. F(sk,x)), aux)
+
+DST := Domain Separation Label (tag), F PRF, and H_2 hash function
+
+*/
+
+
+theory privpass
+
+begin
+
+builtins: dest-pairing
+
+functions: pkV/1,MVBlind/2,rVBlind/2,VEvaluate/3, VUnblind/4, VFinalize/4 [destructor], H2/1,F/2
+
+equations: VFinalize(x, pkV(sk),
+	   		VUnblind(rVBlind(x,r),pkV(sk),MVBlind(x,r), VEvaluate(sk,pkV(sk),MVBlind(x,r)))
+			, aux) = H2( < H2(<x,F(sk,x)>) , aux>)
+
+let Client(pkS,x) =
+    new r;
+   let tok = rVBlind(x,r) in
+   let Btok = MVBlind(x,r) in
+   out(Btok);
+   in(resp);
+   let unbTok = VUnblind(tok,pkS,Btok,resp) in
+   // end of issance phase
+   // begin redemption phase
+   new aux;
+   let redeem = VFinalize(x, pkS, unbTok,<pkS,aux>) in
+   out(<x,redeem,aux>)
+
+let ServerIssue(~sk) =
+   in(btok);
+   event Issue(btok);
+   out(VEvaluate(~sk,pkV(~sk),btok))
+   // end of issuance phase
+
+let ServerRedemp(~sk) =
+   in(final);
+   // begin redemption
+   let <x,redeem,aux> = final in
+   if redeem =  H2( < H2(<x,F(~sk,x)>) , aux>) then
+      event Accept(x)
+
+
+
+process:
+!(new ~sk;
+ out(pkV(~sk));
+ !(new x; Client(pkV(~sk),x) | ServerIssue(~sk) | ServerRedemp(~sk))
+
+)
+
+
+lemma true_honnestauthRI:  // should be true
+ "All x #i . Accept(x)@i  ==>
+    (Ex r #j. j<i & Issue(MVBlind(x,r))@j )"
+
+
+lemma false_exec:  // should be false
+ "not(Ex x #i . Accept(x)@i)"
+
+
+// To check for injectivity, we would need to enforce that the servers remember which token were spent
+// export queries:
+
+// "
+// query x,r:bitstring;
+//  (event(Accept( x ))) ==> inj-event(Issue( MVBlind(x, r) )).
+
+// "
+
+
+
+
+
+let ClientNoRed(pkS,x) =
+    new r;
+   let tok = rVBlind(x,r) in
+   let Btok = MVBlind(x,r) in
+   out(Btok)
+
+
+diffEquivLemma:
+// Adding a top-level ! makes Proverif not answer back
+(new ~sk;
+ out(pkV(~sk)); new y; (ServerRedemp(~sk) |
+  ( new x; Client(pkV(~sk),diff(x,y)))|
+! (new x; ClientNoRed(pkV(~sk),diff(x,y)) | ServerIssue(~sk)  ))
+)
+
+
+
+end

@@ -8,7 +8,13 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
+
+
+
+
 
 lemma can_obtain_key:
   exists-trace "∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (K( k ) @ #j)"
@@ -17,50 +23,50 @@ guarded formula characterizing all satisfying traces:
 "∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (K( k ) @ #j)"
 */
 simplify
-solve( State_1111111111( h, k ) ▶₀ #i )
-  case newk_0_111111111
-  solve( !KU( ~n.1 ) @ #vk )
-    case outm_0_11112111111
+solve( State_1111111( ) ▶₀ #i )
+  case p_1_
+  solve( !KU( ~n.1 ) @ #vk.1 )
+    case eventDecUsingkm_0_1111211111
     solve( Insert( <'key', h>, k ) @ #t2 )
       case insertkeyhk_0_11111111111
       solve( State_11111111111( h, k ) ▶₀ #t2 )
-        case eventNewKeyhk_0_1111111111
+        case increate_0_1111111
         solve( !KU( senc(t, ~n.3) ) @ #vk.4 )
-          case outsenckk_0_112111111_case_1
+          case eventWrapkk_0_11211111_case_1
           solve( Insert( <'att', ~n.2>, 'dec' ) @ #t2.1 )
             case insertatthdec_0_1111121111
             solve( State_1111121111( a, ~n.2 ) ▶₀ #t2.1 )
               case deleteatth_0_111112111
               solve( !KU( ~n.2 ) @ #vk.4 )
-                case outh_0_1111111111111
-                solve( (#vr.56 < #t2.5)  ∥ (#vr.56 = #t2.5) )
+                case insertatthinit_0_111111111111
+                solve( (#vr.23 < #t2.5)  ∥ (#vr.23 = #t2.5) )
                   case case_2
                   solve( Insert( <'key', h2>, t ) @ #t2.3 )
                     case insertkeyhk_0_11111111111
                     solve( State_11111111111( h2, t ) ▶₀ #t2.3 )
-                      case eventNewKeyhk_0_1111111111
+                      case increate_0_1111111
                       solve( (#vl, 0) ~~> (#vk, 0) )
                         case Var_fresh_4_n
                         solve( Insert( <'key', h1>, ~n.3 ) @ #t2.4 )
                           case insertkeyhk_0_11111111111
                           solve( State_11111111111( h1, ~n.3 ) ▶₀ #t2.4 )
-                            case eventNewKeyhk_0_1111111111
-                            solve( (#vr.45 < #t2.4)  ∥ (#vr.40 < #vr.45) )
+                            case increate_0_1111111
+                            solve( (#vr.18 < #t2.4)  ∥ (#vr.15 < #vr.18) )
                               case case_1
-                              solve( (#t2.1 < #t2.4)  ∥ (#t2.1 = #t2.4)  ∥ (#vr.40 < #t2.1) )
+                              solve( (#t2.1 < #t2.4)  ∥ (#t2.1 = #t2.4)  ∥ (#vr.15 < #t2.1) )
                                 case case_3
                                 solve( Insert( <'att', ~n.2>, 'wrap' ) @ #t2.4 )
                                   case insertatthwrap_0_11111121111
                                   solve( State_11111121111( a, ~n.2 ) ▶₀ #t2.4 )
                                     case deleteatth_0_1111112111
-                                    solve( (#vr.45 < #t2.5)  ∥ (#vr.58 < #vr.45) )
+                                    solve( (#vr.18 < #t2.5)  ∥ (#vr.25 < #vr.18) )
                                       case case_2
-                                      solve( (#t2.5 < #t2.2)  ∥ (#t2.5 = #t2.2)  ∥ (#vr.47 < #t2.5) )
+                                      solve( (#t2.5 < #t2.2)  ∥ (#t2.5 = #t2.2)  ∥ (#vr.20 < #t2.5) )
                                         case case_2
                                         solve( Insert( <'att', ~n.2>, 'init' ) @ #t2.2 )
                                           case insertatthinit_0_111111111111
                                           solve( !KU( ~n ) @ #vk.8 )
-                                            case outh_0_1111111111111
+                                            case insertatthinit_0_111111111111
                                             SOLVED // trace found
                                           qed
                                         qed
@@ -85,669 +91,734 @@ solve( State_1111111111( h, k ) ▶₀ #i )
   qed
 qed
 
+
+
+
+
+
+
+
+
+
+
 rule (modulo E) Init[color=#ffffff, process="!"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_[color=#ffffff, process="!"]:
-   [ State_( ) ] --> [ !Semistate_1( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
-   [ !Semistate_1( ) ] --> [ State_1( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1[color=#ffffff, process="|"]:
-   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_11[color=#ffffff, process="|"]:
-   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111[color=#ffffff, process="|"]:
-   [ State_111( ) ] --> [ State_1111( ), State_1112( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1111[color=#ffffff, process="|"]:
-   [ State_1111( ) ] --> [ State_11111( ), State_11112( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_11111[color=#ffffff, process="|"]:
-   [ State_11111( ) ] --> [ State_111111( ), State_111112( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111111[color=#ffffff, process="|"]:
-   [ State_111111( ) ] --> [ State_1111111( ), State_1111112( ) ]
+   [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) increate_0_1111111[color=#ffffff,
                                    process="in('create');"]:
-   [ State_1111111( ), In( 'create' ) ] --> [ State_11111111( ) ]
+   [ State_1111111( ), In( 'create' ), Fr( h.1 ), Fr( k.1 ) ]
+  --[ NewKey( h.1, k.1 ) ]->
+   [ State_11111111111( h.1, k.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) newh_0_11111111[color=#ffffff, process="new h;"]:
-   [ State_11111111( ), Fr( h ) ] --> [ State_111111111( h ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) newk_0_111111111[color=#ffffff, process="new k;"]:
-   [ State_111111111( h ), Fr( k ) ] --> [ State_1111111111( h, k ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventNewKeyhk_0_1111111111[color=#ffffff,
-                                           process="event NewKey( h, k );"]:
-   [ State_1111111111( h, k ) ]
-  --[ NewKey( h, k ) ]->
-   [ State_11111111111( h, k ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) increate_0_1111111[color=#ffffff,
+                                      process="in('create');"]:
+     [ State_1111111( ), In( 'create' ), Fr( h ), Fr( k ) ]
+    --[ NewKey( h, k ) ]->
+     [ State_11111111111( h, k ) ]
+  */
 
 rule (modulo E) insertkeyhk_0_11111111111[color=#ffffff,
-                                          process="insert <'key', h>,k;"]:
-   [ State_11111111111( h, k ) ]
-  --[ Insert( <'key', h>, k ) ]->
-   [ State_111111111111( h, k ) ]
+                                          process="insert <'key', h.1>,k.1;"]:
+   [ State_11111111111( h.1, k.1 ) ]
+  --[ Insert( <'key', h.1>, k.1 ) ]->
+   [ State_111111111111( h.1, k.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) insertkeyhk_0_11111111111[color=#ffffff,
+                                             process="insert <'key', h.1>,k.1;"]:
+     [ State_11111111111( h, k ) ]
+    --[ Insert( <'key', h>, k ) ]->
+     [ State_111111111111( h, k ) ]
+  */
 
 rule (modulo E) insertatthinit_0_111111111111[color=#ffffff,
-                                              process="insert <'att', h>,'init';"]:
-   [ State_111111111111( h, k ) ]
-  --[ Insert( <'att', h>, 'init' ) ]->
-   [ State_1111111111111( h, k ) ]
+                                              process="insert <'att', h.1>,'init';"]:
+   [ State_111111111111( h.1, k.1 ) ]
+  --[ Insert( <'att', h.1>, 'init' ) ]->
+   [ Out( h.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) outh_0_1111111111111[color=#ffffff, process="out(h);"]:
-   [ State_1111111111111( h, k ) ]
-  -->
-   [ State_11111111111111( h, k ), Out( h ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_11111111111111[color=#ffffff, process="0"]:
-   [ State_11111111111111( h, k ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) insertatthinit_0_111111111111[color=#ffffff,
+                                                 process="insert <'att', h.1>,'init';"]:
+     [ State_111111111111( h, k ) ]
+    --[ Insert( <'att', h>, 'init' ) ]->
+     [ Out( h ) ]
+  */
 
 rule (modulo E) insetwraph_0_1111112[color=#ffffff,
-                                     process="in(<'set_wrap', h>);"]:
-   [ State_1111112( ), In( <'set_wrap', h> ) ] --> [ State_11111121( h ) ]
+                                     process="in(<'set_wrap', h.2>);"]:
+   [ State_1111112( ), In( <'set_wrap', h.2> ) ]
+  -->
+   [ State_11111121( h.2 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) insetwraph_0_1111112[color=#ffffff,
+                                        process="in(<'set_wrap', h.2>);"]:
+     [ State_1111112( ), In( <'set_wrap', h> ) ] --> [ State_11111121( h ) ]
+  */
 
 rule (modulo E) lookupatthasa_0_11111121[color=#ffffff,
-                                         process="lookup <'att', h> as a"]:
-   [ State_11111121( h ) ]
-  --[ IsIn( <'att', h>, a ) ]->
-   [ State_111111211( a, h ) ]
+                                         process="lookup <'att', h.2> as a.1"]:
+   [ State_11111121( h.2 ) ]
+  --[ IsIn( <'att', h.2>, a.1 ) ]->
+   [ State_111111211( a.1, h.2 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) lookupatthasa_1_11111121[color=#ffffff,
-                                         process="lookup <'att', h> as a"]:
-   [ State_11111121( h ) ]
-  --[ IsNotSet( <'att', h> ) ]->
-   [ State_111111212( h ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_0_11111121[color=#ffffff,
+                                            process="lookup <'att', h.2> as a.1"]:
+     [ State_11111121( h ) ]
+    --[ IsIn( <'att', h>, a ) ]->
+     [ State_111111211( a, h ) ]
+  */
 
 rule (modulo E) ifainit_0_111111211[color=#ffffff,
-                                    process="if a='init'"]:
-   [ State_111111211( a, h ) ]
-  --[ Pred_Eq( a, 'init' ) ]->
-   [ State_1111112111( a, h ) ]
+                                    process="if a.1='init'"]:
+   [ State_111111211( a.1, h.2 ) ]
+  --[ Pred_Eq( a.1, 'init' ) ]->
+   [ State_1111112111( a.1, h.2 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifainit_1_111111211[color=#ffffff,
-                                    process="if a='init'"]:
-   [ State_111111211( a, h ) ]
-  --[ Pred_Not_Eq( a, 'init' ) ]->
-   [ State_1111112112( a, h ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifainit_0_111111211[color=#ffffff,
+                                       process="if a.1='init'"]:
+     [ State_111111211( a, h ) ]
+    --[ Pred_Eq( a, 'init' ) ]->
+     [ State_1111112111( a, h ) ]
+  */
 
 rule (modulo E) deleteatth_0_1111112111[color=#ffffff,
-                                        process="delete <'att', h>;"]:
-   [ State_1111112111( a, h ) ]
-  --[ Delete( <'att', h> ) ]->
-   [ State_11111121111( a, h ) ]
+                                        process="delete <'att', h.2>;"]:
+   [ State_1111112111( a.1, h.2 ) ]
+  --[ Delete( <'att', h.2> ) ]->
+   [ State_11111121111( a.1, h.2 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) deleteatth_0_1111112111[color=#ffffff,
+                                           process="delete <'att', h.2>;"]:
+     [ State_1111112111( a, h ) ]
+    --[ Delete( <'att', h> ) ]->
+     [ State_11111121111( a, h ) ]
+  */
 
 rule (modulo E) insertatthwrap_0_11111121111[color=#ffffff,
-                                             process="insert <'att', h>,'wrap';"]:
-   [ State_11111121111( a, h ) ]
-  --[ Insert( <'att', h>, 'wrap' ) ]->
-   [ State_111111211111( a, h ) ]
+                                             process="insert <'att', h.2>,'wrap';"]:
+   [ State_11111121111( a.1, h.2 ) ]
+  --[ Insert( <'att', h.2>, 'wrap' ) ]->
+   [ State_111111211111( a.1, h.2 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) insertatthwrap_0_11111121111[color=#ffffff,
+                                                process="insert <'att', h.2>,'wrap';"]:
+     [ State_11111121111( a, h ) ]
+    --[ Insert( <'att', h>, 'wrap' ) ]->
+     [ State_111111211111( a, h ) ]
+  */
 
 rule (modulo E) eventWrapHandleh_0_111111211111[color=#ffffff,
-                                                process="event WrapHandle( h );"]:
-   [ State_111111211111( a, h ) ]
-  --[ WrapHandle( h ) ]->
-   [ State_1111112111111( a, h ) ]
+                                                process="event WrapHandle( h.2 );"]:
+   [ State_111111211111( a.1, h.2 ) ] --[ WrapHandle( h.2 ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) eventWrapHandleh_0_111111211111[color=#ffffff,
+                                                   process="event WrapHandle( h.2 );"]:
+     [ State_111111211111( a, h ) ] --[ WrapHandle( h ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_1111112111111[color=#ffffff, process="0"]:
-   [ State_1111112111111( a, h ) ] --> [ ]
+rule (modulo E) ifainit_1_111111211[color=#ffffff,
+                                    process="if a.1='init'"]:
+   [ State_111111211( a.1, h.2 ) ] --[ Pred_Not_Eq( a.1, 'init' ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifainit_1_111111211[color=#ffffff,
+                                       process="if a.1='init'"]:
+     [ State_111111211( a, h ) ] --[ Pred_Not_Eq( a, 'init' ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_1111112112[color=#ffffff, process="0"]:
-   [ State_1111112112( a, h ) ] --> [ ]
+rule (modulo E) lookupatthasa_1_11111121[color=#ffffff,
+                                         process="lookup <'att', h.2> as a.1"]:
+   [ State_11111121( h.2 ) ] --[ IsNotSet( <'att', h.2> ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111111212[color=#ffffff, process="0"]:
-   [ State_111111212( h ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_1_11111121[color=#ffffff,
+                                            process="lookup <'att', h.2> as a.1"]:
+     [ State_11111121( h ) ] --[ IsNotSet( <'att', h> ) ]-> [ ]
+  */
 
 rule (modulo E) insetdech_0_111112[color=#ffffff,
-                                   process="in(<'set_dec', h>);"]:
-   [ State_111112( ), In( <'set_dec', h> ) ] --> [ State_1111121( h ) ]
+                                   process="in(<'set_dec', h.3>);"]:
+   [ State_111112( ), In( <'set_dec', h.3> ) ] --> [ State_1111121( h.3 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) insetdech_0_111112[color=#ffffff,
+                                      process="in(<'set_dec', h.3>);"]:
+     [ State_111112( ), In( <'set_dec', h> ) ] --> [ State_1111121( h ) ]
+  */
 
 rule (modulo E) lookupatthasa_0_1111121[color=#ffffff,
-                                        process="lookup <'att', h> as a"]:
-   [ State_1111121( h ) ]
-  --[ IsIn( <'att', h>, a ) ]->
-   [ State_11111211( a, h ) ]
+                                        process="lookup <'att', h.3> as a.2"]:
+   [ State_1111121( h.3 ) ]
+  --[ IsIn( <'att', h.3>, a.2 ) ]->
+   [ State_11111211( a.2, h.3 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_0_1111121[color=#ffffff,
+                                           process="lookup <'att', h.3> as a.2"]:
+     [ State_1111121( h ) ]
+    --[ IsIn( <'att', h>, a ) ]->
+     [ State_11111211( a, h ) ]
+  */
 
-rule (modulo E) lookupatthasa_1_1111121[color=#ffffff,
-                                        process="lookup <'att', h> as a"]:
-   [ State_1111121( h ) ]
-  --[ IsNotSet( <'att', h> ) ]->
-   [ State_11111212( h ) ]
+rule (modulo E) ifainit_0_11111211[color=#ffffff,
+                                   process="if a.2='init'"]:
+   [ State_11111211( a.2, h.3 ) ]
+  --[ Pred_Eq( a.2, 'init' ) ]->
+   [ State_111112111( a.2, h.3 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifainit_0_11111211[color=#ffffff, process="if a='init'"]:
-   [ State_11111211( a, h ) ]
-  --[ Pred_Eq( a, 'init' ) ]->
-   [ State_111112111( a, h ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifainit_1_11111211[color=#ffffff, process="if a='init'"]:
-   [ State_11111211( a, h ) ]
-  --[ Pred_Not_Eq( a, 'init' ) ]->
-   [ State_111112112( a, h ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifainit_0_11111211[color=#ffffff,
+                                      process="if a.2='init'"]:
+     [ State_11111211( a, h ) ]
+    --[ Pred_Eq( a, 'init' ) ]->
+     [ State_111112111( a, h ) ]
+  */
 
 rule (modulo E) deleteatth_0_111112111[color=#ffffff,
-                                       process="delete <'att', h>;"]:
-   [ State_111112111( a, h ) ]
-  --[ Delete( <'att', h> ) ]->
-   [ State_1111121111( a, h ) ]
+                                       process="delete <'att', h.3>;"]:
+   [ State_111112111( a.2, h.3 ) ]
+  --[ Delete( <'att', h.3> ) ]->
+   [ State_1111121111( a.2, h.3 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) deleteatth_0_111112111[color=#ffffff,
+                                          process="delete <'att', h.3>;"]:
+     [ State_111112111( a, h ) ]
+    --[ Delete( <'att', h> ) ]->
+     [ State_1111121111( a, h ) ]
+  */
 
 rule (modulo E) insertatthdec_0_1111121111[color=#ffffff,
-                                           process="insert <'att', h>,'dec';"]:
-   [ State_1111121111( a, h ) ]
-  --[ Insert( <'att', h>, 'dec' ) ]->
-   [ State_11111211111( a, h ) ]
+                                           process="insert <'att', h.3>,'dec';"]:
+   [ State_1111121111( a.2, h.3 ) ]
+  --[ Insert( <'att', h.3>, 'dec' ) ]->
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) insertatthdec_0_1111121111[color=#ffffff,
+                                              process="insert <'att', h.3>,'dec';"]:
+     [ State_1111121111( a, h ) ] --[ Insert( <'att', h>, 'dec' ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_11111211111[color=#ffffff, process="0"]:
-   [ State_11111211111( a, h ) ] --> [ ]
+rule (modulo E) ifainit_1_11111211[color=#ffffff,
+                                   process="if a.2='init'"]:
+   [ State_11111211( a.2, h.3 ) ] --[ Pred_Not_Eq( a.2, 'init' ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifainit_1_11111211[color=#ffffff,
+                                      process="if a.2='init'"]:
+     [ State_11111211( a, h ) ] --[ Pred_Not_Eq( a, 'init' ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_111112112[color=#ffffff, process="0"]:
-   [ State_111112112( a, h ) ] --> [ ]
+rule (modulo E) lookupatthasa_1_1111121[color=#ffffff,
+                                        process="lookup <'att', h.3> as a.2"]:
+   [ State_1111121( h.3 ) ] --[ IsNotSet( <'att', h.3> ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_11111212[color=#ffffff, process="0"]:
-   [ State_11111212( h ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_1_1111121[color=#ffffff,
+                                           process="lookup <'att', h.3> as a.2"]:
+     [ State_1111121( h ) ] --[ IsNotSet( <'att', h> ) ]-> [ ]
+  */
 
 rule (modulo E) inhsencmk_0_11112[color=#ffffff,
-                                  process="in(<h, senc(m, k)>);"]:
-   [ State_11112( ), In( <h, senc(m, k)> ) ] --> [ State_111121( h, k, m ) ]
+                                  process="in(<h.4, senc(m.1, k.2)>);"]:
+   [ State_11112( ), In( <h.4, senc(m.1, k.2)> ) ]
+  -->
+   [ State_111121( m.1, k.2, h.4 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) inhsencmk_0_11112[color=#ffffff,
+                                     process="in(<h.4, senc(m.1, k.2)>);"]:
+     [ State_11112( ), In( <h, senc(m, k)> ) ] --> [ State_111121( m, k, h ) ]
+  */
 
 rule (modulo E) lookupatthasa_0_111121[color=#ffffff,
-                                       process="lookup <'att', h> as a"]:
-   [ State_111121( h, k, m ) ]
-  --[ IsIn( <'att', h>, a ) ]->
-   [ State_1111211( a, h, k, m ) ]
+                                       process="lookup <'att', h.4> as a.3"]:
+   [ State_111121( m.1, k.2, h.4 ) ]
+  --[ IsIn( <'att', h.4>, a.3 ) ]->
+   [ State_1111211( m.1, k.2, a.3, h.4 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_0_111121[color=#ffffff,
+                                          process="lookup <'att', h.4> as a.3"]:
+     [ State_111121( m, k, h ) ]
+    --[ IsIn( <'att', h>, a ) ]->
+     [ State_1111211( m, k, a, h ) ]
+  */
 
-rule (modulo E) lookupatthasa_1_111121[color=#ffffff,
-                                       process="lookup <'att', h> as a"]:
-   [ State_111121( h, k, m ) ]
-  --[ IsNotSet( <'att', h> ) ]->
-   [ State_1111212( h, k, m ) ]
+rule (modulo E) ifadec_0_1111211[color=#ffffff, process="if a.3='dec'"]:
+   [ State_1111211( m.1, k.2, a.3, h.4 ) ]
+  --[ Pred_Eq( a.3, 'dec' ) ]->
+   [ State_11112111( m.1, k.2, a.3, h.4 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifadec_0_1111211[color=#ffffff, process="if a='dec'"]:
-   [ State_1111211( a, h, k, m ) ]
-  --[ Pred_Eq( a, 'dec' ) ]->
-   [ State_11112111( a, h, k, m ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifadec_1_1111211[color=#ffffff, process="if a='dec'"]:
-   [ State_1111211( a, h, k, m ) ]
-  --[ Pred_Not_Eq( a, 'dec' ) ]->
-   [ State_11112112( a, h, k, m ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifadec_0_1111211[color=#ffffff, process="if a.3='dec'"]:
+     [ State_1111211( m, k, a, h ) ]
+    --[ Pred_Eq( a, 'dec' ) ]->
+     [ State_11112111( m, k, a, h ) ]
+  */
 
 rule (modulo E) lookupkeyhaskp_0_11112111[color=#ffffff,
-                                          process="lookup <'key', h> as kp"]:
-   [ State_11112111( a, h, k, m ) ]
-  --[ IsIn( <'key', h>, kp ) ]->
-   [ State_111121111( a, h, k, kp, m ) ]
+                                          process="lookup <'key', h.4> as kp.1"]:
+   [ State_11112111( m.1, k.2, a.3, h.4 ) ]
+  --[ IsIn( <'key', h.4>, kp.1 ) ]->
+   [ State_111121111( kp.1, m.1, k.2, a.3, h.4 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupkeyhaskp_0_11112111[color=#ffffff,
+                                             process="lookup <'key', h.4> as kp.1"]:
+     [ State_11112111( m, k, a, h ) ]
+    --[ IsIn( <'key', h>, kp ) ]->
+     [ State_111121111( kp, m, k, a, h ) ]
+  */
 
-rule (modulo E) lookupkeyhaskp_1_11112111[color=#ffffff,
-                                          process="lookup <'key', h> as kp"]:
-   [ State_11112111( a, h, k, m ) ]
-  --[ IsNotSet( <'key', h> ) ]->
-   [ State_111121112( a, h, k, m ) ]
+rule (modulo E) ifkpk_0_111121111[color=#ffffff, process="if kp.1=k.2"]:
+   [ State_111121111( kp.1, m.1, k.2, a.3, h.4 ) ]
+  --[ Pred_Eq( kp.1, k.2 ) ]->
+   [ State_1111211111( kp.1, m.1, k.2, a.3, h.4 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifkpk_0_111121111[color=#ffffff, process="if kp=k"]:
-   [ State_111121111( a, h, k, kp, m ) ]
-  --[ Pred_Eq( kp, k ) ]->
-   [ State_1111211111( a, h, k, kp, m ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifkpk_1_111121111[color=#ffffff, process="if kp=k"]:
-   [ State_111121111( a, h, k, kp, m ) ]
-  --[ Pred_Not_Eq( kp, k ) ]->
-   [ State_1111211112( a, h, k, kp, m ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifkpk_0_111121111[color=#ffffff, process="if kp.1=k.2"]:
+     [ State_111121111( kp, m, k, a, h ) ]
+    --[ Pred_Eq( kp, k ) ]->
+     [ State_1111211111( kp, m, k, a, h ) ]
+  */
 
 rule (modulo E) eventDecUsingkm_0_1111211111[color=#ffffff,
-                                             process="event DecUsing( k, m );"]:
-   [ State_1111211111( a, h, k, kp, m ) ]
-  --[ DecUsing( k, m ) ]->
-   [ State_11112111111( a, h, k, kp, m ) ]
+                                             process="event DecUsing( k.2, m.1 );"]:
+   [ State_1111211111( kp.1, m.1, k.2, a.3, h.4 ) ]
+  --[ DecUsing( k.2, m.1 ) ]->
+   [ Out( m.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) eventDecUsingkm_0_1111211111[color=#ffffff,
+                                                process="event DecUsing( k.2, m.1 );"]:
+     [ State_1111211111( kp, m, k, a, h ) ]
+    --[ DecUsing( k, m ) ]->
+     [ Out( m ) ]
+  */
 
-rule (modulo E) outm_0_11112111111[color=#ffffff, process="out(m);"]:
-   [ State_11112111111( a, h, k, kp, m ) ]
-  -->
-   [ State_111121111111( a, h, k, kp, m ), Out( m ) ]
+rule (modulo E) ifkpk_1_111121111[color=#ffffff, process="if kp.1=k.2"]:
+   [ State_111121111( kp.1, m.1, k.2, a.3, h.4 ) ]
+  --[ Pred_Not_Eq( kp.1, k.2 ) ]->
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifkpk_1_111121111[color=#ffffff, process="if kp.1=k.2"]:
+     [ State_111121111( kp, m, k, a, h ) ] --[ Pred_Not_Eq( kp, k ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_111121111111[color=#ffffff, process="0"]:
-   [ State_111121111111( a, h, k, kp, m ) ] --> [ ]
+rule (modulo E) lookupkeyhaskp_1_11112111[color=#ffffff,
+                                          process="lookup <'key', h.4> as kp.1"]:
+   [ State_11112111( m.1, k.2, a.3, h.4 ) ]
+  --[ IsNotSet( <'key', h.4> ) ]->
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupkeyhaskp_1_11112111[color=#ffffff,
+                                             process="lookup <'key', h.4> as kp.1"]:
+     [ State_11112111( m, k, a, h ) ] --[ IsNotSet( <'key', h> ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_1111211112[color=#ffffff, process="0"]:
-   [ State_1111211112( a, h, k, kp, m ) ] --> [ ]
+rule (modulo E) ifadec_1_1111211[color=#ffffff, process="if a.3='dec'"]:
+   [ State_1111211( m.1, k.2, a.3, h.4 ) ]
+  --[ Pred_Not_Eq( a.3, 'dec' ) ]->
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifadec_1_1111211[color=#ffffff, process="if a.3='dec'"]:
+     [ State_1111211( m, k, a, h ) ] --[ Pred_Not_Eq( a, 'dec' ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_111121112[color=#ffffff, process="0"]:
-   [ State_111121112( a, h, k, m ) ] --> [ ]
+rule (modulo E) lookupatthasa_1_111121[color=#ffffff,
+                                       process="lookup <'att', h.4> as a.3"]:
+   [ State_111121( m.1, k.2, h.4 ) ] --[ IsNotSet( <'att', h.4> ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_1_111121[color=#ffffff,
+                                          process="lookup <'att', h.4> as a.3"]:
+     [ State_111121( m, k, h ) ] --[ IsNotSet( <'att', h> ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_11112112[color=#ffffff, process="0"]:
-   [ State_11112112( a, h, k, m ) ] --> [ ]
+rule (modulo E) inhm_0_1112[color=#ffffff, process="in(<h.5, m.2>);"]:
+   [ State_1112( ), In( <h.5, m.2> ) ] --> [ State_11121( m.2, h.5 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1111212[color=#ffffff, process="0"]:
-   [ State_1111212( h, k, m ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) inhm_0_1112[color=#ffffff, process="in(<h, m>);"]:
-   [ State_1112( ), In( <h, m> ) ] --> [ State_11121( h, m ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) inhm_0_1112[color=#ffffff, process="in(<h.5, m.2>);"]:
+     [ State_1112( ), In( <h, m> ) ] --> [ State_11121( m, h ) ]
+  */
 
 rule (modulo E) lookupatthasa_0_11121[color=#ffffff,
-                                      process="lookup <'att', h> as a"]:
-   [ State_11121( h, m ) ]
-  --[ IsIn( <'att', h>, a ) ]->
-   [ State_111211( a, h, m ) ]
+                                      process="lookup <'att', h.5> as a.4"]:
+   [ State_11121( m.2, h.5 ) ]
+  --[ IsIn( <'att', h.5>, a.4 ) ]->
+   [ State_111211( m.2, a.4, h.5 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_0_11121[color=#ffffff,
+                                         process="lookup <'att', h.5> as a.4"]:
+     [ State_11121( m, h ) ]
+    --[ IsIn( <'att', h>, a ) ]->
+     [ State_111211( m, a, h ) ]
+  */
 
-rule (modulo E) lookupatthasa_1_11121[color=#ffffff,
-                                      process="lookup <'att', h> as a"]:
-   [ State_11121( h, m ) ]
-  --[ IsNotSet( <'att', h> ) ]->
-   [ State_111212( h, m ) ]
+rule (modulo E) ifadec_0_111211[color=#ffffff, process="if a.4='dec'"]:
+   [ State_111211( m.2, a.4, h.5 ) ]
+  --[ Pred_Eq( a.4, 'dec' ) ]->
+   [ State_1112111( m.2, a.4, h.5 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifadec_0_111211[color=#ffffff, process="if a='dec'"]:
-   [ State_111211( a, h, m ) ]
-  --[ Pred_Eq( a, 'dec' ) ]->
-   [ State_1112111( a, h, m ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifadec_1_111211[color=#ffffff, process="if a='dec'"]:
-   [ State_111211( a, h, m ) ]
-  --[ Pred_Not_Eq( a, 'dec' ) ]->
-   [ State_1112112( a, h, m ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifadec_0_111211[color=#ffffff, process="if a.4='dec'"]:
+     [ State_111211( m, a, h ) ]
+    --[ Pred_Eq( a, 'dec' ) ]->
+     [ State_1112111( m, a, h ) ]
+  */
 
 rule (modulo E) lookupkeyhask_0_1112111[color=#ffffff,
-                                        process="lookup <'key', h> as k"]:
-   [ State_1112111( a, h, m ) ]
-  --[ IsIn( <'key', h>, k ) ]->
-   [ State_11121111( a, h, k, m ) ]
+                                        process="lookup <'key', h.5> as k.3"]:
+   [ State_1112111( m.2, a.4, h.5 ) ]
+  --[ IsIn( <'key', h.5>, k.3 ) ]->
+   [ State_11121111( m.2, k.3, a.4, h.5 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) lookupkeyhask_1_1112111[color=#ffffff,
-                                        process="lookup <'key', h> as k"]:
-   [ State_1112111( a, h, m ) ]
-  --[ IsNotSet( <'key', h> ) ]->
-   [ State_11121112( a, h, m ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupkeyhask_0_1112111[color=#ffffff,
+                                           process="lookup <'key', h.5> as k.3"]:
+     [ State_1112111( m, a, h ) ]
+    --[ IsIn( <'key', h>, k ) ]->
+     [ State_11121111( m, k, a, h ) ]
+  */
 
 rule (modulo E) eventEncUsingkm_0_11121111[color=#ffffff,
-                                           process="event EncUsing( k, m );"]:
-   [ State_11121111( a, h, k, m ) ]
-  --[ EncUsing( k, m ) ]->
-   [ State_111211111( a, h, k, m ) ]
+                                           process="event EncUsing( k.3, m.2 );"]:
+   [ State_11121111( m.2, k.3, a.4, h.5 ) ]
+  --[ EncUsing( k.3, m.2 ) ]->
+   [ Out( senc(m.2, k.3) ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) eventEncUsingkm_0_11121111[color=#ffffff,
+                                              process="event EncUsing( k.3, m.2 );"]:
+     [ State_11121111( m, k, a, h ) ]
+    --[ EncUsing( k, m ) ]->
+     [ Out( senc(m, k) ) ]
+  */
 
-rule (modulo E) outsencmk_0_111211111[color=#ffffff,
-                                      process="out(senc(m, k));"]:
-   [ State_111211111( a, h, k, m ) ]
-  -->
-   [ State_1112111111( a, h, k, m ), Out( senc(m, k) ) ]
+rule (modulo E) lookupkeyhask_1_1112111[color=#ffffff,
+                                        process="lookup <'key', h.5> as k.3"]:
+   [ State_1112111( m.2, a.4, h.5 ) ] --[ IsNotSet( <'key', h.5> ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupkeyhask_1_1112111[color=#ffffff,
+                                           process="lookup <'key', h.5> as k.3"]:
+     [ State_1112111( m, a, h ) ] --[ IsNotSet( <'key', h> ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_1112111111[color=#ffffff, process="0"]:
-   [ State_1112111111( a, h, k, m ) ] --> [ ]
+rule (modulo E) ifadec_1_111211[color=#ffffff, process="if a.4='dec'"]:
+   [ State_111211( m.2, a.4, h.5 ) ] --[ Pred_Not_Eq( a.4, 'dec' ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifadec_1_111211[color=#ffffff, process="if a.4='dec'"]:
+     [ State_111211( m, a, h ) ] --[ Pred_Not_Eq( a, 'dec' ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_11121112[color=#ffffff, process="0"]:
-   [ State_11121112( a, h, m ) ] --> [ ]
+rule (modulo E) lookupatthasa_1_11121[color=#ffffff,
+                                      process="lookup <'att', h.5> as a.4"]:
+   [ State_11121( m.2, h.5 ) ] --[ IsNotSet( <'att', h.5> ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_1_11121[color=#ffffff,
+                                         process="lookup <'att', h.5> as a.4"]:
+     [ State_11121( m, h ) ] --[ IsNotSet( <'att', h> ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_1112112[color=#ffffff, process="0"]:
-   [ State_1112112( a, h, m ) ] --> [ ]
+rule (modulo E) inhh_0_112[color=#ffffff, process="in(<h1.1, h2.1>);"]:
+   [ State_112( ), In( <h1.1, h2.1> ) ] --> [ State_1121( h1.1, h2.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111212[color=#ffffff, process="0"]:
-   [ State_111212( h, m ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) inhh_0_112[color=#ffffff, process="in(<h1, h2>);"]:
-   [ State_112( ), In( <h1, h2> ) ] --> [ State_1121( h1, h2 ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) inhh_0_112[color=#ffffff, process="in(<h1.1, h2.1>);"]:
+     [ State_112( ), In( <h1, h2> ) ] --> [ State_1121( h1, h2 ) ]
+  */
 
 rule (modulo E) lookupatthasa_0_1121[color=#ffffff,
-                                     process="lookup <'att', h1> as a1"]:
-   [ State_1121( h1, h2 ) ]
-  --[ IsIn( <'att', h1>, a1 ) ]->
-   [ State_11211( a1, h1, h2 ) ]
+                                     process="lookup <'att', h1.1> as a1.1"]:
+   [ State_1121( h1.1, h2.1 ) ]
+  --[ IsIn( <'att', h1.1>, a1.1 ) ]->
+   [ State_11211( a1.1, h1.1, h2.1 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_0_1121[color=#ffffff,
+                                        process="lookup <'att', h1.1> as a1.1"]:
+     [ State_1121( h1, h2 ) ]
+    --[ IsIn( <'att', h1>, a1 ) ]->
+     [ State_11211( a1, h1, h2 ) ]
+  */
 
-rule (modulo E) lookupatthasa_1_1121[color=#ffffff,
-                                     process="lookup <'att', h1> as a1"]:
-   [ State_1121( h1, h2 ) ]
-  --[ IsNotSet( <'att', h1> ) ]->
-   [ State_11212( h1, h2 ) ]
+rule (modulo E) ifawrap_0_11211[color=#ffffff, process="if a1.1='wrap'"]:
+   [ State_11211( a1.1, h1.1, h2.1 ) ]
+  --[ Pred_Eq( a1.1, 'wrap' ) ]->
+   [ State_112111( a1.1, h1.1, h2.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifawrap_0_11211[color=#ffffff, process="if a1='wrap'"]:
-   [ State_11211( a1, h1, h2 ) ]
-  --[ Pred_Eq( a1, 'wrap' ) ]->
-   [ State_112111( a1, h1, h2 ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifawrap_1_11211[color=#ffffff, process="if a1='wrap'"]:
-   [ State_11211( a1, h1, h2 ) ]
-  --[ Pred_Not_Eq( a1, 'wrap' ) ]->
-   [ State_112112( a1, h1, h2 ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifawrap_0_11211[color=#ffffff,
+                                   process="if a1.1='wrap'"]:
+     [ State_11211( a1, h1, h2 ) ]
+    --[ Pred_Eq( a1, 'wrap' ) ]->
+     [ State_112111( a1, h1, h2 ) ]
+  */
 
 rule (modulo E) lookupkeyhask_0_112111[color=#ffffff,
-                                       process="lookup <'key', h1> as k1"]:
-   [ State_112111( a1, h1, h2 ) ]
-  --[ IsIn( <'key', h1>, k1 ) ]->
-   [ State_1121111( a1, h1, h2, k1 ) ]
+                                       process="lookup <'key', h1.1> as k1.1"]:
+   [ State_112111( a1.1, h1.1, h2.1 ) ]
+  --[ IsIn( <'key', h1.1>, k1.1 ) ]->
+   [ State_1121111( a1.1, h1.1, h2.1, k1.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) lookupkeyhask_1_112111[color=#ffffff,
-                                       process="lookup <'key', h1> as k1"]:
-   [ State_112111( a1, h1, h2 ) ]
-  --[ IsNotSet( <'key', h1> ) ]->
-   [ State_1121112( a1, h1, h2 ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupkeyhask_0_112111[color=#ffffff,
+                                          process="lookup <'key', h1.1> as k1.1"]:
+     [ State_112111( a1, h1, h2 ) ]
+    --[ IsIn( <'key', h1>, k1 ) ]->
+     [ State_1121111( a1, h1, h2, k1 ) ]
+  */
 
 rule (modulo E) lookupkeyhask_0_1121111[color=#ffffff,
-                                        process="lookup <'key', h2> as k2"]:
-   [ State_1121111( a1, h1, h2, k1 ) ]
-  --[ IsIn( <'key', h2>, k2 ) ]->
-   [ State_11211111( a1, h1, h2, k1, k2 ) ]
+                                        process="lookup <'key', h2.1> as k2.1"]:
+   [ State_1121111( a1.1, h1.1, h2.1, k1.1 ) ]
+  --[ IsIn( <'key', h2.1>, k2.1 ) ]->
+   [ State_11211111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) lookupkeyhask_1_1121111[color=#ffffff,
-                                        process="lookup <'key', h2> as k2"]:
-   [ State_1121111( a1, h1, h2, k1 ) ]
-  --[ IsNotSet( <'key', h2> ) ]->
-   [ State_11211112( a1, h1, h2, k1 ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupkeyhask_0_1121111[color=#ffffff,
+                                           process="lookup <'key', h2.1> as k2.1"]:
+     [ State_1121111( a1, h1, h2, k1 ) ]
+    --[ IsIn( <'key', h2>, k2 ) ]->
+     [ State_11211111( a1, h1, h2, k1, k2 ) ]
+  */
 
 rule (modulo E) eventWrapkk_0_11211111[color=#ffffff,
-                                       process="event Wrap( k1, k2 );"]:
-   [ State_11211111( a1, h1, h2, k1, k2 ) ]
-  --[ Wrap( k1, k2 ) ]->
-   [ State_112111111( a1, h1, h2, k1, k2 ) ]
+                                       process="event Wrap( k1.1, k2.1 );"]:
+   [ State_11211111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ]
+  --[ Wrap( k1.1, k2.1 ) ]->
+   [ Out( senc(k2.1, k1.1) ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) eventWrapkk_0_11211111[color=#ffffff,
+                                          process="event Wrap( k1.1, k2.1 );"]:
+     [ State_11211111( a1, h1, h2, k1, k2 ) ]
+    --[ Wrap( k1, k2 ) ]->
+     [ Out( senc(k2, k1) ) ]
+  */
 
-rule (modulo E) outsenckk_0_112111111[color=#ffffff,
-                                      process="out(senc(k2, k1));"]:
-   [ State_112111111( a1, h1, h2, k1, k2 ) ]
+rule (modulo E) lookupkeyhask_1_1121111[color=#ffffff,
+                                        process="lookup <'key', h2.1> as k2.1"]:
+   [ State_1121111( a1.1, h1.1, h2.1, k1.1 ) ]
+  --[ IsNotSet( <'key', h2.1> ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) lookupkeyhask_1_1121111[color=#ffffff,
+                                           process="lookup <'key', h2.1> as k2.1"]:
+     [ State_1121111( a1, h1, h2, k1 ) ] --[ IsNotSet( <'key', h2> ) ]-> [ ]
+  */
+
+rule (modulo E) lookupkeyhask_1_112111[color=#ffffff,
+                                       process="lookup <'key', h1.1> as k1.1"]:
+   [ State_112111( a1.1, h1.1, h2.1 ) ]
+  --[ IsNotSet( <'key', h1.1> ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) lookupkeyhask_1_112111[color=#ffffff,
+                                          process="lookup <'key', h1.1> as k1.1"]:
+     [ State_112111( a1, h1, h2 ) ] --[ IsNotSet( <'key', h1> ) ]-> [ ]
+  */
+
+rule (modulo E) ifawrap_1_11211[color=#ffffff, process="if a1.1='wrap'"]:
+   [ State_11211( a1.1, h1.1, h2.1 ) ]
+  --[ Pred_Not_Eq( a1.1, 'wrap' ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) ifawrap_1_11211[color=#ffffff,
+                                   process="if a1.1='wrap'"]:
+     [ State_11211( a1, h1, h2 ) ] --[ Pred_Not_Eq( a1, 'wrap' ) ]-> [ ]
+  */
+
+rule (modulo E) lookupatthasa_1_1121[color=#ffffff,
+                                     process="lookup <'att', h1.1> as a1.1"]:
+   [ State_1121( h1.1, h2.1 ) ] --[ IsNotSet( <'att', h1.1> ) ]-> [ ]
+
+  /*
+  rule (modulo AC) lookupatthasa_1_1121[color=#ffffff,
+                                        process="lookup <'att', h1.1> as a1.1"]:
+     [ State_1121( h1, h2 ) ] --[ IsNotSet( <'att', h1> ) ]-> [ ]
+  */
+
+rule (modulo E) p_1_[color=#ffffff, process="!"]:
+   [ !Semistate_1( ) ]
   -->
-   [ State_1121111111( a1, h1, h2, k1, k2 ), Out( senc(k2, k1) ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1121111111[color=#ffffff, process="0"]:
-   [ State_1121111111( a1, h1, h2, k1, k2 ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_11211112[color=#ffffff, process="0"]:
-   [ State_11211112( a1, h1, h2, k1 ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1121112[color=#ffffff, process="0"]:
-   [ State_1121112( a1, h1, h2 ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_112112[color=#ffffff, process="0"]:
-   [ State_112112( a1, h1, h2 ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_11212[color=#ffffff, process="0"]:
-   [ State_11212( h1, h2 ) ] --> [ ]
+   [
+   State_1111111( ), State_1111112( ), State_111112( ), State_11112( ),
+   State_1112( ), State_112( ), State_12( )
+   ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) inhsencmk_0_12[color=#ffffff,
-                               process="in(<h1, senc(m, k)>);"]:
-   [ State_12( ), In( <h1, senc(m, k)> ) ] --> [ State_121( h1, k, m ) ]
+                               process="in(<h1.2, senc(m.3, k.4)>);"]:
+   [ State_12( ), In( <h1.2, senc(m.3, k.4)> ) ]
+  -->
+   [ State_121( h1.2, m.3, k.4 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) inhsencmk_0_12[color=#ffffff,
+                                  process="in(<h1.2, senc(m.3, k.4)>);"]:
+     [ State_12( ), In( <h1, senc(m, k)> ) ] --> [ State_121( h1, m, k ) ]
+  */
 
 rule (modulo E) lookupatthasa_0_121[color=#ffffff,
-                                    process="lookup <'att', h1> as a1"]:
-   [ State_121( h1, k, m ) ]
-  --[ IsIn( <'att', h1>, a1 ) ]->
-   [ State_1211( a1, h1, k, m ) ]
+                                    process="lookup <'att', h1.2> as a1.2"]:
+   [ State_121( h1.2, m.3, k.4 ) ]
+  --[ IsIn( <'att', h1.2>, a1.2 ) ]->
+   [ State_1211( a1.2, h1.2, m.3, k.4 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_0_121[color=#ffffff,
+                                       process="lookup <'att', h1.2> as a1.2"]:
+     [ State_121( h1, m, k ) ]
+    --[ IsIn( <'att', h1>, a1 ) ]->
+     [ State_1211( a1, h1, m, k ) ]
+  */
 
-rule (modulo E) lookupatthasa_1_121[color=#ffffff,
-                                    process="lookup <'att', h1> as a1"]:
-   [ State_121( h1, k, m ) ]
-  --[ IsNotSet( <'att', h1> ) ]->
-   [ State_1212( h1, k, m ) ]
+rule (modulo E) ifawrap_0_1211[color=#ffffff, process="if a1.2='wrap'"]:
+   [ State_1211( a1.2, h1.2, m.3, k.4 ) ]
+  --[ Pred_Eq( a1.2, 'wrap' ) ]->
+   [ State_12111( a1.2, h1.2, m.3, k.4 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifawrap_0_1211[color=#ffffff, process="if a1='wrap'"]:
-   [ State_1211( a1, h1, k, m ) ]
-  --[ Pred_Eq( a1, 'wrap' ) ]->
-   [ State_12111( a1, h1, k, m ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifawrap_1_1211[color=#ffffff, process="if a1='wrap'"]:
-   [ State_1211( a1, h1, k, m ) ]
-  --[ Pred_Not_Eq( a1, 'wrap' ) ]->
-   [ State_12112( a1, h1, k, m ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifawrap_0_1211[color=#ffffff, process="if a1.2='wrap'"]:
+     [ State_1211( a1, h1, m, k ) ]
+    --[ Pred_Eq( a1, 'wrap' ) ]->
+     [ State_12111( a1, h1, m, k ) ]
+  */
 
 rule (modulo E) lookupkeyhask_0_12111[color=#ffffff,
-                                      process="lookup <'key', h1> as k1"]:
-   [ State_12111( a1, h1, k, m ) ]
-  --[ IsIn( <'key', h1>, k1 ) ]->
-   [ State_121111( a1, h1, k, k1, m ) ]
+                                      process="lookup <'key', h1.2> as k1.2"]:
+   [ State_12111( a1.2, h1.2, m.3, k.4 ) ]
+  --[ IsIn( <'key', h1.2>, k1.2 ) ]->
+   [ State_121111( a1.2, h1.2, k1.2, m.3, k.4 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupkeyhask_0_12111[color=#ffffff,
+                                         process="lookup <'key', h1.2> as k1.2"]:
+     [ State_12111( a1, h1, m, k ) ]
+    --[ IsIn( <'key', h1>, k1 ) ]->
+     [ State_121111( a1, h1, k1, m, k ) ]
+  */
 
-rule (modulo E) lookupkeyhask_1_12111[color=#ffffff,
-                                      process="lookup <'key', h1> as k1"]:
-   [ State_12111( a1, h1, k, m ) ]
-  --[ IsNotSet( <'key', h1> ) ]->
-   [ State_121112( a1, h1, k, m ) ]
+rule (modulo E) ifkk_0_121111[color=#ffffff, process="if k1.2=k.4"]:
+   [ State_121111( a1.2, h1.2, k1.2, m.3, k.4 ), Fr( h2.2 ) ]
+  --[ Pred_Eq( k1.2, k.4 ) ]->
+   [ State_12111111( a1.2, h1.2, h2.2, k1.2, m.3, k.4 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifkk_0_121111[color=#ffffff, process="if k1=k"]:
-   [ State_121111( a1, h1, k, k1, m ) ]
-  --[ Pred_Eq( k1, k ) ]->
-   [ State_1211111( a1, h1, k, k1, m ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) ifkk_1_121111[color=#ffffff, process="if k1=k"]:
-   [ State_121111( a1, h1, k, k1, m ) ]
-  --[ Pred_Not_Eq( k1, k ) ]->
-   [ State_1211112( a1, h1, k, k1, m ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) newh_0_1211111[color=#ffffff, process="new h2;"]:
-   [ State_1211111( a1, h1, k, k1, m ), Fr( h2 ) ]
-  -->
-   [ State_12111111( a1, h1, h2, k, k1, m ) ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifkk_0_121111[color=#ffffff, process="if k1.2=k.4"]:
+     [ State_121111( a1, h1, k1, m, k ), Fr( h2 ) ]
+    --[ Pred_Eq( k1, k ) ]->
+     [ State_12111111( a1, h1, h2, k1, m, k ) ]
+  */
 
 rule (modulo E) eventUnwrappedhm_0_12111111[color=#ffffff,
-                                            process="event Unwrapped( h2, m );"]:
-   [ State_12111111( a1, h1, h2, k, k1, m ) ]
-  --[ Unwrapped( h2, m ) ]->
-   [ State_121111111( a1, h1, h2, k, k1, m ) ]
+                                            process="event Unwrapped( h2.2, m.3 );"]:
+   [ State_12111111( a1.2, h1.2, h2.2, k1.2, m.3, k.4 ) ]
+  --[ Unwrapped( h2.2, m.3 ) ]->
+   [ State_121111111( a1.2, h1.2, h2.2, k1.2, m.3, k.4 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) eventUnwrappedhm_0_12111111[color=#ffffff,
+                                               process="event Unwrapped( h2.2, m.3 );"]:
+     [ State_12111111( a1, h1, h2, k1, m, k ) ]
+    --[ Unwrapped( h2, m ) ]->
+     [ State_121111111( a1, h1, h2, k1, m, k ) ]
+  */
 
 rule (modulo E) insertkeyhm_0_121111111[color=#ffffff,
-                                        process="insert <'key', h2>,m;"]:
-   [ State_121111111( a1, h1, h2, k, k1, m ) ]
-  --[ Insert( <'key', h2>, m ) ]->
-   [ State_1211111111( a1, h1, h2, k, k1, m ) ]
+                                        process="insert <'key', h2.2>,m.3;"]:
+   [ State_121111111( a1.2, h1.2, h2.2, k1.2, m.3, k.4 ) ]
+  --[ Insert( <'key', h2.2>, m.3 ) ]->
+   [ State_1211111111( a1.2, h1.2, h2.2, k1.2, m.3, k.4 ) ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) insertkeyhm_0_121111111[color=#ffffff,
+                                           process="insert <'key', h2.2>,m.3;"]:
+     [ State_121111111( a1, h1, h2, k1, m, k ) ]
+    --[ Insert( <'key', h2>, m ) ]->
+     [ State_1211111111( a1, h1, h2, k1, m, k ) ]
+  */
 
 rule (modulo E) insertattrhwrap_0_1211111111[color=#ffffff,
-                                             process="insert <'attr', h2>,'wrap';"]:
-   [ State_1211111111( a1, h1, h2, k, k1, m ) ]
-  --[ Insert( <'attr', h2>, 'wrap' ) ]->
-   [ State_12111111111( a1, h1, h2, k, k1, m ) ]
+                                             process="insert <'attr', h2.2>,'wrap';"]:
+   [ State_1211111111( a1.2, h1.2, h2.2, k1.2, m.3, k.4 ) ]
+  --[ Insert( <'attr', h2.2>, 'wrap' ) ]->
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) insertattrhwrap_0_1211111111[color=#ffffff,
+                                                process="insert <'attr', h2.2>,'wrap';"]:
+     [ State_1211111111( a1, h1, h2, k1, m, k ) ]
+    --[ Insert( <'attr', h2>, 'wrap' ) ]->
+     [ ]
+  */
 
-rule (modulo E) p_0_12111111111[color=#ffffff, process="0"]:
-   [ State_12111111111( a1, h1, h2, k, k1, m ) ] --> [ ]
+rule (modulo E) ifkk_1_121111[color=#ffffff, process="if k1.2=k.4"]:
+   [ State_121111( a1.2, h1.2, k1.2, m.3, k.4 ) ]
+  --[ Pred_Not_Eq( k1.2, k.4 ) ]->
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifkk_1_121111[color=#ffffff, process="if k1.2=k.4"]:
+     [ State_121111( a1, h1, k1, m, k ) ] --[ Pred_Not_Eq( k1, k ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_1211112[color=#ffffff, process="0"]:
-   [ State_1211112( a1, h1, k, k1, m ) ] --> [ ]
+rule (modulo E) lookupkeyhask_1_12111[color=#ffffff,
+                                      process="lookup <'key', h1.2> as k1.2"]:
+   [ State_12111( a1.2, h1.2, m.3, k.4 ) ]
+  --[ IsNotSet( <'key', h1.2> ) ]->
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupkeyhask_1_12111[color=#ffffff,
+                                         process="lookup <'key', h1.2> as k1.2"]:
+     [ State_12111( a1, h1, m, k ) ] --[ IsNotSet( <'key', h1> ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_121112[color=#ffffff, process="0"]:
-   [ State_121112( a1, h1, k, m ) ] --> [ ]
+rule (modulo E) ifawrap_1_1211[color=#ffffff, process="if a1.2='wrap'"]:
+   [ State_1211( a1.2, h1.2, m.3, k.4 ) ]
+  --[ Pred_Not_Eq( a1.2, 'wrap' ) ]->
+   [ ]
 
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) ifawrap_1_1211[color=#ffffff, process="if a1.2='wrap'"]:
+     [ State_1211( a1, h1, m, k ) ] --[ Pred_Not_Eq( a1, 'wrap' ) ]-> [ ]
+  */
 
-rule (modulo E) p_0_12112[color=#ffffff, process="0"]:
-   [ State_12112( a1, h1, k, m ) ] --> [ ]
+rule (modulo E) lookupatthasa_1_121[color=#ffffff,
+                                    process="lookup <'att', h1.2> as a1.2"]:
+   [ State_121( h1.2, m.3, k.4 ) ] --[ IsNotSet( <'att', h1.2> ) ]-> [ ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1212[color=#ffffff, process="0"]:
-   [ State_1212( h1, k, m ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) lookupatthasa_1_121[color=#ffffff,
+                                       process="lookup <'att', h1.2> as a1.2"]:
+     [ State_121( h1, m, k ) ] --[ IsNotSet( <'att', h1> ) ]-> [ ]
+  */
 
 restriction set_in:
   "∀ x y #t3.
@@ -778,25 +849,67 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule lookupatthasa_0_11111121: 
+Failed to derive Variable(s): a.1
+
+Rule lookupatthasa_0_1111121: 
+Failed to derive Variable(s): a.2
+
+Rule inhsencmk_0_11112: 
+Failed to derive Variable(s): m.1, k.2
+
+Rule lookupatthasa_0_111121: 
+Failed to derive Variable(s): a.3
+
+Rule lookupkeyhaskp_0_11112111: 
+Failed to derive Variable(s): kp.1
+
+Rule lookupatthasa_0_11121: 
+Failed to derive Variable(s): a.4
+
+Rule lookupkeyhask_0_1112111: 
+Failed to derive Variable(s): k.3
+
+Rule lookupatthasa_0_1121: 
+Failed to derive Variable(s): a1.1
+
+Rule lookupkeyhask_0_112111: 
+Failed to derive Variable(s): k1.1
+
+Rule lookupkeyhask_0_1121111: 
+Failed to derive Variable(s): k2.1
+
+Rule inhsencmk_0_12: 
+Failed to derive Variable(s): m.3, k.4
+
+Rule lookupatthasa_0_121: 
+Failed to derive Variable(s): a1.2
+
+Rule lookupkeyhask_0_12111: 
+Failed to derive Variable(s): k1.2
+*/
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
-
-  output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 375.914539274s
-  can_obtain_key (exists-trace): verified (24 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -804,7 +917,11 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 375.914539274s
+  processing time: 400.01s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   can_obtain_key (exists-trace): verified (24 steps)
 
 ==============================================================================

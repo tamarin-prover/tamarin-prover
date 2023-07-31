@@ -68,6 +68,8 @@ library
       Term.Subsumption
       Term.Substitution
 
+      Term.Macro
+
       Term.Rewriting.Definitions
       Term.Rewriting.Norm
 

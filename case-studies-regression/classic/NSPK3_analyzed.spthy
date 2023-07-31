@@ -10,6 +10,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Register_pk:
    [ Fr( ~ltkA ) ]
   -->
@@ -354,28 +358,33 @@ solve( Secret( A, B, s ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/classic/NSPK3.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/classic/NSPK3.spthy
-
-  output:          examples/classic/NSPK3.spthy.tmp
-  processing time: 1.955963514s
-  types (all-traces): verified (33 steps)
-  nonce_secrecy (all-traces): falsified - found trace (16 steps)
-  injective_agree (all-traces): falsified - found trace (14 steps)
-  session_key_setup_possible (exists-trace): verified (5 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -383,7 +392,8 @@ summary of summaries:
 analyzed: examples/classic/NSPK3.spthy
 
   output:          examples/classic/NSPK3.spthy.tmp
-  processing time: 1.955963514s
+  processing time: 1.63s
+  
   types (all-traces): verified (33 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)
   injective_agree (all-traces): falsified - found trace (14 steps)

@@ -10,6 +10,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) NewKey:
    [ Fr( ~h ), Fr( ~k ) ]
   --[ NewKey( ~h, ~k ) ]->
@@ -65,26 +69,31 @@ guarded formula characterizing all counter-examples:
 simplify
 by contradiction /* from formulas */
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/loops/Minimal_Crypto_API.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/Minimal_Crypto_API.spthy
-
-  output:          examples/loops/Minimal_Crypto_API.spthy.tmp
-  processing time: 0.077715138s
-  NewKey_invariant (all-traces): verified (8 steps)
-  NewKey_secrecy (all-traces): verified (2 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -92,7 +101,8 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Crypto_API.spthy
 
   output:          examples/loops/Minimal_Crypto_API.spthy.tmp
-  processing time: 0.077715138s
+  processing time: 0.12s
+  
   NewKey_invariant (all-traces): verified (8 steps)
   NewKey_secrecy (all-traces): verified (2 steps)
 
