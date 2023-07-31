@@ -475,13 +475,13 @@ restriction OnlyOnceV:
 
 #### Less than 
 
-If we use the `multiset` built-in we can construct numbers as
-"1+1+...+1", and have a restriction enforcing that one number is less than
+If we use the `natural-numbers` built-in we can construct numbers as
+"%1 %+ ... %+ %1", and have a restriction enforcing that one number is less than
 another, say `LessThan`:
 
 ```
 restriction LessThan:
-  "All x y #i. LessThan(x,y)@#i ==> Ex z. x + z = y"
+  "All x y #i. LessThan(x,y)@#i ==> x ⊏ y"
 ```
 
 You would then add the `LessThan` action fact to a rule where you want
@@ -491,7 +491,7 @@ Similarly you can use a `GreaterThan` where we want `x` to be strictly larger th
 
 ```
 restriction GreaterThan:
-  "All x y #i. GreaterThan(x,y)@#i ==> Ex z. x = y + z"
+  "All x y #i. GreaterThan(x,y)@#i ==> y ⊏ x"
 ```
 
 
@@ -518,14 +518,14 @@ Note that form can refer to the timepoint #NOW, which will be bound to the
 time-point of the current instantiation of this rule. Consider the following example:
 
 ```
-builtins: multiset
+builtins: natural-numbers
 
-predicates: Smaller(x,y) <=> Ex z. x + z = y
+predicates: Smaller(x,y) <=> x ⊏ y
           , Equal(x,y)   <=> x = y
           , Added(x,y)   <=> Ex #a. A(x,y)@a & #a < #NOW
 
 rule A:
-  [In(x), In(y)] --[ _restrict(Smaller(x,y)), A(x,y), B('1','1'+'1')]-> [ X('A')]
+  [In(x), In(y)] --[ _restrict(Smaller(x,y)), A(x,y), B(%1,%1 %+ %1)]-> [ X('A')]
 
 rule B:
     [In(x), In(y)] --[ _restrict(Added(x,y))]-> []

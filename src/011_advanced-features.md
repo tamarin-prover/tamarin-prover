@@ -663,64 +663,6 @@ tamarin-prover Example.spthy --prove +RTS -N2 -RTS
 
 to prove the lemmas in file `Example.spthy` using two cores.
 
-Reasoning about Exclusivity: Facts Symbols with Injective Instances
--------------------------------------------------------------------
-
-We say that a fact symbol `f` has *injective instances* with respect to a
-multiset rewriting system `R`, if there is no reachable state of
-the multiset rewriting system `R` with more than one instance of an `f`-fact
-with the same term as a first argument. Injective facts typically arise from
-modeling databases using linear facts. An example of a fact with injective
-instances is the `Store`-fact in the following multiset rewriting system.
-
-```
-  rule CreateKey: [ Fr(handle), Fr(key) ] --> [ Store(handle, key) ]
-
-  rule NextKey:   [ Store(handle, key) ] --> [ Store(handle, h(key)) ]
-
-  rule DelKey:    [ Store(handle,key) ] --> []
-```
-
-When reasoning about the above multiset rewriting system, we exploit that
-`Store` has injective instances to prove that after the `DelKey` rule no other
-rule using the same handle can be applied. This proof uses trace induction and
-the following constraint-reduction rule that exploits facts with unique
-instances.
-
-Let `f` be a fact symbol with injective instances. Let `i`, `j`, and `k` be temporal
-variables ordered according to
-
-```
-  i < j < k
-```
-
-and let there be an edge from `(i,u)` to `(k,w)` for some indices `u` and `v`.
-Then, we have a contradiction, if the premise `(k,w)` requires a fact `f(t,...)`
-and there is a premise `(j,v)` requiring a fact `f(t,...)`.  These two premises
-must be merged because the edge `(i,u) >-> (k,w)` crosses `j` and the state at
-`j` therefore contains `f(t,...)`. This merging is not possible due to the
-ordering constraints `i < j < k`.
-
-Note that computing the set of fact symbols with injective instances is
-undecidable in general. We therefore compute an under-approximation to this
-set using the following simple heuristic. A fact tag is guaranteed to have
-injective instance, if
-
-1. the fact-symbol is linear, and
-2. every introduction of such a fact is protected by a `Fr`-fact of the first term, and
-3. every rule has at most one copy of this fact-tag in the conclusion and the first term arguments agree.
-
-We exclude facts that are not copied in a rule, as they are already handled
-properly by the naive backwards reasoning.
-
-Note that this support for reasoning about exclusivity was sufficient for our
-case studies, but it is likely that more complicated case studies require
-additional support. For example, that fact symbols with injective instances
-can be specified by the user and the soundness proof that these symbols have
-injective instances is constructed explicitly using the Tamarin prover.
-Please tell us, if you encounter limitations in your case studies:
-https://github.com/tamarin-prover/tamarin-prover/issues.
-
 
 Equation Store
 --------------
@@ -761,3 +703,114 @@ Logically, the equation store represents expression of the form
       | (Ex y_ol1 ... y_olk. x_ol1 = t_fresh_ol1 & ... & x_1lm = t_fresh_1lm)
       )
 ```
+
+
+Subterms
+--------
+
+The subterm predicate (written `<<` or `⊏`) captures a dependency relation on terms. It can be used just as `=` in lemmas and restrictions. Intuitively, if `x` is a subterm of `t`, then `x` is needed to compute `t`. This relation is a strict partial order, satisfies transitivity, and, most importantly, is consistent with the equational theory. For example, `x⊏h(x)` and also `c ++ a ⊏ a ++ b ++ c` hold.
+
+It gets more complicated when working with operators that are on top of a rewriting rule's left side (excluding AC rules), e.g., `fst`/`snd` for pairs: `fst(<a,b>) ↦ a`, `⊕` for xor and `adec`/`sdec` for decryption. We call these operators *reducible*. These cases do not happen in practice as, it is not even clear what the relation intuitively means, e.g., for `x⊏x⊕y` one could argue that `x` was needed to construct `x⊕y` but if `y` is instantiated with `x`, then `x⊕y=x⊕x=0` which clearly does not contain `x`.
+
+#### Non-Provable Lemmas
+
+Tamarins reasoning for subterms works well for irreducible operators. For reducible operators, however, the following situation can appear: No more goals are left but there are reducible operators in subterms. Usually, we have found a trace if no goals are left. However, if we have, e.g., `x⊏x⊕y` as a constraint left, then our constraint solving algorithm cannot solve this constraint, i.e., it is not clear whether we found a trace. In such a situation, Tamarin indicates with a yellow color in the proof tree that this part of the proof cannot be completed, i.e., there could be a trace, but we're not sure. Even with such a yellow part, it can be that we find a trace in another part of the proof tree and prove an `exists-trace` lemma.
+
+In the following picture one can see the subterm with the reducible operator `fst` on the right side. Therefore, on the left side, the proof is marked yellow (with the blue line marking the current position). Also, this example demonstrates in `lemma GreenYellow`, that in an `exists-trace` lemma, a trace can be still found and the lemma proven even if there is a part of the proof that cannot be finished. Analogously, `lemma RedYellow` demonstrates that a `all-traces` lemma can still be disproven if a violating trace was found. The last two lemmas are ones where no traces were found in the rest of the proof, thus the overall result of the computation is `Tamarin cannot prove this property`.
+
+![Subterms](../images/YellowSubterms.png "Subterms")\
+
+
+#### Subterm Store
+
+Subterms are solved by recursively deconstructing the right side which basically boils down to replacing
+`t ⊏ f(t1,...,tn)` by the disjunction `t=t1 ∨ t⊏t1 ∨ ··· ∨ t=tn ∨ t⊏tn`. This disjunction can be quite large, so we want to delay it if not needed. The subterm store is the tool to do exactly this. It collects subterms, negative subterms (e.g., `¬ x ⊏ h(y)` being split to `x≠y ∧ ¬x⊏y`) and solved subterms which were already split. With this collection, many simplifications can be applied without splitting, especially concerning transitivity.
+
+Subterms are very well suited for `nat` terms as it reflects the smaller-than relation on natural numbers. Therefore, Tamarin provides special algorithms in deducing contradictions on natural numbers. Notably, if we are looking at natural numbers, we can deduce `x⊏y` from `(¬y⊏x ∧ x≠y)` which is not possible for normal subterms.
+
+For more detailed explanations on subterms and numbers, look at the paper "Subterm-based proof techniques for improving the automation and scope of security protocol analysis" which introduced subterms and numbers to Tamarin.
+
+
+Reasoning about Exclusivity: Facts Symbols with Injective Instances
+-------------------------------------------------------------------
+
+We say that a fact symbol `F` has *injective instances* with respect to a
+multiset rewriting system `R`, if there is no reachable state of
+the multiset rewriting system `R` with more than one instance of an `F`-fact
+with the same term as a first argument. Injective facts typically arise from
+modeling databases using linear facts. An example of a fact with injective
+instances is the `Store`-fact in the following multiset rewriting system.
+
+```
+  rule CreateKey: [ Fr(handle), Fr(key) ] --> [ Store(handle, key) ]
+
+  rule NextKey:   [ Store(handle, key) ] --> [ Store(handle, h(key)) ]
+
+  rule DelKey:    [ Store(handle,key) ] --> []
+```
+
+When reasoning about the above multiset rewriting system, we exploit that
+`Store` has injective instances to prove that after the `DelKey` rule no other
+rule using the same handle can be applied. This proof uses trace induction and
+the following constraint-reduction rule that exploits facts with unique
+instances.
+
+Let `F` be a fact symbol with injective instances. Let `i`, `j`, and `k` be temporal variables ordered according to
+
+```
+  i < j < k
+```
+
+and let there be an edge from `(i,u)` to `(k,w)` for some indices `u` and `v`, as well as an injective fact `F(t,...)` in the conclusion `(i,u)`.
+
+Then, we have a contradiction either if:
+ 1) both the premises `(k,w)` and `(j,v)` are consuming and require a fact `F(t,...)`.
+ 2) both the conclusions `(i,u)` and `(j,v)` produce a fact `F(t,..)`.
+
+In the first case, `(k,w)` and `(j,v)` would have to be merged, and in the second case `(i,u)` and `(j,v)` would have to be merged. This is because the edge `(i,u) >-> (k,w)` crosses `j` and the state at `j` therefore contains `F(t,...)`. The merging is not possible due to the
+ordering constraints `i < j < k`.
+
+
+#### Detection of Injective Facts
+
+Note that computing the set of fact symbols with injective instances is undecidable in general. We therefore compute an under-approximation to this set using the following simple heuristic:
+
+We check for each occurrence of the fact-tag in a rule that there is no other occurrence with the same first term and
+1. either there is a Fr-fact of the first term as a premise
+2. or there is exactly one consume fact-tag with the same first term in a premise
+
+We exclude facts that are not copied in a rule, as they are already handled properly by the naive backwards reasoning.
+
+Additionally, we determine the monotonic term positions which are
+- Constant (`=`)
+- Increasing/Decreasing (`<`/`>`)
+- Strictly Increasing/Decreasing (`≤`/`≥`)
+Positions can also be inside tuples if these tuples are always explicitly used in the rules.
+
+In the example above, the `key` in `Store` is strictly increasing as `key` is a syntactic subterm of `h(key)` and `h` is not a reducible operator (not appearing on the top of a rewriting rules left side).
+
+These detected injective facts can be viewed on the top of the right side when clicking on "Message Rewriting Rules". The Store would look as follows: `Store(id,<)` indicating that the first term is for identification of the injective fact while the second term is strictly increasing. Possible symbols are `≤`, `≥`, `<`, `>` and `=`. A tuple position is marked with additional parantheses, e.g., `Store(id,(<,≥),=)`.
+
+Note that this support for reasoning about exclusivity was sufficient for our
+case studies, but it is likely that more complicated case studies require
+additional support. For example, that fact symbols with injective instances
+can be specified by the user and the soundness proof that these symbols have
+injective instances is constructed explicitly using the Tamarin prover.
+Please tell us, if you encounter limitations in your case studies:
+https://github.com/tamarin-prover/tamarin-prover/issues.
+
+
+#### Monotonicity
+
+With the monotonic term positions, we can additionally reason as follows: if there are two instances at positions `i` and `j` of an injective fact with the same first term, then
+- for each two terms `s`,`t` at a constant position
+  - (1) `s=t` is deduced
+- for each two terms `s`,`t` at a strictly increasing position:
+  - (2) if `s=t`, then `i=j` is deduced
+  - (3) if `s⊏t`, then `i<j` is deduced
+  - (4) if `i<j` or `j<i`, then `s≠t` is deduced
+  - (5) if `¬s⊏t` and `¬s=t`, then `j<i` is deduced (as t⊏s must hold because of monotonicity)
+- for each two terms `s`,`t` at an increasing position:
+  - (3) if `s⊏t`, then `i<j` is deduced
+  - (5) if `¬s⊏t` and `¬s=t`, then `j<i` is deduced (as t⊏s must hold because of monotonicity)
+- for decreasing and strictly decreasing, the inverse of the increasing cases holds
