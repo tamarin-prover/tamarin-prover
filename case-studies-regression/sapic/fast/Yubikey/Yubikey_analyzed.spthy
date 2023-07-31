@@ -47,13 +47,13 @@ next
           ∧
            (¬(last(#t2))) ∧
            (¬(last(#t1))) ∧
-           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1++z) = tc2) ⇒ ⊥))) ∧
            (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
            (¬(#t1 = #t2)))  ∥
          (∃ x #NOW x.1.
            (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
           ∧
-           (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+           (¬(last(#NOW))) ∧ (∀ z. (x = (z++x.1)) ⇒ ⊥)) )
     case case_1
     solve( (last(#i))  ∥ (∀ #j. (!KU( ~n ) @ #j) ⇒ last(#j)) )
       case case_1
@@ -80,7 +80,7 @@ next
     qed
   next
     case case_2
-    solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+    solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1++z) = tc2) ⇒ ⊥) )
       case case_1
       by contradiction /* from formulas */
     next
@@ -136,20 +136,20 @@ next
             ∧
              (¬(last(#t2))) ∧
              (¬(last(#t1))) ∧
-             (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+             (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1++z) = tc2) ⇒ ⊥))) ∧
              (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
              (¬(#t1 = #t2)))  ∥
            (∃ x #NOW x.1.
              (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
             ∧
-             (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+             (¬(last(#NOW))) ∧ (∀ z. (x = (z++x.1)) ⇒ ⊥)) )
       case case_1
       solve( (last(#i))  ∥
              ((tuple = <sid, k, otc>) ∧
               (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
         case case_1
         solve( State_111111111111111( StateChannel, lock, pid, SL_pid,
-                                      StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), tuple
+                                      StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc++z), tuple
                ) ▶₀ #i )
           case iftuplesecretidkotc_0_11111111111111
           by contradiction /* from formulas */
@@ -160,7 +160,7 @@ next
       qed
     next
       case case_2
-      solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+      solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1++z) = tc2) ⇒ ⊥) )
         case case_1
         by contradiction /* from formulas */
       next
@@ -193,24 +193,25 @@ next
             ∧
              (¬(last(#t2))) ∧
              (¬(last(#t1))) ∧
-             (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+             (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1++z) = tc2) ⇒ ⊥))) ∧
              (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
              (¬(#t1 = #t2)))  ∥
            (∃ x #NOW x.1.
              (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
             ∧
-             (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+             (¬(last(#NOW))) ∧ (∀ z. (x = (z++x.1)) ⇒ ⊥)) )
       case case_1
       solve( (last(#i))  ∥
              ((tuple = <sid, k, otc>) ∧
               (∃ #j. (YubiInit( pid, sid, k ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))) )
         case case_1
         solve( State_111111111111111( StateChannel, lock, pid, SL_pid,
-                                      StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), tuple
+                                      StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc++z), tuple
                ) ▶₀ #i )
           case iftuplesecretidkotc_0_11111111111111
           solve( State_11111111111111( StateChannel, lock, pid, SL_pid,
-                                       StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), <sid, k, otc>
+                                       StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc++z),
+                                       <sid, k, otc>
                  ) ▶₀ #vr )
             case inotc_0_1111111111111_case_1
             solve( State_11111111211111( StateChannel.2, L_pid, SL_pid,
@@ -218,7 +219,7 @@ next
                    ) ▶₀ #j )
               case newk_0_111111112
               solve( State_11111111111111( StateChannel, lock, ~n.9, ~n.3,
-                                           StateChannel.1, YL_pid, ~n.6, nonce.1, npr.1, otc, ~n.7, (otc+z),
+                                           StateChannel.1, YL_pid, ~n.6, nonce.1, npr.1, otc, ~n.7, (otc++z),
                                            <~n.7, ~n.6, otc>
                      ) ▶₀ #vr.8 )
                 case inotc_0_1111111111111_case_1
@@ -232,7 +233,7 @@ next
             case inotc_0_1111111111111_case_2
             solve( !KU( ~n.2 ) @ #vk.2 )
               case insc_0_111111112111111111211_case_1
-              solve( !KU( senc(<~n.7, ('zero'+z), npr>, ~n.6) ) @ #vk.5 )
+              solve( !KU( senc(<~n.7, ('zero'++z), npr>, ~n.6) ) @ #vk.5 )
                 case c_senc
                 by contradiction /* from formulas */
               next
@@ -247,7 +248,7 @@ next
               by contradiction /* from formulas */
             next
               case p_1_
-              solve( !KU( senc(<~n.7, ('zero'+z), npr>, ~n.6) ) @ #vk.5 )
+              solve( !KU( senc(<~n.7, ('zero'++z), npr>, ~n.6) ) @ #vk.5 )
                 case c_senc
                 by contradiction /* from formulas */
               next
@@ -266,7 +267,7 @@ next
       qed
     next
       case case_2
-      solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+      solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1++z) = tc2) ⇒ ⊥) )
         case case_1
         by contradiction /* from formulas */
       next
@@ -314,22 +315,22 @@ next
           ∧
            (¬(last(#t2))) ∧
            (¬(last(#t1))) ∧
-           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1++z) = tc2) ⇒ ⊥))) ∧
            (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
            (¬(#t1 = #t2)))  ∥
          (∃ x #NOW x.1.
            (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
           ∧
-           (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+           (¬(last(#NOW))) ∧ (∀ z. (x = (z++x.1)) ⇒ ⊥)) )
     case case_1
     solve( (last(#i))  ∥ (∀ #j. (!KU( k ) @ #j) ⇒ last(#j)) )
       case case_1
       solve( State_111111111111111( StateChannel, lock, pid, SL_pid,
-                                    StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), tuple
+                                    StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc++z), tuple
              ) ▶₀ #i )
         case iftuplesecretidkotc_0_11111111111111
         solve( State_11111111111111( StateChannel, lock, pid, SL_pid,
-                                     StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), <sid, k, otc>
+                                     StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc++z), <sid, k, otc>
                ) ▶₀ #vr )
           case inotc_0_1111111111111_case_1
           by contradiction /* from formulas */
@@ -341,11 +342,11 @@ next
     next
       case case_2
       solve( State_111111111111111( StateChannel, lock, pid, SL_pid,
-                                    StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), tuple
+                                    StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc++z), tuple
              ) ▶₀ #i )
         case iftuplesecretidkotc_0_11111111111111
         solve( State_11111111111111( StateChannel, lock, pid, SL_pid,
-                                     StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc+z), <sid, k, otc>
+                                     StateChannel.1, YL_pid, k, nonce, npr, otc, sid, (otc++z), <sid, k, otc>
                ) ▶₀ #vr )
           case inotc_0_1111111111111_case_1
           by contradiction /* from formulas */
@@ -357,7 +358,7 @@ next
     qed
   next
     case case_2
-    solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+    solve( (#t1 = #t2)  ∥ (#t2 < #t1)  ∥ (∀ z. ((tc1++z) = tc2) ⇒ ⊥) )
       case case_1
       by contradiction /* from formulas */
     next
@@ -382,30 +383,30 @@ qed
 restriction slightly_weaker_invariant:
   "∀ pid k tc1 tc2 #t1 #t2.
     ((Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)) ⇒
-    ((((#t1 < #t2) ∧ (∃ z. (tc1+z) = tc2)) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
+    ((((#t1 < #t2) ∧ (∃ z. (tc1++z) = tc2)) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
 
 lemma Login_reachable:
-  exists-trace "∃ #i pid k. Login( pid, k, ('one'+'zero') ) @ #i"
+  exists-trace "∃ #i pid k. Login( pid, k, ('one'++'zero') ) @ #i"
 /*
 guarded formula characterizing all satisfying traces:
-"∃ #i pid k. (Login( pid, k, ('one'+'zero') ) @ #i)"
+"∃ #i pid k. (Login( pid, k, ('one'++'zero') ) @ #i)"
 */
 simplify
-solve( Login( pid, k, ('one'+'zero') ) @ #i )
+solve( Login( pid, k, ('one'++'zero') ) @ #i )
   case eventLoginLpidktc_0_11111111111111111
   solve( State_11111111111111111( StateChannel, lock, pid, SL_pid,
-                                  StateChannel.1, YL_pid, k, nonce, npr, otc, secretid, ('one'+'zero'),
+                                  StateChannel.1, YL_pid, k, nonce, npr, otc, secretid, ('one'++'zero'),
                                   tuple
          ) ▶₀ #i )
     case ifSmallerotctc_0_111111111111111_case_2
     solve( State_11111111111111( StateChannel, lock, ~n, SL_pid,
-                                 StateChannel.1, YL_pid, ~n.1, nonce, npr, 'zero', ~n.2, ('one'+'zero'),
+                                 StateChannel.1, YL_pid, ~n.1, nonce, npr, 'zero', ~n.2, ('one'++'zero'),
                                  <~n.2, ~n.1, 'zero'>
            ) ▶₀ #vr.1 )
       case inotc_0_1111111111111
       solve( !KU( ~n.2 ) @ #vk.2 )
         case insc_0_111111112111111111211
-        solve( !KU( senc(<~n.7, ('one'+'zero'), npr>, ~n.6) ) @ #vk.5 )
+        solve( !KU( senc(<~n.7, ('one'++'zero'), npr>, ~n.6) ) @ #vk.5 )
           case insc_0_111111112111111111211
           solve( L_CellLocked( ~n.3, ~n.1 ) ▶₁ #i )
             case inLpidnoncesencsecretidtcnprk_0_1111111111
@@ -415,7 +416,7 @@ solve( Login( pid, k, ('one'+'zero') ) @ #i )
                 case insc_0_111111112111111111111
                 solve( L_CellLocked( ~n.5, ~n.15 ) ▶₄ #vr.17 )
                   case lookupYLpidastc_0_11111111211111111121
-                  solve( L_PureState( ~n.5, ('one'+'zero') ) ▶₁ #vr.20 )
+                  solve( L_PureState( ~n.5, ('one'++'zero') ) ▶₁ #vr.20 )
                     case newk_0_111111112
                     solve( L_CellLocked( ~n.5, ~n.16 ) ▶₂ #vr.23 )
                       case lookupYLpidassc_0_11111111211111111111
@@ -442,27 +443,27 @@ solve( Login( pid, k, ('one'+'zero') ) @ #i )
 qed
 
 lemma Login_reachable_two:
-  exists-trace "∃ #i pid k. Login( pid, k, ('one'+'one'+'zero') ) @ #i"
+  exists-trace "∃ #i pid k. Login( pid, k, ('one'++'one'++'zero') ) @ #i"
 /*
 guarded formula characterizing all satisfying traces:
-"∃ #i pid k. (Login( pid, k, ('one'+'one'+'zero') ) @ #i)"
+"∃ #i pid k. (Login( pid, k, ('one'++'one'++'zero') ) @ #i)"
 */
 simplify
-solve( Login( pid, k, ('one'+'one'+'zero') ) @ #i )
+solve( Login( pid, k, ('one'++'one'++'zero') ) @ #i )
   case eventLoginLpidktc_0_11111111111111111
   solve( State_11111111111111111( StateChannel, lock, pid, SL_pid,
                                   StateChannel.1, YL_pid, k, nonce, npr, otc, secretid,
-                                  ('one'+'one'+'zero'), tuple
+                                  ('one'++'one'++'zero'), tuple
          ) ▶₀ #i )
     case ifSmallerotctc_0_111111111111111_case_2
     solve( State_11111111111111( StateChannel, lock, ~n, SL_pid,
                                  StateChannel.1, YL_pid, ~n.1, nonce, npr, 'zero', ~n.2,
-                                 ('one'+'one'+'zero'), <~n.2, ~n.1, 'zero'>
+                                 ('one'++'one'++'zero'), <~n.2, ~n.1, 'zero'>
            ) ▶₀ #vr.1 )
       case inotc_0_1111111111111
       solve( !KU( ~n.2 ) @ #vk.2 )
         case insc_0_111111112111111111211
-        solve( !KU( senc(<~n.7, ('one'+'one'+'zero'), npr>, ~n.6) ) @ #vk.5 )
+        solve( !KU( senc(<~n.7, ('one'++'one'++'zero'), npr>, ~n.6) ) @ #vk.5 )
           case insc_0_111111112111111111211
           solve( L_CellLocked( ~n.3, ~n.1 ) ▶₁ #i )
             case inLpidnoncesencsecretidtcnprk_0_1111111111
@@ -472,7 +473,7 @@ solve( Login( pid, k, ('one'+'one'+'zero') ) @ #i )
                 case insc_0_111111112111111111111
                 solve( L_CellLocked( ~n.5, ~n.15 ) ▶₄ #vr.17 )
                   case lookupYLpidastc_0_11111111211111111121
-                  solve( L_PureState( ~n.5, ('one'+'one'+'zero') ) ▶₁ #vr.20 )
+                  solve( L_PureState( ~n.5, ('one'++'one'++'zero') ) ▶₁ #vr.20 )
                     case insc_0_111111112111111111111
                     solve( L_CellLocked( ~n.5, ~n.16 ) ▶₂ #vr.23 )
                       case lookupYLpidassc_0_11111111211111111111
@@ -480,7 +481,7 @@ solve( Login( pid, k, ('one'+'one'+'zero') ) @ #i )
                         case newk_0_111111112
                         solve( L_CellLocked( ~n.5, ~n.19 ) ▶₂ #vr.30 )
                           case lookupYLpidassc_0_11111111211111111111
-                          solve( L_PureState( ~n.5, ('one'+'zero') ) ▶₁ #vr.31 )
+                          solve( L_PureState( ~n.5, ('one'++'zero') ) ▶₁ #vr.31 )
                             case newk_0_111111112
                             SOLVED // trace found
                           qed
@@ -528,13 +529,13 @@ next
           ∧
            (¬(last(#t2))) ∧
            (¬(last(#t1))) ∧
-           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1+z) = tc2) ⇒ ⊥))) ∧
+           (((#t1 = #t2) ∨ (#t2 < #t1) ∨ (∀ z. ((tc1++z) = tc2) ⇒ ⊥))) ∧
            (((#t2 = #t1) ∨ (#t1 < #t2))) ∧
            (¬(#t1 = #t2)))  ∥
          (∃ x #NOW x.1.
            (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW)
           ∧
-           (¬(last(#NOW))) ∧ (∀ z. (x = (z+x.1)) ⇒ ⊥)) )
+           (¬(last(#NOW))) ∧ (∀ z. (x = (z++x.1)) ⇒ ⊥)) )
     case case_1
     solve( (last(#t2))  ∥
            (∃ #t1 sid.
@@ -545,11 +546,11 @@ next
              ) ▶₀ #t2 )
         case ifSmallerotctc_0_111111111111111
         solve( State_11111111111111( StateChannel, lock, ~n, SL_pid,
-                                     StateChannel.1, YL_pid, ~n.1, nonce, npr, otc, ~n.2, (otc+z),
+                                     StateChannel.1, YL_pid, ~n.1, nonce, npr, otc, ~n.2, (otc++z),
                                      <~n.2, ~n.1, otc>
                ) ▶₀ #vr.1 )
           case inotc_0_1111111111111_case_1
-          solve( !KU( senc(<~n.6, (otc+z+z.1), npr>, ~n.5) ) @ #vk.5 )
+          solve( !KU( senc(<~n.6, (otc++z++z.1), npr>, ~n.5) ) @ #vk.5 )
             case c_senc
             by contradiction /* from formulas */
           next
@@ -558,7 +559,7 @@ next
           qed
         next
           case inotc_0_1111111111111_case_2
-          solve( !KU( senc(<~n.6, ('zero'+z), npr>, ~n.5) ) @ #vk.5 )
+          solve( !KU( senc(<~n.6, ('zero'++z), npr>, ~n.5) ) @ #vk.5 )
             case c_senc
             by contradiction /* from formulas */
           next
@@ -573,7 +574,7 @@ next
     qed
   next
     case case_2
-    solve( (#t1 = #t2.1)  ∥ (#t2.1 < #t1)  ∥ (∀ z. ((tc1+z) = tc2) ⇒ ⊥) )
+    solve( (#t1 = #t2.1)  ∥ (#t2.1 < #t1)  ∥ (∀ z. ((tc1++z) = tc2) ⇒ ⊥) )
       case case_1
       by contradiction /* from formulas */
     next
@@ -641,14 +642,14 @@ lemma Login_invalidates_smaller_counters:
   all-traces
   "∀ pid k tc1 tc2 #t1 #t2.
     (((Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)) ∧
-     (∃ z. (tc1+z) = tc2)) ⇒
+     (∃ z. (tc1++z) = tc2)) ⇒
     (#t1 < #t2)"
 /*
 guarded formula characterizing all counter-examples:
 "∃ pid k tc1 tc2 #t1 #t2.
   (Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)
  ∧
-  (∃ z. ((tc1+z) = tc2)) ∧ (¬(#t1 < #t2))"
+  (∃ z. ((tc1++z) = tc2)) ∧ (¬(#t1 < #t2))"
 */
 simplify
 solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
@@ -658,14 +659,14 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
          ) ▶₀ #t1 )
     case ifSmallerotctc_0_111111111111111
     solve( State_111111112111111111211( StateChannel.2, ~n, SL_pid.1,
-                                        StateChannel.3, YL_pid.1, ~n.1, lock.1, sid, (otc+z)
+                                        StateChannel.3, YL_pid.1, ~n.1, lock.1, sid, (otc++z)
            ) ▶₀ #t1.1 )
       case lookupYLpidastc_0_11111111211111111121
       solve( State_111111112111111111211( StateChannel.2, ~n.1, SL_pid.1,
-                                          StateChannel.3, YL_pid.1, ~n.5, lock.1, sid, (otc+z)
+                                          StateChannel.3, YL_pid.1, ~n.5, lock.1, sid, (otc++z)
              ) ▶₀ #t1.2 )
         case lookupYLpidastc_0_11111111211111111121
-        by solve( Login( ~n.1, ~n.5, (otc+z+z.1) ) @ #t1 )
+        by solve( Login( ~n.1, ~n.5, (otc++z++z.1) ) @ #t1 )
       qed
     qed
   qed
@@ -817,7 +818,7 @@ rule (modulo E) iftuplesecretidkotc_0_11111111111111[color=#408051,
 restriction Restr_ifSmallerotctc_0_111111111111111_1:
   "∀ x #NOW x.1.
     (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW) ⇒
-    (∃ z. x = (z+x.1))"
+    (∃ z. x = (z++x.1))"
 
 rule (modulo E) ifSmallerotctc_0_111111111111111[color=#408051,
                                                  process="if Smaller( otc.1, tc.1 )"]:
@@ -948,7 +949,7 @@ rule (modulo E) newk_0_111111112[color=#ffffff, process="new k.2;"]:
    State_11111111211111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
                          YL_pid.1, k.2, secretid.2
    ),
-   L_PureState( YL_pid.1, ('one'+'zero') ),
+   L_PureState( YL_pid.1, ('one'++'zero') ),
    L_PureState( SL_pid.1, <secretid.2, k.2, 'zero'> )
    ]
 
@@ -963,7 +964,7 @@ rule (modulo E) newk_0_111111112[color=#ffffff, process="new k.2;"]:
      State_11111111211111( StateChannel, L_pid, SL_pid, StateChannel.1,
                            YL_pid, k, secretid
      ),
-     L_PureState( YL_pid, ('one'+'zero') ),
+     L_PureState( YL_pid, ('one'++'zero') ),
      L_PureState( SL_pid, <secretid, k, 'zero'> )
      ]
   */
@@ -1071,7 +1072,7 @@ rule (modulo E) insc_0_111111112111111111111[color=#40805e,
    In( sc.1 ), L_CellLocked( YL_pid.1, lock.1 )
    ]
   -->
-   [ L_PureState( YL_pid.1, ('one'+sc.1) ) ]
+   [ L_PureState( YL_pid.1, ('one'++sc.1) ) ]
 
   // loop breaker: [2]
   /*
@@ -1084,7 +1085,7 @@ rule (modulo E) insc_0_111111112111111111111[color=#40805e,
      In( sc ), L_CellLocked( YL_pid, lock )
      ]
     -->
-     [ L_PureState( YL_pid, ('one'+sc) ) ]
+     [ L_PureState( YL_pid, ('one'++sc) ) ]
     // loop breaker: [2]
   */
 
@@ -1168,7 +1169,7 @@ rule (modulo E) insc_0_111111112111111111211[color=#40805e,
    ]
   --[ YubiPress( L_pid.1, secretid.2, k.2, tc.2 ) ]->
    [
-   L_PureState( YL_pid.1, ('one'+tc.2) ),
+   L_PureState( YL_pid.1, ('one'++tc.2) ),
    Out( <L_pid.1, nonce.2, senc(<secretid.2, tc.2, npr.2>, k.2)> )
    ]
 
@@ -1184,7 +1185,7 @@ rule (modulo E) insc_0_111111112111111111211[color=#40805e,
      ]
     --[ YubiPress( L_pid, secretid, k, tc ) ]->
      [
-     L_PureState( YL_pid, ('one'+tc) ),
+     L_PureState( YL_pid, ('one'++tc) ),
      Out( <L_pid, nonce, senc(<secretid, tc, npr>, k)> )
      ]
     // loop breaker: [4]
@@ -1205,17 +1206,18 @@ restriction single_session:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  inLpidnoncesencsecretidtcnprk_0_1111111111
-Failed to derive Variable(s): k.1, npr.1, secretid.1, tc.1
+Derivation Checks
+=================
+
+  Derivation checks timed out. Use --derivcheck-timeout=INT to configure timeout, 0 to deactivate.
 */
 
 /*
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
@@ -1230,7 +1232,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 9.82s
+  processing time: 12.57s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

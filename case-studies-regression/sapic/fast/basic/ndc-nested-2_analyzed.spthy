@@ -245,50 +245,54 @@ restriction progressInit:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  MessageIDRule
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule MessageIDRule: 
 Failed to derive Variable(s): ~mid_
-  
-  Init
+
+Rule Init: 
 Failed to derive Variable(s): ~prog_
-  
-  eventStart_0_
+
+Rule eventStart_0_: 
 Failed to derive Variable(s): ~prog_
-  
-  p_0_11
+
+Rule p_0_11: 
 Failed to derive Variable(s): ~prog_
-  
-  p_1_11
+
+Rule p_1_11: 
 Failed to derive Variable(s): ~prog_, ~prog_111
-  
-  eventA_0_111
+
+Rule eventA_0_111: 
 Failed to derive Variable(s): ~prog_, ~prog_111
-  
-  p_0_1111
+
+Rule p_0_1111: 
 Failed to derive Variable(s): ~prog_, ~prog_111
-  
-  p_0_121
+
+Rule p_0_121: 
 Failed to derive Variable(s): ~prog_
-  
-  p_1_121
+
+Rule p_1_121: 
 Failed to derive Variable(s): ~prog_, ~prog_1211
-  
-  eventB_0_1211
+
+Rule eventB_0_1211: 
 Failed to derive Variable(s): ~prog_, ~prog_1211
-  
-  p_0_12111
+
+Rule p_0_12111: 
 Failed to derive Variable(s): ~prog_, ~prog_1211
-  
-  p_0_122
+
+Rule p_0_122: 
 Failed to derive Variable(s): ~prog_
-  
-  p_1_122
+
+Rule p_1_122: 
 Failed to derive Variable(s): ~prog_, ~prog_1221
-  
-  eventC_0_1221
+
+Rule eventC_0_1221: 
 Failed to derive Variable(s): ~prog_, ~prog_1221
-  
-  p_0_12211
+
+Rule p_0_12211: 
 Failed to derive Variable(s): ~prog_, ~prog_1221
 */
 
@@ -296,8 +300,8 @@ Failed to derive Variable(s): ~prog_, ~prog_1221
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
@@ -312,9 +316,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-2.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-2.spthy.tmp
-  processing time: 0.15s
+  processing time: 0.19s
   
-  WARNING: 15 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   A_possible (exists-trace): verified (7 steps)

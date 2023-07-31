@@ -14,6 +14,8 @@ equations:
 
 
 
+
+
 rule (modulo E) PCR_Init:
    [ Fr( ~aik ) ]
   --[ PCR_Init( ), PCR_Write( 'pcr0' ) ]->
@@ -408,8 +410,8 @@ Failed to derive Variable(s): pk
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 0bae6da59a0dc9ff65d82792478deb61a5dcaf90 (with uncommited changes), branch: subterm-new
-Compiled at: 2023-07-27 11:42:57.499991562 UTC
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
@@ -424,7 +426,7 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.77s
+  processing time: 0.45s
   
   WARNING: 1 wellformedness check failed!
   

@@ -957,32 +957,36 @@ restriction single_session:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  p_1_111
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule p_1_111: 
 Failed to derive Variable(s): skV.1
-  
-  insencprgprogsharedkey_0_111111111
+
+Rule insencprgprogsharedkey_0_111111111: 
 Failed to derive Variable(s): prog2.1
-  
-  p_1_1111111111
+
+Rule p_1_1111111111: 
 Failed to derive Variable(s): token.1
-  
-  insencaskxtkntokensharedkey_0_1121111111111111
+
+Rule insencaskxtkntokensharedkey_0_1121111111111111: 
 Failed to derive Variable(s): token2.1, x.2
 */
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 4b98299e4a9d45b005a55cefa35edd01c0ae0eb3 (with uncommited changes), branch: issues527
-Compiled at: 2023-07-03 08:19:31.808496576 UTC
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -991,9 +995,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 3.45s
+  processing time: 2.54s
   
-  WARNING: 4 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   attested_comput (all-traces): verified (19 steps)
