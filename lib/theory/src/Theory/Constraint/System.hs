@@ -86,6 +86,7 @@ module Theory.Constraint.System (
   , pcTrueSubterm
   , pcVerbose
   , pcConstantRHS
+  , pcIsSapic
   , dpcPCLeft
   , dpcPCRight
   , dpcProtoRules
@@ -172,6 +173,7 @@ module Theory.Constraint.System (
   , isCorrectDG
   , getMirrorDG
   , getMirrorDGandEvaluateRestrictions
+  , evaluateRestrictions
   , doRestrictionsHold
   , filterRestrictions
 
@@ -204,6 +206,10 @@ module Theory.Constraint.System (
   , sEqStore
   , sSubst
   , sConjDisjEqs
+
+  -- ** Subterms
+  , module Theory.Tools.SubtermStore
+  , sSubtermStore
 
   -- ** Formulas
   , sFormulas
@@ -274,7 +280,9 @@ import           Theory.Constraint.System.Constraints
 --import           Theory.Constraint.Solver.Heuristics
 import           Theory.Model
 import           Theory.Text.Pretty
+import           Theory.Tools.SubtermStore
 import           Theory.Tools.EquationStore
+import           Theory.Tools.InjectiveFactInstances
 
 import           System.FilePath
 import           Text.Show.Functions()
@@ -370,6 +378,7 @@ data System = System
     , _sEdges          :: S.Set Edge
     , _sLessAtoms      :: S.Set (NodeId, NodeId, Reason)
     , _sLastAtom       :: Maybe NodeId
+    , _sSubtermStore   :: SubtermStore
     , _sEqStore        :: EqStore
     , _sFormulas       :: S.Set LNGuarded
     , _sSolvedFormulas :: S.Set LNGuarded
@@ -708,7 +717,7 @@ data InductionHint = UseInduction | AvoidInduction
 data ProofContext = ProofContext
        { _pcSignature          :: SignatureWithMaude
        , _pcRules              :: ClassifiedRules
-       , _pcInjectiveFactInsts :: S.Set FactTag
+       , _pcInjectiveFactInsts :: S.Set (FactTag, [[MonotonicBehaviour]])
        , _pcSourceKind         :: SourceKind
        , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
@@ -721,6 +730,7 @@ data ProofContext = ProofContext
        , _pcDiffContext        :: Bool -- true if diff proof
        , _pcTrueSubterm        :: Bool -- true if in all rules the RHS is a subterm of the LHS
        , _pcConstantRHS        :: Bool -- true if there are rules with a constant RHS
+       , _pcIsSapic            :: Bool -- true if the model was originally a sapic process
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -778,7 +788,7 @@ $(mkLabels [''DiffSystem])
 -- | The empty constraint system, which is logically equivalent to true.
 emptySystem :: SourceKind -> Bool -> System
 emptySystem d isdiff = System
-    M.empty S.empty S.empty Nothing emptyEqStore
+    M.empty S.empty S.empty Nothing emptySubtermStore emptyEqStore
     S.empty S.empty S.empty
     M.empty 0 d isdiff
 
@@ -1008,6 +1018,8 @@ safePartialAtomValuation ctxt sys =
     before     = alwaysBefore sys
     lessRel    = rawLessRel sys
     nodesAfter = \i -> filter (i /=) $ S.toList $ D.reachableSet [i] lessRel
+    reducible  = reducibleFunSyms $ mhMaudeSig $ L.get pcMaudeHandle ctxt
+    sst        = L.get sSubtermStore sys
 
     -- | 'True' iff there in every solution to the system the two node-ids are
     -- instantiated to a different index *in* the trace.
@@ -1044,6 +1056,8 @@ safePartialAtomValuation ctxt sys =
                     | i `before` j || j `before` i  -> Just False
                     | nonUnifiableNodes i j         -> Just False
                   _                                 -> Nothing
+
+          Subterm small big                      -> isTrueFalse reducible (Just sst) (small, big)
 
           Last (ltermNodeId' -> i)
             | isLast sys i                       -> Just True
@@ -1166,7 +1180,16 @@ data Trivalent = TTrue | TFalse | TUnknown deriving (Show, Eq)
 -- | Computes the mirror dependency graph and evaluates whether the restrictions hold.
 -- Returns Just True and a list of mirrors if all hold, Just False and a list of attacks (if found) if at least one does not hold and Nothing otherwise.
 getMirrorDGandEvaluateRestrictions :: DiffProofContext -> DiffSystem -> Bool -> (Trivalent, [System])
-getMirrorDGandEvaluateRestrictions dctxt dsys isSolved =
+getMirrorDGandEvaluateRestrictions dctxt dsys isSolved = 
+    case (L.get dsSide dsys, L.get dsSystem dsys) of
+          (Nothing,   _       ) -> (TFalse, [])
+          (Just _ , Nothing   ) -> (TFalse, [])
+          (Just side, Just sys) -> evaluateRestrictions dctxt dsys (getMirrorDG dctxt side sys) isSolved
+
+-- | Evaluates whether the restrictions hold. Assumes that the mirrors have been correctly computed.
+-- Returns Just True and a list of mirrors if all hold, Just False and a list of attacks (if found) if at least one does not hold and Nothing otherwise.
+evaluateRestrictions :: DiffProofContext -> DiffSystem -> [System] -> Bool -> (Trivalent, [System])
+evaluateRestrictions dctxt dsys mirrors isSolved =
     case (L.get dsSide dsys, L.get dsSystem dsys) of
         (Nothing,   _       ) -> (TFalse, [])
         (Just _ , Nothing   ) -> (TFalse, [])
@@ -1180,13 +1203,13 @@ getMirrorDGandEvaluateRestrictions dctxt dsys isSolved =
                         else
                             (TFalse, concat $ map snd $ filter (\x -> fst x == TFalse) evals)
             where
-                mirrors = getMirrorDG dctxt side sys
                 oppositeCtxt = eitherProofContext dctxt (opposite side)
                 restrictions = filterRestrictions oppositeCtxt sys $ restrictions' (opposite side) $ L.get dpcRestrictions dctxt
                 evals = map (\x -> doRestrictionsHold oppositeCtxt x restrictions isSolved) mirrors
 
                 restrictions' _  []               = []
                 restrictions' s' ((s'', form):xs) = if s' == s'' then form ++ (restrictions' s' xs) else (restrictions' s' xs)
+
 
 -- | Evaluates whether the formulas hold using safePartialAtomValuation and impliedFormulas.
 -- Returns Just True if all hold, Just False if at least one does not hold and Nothing otherwise.
@@ -1230,11 +1253,11 @@ normDG ctxt sys = L.set sNodes normalizedNodes sys
 
 -- | Returns the mirrored DGs, if they exist.
 getMirrorDG :: DiffProofContext -> Side -> System -> [System]
-getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshAndPubConstrRules, sys))) $-} fmap (normDG $ eitherProofContext ctxt side) $ unifyInstances $ evalFreshAvoiding newNodes (freshAndPubConstrRules, sys)
+getMirrorDG ctxt side sys = {-trace (show (evalFreshAvoiding newNodes (freshNatAndPubConstrRules, sys))) $-} fmap (normDG $ eitherProofContext ctxt side) $ unifyInstances $ evalFreshAvoiding newNodes (freshNatAndPubConstrRules, sys)
   where
-    (freshAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule)) (L.get sNodes sys))
+    (freshNatAndPubConstrRules, notFreshNorPub) = (M.partition (\rule -> (isFreshRule rule) || (isPubConstrRule rule) || (isNatConstrRule rule)) (L.get sNodes sys))
     (newProtoRules, otherRules) = (M.partition (\rule -> (containsNewVars rule) && (isProtocolRule rule)) notFreshNorPub)
-    newNodes = (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (return [freshAndPubConstrRules]) newProtoRules) otherRules)
+    newNodes = (M.foldrWithKey (transformRuleInstance) (M.foldrWithKey (transformRuleInstance) (return [freshNatAndPubConstrRules]) newProtoRules) otherRules)
 
     -- We keep instantiations of fresh and public variables. Currently new public variables in protocol rule instances
     -- are instantiated correctly in someRuleACInstAvoiding, but if this is changed we need to fix this part.
@@ -1457,6 +1480,7 @@ unsolvedTrivialGoals sys = foldl f [] $ M.toList (L.get sGoals sys)
     f l (ChainG _ _, _)               = l
     f l (SplitG _, _)                 = l
     f l (DisjG _, _)                  = l
+    f l (SubtermG _, _)               = l
 
 -- | Tests whether there are common Variables in the Facts
 noCommonVarsInGoals :: [(Either NodePrem LVar, LNFact)] -> Bool
@@ -1494,6 +1518,7 @@ allOpenGoalsAreSimpleFacts ctxt sys = M.foldlWithKey goalIsSimpleFact True (L.ge
         r = nodeRule nid sys
     goalIsSimpleFact ret (SplitG _)               (GoalStatus solved _ _) = ret && solved
     goalIsSimpleFact ret (DisjG _)                (GoalStatus solved _ _) = ret && solved
+    goalIsSimpleFact ret (SubtermG _)             (GoalStatus solved _ _) = ret && solved
 
 -- | Returns true if the current system is a diff system
 isDiffSystem :: System -> Bool
@@ -1620,6 +1645,7 @@ prettyNonGraphSystem :: HighlightDocument d => System -> d
 prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
   [ ("last",            maybe (text "none") prettyNodeId $ L.get sLastAtom se)
   , ("formulas",        vsep $ map prettyGuarded {-(text . show)-} $ S.toList $ L.get sFormulas se)
+  , ("subterms",        prettySubtermStore $ L.get sSubtermStore se)
   , ("equations",       prettyEqStore $ L.get sEqStore se)
   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
   , ("allowed cases",   text $ show $ L.get sSourceKind se)
@@ -1721,7 +1747,7 @@ prettyGoals solved sys = vsep $ do
     -- are composed of public names only and do not contain private function
     -- symbols or because they can be extracted from a sent message using
     -- unpairing or inversion only.
-    currentlyDeducible i m = (checkTermLits (LSortPub ==) m
+    currentlyDeducible i m = (checkTermLits (`elem` [LSortPub, LSortNat]) m
                               && not (containsPrivate m))
                           || extractible i m
 
@@ -1761,13 +1787,13 @@ instance Apply LNSubst SourceKind where
     apply = const id
 
 instance Apply LNSubst System where
-    apply subst (System a b c d e f g h i j k l) =
+    apply subst (System a b c d e f g h i j k l m) =
         System (apply subst a)
         -- we do not apply substitutions to node variables, so we do not apply them to the edges either
         b
         (apply subst c) (apply subst d)
-        (apply subst e) (apply subst f) (apply subst g) (apply subst h)
-        i j (apply subst k) (apply subst l)
+        (apply subst e) (apply subst f) (apply subst g) (apply subst h) (apply subst i)
+        j k (apply subst l) (apply subst m)
 
 instance HasFrees SourceKind where
     foldFrees = const mempty
@@ -1780,7 +1806,7 @@ instance HasFrees GoalStatus where
     mapFrees  = const pure
 
 instance HasFrees System where
-    foldFrees fun (System a b c d e f g h i j k l) =
+    foldFrees fun (System a b c d e f g h i j k l m) =
         foldFrees fun a `mappend`
         foldFrees fun b `mappend`
         foldFrees fun c `mappend`
@@ -1792,9 +1818,10 @@ instance HasFrees System where
         foldFrees fun i `mappend`
         foldFrees fun j `mappend`
         foldFrees fun k `mappend`
-        foldFrees fun l
+        foldFrees fun l `mappend`
+        foldFrees fun m
 
-    foldFreesOcc fun ctx (System a _b _c _d _e _f _g _h _i _j _k _l) =
+    foldFreesOcc fun ctx (System a _b _c _d _e _f _g _h _i _j _k _l _m) =
         foldFreesOcc fun ("a":ctx') a {- `mappend`
         foldFreesCtx fun ("b":ctx') b `mappend`
         foldFreesCtx fun ("c":ctx') c `mappend`
@@ -1808,7 +1835,7 @@ instance HasFrees System where
         foldFreesCtx fun ("k":ctx') k -}
       where ctx' = "system":ctx
 
-    mapFrees fun (System a b c d e f g h i j k l) =
+    mapFrees fun (System a b c d e f g h i j k l m) =
         System <$> mapFrees fun a
                <*> mapFrees fun b
                <*> mapFrees fun c
@@ -1821,6 +1848,7 @@ instance HasFrees System where
                <*> mapFrees fun j
                <*> mapFrees fun k
                <*> mapFrees fun l
+               <*> mapFrees fun m
 
 instance HasFrees Source where
     foldFrees f th =
@@ -1853,11 +1881,11 @@ compareNodesUpToNewVars n1 n2 = compareListsUpToNewVars (M.toAscList n1) (M.toAs
 compareSystemsUpToNewVars :: System -> System -> Ordering
 -- when we have trace systems, we can ignore new variable instantiations
 compareSystemsUpToNewVars
-   (System a1 b1 c1 d1 e1 f1 g1 h1 i1 j1 k1 False)
-   (System a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 False)
+   (System a1 b1 c1 d1 e1 f1 g1 h1 i1 j1 k1 l1 False)
+   (System a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 False)
        = if compareNodes == EQ then
-            compare (System M.empty b1 c1 d1 e1 f1 g1 h1 i1 j1 k1 False)
-                (System M.empty b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 False)
+            compare (System M.empty b1 c1 d1 e1 f1 g1 h1 i1 j1 k1 l1 False)
+                (System M.empty b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 False)
          else
             compareNodes
         where

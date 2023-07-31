@@ -67,6 +67,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             One                                             -> True
             DHNeutral                                       -> True
             Zero                                            -> True
+            NatOne                                          -> True
             Lit2 _                                          -> True
             -- subterm rules
             FAppNoEq _ _ | setAny (struleApplicable t) strules -> False
@@ -97,6 +98,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FMult      ts    -> all go ts
             FXor       ts    -> all go ts
             FUnion     ts    -> all go ts
+            FNatPlus   ts    -> all go ts
             FAppNoEq _ ts    -> all go ts
             FAppC _    ts    -> all go ts
 

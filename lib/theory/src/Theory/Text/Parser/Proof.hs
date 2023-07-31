@@ -39,9 +39,10 @@ nodeConc = parens ((,) <$> nodevar
 -- | Parse a goal.
 goal :: Parser Goal
 goal = asum
-    [ premiseGoal
+    [ stSplitGoal    
+    , premiseGoal
     , actionGoal
-    , chainGoal
+    , chainGoal     
     , disjSplitGoal
     , eqSplitGoal
     ]
@@ -60,6 +61,13 @@ goal = asum
 
     disjSplitGoal = (DisjG . Disj) <$> sepBy1 guardedFormula (symbol "∥")
 
+    stSplitGoal = do
+      a <- try (termp <* opSubterm)
+      b <- termp
+      return $ SubtermG (a, b)
+        where
+          termp =  msetterm False (vlit msgvar)      
+
     eqSplitGoal = try $ do
         symbol_ "splitEqs"
         parens $ (SplitG . SplitId . fromIntegral) <$> natural
@@ -73,6 +81,7 @@ proofMethod = asum
   , symbol "solve"         *> (SolveGoal <$> parens goal)
   , symbol "contradiction" *> pure (Contradiction Nothing)
   , symbol "induction"     *> pure Induction
+  , symbol "UNFINISHABLE"  *> pure Unfinishable
   ]
 
 -- | Start parsing a proof skeleton.
@@ -113,6 +122,7 @@ diffProofMethod = asum
   , symbol "backward-search"  *> pure DiffBackwardSearch
   , symbol "step"             *> (DiffBackwardSearchStep <$> parens proofMethod)
   , symbol "ATTACK"           *> pure DiffAttack
+  , symbol "UNFINISHABLEdiff" *> pure DiffUnfinishable
   ]
 
 -- | Parse a diff proof skeleton.

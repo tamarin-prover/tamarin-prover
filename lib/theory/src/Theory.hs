@@ -41,6 +41,7 @@ module Theory (
   , forcedInjectiveFacts
   , setforcedInjectiveFacts
   , thyOptions
+  , thyIsSapic
   , setOption
   , Option
   -- * Predicates
@@ -322,4 +323,5 @@ import Theory.Model
 import Theory.Proof
 import Theory.Syntactic.Predicate
 import TheoryObject
+import Prelude hiding (id, (.))
 

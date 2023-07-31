@@ -401,11 +401,15 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  Witness_Aborted
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Witness_Aborted: 
 Failed to derive Variable(s): ct, sk1, ysk
-  
-  Witness_Resolved
+
+Rule Witness_Resolved: 
 Failed to derive Variable(s): ct, sk1, sk2
 */
 
@@ -413,8 +417,8 @@ Failed to derive Variable(s): ct, sk1, sk2
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
@@ -429,9 +433,9 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 1.00s
+  processing time: 0.52s
   
-  WARNING: 2 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)

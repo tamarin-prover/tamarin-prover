@@ -194,7 +194,7 @@ next
       case case_1
       solve( Server( pid, sid, otc1 ) ▶₀ #t1 )
         case BuyANewYubikey
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -487,7 +487,7 @@ next
         qed
       next
         case Server_ReceiveOTP_NewSession_case_1
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -638,7 +638,7 @@ next
         qed
       next
         case Server_ReceiveOTP_NewSession_case_2
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -897,7 +897,7 @@ next
         qed
       next
         case Server_ReceiveOTP_NewSession_case_3
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -1048,7 +1048,7 @@ next
         qed
       next
         case Server_ReceiveOTP_NewSession_case_4
-        solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
           case 
           by sorry /* unannotated */
         next
@@ -3776,8 +3776,8 @@ qed
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
@@ -3792,7 +3792,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 6.84s
+  processing time: 9.18s
   
   Login_reachable (exists-trace): verified (12 steps)
   slightly_weaker_invariant (all-traces): verified (1141 steps)

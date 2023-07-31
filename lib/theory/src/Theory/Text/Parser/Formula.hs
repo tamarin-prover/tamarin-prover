@@ -50,6 +50,7 @@ blatom varp nodep = fmap (fmapTerm (fmap Free)) <$> asum
       -- Predicates can be called for timepoints in addition to other logical vars.
       -- Note that lexemes that are ambigous (e.g., a variable without a sort)
       -- will be interpreted by varp.
+  , Subterm     <$> try (msetterm False (vlit varp) <* opSubterm) <*> msetterm False (vlit varp) <?> "subterm predicate"    
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , smallerp varp <?> "multiset comparisson"
   , EqE         <$> try (termp <* opEqual) <*> termp <?> "term equality"

@@ -1,5 +1,6 @@
 {-# LANGUAGE ViewPatterns     #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TupleSections    #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
@@ -46,6 +47,8 @@
 --
 --     12. (diff only) No rule uses a fact starting with 'DiffProto' or 'DiffIntr'
 --
+--     13. LSortNat is well typed
+--
 --   [security properties]
 --
 --     1. all facts occur with the same arity in the action of some
@@ -62,11 +65,11 @@ module Theory.Tools.Wellformedness (
   , checkWellformednessDiff
 
   , prettyWfErrorReport
+  , underlineTopic
 
   , formulaTerms
   ) where
 
--- import           Debug.Trace
 
 import           Prelude                     hiding (id, (.))
 
@@ -269,6 +272,71 @@ ruleSortsReport thy = do
     ru <- thyProtoRules thy
     sortsClashCheck ("rule " ++ quote (showRuleCaseName ru) ++
                      ": ") ru
+
+
+-- | bind quantified variables with substBound and return all terms from a formula
+boundTerms :: [(Integer,LVar)] -> LNGuarded -> [BLTerm]
+boundTerms l (substBound l -> GAto a) = atomTerms a
+boundTerms l (GDisj disj)             = concatMap (boundTerms l) disj
+boundTerms l (GConj conj)             = concatMap (boundTerms l) conj
+boundTerms l (GGuarded _ ss _ gf)     = boundTerms extendedVarAssignment gf
+  where
+    extendedVarAssignment = zip [0..] [LVar name sort 0 | (name, sort) <- reverse ss] ++ l
+boundTerms _ _                        = [] --cannot happen
+
+-- | check nat-Sorting (i.e., below + is only nat)
+nonWellSorted :: LNTerm -> [LNTerm]
+nonWellSorted (viewTerm2 -> FNatPlus list) = concatMap notOnlyNat list
+  where
+    notOnlyNat :: LNTerm -> [LNTerm]
+    notOnlyNat (viewTerm2 -> FNatPlus l) = concatMap notOnlyNat l
+    notOnlyNat (viewTerm2 -> NatOne) = []
+    notOnlyNat t | isNatVar t = []
+    notOnlyNat t = [t]
+nonWellSorted (viewTerm2 -> NatOne) = []
+nonWellSorted (viewTerm -> Lit _) = []
+nonWellSorted (viewTerm -> FApp _ ts) = concatMap nonWellSorted ts
+-- TODO: nat let's are only nats (%x = h(n) is forbidden) (unimportant)
+
+-- | safe version of bTermToLTerm if variables are not important
+bTermToLTermStupid :: BLTerm -> LNTerm
+bTermToLTermStupid = fmapTerm (fmap (foldBVar (LVar "boundVar" LSortMsg) id))
+
+-- | typed version of formulaToGuarded
+formulaToGuardedTyped :: LNFormula -> Either Doc LNGuarded
+formulaToGuardedTyped = formulaToGuarded
+
+-- | generate nat sort errors
+natSortErrors :: [LNTerm] -> WfErrorReport
+natSortErrors itemsTerms = [ (underlineTopic "Nat Sorts", prettyLNTerm err <> text " in term " <> prettyLNTerm t <> text " must be of sort nat") | t <- itemsTerms, err <- nonWellSorted t]
+
+-- | check nat-Sorting (i.e., below + is only nat)
+natWellSortedReport :: OpenTranslatedTheory -> WfErrorReport
+natWellSortedReport thy = natSortErrors itemsTerms
+  where
+    itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get thyItems thy
+
+    getItemTerms :: TheoryItem OpenProtoRule ProofSkeleton () -> [BLTerm]
+    getItemTerms (RuleItem (get oprRuleE -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    getItemTerms (LemmaItem (formulaToGuardedTyped . get lFormula -> Right f)) = boundTerms [] f
+    getItemTerms (RestrictionItem (formulaToGuardedTyped . get rstrFormula -> Right f)) = boundTerms [] f
+    getItemTerms (PredicateItem (formulaToGuardedTyped . get pFormula -> Right p)) = boundTerms [] p
+    getItemTerms _ = []
+
+-- | check nat-Sorting (i.e., below + is only nat)
+natWellSortedReportDiff :: OpenDiffTheory -> WfErrorReport
+natWellSortedReportDiff thy = natSortErrors itemsTerms
+  where
+    itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get diffThyItems thy
+
+    getItemTerms :: DiffTheoryItem DiffProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> [BLTerm]
+    getItemTerms (DiffRuleItem (get dprRule -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    getItemTerms (EitherRuleItem (_, get oprRuleE -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    getItemTerms (EitherLemmaItem (_, formulaToGuardedTyped . get lFormula -> Right f)) = boundTerms [] f
+    getItemTerms (EitherRestrictionItem (_, formulaToGuardedTyped . get rstrFormula -> Right f)) = boundTerms [] f
+    getItemTerms _ = []
+
+
 
 --- | Check that the protocol rule variants are correct.
 variantsCheck :: MaudeHandle -> [Macro] -> String -> OpenProtoRule -> WfErrorReport
@@ -783,20 +851,23 @@ formulaFacts =
     atomFacts (Action _ fa)   = [fa]
     atomFacts (Syntactic _)   = mempty --the 'facts' in a predicate atom are not real facts
     atomFacts (EqE _ _)       = mempty
+    atomFacts (Subterm _ _)   = mempty
     atomFacts (Less _ _)      = mempty
     atomFacts (Last _)        = mempty
+
+atomTerms :: ProtoAtom s t -> [t]
+atomTerms (Action i fa)        = i : factTerms fa
+atomTerms (Syntactic _)       = []
+-- atomTerms (Syntactic (Pred p)) = factTerms p
+atomTerms (EqE t s)            = [t, s]
+atomTerms (Subterm i j)        = [i, j]
+atomTerms (Less i j)           = [i, j]
+atomTerms (Last i)             = [i]
 
 -- | Gather all terms referenced in a formula.
 formulaTerms :: Formula s c v -> [VTerm c (BVar v)]
 formulaTerms =
     foldFormula atomTerms (const mempty) id (const mappend) (const $ const id)
-  where
-    atomTerms (Action i fa)        = i : factTerms fa
-    atomTerms (Syntactic _)       = []
-    -- atomTerms (Syntactic (Pred p)) = factTerms p
-    atomTerms (EqE t s)            = [t, s]
-    atomTerms (Less i j)           = [i, j]
-    atomTerms (Last i)             = [i]
 
 -- TODO: Perhaps a lot of errors would be captured when making the signature
 -- of facts, term, and atom constructors explicit.
@@ -852,7 +923,7 @@ formulaReports thy = do
       where
         binders    = foldFormula (const mempty) (const mempty) id (const mappend)
                          (\_ binder rest -> binder : rest) fm
-        disallowed = filter (not . (`elem` [LSortMsg, LSortNode]) . snd) binders
+        disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
 
     -- check that only bound variables and public names are used
     checkTerms header fm
@@ -875,7 +946,8 @@ formulaReports thy = do
         allowed (viewTerm -> Lit (Var (Bound _)))        = True
         allowed (viewTerm -> Lit (Con (Name PubName _))) = True
         -- we allow multiset union
-        allowed (viewTerm2 -> FUnion args)                = all allowed args
+        allowed (viewTerm2 -> FUnion args)               = all allowed args
+        -- allowed (viewTerm2 -> FNatPlus args)             = all allowed args  -- line from Cedric Staub which seems to be unnecessary
         -- we allow irreducible function symbols
         allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
         allowed _                                                    = False
@@ -918,7 +990,7 @@ formulaReportsDiff thy = do
       where
         binders    = foldFormula (const mempty) (const mempty) id (const mappend)
                          (\_ binder rest -> binder : rest) fm
-        disallowed = filter (not . (`elem` [LSortMsg, LSortNode]) . snd) binders
+        disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
 
     -- check that only bound variables and public names are used
     checkTerms header fm
@@ -1173,6 +1245,7 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , formulaReportsDiff
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
+    , natWellSortedReportDiff
     ]
 
 
@@ -1190,5 +1263,6 @@ checkWellformedness thy sig = concatMap ($ thy)
     , formulaReports
     , lemmaAttributeReport
     , multRestrictedReport
+    , natWellSortedReport
     ]
 

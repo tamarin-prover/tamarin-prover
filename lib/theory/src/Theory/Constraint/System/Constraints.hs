@@ -28,6 +28,7 @@ module Theory.Constraint.System.Constraints (
   , Goal(..)
   , isActionGoal
   , isStandardActionGoal
+  , isSubtermGoal
   , isPremiseGoal
   , isChainGoal
   , isSplitGoal
@@ -120,13 +121,15 @@ data Goal =
        ActionG LVar LNFact
        -- ^ An action that must exist in the trace.
      | ChainG NodeConc NodePrem
-       -- A destruction chain.
+       -- ^ A destruction chain.
      | PremiseG NodePrem LNFact
        -- ^ A premise that must have an incoming direct edge.
      | SplitG SplitId
        -- ^ A case split over equalities.
      | DisjG (Disj LNGuarded)
        -- ^ A case split over a disjunction.
+     | SubtermG (LNTerm, LNTerm)
+       -- ^ A split of a Subterm which is in SubtermStore -> _subterms
      deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 -- Indicators
@@ -156,6 +159,10 @@ isDisjGoal :: Goal -> Bool
 isDisjGoal (DisjG _) = True
 isDisjGoal _         = False
 
+isSubtermGoal :: Goal -> Bool
+isSubtermGoal (DisjG _) = True
+isSubtermGoal _         = False
+
 
 
 -- Instances
@@ -168,6 +175,7 @@ instance HasFrees Goal where
         ChainG c p    -> foldFrees f c <> foldFrees f p
         SplitG i      -> foldFrees f i
         DisjG x       -> foldFrees f x
+        SubtermG p    -> foldFrees f p
 
     foldFreesOcc  f c goal = case goal of
         ActionG i fa -> foldFreesOcc f ("ActionG":c) (i, fa)
@@ -180,6 +188,7 @@ instance HasFrees Goal where
         ChainG c p    -> ChainG   <$> mapFrees f c <*> mapFrees f p
         SplitG i      -> SplitG   <$> mapFrees f i
         DisjG x       -> DisjG    <$> mapFrees f x
+        SubtermG p    -> SubtermG <$> mapFrees f p
 
 instance Apply LNSubst Goal where
     apply subst goal = case goal of
@@ -188,6 +197,7 @@ instance Apply LNSubst Goal where
         ChainG c p    -> ChainG   (apply subst c) (apply subst p)
         SplitG i      -> SplitG   (apply subst i)
         DisjG x       -> DisjG    (apply subst x)
+        SubtermG p    -> SubtermG (apply subst p)
 
 
 ------------------------------------------------------------------------------
@@ -233,4 +243,6 @@ prettyGoal (DisjG (Disj gfs)) = fsep $
     -- punctuate (operator_ " |") (map (nest 1 . parens . prettyGuarded) gfs)
 prettyGoal (SplitG x) =
     text "splitEqs" <> parens (text $ show (unSplitId x))
+prettyGoal (SubtermG (l,r)) =
+    prettyLNTerm l <-> operator_ "⊏" <-> prettyLNTerm r
 

@@ -27,6 +27,8 @@ import           Data.Monoid                         (Sum(..))
 
 -- import qualified Data.Label.Total
 
+import           Theory.Tools.InjectiveFactInstances
+
 import           Theory.Text.Pretty
 import OpenTheory
 import Pretty
@@ -108,6 +110,7 @@ getProofContext l thy = ProofContext
     False
     (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
     (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
+    (L.get thyIsSapic thy)
   where
     kind    = lemmaSourceKind l
     cases   = case kind of RawSource     -> crcRawSources
@@ -152,6 +155,7 @@ getProofContextDiff s l thy = case s of
             False
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
+            (L.get diffThyIsSapic thy)
   RHS -> ProofContext
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyCacheRight)           thy)
@@ -168,6 +172,7 @@ getProofContextDiff s l thy = case s of
             False
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
+            (L.get diffThyIsSapic thy)
   where
     kind    = lemmaSourceKind l
     cases   = case kind of RawSource     -> crcRawSources
@@ -226,6 +231,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
+            (L.get diffThyIsSapic thy)
         RHS -> ProofContext
             ( L.get diffThySignature                    thy)
             ( L.get (crcRules . diffThyDiffCacheRight)           thy)
@@ -242,6 +248,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
+            (L.get diffThyIsSapic thy)
 
     specifiedHeuristic = case lattr of
         Just lh -> Just lh
@@ -259,11 +266,11 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
         lattr = L.get diffThyTactic thy
 
 -- | The facts with injective instances in this theory
-getInjectiveFactInsts :: ClosedTheory -> S.Set FactTag
+getInjectiveFactInsts :: ClosedTheory -> S.Set (FactTag, [[MonotonicBehaviour]])
 getInjectiveFactInsts = L.get (crcInjectiveFactInsts . thyCache)
 
 -- | The facts with injective instances in this theory
-getDiffInjectiveFactInsts :: Side -> Bool -> ClosedDiffTheory -> S.Set FactTag
+getDiffInjectiveFactInsts :: Side -> Bool -> ClosedDiffTheory -> S.Set (FactTag, [[MonotonicBehaviour]])
 getDiffInjectiveFactInsts s isdiff = case (s, isdiff) of
            (LHS, False) -> L.get (crcInjectiveFactInsts . diffThyCacheLeft)
            (RHS, False) -> L.get (crcInjectiveFactInsts . diffThyCacheRight)
@@ -399,13 +406,14 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
             ,_thySignature=(L.get thySignature thy)
             ,_thyCache=(L.get thyCache thy)
             ,_thyItems = mergedRules
-            ,_thyOptions =(L.get thyOptions thy)}
+            ,_thyOptions =(L.get thyOptions thy)
+            ,_thyIsSapic = (L.get thyIsSapic thy)}
     ppInjectiveFactInsts crc =
         case S.toList $ L.get crcInjectiveFactInsts crc of
             []   -> emptyDoc
             tags -> multiComment $ sep
                       [ text "looping facts with injective instances:"
-                      , nest 2 $ fsepList (text . showFactTagArity) tags ]
+                      , nest 2 $ fsepList (text . showFactTagArity) (map fst tags) ]
 
 -- | Pretty print a closed diff theory.
 prettyClosedDiffTheory :: HighlightDocument d => ClosedDiffTheory -> d
@@ -440,13 +448,14 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
             ,_diffThyDiffCacheLeft=(L.get diffThyDiffCacheLeft thy)
             ,_diffThyDiffCacheRight=(L.get diffThyDiffCacheRight thy)
             ,_diffThyItems = mergedRules
-            ,_diffThyOptions =(L.get diffThyOptions thy)}
+            ,_diffThyOptions =(L.get diffThyOptions thy)
+            ,_diffThyIsSapic = (L.get diffThyIsSapic thy)}
     ppInjectiveFactInsts crc =
         case S.toList $ L.get crcInjectiveFactInsts crc of
             []   -> emptyDoc
             tags -> multiComment $ sep
                       [ text "looping facts with injective instances:"
-                      , nest 2 $ fsepList (text . showFactTagArity) tags ]
+                      , nest 2 $ fsepList (text . showFactTagArity) (map fst tags) ]
 
 prettyClosedSummary :: Document d => ClosedTheory -> d
 prettyClosedSummary thy =

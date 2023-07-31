@@ -182,6 +182,7 @@ getRuleType r
     | isIEqualityRule r = "isIEqualityRule"
     | isConstrRule r    = "isConstrRule"
     | isPubConstrRule r = "isPubConstrRule"
+    | isNatConstrRule r = "isNatConstrRule"
     | isFreshRule r     = "isFreshRule"
     | isIRecvRule r     = "isIRecvRule"
     | isISendRule r     = "isISendRule"

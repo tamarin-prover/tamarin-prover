@@ -7546,23 +7546,27 @@ Facts occur in the left-hand-side but not in any right-hand-side
   
   3. in rule "YSM_AES_ESC_BLOCK_ENCRYPT":  factName `YSM_AES_ESC_BLOCK_ENCRYPT' arity: 1 multiplicity: Persistent
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  YSM_AEAD_YUBIKEY_OTP_DECODE
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule YSM_AEAD_YUBIKEY_OTP_DECODE: 
 Failed to derive Variable(s): N
 */
 
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 43a00382d32032f238b20b5293eb15219df3aef4 (with uncommited changes), branch: fix532
-Compiled at: 2023-07-26 13:44:49.000956908 UTC
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -7571,7 +7575,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 27.24s
+  processing time: 21.82s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

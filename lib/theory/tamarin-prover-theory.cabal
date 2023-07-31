@@ -44,6 +44,7 @@ library
     build-depends:
         aeson
       , aeson-pretty
+      , array
       , attoparsec
       , base
       , binary
@@ -125,6 +126,7 @@ library
       Theory.Tools.IntruderRules
       Theory.Tools.LoopBreakers
       Theory.Tools.RuleVariants
+      Theory.Tools.SubtermStore
       Theory.Tools.Wellformedness
       TheoryObject
       Lemma

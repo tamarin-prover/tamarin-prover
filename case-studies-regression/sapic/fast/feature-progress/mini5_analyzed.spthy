@@ -316,53 +316,57 @@ restriction progressInit:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  MessageIDRule
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule MessageIDRule: 
 Failed to derive Variable(s): ~mid_
-  
-  Init
+
+Rule Init: 
 Failed to derive Variable(s): ~prog_
-  
-  news_0_
+
+Rule news_0_: 
 Failed to derive Variable(s): ~prog_, s.1
-  
-  p_0_1
+
+Rule p_0_1: 
 Failed to derive Variable(s): ~prog_, s.1
-  
-  insertsHELLO_0_11
+
+Rule insertsHELLO_0_11: 
 Failed to derive Variable(s): ~prog_, s.1
-  
-  p_0_111
+
+Rule p_0_111: 
 Failed to derive Variable(s): ~prog_, s.1
-  
-  lookupsasx_0_12
+
+Rule lookupsasx_0_12: 
 Failed to derive Variable(s): ~prog_, s.1, x.1
-  
-  lookupsasx_1_12
+
+Rule lookupsasx_1_12: 
 Failed to derive Variable(s): ~prog_, s.1
-  
-  ifxHELLO_0_121
+
+Rule ifxHELLO_0_121: 
 Failed to derive Variable(s): ~prog_, s.1, x.1
-  
-  ifxHELLO_1_121
+
+Rule ifxHELLO_1_121: 
 Failed to derive Variable(s): ~prog_, s.1, x.1
-  
-  eventA_0_1211
+
+Rule eventA_0_1211: 
 Failed to derive Variable(s): ~prog_, s.1, x.1
-  
-  p_0_12111
+
+Rule p_0_12111: 
 Failed to derive Variable(s): ~prog_, s.1, x.1
-  
-  eventB_0_1212
+
+Rule eventB_0_1212: 
 Failed to derive Variable(s): ~prog_, s.1, x.1
-  
-  p_0_12121
+
+Rule p_0_12121: 
 Failed to derive Variable(s): ~prog_, s.1, x.1
-  
-  eventC_0_122
+
+Rule eventC_0_122: 
 Failed to derive Variable(s): ~prog_, s.1
-  
-  p_0_1221
+
+Rule p_0_1221: 
 Failed to derive Variable(s): ~prog_, s.1
 */
 
@@ -370,8 +374,8 @@ Failed to derive Variable(s): ~prog_, s.1
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
@@ -386,9 +390,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini5.spthy
 
   output:          examples/sapic/fast/feature-progress/mini5.spthy.tmp
-  processing time: 0.23s
+  processing time: 0.35s
   
-  WARNING: 16 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   A_possible (exists-trace): verified (9 steps)

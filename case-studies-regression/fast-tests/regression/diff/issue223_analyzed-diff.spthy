@@ -15,6 +15,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Attack3:
    [ Fr( ~ni1 ), Fr( ~rnd1 ), Fr( ~ltkV1 ) ]
   -->
@@ -3239,8 +3241,8 @@ qed
 Generated from:
 Tamarin version 1.7.1
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
@@ -3255,7 +3257,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 5.33s
+  processing time: 2.40s
   
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 

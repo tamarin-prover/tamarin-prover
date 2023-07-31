@@ -34,6 +34,7 @@ module Theory.Text.Parser.Token (
 
   , freshName
   , pubName
+  , natName
 
 
   , typep
@@ -56,6 +57,7 @@ module Theory.Text.Parser.Token (
   , opXor
 
   , opEqual
+  , opSubterm
   , opLess
   , opAt
   , opForall
@@ -84,6 +86,7 @@ module Theory.Text.Parser.Token (
   , opSlash
   , opMinus
   , opPlus
+  , opUnion
   , opLeftarrow
   , opRightarrow
   , opLongleftarrow
@@ -355,10 +358,11 @@ sortedLVar ss =
 
     mkPrefixParser s = do
         case s of
-          LSortMsg   -> pure ()
-          LSortPub   -> void $ char '$'
-          LSortFresh -> void $ char '~'
-          LSortNode  -> void $ char '#'
+          LSortMsg       -> pure ()
+          LSortPub       -> void $ char '$'
+          LSortFresh     -> void $ char '~'
+          LSortNode      -> void $ char '#'
+          LSortNat       -> void $ char '%'
         (n, i) <- indexedIdentifier
         return (LVar n s i)
 
@@ -368,7 +372,7 @@ lvar = sortedLVar [minBound..]
 
 -- | Parse a non-node variable.
 msgvar :: Parser LVar
-msgvar = sortedLVar [LSortFresh, LSortPub, LSortMsg]
+msgvar = sortedLVar [LSortFresh, LSortPub, LSortNat, LSortMsg]
 
 -- | Parse a graph node variable.
 nodevar :: Parser NodeId
@@ -384,6 +388,10 @@ freshName = try (symbol "~" *> singleQuoted identifier)
 -- | Parse a literal public name, e.g., @'n'@.
 pubName :: Parser String
 pubName = singleQuoted identifier
+
+-- | Parse a literal nat name, e.g. @%'n'@.
+natName :: Parser String
+natName = try (symbol "%" *> singleQuoted identifier)
 
 -- | Parse a Sapic Type
 typep :: Parser SapicType
@@ -439,9 +447,13 @@ opExp = symbol_ "^"
 opMult :: Parser ()
 opMult = symbol_ "*"
 
--- | The addition operator @*@.
+-- | The addition operator @%+@.
 opPlus :: Parser ()
-opPlus = symbol_ "+"
+opPlus = symbol_ "%+"
+
+-- | The multiset operator @+@.
+opUnion :: Parser ()
+opUnion = symbol_ "++" <|> symbol_ "+"
 
 -- | The xor operator @XOR@ or @⊕@.
 opXor :: Parser ()
@@ -462,6 +474,10 @@ opAt = symbol_ "@"
 -- | The equality operator @=@.
 opEqual :: Parser ()
 opEqual = symbol_ "="
+
+-- | The equality operator @=@.
+opSubterm :: Parser ()
+opSubterm = symbol_ "<<" <|> symbol_ "⊏"
 
 -- | The logical-forall operator @All@ or @∀@.
 opForall :: Parser ()

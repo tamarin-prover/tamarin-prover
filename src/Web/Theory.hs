@@ -103,9 +103,10 @@ applyMethodAtPath thy lemmaName proofPath prover i = do
     methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPath thy lemmaName proofPath
-      (oneStepProver method                        `mappend`
-       replaceSorryProver (oneStepProver Simplify) `mappend`
-       replaceSorryProver (contradictionProver)    `mappend`
+      (oneStepProver method                            `mappend`
+       replaceSorryProver (oneStepProver Simplify)     `mappend`
+       replaceSorryProver (contradictionProver)        `mappend`
+       replaceSorryProver (oneStepProver Unfinishable) `mappend`
        replaceSorryProver (oneStepProver Solved)
       )
 
@@ -124,9 +125,10 @@ applyMethodAtPathDiff thy s lemmaName proofPath prover i = do
     methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPathDiff thy s lemmaName proofPath
-      (oneStepProver method                        `mappend`
-       replaceSorryProver (oneStepProver Simplify) `mappend`
-       replaceSorryProver (contradictionProver)    `mappend`
+      (oneStepProver method                            `mappend`
+       replaceSorryProver (oneStepProver Simplify)     `mappend`
+       replaceSorryProver (contradictionProver)        `mappend`
+       replaceSorryProver (oneStepProver Unfinishable) `mappend`
        replaceSorryProver (oneStepProver Solved)
       )
 
@@ -148,7 +150,8 @@ applyDiffMethodAtPath thy lemmaName proofPath prover i = do
       (oneStepDiffProver method                        `mappend`
        replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify)) `mappend`
        replaceDiffSorryProver (contradictionDiffProver)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)
+       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)    `mappend`
+       replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
@@ -212,7 +215,7 @@ preformatted cl = withTag "div" [("class", classes cl)]
 proofIndex :: HtmlDocument d
            => RenderUrl
            -> (ProofPath -> Route WebUI)         -- ^ Relative addressing function
-           -> Proof (Maybe System, Maybe Bool) -- ^ The annotated incremental proof
+           -> Proof (Maybe System, ProofStepColor) -- ^ The annotated incremental proof
            -> d
 proofIndex renderUrl mkRoute =
     prettyProofWith ppStep ppCase . insertPaths
@@ -221,10 +224,11 @@ proofIndex renderUrl mkRoute =
 
     ppStep step =
            case fst $ psInfo step of
-               (Nothing, _)    -> superfluousStep
-               (_, Nothing)    -> stepLink ["sorry-step"]
-               (_, Just True)  -> stepLink ["hl_good"]
-               (_, Just False) -> stepLink ["hl_bad"]
+               (Nothing, _)  -> superfluousStep
+               (_, Unmarked) -> stepLink ["sorry-step"]
+               (_, Green)    -> stepLink ["hl_good"]
+               (_, Yellow)   -> stepLink ["hl_medium"]
+               (_, Red)      -> stepLink ["hl_bad"]
         <> case psMethod step of
                Sorry _ -> emptyDoc
                _       -> removeStep
@@ -243,7 +247,7 @@ proofIndex renderUrl mkRoute =
 diffProofIndex :: HtmlDocument d
            => RenderUrl
            -> (ProofPath -> Route WebUI)          -- ^ Relative addressing function
-           -> DiffProof (Maybe DiffSystem, Maybe Bool) -- ^ The annotated incremental proof
+           -> DiffProof (Maybe DiffSystem, ProofStepColor) -- ^ The annotated incremental proof
            -> d
 diffProofIndex renderUrl mkRoute =
     prettyDiffProofWith ppStep ppCase . insertPathsDiff
@@ -252,10 +256,11 @@ diffProofIndex renderUrl mkRoute =
 
     ppStep step =
            case fst $ dpsInfo step of
-               (Nothing, _)    -> superfluousStep
-               (_, Nothing)    -> stepLink ["sorry-step"]
-               (_, Just True)  -> stepLink ["hl_good"]
-               (_, Just False) -> stepLink ["hl_bad"]
+               (Nothing, _)  -> superfluousStep
+               (_, Unmarked) -> stepLink ["sorry-step"]
+               (_, Green)    -> stepLink ["hl_good"]
+               (_, Yellow)   -> stepLink ["hl_medium"]
+               (_, Red)      -> stepLink ["hl_bad"]
         <> case dpsMethod step of
                DiffSorry _ -> emptyDoc
                _           -> removeStep
@@ -527,7 +532,8 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         subCases
   where
     prettyApplicableProofMethods sys = case proofMethods sys of
-        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        [] | finishedSubterms ctxt sys  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        []                              -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
@@ -619,7 +625,8 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
         subCases
   where
     prettyApplicableProofMethods sys = case proofMethods sys of
-        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        [] | finishedSubterms ctxt sys  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        []                              -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
@@ -712,9 +719,12 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         ] ++
         subCases
   where
-    prettyApplicableDiffProofMethods sys = case diffProofMethods sys of
-        []  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
-        pms ->
+    prettyApplicableDiffProofMethods sys = case (diffProofMethods sys, get dsSide sys, get dsSystem sys) of
+        ([], Nothing, _)                                                                  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], _, Nothing)                                                                  -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], Just side, Just sys') | finishedSubterms (eitherProofContext ctxt side) sys' -> [ withTag "h3" [] (text "Constraint System is Solved") ]
+        ([], _, _)                                                                           -> [ withTag "h3" [] (text "Constraint System is Unfinishable") ]
+        (pms, _, _) ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
@@ -732,12 +742,17 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
            then [ text "", withTag "h3" [] (text "mirror:") ] ++
                 [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
                 [ text "" ]
-           else if dpsMethod (root prf) == DiffAttack
-                then [ text "", withTag "h3" [] (text "attack:") ] ++
-                        [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
-                        [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirror graphs violates a restriction, this graph is shown.)" ] ++
-                        [ text "" ]
-                else []
+        else if dpsMethod (root prf) == DiffAttack
+           then [ text "", withTag "h3" [] (text "attack:") ] ++
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "(If no attack graph is shown, the current graph has no mirrors. If one of the mirror graphs violates a restriction, this graph is shown.)" ] ++
+                [ text "" ]
+        else if dpsMethod (root prf) == DiffUnfinishable
+           then [ text "", withTag "h3" [] (text "mirror:") ] ++
+                [ refDotDiffPath renderUrl tidx (DiffTheoryDiffProof lemma proofPath) True ] ++
+                [ text "The proof cannot be finished as there are reducible operators at the top of subterms in the subterm store." ] ++
+                [ text "" ]
+           else []
 
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
@@ -862,7 +877,7 @@ rulesSnippet thy = vcat
                                 else ppWithHeader "Macros" $ 
         (prettyMacros $ theoryMacros thy)
     , ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showFactTagArity) injFacts
+        fsepList (text . showInjFact) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
@@ -871,6 +886,11 @@ rulesSnippet thy = vcat
   where
     msrRules   = get crProtocol $ getClassifiedRules thy
     injFacts   = S.toList $ getInjectiveFactInsts thy
+    showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ concat (intersperse "," ("id":positions)) ++ ")"
+      where positions = [case bb of
+                          [b] -> show b
+                          _   -> "(" ++ concat (intersperse "," (map show bb)) ++ ")"
+                        | bb <- behaviours ]
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -923,7 +943,7 @@ rulesDiffSnippetSide s isdiff thy = vcat
                                      else ppWithHeader "Macros" $
         (prettyMacros $ diffTheoryMacros thy)
     ,ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showFactTagArity) injFacts
+        fsepList (text . showInjFact) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null(diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
@@ -932,6 +952,11 @@ rulesDiffSnippetSide s isdiff thy = vcat
   where
     msrRules = get crProtocol $ getDiffClassifiedRules s isdiff thy
     injFacts = S.toList $ getDiffInjectiveFactInsts s isdiff thy
+    showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ concat (intersperse "," ("id":positions)) ++ ")"
+      where positions = [case bb of
+                          [b] -> show b
+                          _   -> "(" ++ concat (intersperse "," (map show bb)) ++ ")"
+                        | bb <- behaviours ]
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -1773,9 +1798,10 @@ prevDiffThyPath thy = go
 
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
-isInterestingMethod (Sorry _) = True
-isInterestingMethod Solved    = True
-isInterestingMethod _         = False
+isInterestingMethod (Sorry _)    = True
+isInterestingMethod Solved       = True
+isInterestingMethod Unfinishable = True
+isInterestingMethod _            = False
 
 -- | Interesting diff proof methods that are not skipped by next/prev-smart.
 isInterestingDiffMethod :: DiffProofMethod -> Bool
@@ -2042,26 +2068,30 @@ getPrevElement f (x:xs) = go x xs
 
 -- | Translate a proof status returned by 'annotateLemmaProof' to a
 -- corresponding CSS class.
-markStatus :: HtmlDocument d => (Maybe System, Maybe Bool) -> d -> d
-markStatus (Nothing, _         ) = withTag "span" [("class","hl_superfluous")]
-markStatus (Just _,  Just True ) = withTag "span" [("class","hl_good")]
-markStatus (Just _,  Just False) = withTag "span" [("class","hl_bad")]
-markStatus (Just _,  Nothing   ) = id
+markStatus :: HtmlDocument d => (Maybe System, ProofStepColor) -> d -> d
+markStatus (Nothing, _       ) = withTag "span" [("class","hl_superfluous")]
+markStatus (Just _,  Green   ) = withTag "span" [("class","hl_good")]
+markStatus (Just _,  Red     ) = withTag "span" [("class","hl_bad")]
+markStatus (Just _,  Yellow  ) = withTag "span" [("class","hl_medium")]
+markStatus (Just _,  Unmarked) = id
 
 -- | Translate a diff proof status returned by 'annotateLemmaProof' to a
 -- corresponding CSS class.
-markStatusDiff :: HtmlDocument d => (Maybe DiffSystem, Maybe Bool) -> d -> d
-markStatusDiff (Nothing, _         ) = withTag "span" [("class","hl_superfluous")]
-markStatusDiff (Just _,  Just True ) = withTag "span" [("class","hl_good")]
-markStatusDiff (Just _,  Just False) = withTag "span" [("class","hl_bad")]
-markStatusDiff (Just _,  Nothing   ) = id
+markStatusDiff :: HtmlDocument d => (Maybe DiffSystem, ProofStepColor) -> d -> d
+markStatusDiff (Nothing, _       ) = withTag "span" [("class","hl_superfluous")]
+markStatusDiff (Just _,  Green   ) = withTag "span" [("class","hl_good")]
+markStatusDiff (Just _,  Red     ) = withTag "span" [("class","hl_bad")]
+markStatusDiff (Just _,  Yellow  ) = withTag "span" [("class","hl_medium")]
+markStatusDiff (Just _,  Unmarked) = id
 
+
+data ProofStepColor = Unmarked | Green | Red | Yellow
 
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children
 -- are (a) all annotated and (b) contain no sorry steps.
 annotateLemmaProof :: Lemma IncrementalProof
-                   -> Proof (Maybe System, Maybe Bool)
+                   -> Proof (Maybe System, ProofStepColor)
 annotateLemmaProof lem =
 --     error (show (get lProof lem) ++ " - " ++ show prf)
     mapProofInfo (second interpret) prf
@@ -2075,18 +2105,19 @@ annotateLemmaProof lem =
         incomplete = if isNothing (psInfo step) then [IncompleteProof] else []
 
     interpret status = case (get lTraceQuantifier lem, status) of
-      (_,           IncompleteProof)   -> Nothing
-      (_,           UndeterminedProof) -> Nothing
-      (AllTraces,   TraceFound)        -> Just False
-      (AllTraces,   CompleteProof)     -> Just True
-      (ExistsTrace, TraceFound)        -> Just True
-      (ExistsTrace, CompleteProof)     -> Just False
+      (_,           IncompleteProof)   -> Unmarked
+      (_,           UndeterminedProof) -> Unmarked
+      (_,           UnfinishableProof) -> Yellow
+      (AllTraces,   TraceFound)        -> Red
+      (AllTraces,   CompleteProof)     -> Green
+      (ExistsTrace, TraceFound)        -> Green
+      (ExistsTrace, CompleteProof)     -> Red
 
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children
 -- are (a) all annotated and (b) contain no sorry steps.
 annotateDiffLemmaProof :: DiffLemma IncrementalDiffProof
-                   -> DiffProof (Maybe DiffSystem, Maybe Bool)
+                   -> DiffProof (Maybe DiffSystem, ProofStepColor)
 annotateDiffLemmaProof lem =
     mapDiffProofInfo (second interpret) prf
   where
@@ -2099,7 +2130,8 @@ annotateDiffLemmaProof lem =
         incomplete = if isNothing (dpsInfo step) then [IncompleteProof] else []
 
     interpret status = case status of
-      IncompleteProof   -> Nothing
-      UndeterminedProof -> Nothing
-      TraceFound        -> Just False
-      CompleteProof     -> Just True
+      IncompleteProof   -> Unmarked
+      UndeterminedProof -> Unmarked
+      UnfinishableProof -> Yellow
+      TraceFound        -> Red
+      CompleteProof     -> Green

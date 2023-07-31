@@ -50,7 +50,7 @@ import           Data.Char                           (toLower)
 import           Data.Label
 import           Data.List                           (isPrefixOf, intercalate, find)
 import qualified Data.Set
-import           Data.Maybe                          (fromMaybe, fromJust, isJust)
+import           Data.Maybe                          (fromMaybe)
 import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
 import qualified Data.Label as L
@@ -58,8 +58,11 @@ import           Data.Bifunctor (Bifunctor(bimap))
 import           Data.Bitraversable (Bitraversable(bitraverse))
 
 import           Control.Category
+import           Control.Exception (evaluate)
+import           Control.DeepSeq (force)
 
 import           System.Console.CmdArgs.Explicit
+import           System.Timeout (timeout)
 
 import           Theory hiding (transReport, closeTheory)
 import           Theory.Text.Parser                  (parseIntruderRules, theory, diffTheory)
@@ -88,12 +91,11 @@ import           Items.OptionItem                    (openChainsLimit,saturation
 import           Control.Monad.Except
 import           Control.Monad.Catch (MonadCatch)
 
+
 import qualified Accountability as Acc
 import qualified Accountability.Generation as Acc
 
 import           GHC.Records (HasField(getField))
-import           System.Directory.Internal.Prelude (timeout)
---import Web.Types (TheoryPath(TheoryRules))
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -154,7 +156,7 @@ theoryLoadFlags =
       "Limits the number of saturations during precomputations (default 5)"
 
   , flagOpt "5" ["derivcheck-timeout"] (updateArg "derivcheck-timeout" ) "INT"
-      "Set timeout for message derivation checks"
+      "Set timeout for message derivation checks in sec (default 5). 0 deactivates check."
 
 
 --  , flagOpt "" ["diff"] (updateArg "diff") "OFF|ON"
@@ -388,10 +390,10 @@ closeTheory version thyOpts sign srcThy = do
   derivCheckSignature <- Control.Monad.Except.liftIO $ toSignatureWithMaude (get oMaudePath thyOpts) $ maudePublicSig (toSignaturePure sign)
   variableReport <- case compare derivChecks 0 of
     EQ -> pure $ Just []
-    _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
+    _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ evaluate . force $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
       (\t-> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver) deducThy)
 
-  let report = wellformednessReport  ++ (if isJust variableReport then fromJust variableReport else [("Timed Out", Pretty.text "Derivation Checks")])
+  let report = wellformednessReport  ++ (fromMaybe [(underlineTopic "Derivation Checks", Pretty.text "Derivation checks timed out. Use --derivcheck-timeout=INT to configure timeout, 0 to deactivate.")] variableReport)
 
   checkedThy <- bitraverse (\t -> return $ addComment     (reportToDoc report) t)
                            (\t -> return $ addDiffComment (reportToDoc report) t) deducThy

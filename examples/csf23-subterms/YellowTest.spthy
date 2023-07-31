@@ -1,0 +1,54 @@
+theory YellowTest
+begin
+
+rule Start:
+    [Fr(~s)]
+  --[Start(~s, <~s,~s>)]->
+    [State(~s, <~s,~s>)]
+
+rule Start2:
+    [Fr(~s)]
+  --[Start(~s, fst(~s))]->
+    [State(~s, ~s)]
+
+rule End:
+    [State(s, t)]
+  --[End(s, t)]->
+    []
+
+restriction Start2Complication:
+"∀ s t #i. Start(s, t)@i ==> s ⊏ t"
+
+lemma GreenYellow: exists-trace
+"∃ s t #i. End(s, t)@i"
+
+lemma RedYellow:
+"¬∃ s t #i. End(s, t)@i"
+
+lemma YellowRed: exists-trace
+"¬∀ s t #i. End(s, t)@i ==> <s,s> = t"
+
+lemma YellowGreen:
+"∀ s t #i. End(s, t)@i ==> <s,s> = t"
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

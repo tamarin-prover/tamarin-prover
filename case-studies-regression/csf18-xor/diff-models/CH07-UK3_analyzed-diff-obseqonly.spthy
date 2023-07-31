@@ -10,23 +10,27 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( ) ]->
    [
-   Reader( ('1'+diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>)))
+   Reader( ('1'++
+            diff((<~k1, ~id1>++<~k2, ~id2>), (<~k1, ~id1>++<~k1, ~id1>)))
    ),
-   Tag( ('1'+diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>))) )
+   Tag( ('1'++diff((<~k1, ~id1>++<~k2, ~id2>), (<~k1, ~id1>++<~k1, ~id1>)))
+   )
    ]
 
 rule (modulo E) select_tag:
-   [ Tag( (z+<~k, ~id>) ) ]
-  --[ Tag( (z+<~k, ~id>) ) ]->
+   [ Tag( (z++<~k, ~id>) ) ]
+  --[ Tag( (z++<~k, ~id>) ) ]->
    [ TagRun( ~k, ~id ), Tag( z ) ]
 
 rule (modulo E) select_reader:
-   [ Reader( (z+<~k, ~id>) ) ]
-  --[ Reader( (z+<~k, ~id>) ) ]->
+   [ Reader( (z++<~k, ~id>) ) ]
+  --[ Reader( (z++<~k, ~id>) ) ]->
    [ ReaderRun( ~k, ~id ), Reader( z ) ]
 
 rule (modulo E) reader1:
@@ -66,19 +70,19 @@ restriction equality [left]:
   // safety formula
 
 restriction max_number_of_tags_tag [right]:
-  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Tag( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag [left]:
-  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Tag( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag_reader [right]:
-  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag_reader [left]:
-  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction unique [right]:
@@ -195,8 +199,12 @@ Check presence of the --prove/--lemma arguments in theory
 
   --> 'Observational_equivalence' from arguments do(es) not correspond to a specified lemma in the theory 
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching
-  reader2
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule reader2: 
 Failed to derive Variable(s): hash
 */
 
@@ -216,15 +224,15 @@ rule-equivalence
             case select_reader
             step( solve( !KU( lh((h(z)⊕rot(~id, h(z)))) ) @ #vk.3 ) )
               case tag1
-              step( solve( Reader( (z.1+<~k, ~id>) ) ▶₀ #vr.2 ) )
+              step( solve( Reader( (z.1++<~k, ~id>) ) ▶₀ #vr.2 ) )
                 case Setup
-                step( solve( Tag( (z.1+<~k.1, ~id>) ) ▶₀ #vr.5 ) )
+                step( solve( Tag( (z.1++<~k.1, ~id>) ) ▶₀ #vr.5 ) )
                   case Setup
                   step( solve( !KU( rh((h(z)⊕rot(~id, h(z)))) ) @ #vk.2 ) )
                     case reader2
-                    step( solve( Reader( (z.1+<~k.1, ~id>) ) ▶₀ #vr.9 ) )
+                    step( solve( Reader( (z.1++<~k.1, ~id>) ) ▶₀ #vr.9 ) )
                       case select_reader
-                      step( solve( Reader( (z.1+<~k.1, ~id>+<~k.2, ~id.1>) ) ▶₀ #vr.10 ) )
+                      step( solve( Reader( (z.1++<~k.1, ~id>++<~k.2, ~id.1>) ) ▶₀ #vr.10 ) )
                         case Setup
                         step( solve( splitEqs(0) ) )
                           case split_case_3
@@ -267,15 +275,15 @@ qed
 /*
 Generated from:
 Tamarin version 1.7.1
-Maude version 2.7.1
-Git revision: 3759de6eabd9ede720530af43c1e8ccd2dc580b5 (with uncommited changes), branch: issues527
-Compiled at: 2023-06-30 09:58:13.513876994 UTC
+Maude version 3.2.1
+Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
+Compiled at: 2023-07-31 09:45:04.338688526 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
 
 ==============================================================================
@@ -284,7 +292,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 154.65s
+  processing time: 119.68s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

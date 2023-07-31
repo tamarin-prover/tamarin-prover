@@ -126,8 +126,9 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
                -> Bool               -- ^ Verbose option
                -> Bool               -- ^ Diff or not
+               -> Bool               -- ^ isSapic or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $
     ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
@@ -136,10 +137,16 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
+        isSapic
 
+    -- Maude handle
+    hnd = L.get sigmMaudeHandle sig
+    reducibles = reducibleFunSyms $ mhMaudeSig hnd
+
+    forcedInjFacts' = S.map (\x -> (x, replicate (factTagArity x) [Unspecified])) forcedInjFacts
     -- inj fact instances
-    injFactInstances = forcedInjFacts `S.union`
-        simpleInjectiveFactInstances (L.get cprRuleE <$> protoRules)
+    injFactInstances = forcedInjFacts' `S.union`
+        simpleInjectiveFactInstances reducibles (L.get cprRuleE <$> protoRules)
 
     -- precomputing the case distinctions: we make sure to only add safety
     -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
@@ -147,9 +154,6 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
     safetyRestrictions = filter isSafetyFormula restrictions
     rawSources         = precomputeSources parameters ctxt0 safetyRestrictions
     refinedSources     = refineWithSourceAsms parameters typAsms ctxt0 rawSources
-
-    -- Maude handle
-    hnd = L.get sigmMaudeHandle sig
 
     -- close intruder rules
     intrRulesAC = concat $ map (closeIntrRule hnd) intrRules

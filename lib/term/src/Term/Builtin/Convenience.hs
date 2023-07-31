@@ -21,6 +21,8 @@ b *: e = fAppAC Mult [b,e]
 b # e  = fAppAC Union [b,e]
 (+:) :: Ord a => Term a -> Term a -> Term a
 b +: e = fAppAC Xor [b,e]
+(++:) :: Ord a => Term a -> Term a -> Term a
+b ++: e = fAppAC NatPlus [b,e]
 
 adec, aenc, sdec, senc, sign, revealSign, rep, check_rep:: (Term a,Term a) -> Term a
 adec (a,b)       = fAppNoEq adecSym [a,b]
@@ -107,6 +109,20 @@ px7  = pubVar "px" 7
 px8  = pubVar "px" 8
 px9  = pubVar "px" 9
 px10 = pubVar "px" 10
+
+natVar :: String -> Integer -> LNTerm
+natVar s i = varTerm $ LVar s LSortPub i
+
+n1,n2,n3,n4,n5,n6,n7,n8,n9 :: LNTerm
+n1 = natVar "n" 1
+n2 = natVar "n" 2
+n3 = natVar "n" 3
+n4 = natVar "n" 4
+n5 = natVar "n" 5
+n6 = natVar "n" 6
+n7 = natVar "n" 7
+n8 = natVar "n" 8
+n9 = natVar "n" 9
 
 lx1,lx2,lx3,lx4,lx5,lx6,lx7,lx8,lx9,lx10 :: LVar
 lx1 = LVar "x" LSortMsg 1

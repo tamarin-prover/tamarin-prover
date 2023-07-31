@@ -393,6 +393,14 @@ insertAction i fa@(Fact _ ann _) = do
 insertLess :: NodeId -> NodeId -> Reason-> Reduction ()
 insertLess i j r = modM sLessAtoms (S.insert (i, j, r))
 
+-- | Insert a 'Subterm' atom. *x ⊏ y* is added to the SubtermStore
+insertSubterm :: LNTerm -> LNTerm -> Reduction ()
+insertSubterm x y = setM sSubtermStore . addSubterm (x, y) =<< getM sSubtermStore
+
+-- | Insert the negation of a 'Subterm' atom. *¬ x ⊏ y* is added to the SubtermStore
+insertNegSubterm :: LNTerm -> LNTerm -> Reduction()
+insertNegSubterm x y = setM sSubtermStore . addNegSubterm (x, y) =<< getM sSubtermStore
+
 -- | Insert a 'Last' atom and ensure their uniqueness.
 insertLast :: NodeId -> Reduction ChangeIndicator
 insertLast i = do
@@ -403,14 +411,14 @@ insertLast i = do
 
 -- | Insert an atom. Returns 'Changed' if another part of the constraint
 -- system than the set of actions was changed.
-insertAtom :: LNAtom -> Reduction ChangeIndicator
+insertAtom :: LNAtom -> Reduction ()
 insertAtom ato = case ato of
-    EqE x y       -> solveTermEqs SplitNow [Equal x y]
-    Action i fa   -> insertAction (ltermNodeId' i) fa
-    Less i j      -> do insertLess (ltermNodeId' i) (ltermNodeId' j) Formula
-                        return Unchanged
-    Last i        -> insertLast (ltermNodeId' i)
-    Syntactic _   -> return Unchanged
+    EqE x y       -> void $ solveTermEqs SplitNow [Equal x y]
+    Subterm x y   -> insertSubterm x y
+    Action i fa   -> void $ insertAction (ltermNodeId' i) fa
+    Less i j      -> insertLess (ltermNodeId' i) (ltermNodeId' j) Formula
+    Last i        -> void $ insertLast (ltermNodeId' i)
+    Syntactic _   -> return ()
 
 -- | Insert a 'Guarded' formula. Ensures that existentials, conjunctions, negated
 -- last atoms, and negated less atoms, are immediately solved using the rules
@@ -431,7 +439,7 @@ insertFormula = do
       | otherwise = case fm of
           GAto ato -> do
               markAsSolved
-              void (insertAtom (bvarToLVar ato))
+              insertAtom (bvarToLVar ato)
 
           -- CR-rule *S_∧*
           GConj fms -> do
@@ -456,6 +464,11 @@ insertFormula = do
           GGuarded All [] [Less i j] gf  | gf == gfalse -> do
               markAsSolved
               insert False (gdisj [GAto (EqE i j), GAto (Less j i)])
+
+          -- negative Subterm
+          GGuarded All [] [Subterm i j] gf  | gf == gfalse -> do
+              markAsSolved
+              insertNegSubterm (bTermToLTerm i) (bTermToLTerm j)
 
           -- CR-rule: FIXME add this rule to paper
           GGuarded All [] [EqE i@(bltermNodeId -> Just _)
@@ -484,12 +497,13 @@ insertFormula = do
 -- 'insertFormula'.
 reducibleFormula :: LNGuarded -> Bool
 reducibleFormula fm = case fm of
-    GAto _                        -> True
-    GConj _                       -> True
-    GGuarded Ex _ _ _             -> True
-    GGuarded All [] [Less _ _] gf -> gf == gfalse
-    GGuarded All [] [Last _]   gf -> gf == gfalse
-    _                             -> False
+    GAto _                           -> True
+    GConj _                          -> True
+    GGuarded Ex _ _ _                -> True
+    GGuarded All [] [Less _ _]    gf -> gf == gfalse
+    GGuarded All [] [Subterm _ _] gf -> gf == gfalse
+    GGuarded All [] [Last _]      gf -> gf == gfalse
+    _                                -> False
 
 
 -- Goal management
@@ -525,6 +539,7 @@ markGoalAsSolved how goal =
       DisjG disj      -> modM sFormulas       (S.delete $ GDisj disj) >>
                          modM sSolvedFormulas (S.insert $ GDisj disj) >>
                          updateStatus
+      SubtermG _      -> updateStatus
   where
     updateStatus = do
         mayStatus <- M.lookup goal <$> getM sGoals
@@ -558,6 +573,7 @@ substSystem = do
     substEdges
     substLastAtom
     substLessAtoms
+    substSubtermStore
     substFormulas
     substSolvedFormulas
     substLemmas
@@ -566,11 +582,12 @@ substSystem = do
     return (c1 <> c2)
 
 -- no invariants to maintain here
-substEdges, substLessAtoms, substLastAtom, substFormulas,
+substEdges, substLessAtoms, substSubtermStore, substLastAtom, substFormulas,
   substSolvedFormulas, substLemmas, substNextGoalNr :: Reduction ()
 
 substEdges          = substPart sEdges
 substLessAtoms      = substPart sLessAtoms
+substSubtermStore   = substPart sSubtermStore
 substLastAtom       = substPart sLastAtom
 substFormulas       = substPart sFormulas
 substSolvedFormulas = substPart sSolvedFormulas
@@ -659,6 +676,8 @@ conjoinSystem sys = do
     eqs <- getM sEqStore
     let (eqs',splitIds) = (mapAccumL addDisj eqs (map snd . getConj $ get sConjDisjEqs sys))
     setM sEqStore eqs'
+    -- conjoin subterm store
+    modM sSubtermStore (conjoinSubtermStores (get sSubtermStore sys))
     -- add split-goals for all disjunctions of sys
     mapM_  (`insertGoal` False) $ SplitG <$> splitIds
     void (solveSubstEqs SplitNow $ get sSubst sys)
