@@ -51,6 +51,7 @@ library
       , bytestring
       , containers
       , deepseq
+      , directory
       , dlist
       , fclabels
       , filepath

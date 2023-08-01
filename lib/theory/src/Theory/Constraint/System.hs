@@ -28,6 +28,7 @@ module Theory.Constraint.System (
 
   , Oracle(..)
   , defaultOracle
+  , defaultOracleNames
   , oraclePath
   , maybeSetOracleWorkDir
   , maybeSetOracleRelPath
@@ -256,9 +257,9 @@ import           GHC.Generics                         (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.List                            (foldl', partition, intersect,find,intercalate)
+import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy)
 import qualified Data.Map                             as M
-import           Data.Maybe                           (fromMaybe,mapMaybe)
+import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing)
 -- import           Data.Monoid                          (Monoid(..))
 import qualified Data.Monoid                             as Mono
 import qualified Data.Set                             as S
@@ -274,6 +275,8 @@ import           Control.Monad.Reader
 import           Data.Label                           ((:->), mkLabels)
 import qualified Extension.Data.Label                 as L
 
+import           GHC.IO                               (unsafePerformIO)
+
 import           Logic.Connectives
 import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.System.Constraints 
@@ -284,6 +287,7 @@ import           Theory.Tools.SubtermStore
 import           Theory.Tools.EquationStore
 import           Theory.Tools.InjectiveFactInstances
 
+import           System.Directory                     (doesFileExist)
 import           System.FilePath
 import           Text.Show.Functions()
 import           Utils.Misc 
@@ -414,8 +418,8 @@ sConjDisjEqs = eqsConj . sEqStore
 ------------------------------------------------------------------------------
 
 data Oracle = Oracle {
-    oracleWorkDir :: !FilePath
-  , oracleRelPath :: !FilePath
+    oracleWorkDir :: !(Maybe FilePath)
+  , oracleRelPath :: !(Maybe FilePath)
   }
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -530,13 +534,26 @@ defaultTactic = Tactic "default" (SmartRanking False) [] []
 
 -- Default to "./oracle" in the current working directory.
 defaultOracle :: Oracle
-defaultOracle = Oracle "." "oracle"
+defaultOracle = Oracle Nothing Nothing
+
+-- | Set the oraclename to the default ./theory_filename.oracle for all oracles in a heuristic.
+defaultOracleNames :: FilePath -> [GoalRanking ProofContext] ->[GoalRanking ProofContext]
+defaultOracleNames srcThyInFileName = map (mapOracleRanking remapOracle)
+  where
+    remapOracle o@(Oracle workDir relPath) =
+      if isNothing relPath
+        then if unsafePerformIO (doesFileExist inFileOracleName)
+               then Oracle workDir (Just inFileOracleName)
+               else Oracle workDir (Just "oracle")
+        else o
+    inFileOracleName =
+      last (groupBy (\_ b -> b /= '/') $ head $ groupBy (\_ b -> b /= '.') srcThyInFileName) ++ ".oracle"
 
 maybeSetOracleWorkDir :: Maybe FilePath -> Oracle -> Oracle
-maybeSetOracleWorkDir p o = maybe o (\x -> o{ oracleWorkDir = x }) p
+maybeSetOracleWorkDir p o = o{ oracleWorkDir = p }
 
 maybeSetOracleRelPath :: Maybe FilePath -> Oracle -> Oracle
-maybeSetOracleRelPath p o = maybe o (\x -> o{ oracleRelPath = x }) p
+maybeSetOracleRelPath p o = o{ oracleRelPath = p }
 
 mapOracleRanking :: (Oracle -> Oracle) -> (GoalRanking ProofContext) -> (GoalRanking ProofContext)
 mapOracleRanking f (OracleRanking o) = OracleRanking (f o)
@@ -544,7 +561,7 @@ mapOracleRanking f (OracleSmartRanking o) = OracleSmartRanking (f o)
 mapOracleRanking _ r = r
 
 oraclePath :: Oracle -> FilePath
-oraclePath (Oracle oracleWorkDir_ oracleRelPath_) = oracleWorkDir_ </> normalise oracleRelPath_
+oraclePath (Oracle oracleWorkDir_ oracleRelPath_) = fromMaybe "." oracleWorkDir_ </> normalise (fromMaybe "" oracleRelPath_)
 
 maybeSetInternalTacticName :: Maybe String -> Tactic ProofContext -> Tactic ProofContext
 maybeSetInternalTacticName s t = maybe t (\x -> t{ _name = x }) s
@@ -660,8 +677,8 @@ goalRankingName :: GoalRanking ProofContext -> String
 goalRankingName ranking =
     "Goals sorted according to " ++ case ranking of
         GoalNrRanking                 -> "their order of creation"
-        OracleRanking oracle          -> "an oracle for ranking, located at " ++ oraclePath oracle
-        OracleSmartRanking oracle     -> "an oracle for ranking based on 'smart' heuristic, located at " ++ oraclePath oracle
+        OracleRanking oracle          -> "an oracle for ranking, located at " ++ printOracle oracle
+        OracleSmartRanking oracle     -> "an oracle for ranking based on 'smart' heuristic, located at " ++ printOracle oracle
         UsefulGoalNrRanking           -> "their usefulness and order of creation"
         SapicRanking                  -> "heuristics adapted for processes"
         SapicPKCS11Ranking            -> "heuristics adapted to a specific model of PKCS#11 expressed using SAPIC. deprecated."
@@ -671,14 +688,18 @@ goalRankingName ranking =
         InternalTacticRanking tactic  -> "the tactic written in the theory file: "++ _name tactic
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
+     printOracle o@(Oracle workDir relPath) =
+      if isNothing relPath 
+        then fromMaybe "" workDir </> "theory_filename.oracle"
+        else oraclePath o
 
 prettyGoalRankings :: [GoalRanking ProofContext] -> String
 prettyGoalRankings rs = unwords (map prettyGoalRanking rs)
 
 prettyGoalRanking :: GoalRanking ProofContext -> String
 prettyGoalRanking ranking = case ranking of
-    OracleRanking oracle            -> findIdentifier ranking ++ " \"" ++ oracleRelPath oracle ++ "\""
-    OracleSmartRanking oracle       -> findIdentifier ranking ++ " \"" ++ oracleRelPath oracle ++ "\""
+    OracleRanking oracle            -> findIdentifier ranking ++ " \"" ++ fromMaybe "" (oracleRelPath oracle) ++ "\""
+    OracleSmartRanking oracle       -> findIdentifier ranking ++ " \"" ++ fromMaybe "" (oracleRelPath oracle) ++ "\""
     InternalTacticRanking tactic    -> '{':_name tactic++"}"
     _                         -> findIdentifier ranking
   where

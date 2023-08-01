@@ -1,11 +1,11 @@
 theory DefaultOracle
 begin
 
-heuristic: o
+heuristic: osopo
 rule Rule:
   []--[A()]->[]
 
-lemma Test1 [heuristic=o]:
+lemma Test1 [heuristic=soioo]:
   exists-trace
   " Ex #i. A()@i"
 
