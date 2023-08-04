@@ -11,7 +11,7 @@ Organization
 How to reproduce the results (authentication and secrecy properties)
 --------------------------------------------------------------------
 
-This analysis uses version 1.4.0 of the [Tamarin-prover](https://github.com/tamarin-prover/tamarin-prover). Instructions for the installation and usage can be found in chapter 2 of the [manual](https://tamarin-prover.github.io/manual/book/002_installation.html).
+This analysis uses version 1.4.0 of the [Tamarin-prover](https://github.com/tamarin-prover/tamarin-prover). Instructions for the installation and usage can be found in chapter 2 of the [manual](https://tamarin-prover.github.io/manual/master/book/002_installation.html).
 
 
 Due to the complexity of the proofs, oracle files that guide the proof search are required. These files need to be passed as argument as shown below:

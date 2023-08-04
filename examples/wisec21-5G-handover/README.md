@@ -24,7 +24,7 @@ models
 ```
 
 ## Reproducing The Results
-The models have been tested with version 1.5.1 (git revision: 57056945acf0d3aa91784a4cf93e37270cc97dc6, branch: develop) of the [Tamarin prover](https://github.com/tamarin-prover/tamarin-prover). Instructions for installation and usage can be found in Chapter 2 of the [manual](https://tamarin-prover.github.io/manual/book/002_installation.html). Results can be reproduced in one of two ways.
+The models have been tested with version 1.5.1 (git revision: 57056945acf0d3aa91784a4cf93e37270cc97dc6, branch: develop) of the [Tamarin prover](https://github.com/tamarin-prover/tamarin-prover). Instructions for installation and usage can be found in Chapter 2 of the [manual](https://tamarin-prover.github.io/manual/master/book/002_installation.html). Results can be reproduced in one of two ways.
 
 
 Interactive mode:
