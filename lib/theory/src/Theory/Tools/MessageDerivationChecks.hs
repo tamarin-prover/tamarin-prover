@@ -112,15 +112,15 @@ reportVars analysisresults rules vars = case rulesAndVars of
         ++ errors)]
     where
         rulesAndVars :: String
-        rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars ->
-            if List.any ( /= TraceFound) results && List.all ( /= IgnoreDerivChecks) (ruleAttributes $ L.get oprRuleE rule)
-                then Just $ generateError results rule vars
+        rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars' ->
+            if List.any ( /= TraceFound) results && notElem IgnoreDerivChecks (ruleAttributes $ L.get oprRuleE rule)
+                then Just $ generateError results rule vars'
                 else Nothing)
             analysisresults rules vars)
 
         generateError :: [ProofStatus] -> OpenProtoRule -> [LVar] -> String
-        generateError results rule vars = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get oprRuleE rule)))
-                ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars))
+        generateError results rule vars' = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get oprRuleE rule)))
+                ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars'))
 
 reportDiffVars :: [[ProofStatus]] -> [DiffProtoRule] -> [[LVar]] -> WfErrorReport
 reportDiffVars analysisresults rules vars = case rulesAndVars of
@@ -130,15 +130,15 @@ reportDiffVars analysisresults rules vars = case rulesAndVars of
         ++ errors)]
     where
         rulesAndVars :: String
-        rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars ->
-            if List.any ( /= TraceFound) results && List.all ( /= IgnoreDerivChecks) (ruleAttributes $ L.get dprRule rule)
-                then Just $ generateError results rule vars
+        rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars' ->
+            if List.any ( /= TraceFound) results && notElem IgnoreDerivChecks (ruleAttributes $ L.get dprRule rule)
+                then Just $ generateError results rule vars'
                 else Nothing)
             analysisresults rules vars)
 
         generateError :: [ProofStatus] -> DiffProtoRule -> [LVar] -> String
-        generateError results rule vars = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get dprRule rule)))
-                ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars))
+        generateError results rule vars' = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get dprRule rule)))
+                ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars'))
 
 checkProofStatuses :: ClosedTheory -> [ProofStatus]
 checkProofStatuses thy =  map (foldProof proofStepStatus . L.get lProof) $ theoryLemmas thy
@@ -151,22 +151,16 @@ checkDiffProofStatuses thy = map (foldProof proofStepStatus . L.get lProof . snd
 -----------------------------------------------
 
 freesInThyRules :: [OpenProtoRule] -> [[LVar]]
-freesInThyRules rules = map (frees . L.get oprRuleE) rules
+freesInThyRules = map (frees . L.get oprRuleE)
 
 premsOfThyRules :: [OpenProtoRule] -> [[LNFact]]
-premsOfThyRules rules = map (L.get rPrems . L.get oprRuleE) rules
-
-concsOfThyRules :: [OpenProtoRule] -> [[LNFact]]
-concsOfThyRules rules = map (L.get rConcs . L.get oprRuleE ) rules
+premsOfThyRules = map (L.get rPrems . L.get oprRuleE)
 
 difffreesInThyRules :: DiffTheory sig c r OpenProtoRule p p2 -> Side -> [[LVar]]
 difffreesInThyRules thy side = map (frees . L.get oprRuleE) $ diffTheorySideRules side thy
 
 diffpremsOfThyRules :: DiffTheory sig c r OpenProtoRule p p2 -> Side -> [[LNFact]]
 diffpremsOfThyRules thy side = map (L.get rPrems . L.get oprRuleE) $ diffTheorySideRules side  thy
-
-diffconcsOfThyRules :: DiffTheory sig c r OpenProtoRule p p2 -> Side -> [[LNFact]]
-diffconcsOfThyRules thy side = map (L.get rConcs . L.get oprRuleE ) $ diffTheorySideRules side thy
 
 ----------------------------------------------------
 -- Helper functions for rule and lemma generation
@@ -175,35 +169,26 @@ diffconcsOfThyRules thy side = map (L.get rConcs . L.get oprRuleE ) $ diffTheory
 generateRule ::  [LVar] -> [LNFact] -> Int -> OpenProtoRule
 generateRule freevars premises idx =  OpenProtoRule (Rule (ProtoRuleEInfo (StandRule (show idx)) [] []) (freesToFresh . deleteGlobals $ freevars) (premisesToOut premises ) ([generateAction (deleteGlobals freevars) idx]) ([])) []
 
-generateDiffRule :: Side -> [LVar] -> [LNFact] -> Int -> OpenProtoRule
-generateDiffRule side freevars premises idx =  OpenProtoRule (Rule (ProtoRuleEInfo (StandRule (show side ++ show idx)) [] []) (freesToFresh . deleteGlobals $ freevars) (premisesToOut premises ) ([generateAction (deleteGlobals freevars) idx]) ([])) []
-
 generateAction :: [LVar] ->Int -> LNFact
 generateAction vars idx = protoFact Persistent ("Generated_" ++ show idx) (map lvarToLnterm (deleteGlobals vars))
 
-generateLemma :: Int -> [LVar]-> [LNFact]-> ProtoLemma (ProtoFormula Unit2 (String, LSort) Name LVar) (Proof ())
-generateLemma idx vars kus = Lemma (show idx) ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : kus) [] (unproven ())
-
 generateSeparatedLemmas :: Int -> [LVar]-> [ProtoLemma (ProtoFormula Unit2 (String, LSort) Name LVar) (Proof ())]
 generateSeparatedLemmas idx vars = map (\v -> Lemma (show v) ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : [(lntermToKUFact (lvarToLnterm v))]) [] (unproven ())) vars
-
-generateDiffLemma :: Side -> Int -> [LVar]-> [LNFact]-> ProtoLemma     (ProtoFormula Unit2 (String, LSort) Name LVar) (Proof ())
-generateDiffLemma side idx vars kus = Lemma (show side ++ show idx) ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : kus) [] (unproven ())
 
 deleteGlobals :: [LVar] -> [LVar]
 deleteGlobals = filter (\v -> lvarSort v /= LSortPub)
 
 -- Exists-quantifies every non-time LVar of a formula
 existFormula ::  ProtoFormula Unit2 (String,LSort) Name LVar -> ProtoFormula Unit2 (String,LSort) Name LVar
-existFormula formula = foldl (\formula -> \var -> exists (((lvarName var)), (lvarSort var)) var formula) formula (frees formula)
+existFormula fm = foldl (\ formula var -> exists (lvarName var, lvarSort var) var formula) fm (frees fm)
 
 -- Assumes function passed only has free time variables anymore and exists-quantifies them
 existsTimeFormula :: ProtoFormula Unit2 (String,LSort) Name LVar -> ProtoFormula Unit2 (String,LSort) Name LVar
-existsTimeFormula fm = foldl (\formula -> \var -> exists (((lvarName var)), LSortNode) var formula) fm (frees fm)
+existsTimeFormula fm = foldl (\ formula var -> exists (lvarName var, LSortNode) var formula) fm (frees fm)
 
 -- Takes a list of facts and logically ands them into a formula that can be used for a lemma
 landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
-landFormula facts = foldl (\fm -> \(idx, fact) -> fm .&&. (Ato (Action (LIT (Var (Free (LVar (show idx) LSortNode 0))) ) fact )))  ltrue (zip [0..]  (map freeFact facts))
+landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map freeFact facts))
 
 -- Transforms different kind of facts into the desired form
 freesToFresh :: [LVar] -> [LNFact]
@@ -211,9 +196,6 @@ freesToFresh = map (freshFact . lvarToLnterm)
 
 premisesToOut :: [LNFact] -> [LNFact]
 premisesToOut =  map (outFact . natToFreshVars) . concatMap factTerms
-
-concsToKU :: [LNFact] -> [LNFact]
-concsToKU = map kuFact . concatMap factTerms
 
 -- Convenience functions for converting vars/terms
 freeLNTerm :: LVar -> BVar LVar
