@@ -220,6 +220,8 @@ module Theory (
   , getDiffClassifiedRules
   , getInjectiveFactInsts
   , getDiffInjectiveFactInsts
+  , getLeftProtoRule
+  , getRightProtoRule
 
   , getSource
   , getDiffSource

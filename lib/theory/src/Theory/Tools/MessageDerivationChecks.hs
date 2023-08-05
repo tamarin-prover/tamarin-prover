@@ -5,7 +5,7 @@ module Theory.Tools.MessageDerivationChecks (
 
 import  Theory.Model.Formula
 import  qualified Data.Label as L
-import Theory (OpenTranslatedTheory, OpenDiffTheory)
+import Theory (OpenTranslatedTheory, OpenDiffTheory, getLeftProtoRule, getRightProtoRule)
 import Items.RuleItem
 import TheoryObject
 import Theory.Model
@@ -49,10 +49,14 @@ diffCheckVariableDeducability thy sig sources prover diffprover =
         newrules =  map (\(idx, freevs, prems )-> generateRule freevs (premisesToOut prems) idx) freesAndPrems
         newlemmas =  map (\(idx, freevs, _) -> generateSeparatedLemmas idx freevs) freesAndPrems
         freesAndPrems = freesAndPremsLHS ++ freesAndPremsRHS
-        freesAndPremsRHS = zip3 [0..] (difffreesInThyRules closedThy RHS) (map (map (fmap replacePrivate)) $ diffpremsOfThyRules closedThy RHS)
-        freesAndPremsLHS = zip3  [0..] (difffreesInThyRules closedThy LHS) (map (map (fmap replacePrivate)) $ diffpremsOfThyRules closedThy LHS)
-        freeVars = difffreesInThyRules closedThy LHS ++ difffreesInThyRules closedThy RHS
-        closedThy = openDiffTheory ( closeDiffTheoryWithMaude sig thy True )
+        freesAndPremsRHS = zip3 [0..] (freesInThyRules rightOpenRules) (map (map (fmap replacePrivate)) $ premsOfThyRules rightOpenRules)
+        freesAndPremsLHS = zip3 [0..] (freesInThyRules leftOpenRules) (map (map (fmap replacePrivate)) $ premsOfThyRules leftOpenRules)
+        freeVars = freesInThyRules (leftOpenRules ++ rightOpenRules)
+
+        diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy)) $ diffTheoryDiffRules thy
+        leftOpenRules  = map getLeftProtoRule  diffRules
+        rightOpenRules = map getRightProtoRule diffRules
+
 
 -----------------------------------------------
 -- Manipulating Theories
@@ -155,12 +159,6 @@ freesInThyRules = map (frees . L.get oprRuleE)
 
 premsOfThyRules :: [OpenProtoRule] -> [[LNFact]]
 premsOfThyRules = map (L.get rPrems . L.get oprRuleE)
-
-difffreesInThyRules :: DiffTheory sig c r OpenProtoRule p p2 -> Side -> [[LVar]]
-difffreesInThyRules thy side = map (frees . L.get oprRuleE) $ diffTheorySideRules side thy
-
-diffpremsOfThyRules :: DiffTheory sig c r OpenProtoRule p p2 -> Side -> [[LNFact]]
-diffpremsOfThyRules thy side = map (L.get rPrems . L.get oprRuleE) $ diffTheorySideRules side  thy
 
 ----------------------------------------------------
 -- Helper functions for rule and lemma generation
