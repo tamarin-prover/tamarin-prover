@@ -1036,8 +1036,7 @@ formulaReportsDiff thy = do
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReport :: OpenTranslatedTheory -> WfErrorReport
 multRestrictedReport thy = do
-    ruO <- theoryRules thy
-    let ru = get oprRuleE ruO
+    ru <- thyProtoRules thy
     (,) (underlineTopic "Multiplication restriction of rules") <$>
         case restrictedFailures ru of
           ([],[]) -> []
@@ -1103,8 +1102,7 @@ multRestrictedReport thy = do
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReportDiff :: OpenDiffTheory -> WfErrorReport
 multRestrictedReportDiff thy = do
-    ruO <- diffTheoryDiffRules thy
-    let ru = get dprRule ruO
+    ru <- diffThyProtoRules thy
     (,) (underlineTopic "Multiplication restriction of rules") <$>
         case restrictedFailures ru of
           ([],[]) -> []
