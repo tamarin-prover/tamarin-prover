@@ -36,7 +36,7 @@ This model uses the oracle `oracle-cwa`.
 
 This artifact can be evaluated with a local Tamarin installation or using the provided Docker container.
 
-Tamarin and its dependencies can be installed following the instruction from the [Tamarin manual](https://tamarin-prover.github.io/manual/book/002_installation.html).
+Tamarin and its dependencies can be installed following the instruction from the [Tamarin manual](https://tamarin-prover.github.io/manual/master/book/002_installation.html).
 
 Installation instruction for Docker are available in the [Docker documentation](https://docs.docker.com/engine/install).
 The Docker container can be obtained by executing

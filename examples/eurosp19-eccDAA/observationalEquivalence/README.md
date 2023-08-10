@@ -12,7 +12,7 @@ Tamarin Installation
 
 To run these files, you will need the Tamarin Prover tool installed, git hash `44d5ecbc2097ee99a22a01876e445047f2a31c54` or later, and its dependencies.
 
-Please follow the [instructions within the Tamarin Manual (link)](https://tamarin-prover.github.io/manual/book/002_installation.html).
+Please follow the [instructions within the Tamarin Manual (link)](https://tamarin-prover.github.io/manual/master/book/002_installation.html).
 
 Running Tamarin on the model
 ----------------------------
