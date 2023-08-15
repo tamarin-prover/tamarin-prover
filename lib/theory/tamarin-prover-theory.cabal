@@ -14,7 +14,7 @@ maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
                     Cas Cremers <cremers@cispa.de>
-copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2018
+copyright:          Benedikt Schmidt, Simon Meier, Cas Cremers, Jannik Dreier, Ralf Sasse, 2010-2023
 
 synopsis:           Security protocol types and constraint solver library for the tamarin prover.
 
