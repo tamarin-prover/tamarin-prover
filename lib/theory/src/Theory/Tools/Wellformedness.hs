@@ -893,6 +893,55 @@ lemmaAttributeReportDiff thy = do
              text "cannot reuse 'exists-trace' lemmas"
            )
 
+
+-- check that only message and node variables are used
+checkQuantifiers :: Document b => Show a => String -> ProtoFormula syn (a, LSort) c v -> [b]
+checkQuantifiers header fm
+  | null disallowed = []
+  | otherwise       = return $ fsep $
+      (text $ header ++ " uses quantifiers with wrong sort:") :
+      (punctuate comma $ map (nest 2 . text . show) disallowed)
+  where
+    binders    = foldFormula (const mempty) (const mempty) id (const mappend)
+                      (\_ binder rest -> binder : rest) fm
+    disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
+
+-- check that only bound variables and public names are used
+checkTerms :: Document b => Show v => String -> MaudeSig -> Formula s Name v -> [b]
+checkTerms header maudeSig fm
+  | null offenders = []
+  | otherwise      = return $
+      (fsep $
+        (text $ header ++ " uses terms of the wrong form:") :
+        (punctuate comma $ map (nest 2 . text . quote . show) offenders)
+      ) $--$
+      wrappedText
+        "The only allowed terms are public names and bound node and message\
+        \ variables. If you encounter free message variables, then you might\
+        \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
+        \ this is unambiguous. Moreover, reducible function symbols are\
+        \ disallowed."
+  where
+    irreducible = irreducibleFunSyms $ maudeSig
+
+    offenders = filter (not . allowed) $ formulaTerms fm
+    allowed (viewTerm -> Lit (Var (Bound _)))        = True
+    allowed (viewTerm -> Lit (Con (Name PubName _))) = True
+    -- we allow multiset union
+    allowed (viewTerm2 -> FUnion args)               = all allowed args
+    -- allowed (viewTerm2 -> FNatPlus args)             = all allowed args  -- line from Cedric Staub which seems to be unnecessary
+    -- we allow irreducible function symbols
+    allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
+    allowed _                                                    = False
+
+-- check that the formula can be converted to a guarded formula
+checkGuarded :: HighlightDocument a => String -> LNFormula -> [a]
+checkGuarded header fm = case formulaToGuarded fm of
+    Left err -> return $
+        text (header ++ " cannot be converted to a guarded formula:") $-$
+        nest 2 err
+    Right _  -> []
+
 -- | Check for mistakes in lemmas.
 --
 -- TODO: Perhaps a lot of errors would be captured when making the signature
@@ -901,7 +950,7 @@ formulaReports :: OpenTranslatedTheory -> WfErrorReport
 formulaReports thy = do
     (header, fm) <- annFormulas
     msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
-         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header fm
+         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header (get (sigpMaudeSig . thySignature) thy) fm
          , ((,) (underlineTopic " Formula guardedness"))      <$> checkGuarded header fm
          ]
   where
@@ -914,50 +963,6 @@ formulaReports thy = do
                          fm     = get rstrFormula rstr
                      return (header, fm)
 
-    -- check that only message and node variables are used
-    checkQuantifiers header fm
-      | null disallowed = []
-      | otherwise       = return $ fsep $
-          (text $ header ++ " uses quantifiers with wrong sort:") :
-          (punctuate comma $ map (nest 2 . text . show) disallowed)
-      where
-        binders    = foldFormula (const mempty) (const mempty) id (const mappend)
-                         (\_ binder rest -> binder : rest) fm
-        disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
-
-    -- check that only bound variables and public names are used
-    checkTerms header fm
-      | null offenders = []
-      | otherwise      = return $
-          (fsep $
-            (text $ header ++ " uses terms of the wrong form:") :
-            (punctuate comma $ map (nest 2 . text . quote . show) offenders)
-          ) $--$
-          wrappedText
-            "The only allowed terms are public names and bound node and message\
-            \ variables. If you encounter free message variables, then you might\
-            \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
-            \ this is unambiguous. Moreover, reducible function symbols are\
-            \ disallowed."
-      where
-        irreducible = irreducibleFunSyms $ get (sigpMaudeSig . thySignature) thy
-
-        offenders = filter (not . allowed) $ formulaTerms fm
-        allowed (viewTerm -> Lit (Var (Bound _)))        = True
-        allowed (viewTerm -> Lit (Con (Name PubName _))) = True
-        -- we allow multiset union
-        allowed (viewTerm2 -> FUnion args)               = all allowed args
-        -- allowed (viewTerm2 -> FNatPlus args)             = all allowed args  -- line from Cedric Staub which seems to be unnecessary
-        -- we allow irreducible function symbols
-        allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
-        allowed _                                                    = False
-
-    -- check that the formula can be converted to a guarded formula
-    checkGuarded header fm = case formulaToGuarded fm of
-        Left err -> return $
-            text (header ++ " cannot be converted to a guarded formula:") $-$
-            nest 2 err
-        Right _  -> []
 
 
 -- | Check for mistakes in lemmas.
@@ -968,7 +973,7 @@ formulaReportsDiff :: OpenDiffTheory -> WfErrorReport
 formulaReportsDiff thy = do
     (header, fm) <- annFormulas
     msum [ ((,) (underlineTopic "Quantifier sorts")) <$> checkQuantifiers header fm
-         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header fm
+         , ((,) (underlineTopic "Formula terms"))    <$> checkTerms header ( get (sigpMaudeSig . diffThySignature) thy) fm
          , ((,) (underlineTopic "Formula guardedness"))      <$> checkGuarded header fm
          ]
   where
@@ -981,51 +986,6 @@ formulaReportsDiff thy = do
                          fm     = get rstrFormula rstr
                      return (header, fm)
 
-    -- check that only message and node variables are used
-    checkQuantifiers header fm
-      | null disallowed = []
-      | otherwise       = return $ fsep $
-          (text $ header ++ " uses quantifiers with wrong sort:") :
-          (punctuate comma $ map (nest 2 . text . show) disallowed)
-      where
-        binders    = foldFormula (const mempty) (const mempty) id (const mappend)
-                         (\_ binder rest -> binder : rest) fm
-        disallowed = filter (not . (`elem` [LSortMsg, LSortNode, LSortNat]) . snd) binders
-
-    -- check that only bound variables and public names are used
-    checkTerms header fm
-      | null offenders = []
-      | otherwise      = return $
-          (fsep $
-            (text $ header ++ " uses terms of the wrong form:") :
-            (punctuate comma $ map (nest 2 . text . quote . show) offenders)
-          ) $--$
-          wrappedText
-            "The only allowed terms are public names and bound node and message\
-            \ variables. If you encounter free message variables, then you might\
-            \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
-            \ this is unambiguous. Moreover, reducible function symbols are\
-            \ disallowed."
-      where
-        irreducible = irreducibleFunSyms $ get (sigpMaudeSig . diffThySignature) thy
-
-        offenders = filter (not . allowed) $ formulaTerms fm
-        allowed (viewTerm -> Lit (Var (Bound _)))        = True
-        allowed (viewTerm -> Lit (Con (Name PubName _))) = True
-        -- we allow multiset union
-        allowed (viewTerm2 -> FUnion args)                = all allowed args
-        -- we allow irreducible function symbols
-        allowed (viewTerm -> FApp o args) | o `S.member` irreducible = all allowed args
-        allowed _                                                    = False
-
-    -- check that the formula can be converted to a guarded formula
-    checkGuarded header fm = case formulaToGuarded fm of
-        Left err -> return $
-            text (header ++ " cannot be converted to a guarded formula:") $-$
-            nest 2 err
-        Right _  -> []
-
-
 -- | Check that all rules are multipliation restricted. Compared
 -- to the definition in the paper we are slightly more lenient.
 -- We also accept a rule that is an instance of a multiplication
@@ -1034,10 +994,9 @@ formulaReportsDiff thy = do
 --    occuring in lhs with fresh variables in rule.
 -- 2. check vars(rhs) subset of vars(lhs) u V_Pub for abstracted rule for abstracted variables.
 -- 3. check that * does not occur in rhs of abstracted rule.
-multRestrictedReport :: OpenTranslatedTheory -> WfErrorReport
-multRestrictedReport thy = do
-    ruO <- theoryRules thy
-    let ru = get oprRuleE ruO
+multRestrictedReport' :: FunSig -> [ProtoRuleE] -> WfErrorReport
+multRestrictedReport' irreducible ru0 = do
+    ru <- ru0
     (,) (underlineTopic "Multiplication restriction of rules") <$>
         case restrictedFailures ru of
           ([],[]) -> []
@@ -1090,6 +1049,17 @@ multRestrictedReport thy = do
                  , lvarSort v /= LSortPub ]
 
 
+-- | Check that all rules are multipliation restricted. Compared
+-- to the definition in the paper we are slightly more lenient.
+-- We also accept a rule that is an instance of a multiplication
+-- restricted rule.
+-- 1. Consistently abstract terms with outermost reducible function symbols
+--    occuring in lhs with fresh variables in rule.
+-- 2. check vars(rhs) subset of vars(lhs) u V_Pub for abstracted rule for abstracted variables.
+-- 3. check that * does not occur in rhs of abstracted rule.
+multRestrictedReport :: OpenTranslatedTheory -> WfErrorReport
+multRestrictedReport thy = multRestrictedReport' irreducible (thyProtoRules thy)
+  where
     irreducible = irreducibleFunSyms $ get (sigpMaudeSig . thySignature) thy
 
 
@@ -1102,61 +1072,8 @@ multRestrictedReport thy = do
 -- 2. check vars(rhs) subset of vars(lhs) u V_Pub for abstracted rule for abstracted variables.
 -- 3. check that * does not occur in rhs of abstracted rule.
 multRestrictedReportDiff :: OpenDiffTheory -> WfErrorReport
-multRestrictedReportDiff thy = do
-    ruO <- diffTheoryDiffRules thy
-    let ru = get dprRule ruO
-    (,) (underlineTopic "Multiplication restriction of rules") <$>
-        case restrictedFailures ru of
-          ([],[]) -> []
-          (mults, unbounds) ->
-              return $
-                (text "The following rule is not multiplication restricted:")
-                $-$ (nest 2 (prettyProtoRuleE ru))
-                $-$ (text "")
-                $-$ (text "After replacing reducible function symbols in lhs with variables:")
-                $-$ (nest 2 $ prettyProtoRuleE (abstractRule ru))
-                $-$ (text "")
-                $-$ (if null mults then mempty
-                     else nest 2 $ (text "Terms with multiplication: ") <-> (prettyLNTermList mults))
-                $-$ (if null unbounds then mempty
-                     else nest 2 $ (text "Variables that occur only in rhs: ") <-> (prettyVarList unbounds))
+multRestrictedReportDiff thy = multRestrictedReport' irreducible (diffThyProtoRules thy)
   where
-    abstractRule ru@(Rule i lhs acts rhs nvs) =
-        (`evalFreshAvoiding` ru) .  (`evalBindT` noBindings) $ do
-        Rule i <$> mapM (traverse abstractTerm) lhs
-               <*> mapM (traverse replaceAbstracted) acts
-               <*> mapM (traverse replaceAbstracted) rhs
-               <*> (traverse replaceAbstracted) nvs
-
-    abstractTerm (viewTerm -> FApp o args) | o `S.member` irreducible =
-        fApp o <$> mapM abstractTerm args
-    abstractTerm (viewTerm -> Lit l) = return $ lit l
-    abstractTerm t = varTerm <$> importBinding (`LVar` sortOfLNTerm t) t "x"
-
-    replaceAbstracted t = do
-        b <- lookupBinding t
-        case b of
-          Just v -> return $ varTerm v
-          Nothing ->
-              case viewTerm t of
-                FApp o args ->
-                    fApp o <$> mapM replaceAbstracted args
-                Lit l       -> return $ lit l
-
-    restrictedFailures ru = (mults, unbound ruAbstr \\ unbound ru)
-      where
-        ruAbstr = abstractRule ru
-
-        mults = [ mt | Fact _ _ ts <- get rConcs ru, t <- ts, mt <- multTerms t ]
-
-        multTerms t@(viewTerm -> FApp (AC Mult) _)  = [t]
-        multTerms   (viewTerm -> FApp _         as) = concatMap multTerms as
-        multTerms _                                 = []
-
-    unbound ru = [v | v <- frees (get rConcs ru) \\ frees (get rPrems ru)
-                 , lvarSort v /= LSortPub ]
-
-
     irreducible = irreducibleFunSyms $ get (sigpMaudeSig . diffThySignature) thy
 
 
