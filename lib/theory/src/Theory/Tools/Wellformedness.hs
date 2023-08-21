@@ -314,28 +314,35 @@ natSortErrors itemsTerms = [ (underlineTopic "Nat Sorts", prettyLNTerm err <> te
 natWellSortedReport :: OpenTranslatedTheory -> WfErrorReport
 natWellSortedReport thy = natSortErrors itemsTerms
   where
-    itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get thyItems thy
+    itemsTerms = map bTermToLTermStupid (concat allRuleTerms ++ concatMap getItemTerms (get thyItems thy))
 
     getItemTerms :: TheoryItem OpenProtoRule ProofSkeleton () -> [BLTerm]
-    getItemTerms (RuleItem (get oprRuleE -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    -- getItemTerms (RuleItem (get oprRuleE -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    -- FIXED: use thyProtoRules as below to ensure macros have been applied correctly
     getItemTerms (LemmaItem (formulaToGuardedTyped . get lFormula -> Right f)) = boundTerms [] f
     getItemTerms (RestrictionItem (formulaToGuardedTyped . get rstrFormula -> Right f)) = boundTerms [] f
     getItemTerms (PredicateItem (formulaToGuardedTyped . get pFormula -> Right p)) = boundTerms [] p
     getItemTerms _ = []
 
+    allRuleTerms = map getRuleTerms $ thyProtoRules thy
+    getRuleTerms r = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+
 -- | check nat-Sorting (i.e., below + is only nat)
 natWellSortedReportDiff :: OpenDiffTheory -> WfErrorReport
 natWellSortedReportDiff thy = natSortErrors itemsTerms
   where
-    itemsTerms = map bTermToLTermStupid $ concatMap getItemTerms $ get diffThyItems thy
+    itemsTerms = map bTermToLTermStupid (concat allRuleTerms ++ concatMap getItemTerms (get diffThyItems thy))
 
-    getItemTerms :: DiffTheoryItem DiffProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> [BLTerm]
-    getItemTerms (DiffRuleItem (get dprRule -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    getItemTerms :: DiffTheoryItem DiffProtoRule OpenProtoRule DiffProofSkeleton ProofSkeleton -> [BLTerm]
+    -- getItemTerms (DiffRuleItem (get dprRule -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
+    -- FIXED: use diffThyProtoRules as below to ensure macros have been applied correctly
     getItemTerms (EitherRuleItem (_, get oprRuleE -> r)) = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
     getItemTerms (EitherLemmaItem (_, formulaToGuardedTyped . get lFormula -> Right f)) = boundTerms [] f
     getItemTerms (EitherRestrictionItem (_, formulaToGuardedTyped . get rstrFormula -> Right f)) = boundTerms [] f
     getItemTerms _ = []
 
+    allRuleTerms = map getRuleTerms $ diffThyProtoRules thy
+    getRuleTerms r = map lTermToBTerm $ concatMap factTerms (get rPrems r ++ get rActs r ++ get rConcs r)
 
 
 --- | Check that the protocol rule variants are correct.
@@ -466,7 +473,7 @@ publicNamesReport' rules =
         text $ "rule " ++ show ruName ++ ": "++" name " ++
          show (pub) ++ concatMap ((", " ++) . show . snd) rest
     ppRuleAndName [] = text "Error: empty clash"
-    
+
 publicNamesReport :: OpenTranslatedTheory -> WfErrorReport
 publicNamesReport thy = publicNamesReport' $ thyProtoRules thy
 
@@ -525,7 +532,7 @@ reservedFactNameRules' rules = do
             text ("rule " ++ quote (showRuleCaseName ru))
             <-> text ("contains facts with reserved names"++msg) $-$
             nest 2 (fsep $ punctuate comma $ map prettyLNFact fas)
-  
+
   msum [ check " on left-hand-side:"  lfact
         , check " on the middle:" mfact
         , check " on the right-hand-side:" rfact ]
@@ -855,7 +862,7 @@ formulaFacts =
     atomFacts (Less _ _)      = mempty
     atomFacts (Last _)        = mempty
 
-atomTerms :: ProtoAtom s t -> [t]
+atomTerms :: ProtoAtom s t -> [t]
 atomTerms (Action i fa)        = i : factTerms fa
 atomTerms (Syntactic _)       = []
 -- atomTerms (Syntactic (Pred p)) = factTerms p
