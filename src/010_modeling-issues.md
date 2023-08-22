@@ -233,5 +233,5 @@ In the rule `setup`, this is the case because we used m once as a fresh value
 ### What to do when Tamarin does not terminate ###
 Tamarin may fail to terminate when it automatically constructs proofs.
 One reason for this is that there are open chains.
-For advice on how to find and remove open chains, see [open chains](008_precomputation.html#sec:openchains).
+For advice on how to find and remove open chains, see [open chains](009_precomputation.html#sec:openchains).
 
