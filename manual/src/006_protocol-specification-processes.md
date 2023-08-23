@@ -242,7 +242,7 @@ offline most of time, but can be reached using [the builtin theory for reliable 
 IEEs, or enclaves, allow to run code inside a secure environment and to provide
 a certificate of the current state (including the executed program) of the
 enclave. A localized version of the applied pi-calculus, defined in
-[@JKS-eurosp17] and included in SAPIC, allows to model such environments.
+[@jacomme2017symbolic] and included in SAPIC, allows to model such environments.
 
 Processes can be given a unique identifier, which we call location:
 ```
@@ -276,7 +276,7 @@ Report(x,y) <=> phi(x,y)
 ```
 The attacker can then produce any `report(m)@loc` if `phi(m,loc)` is true.
 
-More details can be found in the corresponding paper [@JKS-eurosp17], and the examples.
+More details can be found in the corresponding paper [@jacomme2017symbolic], and the examples.
 
 ## Process declarations using `let`
 
@@ -324,3 +324,127 @@ and subprocesses:
 ```
 let P(a:lol) =
 ```
+
+Export features{#sec:translation}
+-----
+
+It is possible to export processes defined in .spthy files into the formats
+used by other protocol verifiers, making it possible to switch between tools.
+One can even translate lemmas in one tool to assumptions in other to combine
+these results. The correctness of the translation is proven in [@sapicplus].
+
+The `-m` flag selects an output module:
+```
+ -m --output-module[=spthy|spthytyped|msr|proverif|deepsec]
+``` 
+
+The following outputs are supported:
+
+- *spthy:* parse .spthy file and output
+- *spthytyped* - parse and type .spthy file ad output
+- *msr* - parse and type .spthy file and translate processes to multiset-rewrite rules
+- *proverif*: - translate to [ProVerif](https://bblanche.gitlabpages.inria.fr/proverif/) input format
+- *deepsec*: - translate to [Deepsec](https://deepsec-prover.github.io/) input format
+
+## Lemma selection
+
+The same spthy file may be used with multiple tools as backend. To list the
+tools that a lemma should be exported to, use the `output` attribute:
+```
+lemma secrecy[reuse, output=[proverif,msr]]:
+```
+Lemmas are omitted when the currently selected output module is not in that
+list.
+
+## Exporting queries
+
+Security properties are automatically translated, if it is possible. (ProVerif
+only supports two quantifier alternations, for example.) As, e.g., DeepSec,
+supports queries that are not expressible in Tamarin's language, it is possible
+to define blocks that are covered on export. They are written as:
+```
+export IDENTIFIER:
+"
+    text to export
+"
+```
+where IDENTIFIER is one of the following:
+
+- `requests`: is included in the requests the target solver tries to prove. E.g.:
+
+    ```
+    export requests:
+    "
+    let sys1 = new sk; (!^3 (new skP; P(sk,skP)) | !^3 S(sk)).
+
+    let sys2 = new sk; ( ( new skP; !^3 P(sk,skP)) | !^3 S(sk)).
+
+    query session_equiv(sys1,sys2).
+    "
+    ```
+
+## Smart export features
+
+- Some predicates / conditions appear in `if .. ` processes have [dedicates
+      translations](007_property-specification.html#sec:predicates-special).
+
+
+## Natural numbers
+
+SAPIC supports the usage of the builtin natural numbers of both GSVerif and Tamarin.
+
+To use them, variables must be declared with the `nat` type, and the corresponding builtin must be declared:
+```
+builtins: natural-numbers
+
+process:
+
+in(ctr0:nat);
+let ctr1:nat = ctr0 %+ %1 in
+out(ctr1)
+```
+
+The subterm operator `<<` will be translated for GSVerif as `<`.
+
+Beware, declaring a nat variable in SAPIC does not instantiate a nat
+Tamarin variable, which may create additional possible sources. To
+declare and use a true Tamarin nat variable, similar to fresh
+variables and other, each occurence of the variable must be prefixed
+with `%` (or `~` in the case of fresh variables):
+```
+builtins: natural-numbers
+
+process:
+
+in(%ctr0:nat);
+let ctr1:nat = %ctr0 %+ %1 in
+out(ctr1)
+```
+
+
+This may however lead to divergence in Tamarin and Proverif threat models.
+
+
+## Options
+
+Some options allow altering the behaviour of the translation, but can
+leat to divergence between Tamarin and Proverif. They should be used
+with care.  Adding an option is performed in the headers of the file,
+with:
+
+```
+options: opt1, opt2, ...
+```
+
+The available options are:
+
+ * `translation-state-optimisation`: this enables the pure state
+   translation described in the SAPIC+ paper. Both the original and
+   the optimized version do not always yield the same benefit, hence
+   the optional switch.
+ * `translation-compress-events`: by default, each event is translated
+   in a singular rule. This may create a Tamarin slowdown when
+   translating a sequence of events, but is due to the fact that in
+   Proverif, multiple events always occur at distinct timestampe. This
+   option allows compressing events into a single rule.
+ * `translation-progress`: see above.

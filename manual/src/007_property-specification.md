@@ -93,11 +93,6 @@ lemma one_smaller_two:
     "All x y #i. B(x,y)@i ==> Smaller(x,y)"
 ```
 
-#### Special predicates {#sec:predicates-special}
-
-In processes, the predicate `Smaller(x,y)` can be written `(<)` with the added
-bonus that it is translated to an integer comparisson in the ProVerif export.
-
 ### Guardedness
 To ensure guardedness, for universally quantified variables, one has to check 
 that they all occur in an action constraint right after the quantifier and that 
