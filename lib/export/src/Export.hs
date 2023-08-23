@@ -339,6 +339,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       Lit v -> ppLit v
       FApp (AC Xor) ts -> ppXor ts
       FApp (AC o) ts -> ppTerms (ppACOp o) 1 "(" ")" ts
+      FApp (NoEq s) [] | s == natOneSym -> text "1"      
       FApp (NoEq s) [t1, t2] | s == expSym -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
       FApp (NoEq s) [t1, t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
       FApp (NoEq _) [t1, t2] | isPair tm -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -348,7 +349,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       FApp List ts -> ppFun (BC.pack "LIST") ts
 
     ppACOp Mult = "*"
-    ppACOp Union = "+"
+    ppACOp NatPlus = "+"
     ppACOp Xor = "⊕"
 
     ppXor [] = text "one"
@@ -880,6 +881,7 @@ ppProtoAtom _ True _ ppT (EqE l r) =
   (sep [ppT l <-> text "<>", ppT r], M.empty)
 -- sep [ppNTerm l <-> text "≈", ppNTerm r]
 ppProtoAtom _ _ _ ppT (Less u v) = (ppT u <-> opLess <-> ppT v, M.empty)
+ppProtoAtom _ _ _ ppT (Subterm u v) = (ppT u <-> opLess <-> ppT v, M.empty)
 ppProtoAtom _ _ _ _ (Last i) = (operator_ "last" <> parens (text (show i)), M.empty)
 
 ppAtom :: TypingEnvironment -> Bool -> (LNTerm -> Doc) -> ProtoAtom s LNTerm -> (Doc, M.Map LVar SapicType)
