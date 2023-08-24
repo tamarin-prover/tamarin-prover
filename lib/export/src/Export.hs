@@ -351,6 +351,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
     ppACOp Mult = "*"
     ppACOp NatPlus = "+"
     ppACOp Xor = "⊕"
+    ppACOp u = translationFail $ "Unsupported operator " ++ show u
 
     ppXor [] = text "one"
     ppXor [t1, t2] = text "xor(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -394,6 +395,10 @@ auxppSapicTerm tc mVars isPattern = auxppTerm ppLit
         | S.member lvar mVars ->
           translationWarning ("Pattern matching on fresh variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
           text "=" <> ppLVar lvar
+      Var (SapicLVar lvar@(LVar n LSortNat _) _)
+        | S.member lvar mVars ->
+          translationWarning ("Pattern matching on natural variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
+          text "=" <> ppLVar lvar          
       Var (SapicLVar lvar _)
         | S.member lvar mVars -> text "=" <> ppLVar lvar
       l | isPattern -> ppTypeLit tc l
@@ -1079,9 +1084,8 @@ loadHeaders tc thy typeEnv = do
       foldl
         ( \y x -> case List.lookup x builtins of
             Nothing -> case x of
-              "multiset"         -> -- on the long run, this should throw UnsupportedBuiltinMS, but we currently allow to use multiset in a restricted fashion
-                translationWarning "you are using in the Sapic model the multiset builtin. Unless you are only using it to model natural numbers, this may result in a failure of the translation." y
-              "bilinear-pairing" -> throw UnsupportedBuiltinBP
+              "multiset"         -> translationFail "Multiset is not supported in ProVerif. If you want to model natural numbers, you can use the dedicated Tamarin builtin."
+              "bilinear-pairing" -> translationFail "Bilinear pairings are not supported in ProVerif."
               _                  -> y
             Just t -> y `S.union` t
         )
