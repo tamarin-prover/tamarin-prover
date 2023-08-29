@@ -257,5 +257,5 @@ If this is intentional, the rule can be annotated with `[derivchecks]`, which wi
 ### What to do when Tamarin does not terminate ###
 Tamarin may fail to terminate when it automatically constructs proofs.
 One reason for this is that there are open chains.
-For advice on how to find and remove open chains, see [open chains](008_precomputation.html#sec:openchains).
+For advice on how to find and remove open chains, see [open chains](009_precomputation.html#sec:openchains).
 
