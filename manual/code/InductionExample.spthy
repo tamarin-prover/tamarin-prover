@@ -19,4 +19,12 @@ rule repeat:
 lemma AlwaysStarts [use_induction]:
   "All x #i. Loop(x) @i ==> Ex #j. Start(x) @j"
 
+rule finish:
+  [ A(x) ]
+--[ End(x) ]->
+  []
+
+lemma AlwaysStartsWhenEnds [use_induction]:
+  "All x #i. End(x) @i ==> Ex #j. Start(x) @j"
+
 end
