@@ -4,7 +4,7 @@ Model Specification using Processes {#sec:model-specification-proc}
 In this section, we provide an informal description of the process calculus now
 integrated in tamarin. It is called **SAPIC+**, which stands for "Stateful Applied
 PI-Calculus" (plus) and is described in the following papers:
-    
+
 - [@KK-jcs16] introduced the original version of SAPIC and its translation
       to multiset rewrite rules and axioms.
 
@@ -26,12 +26,12 @@ Processes{#sec:proc}
 -----
 
 A SAPIC+ process is described using the grammar we will introduce and
-illustrate by example in the followup. Throughout, let 
+illustrate by example in the followup. Throughout, let
 `n` stand for a fresh name,
 `x` for a variable,
 `t`, `t1` or `t2` for terms
 and
-`F` for a fact and `cond` for a conditional, which is either a comparisson `t1=t2` 
+`F` for a fact and `cond` for a conditional, which is either a comparisson `t1=t2`
 or a custom
 [predicate](007_property-specification.html#sec:predicates).
 
@@ -66,7 +66,7 @@ to a variable.
 
 If the channel is left out, the public channel `'c'` is assumed, which is the
 case in the majority of our examples. This is exactly what the facts `In(x)` and
-`Out(t)` represent. 
+`Out(t)` represent.
 
 **Example.** This process picks an encryption key, waits for an input and encrypts it.
 ```
@@ -76,9 +76,9 @@ new k; in(m); out(senc(m,k))
 Processes can also branch:
 `if cond then P else Q` will execute either `P` or `Q`, depending on whether `cond` holds.
 Most frequently, this is the equality check of
-form `t1 = t2`, but you can also define 
+form `t1 = t2`, but you can also define
 [a predicate](007_property-specification.html#sec:predicates) using Tamarin's
-security property syntax. 
+security property syntax.
 
 `Let`-bindings are allowed to faciliate writing processes
 where a term occur several times (possibly as a subterm) within the process
@@ -93,7 +93,7 @@ declares a destructor `adec`. In contrast to the encryption (represented by
 `aenc`), the decryption may fail, e.g., the term `adec(aenc(m,pk(sk)),sk')` is
 not representing a valid message. A destructor symbol allows to represent this
 failure. Destructors may only appear in `let`-patterns (i.e., to the right of
-`=`). If one of the destructors in a let pattern fails, the process moves into the else branch, e.g., 
+`=`). If one of the destructors in a let pattern fails, the process moves into the else branch, e.g.,
 ```
 new sk; new sk'; let x=adec(aenc(m,pk(sk)),sk') in P else Q
 ```
@@ -135,7 +135,7 @@ events and replications.
 The `event` construct is similar to actions in rules. In fact, it will be translated
 to actions. Like in rules, events  annotate parts of the processes and are
 useful for stating security properties. Each of these constructs can be thought
-of as "local" computations. 
+of as "local" computations.
 
 
 `!P` is the replication of P, which allows an unbounded number of sessions in
@@ -195,7 +195,6 @@ an action `Insert(x,y)` has occurred previously, and in between, no other
 the global store is distinct from the set of facts in the current state.
 
 ### Enforcing local progress (optional) {#sec:local-progress}
-
 
 The translation from processes can be modified so it enforces a different
 semantics. In this semantics, the set of traces consists of only those where
@@ -303,7 +302,7 @@ let B() = A() | A()
 
 It is possible to declare types to avoid potential user errors. This does
 not affect the attacker, as these types are disregarded after translation into
-multiset-rewrite rues. 
+multiset-rewrite rues.
 
 Types can be declared for function symbols:
 ```spthy
