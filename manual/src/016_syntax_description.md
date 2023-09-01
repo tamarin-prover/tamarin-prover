@@ -13,7 +13,7 @@ All security protocol theory are named and delimited by `begin` and `end`.
 We explain the non-terminals of the body in the following paragraphs.
 
     security_protocol_theory := 'theory' ident 'begin' body 'end'
-    body := (signature_spec | global_heuristic | rule |
+    body := (signature_spec | global_heuristic | tactic | rule |
                 restriction | lemma | formal_comment)*
 
 Here, we use the term signature more liberally to denote both the defined
@@ -43,7 +43,7 @@ enable it to parse terms containing exponentiations, e.g.,  g ^ x.
                     | 'hashing' | 'symmetric-encryption'
                     | 'asymmetric-encryption' | 'signing'
                     | 'bilinear-pairing' | 'xor'
-                    | 'multiset' | 'revealing-signing'
+                    | 'multiset' | 'natural-numbers' | 'revealing-signing'
 
 A global heuristic sets the default heuristic that will be used when autoproving
 lemmas in the file. The specified goal ranking can be any of those discussed in
@@ -53,6 +53,24 @@ Section [Heuristics](010_advanced-features.html#sec:heuristics).
     goal_ranking          := standard_goal_ranking | oracle_goal_ganking
     standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
     oracle_goal_ranking   := 'o' '"' [^'"']* '"' | 'O' '"' [^'"']* '"'
+
+The tactics allow the user to write their own heuristics based on the lemmas there are trying to prove. Their use is descibed in in Section [Using a Tactic](010_advanced-features.html#sec:fact-annotations#subsec:tactic).
+
+    tactic                := 'tactic' ':' ident
+                             [presort]
+                             (prio)+ (deprio)* | (prio)* (deprio)+
+    presort               := 'presort' ':' 'standard_goal_ranking
+    prio                  := 'prio' ':' ['{'post_ranking'}']
+                                 (function)+
+    deprio                := 'deprio' ':' ['{'post_ranking'}']
+                                 (function)+
+    standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
+    post_ranking          := 'smallest' | 'id'                   
+    function              := and_function [ '|' and_function]*
+    and_function          := not_function [ '&' not_function]*
+    not_function          := (not)? function_name ['"' param '"']*
+    function_name         :=   'regex' | 'isFactName' | 'isInFactTerms' | 'dhreNoise'
+                             | 'defaultNoise' | 'reasonableNoncesNoise' | 'nonAbsurdGoal'
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
 to a security protocol theory is the set of all multiset rewriting rules
@@ -88,6 +106,11 @@ in a bottom-up fashion. For example,
 This becomes a lot less confusing if you keep the set of variables on the
 left-hand side separate from the free variables on the right-hand side.
 
+Macros works similarly to let-blocks, but apply globally to all rules.
+
+    macros      := 'macros' ':' macro (',' macro)*
+    macro       := ident '(' [(var) (',' var)*] ')' '=' term
+
 Restrictions specify restrictions on the set of traces considered, i.e., they filter
 the set of traces of a protocol. The formula of a restriction is available as an
 assumption in the proofs of *all* security properties specified in this
@@ -116,7 +139,7 @@ quantifier.
 
 In observational equivalence mode, lemmas can be associated to one side.
 
-    lemma_attr      := '[' ('sources' | 'reuse' | 'use_induction' | 
+    lemma_attr      := '[' ('sources' | 'reuse' | 'use_induction' |
                             'hide_lemma=' ident | 'heuristic=' heuristic |
                             'left' | 'right') ']'
 
@@ -137,7 +160,7 @@ It indicates the proof method used at each step, which may include multiple case
     node_var       := ['#'] ident ['.' natural]      // temporal sort prefix
                     | ident ['.' natural] ':' 'node' // temporal sort suffix
     natural        := digit+
-    natural_sub    := ('₀'|'₁'|'₂'|'₃'|'₄'|'₅'|'₆'|'₇'|'₈'|'₉')+
+    natural_subscr := ('₀'|'₁'|'₂'|'₃'|'₄'|'₅'|'₆'|'₇'|'₈'|'₉')+
 
 Formal comments are used to make the input more readable. In contrast
 to `/*...*/` and `//...` comments, formal comments are stored and output
@@ -160,7 +183,8 @@ arguments of an n-ary function application must agree with the arity given in
 the function definition.
 
     tupleterm := '<' msetterm (',' msetterm)* '>'
-    msetterm  := xorterm ('+' xorterm)*
+    msetterm  := natterm (('++' | '+') natterm)*
+    natterm   := xorterm ('%+' xorterm)*
     xorterm   := multterm (('XOR' | ⊕) multterm)*
     multterm  := expterm ('*' expterm)*
     expterm   := term    ('^' term   )*
@@ -213,14 +237,15 @@ guards.
     disjunction := conjunction (('|' | '∨') conjunction)* // left-associative
     conjunction := negation (('&' | '∧') negation)*       // left-associative
     negation    := ['not' | '¬'] atom
-    atom        := '⊥' | 'F' | '⊤' | 'T'        // true or false
-                 | '(' formula ')'          // nested formula
-                 | 'last' '(' node_var ')'  // 'last' temporal variable for induction
-                 | fact '@' node_var        // action
-                 | node_var '<' node_var    // ordering of temporal variables
-                 | msetterm '=' msetterm    // equality of terms
-                 | node_var '=' node_var    // equality of temporal variables
-                 | ('Ex' | '∃' | 'All' | '∀') // quantified formula
+    atom        := '⊥' | 'F' | '⊤' | 'T'           // true or false
+                 | '(' formula ')'                 // nested formula
+                 | 'last' '(' node_var ')'         // 'last' temporal variable for induction
+                 | fact '@' node_var               // action
+                 | node_var '<' node_var           // ordering of temporal variables
+                 | msetterm '=' msetterm           // equality of terms
+                 | msetterm ('<<' | '⊏') msetterm  // subterm relation
+                 | node_var '=' node_var           // equality of temporal variables
+                 | ('Ex' | '∃' | 'All' | '∀')      // quantified formula
                         lvar+ '.' formula
 
     lvar        := node_var | nonnode_var
