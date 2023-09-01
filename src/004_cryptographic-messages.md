@@ -20,7 +20,7 @@ When specifying equations, we also allow for variables in addition to constants.
 Constants
 ---------
 
-We distinguish between two types of constants:
+We distinguish between these types of constants:
 
 * *Public constants* model publicly known atomic messages such as agent
   identities and labels. We use the notation `'ident'` to denote public
@@ -31,6 +31,7 @@ We distinguish between two types of constants:
   public and known by the adversary. If the function is declared private, it is
   not known by the adversary. However, *fresh* values are usually a more
   appropriate modeling of secret values.
+* *Natural Numbers* have only one constant which is written `%1` or `1:nat` and models the number one.
 
 Function Symbols
 ----------------
@@ -199,8 +200,14 @@ x ⊕ x       = zero
 
 `multiset`:
 
-: This theory introduces the associative-commutative operator `+` which is usually
-  used to model multisets.
+: This theory introduces the associative-commutative operator `++` which is usually used to model multisets^[In earlier versions of Tamarin, this operator was `+` wich is still supported but deprecated. The reason for this change is that in the end, we want to use `+` for addition on natural numbers (instead of the current `%+`).].
+
+`natural-numbers`:
+: This theory introduces the associative-commutative operator `%+` and the public constant `%1` which are used to model counters. It also introduces the sort `nat` with which variables can be annotated like the sort `pub $`: `n:nat` or `%n`. Furthermore, the operator `%+` only accepts terms of sort `nat` and is the only one to produce `nat` terms. This guarantees, that any term of sort `nat` is essentially a sum of `%1`. So all natural numbers are public knowledge which speeds up Tamarin as no attacker construction of a number has to be searched for.
+
+Note that these `nat` terms are only suited to model small natural numbers like counters that are assumed to be guessable by the attacker. To model big random numbers, it is advised to use `fresh` variables.
+
+In some protocols such as WPA-2, big natural numbers are increased as a counter with a random start-point. For such models, it is advised to use a pair `<~x, %n>` where `~x` is the random start point and `%n` is the guessable counter.
 
 `reliable-channel`:
 
