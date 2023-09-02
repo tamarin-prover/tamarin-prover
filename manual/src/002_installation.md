@@ -34,7 +34,7 @@ want to use an unreleased feature. However, if you do want to install it from so
 
 ### Manually install dependencies {#sec:dependencies}
 
-Tamarin requires Haskell Stack to build and GraphViz and Maude 2.7.1 (or newer) to run. The easiest way to
+Tamarin requires Haskell Stack to build and GraphViz and Maude (2.7.1 or newer) to run. The easiest way to
 install these is
 
 ```
@@ -51,11 +51,11 @@ Alternatively, you can install them yourself:
   - **Graphviz** Graphviz should be available using your standard package manager, or directly from
     <http://www.graphviz.org/>
 
-  - **Maude** You can install Maude using your package manager. However, if your package manager
-    installs Maude 2.6, then you must install version 2.7.1, [Core Maude
-    2.7.1](http://maude.cs.illinois.edu/w/index.php?title=Maude_download_and_installation#Core_Maude_2.7.1),
-    directly from <http://maude.cs.illinois.edu/>.  In this case, you should ensure that your `PATH`
-    includes the install path, so that calling `maude` starts version 2.7.1. Note that even though
+  - **Maude** You can install Maude using your package manager (make sure to have version 2.7.1. or
+    newer). You can also install Maude manually from the [Maude website]
+    (http://maude.cs.illinois.edu/w/index.php/Maude_download_and_installation).
+    In this case, you should ensure that your `PATH`
+    includes the install path, so that calling `maude` runs the right version. Note that even though
     the Maude executable is movable, the `prelude.maude` file must be in the same folder that you
     start Maude from.
 
