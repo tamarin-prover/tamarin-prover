@@ -121,7 +121,9 @@ sides.
 As the above example indicates, macros may use the left-hand sides of
 earlier defined macros.
 
+
 ### Global macros {#sec:macros}
+
 
 Sometimes we want to use the same let binding(s) in multiples rules. In such a
 case, we can use the `macros` keyword to define global macros, which are
