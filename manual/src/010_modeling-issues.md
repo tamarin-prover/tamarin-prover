@@ -73,7 +73,6 @@ The following statement that some wellformedness check failed will
 appear at the very end of the text when loading this theory.
 
 	WARNING: 1 wellformedness check failed!
-          	 The analysis results might be wrong!
 
 Such a wellformedness warning appears in many different error messages at the
 bottom and indicates that there might be a problem. However, to get
@@ -83,26 +82,29 @@ detailed error messages.
 	/*
 	WARNING: the following wellformedness checks failed!
 
-	fact usage:
-  	1. rule `setup', fact "agst": ("AgSt",3,Linear)
-       		AgSt( $I, ~k, ~m )
+	Fact usage
+	==========
 
-  	2. rule `setup', fact "agst": ("AgSt",2,Linear)
-       		AgSt( $R, ~k )
+  	Possible reasons:
+	1. Fact names are case-sensitive, different capitalizations are considered as different facts, i.e., Fact() is different from FAct(). Check the capitalization of your fact names.
+	2. Same fact is used with different arities, i.e., Fact('A','B') is different from Fact('A'). Check the arguments of your facts.
+	
 
-  	3. rule `I_1', fact "agst": ("AgSt",2,Linear)
-       		AgSt( $I, <~k, ~m> )
+  	Fact `agst':
 
-  	4. rule `R_1', fact "agst": ("AgSt",2,Linear)
-       		AgSt( $R, ~k )
-	*/
+    	1. Rule `setup', capitalization  "AgSt", 2, Linear
+         AgSt( $R, ~k )
+
+    	2. Rule `setup', capitalization  "AgSt", 3, Linear
+        	 AgSt( $I, ~k, ~m )
+  	*/
 
 The problem lists all the fact usages of fact `AgSt`.
-The statement `1. rule 'setup', fact "agst":("AgSt",3,Linear)` means that
-in the rule `setup` the fact `AgSt` is used as a linear fact with 3 arguments.
+The statement `1. Rule 'setup', capitalization  "AgSt", 2, Linear` means that
+in the rule `setup` the fact `AgSt` is used as a linear fact with 2 arguments.
 This is not consistent with its use in other rules. For example
-`2. rule 'setup', fact "agst": ("AgSt",2,Linear)` indicates that it is also
-used with 2 arguments in the `setup` rule.
+`2. Rule 'setup', capitalization  "AgSt", 3, Linear` indicates that it is also
+used with 3 arguments in the `setup` rule.
 To solve this problem we must ensure that we only use the same fact with
 the same number of arguments.
 
@@ -118,9 +120,11 @@ we get the error message
 	/*
 	WARNING: the following wellformedness checks failed!
 
-	unbound:
-	  rule `R_1' has unbound variables:
-	    ~n
+	Unbound variables
+	=================
+
+	rule `R_1' has unbound variables: 
+		~n
 	*/
 
 The warning `unbound variables` indicates that there is a term, here the fresh
@@ -143,13 +147,16 @@ This causes the following warning:
 	/*
 	WARNING: the following wellformedness checks failed!
 
-	formula terms:
-	  lemma `functional' uses terms of the wrong form: `Free m', `Free m'
+	Formula terms
+	=============
 
-	  The only allowed terms are public names and bound node and message
-	  variables. If you encounter free message variables, then you might
-	  have forgotten a #-prefix. Sort prefixes can only be dropped where
-	  this is unambiguous.
+	lemma `functional' uses terms of the wrong form: `Free m', `Free m'
+	
+	The only allowed terms are public names and bound node and message
+	variables. If you encounter free message variables, then you might
+	have forgotten a #-prefix. Sort prefixes can only be dropped where
+	this is unambiguous. Moreover, reducible function symbols are
+	disallowed.
 	*/
 
 The warning indicates that in this lemma the term `m` occurs free. This
@@ -170,10 +177,12 @@ We get the following warning:
 	/*
 	WARNING: the following wellformedness checks failed!
 
-	lemma actions:
-	  lemma `nonce_secret' references action
-	    (ProtoFact Linear "Secr" 2,2,Linear)
-	  but no rule has such an action.
+	Inexistant lemma actions
+	========================
+
+	lemma `nonce_secret' references action 
+		fact "Secr" (arity 2, Linear) 
+	but no rule has such an action.
 	*/
 
 Such a warning always occurs when a lemma uses a fact that never appears as an
@@ -215,15 +224,21 @@ If we change the `setup` rule to
 we get the error message
 
 	/*
-	WARNING: the following wellformedness checks failed!
+	Unbound variables
+	=================
 
-	unbound:
-	  rule `setup' has unbound variables:
-	    m
+	rule `setup' has unbound variables: 
+		m
 
-	sorts:
-	  rule `setup' clashing sorts, casings, or multiplicities:
-	    1. ~m, m
+	Variable with mismatching sorts or capitalization
+	=================================================
+
+	Possible reasons:
+	1. Identifiers are case sensitive, i.e.,'x' and 'X' are considered to be different.
+	2. The same holds for sorts:, i.e., '$x', 'x', and '~x' are considered to be different.
+
+	rule `setup': 
+		1. ~m, m
 	*/
 
 This indicates that the sorts of a message were inconsistently used.
@@ -243,11 +258,13 @@ Consider for example what happens if we change the rule `R_1` to
 we get the error message
 
     /*
-    WARNING: the following wellformedness checks failed!
+	Message Derivation Checks
+	=========================
 
-    The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
-      R_1
-    Failed to derive Variable(s): ~k, m
+	The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+	Rule R_1: 
+	Failed to derive Variable(s): ~k, m
     */
 
 This warning indicates that in the rule `R_1`, we introduce additional capabilities, namely, the derivation of both `~k` and `m`.
@@ -258,4 +275,3 @@ If this is intentional, the rule can be annotated with `[derivchecks]`, which wi
 Tamarin may fail to terminate when it automatically constructs proofs.
 One reason for this is that there are open chains.
 For advice on how to find and remove open chains, see [open chains](009_precomputation.html#sec:openchains).
-
