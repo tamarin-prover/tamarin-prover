@@ -15,6 +15,7 @@ import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Ord (comparing)
 import Data.Function (on)
+import Data.Foldable (asum)
 
 import Control.Basics
 
