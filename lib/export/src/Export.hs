@@ -204,6 +204,7 @@ filterHeaders = S.filter (not . isForbidden)
     isForbidden (Fun "fun" "true" _ _ _) = True
     isForbidden (Type "bitstring") = True
     isForbidden (Type "channel") = True
+    isForbidden (Type "nat") = True    
     isForbidden _ = False
 
 -- We cannot define a constant and a function with the same name in proverif
