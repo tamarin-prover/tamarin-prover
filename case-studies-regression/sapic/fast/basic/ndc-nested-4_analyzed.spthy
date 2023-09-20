@@ -205,50 +205,54 @@ restriction progressInit:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
-  MessageIDRule
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule MessageIDRule: 
 Failed to derive Variable(s): ~mid_
-  
-  Init
+
+Rule Init: 
 Failed to derive Variable(s): ~prog_
-  
-  eventA_0_1
+
+Rule eventA_0_1: 
 Failed to derive Variable(s): ~prog_
-  
-  p_0_11
+
+Rule p_0_11: 
 Failed to derive Variable(s): ~prog_
-  
-  p_0_21
+
+Rule p_0_21: 
 Failed to derive Variable(s): ~prog_
-  
-  p_1_21
+
+Rule p_1_21: 
 Failed to derive Variable(s): ~prog_
-  
-  eventB_0_211
+
+Rule eventB_0_211: 
 Failed to derive Variable(s): ~prog_
-  
-  p_0_2111
+
+Rule p_0_2111: 
 Failed to derive Variable(s): ~prog_
-  
-  p_0_22
+
+Rule p_0_22: 
 Failed to derive Variable(s): ~prog_
-  
-  p_1_22
+
+Rule p_1_22: 
 Failed to derive Variable(s): ~prog_
-  
-  eventC_0_221
+
+Rule eventC_0_221: 
 Failed to derive Variable(s): ~prog_
-  
-  p_0_2211
+
+Rule p_0_2211: 
 Failed to derive Variable(s): ~prog_
 */
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -263,9 +267,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-4.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-4.spthy.tmp
-  processing time: 0.11s
+  processing time: 0.14s
   
-  WARNING: 12 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   A_possible (exists-trace): verified (5 steps)

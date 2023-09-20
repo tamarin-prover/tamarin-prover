@@ -584,23 +584,27 @@ restriction locking_2:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
-  inrenewuserpknsk_0_111112
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule inrenewuserpknsk_0_111112: 
 Failed to derive Variable(s): nsk.1, sk.2
-  
-  lookupSERVERpkiuseraspksk_0_111112111
+
+Rule lookupSERVERpkiuseraspksk_0_111112111: 
 Failed to derive Variable(s): pksk.1
-  
-  lookupUSERuserassk_0_1112111111
+
+Rule lookupUSERuserassk_0_1112111111: 
 Failed to derive Variable(s): ~sk.3
 */
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -615,9 +619,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 1.45s
+  processing time: 1.69s
   
-  WARNING: 3 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)

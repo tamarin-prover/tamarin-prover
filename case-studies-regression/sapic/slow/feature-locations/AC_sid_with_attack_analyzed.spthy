@@ -698,20 +698,24 @@ restriction locking_1:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
-  lookupstateasipo_0_11111111111
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule lookupstateasipo_0_11111111111: 
 Failed to derive Variable(s): ipo.1
-  
-  lookupstateasipo_0_112111111111
+
+Rule lookupstateasipo_0_112111111111: 
 Failed to derive Variable(s): ipo.2
 */
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -726,9 +730,9 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 19.17s
+  processing time: 23.46s
   
-  WARNING: 2 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   attested_comput (exists-trace): verified (31 steps)

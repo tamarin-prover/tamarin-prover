@@ -392,6 +392,8 @@ data ProofStatus =
        | IncompleteProof    -- ^ There is a annotated sorry,
                             --   but no annotated solved step.
        | TraceFound         -- ^ There is an annotated solved step
+       | UnfinishableProof  -- ^ The proof cannot be finished (due to reducible operators in subterms)
+                            --   i.e. all ends are either Completed or Unfinishable (if a trace is found, then the status is TraceFound)
     deriving ( Show, Generic, NFData, Binary, Eq )
 
 instance Semigroup ProofStatus where
@@ -399,8 +401,10 @@ instance Semigroup ProofStatus where
     _ <> TraceFound                        = TraceFound
     IncompleteProof <> _                   = IncompleteProof
     _ <> IncompleteProof                   = IncompleteProof
-    _ <> CompleteProof                     = CompleteProof
+    UnfinishableProof <> _                 = UnfinishableProof
+    _ <> UnfinishableProof                 = UnfinishableProof
     CompleteProof <> _                     = CompleteProof
+    _ <> CompleteProof                     = CompleteProof
     UndeterminedProof <> UndeterminedProof = UndeterminedProof
 
 
@@ -409,17 +413,20 @@ instance Monoid ProofStatus where
 
 -- | The status of a 'ProofStep'.
 proofStepStatus :: ProofStep (Maybe a) -> ProofStatus
-proofStepStatus (ProofStep _         Nothing ) = UndeterminedProof
-proofStepStatus (ProofStep Solved    (Just _)) = TraceFound
-proofStepStatus (ProofStep (Sorry _) (Just _)) = IncompleteProof
-proofStepStatus (ProofStep _         (Just _)) = CompleteProof
+proofStepStatus (ProofStep _            Nothing ) = UndeterminedProof
+proofStepStatus (ProofStep Solved       (Just _)) = TraceFound
+proofStepStatus (ProofStep Unfinishable (Just _)) = UnfinishableProof
+proofStepStatus (ProofStep (Sorry _)    (Just _)) = IncompleteProof
+proofStepStatus (ProofStep _            (Just _)) = CompleteProof
 
 -- | The status of a 'DiffProofStep'.
 diffProofStepStatus :: DiffProofStep (Maybe a) -> ProofStatus
-diffProofStepStatus (DiffProofStep _             Nothing ) = UndeterminedProof
-diffProofStepStatus (DiffProofStep DiffAttack    (Just _)) = TraceFound
-diffProofStepStatus (DiffProofStep (DiffSorry _) (Just _)) = IncompleteProof
-diffProofStepStatus (DiffProofStep _             (Just _)) = CompleteProof
+diffProofStepStatus (DiffProofStep _                Nothing ) = UndeterminedProof
+diffProofStepStatus (DiffProofStep DiffAttack       (Just _)) = TraceFound
+diffProofStepStatus (DiffProofStep (DiffSorry _)    (Just _)) = IncompleteProof
+diffProofStepStatus (DiffProofStep DiffUnfinishable (Just _)) = UnfinishableProof
+diffProofStepStatus (DiffProofStep _                (Just _)) = CompleteProof
+
 
 {- TODO: Test and probably improve
 
@@ -975,6 +982,7 @@ cutOnSolvedBFS =
         case S.runState (checkLevel l prf) CompleteProof of
           (_, UndeterminedProof) -> error "cutOnSolvedBFS: impossible"
           (_, CompleteProof)     -> prf
+          (_, UnfinishableProof) -> prf
           (_, IncompleteProof)   -> go (l+1) prf
           (prf', TraceFound)     ->
               trace ("attack found at depth: " ++ show l) prf'
@@ -1004,6 +1012,7 @@ cutOnSolvedBFSDiff =
         case S.runState (checkLevel l prf) CompleteProof of
           (_, UndeterminedProof) -> error "cutOnSolvedBFS: impossible"
           (_, CompleteProof)     -> prf
+          (_, UnfinishableProof) -> prf
           (_, IncompleteProof)   -> go (l+1) prf
           (prf', TraceFound)     ->
               trace ("attack found at depth: " ++ show l) prf'
@@ -1033,9 +1042,11 @@ proveSystemDFS :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContex
 proveSystemDFS heuristic tactics ctxt d0 sys0 =
     prove d0 sys0
   where
-    prove !depth sys = case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
-          []                         -> node Solved M.empty
-          (method, (cases, _expl)):_ -> node method cases
+    prove !depth sys =
+        case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
+          [] | finishedSubterms ctxt sys -> node Solved M.empty
+          []                             -> node Unfinishable M.empty
+          (method, (cases, _expl)):_     -> node method cases
       where
 
         node method cases =
@@ -1123,6 +1134,7 @@ showProofStatus ExistsNoTrace   TraceFound        = "falsified - found trace"
 showProofStatus ExistsNoTrace   CompleteProof     = "verified"
 showProofStatus ExistsSomeTrace CompleteProof     = "falsified - no trace found"
 showProofStatus ExistsSomeTrace TraceFound        = "verified"
+showProofStatus _               UnfinishableProof = "analysis cannot be finished (reducible operators in subterms)"
 showProofStatus _               IncompleteProof   = "analysis incomplete"
 showProofStatus _               UndeterminedProof = "analysis undetermined"
 
@@ -1130,6 +1142,7 @@ showProofStatus _               UndeterminedProof = "analysis undetermined"
 showDiffProofStatus :: ProofStatus -> String
 showDiffProofStatus TraceFound        = "falsified - found trace"
 showDiffProofStatus CompleteProof     = "verified"
+showDiffProofStatus UnfinishableProof = "analysis cannot be finished (reducible operators in subterms)"
 showDiffProofStatus IncompleteProof   = "analysis incomplete"
 showDiffProofStatus UndeterminedProof = "analysis undetermined"
 

@@ -177,7 +177,7 @@ c01chja@Colossus05 $ time proverif output.pv
 
    Pre-shared
    secrets:	Symmetric subscription key:		(UE, HSS, ~k)
-		Sequence number:			(UE, HSS, ~sqn_root+'one')
+		Sequence number:			(UE, HSS, ~sqn_root+%1)
 
    Protocol:	1. UE   -> SEAF:	suci
 		2. SEAF -> AUSF:	suci, SNID
@@ -203,7 +203,7 @@ c01chja@Colossus05 $ time proverif output.pv
 
 begin
 
-builtins: dest-pairing,	dest-asymmetric-encryption, multiset, xor
+builtins: dest-pairing,	dest-asymmetric-encryption, natural-numbers, xor
 
 functions:
 	// AKA functions (TS 33.102)
@@ -248,8 +248,8 @@ let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
 
     lock ~supi;
     // Sqn_UE(~supi, ~idHN, SqnUE, ~sqn_root, count),
-    lookup ~supi as count:nat in
-    let SqnUE = <~sqn_root, count> in
+    lookup ~supi as %count:nat in
+    let SqnUE = <~sqn_root, %count> in
     // Input, checks
     // Authentication Request (Auth-Req) and Sync Failure
     // [3G] Clauses C.2.1, C.2.2
@@ -258,15 +258,15 @@ let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
     //	- or Received Sqn is not bigger.
     // [3G] Clauses 6.3.3, 6.3.5
     // Input, checks
-    in(<RAND,c2:nat,<xored, MAC, 'FiveG', idSN    >>);
-    if (xored  =   f5(~k, RAND) XOR  <~sqn_root,c2>) & MAC  = f1(~k, < <~sqn_root,c2> , RAND>) then
-    if count (<) c2   then
+    in(<RAND,%c2:nat,<xored, MAC, 'FiveG', idSN    >>);
+    if (xored  =   f5(~k, RAND) XOR  <~sqn_root,%c2>) & MAC  = f1(~k, < <~sqn_root,%c2> , RAND>) then
+    if %count << %c2   then
 //    in( < RAND,  <SqnHSSXORAK, MAC>,  <'FiveG', idSN>  > );
     // let	MAC = f1(~k, <SqnHSS, RAND>) in// check on the MAC
     (
-    event CounterGS(~supi,count);
+    event CounterGS(~supi,%count);
     let	AK = f5(~k, RAND) in
-    let SqnHSS = <~sqn_root,c2> in
+    let SqnHSS = <~sqn_root,%c2> in
 
 //    let MAC =  f1(~k, < <~sqn_root,c2> , RAND>) in // useless rebind?
     let	SNID = <'FiveG', idSN>  in
@@ -285,11 +285,11 @@ let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
 	let K_seaf = KDF(KDF(<CK, IK>, <SNID, SqnHSS XOR AK>), SNID) in
 	let msgOut = RES_star in
 	// Open chains
-	event Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, c2);
+	event Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, %c2);
 
 	// Helper lemmas
-	event Sqn_UE_Change(~supi, ~idHN, c2);
-	event Sqn_UE_Use(~supi, ~idHN, c2);
+	event Sqn_UE_Change(~supi, ~idHN, %c2);
+	event Sqn_UE_Use(~supi, ~idHN, %c2);
 	// GSVerif axiom
 	event KSEAF(K_seaf);
 
@@ -311,8 +311,8 @@ let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
 	event Honest(~supi);
 	event Honest(~idHN);
 	event Honest(idSN);
-	//	 Sqn_UE(~supi, ~idHN, SqnHSS, ~sqn_root, count+dif)
-	insert ~supi, c2;
+	//	 Sqn_UE(~supi, ~idHN, SqnHSS, ~sqn_root, %count+dif)
+	insert ~supi, %c2;
 	unlock ~supi;
 	out(msgOut);
 	// St_2_UE(~tid, ~supi, ~idHN, ~k, ~sqn_root, idSN, K_seaf),
@@ -333,9 +333,9 @@ let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
 	out(f1(K_seaf, 'UE'))
 
     )
-    else if (xored  =  <~sqn_root,c2> XOR  f5(~k, RAND)) & MAC  = f1(~k, < <~sqn_root,c2> , RAND>) then //    if SqnUE > SqnHSS then
+    else if (xored  =  <~sqn_root,%c2> XOR  f5(~k, RAND)) & MAC  = f1(~k, < <~sqn_root,%c2> , RAND>) then //    if SqnUE > SqnHSS then
     (
-	in(=count);
+	in(=%count:nat);
 	let AKS = f5_star(~k, RAND) in
 	let MACS = f1_star(~k, <SqnUE, RAND>) in
 	let AUTS = <SqnUE XOR AKS, MACS > in
@@ -343,10 +343,10 @@ let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
 	// Restriction
 //	event Greater_Or_Equal_Than(SqnUE, SqnHSS); // Check freshness (FAIL)
 	// Open chains
-        event Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, count);
+        event Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, %count);
 	// Helper lemmas
-	event Sqn_UE_Nochange(~supi, ~idHN, count);
-	insert ~supi, count;
+	event Sqn_UE_Nochange(~supi, ~idHN, %count);
+	insert ~supi, %count;
 	unlock ~supi;
 	out(out_msg)
      )
@@ -465,11 +465,11 @@ let HSS(~idHN, ~sk_HN, ~supi, ~k, ~sqn_root,~secureChan)=
 // !HSS(~idHN, ~sk_HN),
 // !Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root),
    lock ~sqn_root;
-// Sqn_HSS(~supi, ~idHN, SqnHSS, ~sqn_root, count),
-   lookup ~sqn_root as count:nat in
-   in(=count);
-   event CounterGS(~sqn_root,count);
-   let SqnHSS = <~sqn_root, count> in
+// Sqn_HSS(~supi, ~idHN, SqnHSS, ~sqn_root, count3),
+   lookup ~sqn_root as %count3:nat in
+   in(=%count3:nat);
+   event CounterGS(~sqn_root,%count3);
+   let SqnHSS = <~sqn_root, %count3> in
 // RcvS(~cid, idSN, ~idHN, <'air', msgIn>),
    in(idSN);
    in(~secureChan,<~cid, =idSN, =~idHN, <'air',  <  < cyphersupirR, =~idHN> , <'FiveG', =idSN> > >>);
@@ -485,8 +485,8 @@ let HSS(~idHN, ~sk_HN, ~supi, ~k, ~sqn_root,~secureChan)=
 
 //   let (=idSN2) = idSN in // HSS checks that the received SNID matches the authenticated channel with idSN
    let SNID = <'FiveG', idSN> in
-   let cnext:nat = count + 'one' in
-   let SqnNext = <~sqn_root,count + 'one'> in
+   let cnext:nat = %count3 %+ %1 in
+   let SqnNext = <~sqn_root,%count3 %+ %1> in
 
    // 2. Send
    //     a. ARPF part
@@ -521,13 +521,13 @@ let HSS(~idHN, ~sk_HN, ~supi, ~k, ~sqn_root,~secureChan)=
    event Honest(~supi);
    event Honest(~idHN);
    event Honest(idSN);
-   //         Sqn_HSS(~supi, ~idHN, SqnNext, ~sqn_root, count+'one'),
+   //         Sqn_HSS(~supi, ~idHN, SqnNext, ~sqn_root, count3+%1),
    //         SndS(~cid, ~idHN, idSN, <'aia', msgOut>)
    event SrcId(~idHN);
 event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
 	  event	Sqn_HSS_Change(~sqn_root, cnext);
    out(~secureChan,<~cid, ~idHN, idSN, <'aia', msgOut>>);
-  insert ~sqn_root, count+'one';
+  insert ~sqn_root, %count3%+%1;
   unlock ~sqn_root;
 
     // St_1_HSS(~tid, ~idHN, ~supi, suci, idSN, SNID, ~k, SqnNext, XRES_star, ~RAND, ~sqn_root, ~sk_HN, ~cid)
@@ -574,17 +574,17 @@ event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
      // directly send the new AVs. Need to rerun the protocol.
      // Sqn is only updated if needed. (recal that delta = infinity in this model)
      (
-	// insert ~sqn_root, count+'one';
+	// insert ~sqn_root, count3+%1;
         // unlock ~sqn_root;
 	  lock ~sqn_root;
-	  // Sqn_HSS(~supi, ~idHN, SqnHSS, ~sqn_root, count),
-        lookup ~sqn_root as count2:nat in
-	event CounterGS(~sqn_root,count2);
-        if count2 = count+'one' then
+	  // Sqn_HSS(~supi, ~idHN, SqnHSS, ~sqn_root, count3),
+        lookup ~sqn_root as %count2:nat in
+	event CounterGS(~sqn_root,%count2);
+        if %count2 = %count3%+%1 then
 //        let SqnHSS2 = SqnNext in
-	in(count3:nat);
-	if    count2 (<) count3 then
-	  let SqnUE = <~sqn_root,count3> in
+	in(%countin:nat);
+	if    %count2 << %countin then
+	  let SqnUE = <~sqn_root,%countin> in
 	let  <=~RAND, <sqnuexoredf5, f1s  > >  = msg2 in
 	if sqnuexoredf5 = SqnUE XOR  f5_star(~k, ~RAND) then
 	if f1s = f1_star(~k, <SqnUE, ~RAND>) then
@@ -593,15 +593,15 @@ event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
 
 
 
-//	  let <=SqnHSS, =SqnUE,=SqnUE > = <count2 + ~sqn_root, dif + SqnHSS, SqnUE2> in
+//	  let <=SqnHSS, =SqnUE,=SqnUE > = <%count2 + ~sqn_root, dif + SqnHSS, SqnUE2> in
 
 	  // Open chains
-	  event	Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, count3);
-	  event	Sqn_HSS_Change(~sqn_root, count3);
+	  event	Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, %countin);
+	  event	Sqn_HSS_Change(~sqn_root, %countin);
    	  // Executability
-	  event	HSS_Resync_End(count3);
-	  insert ~sqn_root, count3;
-	  // Sqn_HSS(~supi, ~idHN, SqnUE, ~sqn_root, count+dif)
+	  event	HSS_Resync_End(%countin);
+	  insert ~sqn_root, %countin;
+	  // Sqn_HSS(~supi, ~idHN, SqnUE, ~sqn_root, %count+dif)
 	  unlock ~sqn_root
        )
 
@@ -618,20 +618,20 @@ let addSub(~idHN,~sk_HN,~secureChan) = // HSS(~idHN, ~sk_HN)
   // Helper lemmas
   event Sqn_Create(~supi, ~idHN, ~sqn_root);
   event CreateUser(~supi, ~k, ~idHN);
-  // |	 Sqn_UE(~supi, ~idHN, ~sqn_root+'one', ~sqn_root, 'one'),
+  // |	 Sqn_UE(~supi, ~idHN, ~sqn_root+%1, ~sqn_root, %1),
   // Remark, we use ~supi as an identifier for the state Sqn_UE
 
-  // |	 Sqn_HSS(~supi, ~idHN, ~sqn_root+'one', ~sqn_root, 'one')]
+  // |	 Sqn_HSS(~supi, ~idHN, ~sqn_root+%1, ~sqn_root, %1)]
   // Remark, we use ~sqn_root as an identifier for the state Sqn_HSS
-  insert ~sqn_root, 'one';
-  insert ~supi, 'one';
+  insert ~sqn_root, %1;
+  insert ~supi, %1;
   //!Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root),
   (
   // Compromised subscriptions (symmetric key k)
    (event Rev(~supi, <'k', ~k>); event Rev(~idHN, <'k', ~k>); event RevId(~supi); event RevId(~idHN);
    event Revk(); event Revk();
    out(~k))
-   // Compromised subscriptions ("initial" counter sqn_root)
+   // Compromised subscriptions ("initial" %counter sqn_root)
    || (event Rev(~supi, <'sqn', ~sqn_root>); event Rev(~idHN, <'sqn', ~sqn_root>); event RevId(~supi); event RevId(~idHN);
       event Revsqn(); event Revsqn();
    out(~sqn_root))
@@ -648,20 +648,20 @@ let addSub(~idHN,~sk_HN,~secureChan) = // HSS(~idHN, ~sk_HN)
       // trivially violate injectivity
 	(
 	lock ~supi;
-	lookup ~supi as count:nat in
+	lookup ~supi as %count4:nat in
 
-	event CounterGS(~supi,count);
-//	let Sqn:nat = ~sqn_root + count in
+	event CounterGS(~supi,%count4);
+//	let Sqn:nat = ~sqn_root + %count4 in
 //	in(m:nat); 		// Open chains
-	event	Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, count+'one');
+	event	Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, %count4 %+%1);
 		// Helper lemmas
-	event	Sqn_UE_Change(~supi, ~idHN, count+'one');
+	event	Sqn_UE_Change(~supi, ~idHN, %count4 %+%1);
 		// Executability
 	event	Sqn_UE_Desync();
 
-	insert ~supi, count+'one';
+	insert ~supi, %count4%+%1;
 	unlock ~supi
-	//Sqn_UE(~supi, ~idHN, Sqn+m, ~sqn_root, count+m)
+	//Sqn_UE(~supi, ~idHN, Sqn+m, ~sqn_root, %count4+m)
 	)
 
 
@@ -775,19 +775,19 @@ lemma true_sqn_ue_nodecrease [use_induction, reuse, output=[spthy], heuristic=O]
 	" (All supi HN Sqni Sqnj #i #j.
 		(Sqn_UE_Change(supi, HN, Sqnj)@j &
 		 Sqn_UE_Change(supi, HN, Sqni)@i &
-		 i < j)	==> (Ex dif. Sqnj = Sqni + dif)) &
+		 i < j)	==> (Ex dif. Sqnj = Sqni %+ dif)) &
 	  (All supi HN Sqni Sqnj #i #j.
 		(Sqn_UE_Change(supi, HN, Sqnj)@j &
 		 Sqn_UE_Nochange(supi, HN, Sqni)@i &
-		 i < j)	==> (Ex dif. Sqnj = Sqni + dif)) &
+		 i < j)	==> (Ex dif. Sqnj = Sqni %+ dif)) &
 	  (All supi HN Sqni Sqnj #i #j.
 		(Sqn_UE_Nochange(supi, HN, Sqnj)@j &
 		 Sqn_UE_Change(supi, HN, Sqni)@i &
-		 i < j)	==> ((Sqnj = Sqni) | (Ex dif. Sqnj = Sqni + dif))) &
+		 i < j)	==> ((Sqnj = Sqni) | (Ex dif. Sqnj = Sqni %+ dif))) &
 	  (All supi HN Sqni Sqnj #i #j.
 		(Sqn_UE_Nochange(supi, HN, Sqnj)@j &
 		 Sqn_UE_Nochange(supi, HN, Sqni)@i &
-		 i < j)	==> ((Sqnj = Sqni) | (Ex dif. Sqnj = Sqni + dif))) "
+		 i < j)	==> ((Sqnj = Sqni) | (Ex dif. Sqnj = Sqni %+ dif))) "
 
 // // proof (automatic) (~1 sec)
  lemma true_sqn_ue_unique [reuse, hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:
@@ -827,7 +827,7 @@ lemma false_executability_desync[output=[proverif]]:
 //
 lemma false_executability_resync[output=[proverif]]:
 	" All #i2.
-		 HSS_Resync_End('one'+'one'+'one'+'one')@i2
+		 HSS_Resync_End(%1%+%1%+%1%+%1)@i2
 ==>
 Ex X data #r. Rev(X,data)@r
 "
@@ -950,7 +950,7 @@ lemma gsverif_sqn_hss_nodecrease [use_induction, reuse, output=[spthy], heuristi
 	" (All supi  Sqni Sqnj #i #j.
 			 (Sqn_HSS_Change(supi, Sqnj)@j &
 		 Sqn_HSS_Change(supi, Sqni)@i &
-		 i < j)	==> (Ex dif. Sqnj = Sqni + dif)) "
+		 i < j)	==> (Ex dif. Sqnj = Sqni %+ dif)) "
 
 
 lemma gsverif_intermediate [use_induction, reuse,hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:

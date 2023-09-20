@@ -957,26 +957,30 @@ restriction single_session:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
-  p_1_111
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule p_1_111: 
 Failed to derive Variable(s): skV.1
-  
-  insencprgprogsharedkey_0_111111111
+
+Rule insencprgprogsharedkey_0_111111111: 
 Failed to derive Variable(s): prog2.1
-  
-  p_1_1111111111
+
+Rule p_1_1111111111: 
 Failed to derive Variable(s): token.1
-  
-  insencaskxtkntokensharedkey_0_1121111111111111
+
+Rule insencaskxtkntokensharedkey_0_1121111111111111: 
 Failed to derive Variable(s): token2.1, x.2
 */
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -991,9 +995,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 2.14s
+  processing time: 3.12s
   
-  WARNING: 4 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   attested_comput (all-traces): verified (19 steps)

@@ -50,6 +50,7 @@ import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
 import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
 import           Theory.Model
+import           Term.Builtin.Convenience
 
 
 import           Utils.Misc                              (twoPartitions)
@@ -79,7 +80,9 @@ openGoals sys = do
              else
                not $    solved
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
-                    || (isMsgVar m && Nothing == M.lookup i (get sNodes sys)) || sortOfLNTerm m == LSortPub
+                    || (isMsgVar m && Nothing == M.lookup i (get sNodes sys))
+                    || sortOfLNTerm m == LSortPub
+                    || sortOfLNTerm m == LSortNat
                     -- handled by 'insertAction'
                     || isPair m || isInverse m || isProduct m --- || isXor m
                     || isUnion m || isNullaryPublicFunction m
@@ -104,6 +107,7 @@ openGoals sys = do
         -- FIXME: Split goals may be duplicated, we always have to check
         -- explicitly if they still exist.
         SplitG idx -> splitExists (get sEqStore sys) idx
+        SubtermG st -> st `elem` L.get (posSubterms . sSubtermStore) sys
 
     let
         useful = case goal of
@@ -137,7 +141,7 @@ openGoals sys = do
     -- are composed of public names only and do not contain private function
     -- symbols or because they can be extracted from a sent message using
     -- unpairing or inversion only.
-    currentlyDeducible i m = (checkTermLits (LSortPub ==) m
+    currentlyDeducible i m = (checkTermLits (`elem` [LSortPub, LSortNat]) m
                               && not (containsPrivate m))
                           || extractible i m
 
@@ -209,6 +213,7 @@ solveGoal goal = do
       ChainG c p    -> solveChain (get crDestruct  rules) (c, p)
       SplitG i      -> solveSplit i
       DisjG disj    -> solveDisjunction disj
+      SubtermG st   -> solveSubterm st
 
 -- The following functions are internal to 'solveGoal'. Use them with great
 -- care.
@@ -256,7 +261,7 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
     requiresKU t = do
         j <- freshLVar "vk" LSortNode
         let faKU = kuFact t
-        insertLess j i
+        insertLess j i Adversary
         void (insertAction j faKU)
 
 -- | CR-rules *DG_{2,P}* and *DG_{2,d}*: solve a premise with a direct edge
@@ -396,3 +401,37 @@ solveDisjunction disj = do
     (i, gfm) <- disjunctionOfList $ zip [(1::Int)..] $ getDisj disj
     insertFormula gfm
     return $ "case_" ++ show i
+
+-- | remove from subterms
+-- get split
+-- behave according to split
+--   insert subterms
+--   insert equalities
+--   insert eqFormulas
+--   ignore TrueD
+--   contradict if emptyset
+solveSubterm :: (LNTerm, LNTerm) -> Reduction String
+solveSubterm st = do
+      -- mark subterm as solved
+      modM (posSubterms . sSubtermStore) (st `S.delete`)
+      modM (solvedSubterms . sSubtermStore) (st `S.insert`)
+      
+      -- find all splits
+      reducible <- reducibleFunSyms . mhMaudeSig <$> getMaudeHandle
+      splitList <- splitSubterm reducible True st
+      (i, split) <- disjunctionOfList $ zip [(1::Int)..] splitList  -- make disjunction over all splits
+      
+      -- from here on: only look at a single split
+      case split of
+        TrueD -> return ()
+        SubtermD st1 -> modM sSubtermStore (addSubterm st1)
+        NatSubtermD st1@(s,t) -> if length splitList == 1
+                                    then do
+                                      newVar <- freshLVar "newVar" LSortNat
+                                      let sPlus = s ++: varTerm newVar
+                                      insertFormula $ closeGuarded Ex [newVar] [EqE sPlus t] gtrue
+                                    else modM sSubtermStore (addSubterm st1)
+        EqualD (l, r) -> insertFormula $ GAto $ EqE (lTermToBTerm l) (lTermToBTerm r)
+        ACNewVarD ((smallPlus, big), newVar) -> insertFormula $ closeGuarded Ex [newVar] [EqE smallPlus big] gtrue
+        
+      return $ "SubtermSplit" ++ show i

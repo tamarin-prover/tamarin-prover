@@ -85,6 +85,7 @@ module Theory.Model.Fact (
   , protoFact
   , protoFactAnn
   , annotateFact
+  , applyMacroInFact
 
   -- * NFact
   , NFact
@@ -120,6 +121,7 @@ import qualified Data.Set               as S
 
 import           Term.Unification
 import           Term.Rewriting.Norm
+import           Term.Macro
 
 import           Text.PrettyPrint.Class
 
@@ -299,6 +301,11 @@ protoFactAnn multi name an ts = Fact (ProtoFact multi name (length ts)) an ts
 -- | Add annotations to an existing fact
 annotateFact :: S.Set FactAnnotation -> Fact t -> Fact t
 annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
+
+-- | Apply macros in fact
+applyMacroInFact :: [Macro] -> LNFact -> LNFact
+applyMacroInFact mcs (Fact tag annot terms) = let mTerms = map (applyMacros mcs) terms in
+                                              Fact tag annot mTerms
 
 -- Queries on facts
 -------------------

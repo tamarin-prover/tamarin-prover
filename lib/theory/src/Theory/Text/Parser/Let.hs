@@ -29,7 +29,7 @@ genericletBlock varp termp = many1 definition
 letBlock :: Parser LNSubst
 letBlock = do
         _  <- letIdentifier
-        ls <-genericletBlock (sortedLVar [LSortMsg]) (msetterm False llit)
+        ls <-genericletBlock (sortedLVar [LSortMsg, LSortNat]) (msetterm False llit)
         _  <- symbol "in"
         return $ toSubst ls
   where

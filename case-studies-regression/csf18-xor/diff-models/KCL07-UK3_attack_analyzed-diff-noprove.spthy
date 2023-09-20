@@ -10,23 +10,27 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( ) ]->
    [
-   Reader( ('1'+diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>)))
+   Reader( ('1'++
+            diff((<~k1, ~id1>++<~k2, ~id2>), (<~k1, ~id1>++<~k1, ~id1>)))
    ),
-   Tag( ('1'+diff((<~k1, ~id1>+<~k2, ~id2>), (<~k1, ~id1>+<~k1, ~id1>))) )
+   Tag( ('1'++diff((<~k1, ~id1>++<~k2, ~id2>), (<~k1, ~id1>++<~k1, ~id1>)))
+   )
    ]
 
 rule (modulo E) select_tag:
-   [ Tag( (z+<~k, ~id>) ) ]
-  --[ Tag( (z+<~k, ~id>) ) ]->
+   [ Tag( (z++<~k, ~id>) ) ]
+  --[ Tag( (z++<~k, ~id>) ) ]->
    [ TagRun( ~k, ~id ), Tag( z ) ]
 
 rule (modulo E) select_reader:
-   [ Reader( (z+<~k, ~id>) ) ]
-  --[ Reader( (z+<~k, ~id>) ) ]->
+   [ Reader( (z++<~k, ~id>) ) ]
+  --[ Reader( (z++<~k, ~id>) ) ]->
    [ ReaderRun( ~k, ~id ), Reader( z ) ]
 
 rule (modulo E) reader1:
@@ -61,19 +65,19 @@ restriction unique [left]:
   // safety formula
 
 restriction max_number_of_tags_tag [right]:
-  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Tag( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag [left]:
-  "∀ a b c d #i. (Tag( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Tag( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag_reader [right]:
-  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 restriction max_number_of_tags_tag_reader [left]:
-  "∀ a b c d #i. (Reader( (a+b+c+d) ) @ #i) ⇒ (⊥)"
+  "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
 lemma recentalive_tag [right]:
@@ -177,12 +181,12 @@ next
       case tag1
       step( solve( TagRun( ~k, ~id ) ▶₂ #vr ) )
         case select_tag
-        step( solve( Tag( (z.1+<~k, ~id>) ) ▶₀ #vr.1 ) )
+        step( solve( Tag( (z.1++<~k, ~id>) ) ▶₀ #vr.1 ) )
           case Setup
           by sorry
         next
           case select_tag
-          step( solve( Tag( (z.1+<~k, ~id>+<~k.1, ~id.1>) ) ▶₀ #vr.2 ) )
+          step( solve( Tag( (z.1++<~k, ~id>++<~k.1, ~id.1>) ) ▶₀ #vr.2 ) )
             case Setup
             step( solve( !KU( r1 ) @ #vk.1 ) )
               case c_fst
@@ -238,12 +242,12 @@ next
                             case d_0_snd
                             step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.6 ) )
                               case select_tag
-                              step( solve( Tag( (z.2+<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
+                              step( solve( Tag( (z.2++<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
                                 case Setup
                                 by sorry
                               next
                                 case select_tag
-                                step( solve( Tag( (z.2+<~k.1, ~id.1>+<~k.2, ~id.2>) ) ▶₀ #vr.9 ) )
+                                step( solve( Tag( (z.2++<~k.1, ~id.1>++<~k.2, ~id.2>) ) ▶₀ #vr.9 ) )
                                   case Setup
                                   step( solve( (#vr.6, 0) ~~> (#vk.1, 0) ) )
                                     case Xor
@@ -261,7 +265,7 @@ next
                                           case tag1
                                           step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.7 ) )
                                             case select_tag
-                                            step( solve( Tag( (z.1+<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
+                                            step( solve( Tag( (z.1++<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
                                               case Setup
                                               step( solve( splitEqs(7) ) )
                                                 case split
@@ -281,7 +285,7 @@ next
                                                         case tag1
                                                         step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.10 ) )
                                                           case select_tag
-                                                          step( solve( Tag( (z.2+<~k.1, ~id.1>)
+                                                          step( solve( Tag( (z.2++<~k.1, ~id.1>)
                                                                        ) ▶₀ #vr.11 ) )
                                                             case Setup
                                                             step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
@@ -381,6 +385,9 @@ next
                 qed
               qed
             next
+              case nat
+              by sorry
+            next
               case pub
               by sorry
             qed
@@ -419,10 +426,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -437,13 +444,13 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 0.61s
+  processing time: 0.54s
   
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)
   LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (90 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (91 steps)
 
 ==============================================================================
 */

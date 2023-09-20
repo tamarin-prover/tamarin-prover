@@ -26,6 +26,8 @@ module Theory (
   , pBody
   , pVars
   , addFunctionTypingInfo
+  , addMacros
+  , addDiffMacros
   , clearFunctionTypingInfos
 
   -- * Options
@@ -39,6 +41,7 @@ module Theory (
   , forcedInjectiveFacts
   , setforcedInjectiveFacts
   , thyOptions
+  , thyIsSapic
   , setOption
   , Option
   -- * Predicates
@@ -217,6 +220,8 @@ module Theory (
   , getDiffClassifiedRules
   , getInjectiveFactInsts
   , getDiffInjectiveFactInsts
+  , getLeftProtoRule
+  , getRightProtoRule
 
   , getSource
   , getDiffSource
@@ -246,6 +251,7 @@ module Theory (
   , prettyOpenTheory
   , prettyOpenTranslatedTheory
   , prettyOpenDiffTheory
+  , prettyMacros
 
   , prettyOpenProtoRule
   , prettyDiffRule
@@ -319,4 +325,5 @@ import Theory.Model
 import Theory.Proof
 import Theory.Syntactic.Predicate
 import TheoryObject
+import Prelude hiding (id, (.))
 

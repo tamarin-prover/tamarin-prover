@@ -17,6 +17,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Register_Voter_pk:
    [ Fr( ~ltkV ) ]
   -->
@@ -62,10 +64,10 @@ rule (modulo E) V_2_sync:
    St_V_sync( 'v1', pkA, $vote1, ~r1 ), St_V_sync( 'v2', pkA, $vote2, ~r2 )
    ]
   --[ V_2_sync( ) ]->
-   [ Shuffle( (<'v1', pkA, $vote1, ~r1>+<'v2', pkA, $vote2, ~r2>) ) ]
+   [ Shuffle( (<'v1', pkA, $vote1, ~r1>++<'v2', pkA, $vote2, ~r2>) ) ]
 
 rule (modulo E) shuffle_Vote:
-   [ Shuffle( (x+y) ) ] --> [ St_V_2( x ), St_V_2( y ) ]
+   [ Shuffle( (x++y) ) ] --> [ St_V_2( x ), St_V_2( y ) ]
 
 rule (modulo E) V_3:
    [ St_V_2( <V, pk(~ltkA), $vote, ~r> ), !AdminPk( A, pk(~ltkA) ) ]
@@ -169,11 +171,15 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
-  V_2
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule V_2: 
 Failed to derive Variable(s): ~ltkA
-  
-  V_3
+
+Rule V_3: 
 Failed to derive Variable(s): ~ltkA
 */
 
@@ -6741,7 +6747,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -6826,7 +6832,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case Register_Admin_pk
       by step( solve( (#vl, 0) ~~> (#i, 0) ) )
     next
@@ -21629,7 +21635,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( Shuffle( (x+y) ) ▶₀ #i ) )
+    step( solve( Shuffle( (x++y) ) ▶₀ #i ) )
       case V_2_sync_case_1
       step( solve( !KU( sign(blind(commit($vote1, ~r1), ~b), ~ltkA)
                    ) @ #vk.3 ) )
@@ -21763,7 +21769,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( Shuffle( (x+y) ) ▶₀ #i ) )
+    step( solve( Shuffle( (x++y) ) ▶₀ #i ) )
       case V_2_sync_case_1
       step( solve( !KU( sign(blind(commit($vote1, ~r1), ~b), ~ltkA)
                    ) @ #vk.3 ) )
@@ -21899,10 +21905,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -21917,9 +21923,9 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 122.55s
+  processing time: 157.80s
   
-  WARNING: 2 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   RHS :  exec (exists-trace): verified (12 steps)

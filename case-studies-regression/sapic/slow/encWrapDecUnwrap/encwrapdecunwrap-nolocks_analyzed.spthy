@@ -852,53 +852,57 @@ restriction single_session:
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
-  lookupatthasa_0_11111121
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule lookupatthasa_0_11111121: 
 Failed to derive Variable(s): a.1
-  
-  lookupatthasa_0_1111121
+
+Rule lookupatthasa_0_1111121: 
 Failed to derive Variable(s): a.2
-  
-  inhsencmk_0_11112
+
+Rule inhsencmk_0_11112: 
 Failed to derive Variable(s): m.1, k.2
-  
-  lookupatthasa_0_111121
+
+Rule lookupatthasa_0_111121: 
 Failed to derive Variable(s): a.3
-  
-  lookupkeyhaskp_0_11112111
+
+Rule lookupkeyhaskp_0_11112111: 
 Failed to derive Variable(s): kp.1
-  
-  lookupatthasa_0_11121
+
+Rule lookupatthasa_0_11121: 
 Failed to derive Variable(s): a.4
-  
-  lookupkeyhask_0_1112111
+
+Rule lookupkeyhask_0_1112111: 
 Failed to derive Variable(s): k.3
-  
-  lookupatthasa_0_1121
+
+Rule lookupatthasa_0_1121: 
 Failed to derive Variable(s): a1.1
-  
-  lookupkeyhask_0_112111
+
+Rule lookupkeyhask_0_112111: 
 Failed to derive Variable(s): k1.1
-  
-  lookupkeyhask_0_1121111
+
+Rule lookupkeyhask_0_1121111: 
 Failed to derive Variable(s): k2.1
-  
-  inhsencmk_0_12
+
+Rule inhsencmk_0_12: 
 Failed to derive Variable(s): m.3, k.4
-  
-  lookupatthasa_0_121
+
+Rule lookupatthasa_0_121: 
 Failed to derive Variable(s): a1.2
-  
-  lookupkeyhask_0_12111
+
+Rule lookupkeyhask_0_12111: 
 Failed to derive Variable(s): k1.2
 */
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -913,9 +917,9 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 359.66s
+  processing time: 380.60s
   
-  WARNING: 13 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   can_obtain_key (exists-trace): verified (24 steps)

@@ -173,23 +173,23 @@ next
       case case_1
 	  solve( Server( pid, sid, otc1 ) ▶₀ #t1 )
 		case BuyANewYubikey
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  next
 		case Server_ReceiveOTP_NewSession_case_1
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  next
 		case Server_ReceiveOTP_NewSession_case_2
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  next
 		case Server_ReceiveOTP_NewSession_case_3
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  next
 		case Server_ReceiveOTP_NewSession_case_4
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  qed
     next

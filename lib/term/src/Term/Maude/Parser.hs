@@ -45,17 +45,19 @@ import Data.Attoparsec.ByteString.Char8
 -- | Pretty print an 'LSort'.
 ppLSort :: LSort -> ByteString
 ppLSort s = case s of
-    LSortPub   -> "Pub"
-    LSortFresh -> "Fresh"
-    LSortMsg   -> "Msg"
-    LSortNode  -> "Node"
+    LSortPub       -> "Pub"
+    LSortFresh     -> "Fresh"
+    LSortMsg       -> "Msg"
+    LSortNat       -> "TamNat"
+    LSortNode      -> "Node"
 
 ppLSortSym :: LSort -> ByteString
 ppLSortSym lsort = case lsort of
-    LSortFresh -> "f"
-    LSortPub   -> "p"
-    LSortMsg   -> "c"
-    LSortNode  -> "n"
+    LSortFresh     -> "f"
+    LSortPub       -> "p"
+    LSortMsg       -> "c"
+    LSortNode      -> "n"
+    LSortNat       -> "t"
 
 parseLSortSym :: ByteString -> Maybe LSort
 parseLSortSym s = case s of
@@ -63,6 +65,7 @@ parseLSortSym s = case s of
     "p"  -> Just LSortPub
     "c"  -> Just LSortMsg
     "n"  -> Just LSortNode
+    "t"  -> Just LSortNat
     _    -> Nothing
 
 -- | Used to prevent clashes with predefined Maude function symbols
@@ -121,9 +124,10 @@ replaceMinusFun (s, p) = (replaceMinus s, p)
 ppMaudeACSym :: ACSym -> ByteString
 ppMaudeACSym o =
     funSymPrefix <> case o of
-                      Mult  -> multSymString 
-                      Union -> munSymString
-                      Xor   -> xorSymString 
+                      Mult    -> multSymString 
+                      Union   -> munSymString
+                      Xor     -> xorSymString
+                      NatPlus -> natPlusSymString
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
@@ -160,9 +164,10 @@ ppTheory :: MaudeSig -> ByteString
 ppTheory msig = BC.unlines $
     [ "fmod MSG is"
     , "  protecting NAT ."
-    , "  sort Pub Fresh Msg Node TOP ."
+    , "  sort Pub Fresh Msg Node TamNat TOP ."
     , "  subsort Pub < Msg ."
     , "  subsort Fresh < Msg ."
+    , "  subsort TamNat < Msg ."
     , "  subsort Msg < TOP ."
     , "  subsort Node < TOP ."
     -- constants
@@ -170,6 +175,7 @@ ppTheory msig = BC.unlines $
     , "  op p : Nat -> Pub ."
     , "  op c : Nat -> Msg ."
     , "  op n : Nat -> Node ."
+    , "  op t : Nat -> TamNat ."
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
     , "  op list : TOP -> TOP ."
@@ -200,6 +206,12 @@ ppTheory msig = BC.unlines $
        then
        [ theoryOpEq "zero : -> Msg"
        , theoryOpAC "xor : Msg Msg -> Msg [comm assoc]" ]
+       else [])
+    ++    
+    (if enableNat msig
+       then
+       [ theoryOpEq "tone : -> TamNat"
+       , theoryOpAC "tplus : TamNat TamNat -> TamNat [comm assoc]" ]
        else [])
     ++
     map theoryFunSym (S.toList $ stFunSyms msig)
@@ -278,6 +290,7 @@ parseSort :: Parser LSort
 parseSort =  string "Pub"      *> return LSortPub
          <|> string "Fresh"    *> return LSortFresh
          <|> string "Node"     *> return LSortNode
+         <|> string "TamNat"   *> return LSortNat
          <|> string "M"        *> -- FIXME: why?
                (    string "sg"  *> return LSortMsg )
 
@@ -311,7 +324,7 @@ parseTerm msig = choice
             op                  = if special then 
                                         (ident , (length args,Public,Constructor))
                                   else  (ident', (length args, priv, cnstr))
-            allowedfunSyms = [consSym, nilSym]
+            allowedfunSyms = [consSym, nilSym, natOneSym]
                 ++ (map replaceUnderscoreFun $ S.toList $ noEqFunSyms msig)
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
@@ -319,8 +332,9 @@ parseTerm msig = choice
     parseFApp ident =
         appIdent <$> sepBy1 (parseTerm msig) (string ", ") <* string ")"
       where
-        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult  args
-                       | ident == ppMaudeACSym Union      = fAppAC Union args
+        appIdent args  | ident == ppMaudeACSym Mult       = fAppAC Mult    args
+                       | ident == ppMaudeACSym Union      = fAppAC Union   args
+                       | ident == ppMaudeACSym NatPlus    = fAppAC NatPlus args
                        | ident == ppMaudeACSym Xor        = fAppAC Xor   args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
         appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)

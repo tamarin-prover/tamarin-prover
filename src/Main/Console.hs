@@ -60,7 +60,7 @@ import           Data.Maybe
 import           Data.Version                    (showVersion)
 import           Data.Time
 import           Data.List
-import           Data.Char                       (isSpace, toLower)
+import           Data.Char                       (isSpace)
 import           Safe
 
 import           Control.Monad
@@ -69,7 +69,6 @@ import           Control.Exception               as E
 import           System.Console.CmdArgs.Explicit
 import           System.Console.CmdArgs.Text
 import           System.Exit
-import           System.FilePath
 import           System.IO
 import           System.Process
 
@@ -149,12 +148,13 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
                      else putStrLn ""
                    return Nothing
 
-ensureMaude :: Arguments -> IO (Maybe String)
+ensureMaude :: Arguments -> IO (Bool, String)
 ensureMaude as = do
     putStrLn $ "maude tool: '" ++ maude ++ "'"
     t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" False True
     t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" False True
-    return (if isNothing t1 || isNothing t2 then Nothing else t1)
+    (_, out, _) <- readProcessWithExitCode maude ["--version"] ""
+    return (if isNothing t1 || isNothing t2 then (False, (if out == "" then "unknown version\n" else init out ++ " (unsuported)\n")) else (True, out))
   where
     maude = maudePath as
     checkVersion out _
@@ -169,7 +169,7 @@ ensureMaude as = do
 
 --  Maude versions prior to 2.7.1 are no longer supported,
 --  because the 'get variants' command is incompatible.
-    supportedVersions = ["2.7.1", "3.0", "3.1", "3.2.1", "3.2.2"]
+    supportedVersions = ["2.7.1", "3.0", "3.1", "3.2.1", "3.2.2", "3.3", "3.3.1"]
 
     errMsg' = errMsg $ "'" ++ maude ++ "' executable not found / does not work"
 
@@ -184,8 +184,7 @@ ensureMaude as = do
 ensureMaudeAndGetVersion :: Arguments -> IO String
 ensureMaudeAndGetVersion as = do
           -- Ensure Maude version and get Maude version 
-          maybeMaudeVersion <- ensureMaude as
-          let maudeVersion = fromMaybe "Nothing" maybeMaudeVersion
+          (_, maudeVersion) <- ensureMaude as
           -- Get String for version and put it in the arguments __version__
           getVersionIO maudeVersion
 
@@ -223,7 +222,7 @@ versionStr = unlines
     [ programName
     , " "
     , showVersion version
-    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, ETH Zurich 2010-2020"
+    , ", (C) David Basin, Cas Cremers, Jannik Dreier, Simon Meier, Ralf Sasse, Benedikt Schmidt, 2010-2023"
     ]
   , ""
   , "This program comes with ABSOLUTELY NO WARRANTY. It is free software, and you"
@@ -336,9 +335,10 @@ helpAndExit tmode mayMsg = do
     putStrLn $ showText (Wrap lineWidth)
              $ helpText header HelpFormatOne (tmCmdArgsMode tmode)
     -- output example info
-    when (tmIsMainMode tmode) $ do
-      putStrLn $ unlines
+    putStrLn $ unlines
         [ separator
+        , "To show help for differents commands, type tamarin-prover [Command] --help."
+        , separator
         , "See 'https://github.com/tamarin-prover/tamarin-prover/blob/master/README.md'"
         , "for usage instructions and pointers to examples."
         , separator
@@ -357,7 +357,8 @@ defaultMain firstMode otherModes = do
     case findArg "mode" as of
       Nothing   -> error $ "defaultMain: impossible - mode not set"
       Just name -> headNote "defaultMain: impossible - no mode found" $ do
-          tmode <- (mainMode : otherModes)
+          allModes <- [interMode:intruderMode:testMode:[]]
+          tmode <- (mainMode : allModes)
           guard (tmName tmode == name)
           return $ tmRun tmode tmode as
   where
@@ -377,6 +378,27 @@ defaultMain firstMode otherModes = do
               }
           }
       , tmIsMainMode = True
+      }
+    interMode = (head otherModes)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ head otherModes)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
+        }
+      }
+    intruderMode = (otherModes !! 1)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ otherModes !! 1)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
+        }
+      }
+    testMode = (otherModes !! 2)
+      {
+        tmCmdArgsMode = (tmCmdArgsMode $ otherModes !! 2)
+        {
+          modeGroupModes = toGroup (map tmCmdArgsMode $ otherModes)
+        }
       }
 
 

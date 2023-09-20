@@ -15,7 +15,7 @@ RUN apt-get update && \
         zlib1g-dev
 WORKDIR /workspace
 # copy dependency specifications first (need stack.yaml for resolver spec)
-RUN mkdir -p lib/export lib/theory lib/sapic lib/tools lib/term
+RUN mkdir -p lib/export lib/theory lib/sapic lib/tools lib/term lib/accountability
 COPY stack.yaml tamarin-prover.cabal ./
 
 COPY lib/sapic/tamarin-prover-sapic.cabal lib/sapic/
@@ -23,8 +23,10 @@ COPY lib/term/tamarin-prover-term.cabal lib/term/
 COPY lib/theory/tamarin-prover-theory.cabal lib/theory/
 COPY lib/utils/tamarin-prover-utils.cabal lib/utils/
 COPY lib/export/tamarin-prover-export.cabal lib/export/
+COPY lib/accountability/tamarin-prover-accountability.cabal lib/accountability
 # cache stack package index
 RUN stack update
+RUN stack upgrade
 # > Compiling language-javascript requires a UTF-8 locale.
 # (https://github.com/erikd/language-javascript/issues/86)
 # thankfully we're only in a temporary build container, so let's change that real quick
@@ -32,6 +34,7 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+
 # build dependencies first, for caching
 RUN stack build --system-ghc --dependencies-only --ghc-options="+RTS -M600M"
 # now copy rest of source code
@@ -41,6 +44,7 @@ COPY lib/. ./lib/
 COPY src ./src
 COPY data ./data
 COPY images ./images
+
 # build the entire thing
 RUN stack build --system-ghc
 RUN stack install --system-ghc --local-bin-path /usr/local/bin

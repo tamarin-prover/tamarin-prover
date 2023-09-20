@@ -12,6 +12,7 @@ module Theory.Text.Parser.Term (
     msetterm
     , vlit
     , llit
+    , natLit
     , term
     , llitNoPub
     , reservedBuiltins
@@ -26,7 +27,7 @@ import           Data.Foldable              (asum)
 import qualified Data.Set                   as S
 import           Control.Category
 import           Control.Monad
-import           Text.Parsec                hiding ((<|>))
+import           Text.Parsec
 import           Term.Substitution
 import           Theory
 import           Theory.Text.Parser.Token
@@ -36,11 +37,14 @@ import Data.Functor (($>))
 
 -- | Parse a lit with logical variables parsed by @varp@
 vlit :: Parser v -> Parser (NTerm v)
-vlit varp = asum [freshTerm <$> freshName, pubTerm <$> pubName, varTerm <$> varp]
+vlit varp = asum [freshTerm <$> freshName, pubTerm <$> pubName, natTerm <$> natName, varTerm <$> varp]
 
 -- | Parse a lit with logical variables.
 llit :: Parser LNTerm
 llit = vlit msgvar
+
+natLit :: Parser LNTerm
+natLit = natTerm <$> natName
 
 -- | Parse a lit with logical variables including timepoint variables
 llitWithNode :: Parser LNTerm
@@ -122,9 +126,11 @@ term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
 term plit eqn = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
-    , symbol "1" $> fAppOne
-    , symbol "DH_neutral" $> fAppDHNeutral    
-    , application <?> "function application"
+    , symbol "DH_neutral" *> pure fAppDHNeutral    
+    , symbol "1:nat"      *> pure fAppNatOne
+    , symbol "%1"         *> pure fAppNatOne
+    , symbol "1"          *> pure fAppOne
+    , application        <?> "function application"
     , nullaryApp
     , plit
     ]
@@ -163,7 +169,15 @@ msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 msetterm eqn plit = do
     mset <- enableMSet . sig <$> getState
     if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
-        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opPlus)
+        then chainl1 (natterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opUnion)
+        else natterm eqn plit
+
+-- | A left-associative sequence of natural numbers.
+natterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+natterm eqn plit = do
+    nats <- enableNat . sig <$> getState
+    if nats && not eqn-- if xor is not enabled, do not accept 'xorterms's
+        then chainl1 (xorterm eqn plit) ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
         else xorterm eqn plit
 
 -- | A right-associative sequence of tuples.

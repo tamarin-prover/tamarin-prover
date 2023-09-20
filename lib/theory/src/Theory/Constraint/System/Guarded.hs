@@ -30,8 +30,10 @@ module Theory.Constraint.System.Guarded (
   , gconj
   , gex
   , gall
+  , gnotAtom
   , gnot
   , ginduct
+  , closeGuarded
 
   , formulaToGuarded
   , formulaToGuarded_
@@ -56,6 +58,8 @@ module Theory.Constraint.System.Guarded (
 
   -- ** Conversions to non-bound representations
   , bvarToLVar
+  , bTermToLTerm
+  , lTermToBTerm
 --  , unbindAtom
   , openGuarded
 
@@ -178,7 +182,7 @@ isGAction (GAction _ _) = True
 isGAction _             = False
 
 -- | Convert 'Atom's to 'GAtom's, if possible.
-atomToGAtom :: Show t => Atom t -> GAtom t
+atomToGAtom :: Show t => Atom t -> GAtom t  --TODO-NAT-GUARD: do we want to allow subterms as guards? (search for other TODO-NAT-GUARD in this file) -- There is no proof for doing this, but if someone would prove it, this would make subterms stronger.
 atomToGAtom = conv
   where conv (EqE s t)     = GEqE s t
         conv (Action i f)  = GAction i f
@@ -319,6 +323,20 @@ bvarToLVar =
   where
     boundError v = error $ "bvarToLVar: left-over bound variable '"
                            ++ show v ++ "'"
+
+-- | Assuming that there are no more bound variables left in a term,
+-- convert it to a term with free variables only.
+-- This is especially used in 'insertFormula' where it is surrounded by
+-- an empty universal quantification that cannot have any bound variables.
+bTermToLTerm :: BLTerm -> LNTerm
+bTermToLTerm = fmapTerm (fmap (foldBVar boundError id))
+  where
+    boundError v = error $ "bvarToLVar: left-over bound variable '"
+                           ++ show v ++ "'"
+
+-- | convert a term to a term with bounded variables
+lTermToBTerm :: LNTerm -> BLTerm
+lTermToBTerm = fmapTerm (fmap Free)
 
 -- | Assuming that there are no more bound variables left in an atom of a
 -- formula, convert it to an atom with free variables only.
@@ -495,7 +513,7 @@ formulaToGuarded fmOrig =
 
         conjActionsEqs (Conn And f1 f2)     = conjActionsEqs f1 ++ conjActionsEqs f2
         conjActionsEqs (Ato a@(Action _ _)) = [Left $ bvarToLVar a]
-        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]
+        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]  --TODO-NAT-GUARD (search for other TODO-NAT-GUARD in this file)
         conjActionsEqs f                    = [Right f]
 
         -- Given a list of unguarded variables and a list of atoms, compute the
@@ -626,11 +644,13 @@ simplifyGuarded :: (LNAtom -> Maybe Bool)
                 -- ^ Partial assignment for truth value of atoms.
                 -> LNGuarded
                 -- ^ Original formula
+                -> Bool
+                -- ^ Verbose parameter
                 -> Maybe LNGuarded
                 -- ^ Simplified formula, provided some simplification was
                 -- performed.
-simplifyGuarded valuation fm0
-    | fm1 /= fm0 = trace (render $ ppMsg) (Just fm1)
+simplifyGuarded valuation fm0 verbose
+    | fm1 /= fm0 = if (verbose) then trace (render $ ppMsg) (Just fm1) else (Just fm1)
     | otherwise  = Nothing
   where
     fm1 = simplifyGuardedOrReturn valuation fm0

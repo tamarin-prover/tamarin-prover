@@ -10,16 +10,18 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
 rule (modulo E) Setup:
    [ Fr( ~v1 ) ]
   --[ Setup( ), Roles( $H1, $H2, $D1, $D2 ) ]->
    [
    AgSt_H1v( diff($H2, $H1), diff($D2, $D1), ~v1 ),
-   ShuffleAgents( (<$H1, $D1>+<$H2, $D2>) )
+   ShuffleAgents( (<$H1, $D1>++<$H2, $D2>) )
    ]
 
 rule (modulo E) shuffleVoters:
-   [ ShuffleAgents( (x+y) ) ] --> [ AgSt_S0( x ), AgSt_S0( y ) ]
+   [ ShuffleAgents( (x++y) ) ] --> [ AgSt_S0( x ), AgSt_S0( y ) ]
 
 rule (modulo E) H_vote:
    [ AgSt_H1v( $H, $D, vote ) ]
@@ -88,11 +90,11 @@ next
   backward-search
     case LHS
     step( simplify )
-    by step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    by step( solve( !KD( (x++y) ) ▶₀ #i ) )
   next
     case RHS
     step( simplify )
-    by step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    by step( solve( !KD( (x++y) ) ▶₀ #i ) )
   qed
 next
   case Rule_Equality
@@ -256,7 +258,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( ShuffleAgents( (x+y) ) ▶₀ #i ) )
+    step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
       case Setup_case_1
       by sorry // Cannot prove
     next
@@ -266,7 +268,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( ShuffleAgents( (x+y) ) ▶₀ #i ) )
+    step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
       case Setup_case_1
       by sorry // Cannot prove
     next
@@ -278,10 +280,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -296,7 +298,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-2.spthy
 
   output:          examples/regression/diff/issue198-2.spthy.tmp
-  processing time: 0.50s
+  processing time: 0.30s
   
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 

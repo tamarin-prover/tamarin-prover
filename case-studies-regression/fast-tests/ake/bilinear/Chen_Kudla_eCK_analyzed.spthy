@@ -522,23 +522,27 @@ qed
 /*
 WARNING: the following wellformedness checks failed!
 
-The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching:
-  Reveal_session_key
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Reveal_session_key: 
 Failed to derive Variable(s): sek
-  
-  Init_2
+
+Rule Init_2: 
 Failed to derive Variable(s): ~s1, ~s2
-  
-  Resp_1
+
+Rule Resp_1: 
 Failed to derive Variable(s): ~msk
 */
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: 4b299c253445d7bbc7fce41abf0b0d5659bb1d58, branch: develop
-Compiled at: 2023-06-26 11:54:20.223793825 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -553,9 +557,9 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 35.44s
+  processing time: 20.61s
   
-  WARNING: 3 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
