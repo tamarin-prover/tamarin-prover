@@ -29,6 +29,7 @@ module Theory.Constraint.Solver.Sources (
   , IntegerParameters(..)
   , paramOpenChainsLimit
   , paramSaturationLimit
+  , showSaturationSteps
 
   ) where
 
@@ -75,6 +76,7 @@ data IntegerParameters = IntegerParameters
     {
       _paramOpenChainsLimit :: Integer
     , _paramSaturationLimit :: Integer
+    , _showSaturationSteps  :: Bool
     } deriving( Eq, Ord, Show, G.Generic, NFData, B.Binary )
 $(mkLabels [''IntegerParameters])
 
@@ -365,13 +367,21 @@ saturateSources parameters ctxt thsInit  =
     go :: [Source] -> Integer -> [Source]
     go ths n
       | any or (changes `using` parList rdeepseq) && (n <= get paramSaturationLimit parameters) =
-          trace ("[Saturating Sources] Step " ++ show n ++ " (Max " ++ show (get paramSaturationLimit parameters) ++ ")")
-           $ go ths' (n + 1)
+          if get showSaturationSteps parameters then
+            trace ("[Saturating Sources] Step " ++ show n ++ " (Max " ++ show (get paramSaturationLimit parameters) ++ ")")
+             $ go ths' (n + 1)
+          else 
+             go ths' (n + 1)
       | n > get paramSaturationLimit parameters =
-          trace ("[Saturating Sources] Saturation aborted, more than " ++ show (get paramSaturationLimit parameters) ++
+          if get showSaturationSteps parameters then
+            trace ("[Saturating Sources] Saturation aborted, more than " ++ show (get paramSaturationLimit parameters) ++
                  " iterations. (Limit can be change with -s=)") ths'
+          else
+            ths'
       | otherwise =
-          trace "[Saturating Sources] Done" ths'
+          if get showSaturationSteps parameters then
+            trace "[Saturating Sources] Done" ths'
+          else ths'
       where
           (changes, ths') = unzip $ map (refineSource ctxt solver) ths
           goodTh th = length (getDisj (get cdCases th)) <= 1

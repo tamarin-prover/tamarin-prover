@@ -412,7 +412,7 @@ closeTheory version thyOpts sign srcThy = do
   when (quitOnWarning && not (null report)) (throwError $ WarningError report)
 
   diffLemThy <- withDiffTheory (return . addDefaultDiffLemma) checkedThy
-  closedThy  <- bitraverse (\t -> return $ closeTheoryWithMaude     sign t autoSources)
+  closedThy  <- bitraverse (\t -> return $ closeTheoryWithMaude     sign t autoSources True)
                            (\t -> return $ closeDiffTheoryWithMaude sign t autoSources) diffLemThy
   partialThy <- bitraverse (return . maybe id (`applyPartialEvaluation` autoSources) partialStyle)
                            (return . maybe id (`applyPartialEvaluationDiff` autoSources) partialStyle) closedThy
