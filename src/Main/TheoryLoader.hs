@@ -376,7 +376,7 @@ closeTheory :: MonadIO m => MonadError TheoryLoadError m => String -> TheoryLoad
 closeTheory version thyOpts sign srcThy = do
   let name = either (L.get thyName) (L.get diffThyName) srcThy
 
-  traceM ("[Theory " ++ show name ++ "] Loading & Closing Theory")
+  traceM ("[Theory " ++ show name ++ "] Loading Theory")
 
   let preReport = either (\t -> Sapic.checkWellformedness t ++ Acc.checkWellformedness t)
                          (const []) srcThy
@@ -421,7 +421,7 @@ closeTheory version thyOpts sign srcThy = do
   provedThyWithVersion <- bitraverse (return . addComment (Pretty.text version))
                            (return . addDiffComment (Pretty.text version) )  provedThy
 
-  traceM ("[Theory " ++ show name ++ "] Theory Closed")
+  traceM ("[Theory " ++ show name ++ "] Theory Loaded")
 
   return (report, provedThyWithVersion)
 
