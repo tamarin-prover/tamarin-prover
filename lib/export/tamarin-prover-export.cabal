@@ -1,0 +1,67 @@
+name:               tamarin-prover-export
+
+cabal-version:      >= 1.8
+build-type:         Simple
+version:            1.9.0
+license:            GPL
+license-file:       LICENSE
+category:           Theorem Provers
+author:             Robert Künnemann <robert@kunnemann.de>,
+                    Charlie Jacomme <charlie.jacomme@lsv.fr>
+maintainer:         Robert Künnemann <robert@kunnemann.de>
+copyright:          Robert Künnemann, CISPA-Helmholtz-Centre Saarbrücken, 2019
+                    Charlie Jacomme, LSV, 2019
+
+synopsis:           Library for export of processes in the Sapic calculus to the Proverif calculus
+
+description:        This is an internal library of the Tamarin prover for
+                    security protocol verification
+                    (<hackage.haskell.org/package/tamarin-prover>).
+                    .
+homepage:           https://tamarin-prover.github.io/
+
+
+source-repository head
+  type:     git
+  location: https://github.com/tamarin-prover/tamarin-prover.git
+
+----------------------
+-- library stanzas
+----------------------
+
+library
+    ghc-options:       -Wall -fwarn-tabs
+
+    ghc-prof-options:  -auto-all
+
+    build-depends:
+        aeson
+      , aeson-pretty
+      , base
+      , binary
+      , bytestring
+      , containers
+      , deepseq
+      , dlist
+      , fclabels
+      , HStringTemplate
+      , mtl
+      , parallel
+      , parsec
+      , process
+      , safe
+      , text
+      , transformers
+      , uniplate
+      , exceptions
+      , raw-strings-qq
+      , tamarin-prover-utils
+      , tamarin-prover-term
+      , tamarin-prover-theory
+      , tamarin-prover-sapic
+
+    hs-source-dirs: src
+
+    exposed-modules:
+        Export
+        RuleTranslation

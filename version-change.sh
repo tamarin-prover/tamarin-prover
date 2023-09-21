@@ -10,3 +10,5 @@ lib/term/tamarin-prover-term.cabal \
 lib/theory/tamarin-prover-theory.cabal \
 lib/utils/tamarin-prover-utils.cabal \
 lib/sapic/tamarin-prover-sapic.cabal \
+lib/accountability/tamarin-prover-accountability.cabal \
+lib/export/tamarin-prover-export.cabal \

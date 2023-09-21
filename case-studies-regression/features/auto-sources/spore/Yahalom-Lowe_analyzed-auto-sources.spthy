@@ -10,6 +10,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !LongtermKey( ~kxs, $X ) ]
 
@@ -583,7 +587,24 @@ solve( StateA1( A, B, na ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "Reveal_Shortterm_Key":  factName `ShorttermKey' arity: 3 multiplicity: Persistent
+*/
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -1048,29 +1069,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
-
-  output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 2.300310386s
-  executability (exists-trace): verified (14 steps)
-  secrecy (all-traces): verified (22 steps)
-  noninjectiveagreement_B (all-traces): verified (33 steps)
-  noninjectiveagreement_A (all-traces): verified (10 steps)
-  injectiveagreement_B (all-traces): verified (37 steps)
-  injectiveagreement_A (all-traces): verified (14 steps)
-  AUTO_typing (all-traces): verified (93 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1078,7 +1089,11 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 2.300310386s
+  processing time: 1.91s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   executability (exists-trace): verified (14 steps)
   secrecy (all-traces): verified (22 steps)
   noninjectiveagreement_B (all-traces): verified (33 steps)

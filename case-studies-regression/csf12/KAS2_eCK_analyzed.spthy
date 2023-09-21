@@ -10,6 +10,12 @@ equations:
 
 
 
+
+
+
+
+
+
 section{* KAS2 *}
 
 rule (modulo E) Register_pk:
@@ -228,25 +234,39 @@ solve( (∃ ss #i4 #i5 C D ms.
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf12/KAS2_eCK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf12/KAS2_eCK.spthy
-
-  output:          examples/csf12/KAS2_eCK.spthy.tmp
-  processing time: 3.000678473s
-  eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -254,7 +274,8 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          examples/csf12/KAS2_eCK.spthy.tmp
-  processing time: 3.000678473s
+  processing time: 1.57s
+  
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 
 ==============================================================================

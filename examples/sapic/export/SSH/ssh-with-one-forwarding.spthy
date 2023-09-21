@@ -1,0 +1,173 @@
+/*
+ * Protocol: SSH, with a single agent forwarding
+
+   Proverif : everything in a 2 seconds.
+
+   Tamarin : everything in 5 minutes.
+
+   <!> We add a conditional test not in the program inside the remote P execution, that allows to close the sources of Tamarin. It should not change the security of the protocol, as if the check fails here, it would fail on the server side.
+      This check is not required for Proverif to prove the protocol.
+
+*/
+
+
+theory SSH
+
+begin
+
+builtins: dest-pairing, diffie-hellman, dest-symmetric-encryption, dest-signing
+
+functions: hash/1, kdfPtoS/1, kdfStoP/1
+
+let P(pkS,~skP,pkP) =
+    new ~a;
+    event Share(~a);
+    let A='g'^~a in
+    event Honnest(A);
+    out(A);
+    in(<sig,=pkS,B>);
+
+	let h=hash(<pkS,A,B>) in
+	let k=B^~a in
+	if verify(sig,<'server_sign',h>,pkS)=true then
+	   (
+	   event AcceptP(A,B,pkS,pkP,'source');
+	   event KeyP(k);
+	   let kPS=kdfPtoS(<k,h>) in
+	   let kSP=kdfStoP(<k,h>) in
+	   out(senc(<'user_auth',pkP>,kPS));
+	   in(userauth_answer);
+	   if sdec(userauth_answer,kSP)='userauth_pk_ok' then
+	        (
+		let payload = <'source',h> in
+		let sig2 = sign(payload,~skP) in
+		event Sig(sig2);
+	   	event AcceptP2(A,B,pkS,pkP,'source');
+		out(senc(<'user_answer', 'source', sig2 >,kPS)) ;
+
+
+                !(
+		in(signreq);
+		let <'nested',ms,'sign_req'> = sdec(signreq,kSP) in
+
+	                    event Sig(sign(<'nested',ms>,~skP));
+                            out(senc(<sign(<'nested',ms>,~skP),'sign_ans'>,kPS))
+	           )
+		    )
+
+	 )
+
+
+let remoteP(pkS,~remote:channel) =
+    in(~remote,<pkP,~b2,A2>);
+    new ~aR;
+    event Share(~aR);
+    let A='g'^~aR in
+    event Honnest(A);
+    out(A);
+    in(<sig,=pkS,B>);
+
+	let h=hash(<pkS,A,B>) in
+	let k=B^~aR in
+	if verify(sig,<'server_sign',h>,pkS)=true then
+	   (
+	   event AcceptP(A,B,pkS,pkP,'nested');
+	   event KeyP(k);
+	   let kPS=kdfPtoS(<k,h>) in
+	   let kSP=kdfStoP(<k,h>) in
+	   out(senc(<'user_auth',pkP>,kPS));
+	   in(userauth_answer);
+	   if sdec(userauth_answer,kSP)='userauth_pk_ok' then
+	        (
+
+
+		let B2='g'^~b2 in
+                let h2=hash(<pkS,A2,B2>) in
+                let k2=A2^~b2 in
+                let kPS2=kdfPtoS(<k2,h2>) in
+                let kSP2=kdfStoP(<k2,h2>) in
+
+                out(senc(<'nested',h,'sign_req'>,kSP2));
+
+                in(signans);
+		let <sig2,'sign_ans'> = sdec(signans,kPS2) in
+		 if verify(sig2,<'nested',h>,pkP)=true then
+		 // here we cheat a bit by adding this check, which is not in the standard, but allows to close the sources. The Proverif files goes through without it, but not Tamarin, with over 400 partial deconstructions.
+		 // Replacing this conditional with a source lemma is globaly equivalent to proving the security of the full protocol, so we are back to square one.
+
+				(event AcceptP2(A,B,pkS,pkP,'nested');
+				out(senc(<'user_answer', 'nested',sig2>,kPS)))
+
+                 )
+	    )
+
+
+
+let S(~skS,pkS,pkP,~remote:channel) =
+    in(A);
+    new ~b;
+    event Share(~b);
+    let B='g'^~b in
+    let h=hash(<pkS,A,B>) in
+    let k=A^~b in
+    event AcceptS(A,B,pkS,pkP);
+    let sig=sign(<'server_sign',h>,~skS) in
+    event Sig(sig);
+    out(<sig,pkS,B>);
+    let kPS=kdfPtoS(<k,h>) in
+    let kSP=kdfStoP(<k,h>) in
+    in(userauth);
+    let <'user_auth',=pkP>=sdec(userauth,kPS) in
+
+	  out(senc('userauth_pk_ok',kSP));
+	  in(signans);
+	  let <'user_answer',nestlvl,sig2>=sdec(signans,kPS) in
+	  event AcceptS2TT(A,B,pkS,pkP,sig2,h);
+
+	  if verify(sig2,<nestlvl,h>,pkP)=true then
+	      (
+	      event AcceptS2(A,B,pkS,pkP,nestlvl);
+	      event KeyS2(k);
+	      if nestlvl = 'source' then
+	          out(~remote,<pkP,~b,A>)
+	      )
+
+
+process:
+new ~remote:channel;
+ !(new ~skS; event Key(~skS);
+                 out(pk(~skS));
+                 !(new ~skP;  event Key(~skP);
+                  out(pk(~skP));
+                  !( P(pk(~skS),~skP,pk(~skP)) ||
+		     S(~skS,pk(~skS),pk(~skP),~remote) ||
+		     remoteP(pk(~skS),~remote)
+                     ))
+		     )
+
+
+
+lemma reach: // sanity check
+  exists-trace
+  "Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'source')@i & Honnest(a)@j "
+
+lemma reach_nested: // sanity check
+  exists-trace
+  "Ex  a b skS skP #i #j. AcceptS2(a,b,skS,skP,'nested')@i & Honnest(a)@j"
+
+lemma secretP[reuse]: //secrecy of the key
+  "(not (Ex k #i #j. ( KeyP(k)@i & KU(k)@j ) ))"
+
+
+lemma injPS: // if P accepts, some S also accepted in the first step (but no authentication of P at this stage)
+ "All a b skS skP t #i. AcceptP(a,b,skS,skP,t)@i ==>
+    (Ex skP2 #j. #j<#i & AcceptS(a,b,skS,skP2)@j)"
+
+lemma injSP[reuse,use_induction]: // injectivity of final acceptance
+ "All a b skS skP t #i. AcceptS2(a,b,skS,skP,t)@i ==>
+    (Ex #j. j<i & (AcceptP2(a,b,skS,skP,t)@j))
+"
+lemma secretS[reuse]: //secrecy of the key
+  "(not (Ex k #i #j. (KeyS2(k)@i & KU(k)@j)))"
+
+end

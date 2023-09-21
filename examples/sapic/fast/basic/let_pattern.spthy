@@ -1,0 +1,21 @@
+theory PatternMatchLet
+begin
+section{* A few test cases for operator precedence *}
+
+process:
+let <x,y> = <'1','2'> in
+    in(pat_x); event E(x)
+else
+    in(pat_x); event Fail(pat_x)
+// should be parsed as
+// let pat_x = 1 in (in .. | in )
+
+
+lemma first:
+    "All #e x. E(x)@e ==> x = '1'"
+
+lemma first2 :
+    "not(Ex #e x. Fail(x)@e)"
+
+
+end

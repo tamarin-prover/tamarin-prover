@@ -7,10 +7,14 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
 rule (modulo E) Test:
    [ Fr( ~f ) ] --> [ Out( diff(h($A), ~f) ) ]
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -34,23 +38,19 @@ rule-equivalence
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/equivalence/N5N6DiffTest.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/equivalence/N5N6DiffTest.spthy
-
-  output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
-  processing time: 0.075212962s
-  DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -58,7 +58,8 @@ summary of summaries:
 analyzed: examples/features/equivalence/N5N6DiffTest.spthy
 
   output:          examples/features/equivalence/N5N6DiffTest.spthy.tmp
-  processing time: 0.075212962s
+  processing time: 0.08s
+  
   DiffLemma:  Observational_equivalence : falsified - found trace (8 steps)
 
 ==============================================================================

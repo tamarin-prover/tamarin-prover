@@ -165,6 +165,7 @@ elif ("secrecy_hss" in lemma and not "_k_" in lemma) or \
     elif re.match('.*!KU\( aenc\(.*', line): rank[20].append(num)
     elif re.match('.*!KU\( pk\(.*', line): rank[18].append(num)
     elif re.match('.*!KU\( ~supi.*', line): rank[15].append(num)
+    else: rank[0].append(num)
 
 # AGREEMENTS LEMMAS
 
@@ -437,6 +438,7 @@ elif lemma == "weakagreement_seaf_ue_noKeyRev_noChanRev" or \
     elif re.match('.*!KU\( ~supi.*', line): rank[15].append(num)
     elif re.match('.*!KU\( f1\(~.*', line): rank[12].append(num)
     elif re.match('.*!KU\( f1\(K.*', line): rank[11].append(num)
+    else : rank[0].append(num)
 
 elif lemma == "noninjectiveagreement_seaf_ue_kseaf_noRev" or \
      lemma == "noninjectiveagreement_seaf_ue_kseaf_keyConf_noRev" or \

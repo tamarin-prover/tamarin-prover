@@ -134,12 +134,6 @@ lemma Login_reachable:
   exists-trace
   "Ex #i pid sid x otp1. Login(pid,sid,x,otp1)@i"
 
-// Each succesful login with counter value x was preceeded by a PressButton
-// event with the same counter value
-lemma one_count_foreach_login[reuse,use_induction]:
-        "All pid sid x otp  #t2 . Login(pid,sid,x,otp)@t2 ==>
-         ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
-
 // If a succesful Login happens before a second sucesfull Login, the
 // counter value of the first is smaller than the counter value of the
 // second
@@ -179,23 +173,23 @@ next
       case case_1
 	  solve( Server( pid, sid, otc1 ) ▶₀ #t1 )
 		case BuyANewYubikey
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  next
 		case Server_ReceiveOTP_NewSession_case_1
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  next
 		case Server_ReceiveOTP_NewSession_case_2
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  next
 		case Server_ReceiveOTP_NewSession_case_3
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  next
 		case Server_ReceiveOTP_NewSession_case_4
-		solve( Server( ~pid, sid.1, otc2 ) ▶₀ #t2 )
+		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
 		  by sorry
 	  qed
     next

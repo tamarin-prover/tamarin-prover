@@ -6,8 +6,8 @@ section{* The PKI-example *}
 /*
  * Protocol:    Variant on the running example from Abstraction by set
  * membership by S. Mödersheim.. more difficult than the original,
- * actually 
- * Modeler:     Robert Kunnemann 
+ * actually
+ * Modeler:     Robert Kunnemann
  * Date:    Farbuary 2013
  *
  * Status:  working
@@ -15,16 +15,18 @@ section{* The PKI-example *}
 
 builtins: asymmetric-encryption, signing
 
-heuristic: si // use heuristics for SAPIC and injective facts in a round-robin fashion
+// use heuristics for SAPIC and injective facts in a round-robin fashion
+
+heuristic: si 
 
 let Client=
 	(
 	/* Revoke key */
 	new ~nsk;
-    [ ClientKey(user, ~sk) ] --[ HonestKey(~nsk) ]-> [ ClientKey(user,~nsk) ];
+    [ ClientKey(=user, ~sk) ] --[ HonestKey(~nsk) ]-> [ ClientKey(user,~nsk) ];
 	out(<'renew',user,pk(~nsk)>);
 	out(sign(<'renew',user,pk(~nsk)>,~sk));
-	in(sign(<'confirm',sign(<'renew',user,pk(~nsk)>,~sk)>,pki));
+	in(sign(<'confirm',sign(<'renew',=user,pk(=~nsk)>,=~sk)>,=pki));
 	event Revoked(~sk);
 	out(~sk)
 	)
@@ -35,7 +37,7 @@ let Server=
 	[ ] --[ HonestKey(~sk) ]-> [ ServerDB(pki,user,pk(~sk)),
 ClientKey(user,~sk)];
 	out(pk(~sk))
-) 
+)
 || //Allow creating Dishonest Keys
 ( in(<user,sk>);
   [] --> [ServerDB(pki,user,pk(sk))]
@@ -43,12 +45,13 @@ ClientKey(user,~sk)];
 || //Revoke Key
 (
 	in(<'renew',user,pk(nsk)>);
-	in(sign(<'renew',user,pk(nsk)>,sk));
-	[ServerDB(pki,user,pk(sk))]-->[ServerDB(pki,user,pk(nsk))];
+	in(sign(<'renew',=user,pk(=nsk)>,sk));
+	[ServerDB(=pki,=user,pk(=sk))]-->[ServerDB(pki,user,pk(nsk))];
 	out(sign(<'confirm',sign(<'renew',user,pk(nsk)>,sk)>,pki))
 ))
 
-!(new pki; ! Server || (new user; ! Client) ) 
+process:
+!(new pki; ! Server || (new user; ! Client) )
 
 lemma Knows_Honest_Key_imp_Revoked:
   "All sk #i #d. HonestKey(sk) @ i & K(sk) @ d ==>

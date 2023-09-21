@@ -7,6 +7,10 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
 rule (modulo E) Test:
    [ Fr( ~f ) ] --[ Never( ) ]-> [ Out( ~f ) ]
 
@@ -14,7 +18,7 @@ restriction blockLeft [left]:
   "∀ #i. (Never( ) @ #i) ⇒ (⊥)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -26,23 +30,19 @@ rule-equivalence
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/equivalence/AxiomDiffTest1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/equivalence/AxiomDiffTest1.spthy
-
-  output:          examples/features/equivalence/AxiomDiffTest1.spthy.tmp
-  processing time: 0.069335321s
-  DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -50,7 +50,8 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest1.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest1.spthy.tmp
-  processing time: 0.069335321s
+  processing time: 0.08s
+  
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
 ==============================================================================

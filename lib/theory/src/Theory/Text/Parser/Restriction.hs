@@ -63,7 +63,7 @@ toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
 
 -- | Parse a lemma for an open theory from a string.
 parseRestriction :: String -> Either ParseError SyntacticRestriction
-parseRestriction = parseString "<unknown source>" restriction
+parseRestriction = parseString [] "<unknown source>" (restriction msgvar nodevar)
 
 -- | Parse a 'RestrictionAttribute'.
 restrictionAttribute :: Parser RestrictionAttribute
@@ -74,9 +74,11 @@ restrictionAttribute = asum
   ]
 
 -- | Parse a restriction.
-restriction :: Parser SyntacticRestriction
-restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
-                          <*> doubleQuoted standardFormula
+restriction :: (Hinted v, Ord v) => Parser v -> Parser v
+                -> Parser (ProtoRestriction (SyntacticNFormula v))
+restriction varp nodep = Restriction <$> (symbol "restriction" *> identifier <* colon)
+                          <*> doubleQuoted (standardFormula varp nodep)
+
 
 -- | Fail on parsing an old "axiom" keyword.
 --legacyAxiom :: Parser Restriction
@@ -85,7 +87,7 @@ restriction = Restriction <$> (symbol "restriction" *> identifier <* colon)
 -- | Parse a legacy axiom, now called restriction.
 legacyAxiom :: Parser SyntacticRestriction
 legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (symbol "axiom" *> identifier <* colon)
-                          <*> doubleQuoted standardFormula
+                          <*> doubleQuoted (standardFormula msgvar nodevar)
 
 -- | Parse a diff restriction.
 diffRestriction :: Parser ParseRestriction

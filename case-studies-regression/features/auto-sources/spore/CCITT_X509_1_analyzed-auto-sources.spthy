@@ -12,6 +12,12 @@ equations:
 
 
 
+
+
+
+
+
+
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ]
   --[ Register( $X, ~ltk ) ]->
@@ -261,28 +267,51 @@ solve( !Pk( $B, pkB ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule B_receive: 
+Failed to derive Variable(s): ~ltkA
+*/
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/CCITT_X509_1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
-
-  output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
-  processing time: 0.909839686s
-  Secrecy (all-traces): verified (15 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (14 steps)
-  agreement_B (all-traces): verified (7 steps)
-  Session_key_honest_setup (exists-trace): verified (12 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -290,7 +319,11 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
-  processing time: 0.909839686s
+  processing time: 1.49s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   Secrecy (all-traces): verified (15 steps)
   injectiveagreement_B (all-traces): falsified - found trace (14 steps)
   agreement_B (all-traces): verified (7 steps)

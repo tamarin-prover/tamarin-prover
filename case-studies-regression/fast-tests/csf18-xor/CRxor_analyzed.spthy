@@ -8,6 +8,12 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
+
+
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --[ OnlyOnce( ) ]-> [ !InitLTK( ~k ), !RespLTK( ~k ) ]
 
@@ -511,27 +517,29 @@ solve( Initiated( ~na ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/CRxor.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/CRxor.spthy
-
-  output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.911065946s
-  alive (all-traces): verified (92 steps)
-  recentalive_tag (all-traces): falsified - found trace (11 steps)
-  executable (exists-trace): verified (10 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -539,7 +547,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.911065946s
+  processing time: 0.74s
+  
   alive (all-traces): verified (92 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)

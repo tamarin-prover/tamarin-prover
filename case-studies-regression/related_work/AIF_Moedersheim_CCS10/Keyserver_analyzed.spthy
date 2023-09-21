@@ -10,6 +10,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) SetupServerKey:
    [ Fr( ~sk ) ]
   -->
@@ -131,25 +135,45 @@ next
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Server_RenewKey: 
+Failed to derive Variable(s): sk
+*/
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
-
-  output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.079840681s
-  Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -157,7 +181,11 @@ summary of summaries:
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.079840681s
+  processing time: 0.16s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 
 ==============================================================================

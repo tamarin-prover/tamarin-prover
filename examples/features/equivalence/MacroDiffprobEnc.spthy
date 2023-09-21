@@ -1,0 +1,30 @@
+theory MacroDiffprobEnc 
+begin
+
+/*
+ * Initial Protocol:     Probabilistic encryption
+ * Initial Modeler:      Jannik Dreier and Ralf Sasse in features/equivalence/probEnc.spthy
+ * Modeler:              Thiebaux Valentin
+ * Date:                 July 2023
+ *
+ * Status: 	working
+ * Used to test macros with diff.
+ */
+
+functions: penc/3, pdec/2, pk/1
+
+equations: pdec(penc(m,pk(k),r), k) = m
+
+macros: pubkey(x) = pk(x)
+
+rule gen:
+  [ Fr(~k) ]
+--[ ]->
+  [ !Key(~k), Out(pubkey(~k)) ]
+
+rule enc:
+  [ !Key(k), Fr(~r1), Fr(~r2), In(x) ]
+--[ ]->
+  [ Out(diff(~r1, penc(x, pubkey(k), ~r2))) ]
+
+end

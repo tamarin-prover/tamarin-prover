@@ -4,6 +4,7 @@ begin
 predicates:
 Equal(h1,h2) <=> h1=h2
 
+process:
 new h; 
 if Equal(h,h) then
             event Bogus()

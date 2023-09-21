@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -x # print what we do
+temp=$(mktemp -d)/$(basename "$1")
+tamarin-prover "$1" -m=proverifequiv > "$temp.pv"; proverif "$temp.pv"

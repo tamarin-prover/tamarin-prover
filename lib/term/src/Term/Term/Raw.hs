@@ -6,7 +6,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Term Algebra and related notions.
@@ -26,7 +26,7 @@ module Term.Term.Raw (
     , traverseTerm
     , fmapTerm
     , bindTerm
-    
+
     -- ** Smart constructors
     , lit
     , fApp
@@ -144,10 +144,11 @@ unsafefApp :: FunSym -> [Term a] -> Term a
 unsafefApp fsym as = FAPP fsym as
 
 -- | View on terms that distinguishes function application of builtin symbols like exp.
-data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | One
+data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | One | DHNeutral
                  | FPMult (Term a) (Term a) | FEMap (Term a) (Term a)
                  | FXor [Term a] | Zero
                  | FUnion [Term a]
+                 | FNatPlus [Term a] | NatOne
                  | FPair (Term a) (Term a)
                  | FDiff (Term a) (Term a)
                  | FAppNoEq NoEqSym [Term a]
@@ -164,8 +165,9 @@ viewTerm2 t@(FAPP (AC o) ts)
   | length ts < 2 = error $ "viewTerm2: malformed term `"++show t++"'"
   | otherwise     = (acSymToConstr o) ts
   where
-    acSymToConstr Mult  = FMult
-    acSymToConstr Union = FUnion
+    acSymToConstr Mult    = FMult
+    acSymToConstr Union   = FUnion
+    acSymToConstr NatPlus = FNatPlus
     acSymToConstr Xor   = FXor
 viewTerm2 (FAPP (C EMap) [ t1 ,t2 ]) = FEMap t1 t2
 viewTerm2 t@(FAPP (C _)  _)          = error $ "viewTerm2: malformed term `"++show t++"'"
@@ -176,11 +178,13 @@ viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
     [ t1, t2 ] | o == diffSym   -> FDiff  t1 t2
     [ t1 ]     | o == invSym    -> FInv   t1
     []         | o == oneSym    -> One
+    []         | o == natOneSym -> NatOne
+    []         | o == dhNeutralSym  -> DHNeutral
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"
     _                           -> FAppNoEq o ts
   where
     -- special symbols
-    ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym ]
+    ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, dhNeutralSym ]
 
 ----------------------------------------------------------------------
 -- Instances

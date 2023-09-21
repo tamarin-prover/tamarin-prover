@@ -1,0 +1,23 @@
+theory issue532
+begin
+/**This is an example for issue532(https://github.com/tamarin-prover/tamarin-prover/issues/532)
+* 
+* - In "r1", fact "LongFactNameExt" doesn't occur in any right-hand-side but has some similar
+*   facts in the RHS, for example "LongFactNameExact", "LongFactNameExac". 
+* - In "r2", same problem for fact "OnResultingIn" and fact "LongFactNameExkt. 
+*   However, "OnResultingIn" has similar facts in RHS like "ResultingIn" and "OneResultingIn". 
+*   "LongFactNameExkt" has similar facts in RHS like "LongFactNameExact" and "LongFactNameExac"
+*   
+ */
+rule r1:
+  [LongFactNameExt()]-->[ LongFactNameExact(),LongFactNameExac() ]
+
+rule r2:
+  [OnResultingIn('second'),LongFactNameExkt() ]-->[ResultingIn('second')]
+
+rule r3:
+  [LongFactNameExact() ] --> [OneResultingIn('second')]
+
+rule r4:
+  [NotInAnyRHS() ] --> [TwoResultingIn('second')]
+end

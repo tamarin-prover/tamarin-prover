@@ -1,0 +1,30 @@
+theory Destructors
+begin
+section{* Testing the pattern matching with let destructors *}
+
+functions: senc/2,sdec/2[destructor]
+equations: sdec(k,senc(k,m))=m
+           /* senc(k,sdec(k,m))=m */ // TODO need to check that destructors cannot occur unless at the top-level lhs.
+
+process:
+new k; out(senc(k,'1')); in(x);
+let y = sdec(k,x) in
+         event Dec(y); out(y)
+else
+         event Else()
+
+lemma else:
+    exists-trace
+    "Ex #t. Else()@t"
+
+
+lemma main:
+    exists-trace
+    "Ex m #t. Dec(m)@t"
+
+
+lemma main2:
+    "All m #t. Dec(m)@t ==> (m='1') "
+
+
+end

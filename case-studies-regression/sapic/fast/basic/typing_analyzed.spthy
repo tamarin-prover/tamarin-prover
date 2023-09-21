@@ -1,0 +1,235 @@
+theory Typing begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: f/1, fst/1, g/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) newnlol_0_11111[color=#ffffff, process="new n.2:lol;"]:
+   [ State_11111( a.1, n.1 ), Fr( n.2 ) ] --> [ Out( n.2 ) ]
+
+  /*
+  rule (modulo AC) newnlol_0_11111[color=#ffffff, process="new n.2:lol;"]:
+     [ State_11111( a, n ), Fr( n.1 ) ] --> [ Out( n.1 ) ]
+  */
+
+rule (modulo E) newnrofl_0_11112[color=#ffffff, process="new n.3:rofl;"]:
+   [ State_11112( a.1, n.1 ), Fr( n.3 ) ] --> [ Out( n.3 ) ]
+
+  /*
+  rule (modulo AC) newnrofl_0_11112[color=#ffffff,
+                                    process="new n.3:rofl;"]:
+     [ State_11112( a, n ), Fr( n.1 ) ] --> [ Out( n.1 ) ]
+  */
+
+rule (modulo E) newxlol_0_11121[color=#408051, process="new x.1:lol;"]:
+   [ State_11121( a.1, n.1 ), Fr( x.1 ), Fr( y.1 ) ]
+  -->
+   [ State_11121111( a.1, n.1, x.1, y.1 ), Out( x.1 ) ]
+
+  /*
+  rule (modulo AC) newxlol_0_11121[color=#408051, process="new x.1:lol;"]:
+     [ State_11121( a, n ), Fr( x ), Fr( y ) ]
+    -->
+     [ State_11121111( a, n, x, y ), Out( x ) ]
+  */
+
+rule (modulo E) outybitstring_0_11121111[color=#408051,
+                                         process="out(y.1:bitstring);"]:
+   [ State_11121111( a.1, n.1, x.1, y.1 ) ]
+  -->
+   [ State_111211111( a.1, n.1, x.1, y.1 ), Out( y.1 ) ]
+
+  /*
+  rule (modulo AC) outybitstring_0_11121111[color=#408051,
+                                            process="out(y.1:bitstring);"]:
+     [ State_11121111( a, n, x, y ) ]
+    -->
+     [ State_111211111( a, n, x, y ), Out( y ) ]
+  */
+
+rule (modulo E) outfybitstring_0_111211111[color=#408051,
+                                           process="out(f(y.1:bitstring));"]:
+   [ State_111211111( a.1, n.1, x.1, y.1 ) ]
+  -->
+   [ State_1112111111( a.1, n.1, x.1, y.1 ), Out( f(y.1) ) ]
+
+  /*
+  rule (modulo AC) outfybitstring_0_111211111[color=#408051,
+                                              process="out(f(y.1:bitstring));"]:
+     [ State_111211111( a, n, x, y ) ]
+    -->
+     [ State_1112111111( a, n, x, y ), Out( f(y) ) ]
+  */
+
+rule (modulo E) outxloly_0_1112111111[color=#408051,
+                                      process="out(<x.1:lol, y.1>);"]:
+   [ State_1112111111( a.1, n.1, x.1, y.1 ) ]
+  -->
+   [ State_11121111111( a.1, n.1, x.1, y.1 ), Out( <x.1, y.1> ) ]
+
+  /*
+  rule (modulo AC) outxloly_0_1112111111[color=#408051,
+                                         process="out(<x.1:lol, y.1>);"]:
+     [ State_1112111111( a, n, x, y ) ]
+    -->
+     [ State_11121111111( a, n, x, y ), Out( <x, y> ) ]
+  */
+
+rule (modulo E) outxloly_0_11121111111[color=#408051,
+                                       process="out((x.1:lol++y.1));"]:
+   [ State_11121111111( a.1, n.1, x.1, y.1 ) ]
+  -->
+   [ State_111211111111( a.1, n.1, x.1, y.1 ), Out( (x.1++y.1) ) ]
+
+  /*
+  rule (modulo AC) outxloly_0_11121111111[color=#408051,
+                                          process="out((x.1:lol++y.1));"]:
+     [ State_11121111111( a, n, x, y ) ]
+    -->
+     [ State_111211111111( a, n, x, y ), Out( (x++y) ) ]
+  */
+
+rule (modulo E) outfxloly_0_111211111111[color=#408051,
+                                         process="out(f(<x.1:lol, y.1>));"]:
+   [ State_111211111111( a.1, n.1, x.1, y.1 ) ]
+  -->
+   [ State_1112111111111( a.1, n.1, x.1, y.1 ), Out( f(<x.1, y.1>) ) ]
+
+  /*
+  rule (modulo AC) outfxloly_0_111211111111[color=#408051,
+                                            process="out(f(<x.1:lol, y.1>));"]:
+     [ State_111211111111( a, n, x, y ) ]
+    -->
+     [ State_1112111111111( a, n, x, y ), Out( f(<x, y>) ) ]
+  */
+
+rule (modulo E) outhxlol_0_1112111111111[color=#408051,
+                                         process="out(h(x.1:lol));"]:
+   [ State_1112111111111( a.1, n.1, x.1, y.1 ) ]
+  -->
+   [ State_11121111111111( a.1, n.1, x.1, y.1 ), Out( h(x.1) ) ]
+
+  /*
+  rule (modulo AC) outhxlol_0_1112111111111[color=#408051,
+                                            process="out(h(x.1:lol));"]:
+     [ State_1112111111111( a, n, x, y ) ]
+    -->
+     [ State_11121111111111( a, n, x, y ), Out( h(x) ) ]
+  */
+
+rule (modulo E) outhhxlol_0_11121111111111[color=#408051,
+                                           process="out(h(h(x.1:lol)));"]:
+   [ State_11121111111111( a.1, n.1, x.1, y.1 ) ]
+  -->
+   [ State_111211111111111( a.1, n.1, x.1, y.1 ), Out( h(h(x.1)) ) ]
+
+  /*
+  rule (modulo AC) outhhxlol_0_11121111111111[color=#408051,
+                                              process="out(h(h(x.1:lol)));"]:
+     [ State_11121111111111( a, n, x, y ) ]
+    -->
+     [ State_111211111111111( a, n, x, y ), Out( h(h(x)) ) ]
+  */
+
+rule (modulo E) eventTestxlolalol_0_111211111111111[color=#408051,
+                                                    process="event Test( x.1:lol, a.1:lol );"]:
+   [ State_111211111111111( a.1, n.1, x.1, y.1 ) ]
+  --[ Test( x.1, a.1 ) ]->
+   [
+   State_11121111111111111( a.1, n.1, x.1, y.1 ),
+   State_11121111111111112( a.1, n.1, x.1, y.1 )
+   ]
+
+  /*
+  rule (modulo AC) eventTestxlolalol_0_111211111111111[color=#408051,
+                                                       process="event Test( x.1:lol, a.1:lol );"]:
+     [ State_111211111111111( a, n, x, y ) ]
+    --[ Test( x, a ) ]->
+     [
+     State_11121111111111111( a, n, x, y ),
+     State_11121111111111112( a, n, x, y )
+     ]
+  */
+
+rule (modulo E) Init[color=#ffffff, process="in(a.1:lol);"]:
+   [ In( a.1 ), Fr( n.1 ) ]
+  --[ Init( ) ]->
+   [
+   State_1121( a.1, n.1 ), State_11121( a.1, n.1 ), State_11111( a.1, n.1 ),
+   State_11112( a.1, n.1 )
+   ]
+
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="in(a.1:lol);"]:
+     [ In( a ), Fr( n ) ]
+    --[ Init( ) ]->
+     [
+     State_1121( a, n ), State_11121( a, n ), State_11111( a, n ),
+     State_11112( a, n )
+     ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Wellformedness-error in Process
+  Variable bound twice: a.1:lol.
+*/
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.1. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/typing.spthy
+
+  output:          examples/sapic/fast/basic/typing.spthy.tmp
+  processing time: 0.33s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+
+==============================================================================
+*/

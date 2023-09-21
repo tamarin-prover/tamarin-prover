@@ -5,6 +5,12 @@ packages:
 - lib/term/
 - lib/utils/
 - lib/sapic/
-resolver: lts-18.13
+- lib/export/
+- lib/accountability/
+resolver: lts-20.26
+ghc-options:
+  "$everything": -Wall
 nix:
   packages: [ zlib ]
+
+

@@ -1,3 +1,43 @@
+* 1.8.0
+  - Support for natural numbers and subterm reasoning
+
+  - Tactics language added, improves over oracle use
+
+  - SAPIC:
+    improvements and extensions, including an export functionality targeting ProVerif and DeepSec;
+    boundedness checks;
+    SAPIC now also supports natural numbers (deprecating use of multisets)
+
+  - Advanced DH (subgroups) with additional neutral group element added to Diffie-Hellman builtin
+
+  - Added macros
+
+  - Improved warnings:
+    Added checks to notify user of likely modeling errors as warnings, regarding equational theory use
+    Added warning to notify if a fact occurs in LHS, but never in any RHS (thus not executable)
+    Generally made warnings more readable
+
+  - Improved graph visualization:
+    auto sources annotations are hidden in graphs by default except when proving sources lemmas
+    less relation arrows are colored depending on their causes
+    a transitive reduction is applied by default to make graphs more readable
+    
+  - More verbose Tamarin self-identification on --version
+
+  - Allow optional trailing commas in lists
+
+  - Refactoring of Theory.hs, and other smaller files
+
+  - Use GitHub actions for automated regression tests
+
+  - Numerous bug fixes
+
+  - Added many examples from different published papers
+
+  - Allow Maude up to 3.3.1 (default 3.2.1)
+
+  - Using stack LTS resolver 20.26 and GHC 9.2.8 now [stack update, stack upgrade may be needed]
+
 * 1.6.1
   - Further SAPIC integration
 

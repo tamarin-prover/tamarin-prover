@@ -1,0 +1,27 @@
+fmod SENC is
+sorts Msg .
+op senc : Msg Msg -> Msg [ctor].
+op sdec : Msg Msg ~> Msg .
+op bot  : -> [Msg] [ctor] .
+vars K M C : Msg .
+vars k m c : [Msg] .
+eq sdec(K,senc(K,M)) = M [variant] .
+eq sdec(K,bot) = bot [variant] .
+endfm
+
+get variants in SENC : sdec(K,M) .
+
+get variants in SENC : sdec(k,m)=C .
+
+get irredundant variants in SENC : sdec(K,C).
+
+get variants in SENC : sdec(k,m)=C.
+
+get variants in SENC : nobot(sdec(K,C)).
+
+/* ceq sdec(K,senc(K,M)) = M [variant] if  . */
+/* get variants in SENC : sdec(K,C). */
+
+/* op nobot : Msg -> Msg . */
+ceq sdec(K,C) = bot [variant] 
+    if not (C = senc(K,M)).

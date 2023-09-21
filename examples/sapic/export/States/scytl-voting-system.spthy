@@ -1,0 +1,156 @@
+theory Scytl_Voting_System
+begin
+
+section{* Scytl Voting System *}
+
+/*
+
+ Built from the Sapic model inside the GSVerif benchmark.
+ The original file actually contained a modeeling error.
+
+ Proverif: 1 second
+  "cannot be proved" on single_vote
+
+ Tamarin: 1 minute
+
+
+ */
+
+builtins: dest-pairing
+
+functions: w/2, sk/1 [private], h/1, f/2, phi/1, v/1, cc/1 [private],
+           cut/1, honest/1 [private], enc/3, pub/1, sign/2, zkp/7,
+           verifP/6 [destructor], verifE/2 [destructor], verifS/3 [destructor], dec/2, get_message/1, check/2,
+           get_id/1, get_w/2, true/0, pk/1
+
+equations:
+pk(id) = pub(sk(id)), // this equation was missing in the original GS Verif benchmark file
+dec(Skey,enc(pub(Skey),M,R))  = M ,
+get_message(sign(Skey,M))     = M ,
+check(pub(Skey),sign(Skey,M)) = M ,
+get_id(pub(sk(Id)))           = Id,
+get_w(w(Skey,V),Skey)         = V ,
+verifE(pkey,enc(pkey,m,r))       = true,
+verifS(pub(skey),m,sign(skey,m)) = true,
+verifP(Pke, pub(Skid), enc(Pke,phi(v1),R), w(Skid,cut(enc(Pke,phi(v1),R))), w(Skid,v1),
+   zkp(Pke, pub(Skid), enc(Pke,phi(v1),R), w(Skid,cut(enc(Pke,phi(v1),R))), w(Skid,v1), R,Skid)) = true,
+verifP(Pke, pub(Skid), enc(Pke,phi(v1),R), w(Skid,cut(enc(Pke,phi(v1),R))), w(Skid,v1),
+   zkp(Pke, pub(Skid), enc(Pke,phi(v1),R), cut(enc(Pke,phi(w(Skid,v1)),R)), w(Skid,v1), R,Skid)) = true,
+verifP(Pke, pub(Skid), enc(Pke,phi(v1),R), cut(enc(Pke,phi(w(Skid,v1)),R)), w(Skid,v1),
+   zkp(Pke, pub(Skid), enc(Pke,phi(v1),R), w(Skid,cut(enc(Pke,phi(v1),R))), w(Skid,v1), R,Skid)) = true,
+verifP(Pke, pub(Skid), enc(Pke,phi(v1),R), cut(enc(Pke,phi(w(Skid,v1)),R)), w(Skid,v1),
+zkp(Pke, pub(Skid), enc(Pke,phi(v1),R), cut(enc(Pke,phi(w(Skid,v1)),R)), w(Skid,v1), R,Skid)) = true
+
+let Alice =
+    let AliceSkid  = sk(honest(id_seed)) in
+    let RCid1 = f(k,w(sk(honest(id_seed)),v(X_J))) in
+    let FCid  = f(k,w(sk(honest(id_seed)),cc(honest(id_seed)))) in
+    let CCid  = cc(honest(id_seed)) in
+    out(<mAC1,honest(id_seed),AliceSkid,pk(honest(id_seed)),X_J>);
+    in(<XmCA1,RC_Set>);
+    if XmCA1=mCA1 then
+    if RC_Set=RCid1 then
+    ( event Confirmed(honest(id_seed),k,X_J);
+      out(<mAC2,CCid>);
+      in(<XmCA2,offeredFC>);
+      if XmCA2=mCA2 then
+      if offeredFC=FCid then
+        event HappyUser(honest(id_seed),k,X_J)
+    )
+
+let Serv =
+  in(<ClientId,<C,W,EC,PkId,P>>);
+  let ServPks = pub(sks) in
+  let RFid1 = h(f(k,w(sk(ClientId),v(j)))) in
+  let CRFid = sign(sks,f(k,w(sk(ClientId),cc(ClientId)))) in
+  let B = <C,W,EC,PkId,P> in
+
+  if PkId = pk(ClientId) then
+  ( if verifP(pke,pk(ClientId),C,EC,W,P) = true then
+    if verifE(pke,C) = true then
+    lock locktb;
+    lookup ClientId as otherB in
+      unlock locktb
+    else
+      insert ClientId, B;
+      event InsertBB(ClientId,B);
+      let RC1 = f(k,W) in
+      if h(RC1) = RFid1 then
+        (out(RC1); in(CM);
+        let FC = f(k,CM) in
+        (if verifS(ServPks,FC,CRFid) = true then
+/*        insert <'cb',ClientId>, <FC,CRFid>; */
+          event HasVoted(pke,k,sks,ClientId,B,FC,CRFid);
+          out(FC);
+          unlock locktb
+        else
+         unlock locktb))
+      else
+        unlock locktb
+  )
+
+process:
+new election; out(election);
+new signature; out(signature);
+new globalCGKP; out(globalCGKP);
+let ske = sk(election) in
+let pke = pub(sk(election)) in
+let sks = sk(signature) in
+let pks = pub(sk(signature)) in
+let k = sk(globalCGKP) in
+new j; new a1; out(<j,a1>);
+new mAC1; new mAC2; new mCA1; new mCA2;
+out(<mAC1,mAC2,mCA1,mCA2>);
+out(<pke,pks>);
+new locktb;
+(
+   ( !( in(X_J); new id_seed; out(honest(id_seed)); Alice ))
+|| ( !( in(Y_J); new eid; out(eid);
+	out(<eid,sk(eid),f(k,w(sk(eid),v(Y_J))),f(k,w(sk(eid),cc(eid))),cc(eid)>)))
+|| ( !( Serv ))
+)
+
+
+lemma exists_vote:
+   exists-trace
+  "Ex Id B1 #i. InsertBB(Id,B1) @ i "
+
+lemma exists_hu:
+  exists-trace
+  "Ex Id2 K2 T_J #i. HappyUser(Id2,K2,T_J) @ i"
+
+lemma exists_honest_hv:
+  exists-trace
+  "Ex Pke K1 Sks Id1 B3 FC1 CRFid1 #i.
+   HasVoted(Pke,K1,Sks,honest(Id1),B3,FC1,CRFid1) @ i"
+
+
+lemma single_vote:
+  "All Id B1 B2 #i #j. InsertBB(Id,B1) @ i & InsertBB(Id,B2) @ j ==> (B1=B2)"
+
+lemma cast_as_intended:
+  "All Pke K1 Sks Id1 B3 FC1 CRFid1 #i.
+   HasVoted(Pke,K1,Sks,honest(Id1),B3,FC1,CRFid1) @ i
+   ==> ( Ex Z_J C W1 EC0 P1 R #j.
+         Confirmed(honest(Id1),K1,Z_J) @ j
+       & B3 = <C, W1, EC0, pub(sk(honest(Id1))), P1>
+       & C = enc(Pke,phi(v(Z_J)),R)
+   )"
+
+lemma tallied_as_cast:
+  "All Id2 K2 T_J #i.
+   HappyUser(Id2,K2,T_J) @ i
+   ==> ( Ex Pke Sks B4 FC2 CRFid2 C2 W2 EC1 EC2 P2 R #j.
+         HasVoted(Pke,K2,Sks,Id2,B4,FC2,CRFid2) @ j
+       & B4 = <C2, W2, EC1, pub(sk(Id2)), P2>
+       & C2 = enc(Pke,phi(v(T_J)),R)
+       & W2=w(sk(Id2),v(T_J))
+       & ( EC1 = w(sk(Id2),cut(enc(Pke,phi(v(T_J)),R)))
+         | EC1 = cut(enc(Pke,phi(w(sk(Id2),v(T_J))),R)) )
+       & P2 = zkp(Pke,pub(sk(Id2)),C2,EC2,W2,R,sk(Id2))
+       & ( EC2 = w(sk(Id2),cut(enc(Pke,phi(v(T_J)),R)))
+         | EC2 = cut(enc(Pke,phi(w(sk(Id2),v(T_J))),R)) )
+       & CRFid2 = sign(Sks,FC2)
+   )"
+
+end

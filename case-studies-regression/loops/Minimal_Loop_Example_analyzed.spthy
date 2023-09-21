@@ -7,6 +7,8 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
 /* looping facts with injective instances: A/1 */
 
 rule (modulo E) Start:
@@ -86,16 +88,16 @@ next
     case Loop
     solve( A( ~n ) ▶₀ #i )
       case Loop
-      by contradiction /* non-injective facts (#vr.1,#j,#i) */
+      by contradiction /* cyclic */
     next
       case Start
-      by contradiction /* non-injective facts (#i.1,#j,#i) */
+      by contradiction /* cyclic */
     qed
   next
     case Start
     solve( A( ~n ) ▶₀ #i )
       case Loop
-      by contradiction /* non-injective facts (#vr,#j,#i) */
+      by contradiction /* from formulas */
     qed
   qed
 qed
@@ -113,16 +115,16 @@ solve( (#i < #j)  ∥ (#j < #i) )
     case Loop
     solve( A( ~n ) ▶₀ #j )
       case Loop
-      by contradiction /* non-injective facts (#vr.1,#i,#j) */
+      by contradiction /* cyclic */
     next
       case Start
-      by contradiction /* non-injective facts (#i.1,#i,#j) */
+      by contradiction /* cyclic */
     qed
   next
     case Start
     solve( A( ~n ) ▶₀ #j )
       case Loop
-      by contradiction /* non-injective facts (#vr,#vr.1,#i) */
+      by contradiction /* cyclic */
     next
       case Start
       by contradiction /* cyclic */
@@ -132,10 +134,10 @@ next
   case case_2
   solve( A( x ) ▶₀ #i )
     case Loop
-    by contradiction /* non-injective facts (#vr,#j,#i) */
+    by contradiction /* cyclic */
   next
     case Start
-    by contradiction /* non-injective facts (#vr,#j,#i) */
+    by contradiction /* cyclic */
   qed
 qed
 
@@ -151,29 +153,27 @@ induction
   SOLVED // trace found
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/loops/Minimal_Loop_Example.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/Minimal_Loop_Example.spthy
-
-  output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.068940213s
-  Start_before_Loop (all-traces): verified (8 steps)
-  Start_before_Stop (all-traces): verified (4 steps)
-  Loop_before_Stop (all-traces): verified (9 steps)
-  Stop_unique (all-traces): verified (12 steps)
-  Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -181,7 +181,8 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.068940213s
+  processing time: 0.10s
+  
   Start_before_Loop (all-traces): verified (8 steps)
   Start_before_Stop (all-traces): verified (4 steps)
   Loop_before_Stop (all-traces): verified (9 steps)

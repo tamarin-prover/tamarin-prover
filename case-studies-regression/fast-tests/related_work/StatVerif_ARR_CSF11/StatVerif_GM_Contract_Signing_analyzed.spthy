@@ -13,6 +13,8 @@ equations:
 
 
 
+
+
 rule (modulo E) Setup_TTP:
    [ Fr( seed ) ] --> [ !TTP( seed ), Out( pk(seed) ) ]
 
@@ -376,28 +378,54 @@ solve( !TTP( skT ) ▶₁ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Witness_Aborted: 
+Failed to derive Variable(s): ct, sk1, ysk
+
+Rule Witness_Resolved: 
+Failed to derive Variable(s): ct, sk1, sk2
+*/
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
-
-  output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.376145678s
-  aborted_and_resolved_exclusive (all-traces): verified (7 steps)
-  aborted_contract_reachable (exists-trace): verified (8 steps)
-  resolved1_contract_reachable (exists-trace): verified (9 steps)
-  resolved2_contract_reachable (exists-trace): verified (9 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -405,7 +433,11 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_GM_Contract_Signing.spthy.tmp
-  processing time: 0.376145678s
+  processing time: 0.67s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   aborted_and_resolved_exclusive (all-traces): verified (7 steps)
   aborted_contract_reachable (exists-trace): verified (8 steps)
   resolved1_contract_reachable (exists-trace): verified (9 steps)

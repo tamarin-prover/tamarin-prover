@@ -8,6 +8,12 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
+
+
 rule (modulo E) setup:
    [ Fr( ~k ) ]
   --[ OnlyOnce( 'setup' ), Create( ~k ) ]->
@@ -6555,28 +6561,29 @@ induction
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/LAK06.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/LAK06.spthy
-
-  output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 12.57764757s
-  executable (exists-trace): verified (9 steps)
-  helpingSecrecy (all-traces): verified (2 steps)
-  noninjectiveagreementTAG (all-traces): verified (2082 steps)
-  noninjectiveagreementREADER (all-traces): falsified - found trace (13 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -6584,7 +6591,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 12.57764757s
+  processing time: 6.20s
+  
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
   noninjectiveagreementTAG (all-traces): verified (2082 steps)

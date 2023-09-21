@@ -1,0 +1,70 @@
+name:               tamarin-prover-accountability
+
+cabal-version:      >= 1.8
+build-type:         Simple
+version:            1.9.0
+license:            GPL
+license-file:       LICENSE
+category:           Theorem Provers
+author:             Robert Künnemann <robert@kunnemann.de>, 
+                    Kevin Morio <kevin.morio@cispa.de>,
+                    Yavor Ivanov <yavor.ivanov@cispa.de>
+                    
+maintainer:         Robert Künnemann <robert@kunnemann.de>
+copyright:          (c) 2019-2021 Robert Künnemann, Kevin Morio & Yavor Ivanov
+
+synopsis:           Library for accountability for the tamarin prover.
+
+description:        This is an internal library of the Tamarin prover for
+                    security protocol verification
+                    (<hackage.haskell.org/package/tamarin-prover>).
+                    .
+                    This library provides support for accountability verification.
+homepage:           https://tamarin-prover.github.io/
+
+
+source-repository head
+  type:     git
+  location: https://github.com/tamarin-prover/tamarin-prover.git
+
+----------------------
+-- library stanzas
+----------------------
+
+library
+    ghc-options:       -Wall -fwarn-tabs
+
+    ghc-prof-options:  -auto-all
+
+    build-depends:
+        aeson
+      , aeson-pretty
+      , base
+      , binary
+      , bytestring
+      , containers
+      , deepseq
+      , dlist
+      , fclabels
+      , mtl
+      , parallel
+      , parsec
+      , process
+      , safe
+      , text
+      , transformers
+      , uniplate
+      , exceptions
+      , raw-strings-qq
+      , tamarin-prover-utils
+      , tamarin-prover-term
+      , tamarin-prover-theory
+
+
+    hs-source-dirs: src
+
+    exposed-modules:
+        Accountability
+      , Accountability.Generation
+
+    other-modules:

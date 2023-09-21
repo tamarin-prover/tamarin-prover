@@ -1,0 +1,971 @@
+theory 5G_aka
+/*
+
+==============================================================================
+summary of summaries:
+
+analyzed: 5G_AKA.spthy
+
+  dummy (all-traces): verified (1 steps)
+  true_rand_autn_src (all-traces): verified (13 steps)
+  true_sqn_ue_src (all-traces): verified (15 steps)
+  true_sqn_hss_src (all-traces): verified (8 steps)
+  true_sqn_ue_nodecrease (all-traces): verified (348 steps)
+  true_sqn_ue_unique (all-traces): verified (8 steps)
+  false_executability_honest (all-traces): analysis incomplete (1 steps)
+  false_executability_keyConf_honest (all-traces): analysis incomplete (1 steps)
+  false_executability_desync (all-traces): analysis incomplete (1 steps)
+  false_executability_resync (all-traces): analysis incomplete (1 steps)
+  false_weakagreement_ue_seaf_noRev (all-traces): analysis incomplete (1 steps)
+  false_weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev (all-traces): analysis incomplete (1 steps)
+  false_weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev (all-traces): analysis incomplete (1 steps)
+  true_injectiveagreement_ue_seaf_kseaf_keyConf_noKeyRev_noChanRev (all-traces): verified (83 steps)
+  false_weakagreement_seaf_ue_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev (all-traces): analysis incomplete (1 steps)
+  false_weakagreement_seaf_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev (all-traces): analysis incomplete (1 steps)
+  true_injectiveagreement_seaf_ue_kseaf_noKeyRev_noChanRev (all-traces): verified (95 steps)
+  false_weakagreement_seaf_ue_KeyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev (all-traces): analysis incomplete (1 steps)
+  false_weakagreement_seaf_ue_KeyConf_noChanRev_noAsyKeyRev_noSupiRev_noSqnRev (all-traces): analysis incomplete (1 steps)
+  true_injectiveagreement_seaf_ue_kseaf_keyConf_noKeyRev_noChanRev (all-traces): verified (101 steps)
+  gsverif_sqn_hss_nodecrease (all-traces): verified (255 steps)
+  gsverif_intermediate (all-traces): verified (4 steps)
+  gsverif_lemma (all-traces): verified (364 steps)
+
+==============================================================================
+
+real	1m41.666s
+user	8m58.637s
+sys	2m5.626s
+─( 11:44:18 )─< ~ >────────────────────────────────────────────────────────────────────────────[ 0 ]─
+c01chja@Colossus05 $ time tamarin-prover 5G_AKA.spthy --prove +RTS -N8 -RTS
+
+
+
+With set nounifIgnoreNtimes = 4.
+
+Query(ies):
+ - Query event(SEAF_End)@i ==> event(Rev(X,data))@r is false.
+ - Query event(SEAF_EndConf)@i ==> event(Rev(X,data))@r is false.
+ - Query event(HSS_Resync_End(dif))@i ==> event(Rev(X,data))@r is false.
+ - Query event(HSS_Resync_End(4))@i2 ==> event(Rev(X,data))@r is false.
+ - Query event(Commit(a,b,(UE[],(SEAF[],t))))@i ==> event(RunningId(b,a))@j || event(RevId(a))@r1 ||
+event(RevId(b))@r2 is false.
+ - Query event(CommitConf(a,b,(UE[],(SEAF[],t))))@i ==> event(RunningId(b,a))@j || event(RevsecureCha
+nnel)@r1 || event(RevskHN)@r2 || event(Revsqn)@r3 || event(Revsupi)@r4 is false.
+ - Query event(CommitConf(a,b,(UE[],(SEAF[],t))))@i ==> event(RunningId(b,a))@j || event(Revk)@r1 ||
+event(RevskHN)@r2 || event(Revsqn)@r3 || event(Revsupi)@r4 is false.
+ - Query event(Commit(a,b,(SEAF[],(UE[],t))))@i ==> event(RunningId(b,a))@j || event(Revk)@r1 || even
+t(RevskHN)@r2 || event(Revsqn)@r3 || event(Revsupi)@r4 is false.
+ - Query event(Commit(a,b,(SEAF[],(UE[],t))))@i ==> event(RunningId(b,a))@j || event(RevsecureChannel
+)@r1 || event(RevskHN)@r2 || event(Revsqn)@r3 || event(Revsupi)@r4 is false.
+ - Query event(CommitConf(a,b,(SEAF[],(UE[],t))))@i ==> event(RunningId(b,a))@j || event(Revk)@r1 ||
+event(RevskHN)@r2 || event(Revsqn)@r3 || event(Revsupi)@r4 cannot be proved.
+ - Query event(CommitConf(a,b,(SEAF[],(UE[],t))))@i ==> event(RunningId(b,a))@j || event(RevsecureCha
+nnel)@r1 || event(RevskHN)@r2 || event(Revsqn)@r3 || event(Revsupi)@r4 is false.
+Associated axiom(s):
+ - Axiom event(Counter(d,st2,st_3,i1)) && event(Counter(d,st2,st_3,i)) ==> i1 = i; event(Counter(d,st
+2,st_3,i1)) && event(Counter(d,st2,st1_1,i1)) ==> st_3 = st1_1 in process 1.
+
+--------------------------------------------------------------
+
+
+real    3m40.457s
+user    3m40.075s
+sys     0m0.328s
+─( 21:59:08 )─< ~ >────────────────────────────────────────────────────────────────────────────[ 0 ]─
+c01chja@Colossus05 $ time proverif output.pv
+
+*/
+/*
+
+   Protocol:    5G AKA
+   Modeler:     David Basin, Jannik Dreier, Lucca Hirschi, Sasa Radomirovic, Ralf Sasse, Vincent Stettler
+   Date:        -
+   Version:     Model of 5G AKA v15.0.0, with SUCI, sequence number, XOR, synchronization failure mechanism.
+
+   Based on:	Security Architecture and Procedures for 5G System:
+                  3GPP TS 33.501 V15.0.0
+
+   Comments:	This theory models 5G AKA including:
+		 - the sequence number
+		 - the resynchronization mechanism
+		 - the XOR
+		 - SUPI concealement (SUCI)
+		Not included:
+		 - AMF (authentication management field)
+
+   Resources:	[5G] Security Architecture and Procedures for 5G System:
+                    3GPP TS 33.501 V15.0.0 (2018-03)
+
+                [5G-sys] System Architecture for the 5G System:
+                    3GPP TS 23.501 V1.3.0 (2017-09)
+
+ 		[4G] System Architecture Evolution (SAE): Security architecture
+		    3GPP TS 33.401 V15.0.0 (2017-06)
+
+                [3G] 3G Security: Security architecture
+		    3GPP TS 33.102 V14.1.0 (2017-03)
+
+   Notes:	5G AKA is one of the methods used in 5G primary authentication.
+		It is an enhancement of EPS-AKA (TS 33.401 Section 6.1),
+		which is based on UMTS AKA (TS 33.102 Section 6.3).
+
+   Notations:	supi 	-> 	Subscription Permanent Identifier (IMSI).
+		suci 	-> 	Subscription Concealed Identifier.
+		sqn     ->      Sequence Number
+
+		UE 	-> 	User Equipment.
+		SEAF 	-> 	Security Anchor Function.
+		AUSF 	-> 	Authentication Server Function.
+		ARPF 	-> 	Authentication Repository and Processing Function.
+		HSS 	-> 	Home Subscription Server (AUSF + ARPF)
+
+		SNID	->	Visited Public Land Mobile Network ID (VPLMN-Id)
+				of the serving network, appended to string '5G'.
+		HN 	->	Home network including AUSF and ARPF.
+		SN	->	Serving network.
+
+   Channels:	UE <-> SEAF .<->. HSS  [.<->. is authenticated, confidential, replay protected, order-preserving, binding]
+
+   Terms:
+		Assumptions:
+		 SNid -> ~idSN, output when created (public fresh constant)
+		 supi -> ~supi (fresh value)
+		 sqn ->  sqn ~sqn_root + '1' + ... + '1'
+                         where ~sqn_root is the freshly generated part of Sqn.
+			 We model an attacker who is in the vicinity of the targeted UE for a limited time only.
+			 As a consequence, the attacker does not initially know sqn.
+
+		TS 33.102 6.3 (3G):
+		 ~RAND is freshly generated and unique.
+		 MAC = f1(k, <Sqn, RAND, AMF>)
+		 XRES = f2(k, RAND)
+		 CK = f3(k, RAND)
+		 IK = f4(k, RAND)
+		 AK = f5(k, RAND)
+		 AUTN = <XOR(Sqn, AK), AMF, MAC>
+
+		 MAC-S = f1*(k, <Sqn, RAND, AMF>)
+		 AKS = f5*(k, RAND) // we defined this name here
+		 AUTS = < XOR(Sqn, AKS), MAC-S>
+
+		TS 33.501 6.1, 6.2, A, X (5G):
+		 SNID = <'5G', VPLMNID>  ([5G] 6.1.1.4.1)
+		 K_ausf = KDF(<CK, IK>, <SNID, XOR(Sqn, AK)>) ([5G] A.2)
+		 K_seaf = KDF(K_ausf, SNID) ([5G] A.6)
+		 XRES* = KDF(<CK, IK>, <SNID, XRES, RAND>) ([5G] A.4)
+		 HXRES* = SHA256(<XRES*, RAND>) ([5G] A.5)
+
+		TS 33.501 C (5G):
+		  pk_HSS, sk_HSS (asymmetric key pair of HSS)
+		  id_pk_HSS (identifier for pk_HSS)
+		  ~R (freshly generated randomness)
+		  SUCI = < aenc(<SUPI, ~R>, pk_HSS), HN, id_pk_HSS >
+
+   Functions:
+		TS 33.102 6.3:
+		 f1 is a message authentication function.
+		 f2 is a (possibly truncated) message authentication function.
+		 f3 and f4 are key generating functions.
+		 f5 is a key generating function or f5 = 0.
+
+		 f1* is a MAC function.
+		 f5* is a key generation function.
+
+		TS 33.501 A:
+		 KDF as used in 5G is defined in TS 33.220.
+		 It is used for K_ausf, K_seaf, and RES*.
+
+   Pre-shared
+   secrets:	Symmetric subscription key:		(UE, HSS, ~k)
+		Sequence number:			(UE, HSS, ~sqn_root+%1)
+
+   Protocol:	1. UE   -> SEAF:	suci
+		2. SEAF -> AUSF:	suci, SNID
+		3. AUSF -> ARPF:	suci, SNID
+		4. ARPF -> AUSF:	RAND, XRES*, K_ausf, AUTN, supi
+		5. AUSF -> SEAF:	RAND, HXRES*, K_seaf, AUTN
+		6. SEAF -> UE  :	RAND, AUTN
+		7. UE   -> SEAF:	RES*
+		8. SEAF -> AUSF:	RES*, suci, SNID
+		9. AUSF -> SEAF:	'confirm', supi
+
+   Protocol	1. UE   -> SEAF:	suci
+   Model:	2. SEAF -> HSS:		suci, SNID
+		3. HSS -> SEAF:		RAND, HXRES*, K_seaf, AUTN
+		4. SEAF -> UE  :	RAND, AUTN
+		5. UE   -> SEAF:	RES*
+	  	6. SEAF -> HSS:		RES*, suci, SNID
+		7. HSS -> SEAF:		'confirm', supi
+
+*/
+
+
+
+begin
+
+builtins: dest-pairing,	dest-asymmetric-encryption, natural-numbers, xor
+
+functions:
+	// AKA functions (TS 33.102)
+	f1/2, 	   // MAC-function --> MAC
+	f2/2, 	   // MAC-function --> RES
+	f3/2, 	   // KDF 	   --> CK
+	f4/2, 	   // KDF          --> IK
+	f5/2, 	   // KDF          --> AK (Hide Sqn)
+	f1_star/2, // MAC-function --> MAC-S
+	f5_star/2, // KGF	   --> AKS (Hide Sqn)
+
+	// 3GPP KDFs (TS 33.501)
+	KDF/2,	 // KDF		 --> K_ausf, K_seaf, XRES*
+	SHA256/2 // KDF		 --> HXRES*
+
+options: translation-state-optimisation,
+translation-asynchronous-channels, translation-compress-events,
+translation-allow-pattern-lookups
+
+
+export queries:
+"
+equation forall a,b:bitstring; xor(a,b)=xor(b,a).
+nounif x:bitstring; mess(new StateChannel,*x) [ignoreAFewTimes].
+nounif x:bitstring; mess(new StateChannel_1,*x) [ignoreAFewTimes].
+set nounifIgnoreNtimes = 4.
+
+"
+/************************************/
+/*     UE definition                */
+/************************************/
+let Ue(~supi,~idHn,~k,~sqn_root,~idHN,pk_HN) =
+    // Attach Request
+    new ~R; new ~tid;
+    let suci = < aenc{<~supi, ~R>}pk_HN, ~idHN> in
+    let msg = suci in
+    event Start_UE_Session(~supi);
+
+    out(msg);
+
+	// St_1_UE(~tid, ~supi, ~idHN, ~k, ~sqn_root),
+
+    lock ~supi;
+    // Sqn_UE(~supi, ~idHN, SqnUE, ~sqn_root, count),
+    lookup ~supi as %count:nat in
+    let SqnUE = <~sqn_root, %count> in
+    // Input, checks
+    // Authentication Request (Auth-Req) and Sync Failure
+    // [3G] Clauses C.2.1, C.2.2
+    // The UE reports sync failure if:
+    // 	- Received Sqn is bigger but too big (e.g., jumpsize can be at most delta),
+    //	- or Received Sqn is not bigger.
+    // [3G] Clauses 6.3.3, 6.3.5
+    // Input, checks
+    in(<RAND,%c2:nat,<xored, MAC, 'FiveG', idSN    >>);
+    if (xored  =   f5(~k, RAND) XOR  <~sqn_root,%c2>) & MAC  = f1(~k, < <~sqn_root,%c2> , RAND>) then
+    if %count << %c2   then
+//    in( < RAND,  <SqnHSSXORAK, MAC>,  <'FiveG', idSN>  > );
+    // let	MAC = f1(~k, <SqnHSS, RAND>) in// check on the MAC
+    (
+    event CounterGS(~supi,%count);
+    let	AK = f5(~k, RAND) in
+    let SqnHSS = <~sqn_root,%c2> in
+
+//    let MAC =  f1(~k, < <~sqn_root,c2> , RAND>) in // useless rebind?
+    let	SNID = <'FiveG', idSN>  in
+    let AUTN = <xored, MAC> in
+	// Authentication Request (Auth-Req) + Authentication Response (Auth-Resp)
+	// The UE accepts a Sqn iff it is greater than SqnMax (delta = infinity).
+	// The UE stores the greatest Sqn accepted.
+
+//	let (=SqnHSS) = SqnUE + dif in // check freshness
+	// Remark: this is actually a ugly SqnHS > SqnUE
+	// Output
+	let RES = f2(~k, RAND) in
+	let IK = f4(~k, RAND) in
+	let CK = f3(~k, RAND) in
+	let RES_star = KDF(<CK, IK>, <SNID, RES, RAND>) in
+	let K_seaf = KDF(KDF(<CK, IK>, <SNID, SqnHSS XOR AK>), SNID) in
+	let msgOut = RES_star in
+	// Open chains
+	event Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, %c2);
+
+	// Helper lemmas
+	event Sqn_UE_Change(~supi, ~idHN, %c2);
+	event Sqn_UE_Use(~supi, ~idHN, %c2);
+	// GSVerif axiom
+	event KSEAF(K_seaf);
+
+	// Security properties
+	event RunningId(~supi, idSN);
+	event RunningId(~supi, ~idHN);
+	event Running(~supi, idSN,<'SEAF','UE',<'RES_star', RES_star>>);
+	event Running(~supi, idSN,<'SEAF','UE',<'K_seaf', K_seaf>>);
+	event Running(~supi, idSN,<'SEAF','UE',<'supi', ~supi>>);
+	event Running(~supi, ~idHN, <'HSS','UE', <'K_seaf', K_seaf>>);
+	event Running(~supi, ~idHN, <'HSS','UE', <'RAND', RAND>>);
+	event Secret(<'UE', ~supi>, 'key', K_seaf);
+	event Secret(<'UE', ~supi>, 'supi', ~supi);
+	event Commit(~supi, ~idHN, <'UE','HSS',<'AUTN', AUTN>>);
+	event Commit(~supi, ~idHN, <'UE','HSS',<'supi', ~supi>>);
+	event Commit(~supi, ~idHN, <'UE','HSS', <'K_seaf', K_seaf>>);
+	event Commit(~supi, idSN, <'UE','SEAF',<'K_seaf', K_seaf>>);
+	event Commit(~supi, idSN, <'UE','SEAF',<'RAND', RAND>>);
+	event Honest(~supi);
+	event Honest(~idHN);
+	event Honest(idSN);
+	//	 Sqn_UE(~supi, ~idHN, SqnHSS, ~sqn_root, %count+dif)
+	insert ~supi, %c2;
+	unlock ~supi;
+	out(msgOut);
+	// St_2_UE(~tid, ~supi, ~idHN, ~k, ~sqn_root, idSN, K_seaf),
+
+	// Key confirmation between SEAF and UE (in order to model 'implicit authentication')
+
+	in(f1kseaf);
+	if f1kseaf = f1(K_seaf, 'SEAF') then
+	// Security properties (after key confirmation)
+	event CommitConf(~supi, ~idHN, <'UE','HSS', <'K_seaf', K_seaf>>);
+	event CommitConf(~supi, ~idHN, <'UE','HSS', <'supi', ~supi>>);
+	event CommitConf(~supi, idSN, <'UE','SEAF',<'K_seaf', K_seaf>>);
+	event CommitConf(~supi, idSN, <'UE','SEAF',<'supi', ~supi>>);
+	event CommitConf(~supi, idSN, <'UE','SEAF',<'snname', idSN>>);
+	event Honest(~supi);
+	event Honest(~idHN);
+	event Honest(idSN);
+	out(f1(K_seaf, 'UE'))
+
+    )
+    else if (xored  =  <~sqn_root,%c2> XOR  f5(~k, RAND)) & MAC  = f1(~k, < <~sqn_root,%c2> , RAND>) then //    if SqnUE > SqnHSS then
+    (
+	in(=%count:nat);
+	let AKS = f5_star(~k, RAND) in
+	let MACS = f1_star(~k, <SqnUE, RAND>) in
+	let AUTS = <SqnUE XOR AKS, MACS > in
+	let out_msg = AUTS in
+	// Restriction
+//	event Greater_Or_Equal_Than(SqnUE, SqnHSS); // Check freshness (FAIL)
+	// Open chains
+        event Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, %count);
+	// Helper lemmas
+	event Sqn_UE_Nochange(~supi, ~idHN, %count);
+	insert ~supi, %count;
+	unlock ~supi;
+	out(out_msg)
+     )
+
+/************************************/
+/*       SEAF Rules                 */
+/************************************/
+let Seaf(~idSN,~secureChan) =
+// Attach Request + Authentication Initiation Request (AIR)
+// NOTE: The AIR message is in fact the initial authentication request of the service "Nausf_UEAuthentication_Authenticate" (see TS 33.501 9.6.2).
+    let SNID2 = <'FiveG', ~idSN> in
+    new ~tid; new ~cid;
+    in( <conc_supi,  idHN>);
+    let suci = <conc_supi,  idHN> in
+    let msg = <suci, SNID2 > in
+    event Start_SEAF_Session(~idSN);
+    event SrcId(~idSN);
+    //  SndS(~cid, ~idSN, idHN, <'air', msg>)];
+
+    out(~secureChan,<~cid, ~idSN, idHN, <'air', msg>>);
+
+     // 5G Authentication Initiation Answer (5G-AIA) + Authentication Request (Auth-Req)
+     // [St_1_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, ~cid),
+     //	 RcvS(~cid, idHN, ~idSN, <'aia', msgIn>)
+     (
+     in(~secureChan,<=~cid, =idHN, =~idSN, <'aia', < RAND, HXRES_star, K_seaf, AUTN >>>);
+//     let msgIn = 5G_AV in
+//     let 5G_AV = < RAND, HXRES_star, K_seaf, AUTN > in
+
+     let msgOut = < RAND, AUTN, SNID2 > in
+     event Out_Src(RAND, AUTN);
+     event Id(idHN);
+     // Security properties
+     event Running(~idSN, idHN, <'HSS','SEAF', <'K_seaf', K_seaf>>);
+     event RunningId(~idSN, idHN);
+     out(msgOut);
+
+      // St_2_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, RAND, HXRES_star, K_seaf, ~cid)
+      in(RES_star);
+      (if HXRES_star = SHA256(RES_star, RAND) then
+      // Authentication Response (Auth-Resp) + 5G Authentication Confirmation (5G-AC)
+      // NOTE: The 5G-AC is a subsequent authentication requests to the service "Nausf_UEAuthentication_Authenticate" (see TS 33.501 9.6.2).
+      (
+	let suci2 = <conc_supi,  idHN> in
+	let msgOut2 = < RES_star, suci2, SNID2 > in
+	event Running(~idSN, idHN, <'HSS','SEAF', <'RES_star', RES_star>>);
+        event RunningId(~idSN, idHN);
+// 	SndS(~cid, ~idSN, idHN, <'ac', msgOut>)
+	out(~secureChan, <~cid, ~idSN, idHN, <'ac', msgOut2>>);
+	// St_3_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, RAND, RES_star, K_seaf, ~cid)
+	// Authentication Confirmation Answer (5G-ACA)
+	// RcvS(~cid, idHN, ~idSN, <'aca', msgIn>)
+	in(~secureChan,<=~cid, =idHN, =~idSN, <'aca', <'confirm', supi>>>);
+	let msgIn = <'confirm', supi> in
+
+	// Executability
+	event SEAF_End();
+	// Security properties
+        event RunningId(~idSN, supi);
+	event Running(~idSN, supi,<'UE','SEAF',<'K_seaf', K_seaf>>);
+	event Running(~idSN, supi,<'UE','SEAF',<'supi', supi>>);
+	event Running(~idSN, supi,<'UE','SEAF',<'snname', ~idSN>>);
+	event Secret(<'SEAF', ~idSN>, 'key', K_seaf);
+	event Commit(~idSN, idHN, <'SEAF','HSS', <'K_seaf', K_seaf>>);
+	event Commit(~idSN, idHN, <'SEAF','HSS', <'supi', supi>>);
+	event Commit(~idSN, idHN, <'SEAF','HSS', <'RES_star', RES_star>>);
+	event Commit(~idSN, supi, <'SEAF','UE', <'K_seaf', K_seaf>>);
+	event Commit(~idSN, supi, <'SEAF','UE', <'supi', supi>>);
+	event Commit(~idSN, supi, <'SEAF','UE', <'RES_star', RES_star>>);
+	event Honest(supi);
+	event Honest(idHN);
+	event Honest(~idSN);
+	out(f1(K_seaf, 'SEAF'));  // Key confimration message with UE
+	 // St_4_SEAF(~tid, ~idSN, SNID, conc_supi, idHN, ~RAND, RES_star, K_seaf, supi, ~cid)
+
+	  in(f2keaf);
+	  if f2keaf = f1(K_seaf, 'UE') then
+	  // Security properties
+	  event CommitConf(~idSN, idHN, <'SEAF','HSS', <'K_seaf', K_seaf>>);
+	  event	CommitConf(~idSN, idHN, <'SEAF','HSS', <'supi', supi>>);
+	  event	CommitConf(~idSN, supi, <'SEAF','UE', <'K_seaf', K_seaf>>);
+	  event	CommitConf(~idSN, supi, <'SEAF','UE', <'supi', supi>>);
+	  event	Honest(supi);
+	  event	Honest(idHN);
+	  event	Honest(~idSN);
+	  event	SEAF_EndConf()
+
+      )
+      else
+      // Synchronization Failure and 5G Authentication Synchronization message
+      // [5G] Clause 6.1.3.2.1
+      // [3G] Clauses 6.3.3 and 6.3.5
+      // Note that in this model, the SEAF aborts the procedure, and does not wait
+      // for the resynced AVs. After resync, the HSS also does not directly send
+      // the AVs, but needs to be asked again.
+      (
+	in( < SqnUEXorAKS, MACS >);
+	let AUTS = < SqnUEXorAKS, MACS > in
+	let out_msg = < RAND, AUTS > in
+	// SndS(~cid, ~idSN, idHN, <'resync', out_msg>)
+        out(~secureChan, <~cid, ~idSN, idHN, <'resync', out_msg>>)
+
+	)
+     )
+     )
+
+/************************************/
+/*       HSS Rules                  */
+/************************************/
+
+// Authentication Initiation Request (AIR) + 5G Authentication Initiation Answer (5G-AIA)
+// For key derivarion, see [5G] clause 6.1.3.2 and annex A6
+// NOTE: The AIR message is in fact the initial authentication request to the service "Nausf_UEAuthentication_Authenticate" (see TS 33.501 9.6.2).
+// NOTE: The 5G-AIA is the corresponding Nausf_UEAuthentication_Authenticate Response.
+let HSS(~idHN, ~sk_HN, ~supi, ~k, ~sqn_root,~secureChan)=
+// !HSS(~idHN, ~sk_HN),
+// !Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root),
+   lock ~sqn_root;
+// Sqn_HSS(~supi, ~idHN, SqnHSS, ~sqn_root, count3),
+   lookup ~sqn_root as %count3:nat in
+   in(=%count3:nat);
+   event CounterGS(~sqn_root,%count3);
+   let SqnHSS = <~sqn_root, %count3> in
+// RcvS(~cid, idSN, ~idHN, <'air', msgIn>),
+   in(idSN);
+   in(~secureChan,<~cid, =idSN, =~idHN, <'air',  <  < cyphersupirR, =~idHN> , <'FiveG', =idSN> > >>);
+   let <=~supi, ~R> = adec(cyphersupirR,~sk_HN) in
+
+   event Id(idSN);
+   let suci =  < aenc{<~supi, ~R>}pk(~sk_HN), ~idHN>  in
+
+   new ~RAND;
+   new ~tid;
+
+   // 1. Receive
+
+//   let (=idSN2) = idSN in // HSS checks that the received SNID matches the authenticated channel with idSN
+   let SNID = <'FiveG', idSN> in
+   let cnext:nat = %count3 %+ %1 in
+   let SqnNext = <~sqn_root,%count3 %+ %1> in
+
+   // 2. Send
+   //     a. ARPF part
+   let MAC = f1(~k, <SqnNext, ~RAND>) in
+   let XRES = f2(~k, ~RAND) in
+   let CK = f3(~k, ~RAND) in
+   let IK = f4(~k, ~RAND) in
+   let AK = f5(~k, ~RAND) in
+   let AUTN = <SqnNext XOR AK, MAC> in
+   let K_seaf = KDF(KDF(<CK, IK>, <SNID, AK XOR SqnNext>), SNID) in
+   let XRES_star = KDF(<CK, IK>, <SNID, XRES, ~RAND>) in
+
+   //     b. AUSF part
+   let HXRES_star = SHA256(XRES_star, ~RAND) in
+   let msgOut = < ~RAND, HXRES_star, K_seaf, AUTN > in // 5G_AV
+
+   event Src(~RAND, AUTN);
+   // Helping
+   event KSEAF(K_seaf);
+   // Executability
+   event Start_HSS_Session(~idHN);
+   event HSS_Send_Aia();
+   // Security properties
+   event RunningId(~idHN, idSN);
+   event RunningId(~idHN, ~supi);
+   event Running(~idHN, idSN,<'SEAF','HSS',<'K_seaf', K_seaf>>);
+   event Running(~idHN, idSN,<'SEAF','HSS',<'supi', ~supi>>);
+   event Running(~idHN, idSN,<'SEAF','HSS',<'RES_star', XRES_star>>);
+   event Running(~idHN, ~supi,<'UE','HSS', <'K_seaf', K_seaf>>);
+   event Running(~idHN, ~supi,<'UE','HSS',<'supi', ~supi>>);
+   event Running(~idHN, ~supi,<'UE','HSS',<'AUTN', AUTN>>);
+   event Honest(~supi);
+   event Honest(~idHN);
+   event Honest(idSN);
+   //         Sqn_HSS(~supi, ~idHN, SqnNext, ~sqn_root, count3+%1),
+   //         SndS(~cid, ~idHN, idSN, <'aia', msgOut>)
+   event SrcId(~idHN);
+event Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, cnext);
+	  event	Sqn_HSS_Change(~sqn_root, cnext);
+   out(~secureChan,<~cid, ~idHN, idSN, <'aia', msgOut>>);
+  insert ~sqn_root, %count3%+%1;
+  unlock ~sqn_root;
+
+    // St_1_HSS(~tid, ~idHN, ~supi, suci, idSN, SNID, ~k, SqnNext, XRES_star, ~RAND, ~sqn_root, ~sk_HN, ~cid)
+     // RcvS(~cid, idSN, ~idHN, <'ac',msgIn>)
+     // 5G Authentication Confirmation (5G-AC) + Authentication Confirmation Answer (5G-ACA)
+     // NOTE: 5G-AC is a subsequent authentication requests to the service "Nausf_UEAuthentication_Authenticate" (see TS 33.501 9.6.2).
+     // NOTE: 5G-ACA is the corresponding response by the service.
+        in(~secureChan, <=~cid, =idSN, =~idHN, <rty,  msg2   >>);
+     if rty='ac' then
+     (
+        let        < =XRES_star, =suci, =SNID >  = msg2 in
+   // Open chains
+
+
+
+//        in(~secureChan, <=~cid, =idSN, =~idHN, <'ac',     >>);
+        let Sqn = SqnNext in
+	// bellow are useless rebinds?
+	// let CK = f3(~k, ~RAND) in
+	// let IK = f4(~k, ~RAND) in
+	// let AK = f5(~k, ~RAND) in
+	// let K_seaf = KDF(KDF(<CK, IK>, <SNID, Sqn XOR AK>), SNID) in
+
+	let msgOut2 = <'confirm', ~supi> in
+	// Executability
+	event HSS_End();
+	// Security properties
+	event Secret(<'HSS', ~idHN>, 'key', K_seaf);
+	event Commit(~idHN, idSN, <'HSS','SEAF', <'K_seaf', K_seaf>>);
+	event Commit(~idHN, idSN, <'HSS','SEAF', <'RES_star', XRES_star>>);
+	event Commit(~idHN, ~supi, <'HSS','UE', <'K_seaf', K_seaf>>);
+	event Commit(~idHN, ~supi, <'HSS','UE', <'RAND', ~RAND>>);
+	event Honest(~idHN);
+	event Honest(~supi);
+	event Honest(idSN);
+	// SndS(~cid, ~idHN, idSN, <'aca', msgOut>)
+	out(~secureChan, <~cid, ~idHN, idSN, <'aca', msgOut2>>)
+
+     )
+     else if rty='resync' then
+     //	 RcvS(~cid, idSN, ~idHN, <'resync', msg>)
+     // 5G Authentication Synchronization message
+     // In this model, the HSS aborts after resync, and does NOT
+     // directly send the new AVs. Need to rerun the protocol.
+     // Sqn is only updated if needed. (recal that delta = infinity in this model)
+     (
+	// insert ~sqn_root, count3+%1;
+        // unlock ~sqn_root;
+	  lock ~sqn_root;
+	  // Sqn_HSS(~supi, ~idHN, SqnHSS, ~sqn_root, count3),
+        lookup ~sqn_root as %count2:nat in
+	event CounterGS(~sqn_root,%count2);
+        if %count2 = %count3%+%1 then
+//        let SqnHSS2 = SqnNext in
+	in(%countin:nat);
+	if    %count2 << %countin then
+	  let SqnUE = <~sqn_root,%countin> in
+	let  <=~RAND, <sqnuexoredf5, f1s  > >  = msg2 in
+	if sqnuexoredf5 = SqnUE XOR  f5_star(~k, ~RAND) then
+	if f1s = f1_star(~k, <SqnUE, ~RAND>) then
+
+//          in(~secureChan, <=~cid, =idSN, =~idHN, <'resync',   <=~RAND, <=SqnUE XOR  f5_star(=~k, =~3RAND), f1_star(=~k, <=SqnUE, =~RAND>)  > >   >>);
+
+
+
+//	  let <=SqnHSS, =SqnUE,=SqnUE > = <%count2 + ~sqn_root, dif + SqnHSS, SqnUE2> in
+
+	  // Open chains
+	  event	Sqn_HSS_Invariance(~idHN, ~supi, ~sqn_root, %countin);
+	  event	Sqn_HSS_Change(~sqn_root, %countin);
+   	  // Executability
+	  event	HSS_Resync_End(%countin);
+	  insert ~sqn_root, %countin;
+	  // Sqn_HSS(~supi, ~idHN, SqnUE, ~sqn_root, %count+dif)
+	  unlock ~sqn_root
+       )
+
+/************************************/
+/*     Subscription Rules           */
+/************************************/
+// Initialize the subscription
+let addSub(~idHN,~sk_HN,~secureChan) = // HSS(~idHN, ~sk_HN)
+  new ~supi;
+  new ~k; new ~sqn_root;
+  // Restriction
+  event Subscribe(~supi, ~idHN);
+
+  // Helper lemmas
+  event Sqn_Create(~supi, ~idHN, ~sqn_root);
+  event CreateUser(~supi, ~k, ~idHN);
+  // |	 Sqn_UE(~supi, ~idHN, ~sqn_root+%1, ~sqn_root, %1),
+  // Remark, we use ~supi as an identifier for the state Sqn_UE
+
+  // |	 Sqn_HSS(~supi, ~idHN, ~sqn_root+%1, ~sqn_root, %1)]
+  // Remark, we use ~sqn_root as an identifier for the state Sqn_HSS
+  insert ~sqn_root, %1;
+  insert ~supi, %1;
+  //!Ltk_Sym(~supi, ~idHN, ~k, ~sqn_root),
+  (
+  // Compromised subscriptions (symmetric key k)
+   (event Rev(~supi, <'k', ~k>); event Rev(~idHN, <'k', ~k>); event RevId(~supi); event RevId(~idHN);
+   event Revk(); event Revk();
+   out(~k))
+   // Compromised subscriptions ("initial" %counter sqn_root)
+   || (event Rev(~supi, <'sqn', ~sqn_root>); event Rev(~idHN, <'sqn', ~sqn_root>); event RevId(~supi); event RevId(~idHN);
+      event Revsqn(); event Revsqn();
+   out(~sqn_root))
+   // Compromised subscriptions (identifier supi)
+   || (event Rev(~supi, <'supi', ~supi>); event Rev(~idHN, <'supi', ~supi>); event RevId(~supi); event RevId(~idHN);
+      event Revsupi(); event Revsupi();
+      out(~supi))
+   // Compromised home network (private asymmetric key sqn_HN)
+   // Rk: this could be moved upper in the process
+   || (event Rev(~idHN, <'skHN', ~sk_HN>);event RevskHN(); event RevId(~idHN); out(~sk_HN))
+
+   ||
+      // We only allow the Sqn to increase, as a decrease would
+      // trivially violate injectivity
+	(
+	lock ~supi;
+	lookup ~supi as %count4:nat in
+
+	event CounterGS(~supi,%count4);
+//	let Sqn:nat = ~sqn_root + %count4 in
+//	in(m:nat); 		// Open chains
+	event	Sqn_UE_Invariance(~supi, ~idHN, ~sqn_root, %count4 %+%1);
+		// Helper lemmas
+	event	Sqn_UE_Change(~supi, ~idHN, %count4 %+%1);
+		// Executability
+	event	Sqn_UE_Desync();
+
+	insert ~supi, %count4%+%1;
+	unlock ~supi
+	//Sqn_UE(~supi, ~idHN, Sqn+m, ~sqn_root, %count4+m)
+	)
+
+
+   || // Attach Request
+      !Ue(~supi,~idHN,~k,~sqn_root,~idHN,pk(~sk_HN))
+   || ! HSS(~idHN, ~sk_HN, ~supi, ~k, ~sqn_root,~secureChan)
+)
+
+
+
+/************************************/
+/*     Initialization Rules         */
+/************************************/
+process:
+new ~secureChan:channel;
+(
+( !
+    in(~secureChan,<~cid,A,B,m>);
+    event Rev(B, 'secureChannel');
+    event RevId(B);
+    event RevsecureChannel();
+    out(<~cid,m>))
+||
+ ( !
+    in(<~cid,A,B,x>);
+    event Rev(A, 'secureChannel');
+    event RevId(A);
+    event RevsecureChannel();
+    event Injected(x);
+    out(~secureChan,<~cid,A,B,x>))
+||
+   // Initialize a serving network
+   (
+   new ~idSN; event ServNet(~idSN);
+   let SNID = <'FiveG', ~idSN> in
+   out(SNID); // SEAF(~idSN,SNDI)
+   ! Seaf(~idSN, ~secureChan)
+   )
+||
+   // Initialize a home network
+   new ~sk_HN; new ~idHN; event HomeNet(~idHN);
+   out(<~idHN, pk(~sk_HN)>);
+    //!HSS(~idHN, ~sk_HN),	 !Pk(~idHN, pk(~sk_HN))
+   addSub(~idHN,~sk_HN, ~secureChan)
+)
+// the subscribe once restriction is equivalent to not having a ! on top here
+
+
+
+/************************************/
+/*     Restrictions / Axioms        */
+/************************************/
+
+restriction subscribe_once:
+	" All HN1 HN2 supi #i #j. Subscribe(supi, HN1)@i & Subscribe(supi, HN2)@j ==> (#i = #j & HN1 = HN2)"
+
+
+
+// restriction greater_or_equal_than:
+//   	" All x y #i. Greater_Or_Equal_Than(x,y)@i ==> not (Ex z. x + z = y) "
+
+// Dummy lemma for timing info only.
+lemma dummy: "not(F)"
+
+/************************************/
+/*         Sources lemmas           */
+/************************************/
+
+// lemma idSource [sources]:
+//  " All IDHN #i. Id(IDHN)@i ==> (Ex #j. KU(IDHN)@j & j<i) | (Ex #j. SrcId(IDHN)@j & j<i)"
+
+
+// proof (automatic) (~1 sec)
+lemma true_rand_autn_src [sources, output=[spthy], heuristic=O]:
+  	" All RAND AUTN #i. Out_Src(RAND, AUTN)@i
+		==> (Ex #j. Src(RAND, AUTN)@j & j < i)
+		    | (Ex #j x1 x2. Injected(<'aia', <RAND, x1, x2, AUTN>>)@j & j < i) "
+
+
+
+// proof (automatic) (~1 sec)
+// lemma sqn_ue_invariance [use_induction, sources,output=[spthy]]:
+// 	" All supi HN Sqn sqn_root count #i.
+// 		Sqn_UE_Invariance(supi, HN, Sqn, sqn_root, count)@i
+// 			==> sqn_root + count = Sqn"
+
+// // proof (automatic) (~1 sec)
+// lemma sqn_hss_invariance [use_induction, sources,output=[spthy]]:
+// 	" All HN supi Sqn sqn_root count #i.
+// 		Sqn_HSS_Invariance(HN, supi, Sqn, sqn_root, count)@i
+// 			==> sqn_root + count = Sqn "
+
+// /************************************/
+// /*          Helper lemmas           */
+// /************************************/
+
+// proof (automatic) (~1 sec)
+lemma true_sqn_ue_src [use_induction, reuse, output=[spthy], heuristic=O]:
+	" All supi HN sqn_root count #i.
+		Sqn_UE_Invariance(supi, HN, sqn_root, count)@i
+			==> (Ex #j. Sqn_Create(supi, HN, sqn_root)@j & j < i) "
+
+// proof (automatic) (~1 sec)
+lemma true_sqn_hss_src [reuse, output=[spthy], heuristic=O]:
+	" All HN supi sqn_root count #i.
+		Sqn_HSS_Invariance(HN, supi, sqn_root, count)@i
+			==> (Ex #j. Sqn_Create(supi, HN, sqn_root)@j & j < i) "
+
+// proof (automatic) (~2 min)
+lemma true_sqn_ue_nodecrease [use_induction, reuse, output=[spthy], heuristic=O]:
+	" (All supi HN Sqni Sqnj #i #j.
+		(Sqn_UE_Change(supi, HN, Sqnj)@j &
+		 Sqn_UE_Change(supi, HN, Sqni)@i &
+		 i < j)	==> (Ex dif. Sqnj = Sqni %+ dif)) &
+	  (All supi HN Sqni Sqnj #i #j.
+		(Sqn_UE_Change(supi, HN, Sqnj)@j &
+		 Sqn_UE_Nochange(supi, HN, Sqni)@i &
+		 i < j)	==> (Ex dif. Sqnj = Sqni %+ dif)) &
+	  (All supi HN Sqni Sqnj #i #j.
+		(Sqn_UE_Nochange(supi, HN, Sqnj)@j &
+		 Sqn_UE_Change(supi, HN, Sqni)@i &
+		 i < j)	==> ((Sqnj = Sqni) | (Ex dif. Sqnj = Sqni %+ dif))) &
+	  (All supi HN Sqni Sqnj #i #j.
+		(Sqn_UE_Nochange(supi, HN, Sqnj)@j &
+		 Sqn_UE_Nochange(supi, HN, Sqni)@i &
+		 i < j)	==> ((Sqnj = Sqni) | (Ex dif. Sqnj = Sqni %+ dif))) "
+
+// // proof (automatic) (~1 sec)
+ lemma true_sqn_ue_unique [reuse, hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:
+	" All supi HN Sqn #i #j.
+		Sqn_UE_Use(supi, HN, Sqn)@i & Sqn_UE_Use(supi, HN, Sqn)@j
+			==> #i = #j "
+
+
+
+
+// /************************************/
+// /*     Executability lemmas         */
+// /************************************/
+
+// This lemma shows a normal execution without resync.
+//   executability_honest (exists-trace): verified (22 steps)
+//    real	0m29.966s
+lemma false_executability_honest[output=[proverif]]:
+	"All #i. SEAF_End()@i ==> Ex X data #r. Rev(X,data)@r
+"
+
+// This lemma shows a normal execution without resync. but with key confirmation
+//   executability_keyConf_honest (exists-trace): verified (24 steps)
+// real	0m55.820s
+lemma false_executability_keyConf_honest[output=[proverif]]:
+	"All #i. SEAF_EndConf()@i
+		==> (Ex X data #r. Rev(X,data)@r)
+"
+
+//
+lemma false_executability_desync[output=[proverif]]:
+	" All dif #i.
+                  HSS_Resync_End(dif)@i
+		==> Ex X data #r. Rev(X,data)@r
+"
+
+//
+lemma false_executability_resync[output=[proverif]]:
+	" All #i2.
+		 HSS_Resync_End(%1%+%1%+%1%+%1)@i2
+==>
+Ex X data #r. Rev(X,data)@r
+"
+
+// // /********************************************/
+// // /*     Agreement UE -> SEAF (before KC)     */
+// // /********************************************/
+
+// // // attack (stored)
+lemma false_weakagreement_ue_seaf_noRev [hide_lemma=true_sqn_ue_nodecrease, hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[proverif]]:
+	" All a b t #i. Commit(a,b,<'UE','SEAF',t>)@i
+			==> (Ex #j. RunningId(b, a)@j)
+			    | (Ex #r1. RevId(a)@r1)
+			    | (Ex #r2. RevId(b)@r2)
+			    "
+
+// // /********************************************/
+// // /*     Agreement UE -> SEAF (after KC)      */
+// // /********************************************/
+
+// attack (stored)
+lemma false_weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, output=[proverif]]:
+	" All a b t #i. CommitConf(a,b,<'UE','SEAF',t>)@i
+			==> (Ex #j. RunningId(b, a)@j)
+              		| (Ex #r1. RevsecureChannel()@r1)
+             		| (Ex #r2. RevskHN()@r2 )
+            		| (Ex #r3. Revsqn()@r3 )
+                     	| (Ex #r4. Revsupi()@r4) "
+
+// attack (stored)
+lemma false_weakagreement_ue_seaf_keyConf_noAsyKeyRev_noSupiRev_noSqnRev_noKeyRev [hide_lemma=sqn_ue_nodecrease, hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, output=[proverif]]:
+	" All a b t #i. CommitConf(a,b,<'UE','SEAF',t>)@i
+			==> (Ex #j. RunningId(b, a)@j)
+              		| (Ex #r1. Revk()@r1)
+             		| (Ex #r2. RevskHN()@r2 )
+            		| (Ex #r3. Revsqn()@r3 )
+                     	| (Ex #r4. Revsupi()@r4) "
+
+
+
+lemma true_injectiveagreement_ue_seaf_kseaf_keyConf_noKeyRev_noChanRev [hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, hide_lemma=true_sqn_ue_nodecrease, output=[spthy], heuristic=O]:
+	" All a b t #i. CommitConf(a,b,<'UE','SEAF',<'K_seaf', t>>)@i
+    		==> (Ex #j. Running(b,a,<'UE','SEAF',<'K_seaf', t>>)@j
+        	     & j < i
+        	     & not (Ex a2 b2 #i2. CommitConf(a2,b2,<'UE','SEAF',<'K_seaf', t>>)@i2
+                           	& not (#i2 = #i)))
+             		    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
+                            | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
+
+
+// // /********************************************/
+// // /*     Agreement SEAF -> UE (before KC)     */
+// // /********************************************/
+
+// attack (stored)
+lemma false_weakagreement_seaf_ue_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease, output=[proverif], heuristic=O]:
+	" All a b t #i. Commit(a,b,<'SEAF','UE',t>)@i
+			==> (Ex #j. RunningId(b, a)@j)
+              		| (Ex #r1. Revk()@r1)
+             		| (Ex #r2. RevskHN()@r2 )
+            		| (Ex #r3. Revsqn()@r3 )
+                     	| (Ex #r4. Revsupi()@r4) "
+
+
+// attack (stored)
+lemma false_weakagreement_seaf_ue_noAsyKeyRev_noSupiRev_noSqnRev_noChanRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease, output=[proverif]]:
+	" All a b t #i. Commit(a,b,<'SEAF','UE',t>)@i
+			==> (Ex #j. RunningId(b, a)@j)
+		| (Ex #r1. RevsecureChannel()@r1)
+                | (Ex #r2. RevskHN()@r2 )
+            	| (Ex #r3. Revsqn()@r3 )
+                | (Ex #r4. Revsupi()@r4) "
+
+
+lemma true_injectiveagreement_seaf_ue_kseaf_noKeyRev_noChanRev [hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, hide_lemma=true_sqn_ue_nodecrease, output=[spthy], heuristic=O]:
+	" All a b t #i. Commit(a,b,<'SEAF','UE',<'K_seaf', t>>)@i
+    		==> (Ex #j. Running(b,a,<'SEAF','UE',<'K_seaf', t>>)@j
+        	     & j < i
+        	     & not (Ex a2 b2 #i2. Commit(a2,b2,<'SEAF','UE',<'K_seaf', t>>)@i2
+                           	& not (#i2 = #i)))
+             		    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
+                            | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
+
+
+// // /********************************************/
+// // /*     Agreement SEAF -> UE (after KC)      */
+// // /********************************************/
+
+// attack (stored)
+lemma false_weakagreement_seaf_ue_KeyConf_noKeyRev_noAsyKeyRev_noSupiRev_noSqnRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease, output=[proverif]]:
+	" All a b t #i. CommitConf(a,b,<'SEAF','UE',t>)@i
+			==> (Ex #j. RunningId(b, a)@j)
+             		| (Ex #r1. Revk()@r1)
+             		| (Ex #r2. RevskHN()@r2 )
+            		| (Ex #r3. Revsqn()@r3 )
+                     	| (Ex #r4. Revsupi()@r4) "
+
+// attack (stored)
+lemma false_weakagreement_seaf_ue_KeyConf_noChanRev_noAsyKeyRev_noSupiRev_noSqnRev [hide_lemma=sqn_ue_src, hide_lemma=sqn_hss_src, hide_lemma=sqn_ue_nodecrease, output=[proverif]]:
+	" All a b t #i. CommitConf(a,b,<'SEAF','UE',t>)@i
+			==> (Ex #j. RunningId(b, a)@j)
+		| (Ex #r1. RevsecureChannel()@r1)
+                | (Ex #r2. RevskHN()@r2 )
+            	| (Ex #r3. Revsqn()@r3 )
+                | (Ex #r4. Revsupi()@r4) "
+
+
+lemma true_injectiveagreement_seaf_ue_kseaf_keyConf_noKeyRev_noChanRev [hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, hide_lemma=true_sqn_ue_nodecrease,output=[spthy], heuristic=O]:
+	" All a b t #i. CommitConf(a,b,<'SEAF','UE',<'K_seaf', t>>)@i
+    		==> (Ex #j. Running(b,a,<'SEAF','UE',<'K_seaf', t>>)@j
+        	     & j < i
+        	     & not (Ex a2 b2 #i2. CommitConf(a2,b2,<'SEAF','UE',<'K_seaf', t>>)@i2
+                           	& not (#i2 = #i)))
+             		    | (Ex X key #r. Rev(X, <'k',key>)@r & Honest(X)@i)
+                            | (Ex X #r. Rev(X, 'secureChannel')@r & Honest(X)@i) "
+
+
+
+lemma gsverif_sqn_hss_nodecrease [use_induction, reuse, output=[spthy], heuristic=O]:
+	" (All supi  Sqni Sqnj #i #j.
+			 (Sqn_HSS_Change(supi, Sqnj)@j &
+		 Sqn_HSS_Change(supi, Sqni)@i &
+		 i < j)	==> (Ex dif. Sqnj = Sqni %+ dif)) "
+
+
+lemma gsverif_intermediate [use_induction, reuse,hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:
+	" (All supi  Sqni Sqnj #i #j.
+			 (Sqn_HSS_Change(supi, Sqnj)@j &
+		 Sqn_HSS_Change(supi, Sqni)@i)
+			==> (#i = #j) | (not (Sqnj = Sqni)) ) "
+
+
+
+
+
+ lemma gsverif_lemma  [reuse, hide_lemma=gsverif_sqn_hss_nodecrease, hide_lemma=true_sqn_ue_src, hide_lemma=true_sqn_hss_src, output=[spthy], heuristic=O]:
+	" All x y #i #j.
+		CounterGS(x,y)@i & CounterGS(x,y)@j
+			==> #i = #j "
+
+end

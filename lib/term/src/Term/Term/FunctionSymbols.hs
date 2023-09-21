@@ -17,6 +17,7 @@ module Term.Term.FunctionSymbols (
     , ACSym(..)
     , CSym(..)
     , Privacy(..)
+    , Constructability(..)
     , NoEqSym
 
     -- ** Signatures
@@ -25,26 +26,36 @@ module Term.Term.FunctionSymbols (
 
     -- ** concrete symbols strings
     , diffSymString
+    , munSymString
     , expSymString
     , invSymString
+    , dhNeutralSymString
     , pmultSymString
     , emapSymString
     , unionSymString
     , oneSymString
+    , fstSymString
+    , sndSymString
     , multSymString
     , zeroSymString
     , xorSymString
+    , natPlusSymString
+    , natOneSymString
 
     -- ** concrete symbols
     , diffSym
     , expSym
     , pmultSym
     , oneSym
+    , dhNeutralSym
     , invSym
     , pairSym
     , fstSym
     , sndSym
+    , fstDestSym
+    , sndDestSym    
     , zeroSym
+    , natOneSym
 
     -- ** concrete signatures
     , dhFunSig
@@ -52,10 +63,12 @@ module Term.Term.FunctionSymbols (
     , bpFunSig
     , msetFunSig
     , pairFunSig
+    , pairFunDestSig    
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig
     , implicitFunSig
+    , natFunSig
     ) where
 
 import           GHC.Generics (Generic)
@@ -78,15 +91,20 @@ import qualified Data.Set as S
 ----------------------------------------------------------------------
 
 -- | AC function symbols.
-data ACSym = Union | Mult | Xor
+data ACSym = Union | Mult | Xor | NatPlus
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | A function symbol can be either Private (unknown to adversary) or Public.
 data Privacy = Private | Public
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
+-- | A function symbol can be either a constructor or a destructor in which
+-- case it only applies if it reduces.
+data Constructability = Constructor | Destructor
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
+
 -- | NoEq function symbols (with respect to the background theory).
-type NoEqSym = (ByteString, (Int, Privacy)) -- ^ operator name, arity, private
+type NoEqSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
 
 -- | C(ommutative) function symbols
 data CSym = EMap
@@ -109,14 +127,22 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, expSymString, invSymString, oneSymString, multSymString, xorSymString, zeroSymString :: ByteString
+diffSymString, munSymString, expSymString, invSymString, dhNeutralSymString, oneSymString, xorSymString, multSymString, zeroSymString, fstSymString, sndSymString :: ByteString
 diffSymString = "diff"
+munSymString = "mun"
 expSymString = "exp"
 invSymString = "inv"
 oneSymString = "one"
+fstSymString = "fst"
+sndSymString = "snd"
+dhNeutralSymString = "DH_neutral"
 multSymString = "mult"
 zeroSymString = "zero"
 xorSymString = "xor"
+
+natPlusSymString, natOneSymString :: ByteString
+natPlusSymString = "tplus"
+natOneSymString = "tone"
 
 unionSymString :: ByteString
 unionSymString = "union"
@@ -125,25 +151,38 @@ emapSymString, pmultSymString :: ByteString
 emapSymString  = "em"
 pmultSymString = "pmult"
 
-pairSym, diffSym, expSym, invSym, oneSym, fstSym, sndSym, pmultSym, zeroSym :: NoEqSym
+pairSym, diffSym, expSym, invSym, oneSym, dhNeutralSym, fstSym, sndSym, pmultSym, zeroSym, natOneSym :: NoEqSym
 -- | Pairing.
-pairSym  = ("pair",(2,Public))
+pairSym  = ("pair",(2,Public,Constructor))
 -- | Diff.
-diffSym  = (diffSymString,(2,Private))
+diffSym  = (diffSymString,(2,Private,Constructor))
 -- | Exponentiation.
-expSym   = (expSymString,(2,Public))
+expSym   = (expSymString,(2,Public,Constructor))
 -- | The inverse in the groups of exponents.
-invSym   = (invSymString,(1,Public))
+invSym   = (invSymString,(1,Public,Constructor))
 -- | The one in the group of exponents.
-oneSym   = (oneSymString,(0,Public))
+oneSym   = (oneSymString,(0,Public,Constructor))
+-- | The groupd identity
+dhNeutralSym = (dhNeutralSymString,(0,Public, Constructor))
 -- | Projection of first component of pair.
-fstSym   = ("fst",(1,Public))
+fstSym   = (fstSymString,(1,Public,Constructor))
 -- | Projection of second component of pair.
-sndSym   = ("snd",(1,Public))
+sndSym   = (sndSymString,(1,Public,Constructor))
 -- | Multiplication of points (in G1) on elliptic curve by scalars.
-pmultSym = (pmultSymString,(2,Public))
+pmultSym = (pmultSymString,(2,Public,Constructor))
 -- | The zero for XOR.
-zeroSym  = (zeroSymString,(0,Public))
+zeroSym  = (zeroSymString,(0,Public,Constructor))
+-- | One for natural numbers.
+natOneSym = (natOneSymString, (0,Public,Constructor))
+
+mkDestSym :: NoEqSym -> NoEqSym
+mkDestSym (name,(k,p,_)) = (name,(k,p, Destructor))
+
+fstDestSym, sndDestSym :: NoEqSym
+-- | Projection of first component of pair.
+fstDestSym   = mkDestSym fstSym
+-- | Projection of second component of pair.
+sndDestSym   = mkDestSym sndSym
 
 ----------------------------------------------------------------------
 -- Fixed signatures
@@ -151,7 +190,7 @@ zeroSym  = (zeroSymString,(0,Public))
 
 -- | The signature for Diffie-Hellman function symbols.
 dhFunSig :: FunSig
-dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym ]
+dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym, NoEq dhNeutralSym ]
 
 -- | The signature for Xor function symbols.
 xorFunSig :: FunSig
@@ -169,6 +208,10 @@ msetFunSig = S.fromList [AC Union]
 pairFunSig :: NoEqFunSig
 pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
 
+-- | The signature for pairing with destructors.
+pairFunDestSig :: NoEqFunSig
+pairFunDestSig = S.fromList [ pairSym, fstDestSym, sndDestSym ]
+
 -- | Reducible function symbols for DH.
 dhReducibleFunSig :: FunSig
 dhReducibleFunSig = S.fromList [ NoEq expSym, NoEq invSym ]
@@ -185,3 +228,7 @@ xorReducibleFunSig = S.fromList [ AC Xor ]
 implicitFunSig :: FunSig
 implicitFunSig = S.fromList [ NoEq invSym, NoEq pairSym
                             , AC Mult, AC Union ]
+
+-- | The signature for the natural numbers addition function symbols.
+natFunSig :: FunSig
+natFunSig = S.fromList [ NoEq natOneSym, AC NatPlus ]

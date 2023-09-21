@@ -11,6 +11,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Create_Key:
    [ Fr( ~sk ) ]
   --[ Secret( $A, $B, ~sk ) ]->
@@ -451,30 +455,35 @@ solve( StateB( $A, $B, ~sk, na, ~kabp ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
-
-  output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 9.894984613s
-  secrecy (all-traces): verified (65 steps)
-  injectiveagreement_A (all-traces): falsified - found trace (6 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (7 steps)
-  noninjectiveagreement_A (all-traces): falsified - found trace (6 steps)
-  noninjectiveagreement_B (all-traces): falsified - found trace (7 steps)
-  Session_key_honest_setup (exists-trace): verified (11 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -482,7 +491,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 9.894984613s
+  processing time: 5.98s
+  
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)
   injectiveagreement_B (all-traces): falsified - found trace (7 steps)

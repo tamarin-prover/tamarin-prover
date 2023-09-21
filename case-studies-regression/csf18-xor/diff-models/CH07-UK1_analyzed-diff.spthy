@@ -8,6 +8,10 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
 rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( 'setup' ) ]->
@@ -100,7 +104,22 @@ solve( Response( x, 'Tag' ) @ #j )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "reader2":  factName `ReaderRun' arity: 2 multiplicity: Linear
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule reader2: 
+Failed to derive Variable(s): hash
+*/
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -2110,7 +2129,7 @@ next
   backward-search
     case LHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case reader1
       by step( contradiction /* impossible chain */ )
     next
@@ -2129,7 +2148,7 @@ next
   next
     case RHS
     step( simplify )
-    step( solve( !KD( (x+y) ) ▶₀ #i ) )
+    step( solve( !KD( (x++y) ) ▶₀ #i ) )
       case reader1
       by step( contradiction /* impossible chain */ )
     next
@@ -9202,25 +9221,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/CH07-UK1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
-
-  output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 29.652684198s
-  RHS :  executable (exists-trace): verified (5 steps)
-  LHS :  executable (exists-trace): verified (5 steps)
-  DiffLemma:  Observational_equivalence : verified (3048 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -9228,7 +9241,11 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 29.652684198s
+  processing time: 16.33s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
   RHS :  executable (exists-trace): verified (5 steps)
   LHS :  executable (exists-trace): verified (5 steps)
   DiffLemma:  Observational_equivalence : verified (3048 steps)

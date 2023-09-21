@@ -8,6 +8,10 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
 section{* NAXOS *}
 
 rule (modulo E) generate_ltk:
@@ -136,6 +140,10 @@ rule (modulo E) Init_2:
         Y     = x.608^(x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
         z     = x.608^(~lkI.308*x.609*inv((x.610*h1(<~eskI.307, ~lkI.308>))))
         z.1   = x.608^(x.609*inv(x.610))
+    
+    15. Y     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Resp_1:
@@ -251,6 +259,10 @@ rule (modulo E) Resp_1:
         X     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
         z     = x.1076^(~lkR.543*x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
         z.1   = x.1076^(x.1077*inv(x.1078))
+    
+    15. X     = DH_neutral
+        z     = DH_neutral
+        z.1   = DH_neutral
   */
 
 rule (modulo E) Sessk_reveal:
@@ -719,25 +731,44 @@ next
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Init_2: 
+Failed to derive Variable(s): ~lkR
+
+Rule Resp_1: 
+Failed to derive Variable(s): ~lkI
+*/
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf12/NAXOS_eCK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf12/NAXOS_eCK.spthy
-
-  output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 3.09039101s
-  eCK_key_secrecy (all-traces): verified (134 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -745,7 +776,11 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 3.09039101s
+  processing time: 1.67s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   eCK_key_secrecy (all-traces): verified (134 steps)
 
 ==============================================================================

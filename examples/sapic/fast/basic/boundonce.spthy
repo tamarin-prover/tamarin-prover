@@ -1,0 +1,8 @@
+theory BoundOnce
+begin
+
+process:
+// x is bound once and does not need to be renamed
+new x ||  new x
+
+end

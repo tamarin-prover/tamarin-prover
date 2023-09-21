@@ -24,7 +24,7 @@ a:hover {
 }
 
 a.active-link {
-    background: #ffffb0;
+    background: #a1caf1;
 }
 
 .monospace {
@@ -119,6 +119,10 @@ div.wf-warning {
 
 .hl_good {
     background: #bbeebb;
+}
+
+.hl_medium {
+    background: #fffddd;
 }
 
 .hl_bad {
@@ -501,6 +505,7 @@ h4 {
     right: 0em;
     padding: 0em;
     overflow: auto;
+    white-space: nowrap;
 }
 
 #ui-main-display, #ui-debug-display, #proof {

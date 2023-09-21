@@ -10,7 +10,11 @@ equations:
 
 
 
+
+
 /* looping facts with injective instances: Sender/1 */
+
+
 
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --> [ Sender( ~k ), Receiver( ~k ) ]
@@ -123,26 +127,31 @@ next
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/loops/Minimal_KeyRenegotiation.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
-
-  output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.094748361s
-  Secret_reachable (exists-trace): verified (5 steps)
-  secrecy (all-traces): verified (23 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -150,7 +159,8 @@ summary of summaries:
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.094748361s
+  processing time: 0.13s
+  
   Secret_reachable (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (23 steps)
 

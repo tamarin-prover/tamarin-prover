@@ -8,11 +8,15 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
 rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
   --[ OnlyOnce( 'setup' ) ]->
    [
-   Transcript( <~k1, ~id1> ), Reader( (<~k1, ~id1>+<~k2, ~id2>) ),
+   Transcript( <~k1, ~id1> ), Reader( (<~k1, ~id1>++<~k2, ~id2>) ),
    TagRun( diff(<~k1, ~id1>, <~k2, ~id2>) )
    ]
 
@@ -22,7 +26,7 @@ rule (modulo E) transcript:
    [ Out( ~r1 ), Out( <~r2, (~id⊕~r2), (~r2⊕h(<~r1, ~k>))> ) ]
 
 rule (modulo E) initiatereader:
-   [ Reader( (d1+d2) ), Fr( ~r0 ) ] --> [ ReaderRun( d1 ) ]
+   [ Reader( (d1++d2) ), Fr( ~r0 ) ] --> [ ReaderRun( d1 ) ]
 
 rule (modulo E) reader1:
    [ Fr( ~r1 ) ]
@@ -57,7 +61,7 @@ restriction equality [left]:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -102,23 +106,19 @@ rule-equivalence
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf18-xor/diff-models/KCL07-UK2.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
-
-  output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 62.356128295s
-  DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -126,7 +126,8 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 62.356128295s
+  processing time: 44.16s
+  
   DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
 
 ==============================================================================

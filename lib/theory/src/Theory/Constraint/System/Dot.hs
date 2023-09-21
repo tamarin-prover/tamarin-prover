@@ -14,6 +14,7 @@ module Theory.Constraint.System.Dot (
   , dotSystemLoose
   , dotSystemCompact
   , compressSystem
+  , simplifySystem
   , BoringNodeStyle(..)
   ) where
 
@@ -21,7 +22,7 @@ import           Data.Char                (isSpace)
 import           Data.Color
 import qualified Data.DAG.Simple          as D
 import qualified Data.Foldable            as F
-import           Data.List                (find,foldl',intersect)
+import           Data.List                (find,foldl',intersect,isPrefixOf, intercalate,sort)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Monoid              (Any(..))
@@ -43,6 +44,7 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty       (opAction)
 
+import           Utils.Misc
 -- | 'True' iff the dotted system will be a non-empty graph.
 nonEmptyGraph :: System -> Bool
 nonEmptyGraph sys = not $
@@ -238,20 +240,21 @@ dotSystemLoose se =
         mapM_ dotNode     $ M.keys   $ get sNodes     se
         mapM_ dotEdge     $ S.toList $ get sEdges     se
         mapM_ dotChain    $            unsolvedChains se
-        mapM_ dotLess     $ S.toList $ get sLessAtoms se
+        mapM_ dotLess     $ S.toList (reasonToColor  $ get sLessAtoms    se)
   where
     dotEdge  (Edge src tgt)  = do
         mayNid <- M.lookup (src,tgt) `liftM` getM dsSingles
         maybe (dotGenEdge [] src tgt) (const $ return ()) mayNid
 
     dotChain (src, tgt) =
-        dotGenEdge [("style","dashed"),("color","green")] src tgt
+        dotGenEdge [("style","dotted"),("color","green")] src tgt
 
-    dotLess (src, tgt) = do
+    dotLess (src, tgt, color) = do
         srcId <- dotNode src
         tgtId <- dotNode tgt
         liftDot $ D.edge srcId tgtId
-            [("color","black"),("style","dotted")] -- FIXME: Reactivate,("constraint","false")]
+                [("color",color),("style","dashed")]
+             -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
 
     dotGenEdge style src tgt = do
@@ -275,9 +278,10 @@ nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
       [ (get rInfo ru, case find colorAttr $ ruleAttributes ru of
-            Just (RuleColor c)  -> c
-            Just (Process   _)  -> hsvToRGB $ getColor (gIdx, mIdx)
-            Nothing             -> hsvToRGB $ getColor (gIdx, mIdx))
+            Just (RuleColor c)     -> c
+            Just (Process   _)     -> hsvToRGB $ getColor (gIdx, mIdx)
+            Just IgnoreDerivChecks -> hsvToRGB $ getColor (gIdx, mIdx)
+            Nothing                -> hsvToRGB $ getColor (gIdx, mIdx))
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
     groupIdx ru | isDestrRule ru                   = 0
@@ -297,8 +301,9 @@ nodeColorMap rules =
 -- Note: Currently RuleColors are the only Rule Attributes, so the second line is
 -- commented out to remove the redundant pattern compiler warning. If more are added,
 -- the second line can be uncommented.
-    colorAttr (RuleColor _) = True
-    colorAttr (Process   _) = False
+    colorAttr (RuleColor _)     = True
+    colorAttr (Process   _)     = False
+    colorAttr IgnoreDerivChecks = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational
@@ -314,8 +319,8 @@ data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
 
 
 -- | Dot a node in record based (compact) format.
-dotNodeCompact :: BoringNodeStyle -> NodeId -> SeDot D.NodeId
-dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
+dotNodeCompact :: BoringNodeStyle ->Bool -> NodeId -> SeDot D.NodeId
+dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
     (se, colorMap) <- ask
     let hasOutgoingEdge =
             or [ v == v' | Edge (v', _) _ <- S.toList $ get sEdges se ]
@@ -332,7 +337,7 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
               nodeColor = maybe "white" rgbToHex color
               attrs     = [("fillcolor", nodeColor),("style","filled")
                             , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
-          ids <- mkNode ru attrs hasOutgoingEdge
+          ids <- mkNode ru attrs hasOutgoingEdge showAutosource
           let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
               concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
           modM dsPrems $ M.union $ M.fromList prems
@@ -347,10 +352,10 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
 
-    mkNode  :: RuleACInst -> [(String, String)] -> Bool 
+    mkNode  :: RuleACInst -> [(String, String)] -> Bool -> Bool
       -> ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
-         [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
-    mkNode ru attrs hasOutgoingEdge
+       [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
+    mkNode ru attrs hasOutgoingEdge showAutoLabel
       -- single node, share node-id for all premises and conclusions
       | boringStyle == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
@@ -368,12 +373,30 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
         as = renderRow [ (Nothing,        ruleLabel ) ]
         cs = renderRow [ (Just (Right i), prettyLNFact c) | (i, c) <- enumConcs ru ]
 
-        ruleLabel =
-            prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
-            (brackets $ vcat $ punctuate comma $
-                map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
+        ruleLabel = case showAutoLabel of
+            True -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
+                    (brackets $ vcat $ punctuate comma $
+                    map prettyLNFact $ filter isAutoSource
+                    $ filter isNotDiffAnnotation $ get rActs ru)
+            False -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
+                    (brackets $ vcat $ punctuate comma $
+                    map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
 
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
+
+        -- check if a fact is from auto-source
+        isAutoSource ::  LNFact -> Bool
+        isAutoSource (Fact tag _ _) =not $ hasAutoLabel (showFactTag $ tag)
+
+        -- check if a fact has the label of auto-source 
+        hasAutoLabel :: String -> Bool
+        hasAutoLabel f
+            | "AUTO_IN_TERM_" `isPrefixOf` f  = True
+            | "AUTO_IN_FACT_" `isPrefixOf` f  = True
+            | "AUTO_OUT_TERM_" `isPrefixOf` f = True
+            | "AUTO_OUT_FACT_" `isPrefixOf` f = True
+            | otherwise = False
+
 
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
@@ -403,16 +426,16 @@ dotNodeCompact boringStyle v = dotOnce dsNodes v $ do
 
 -- | Dot a sequent in compact form (one record per rule), if there is anything
 -- to draw.
-dotSystemCompact :: BoringNodeStyle -> System -> D.Dot ()
-dotSystemCompact boringStyle se =
+dotSystemCompact :: BoringNodeStyle ->Bool -> System -> D.Dot ()
+dotSystemCompact boringStyle showAutosource se =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
     (`runReaderT` (se, nodeColorMap (M.elems $ get sNodes se))) $ do
         liftDot $ setDefaultAttributes
-        mapM_ (dotNodeCompact boringStyle) $ M.keys $ get sNodes       se
-        mapM_ (dotNodeCompact boringStyle . fst) $ unsolvedActionAtoms se
+        mapM_ (dotNodeCompact boringStyle showAutosource) $ M.keys $ get sNodes       se
+        mapM_ (dotNodeCompact boringStyle showAutosource . fst) $ unsolvedActionAtoms se
         F.mapM_ dotEdge                            $ get sEdges        se
         F.mapM_ dotChain                           $ unsolvedChains    se
-        F.mapM_ dotLess                            $ get sLessAtoms    se
+        F.mapM_ dotLess                          (reasonToColor  $ get sLessAtoms    se)
   where
     missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
     dotPremC prem = dotOnce dsPrems prem $ missingNode "invtrapezium" $ prettyNodePrem prem
@@ -433,14 +456,48 @@ dotSystemCompact boringStyle se =
         liftDot $ D.edge srcId tgtId style
 
     dotChain (src, tgt) =
-        dotGenEdge [("style","dashed"),("color","green")] src tgt
+        dotGenEdge [("style","dotted"),("color","green")] src tgt
 
-    dotLess (src, tgt) = do
-        srcId <- dotNodeCompact boringStyle src
-        tgtId <- dotNodeCompact boringStyle tgt
-        liftDot $ D.edge srcId tgtId
-            [("color","black"),("style","dotted")] -- FIXME: reactivate ,("constraint","false")]
+    dotLess (src, tgt, color) = do
+
+        srcId <- dotNodeCompact boringStyle showAutosource src
+        tgtId <- dotNodeCompact boringStyle showAutosource tgt
+        liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
+            -- FIXME: Reactivate,("constraint","false")]
             -- setting constraint to false ignores less-edges when ranking nodes.
+
+
+-- | To get the color style for each less 
+reasonToColor :: S.Set (NodeId, NodeId, Reason)
+                -> S.Set (NodeId, NodeId, String)
+reasonToColor l = S.fromList ( map getAllRToC $
+                  groupOn  (\(x,y,_)->(x,y)) $ S.toList l)
+    where
+        toColor :: Reason -> String
+        toColor r = case r of
+             Adversary      -> "red"
+             Formula        -> "black"
+             Fresh          -> "blue3"
+             InjectiveFacts -> "purple"
+             NormalForm     -> "darkorange3"
+        allRtoColors :: [Reason] -> String
+        allRtoColors r = intercalate ":" (map toColor r)++per
+            where
+                len = length r
+                per = if len >1 then ";" ++ show ((1 :: Double)/fromIntegral len) else ""
+        -- to show all the reasons with their colors
+        getAllRToC :: [Less]-> (NodeId,NodeId,String)
+        getAllRToC [] = error "empty list"
+        getAllRToC (x:xs) = (fst3 x, snd3 x,
+                        allRtoColors (reverse (sort $ map thd3 (x:xs))))
+
+        -- |Or else, to show only the most important reason, we can use
+        -- |the function below, at the same time, we need remove function
+        -- |"allRtoColors"
+
+        -- getAllRToC :: [Less]-> (NodeId,NodeId,String)
+        -- getAllRToC (x:xs) = (fst3 x, snd3 x, 
+        --                 toColor $ head (sort $ map thd3 (x:xs)))
 
 
 ------------------------------------------------------------------------------
@@ -453,7 +510,7 @@ dropEntailedOrdConstraints se =
     modify sLessAtoms (S.filter (not . entailed)) se
   where
     edges               = rawEdgeRel se
-    entailed (from, to) = to `S.member` D.reachableSet [from] edges
+    entailed (from, to, _) = to `S.member` D.reachableSet [from] edges
 
 -- | Unsound compression of the sequent that drops fully connected learns and
 -- knows nodes.
@@ -462,6 +519,36 @@ compressSystem se0 =
     foldl' (flip tryHideNodeId) se (frees (get sLessAtoms se, get sNodes se))
   where
     se = dropEntailedOrdConstraints se0
+
+-- | Simplify the system up to the sent level, 
+-- | for level 3, we will simplify the lesses of system by transitive reduction
+-- | for level 2, we will apply the transitive reduction but keep the 
+-- | formula constraint 
+-- | for level 1, there's no transitive reduction applied
+simplifySystem :: Int -> System -> System
+simplifySystem i sys
+    | i==2 = transitiveReduction sys False
+    | i==3 = transitiveReduction sys True
+    | otherwise = sys
+
+-- | Simplify the system by transitive reduction (constraint of formula won't  
+-- | be applied if totalRed is False) but not for a system which has a graph cyclic
+transitiveReduction :: System -> Bool -> System
+transitiveReduction sys totalRed=
+    if D.cyclic oldLesses
+        then sys
+        else   modify sLessAtoms
+            ( S.intersection ( S.fromList newLesses) ) sys
+    where
+        oldLessesWithR = S.toList $ get sLessAtoms sys
+        oldLesses = rawLessRel sys
+        newLesses =
+            case totalRed of
+                True ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
+                            (x,y) `elem` (D.transRed oldLesses) ]
+                False ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
+                            (x,y) `elem` (D.transRed oldLesses) || z == Formula]
+
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
 -- transfer node; i.e., a node annotated with a rule that is one of the
@@ -488,7 +575,7 @@ tryHideNodeId v se = fromMaybe se $ do
     hideAction = do
         guard $  not (null kuActions)
               && all eligibleTerm kuActions
-              && all (\(i, j) -> not (i == j)) lNews
+              && all (\(i, j, _) -> not (i == j)) lNews
               && notOccursIn (standardActionAtoms)
               && notOccursIn (get sLastAtom)
               && notOccursIn (get sEdges)
@@ -502,13 +589,13 @@ tryHideNodeId v se = fromMaybe se $ do
       where
         kuActions            = [ x | x@(i,_,_) <- kuActionAtoms se, i == v ]
         eligibleTerm (_,_,m) =
-            isPair m || isInverse m || sortOfLNTerm m == LSortPub
+            isPair m || isInverse m || sortOfLNTerm m == LSortPub || sortOfLNTerm m == LSortNat
 
         removeAction m (i, fa, _) = M.delete (ActionG i fa) m
 
-        lIns  = selectPart sLessAtoms ((v ==) . snd)
-        lOuts = selectPart sLessAtoms ((v ==) . fst)
-        lNews = [ (i, j) | (i, _) <- lIns, (_, j) <- lOuts ]
+        lIns  = selectPart sLessAtoms ((v ==) . snd3)
+        lOuts = selectPart sLessAtoms ((v ==) . fst3)
+        lNews = [ (i, j, r) | (i, _, _) <- lIns, (_, j, r) <- lOuts ]
 
     -- hide a rule, if it is not "too complicated"
     hideRule :: RuleACInst -> Maybe System

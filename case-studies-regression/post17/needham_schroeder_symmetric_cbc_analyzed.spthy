@@ -11,6 +11,8 @@ equations:
 
 
 
+
+
 rule (modulo E) setup:
    [ Fr( ~k ) ] --[ KeyGen( $A ) ]-> [ !SharedKeyWithServer( $A, ~k ) ]
 
@@ -110,25 +112,35 @@ solve( ResponderWaitConfirm( $B, $A, ~k, ~nb ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/post17/needham_schroeder_symmetric_cbc.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
-
-  output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 10.411569455s
-  secrecy (all-traces): falsified - found trace (8 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -136,7 +148,8 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 10.411569455s
+  processing time: 8.17s
+  
   secrecy (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================

@@ -1,3 +1,10 @@
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleContexts   #-}
 {-# LANGUAGE DeriveGeneric        #-}
@@ -26,6 +33,7 @@ module Theory.Model.Fact (
   , isPersistentFact
   , isProtoFact
   , isInFact
+  , isKLogFact
 
   , factTagName
   , showFactTag
@@ -77,6 +85,7 @@ module Theory.Model.Fact (
   , protoFact
   , protoFactAnn
   , annotateFact
+  , applyMacroInFact
 
   -- * NFact
   , NFact
@@ -112,6 +121,7 @@ import qualified Data.Set               as S
 
 import           Term.Unification
 import           Term.Rewriting.Norm
+import           Term.Macro
 
 import           Text.PrettyPrint.Class
 
@@ -181,7 +191,7 @@ instance HasFrees t => HasFrees (Fact t) where
     foldFreesOcc f c fa = foldFreesOcc f (show (factTag fa):c) (factTerms fa)
     mapFrees   f = traverse (mapFrees f)
 
-instance Apply t => Apply (Fact t) where
+instance Apply s t => Apply s (Fact t) where
     apply subst = fmap (apply subst)
 
 
@@ -292,6 +302,11 @@ protoFactAnn multi name an ts = Fact (ProtoFact multi name (length ts)) an ts
 annotateFact :: S.Set FactAnnotation -> Fact t -> Fact t
 annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
 
+-- | Apply macros in fact
+applyMacroInFact :: [Macro] -> LNFact -> LNFact
+applyMacroInFact mcs (Fact tag annot terms) = let mTerms = map (applyMacros mcs) terms in
+                                              Fact tag annot mTerms
+
 -- Queries on facts
 -------------------
 
@@ -304,6 +319,10 @@ isProtoFact _                            = False
 isInFact :: Fact t -> Bool
 isInFact (Fact InFact _ _) = True
 isInFact _                 = False
+
+-- | True iff the fact is the non-special Log-fact K() from the intruder rule isend
+isKLogFact :: Fact t -> Bool
+isKLogFact f = isProtoFact f && (factTagName (factTag f) == "K")
 
 -- | View a protocol fact.
 protoFactView :: LNFact -> Maybe [LNTerm]

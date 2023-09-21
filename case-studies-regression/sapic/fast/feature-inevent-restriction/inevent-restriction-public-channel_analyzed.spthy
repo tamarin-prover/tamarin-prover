@@ -5,7 +5,11 @@ theory InEventRestrictionPublicChannel begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
+
+
 
 lemma test:
   all-traces
@@ -23,10 +27,16 @@ simplify
 solve( State_( ) ▶₀ #a )
   case Init
   solve( State_11( ) ▶₀ #b )
-    case ina_0_1
+    case ina_1_1
     by contradiction /* from formulas */
   qed
 qed
+
+
+
+
+
+
 
 rule (modulo E) Init[color=#ffffff, process="event A( );"]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
@@ -39,17 +49,17 @@ rule (modulo E) eventA_0_[color=#ffffff, process="event A( );"]:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) ina_0_1[color=#ffffff, process="in('a');"]:
-   [ State_1( ), In( 'a' ) ] --[ ChannelIn( 'a' ) ]-> [ State_11( ) ]
+   [ State_1( ), In( x ) ] --[ ChannelIn( x ) ]-> [ Let_11( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) ina_1_1[color=#ffffff, process="in('a');"]:
+   [ Let_11( 'a' ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );"]:
-   [ State_11( ) ] --[ B( ), Event( ) ]-> [ State_111( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111[color=#ffffff, process="0"]:
-   [ State_111( ) ] --> [ ]
+   [ State_11( ) ] --[ B( ), Event( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -66,25 +76,21 @@ restriction in_event:
       (∀ #t1 xp.
         (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
-
-  output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.073302602s
-  test (all-traces): verified (4 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -92,7 +98,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.073302602s
+  processing time: 0.06s
+  
   test (all-traces): verified (4 steps)
 
 ==============================================================================

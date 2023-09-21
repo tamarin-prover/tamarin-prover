@@ -10,6 +10,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !Ltk( ~kxs, $X ) ]
 
@@ -305,7 +309,17 @@ solve( StateB2( A, $B, ~kbs, ~nb, msg ) ▶₁ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -549,27 +563,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
-
-  output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 0.653935637s
-  executability (exists-trace): verified (10 steps)
-  Secrecy (all-traces): verified (10 steps)
-  injectiveagreement_B (all-traces): verified (17 steps)
-  agreement_B (all-traces): verified (13 steps)
-  AUTO_typing (all-traces): verified (48 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -577,7 +583,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/WooLam_Pi_f.spthy
 
   output:          examples/features/auto-sources/spore/WooLam_Pi_f.spthy.tmp
-  processing time: 0.653935637s
+  processing time: 0.76s
+  
   executability (exists-trace): verified (10 steps)
   Secrecy (all-traces): verified (10 steps)
   injectiveagreement_B (all-traces): verified (17 steps)

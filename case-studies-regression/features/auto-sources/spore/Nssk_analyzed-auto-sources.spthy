@@ -11,6 +11,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !LongtermKey( ~kxs, $X ) ]
 
@@ -740,7 +744,21 @@ solve( StateA2( $A, $B, ~kas, ~na, kab, mb ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -1052,29 +1070,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Nssk.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Nssk.spthy
-
-  output:          examples/features/auto-sources/spore/Nssk.spthy.tmp
-  processing time: 2.968525441s
-  executability (exists-trace): verified (12 steps)
-  Secrecy (all-traces): verified (34 steps)
-  injectiveagreement_B (all-traces): verified (31 steps)
-  agreement_B (all-traces): verified (27 steps)
-  injectiveagreement_A (all-traces): verified (53 steps)
-  agreement_A (all-traces): verified (25 steps)
-  AUTO_typing (all-traces): verified (72 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1082,7 +1090,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Nssk.spthy
 
   output:          examples/features/auto-sources/spore/Nssk.spthy.tmp
-  processing time: 2.968525441s
+  processing time: 2.55s
+  
   executability (exists-trace): verified (12 steps)
   Secrecy (all-traces): verified (34 steps)
   injectiveagreement_B (all-traces): verified (31 steps)

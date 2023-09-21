@@ -11,6 +11,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Generate_Keypair:
    [ Fr( ~ltk ) ]
   -->
@@ -768,26 +772,39 @@ induction
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/loops/TESLA_Scheme1.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/loops/TESLA_Scheme1.spthy
-
-  output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 4.387710005s
-  authentic (all-traces): verified (158 steps)
-  authentic_reachable (exists-trace): verified (13 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -795,7 +812,8 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 4.387710005s
+  processing time: 3.27s
+  
   authentic (all-traces): verified (158 steps)
   authentic_reachable (exists-trace): verified (13 steps)
 

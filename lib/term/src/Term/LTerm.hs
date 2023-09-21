@@ -33,6 +33,7 @@ module Term.LTerm (
   -- ** Construction
   , freshTerm
   , pubTerm
+  , natTerm
 
   -- * LVar
   , LSort(..)
@@ -51,13 +52,16 @@ module Term.LTerm (
   , isMsgVar
   , isFreshVar
   , isPubVar
+  , isNatVar
   , isPubConst
   , isSimpleTerm
   , getVar
   , getMsgVar
   , freshToConst
   , variableToConst
+  , natToFreshVars
   , niFactors
+  , flattenedACTerms
   , containsPrivate
   , containsNoPrivateExcept
   , neverContainsFreshPriv
@@ -87,6 +91,7 @@ module Term.LTerm (
   , evalFreshTAvoiding
   , renameAvoiding
   , renameAvoidingIgnoring
+  , avoidPreciseVars
   , avoidPrecise
   , renamePrecise
   , renameDropNamehint
@@ -113,6 +118,7 @@ module Term.LTerm (
 import           Text.PrettyPrint.Class
 
 -- import           Control.Applicative
+import           Control.Basics
 import           Control.DeepSeq
 import           Control.Monad.Bind
 import           Control.Monad.Identity
@@ -149,17 +155,24 @@ import           Term.VTerm
 --
 -- >  LSortFresh < LSortMsg
 -- >  LSortPub   < LSortMsg
+-- >  LSortNat   < LSortMsg
 --
 data LSort = LSortPub   -- ^ Arbitrary public names.
            | LSortFresh -- ^ Arbitrary fresh names.
            | LSortMsg   -- ^ Arbitrary messages.
            | LSortNode  -- ^ Sort for variables denoting nodes of derivation graphs.
+           | LSortNat   -- ^ Arbitrary natural numbers.
            deriving( Eq, Ord, Show, Enum, Bounded, Typeable, Data, Generic, NFData, Binary )
 
 -- | @sortCompare s1 s2@ compares @s1@ and @s2@ with respect to the partial order on sorts.
---   Partial order: Node      Msg
---                           /   \
---                         Pub  Fresh
+-- Partial order:
+--     Node
+--
+--     Msg
+--     |-- Fresh
+--     |-- Pub
+--     |-- Nat
+--
 sortCompare :: LSort -> LSort -> Maybe Ordering
 sortCompare s1 s2 = case (s1, s2) of
     (a, b) | a == b          -> Just EQ
@@ -169,7 +182,7 @@ sortCompare s1 s2 = case (s1, s2) of
     -- Msg is greater than all sorts except Node
     (LSortMsg,   _        )  -> Just GT
     (_,          LSortMsg )  -> Just LT
-    -- The remaining combinations (Pub/Fresh) are incomparable
+    -- The remaining combinations (Pub/Fresh/Nat) are incomparable
     _                        -> Nothing
 
 -- | @sortPrefix s@ is the prefix we use for annotating variables of sort @s@.
@@ -178,6 +191,7 @@ sortPrefix LSortMsg   = ""
 sortPrefix LSortFresh = "~"
 sortPrefix LSortPub   = "$"
 sortPrefix LSortNode  = "#"
+sortPrefix LSortNat   = "%"
 
 -- | @sortSuffix s@ is the suffix we use for annotating variables of sort @s@.
 sortSuffix :: LSort -> String
@@ -185,6 +199,7 @@ sortSuffix LSortMsg   = "msg"
 sortSuffix LSortFresh = "fresh"
 sortSuffix LSortPub   = "pub"
 sortSuffix LSortNode  = "node"
+sortSuffix LSortNat   = "nat"
 
 
 ------------------------------------------------------------------------------
@@ -196,7 +211,7 @@ newtype NameId = NameId { getNameId :: String }
     deriving( Eq, Ord, Typeable, Data, Generic, NFData, Binary )
 
 -- | Tags for names.
-data NameTag = FreshName | PubName | NodeName
+data NameTag = FreshName | PubName | NodeName | NatName
     deriving( Eq, Ord, Show, Typeable, Data, Generic, NFData, Binary )
 
 -- | Names.
@@ -216,6 +231,7 @@ instance Show Name where
   show (Name FreshName  n) = "~'" ++ show n ++ "'"
   show (Name PubName    n) = "'"  ++ show n ++ "'"
   show (Name NodeName   n) = "#'" ++ show n ++ "'"
+  show (Name NatName   n) = "%'" ++ show n ++ "'"
 
 instance Show NameId where
   show = getNameId
@@ -231,11 +247,16 @@ freshTerm = lit . Con . Name FreshName . NameId
 pubTerm :: String -> NTerm v
 pubTerm = lit . Con . Name PubName . NameId
 
+-- | @natTerm f@ represents the nat name @f@.
+natTerm :: String -> NTerm v
+natTerm = lit . Con . Name NatName . NameId
+
 -- | Return 'LSort' for given 'Name'.
 sortOfName :: Name -> LSort
 sortOfName (Name FreshName _) = LSortFresh
 sortOfName (Name PubName   _) = LSortPub
 sortOfName (Name NodeName  _) = LSortNode
+sortOfName (Name NatName   _) = LSortNat
 
 -- | Is a term a public constant?
 isPubConst :: LNTerm -> Bool
@@ -278,6 +299,8 @@ sortOfLTerm :: Show c => (c -> LSort) -> LTerm c -> LSort
 sortOfLTerm sortOfConst t = case viewTerm2 t of
     Lit2 (Con c)  -> sortOfConst c
     Lit2 (Var lv) -> lvarSort lv
+    FNatPlus _    -> LSortNat
+    NatOne        -> LSortNat
     _             -> LSortMsg
 
 -- | Returns the most precise sort of an 'LNTerm'.
@@ -298,6 +321,11 @@ isMsgVar _                         = False
 isPubVar :: LNTerm -> Bool
 isPubVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortPub)
 isPubVar _                         = False
+
+-- | Is a term a number variable?
+isNatVar :: LNTerm -> Bool
+isNatVar (viewTerm -> Lit (Var v)) = (lvarSort v == LSortNat)
+isNatVar _                         = False
 
 -- | Is a term a fresh variable?
 isFreshVar :: LNTerm -> Bool
@@ -325,33 +353,41 @@ niFactors t = case viewTerm2 t of
                 FInv t1  -> niFactors t1
                 _        -> [t]
 
+-- | If @[term1, ..., termN]@ is returned, then @t = term1 + ... + termN@ where @+@ is the ACSymbol.
+-- It is made sure that the length of the returned list is maximal (i.e., the + is flattened)
+flattenedACTerms :: ACSym -> Term t -> [Term t]
+flattenedACTerms f (viewTerm -> FApp (AC sym) ts)
+  | sym == f = concatMap (flattenedACTerms f) ts
+flattenedACTerms _ term = [term]
+
+
 -- | @containsPrivate t@ returns @True@ if @t@ contains private function symbols.
 containsPrivate :: Term t -> Bool
 containsPrivate t = case viewTerm t of
     Lit _                          -> False
-    FApp (NoEq (_,(_,Private))) _  -> True
+    FApp (NoEq (_,(_,Private,_))) _  -> True
     FApp _                      as -> any containsPrivate as
 
 -- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
 containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool
 containsNoPrivateExcept funs t = case viewTerm t of
     Lit _                          -> True
-    FApp (NoEq (f,(_,Private))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
+    FApp (NoEq (f,(_,Private,_))) as -> (elem f funs) && (all (containsNoPrivateExcept funs) as)
     FApp _                      as -> all (containsNoPrivateExcept funs) as
 
-    
+
 -- | A term is *simple* iff there is an instance of this term that can be
 -- constructed from public names only. i.e., the term does not contain any
 -- fresh names, fresh variables, or private function symbols.
 isSimpleTerm :: LNTerm -> Bool
 isSimpleTerm t =
-    not (containsPrivate t) && 
+    not (containsPrivate t) &&
     (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
 
 -- | 'True' iff no instance of this term contains fresh names or private function symbols.
 neverContainsFreshPriv :: LNTerm -> Bool
 neverContainsFreshPriv t =
-    not (containsPrivate t) && 
+    not (containsPrivate t) &&
     (getAll . foldMap (All . (`notElem` [LSortMsg, LSortFresh]) . sortOfLit) $ t)
 
 -- | Replaces all Fresh variables with constants using toConst.
@@ -362,6 +398,12 @@ freshToConst t = case viewTerm t of
     Lit _                                    -> t
     FApp f as                                -> termViewToTerm $ FApp f (map freshToConst as)
 
+-- | Replaces all Nat variables with fresh variables with the same name.
+natToFreshVars :: LNTerm -> LNTerm
+natToFreshVars t = case viewTerm t of
+    Lit (Var (LVar name LSortNat idx)) -> varTerm (LVar name LSortFresh idx)
+    Lit _                              -> t
+    FApp f as                          -> termViewToTerm $ FApp f (map natToFreshVars as)
 
 -- | Given a variable returns a constant containing its name and type
 variableToConst :: LVar -> LNTerm
@@ -372,6 +414,7 @@ variableToConst cvar = constTerm (Name (nameOfSort cvar) (NameId ("constVar_" ++
     nameOfSort (LVar _ LSortFresh _) = FreshName
     nameOfSort (LVar _ LSortPub   _) = PubName
     nameOfSort (LVar _ LSortNode  _) = NodeName
+    nameOfSort (LVar _ LSortNat   _) = NatName
     nameOfSort (LVar _ LSortMsg   _) = error "Invalid sort Msg"
 
 
@@ -413,7 +456,6 @@ type BLVar = BVar LVar
 
 -- | Terms built over names and 'LVar's combined with quantified variables.
 type BLTerm = NTerm BLVar
-
 
 -- | Fold a possibly bound variable.
 {-# INLINE foldBVar #-}
@@ -464,6 +506,7 @@ bltermNodeId' t =
 
 instance Eq LVar where
   (LVar n1 s1 i1) == (LVar n2 s2 i2) = i1 == i2 && s1 == s2 && n1 == n2
+  -- x == y  =  compare x y == EQ -- slower, but consistent with Ord.
 
 -- An ord instance that prefers the 'lvarIdx' over the 'lvarName'.
 instance Ord LVar where
@@ -539,9 +582,9 @@ frees = sortednub . freesList
 -- then variables that occur in equal contexts in t and s are probably renamings of
 -- each other.
 varOccurences :: HasFrees a => a -> [(LVar, S.Set Occurence)]
-varOccurences t =
-    map (\((v,ctx1):rest) -> (v, S.fromList (ctx1:(map snd rest)))) . groupOn fst . sortOn fst
-    . foldFreesOcc (\ c v -> [(v,c)]) [] $ t
+varOccurences =
+    map (\((v,ctx1):rest) -> (v, S.fromList (ctx1:map snd rest))) . groupOn fst . sortOn fst
+    . foldFreesOcc (\ c v -> [(v,c)]) []
 
 -- | @someInst t@ returns an instance of @t@ where all free variables whose
 -- binding is not yet determined by the caller are replaced with fresh
@@ -573,7 +616,7 @@ renameIgnoring vars x = case boundsVarIdx x of
   where
     incVar shift (LVar n so i) = pure $ if elem (LVar n so i) vars then (LVar n so i) else (LVar n so (i+shift))
 
-    
+
 -- | @eqModuloFreshness t1 t2@ checks whether @t1@ is equal to @t2@ modulo
 -- renaming of indices of free variables. Note that the normal form is not
 -- unique with respect to AC symbols.
@@ -617,13 +660,15 @@ renameAvoidingIgnoring :: (HasFrees s, HasFrees t) => s -> t -> [LVar] -> s
 renameAvoidingIgnoring s t vars = renameIgnoring vars s `evalFreshAvoiding` t
 
 
+avoidPreciseVars :: [LVar] -> Precise.FreshState
+avoidPreciseVars = foldl' ins M.empty
+  where
+    ins m v = M'.insertWith max (lvarName v) (lvarIdx v + 1) m
+
 -- | @avoidPrecise t@ computes a 'Precise.FreshState' that avoids generating
 -- variables occurring in @t@.
 avoidPrecise :: HasFrees t => t -> Precise.FreshState
-avoidPrecise =
-    foldl' ins M.empty . frees
-  where
-    ins m v = M'.insertWith max (lvarName v) (lvarIdx v + 1) m
+avoidPrecise = avoidPreciseVars . frees
 
 -- | @renamePrecise t@ replaces all variables in @t@ with fresh variables.
 --   If 'Control.Monad.PreciseFresh' is used with non-AC terms and identical
@@ -812,4 +857,3 @@ showLitName (Var (LVar v s i))       = "Var_" ++ sortSuffix s ++ "_" ++ body
         body | null v           = show i
              | i == 0           = v
              | otherwise        = show i ++ "_" ++ v
-

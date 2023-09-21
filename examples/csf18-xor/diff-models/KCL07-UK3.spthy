@@ -2,6 +2,21 @@ theory KCL07_UK3 begin
 
 builtins: xor, hashing, multiset
 
+tactic: recentalive_tag
+presort: C
+prio:
+    regex ".*TagRun\(.*"
+prio:
+    regex ".*Tag\(.*"
+
+tactic: Observational_equivalence
+presort: C
+prio:
+    regex ".*TagRun\(.*"
+prio:
+    regex ".*Tag\(.*"
+
+
 /*
 KCL07: Reader R, RFID tag T, shared knowledge k, ID
 
@@ -92,7 +107,7 @@ restriction max_number_of_tags_tag_reader:
   "All a b c d #i. Reader(a+b+c+d)@i ==> F"
 
 // AUTOMATICALLY PROVEN WITH ORACLE KCL07-UK3.oracle [left+right]
-lemma recentalive_tag:
+lemma recentalive_tag[heuristic={recentalive_tag}]:
   all-traces "∀ x #i. (Alive( x, 'Tag' ) @ #i) ⇒ (∃ y #j #k. Challenge(y, 'Reader') @k & Response( x, 'Tag' ) @ #j & k < j & j < i)"
 
 // MANUAL EXPLORATION FINDS TRACE, see

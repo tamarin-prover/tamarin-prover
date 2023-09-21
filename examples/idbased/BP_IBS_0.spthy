@@ -29,6 +29,26 @@ builtins: bilinear-pairing
 functions: idsign/2, idverify/3, IBPriv/2, IBPub/2, GetIBMasterPublicKey/1, true/0, KDF/1
 equations: idverify(idsign(m,IBPriv(A, IBMasterPrivateKey)),m,IBPub(A, GetIBMasterPublicKey(IBMasterPrivateKey))) = true
 
+tactic: all
+prio:
+  regex ".*St_.*\(.*"
+prio:
+  regex ".*KU\( ~.*"
+prio:
+  regex ".*~~>.*"
+prio:
+  regex ".*KU\( KDF\(.*"
+prio:
+  regex ".*KU\( IBPriv\(.*"
+prio:
+  regex ".*KU\( idsign\(.*"
+prio:    
+  regex ".*KU\( em\(.*" | regex ".*KU\( pmult\(.*"
+prio:
+  regex ".*!IB_.*"
+prio:
+  regex ".*splitEqs\(.*"
+
 
 /**** Setup Key Escrow ****/
 // Reveals the identity based private key of an agent A
@@ -155,7 +175,7 @@ restriction Once:
 /**** Lemmas ****/
 
 // WEAK SECRECY
-lemma secrecy_session_key [use_induction, reuse]:
+lemma secrecy_session_key [heuristic={all}, use_induction, reuse]:
   "All A s #i. 
     Secret('KEY',A,s) @i ==> 
         not (Ex #j. K(s)@j)
@@ -163,7 +183,7 @@ lemma secrecy_session_key [use_induction, reuse]:
 
 // SESSION ESCROW
 // Quick autoproof with the oracle on the server (<2 minutes)
-lemma session_escrow[hide_lemma=secrecy_session_key]:
+lemma session_escrow[heuristic={all}, hide_lemma=secrecy_session_key]:
   exists-trace
   "Ex A B key #i #j #k.
      KU(key)@i
@@ -174,7 +194,7 @@ lemma session_escrow[hide_lemma=secrecy_session_key]:
    & not(Ex #r. Reveal('PKG', 'SIGN')@r)"   
 
 // WEAK FORWARD SECRECY
-lemma Weak_Forward_Secrecy_key [use_induction]:
+lemma Weak_Forward_Secrecy_key [heuristic={all},use_induction]:
   "All A B X Y key #i. 
     Commit(A,B,<X,Y,key>) @i ==> 
     // Secret
@@ -189,7 +209,7 @@ lemma Weak_Forward_Secrecy_key [use_induction]:
       | (Ex K #j. Reveal('PKG', K)@j)"
 
 // STRONG FORWARD SECRECY
-lemma Strong_Forward_Secrecy_key [use_induction]:
+lemma Strong_Forward_Secrecy_key [heuristic={all},use_induction]:
   "All A B X Y key #i. 
     Commit(A,B,<X,Y,key>) @i ==> 
     // Secret
@@ -201,7 +221,7 @@ lemma Strong_Forward_Secrecy_key [use_induction]:
       | (Ex K #j. Reveal('PKG', K)@j)"
 
 // ALIVENESS FROM INITIATOR with SIGN reveal, without AUTH reveal
-lemma alivenessInitiatorNoAuthReveal:
+lemma alivenessInitiatorNoAuthReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Initiator','Responder',t>) @i
     ==> (Ex t2 a2 #j. Running(b,a2,<'Responder','Initiator',t2>) @j)
@@ -210,7 +230,7 @@ lemma alivenessInitiatorNoAuthReveal:
         | (Ex #j. Reveal('PKG', 'AUTH')@j)"
 
 // ALIVENESS FROM INITIATOR with AUTH reveal, without SIGN reveal
-lemma alivenessInitiatorNoSignReveal:
+lemma alivenessInitiatorNoSignReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Initiator','Responder',t>) @i
     ==> (Ex a2 t2 #j. Running(b,a2,<'Responder','Initiator',t2>) @j)
@@ -219,7 +239,7 @@ lemma alivenessInitiatorNoSignReveal:
         | (Ex #j. Reveal('PKG', 'SIGN')@j)"
 
 // WEAK AGREEMENT FROM INITIATOR with AUTH reveal, without SIGN reveal
-lemma weakagreementInitiatorNoSignReveal:
+lemma weakagreementInitiatorNoSignReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Initiator','Responder',t>) @i
     ==> (Ex t2 #j. Running(b,a,<'Responder','Initiator',t2>) @j)
@@ -228,7 +248,7 @@ lemma weakagreementInitiatorNoSignReveal:
         | (Ex #j. Reveal('PKG', 'SIGN')@j)"
 
 // NON-INJECTIVE AGREEMENT FROM INITIATOR with AUTH reveal, without SIGN reveal
-lemma noninjectiveagreemenInitiatorNoSignReveal:
+lemma noninjectiveagreemenInitiatorNoSignReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Initiator','Responder',t>) @i
     ==> (Ex #j. Running(b,a,<'Responder','Initiator',t>) @j)
@@ -237,7 +257,7 @@ lemma noninjectiveagreemenInitiatorNoSignReveal:
         | (Ex #j. Reveal('PKG', 'SIGN')@j)"
 
 // INJECTIVE AGREEMENT FROM INITIATOR with AUTH reveal, without SIGN reveal
-lemma injectiveagreementInitiatorNoSignReveal:
+lemma injectiveagreementInitiatorNoSignReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Initiator','Responder',t>) @i
     ==> (   Ex #j. Running(b,a,<'Responder','Initiator',t>) @j 
@@ -250,7 +270,7 @@ lemma injectiveagreementInitiatorNoSignReveal:
 
 
 // ALIVENESS FROM RESPONDER with SIGN reveal, without AUTH reveal
-lemma alivenessResponderNoAuthReveal [use_induction]:
+lemma alivenessResponderNoAuthReveal [heuristic={all},use_induction]:
   "All a b t #i. 
     Commit(a,b,<'Responder','Initiator',t>) @i
     ==> (Ex t2 #j. Running(b,a,<'Initiator', 'Responder', t2>) @j)
@@ -259,7 +279,7 @@ lemma alivenessResponderNoAuthReveal [use_induction]:
         | (Ex #j. Reveal('PKG', 'AUTH')@j)"
 
 // ALIVENESS FROM RESPONDER with AUTH reveal, without SIGN reveal
-lemma alivenessResponderNoSignReveal:
+lemma alivenessResponderNoSignReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Responder','Initiator',t>) @i
     ==> (Ex a2 t2 #j. Running(b,a2,<'Initiator', 'Responder', t2>) @j)
@@ -268,7 +288,7 @@ lemma alivenessResponderNoSignReveal:
         | (Ex #j. Reveal('PKG', 'SIGN')@j)"
 
 // WEAK AGREEMENT FROM RESPONDER with AUTH reveal, without SIGN reveal
-lemma weakagreementResponderNoSignReveal:
+lemma weakagreementResponderNoSignReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Responder','Initiator',t>) @i
     ==> (Ex t2 #j. Running(b,a,<'Initiator', 'Responder', t2>) @j)
@@ -277,7 +297,7 @@ lemma weakagreementResponderNoSignReveal:
         | (Ex #j. Reveal('PKG', 'SIGN')@j)"
 
 // NON-INJECTIVE AGREEMENT FROM RESPONDER with AUTH reveal, without SIGN reveal
-lemma noninjectiveagreemenResponderNoSignReveal:
+lemma noninjectiveagreemenResponderNoSignReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Responder','Initiator',t>) @i
     ==> (Ex #j. Running(b,a,<'Initiator','Responder',t>) @j)
@@ -286,7 +306,7 @@ lemma noninjectiveagreemenResponderNoSignReveal:
         | (Ex #j. Reveal('PKG', 'SIGN')@j)"
 
 // INJECTIVE AGREEMENT FROM RESPONDER with AUTH reveal, without SIGN reveal
-lemma injectiveagreementResponderNoSignReveal:
+lemma injectiveagreementResponderNoSignReveal[heuristic={all}]:
   "All a b t #i. 
     Commit(a,b,<'Responder','Initiator',t>) @i
     ==> (  Ex #j. Running(b,a,<'Initiator','Responder',t>) @j 
@@ -298,7 +318,7 @@ lemma injectiveagreementResponderNoSignReveal:
         | (Ex #j. Reveal('PKG', 'SIGN')@j)"
 
 // SANITY CHECK
-lemma executability_lemma:
+lemma executability_lemma[heuristic={all}]:
   exists-trace
   " Ex #i. Full()@i
   & (All #i #j #k. User()@i & User()@j & User()@k ==> (#i=#j | #j=#k | #i=#k))

@@ -10,6 +10,10 @@ equations:
 
 
 
+
+
+
+
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !LongtermKey( ~kxs, $X ) ]
 
@@ -284,7 +288,17 @@ solve( !LongtermKey( ykbs, B ) ▶₀ #i )
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
 
 lemma AUTO_typing [sources]:
   all-traces
@@ -373,27 +387,19 @@ next
   qed
 qed
 
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
+
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
-
-  output:          examples/features/auto-sources/spore/Denning-Sacco-SK.spthy.tmp
-  processing time: 0.772209487s
-  executability (exists-trace): verified (7 steps)
-  secrecy (all-traces): verified (27 steps)
-  noninjectiveagreement_B (all-traces): verified (8 steps)
-  injectiveagreement_B (all-traces): falsified - found trace (8 steps)
-  AUTO_typing (all-traces): verified (21 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -401,7 +407,8 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK.spthy.tmp
-  processing time: 0.772209487s
+  processing time: 0.80s
+  
   executability (exists-trace): verified (7 steps)
   secrecy (all-traces): verified (27 steps)
   noninjectiveagreement_B (all-traces): verified (8 steps)

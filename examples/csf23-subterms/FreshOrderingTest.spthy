@@ -1,0 +1,30 @@
+theory FreshOrderingTest
+begin
+
+builtins: hashing
+
+rule Start:
+    [ Fr(~s) ]
+  --[ Start(~s) ]->
+    [ Starting(~s) ]
+
+rule Start2:
+    [ Starting(s) ]
+  --[ Start2(s) ]->
+    [ State(s, h(s)) ]
+
+rule Step:
+    [ State(s, x) ]
+  --[ Step(s) ]->
+    [ State(s, h(x))]
+
+// this is directly solvable with the original freshOrdering rule
+lemma Order:
+	"All s #i #j. Start(s)@i ∧ Step(s)@j ⇒ i<j"
+
+// this is directly solvable with the encanced freshOrdering rule but not with the original freshOrdering rule
+lemma Order2:
+	"All s #i #j. Start2(s)@i ∧ Step(s)@j ⇒ i<j"
+
+end
+

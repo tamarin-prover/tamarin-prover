@@ -5,7 +5,11 @@ theory NoReplication begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
+
+
 
 lemma onlyOneSecret:
   all-traces
@@ -16,62 +20,56 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 solve( State_1( x ) ▶₀ #i )
-  case news_0_
+  case Init
   solve( State_1( y ) ▶₀ #j )
-    case news_0_
+    case Init
     by contradiction /* from formulas */
   qed
 qed
 
-rule (modulo E) Init[color=#ffffff, process="new s;"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
 
-  /* has exactly the trivial AC variant */
 
-rule (modulo E) news_0_[color=#ffffff, process="new s;"]:
-   [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
 
-  /* has exactly the trivial AC variant */
+
+
+
+rule (modulo E) Init[color=#ffffff, process="new s.1;"]:
+   [ Fr( s.1 ) ] --[ Init( ) ]-> [ State_1( s.1 ) ]
+
+  /*
+  rule (modulo AC) Init[color=#ffffff, process="new s.1;"]:
+     [ Fr( s ) ] --[ Init( ) ]-> [ State_1( s ) ]
+  */
 
 rule (modulo E) eventSecrets_0_1[color=#ffffff,
-                                 process="event Secret( s );"]:
-   [ State_1( s ) ] --[ Secret( s ) ]-> [ State_11( s ) ]
+                                 process="event Secret( s.1 );"]:
+   [ State_1( s.1 ) ] --[ Secret( s.1 ) ]-> [ Out( s.1 ) ]
 
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) outs_0_11[color=#ffffff, process="out(s);"]:
-   [ State_11( s ) ] --> [ State_111( s ), Out( s ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111[color=#ffffff, process="0"]:
-   [ State_111( s ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
+  /*
+  rule (modulo AC) eventSecrets_0_1[color=#ffffff,
+                                    process="event Secret( s.1 );"]:
+     [ State_1( s ) ] --[ Secret( s ) ]-> [ Out( s ) ]
+  */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/no-replication.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/no-replication.spthy
-
-  output:          examples/sapic/fast/basic/no-replication.spthy.tmp
-  processing time: 0.064188572s
-  onlyOneSecret (all-traces): verified (4 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -79,7 +77,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/no-replication.spthy
 
   output:          examples/sapic/fast/basic/no-replication.spthy.tmp
-  processing time: 0.064188572s
+  processing time: 0.06s
+  
   onlyOneSecret (all-traces): verified (4 steps)
 
 ==============================================================================

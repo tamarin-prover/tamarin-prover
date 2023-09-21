@@ -31,6 +31,10 @@ module Theory.Text.Pretty (
   , kwCase
   , kwNext
   , kwQED
+  , kwTactic
+  , kwPresort
+  , kwPrio
+  , kwDeprio
   , kwLemma
   , kwPredicates
   , kwPredicate
@@ -51,6 +55,7 @@ module Theory.Text.Pretty (
   , opRequires
   , opAction
   , opPath
+  , opSubterm
   , opLess
   , opEqual
   , opDedBefore
@@ -112,16 +117,20 @@ closedComment_ ls = comment $ fsep [text "/*", text ls, text "*/"]
 kwTheoryHeader :: HighlightDocument d => d -> d
 kwTheoryHeader name = keyword_ "theory" <-> name <-> keyword_ "begin"
 
-kwEnd, kwBy, kwCase, kwNext, kwQED, kwRestriction, kwLemma, kwPredicates, kwPredicate, kwDiffLemma, kwLeft, kwRight, kwVariants :: HighlightDocument d => d
+kwEnd, kwBy, kwCase, kwNext, kwQED, kwRestriction, kwTactic, kwPresort, kwPrio, kwDeprio, kwLemma, kwPredicates, kwPredicate, kwDiffLemma, kwLeft, kwRight, kwVariants :: HighlightDocument d => d
 kwEnd         = keyword_ "end"
 kwBy          = keyword_ "by"
 kwCase        = keyword_ "case"
 kwNext        = keyword_ "next"
 kwQED         = keyword_ "qed"
 kwRestriction = keyword_ "restriction"
+kwTactic      = keyword_ "tactic"
+kwPresort     = keyword_ "presort"
+kwPrio        = keyword_ "prio"
+kwDeprio      = keyword_ "deprio"
 kwLemma       = keyword_ "lemma"
 kwPredicates  = keyword_ "predicates"
-kwPredicate  = keyword_ "predicate"
+kwPredicate   = keyword_ "predicate"
 kwDiffLemma   = keyword_ "diffLemma"
 kwLeft        = keyword_ "left"
 kwRight       = keyword_ "right"
@@ -144,7 +153,7 @@ kwVariantsModulo = kwModulo "variants"
 -- Operators
 ------------------------------------------------------------------------------
 
-opProvides, opRequires, opAction, opPath, opLess, opEqual, opDedBefore, opEdge,
+opProvides, opRequires, opAction, opPath, opSubterm, opLess, opEqual, opDedBefore, opEdge,
   opExists, opForall, opLAnd, opLOr, opImp, opIff, opDot
     :: HighlightDocument d => d
 opProvides  = operator_ ":>"
@@ -152,6 +161,7 @@ opRequires  = operator_ "<:"
 opAction    = operator_ "@"
 opPath      = operator_ ">+>"
 opLess      = operator_ "<"
+opSubterm   = operator_ "⊏"
 opEqual     = operator_ "="
 opDedBefore = operator_ "--|"
 opEdge      = operator_ ">->"

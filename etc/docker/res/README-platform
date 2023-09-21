@@ -1,0 +1,63 @@
+Hi! This is the sapicplusplatform Docker image. You can now:
+
+1. Browse the image interactively:
+
+docker run -it robertkuennemann/sapicplusplatform:latest bash
+
+You should obtain a shell that reads like that: `root@976d3bce69f8:/opt/protocolplatform#`.
+
+- execute tamarin-prover, proverif, gsverif, deepse etc. as usual
+- execute the scripts below for the export:
+  -  proverif-tamarin  .. Translates input file with the modified tamarin-prover and runs proverif on output.
+  -  progsverif-tamarin  .. same for gsverif
+  -  proverif-tamarin-diff .. same for proverif with diff queries
+  -  deepsec-tamarin .. same for deepsec
+
+    Their usage is `[proverif|progsverif|deepsec]-tamarin file`. They are kept
+    simple on purpose, see `examples/export/README.md` for details.
+
+2. Using the platform:
+
+The protocol platform consists a modified version of tamarin-prover that parses .spthy and, with the -m flag, outputs:
+```
+  -m --output-module[=spthy|spthytyped|msr|proverif|deepsec]  What to output:- spthy (including
+                                                              processes),- spthy with explicit types,- pure
+                                                              msrs (processes translated to msrs) or- DeepSec
+                                                              or- ProVerif.
+```
+  other important tamarin-flags are:
+```
+     --prove[=LEMMAPREFIX*|LEMMANAME]                         Attempt to prove all lemmas that start with
+                                                              LEMMAPREFIX or the lemma which name is
+                                                              LEMMANAME
+     -D --defines[=STRING]                                       Define flags for pseudo-preprocessor
+     --diff                                                   Turn on observational equivalence mode using
+                                                              diff terms
+```
+    For more details on the command line arguments offered by tamarin-prover, including it's interactive mode, we refer to the official documentation at http://tamarin-prover.github.io/manual/
+
+On most examples inside the `examples/export` repository, `tamarin-prover name.spthy --prove` will verify the file, and `tamarin-prover -m=proverif name.spthy` gives an output that can be written to a file and executed using proverif or gsverif.
+
+From this docker image, try e.g.,
+```
+$ cd /opt/protocolplatform/examples/
+$ cat ex1.spthy
+$ tamarin-prover ex1.spthy --prove
+$ tamarin-prover ex1.spthy -m=proverif > ex1.pv
+$ proverif ex1.pv
+```
+
+We refer to `examples/README.md` for details about the case studies and some usage example.
+
+3. Use it on your host:
+
+- set up the following alias to give the image access to your host's current working
+  dir (at the time of calling) and forward port 3001:
+
+alias pp='docker run -p 3001:3001 -v "$PWD:$PWD" -w "$PWD" robertkuennemann/sapicplusplatform'
+
+- run, e.g., "pp tamarin-prover" to run tamarin-prover from the docker
+- remember to use the "-i" flag in tamarin's interactive mode to accept clients
+  on all interfaces, as the docker host is not localhost to the guest:
+
+  pp tamarin-prover interactive . -i='*4'

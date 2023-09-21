@@ -44,7 +44,7 @@ The Tamarin Prover is distributed through a number of channels: source and binar
 
 1. Make the new release on Github. @rsasse or @jdreier usually does this.
 
-   1. run `python3 regressionTests.py` and check for any error
+   1. run `python3 regressionTests.py -s` and check for any error
 
    2. run `tamarin-prover test`
 

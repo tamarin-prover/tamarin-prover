@@ -8,6 +8,10 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
 section{* A variant of the Chen-Kudla protocol that uses ordered concatenation instead 
           addition of points *}
 
@@ -503,25 +507,49 @@ solve( (∃ matching #i3 #i4 sid.
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Reveal_session_key: 
+Failed to derive Variable(s): sek
+
+Rule Init_2: 
+Failed to derive Variable(s): ~s1, ~s2
+
+Rule Resp_1: 
+Failed to derive Variable(s): ~msk
+*/
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/ake/bilinear/Chen_Kudla_eCK.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
-
-  output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 44.676513018s
-  key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -529,7 +557,11 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 44.676513018s
+  processing time: 20.61s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 
 ==============================================================================

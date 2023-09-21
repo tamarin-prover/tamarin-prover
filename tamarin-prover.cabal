@@ -1,7 +1,7 @@
 cabal-version:      >= 1.10
 build-type:         Simple
 name:               tamarin-prover
-version:            1.7.1
+version:            1.9.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
@@ -12,7 +12,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
 maintainer:         Cas Cremers <cremers@cispa.de>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-copyright:          Benedikt Schmidt, Simon Meier, Jannik Dreier, Ralf Sasse, ETH Zurich, 2010-2020
+copyright:          Benedikt Schmidt, Simon Meier, Cas Cremers, Jannik Dreier, Ralf Sasse, 2010-2023
 synopsis:           The Tamarin prover for security protocol analysis.
 description:
 
@@ -44,8 +44,8 @@ description:
     prover are given at <http://tamarin-prover.github.io>.
     .
     The paper describing the theory underlying the extension for observational
-    equivalence is published at CCS 2015. Its extended version is available from 
-    <http://tamarin-prover.github.io>. For observational equivalence proofs just 
+    equivalence is published at CCS 2015. Its extended version is available from
+    <http://tamarin-prover.github.io>. For observational equivalence proofs just
     add the "--diff" flag when calling the @tamarin-prover@.
 
 homepage:           https://tamarin-prover.github.io
@@ -106,8 +106,8 @@ executable tamarin-prover
     default-language: Haskell2010
 
     if flag(threaded)
-        ghc-options:   -threaded -eventlog 
-    
+        ghc-options:   -threaded -eventlog
+
     -- -XFlexibleInstances
 
     ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing -main-is Main
@@ -136,6 +136,7 @@ executable tamarin-prover
       , containers
       , deepseq
       , directory
+      , exceptions
       , fclabels
       , file-embed
       , filepath
@@ -155,11 +156,12 @@ executable tamarin-prover
       , warp
       , yesod-core
       , yesod-static
-
-      , tamarin-prover-utils  == 1.7.1
-      , tamarin-prover-term   == 1.7.1
-      , tamarin-prover-theory == 1.7.1
-      , tamarin-prover-sapic == 1.7.1
+      , tamarin-prover-utils  == 1.9.0
+      , tamarin-prover-term   == 1.9.0
+      , tamarin-prover-theory == 1.9.0
+      , tamarin-prover-sapic == 1.9.0
+      , tamarin-prover-export == 1.9.0
+      , tamarin-prover-accountability == 1.9.0
 
     other-modules:
       Paths_tamarin_prover
@@ -183,7 +185,7 @@ executable tamarin-prover
       Web.Types
 
       Test.ParserTests
-      
+
     other-extensions:
       TemplateHaskell
 

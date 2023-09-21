@@ -2,10 +2,11 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeSynonymInstances       #-}
+
+
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -29,8 +30,10 @@ module Theory.Constraint.System.Guarded (
   , gconj
   , gex
   , gall
+  , gnotAtom
   , gnot
   , ginduct
+  , closeGuarded
 
   , formulaToGuarded
   , formulaToGuarded_
@@ -55,6 +58,8 @@ module Theory.Constraint.System.Guarded (
 
   -- ** Conversions to non-bound representations
   , bvarToLVar
+  , bTermToLTerm
+  , lTermToBTerm
 --  , unbindAtom
   , openGuarded
 
@@ -81,7 +86,6 @@ module Theory.Constraint.System.Guarded (
 
   ) where
 
-import           Control.Applicative
 import           Control.Arrow
 import           Control.DeepSeq
 import           Control.Monad.Except
@@ -94,6 +98,7 @@ import           GHC.Generics                     (Generic)
 import           Data.Data
 import           Data.Binary
 import           Data.Either                      (partitionEithers)
+import           Data.Maybe
 -- import           Data.Foldable                    (Foldable(..), foldMap)
 import           Data.List
 import qualified Data.DList as D
@@ -106,10 +111,8 @@ import           Text.PrettyPrint.Highlight
 
 import           Theory.Model
 
-import           Data.Functor.Identity
-
-instance MonadFail Identity where
-  fail = fail
+-- Control.Monad.Fail import will become redundant in GHC 8.8+
+-- import qualified Control.Monad.Fail as Fail
 
 ------------------------------------------------------------------------------
 -- Types
@@ -179,7 +182,7 @@ isGAction (GAction _ _) = True
 isGAction _             = False
 
 -- | Convert 'Atom's to 'GAtom's, if possible.
-atomToGAtom :: Show t => Atom t -> GAtom t
+atomToGAtom :: Show t => Atom t -> GAtom t  --TODO-NAT-GUARD: do we want to allow subterms as guards? (search for other TODO-NAT-GUARD in this file) -- There is no proof for doing this, but if someone would prove it, this would make subterms stronger.
 atomToGAtom = conv
   where conv (EqE s t)     = GEqE s t
         conv (Action i f)  = GAction i f
@@ -261,9 +264,9 @@ instance Foldable (Guarded s c) where
 
 traverseGuarded :: (Applicative f, Ord c, Ord v, Ord a)
                 => (a -> f v) -> Guarded s c a -> f (Guarded s c v)
-traverseGuarded f = foldGuarded (liftA GAto . traverse (traverseTerm (traverse (traverse f))))
-                                (liftA GDisj . sequenceA)
-                                (liftA GConj . sequenceA)
+traverseGuarded f = foldGuarded (fmap GAto . traverse (traverseTerm (traverse (traverse f))))
+                                (fmap GDisj . sequenceA)
+                                (fmap GConj . sequenceA)
                                 (\qua ss as gf -> GGuarded qua ss <$> traverse (traverse (traverseTerm (traverse (traverse f)))) as <*> gf)
 
 instance Ord c => HasFrees (Guarded (String, LSort) c LVar) where
@@ -321,6 +324,20 @@ bvarToLVar =
     boundError v = error $ "bvarToLVar: left-over bound variable '"
                            ++ show v ++ "'"
 
+-- | Assuming that there are no more bound variables left in a term,
+-- convert it to a term with free variables only.
+-- This is especially used in 'insertFormula' where it is surrounded by
+-- an empty universal quantification that cannot have any bound variables.
+bTermToLTerm :: BLTerm -> LNTerm
+bTermToLTerm = fmapTerm (fmap (foldBVar boundError id))
+  where
+    boundError v = error $ "bvarToLVar: left-over bound variable '"
+                           ++ show v ++ "'"
+
+-- | convert a term to a term with bounded variables
+lTermToBTerm :: LNTerm -> BLTerm
+lTermToBTerm = fmapTerm (fmap Free)
+
 -- | Assuming that there are no more bound variables left in an atom of a
 -- formula, convert it to an atom with free variables only.
 --bvarToMaybeLVar :: Ord c => Atom (VTerm c (BVar LVar)) -> Maybe (Atom (VTerm c LVar))
@@ -371,7 +388,7 @@ closeGuarded qua vs as gf =
 
 type LNGuarded = Guarded (String,LSort) Name LVar
 
-instance Apply LNGuarded where
+instance Apply LNSubst LNGuarded where
   apply subst = mapGuardedAtoms (const $ apply subst)
 
 
@@ -496,7 +513,7 @@ formulaToGuarded fmOrig =
 
         conjActionsEqs (Conn And f1 f2)     = conjActionsEqs f1 ++ conjActionsEqs f2
         conjActionsEqs (Ato a@(Action _ _)) = [Left $ bvarToLVar a]
-        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]
+        conjActionsEqs (Ato e@(EqE _ _))    = [Left $ bvarToLVar e]  --TODO-NAT-GUARD (search for other TODO-NAT-GUARD in this file)
         conjActionsEqs f                    = [Right f]
 
         -- Given a list of unguarded variables and a list of atoms, compute the
@@ -627,11 +644,13 @@ simplifyGuarded :: (LNAtom -> Maybe Bool)
                 -- ^ Partial assignment for truth value of atoms.
                 -> LNGuarded
                 -- ^ Original formula
+                -> Bool
+                -- ^ Verbose parameter
                 -> Maybe LNGuarded
                 -- ^ Simplified formula, provided some simplification was
                 -- performed.
-simplifyGuarded valuation fm0
-    | fm1 /= fm0 = trace (render $ ppMsg) (Just fm1)
+simplifyGuarded valuation fm0 verbose
+    | fm1 /= fm0 = if (verbose) then trace (render $ ppMsg) (Just fm1) else (Just fm1)
     | otherwise  = Nothing
   where
     fm1 = simplifyGuardedOrReturn valuation fm0
@@ -825,7 +844,7 @@ prettyGuarded fm =
     pp gf0@(GGuarded _ _ _ _) =
       -- variable names invented here can be reused otherwise
       scopeFreshness $ do
-          Just (qua, vs, atoms, gf) <- openGuarded gf0
+          (qua, vs, atoms, gf) <- fromJust <$> openGuarded gf0
           let antecedent = (GAto . fmap (fmapTerm (fmap Free))) <$> atoms
               connective = operator_ (case qua of All -> "⇒"; Ex -> "∧")
                             -- operator_ (case qua of All -> "==>"; Ex -> "&")

@@ -8,6 +8,12 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
+
+
+
+
+
+
 section{* DH2 *}
 
 rule (modulo E) Register_pk:
@@ -103,6 +109,9 @@ rule (modulo E) Resp_1:
     6. ~ltkR = ~ltkR.270
        XB    = x.534^(~ltkR.270*x.535)
        z     = x.534^x.535
+    
+    7. XB    = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) Init_2:
@@ -164,6 +173,9 @@ rule (modulo E) Init_2:
     6. ~ltkI = ~ltkI.23
        YA    = x.41^(~ltkI.23*x.42)
        z     = x.41^x.42
+    
+    7. YA    = DH_neutral
+       z     = DH_neutral
   */
 
 rule (modulo E) Resp_2:
@@ -1807,25 +1819,46 @@ next
   qed
 qed
 
-/* All well-formedness checks were successful. */
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule Init_1: 
+Failed to derive Variable(s): ~ltkR
+
+Rule Resp_1: 
+Failed to derive Variable(s): ~ltkI
+*/
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/csf12/DH2_original.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/csf12/DH2_original.spthy
-
-  output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 26.390886746s
-  KAS_key_secrecy (all-traces): verified (501 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -1833,7 +1866,11 @@ summary of summaries:
 analyzed: examples/csf12/DH2_original.spthy
 
   output:          examples/csf12/DH2_original.spthy.tmp
-  processing time: 26.390886746s
+  processing time: 13.88s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
   KAS_key_secrecy (all-traces): verified (501 steps)
 
 ==============================================================================

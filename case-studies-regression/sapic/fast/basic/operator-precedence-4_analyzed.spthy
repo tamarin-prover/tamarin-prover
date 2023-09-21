@@ -5,9 +5,13 @@ theory OperatorPrecedenceLet begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+
+
 heuristic: p
 
 section{* A few test cases for operator precedence *}
+
+
 
 lemma second_process_covered:
   all-traces "∀ #e x. (E( x ) @ #e) ⇒ (x = '1')"
@@ -17,50 +21,31 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 solve( E( x ) @ #e )
-  case eventE_0_11
+  case in_0_1
   by contradiction /* from formulas */
 next
-  case eventE_0_21
+  case in_0_2
   by contradiction /* from formulas */
 qed
 
-rule (modulo E) Init[color=#ffffff, process="|"]:
-   [ ] --[ Init( ) ]-> [ State_( ) ]
 
-  /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_[color=#ffffff, process="|"]:
-   [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
-  /* has exactly the trivial AC variant */
+
+
 
 rule (modulo E) in_0_1[color=#ffffff, process="in('1');"]:
-   [ State_1( ), In( '1' ) ] --> [ State_11( ) ]
+   [ State_1( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventE_0_11[color=#ffffff, process="event E( '1' );"]:
-   [ State_11( ) ] --[ E( '1' ) ]-> [ State_111( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111[color=#ffffff, process="0"]:
-   [ State_111( ) ] --> [ ]
+rule (modulo E) Init[color=#ffffff, process="|"]:
+   [ ] --[ Init( ) ]-> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) in_0_2[color=#ffffff, process="in('1');"]:
-   [ State_2( ), In( '1' ) ] --> [ State_21( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventE_0_21[color=#ffffff, process="event E( '1' );"]:
-   [ State_21( ) ] --[ E( '1' ) ]-> [ State_211( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_211[color=#ffffff, process="0"]:
-   [ State_211( ) ] --> [ ]
+   [ State_2( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -68,25 +53,21 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All well-formedness checks were successful. */
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.8.0
+Maude version 3.2.1
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
+*/
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 2.7.1. OK.
+ checking version: 3.2.1. OK.
  checking installation: OK.
-
-
-analyzing: examples/sapic/fast/basic/operator-precedence-4.spthy
-
-------------------------------------------------------------------------------
-analyzed: examples/sapic/fast/basic/operator-precedence-4.spthy
-
-  output:          examples/sapic/fast/basic/operator-precedence-4.spthy.tmp
-  processing time: 0.063765138s
-  second_process_covered (all-traces): verified (4 steps)
-
-------------------------------------------------------------------------------
 
 ==============================================================================
 summary of summaries:
@@ -94,7 +75,8 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-4.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-4.spthy.tmp
-  processing time: 0.063765138s
+  processing time: 0.05s
+  
   second_process_covered (all-traces): verified (4 steps)
 
 ==============================================================================
