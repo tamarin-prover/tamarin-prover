@@ -3,7 +3,8 @@ begin
 
 /*
 * Date: November 2021
-* Comment: minimal example for the second issue from PR#394, which is also the issue solved by PR#446 
+* Comment: Minimal example for a missing check if
+* 'SOLVED' is present with a non-empty but incomplete proof.
 */
 
 rule A:
@@ -11,14 +12,14 @@ rule A:
  --[ A('x')]->
    [ ]
 
+lemma lemma_verified:
+  all-traces
+  "All x #i. A(x)@i ==> A(x)@i"
+
 lemma lemma_falsified:
   all-traces
-  "All x #i.  A(x) @ i ==> (A(x)@i | F)"
-
-lemma lemma_verfified:
-  all-traces
-  "All x #i.  A(x) @ i ==> (A(x)@i | F)"
+  "All x #i. A(x)@i ==> A(x)@i"
 simplify
-SOLVED //trace formula
+SOLVED
 
 end
