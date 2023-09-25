@@ -381,17 +381,22 @@ nodevar = asum
   , (\(n, i) -> LVar n LSortNode i) <$> indexedIdentifier ]
   <?> "timepoint variable"
 
+-- | Parse a non-empty single-quoted string
+-- | that does not contain a single-quote or newline.
+singleQuotedString :: Parser String
+singleQuotedString = singleQuoted $ many1 (noneOf "'\n")
+
 -- | Parse a literal fresh name, e.g., @~'n'@.
 freshName :: Parser String
-freshName = try (symbol "~" *> singleQuoted identifier)
+freshName = try (symbol "~" *> singleQuotedString)
 
 -- | Parse a literal public name, e.g., @'n'@.
 pubName :: Parser String
-pubName = singleQuoted identifier
+pubName = singleQuotedString
 
 -- | Parse a literal nat name, e.g. @%'n'@.
 natName :: Parser String
-natName = try (symbol "%" *> singleQuoted identifier)
+natName = try (symbol "%" *> singleQuotedString)
 
 -- | Parse a Sapic Type
 typep :: Parser SapicType
