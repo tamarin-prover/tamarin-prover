@@ -1606,9 +1606,9 @@ nextThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextThyPath thy = go
   where
     go TheoryHelp                       = TheoryMessage
-    go TheoryMessage                    = TheoryTactic
-    go TheoryTactic                     = TheoryRules
-    go TheoryRules                      = TheorySource RawSource 0 0
+    go TheoryMessage                    = TheoryRules
+    go TheoryRules                      = TheoryTactic
+    go TheoryTactic                     = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)     = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource _ _) = fromMaybe TheoryHelp firstLemma
     go (TheoryLemma lemma)              = TheoryProof lemma []
@@ -1699,9 +1699,9 @@ prevThyPath thy = go
   where
     go TheoryHelp                        = TheoryHelp
     go TheoryMessage                     = TheoryHelp
-    go TheoryTactic                      = TheoryMessage
-    go TheoryRules                       = TheoryTactic
-    go (TheorySource RawSource _ _)      = TheoryRules
+    go TheoryRules                       = TheoryMessage
+    go TheoryTactic                      = TheoryRules
+    go (TheorySource RawSource _ _)      = TheoryTactic
     go (TheorySource RefinedSource _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)
       | Just prevLemma <- getPrevLemma l = TheoryProof prevLemma (lastPath prevLemma)
@@ -1814,9 +1814,9 @@ nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextSmartThyPath thy = go
   where
     go TheoryHelp                         = TheoryMessage
-    go TheoryMessage                      = TheoryTactic
-    go TheoryTactic                       = TheoryRules
-    go TheoryRules                        = TheorySource RawSource 0 0
+    go TheoryMessage                      = TheoryRules
+    go TheoryRules                        = TheoryTactic
+    go TheoryTactic                       = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)       = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource   _ _) = fromMaybe TheoryHelp firstLemma
     go (TheoryLemma lemma)                = TheoryProof lemma []
@@ -1913,9 +1913,9 @@ prevSmartThyPath thy = go
   where
     go TheoryHelp                          = TheoryHelp
     go TheoryMessage                       = TheoryHelp
-    go TheoryTactic                        = TheoryMessage
-    go TheoryRules                         = TheoryTactic
-    go (TheorySource RawSource _ _)        = TheoryRules
+    go TheoryRules                         = TheoryMessage
+    go TheoryTactic                        = TheoryRules
+    go (TheorySource RawSource _ _)        = TheoryTactic
     go (TheorySource RefinedSource   _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)
       | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)
