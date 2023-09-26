@@ -12,7 +12,7 @@ module Main.Mode.Batch (
 
 import           Control.Basics
 import           Data.List
-import           Data.Bitraversable              (bisequence)
+import           Data.Bitraversable              (bitraverse, bisequence)
 import           System.Console.CmdArgs.Explicit as CmdArgs
 import           System.FilePath
 import           System.Timing                   (timedIO)
@@ -81,12 +81,15 @@ run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
   | argExists "parseOnly" as || argExists "outModule" as = do
+      versionData <- ensureMaudeAndGetVersion as
+      res <- mapM (processThy versionData) inFiles
+      let (docs, reps) = unzip res
 
-      res <- mapM (processThy "") inFiles
-      let (thys, _) = unzip res
+      let repsWithInfo = ppRep <$> zip4 inFiles (repeat Nothing) (repeat Nothing) reps
+      let summary = Pretty.vcat $ intersperse (Pretty.text "") repsWithInfo
 
-      mapM_ (putStrLn . renderDoc) thys
-      putStrLn ""
+      mapM_ (putStrLn . renderDoc) docs
+      putStrLn $ renderDoc $ ppSummary summary
   | otherwise = do
       versionData <- ensureMaudeAndGetVersion as
       resTimed <- mapM (timedIO . processThy versionData) inFiles
@@ -97,13 +100,13 @@ run thisMode as
         outFiles <- case maybeOutFiles of
           Just f -> return f
           Nothing -> die "Please specify a valid output file/directory"
-        let repsWithInfo = ppRep <$> zip4 inFiles (Just <$> outFiles) times reps
+        let repsWithInfo = ppRep <$> zip4 inFiles (Just <$> outFiles) (Just <$> times) reps
         let summary = Pretty.vcat $ intersperse (Pretty.text "") repsWithInfo
 
         mapM_ (\(o, d) -> writeFileWithDirs o (renderDoc d)) (zip outFiles docs)
         putStrLn $ renderDoc $ ppSummary summary
       else do
-        let repsWithInfo = ppRep <$> zip4 inFiles (repeat Nothing) times reps
+        let repsWithInfo = ppRep <$> zip4 inFiles (repeat Nothing) (Just <$> times) reps
         let summary = Pretty.vcat $ intersperse (Pretty.text "") repsWithInfo
 
         mapM_ (putStrLn . renderDoc) docs
@@ -124,7 +127,7 @@ run thisMode as
                   , Pretty.text $ ""
                   , Pretty.nest 2 $ Pretty.vcat [
                       maybe Pretty.emptyDoc (\o -> Pretty.text $ "output:          " ++ o) outFile
-                    , Pretty.text $ printf "processing time: %.2fs" (realToFrac time :: Double)
+                    , maybe Pretty.emptyDoc (\t -> Pretty.text $ printf "processing time: %.2fs" (realToFrac t :: Double)) time
                     , Pretty.text $ ""
                     , summary ] ]
 
@@ -164,18 +167,24 @@ run thisMode as
       srcThy <- liftIO $ readFile inFile
       thy    <- loadTheory thyLoadOptions srcThy inFile
 
-      if isParseOnlyMode then do
-        either (\t -> bisequence (liftIO $ choosePretty t, return Pretty.emptyDoc))
-               (\d -> return (prettyOpenDiffTheory d, Pretty.emptyDoc)) thy
-      else do
-        let sig = either (get thySignature) (get diffThySignature) thy
-        sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath thyLoadOptions) sig
+      let sig = either (get thySignature) (get diffThySignature) thy
+      sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath thyLoadOptions) sig
 
+      if isParseOnlyMode then do
+        (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
+
+        thy'' <- bitraverse (return . (modify thyItems (++ (TextItem <$> formalComments thy'))))
+                            (return . (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))) thy
+
+        either (\t -> bisequence (liftIO $ choosePretty t, return $ ppWf report))
+               (\d -> return (prettyOpenDiffTheory d, ppWf report)) thy''
+      else do
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
         either (\t -> return (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
                (\d -> return (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d)) thy'
-
       where
+        formalComments = either (filter (/=("","")) . theoryFormalComments) (filter (/=("", "")) . diffTheoryFormalComments)
+
         isParseOnlyMode = get oParseOnlyMode thyLoadOptions
 
         handleError e@(ParserError _) = die $ show e

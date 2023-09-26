@@ -117,6 +117,7 @@ module Theory (
   , theoryRules
   , theoryLemmas
   , theoryCaseTests
+  , theoryFormalComments
   , theoryRestrictions
   , theoryProcesses
   , theoryProcessDefs
@@ -128,6 +129,7 @@ module Theory (
   , theoryAccLemmas
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
+  , diffTheoryFormalComments
   , addTactic
   , addRestriction
   , addLemma
