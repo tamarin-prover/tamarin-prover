@@ -88,7 +88,7 @@ detailed error messages.
   	Possible reasons:
 	1. Fact names are case-sensitive, different capitalizations are considered as different facts, i.e., Fact() is different from FAct(). Check the capitalization of your fact names.
 	2. Same fact is used with different arities, i.e., Fact('A','B') is different from Fact('A'). Check the arguments of your facts.
-	
+
 
   	Fact `agst':
 
@@ -123,7 +123,7 @@ we get the error message
 	Unbound variables
 	=================
 
-	rule `R_1' has unbound variables: 
+	rule `R_1' has unbound variables:
 		~n
 	*/
 
@@ -151,7 +151,7 @@ This causes the following warning:
 	=============
 
 	lemma `functional' uses terms of the wrong form: `Free m', `Free m'
-	
+
 	The only allowed terms are public names and bound node and message
 	variables. If you encounter free message variables, then you might
 	have forgotten a #-prefix. Sort prefixes can only be dropped where
@@ -180,8 +180,8 @@ We get the following warning:
 	Inexistant lemma actions
 	========================
 
-	lemma `nonce_secret' references action 
-		fact "Secr" (arity 2, Linear) 
+	lemma `nonce_secret' references action
+		fact "Secr" (arity 2, Linear)
 	but no rule has such an action.
 	*/
 
@@ -227,7 +227,7 @@ we get the error message
 	Unbound variables
 	=================
 
-	rule `setup' has unbound variables: 
+	rule `setup' has unbound variables:
 		m
 
 	Variable with mismatching sorts or capitalization
@@ -237,7 +237,7 @@ we get the error message
 	1. Identifiers are case sensitive, i.e.,'x' and 'X' are considered to be different.
 	2. The same holds for sorts:, i.e., '$x', 'x', and '~x' are considered to be different.
 
-	rule `setup': 
+	rule `setup':
 		1. ~m, m
 	*/
 
@@ -263,13 +263,13 @@ we get the error message
 
 	The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
-	Rule R_1: 
+	Rule R_1:
 	Failed to derive Variable(s): ~k, m
     */
 
 This warning indicates that in the rule `R_1`, we introduce additional capabilities, namely, the derivation of both `~k` and `m`.
 
-If this is intentional, the rule can be annotated with `[derivchecks]`, which will make Tamarin ignore that rule during derivation checks. The behaviour of these derivation checks can be further modified with the `--derivcheck-timeout` flag. By default, it is set to a value of `5` seconds. Setting it to `0` disables the timeout, setting it to `-1` disables derivation checks entirely.
+If this is intentional, the rule can be annotated with `[no_derivcheck]`, which will make Tamarin ignore that rule during derivation checks. The behaviour of these derivation checks can be further modified with the `--derivcheck-timeout` (or `-d`) flag. By default, it is set to a value of `5` seconds. Setting it to `0` disables derivation checks.
 
 ### What to do when Tamarin does not terminate ###
 Tamarin may fail to terminate when it automatically constructs proofs.
