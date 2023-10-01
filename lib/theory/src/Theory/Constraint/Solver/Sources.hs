@@ -29,6 +29,7 @@ module Theory.Constraint.Solver.Sources (
   , IntegerParameters(..)
   , paramOpenChainsLimit
   , paramSaturationLimit
+  , showSaturationSteps
 
   ) where
 
@@ -71,10 +72,11 @@ import qualified Data.Binary  as B
 
 
 -- | Parameters
-data IntegerParameters = IntegerParameters 
+data IntegerParameters = IntegerParameters
     {
       _paramOpenChainsLimit :: Integer
     , _paramSaturationLimit :: Integer
+    , _showSaturationSteps  :: Bool
     } deriving( Eq, Ord, Show, G.Generic, NFData, B.Binary )
 $(mkLabels [''IntegerParameters])
 
@@ -360,20 +362,33 @@ applySource ctxt th0 goal = case matchToGoal ctxt th0 goal of
 saturateSources
     :: IntegerParameters -> ProofContext -> [Source] -> [Source]
 saturateSources parameters ctxt thsInit  =
-    (go thsInit 1)
+    go thsInit 1
   where
     go :: [Source] -> Integer -> [Source]
-    go ths n =
-        if (any or (changes `using` parList rdeepseq)) && (n <= get paramSaturationLimit parameters)
-          then trace("[Saturating Sources] Step " ++ show n ++ "/" ++ show (get paramSaturationLimit parameters)) $ go ths' (n + 1)
-          else if (n > get paramSaturationLimit parameters)
-            then trace ("[Saturating Sources] Saturation aborted, more than " ++ (show (get paramSaturationLimit parameters)) ++ " iterations. (Limit can be change with -s=)") ths'
-            else trace("[Saturating Sources] Step " ++ show n ++ "/" ++ show (get paramSaturationLimit parameters)) ths'
+    go ths n
+      | any or (changes `using` parList rdeepseq) && (n <= get paramSaturationLimit parameters) =
+          if get showSaturationSteps parameters then
+            trace ("[Saturating Sources] Step " ++ show n ++ " (Max " ++ show (get paramSaturationLimit parameters) ++ ")")
+             $ go ths' (n + 1)
+          else 
+             go ths' (n + 1)
+      | n > get paramSaturationLimit parameters =
+          if get showSaturationSteps parameters then
+            trace ("[Saturating Sources] Saturation aborted, more than " ++ show (get paramSaturationLimit parameters) ++
+                 " iterations. (Limit can be change with -s=)") ths'
+          else
+            ths'
+      | otherwise =
+          if get showSaturationSteps parameters then
+            trace "[Saturating Sources] Done" ths'
+          else ths'
       where
-        (changes, ths') = unzip $ map (refineSource ctxt solver) ths
-        goodTh th  = length (getDisj (get cdCases th)) <= 1
-        solver     = do names <- solveAllSafeGoals (filter goodTh ths) (get paramOpenChainsLimit parameters) 
-                        return (not $ null names, names)
+          (changes, ths') = unzip $ map (refineSource ctxt solver) ths
+          goodTh th = length (getDisj (get cdCases th)) <= 1
+          solver
+            = do names <- solveAllSafeGoals
+                            (filter goodTh ths) (get paramOpenChainsLimit parameters)
+                 return (not $ null names, names)
 
 -- | Precompute a saturated set of case distinctions.
 precomputeSources
