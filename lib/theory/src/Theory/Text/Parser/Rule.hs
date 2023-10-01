@@ -70,6 +70,7 @@ ruleAttribute = asum
     , symbol "color="  *> (Just . RuleColor <$> parseColor)
     , symbol "process="  *> parseAndIgnore
     , symbol "derivchecks" *> ignore
+    , symbol "no_derivcheck" *> ignore
     ]
   where
     parseColor = do
