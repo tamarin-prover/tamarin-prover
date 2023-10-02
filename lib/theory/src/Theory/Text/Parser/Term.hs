@@ -73,7 +73,8 @@ reservedBuiltins =  map unpackChars [
   , pmultSymString 
   , emapSymString 
   , zeroSymString
-  , xorSymString 
+  , xorSymString
+  , concatSymString
   ]
 
 -- | Parse an n-ary operator application for arbitrary n.
@@ -152,7 +153,7 @@ expterm eqn plit = chainl1 (term plit eqn) (curry fAppExp <$ opExp)
 multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 multterm eqn plit = do
     dh <- enableDH . sig  <$> getState
-    if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
+    if dh -- && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
         else term plit eqn
 
@@ -163,6 +164,15 @@ xorterm eqn plit = do
     if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
         then chainl1 (multterm eqn plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
         else multterm eqn plit
+
+-- | A left-associative sequence of concatenations.
+concterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+concterm eqn plit = do
+  conc <- enableConc . sig <$> getState  
+  if conc
+    then chainl1 (xorterm eqn plit) ((\a b -> fAppA Concat [a,b]) <$ opConcat)
+    else chainr1 (xorterm eqn plit) (curry fAppPair <$ opConcat)
+    
 
 -- | A left-associative sequence of multiset unions.
 msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
@@ -178,7 +188,7 @@ natterm eqn plit = do
     nats <- enableNat . sig <$> getState
     if nats && not eqn-- if xor is not enabled, do not accept 'xorterms's
         then chainl1 (xorterm eqn plit) ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
-        else xorterm eqn plit
+        else concterm eqn plit
 
 -- | A right-associative sequence of tuples.
 tupleterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)

@@ -7,7 +7,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 -- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Function Symbols and Signatures.
@@ -15,6 +15,7 @@ module Term.Term.FunctionSymbols (
     -- ** AC, C, and NonAC funcion symbols
       FunSym(..)
     , ACSym(..)
+    , ASym(..)
     , CSym(..)
     , Privacy(..)
     , Constructability(..)
@@ -39,6 +40,7 @@ module Term.Term.FunctionSymbols (
     , multSymString
     , zeroSymString
     , xorSymString
+    , concatSymString
     , natPlusSymString
     , natOneSymString
 
@@ -60,6 +62,7 @@ module Term.Term.FunctionSymbols (
     -- ** concrete signatures
     , dhFunSig
     , xorFunSig
+    , concatFunSig
     , bpFunSig
     , msetFunSig
     , pairFunSig
@@ -67,6 +70,7 @@ module Term.Term.FunctionSymbols (
     , dhReducibleFunSig
     , bpReducibleFunSig
     , xorReducibleFunSig
+    , concatReducibleFunSig
     , implicitFunSig
     , natFunSig
     ) where
@@ -94,6 +98,10 @@ import qualified Data.Set as S
 data ACSym = Union | Mult | Xor | NatPlus
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
+-- | AC function symbols.
+data ASym = Concat
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
+
 -- | A function symbol can be either Private (unknown to adversary) or Public.
 data Privacy = Private | Public
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
@@ -114,6 +122,7 @@ data CSym = EMap
 data FunSym = NoEq  NoEqSym   -- ^ a free function function symbol of a given arity
             | AC    ACSym     -- ^ an AC function symbol, can be used n-ary
             | C     CSym      -- ^ a C function symbol of a given arity
+            | A     ASym      -- ^ an Associative function symbol, can be used n-ary
             | List            -- ^ a free n-ary function symbol of TOP sort
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
@@ -127,7 +136,7 @@ type NoEqFunSig = Set NoEqSym
 -- Fixed function symbols
 ----------------------------------------------------------------------
 
-diffSymString, munSymString, expSymString, invSymString, dhNeutralSymString, oneSymString, xorSymString, multSymString, zeroSymString, fstSymString, sndSymString :: ByteString
+diffSymString, munSymString, expSymString, invSymString, dhNeutralSymString, oneSymString, xorSymString, multSymString, zeroSymString, fstSymString, sndSymString, concatSymString :: ByteString
 diffSymString = "diff"
 munSymString = "mun"
 expSymString = "exp"
@@ -139,6 +148,7 @@ dhNeutralSymString = "DH_neutral"
 multSymString = "mult"
 zeroSymString = "zero"
 xorSymString = "xor"
+concatSymString = "concat"
 
 natPlusSymString, natOneSymString :: ByteString
 natPlusSymString = "tplus"
@@ -196,6 +206,10 @@ dhFunSig = S.fromList [ AC Mult, NoEq expSym, NoEq oneSym, NoEq invSym, NoEq dhN
 xorFunSig :: FunSig
 xorFunSig = S.fromList [ AC Xor, NoEq zeroSym ]
 
+-- | The signature for the associative function symbol
+concatFunSig :: FunSig
+concatFunSig = S.fromList [ A Concat ]
+
 -- | The signature for the bilinear pairing function symbols.
 bpFunSig :: FunSig
 bpFunSig = S.fromList [ NoEq pmultSym, C EMap ]
@@ -206,7 +220,7 @@ msetFunSig = S.fromList [AC Union]
 
 -- | The signature for pairing.
 pairFunSig :: NoEqFunSig
-pairFunSig = S.fromList [ pairSym, fstSym, sndSym ]
+pairFunSig = S.fromList [ pairSym, fstSym, sndSym]
 
 -- | The signature for pairing with destructors.
 pairFunDestSig :: NoEqFunSig
@@ -223,6 +237,10 @@ bpReducibleFunSig = S.fromList [ NoEq pmultSym, C EMap ]
 -- | Reducible function symbols for XOR.
 xorReducibleFunSig :: FunSig
 xorReducibleFunSig = S.fromList [ AC Xor ]
+
+-- | Reducible function symbols for Concatenation.
+concatReducibleFunSig :: FunSig
+concatReducibleFunSig = S.fromList [ A Concat ]
 
 -- | Implicit function symbols.
 implicitFunSig :: FunSig

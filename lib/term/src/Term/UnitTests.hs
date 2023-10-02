@@ -181,6 +181,7 @@ testsNorm hnd = TestLabel "Tests for normalization" $ TestList
     , tcn (f1  *:  inv f2) (f1  *:  inv f2)
     , tcn (one::LNTerm) one
     , tcn x6 (expo(expo(x6,inv x3),x3))
+    , tcn (conc [one,one,one,one]) (conc [one, conc [ conc [one,one],one]])
 
 --    , testEqual "a" (normAC (p3 *: (p1 *: p2))) (mult [p1, p2, p3])
 --    , testEqual "b" (normAC (p3 *: (p1 *: inv p3))) (mult [p1, p3, inv p3])
@@ -286,7 +287,7 @@ tests maudePath = do
 allMaudeSig :: MaudeSig
 allMaudeSig = mconcat
     [ bpMaudeSig, msetMaudeSig
-    , pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, revealSignatureMaudeSig, hashMaudeSig ]
+    , pairMaudeSig, symEncMaudeSig, asymEncMaudeSig, signatureMaudeSig, revealSignatureMaudeSig, hashMaudeSig, concatMaudeSig ]
 
 
 -- testing in ghci
@@ -331,9 +332,10 @@ pair = fAppPair
 inv :: Term a -> Term a
 inv = fAppInv
 
-union, mult :: Ord a => [Term a] -> Term a
+union, mult, conc :: Ord a => [Term a] -> Term a
 union = fAppAC Union
 mult  = fAppAC Mult
+conc  = fAppA Concat
 
 one :: Term a
 one = fAppOne

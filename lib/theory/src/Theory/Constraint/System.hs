@@ -970,6 +970,7 @@ getOppositeRules ctxt side (Rule rule prem _ _ _) = case rule of
     IntrInfo  i -> case i of
         (ConstrRule x) | x == BC.pack "_mult"     -> [(multRuleInstance (length prem))]
         (ConstrRule x) | x == BC.pack "_union"    -> [(unionRuleInstance (length prem))]
+        (ConstrRule x) | x == BC.pack "_concat"    -> [(concatRuleInstance (length prem))]
         (ConstrRule x) | x == BC.pack "_xor"      -> (xorRuleInstance (length prem)):
                                                             (concat $ map (destrRuleToConstrRule (AC Xor) (length prem)) (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) (DestrRule x 0 False False)))
         (DestrRule x l s c) | x == BC.pack "_xor" -> (constrRuleToDestrRule (xorRuleInstance (length prem)) l s c)++(concat $ map destrRuleToDestrRule (intruderRuleWithName (getAllRulesOnOtherSide ctxt side) i))

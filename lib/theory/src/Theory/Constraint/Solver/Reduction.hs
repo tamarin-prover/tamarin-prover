@@ -26,7 +26,7 @@ module Theory.Constraint.Solver.Reduction (
   , whenChanged
   , applyChangeList
   , whileChanging
-  
+
   -- ** Accessing the 'ProofContext'
   , getProofContext
   , getMaudeHandle
@@ -320,7 +320,7 @@ insertAction i fa@(Fact _ ann _) = do
                 Just (UpK, viewTerm2 -> FInv m) -> do
                 -- In the diff case, add inv rule instead of goal
                     if isdiff
-                       then do                          
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -339,7 +339,7 @@ insertAction i fa@(Fact _ ann _) = do
                 Just (UpK, viewTerm2 -> FMult ms) -> do
                 -- In the diff case, add mult rule instead of goal
                     if isdiff
-                       then do           
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -351,7 +351,7 @@ insertAction i fa@(Fact _ ann _) = do
                                insertGoal goal False
                                markGoalAsSolved "exists" goal
                                return Changed
-                          
+
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
@@ -359,7 +359,7 @@ insertAction i fa@(Fact _ ann _) = do
                 Just (UpK, viewTerm2 -> FUnion ms) -> do
                 -- In the diff case, add union (?) rule instead of goal
                     if isdiff
-                       then do                        
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -371,11 +371,29 @@ insertAction i fa@(Fact _ ann _) = do
                                insertGoal goal False
                                markGoalAsSolved "exists" goal
                                return Changed
-                          
+
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
+                Just (UpK, viewTerm2 -> FConcat ms) -> do
+                -- In the diff case, add union (?) rule instead of goal
+                    if isdiff
+                       then do
+                          -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
+                          if not nodePresent
+                             then do
+                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule $ BC.pack "_concat")) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
+                               insertGoal goal False
+                               markGoalAsSolved "union" goal
+                               mapM_ requiresKU ms *> return Changed
+                             else do
+                               insertGoal goal False
+                               markGoalAsSolved "exists" goal
+                               return Changed
 
+                       else do
+                          insertGoal goal False
+                          mapM_ requiresKU ms *> return Changed
                 _ -> do
                     insertGoal goal False
                     return Unchanged
@@ -642,7 +660,7 @@ substGoals = do
     changes <- forM goals $ \(goal, status) -> case goal of
         -- Look out for KU-actions that might need to be solved again.
         ActionG i fa@(kFactView -> Just (UpK, m))
-          | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
+          | (isMsgVar m || isProduct m || isUnion m || isConcat m {--|| isXor m-}) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
         _ -> do modM sGoals $
                   M'.insertWith combineGoalStatus (apply subst goal) status
@@ -772,4 +790,3 @@ solveRuleConstraints (Just eqConstr) = do
     setM sEqStore =<< simp hnd (const (const False)) eqs
     noContradictoryEqStore
 solveRuleConstraints Nothing = return ()
-

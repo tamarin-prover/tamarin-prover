@@ -59,14 +59,13 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
     check hnd = go t0
       where
         go t = case viewTerm2 t of
-            -- irreducible function symbols
-            FAppNoEq o ts | (NoEq o) `S.member` irreducible -> all go ts
             FList ts                                        -> all go ts
             FPair t1 t2                                     -> go t1 && go t2
             FDiff t1 t2                                     -> go t1 && go t2
             One                                             -> True
             DHNeutral                                       -> True
             Zero                                            -> True
+            Null                                            -> True
             NatOne                                          -> True
             Lit2 _                                          -> True
             -- subterm rules
@@ -83,6 +82,10 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FMult ts | fAppOne `elem` ts || fAppDHNeutral `elem` ts  || any isProduct ts || invalidMult ts   -> False
             -- xor
             FXor ts | fAppZero `elem` ts  || any isXor ts || invalidXor ts   -> False
+            -- cons
+            FConcat ts | any isConcat ts                      -> False
+            -- irreducible function symbols
+            FAppNoEq o ts | (NoEq o) `S.member` irreducible -> all go ts
             -- point multiplication
             FPMult _                  (viewTerm2 -> FPMult _ _) -> False
             FPMult (viewTerm2 -> One) _                         -> False
@@ -98,6 +101,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
             FMult      ts    -> all go ts
             FXor       ts    -> all go ts
             FUnion     ts    -> all go ts
+            FConcat    ts    -> all go ts
             FNatPlus   ts    -> all go ts
             FAppNoEq _ ts    -> all go ts
             FAppC _    ts    -> all go ts

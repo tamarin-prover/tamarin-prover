@@ -48,7 +48,7 @@ import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.Solver.Contradictions (substCreatesNonNormalTerms)
 import           Theory.Constraint.Solver.Reduction
 import           Theory.Constraint.System
-import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultRule, isDEMapRule)
+import           Theory.Tools.IntruderRules (mkDUnionRule, mkDConcatRule, isDExpRule, isDPMultRule, isDEMapRule)
 import           Theory.Model
 import           Term.Builtin.Convenience
 
@@ -84,7 +84,7 @@ openGoals sys = do
                     || sortOfLNTerm m == LSortPub
                     || sortOfLNTerm m == LSortNat
                     -- handled by 'insertAction'
-                    || isPair m || isInverse m || isProduct m --- || isXor m
+                    || isPair m ||  isConcat m ||  isInverse m || isProduct m -- || isXor m
                     || isUnion m || isNullaryPublicFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved
@@ -97,6 +97,9 @@ openGoals sys = do
           case kFactView (nodeConcFact c sys) of
               Just (DnK, viewTerm2 -> FUnion args) ->
               -- do not solve Union conclusions if they contain only known msg vars
+                  not solved && not (allMsgVarsKnownEarlier c args)
+              Just (DnK, viewTerm2 -> FConcat args) ->
+              -- do not solve concat conclusions if they contain only known msg vars
                   not solved && not (allMsgVarsKnownEarlier c args)
               -- open chains for msg vars are only solved if N5'' is applicable
               Just (DnK,  m) | isMsgVar m          -> (not solved) &&
@@ -321,6 +324,20 @@ solveChain rules (c, p) = do
                 i <- freshLVar "vr" LSortNode
                 let rus = map (ruleACIntrToRuleACInst . mkDUnionRule args)
                               args
+                -- NOTE: We rely on the check that the chain is open here.
+                ru <- disjunctionOfList rus
+                modM sNodes (M.insert i ru)
+                -- FIXME: Do we have to add the PremiseG here so it
+                -- marked as solved?
+                let v = PremIdx 0
+                faPrem <- gets $ nodePremFact (i,v)
+                extendAndMark i ru v faPrem faConc
+         Just (DnK, viewTerm2 -> FConcat args) ->
+             do -- If the chain starts at a union message, we
+                -- compute the applicable destruction rules directly.
+                i <- freshLVar "vr" LSortNode
+                let rus = map (ruleACIntrToRuleACInst . mkDConcatRule args)
+                              (filter (not . isMsgVar) args)
                 -- NOTE: We rely on the check that the chain is open here.
                 ru <- disjunctionOfList rus
                 modM sNodes (M.insert i ru)

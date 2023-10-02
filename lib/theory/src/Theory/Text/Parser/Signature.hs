@@ -59,6 +59,7 @@ builtinsDiffNames = [
   ("bilinear-pairing", bpMaudeSig),
   ("multiset", msetMaudeSig),
   ("xor", xorMaudeSig),
+  ("concatenation", concatMaudeSig),  
   ("symmetric-encryption", symEncMaudeSig),
   ("asymmetric-encryption", asymEncMaudeSig),
   ("signing", signatureMaudeSig),
@@ -164,7 +165,7 @@ equations =
       (symbol "equations" *> colon *> commaSep1 equation) Data.Functor.$> ()
     where
       equation = do
-        rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
+        rrule <- RRule <$> msetterm True llitNoPub <*> (equalSign *> msetterm True llitNoPub)
         case rRuleToCtxtStRule rrule of
           Just str ->
               modifyStateSig (addCtxtStRule str)

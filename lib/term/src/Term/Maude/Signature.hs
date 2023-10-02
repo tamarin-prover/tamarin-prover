@@ -18,6 +18,7 @@ module Term.Maude.Signature (
   , enableMSet
   , enableDiff
   , enableXor
+  , enableConc
   , enableNat
   , stFunSyms
   , stRules
@@ -44,6 +45,7 @@ module Term.Maude.Signature (
   , natMaudeSig
   , bpMaudeSig
   , xorMaudeSig
+  , concatMaudeSig
   , minimalMaudeSig
   , enableDiffMaudeSig
 
@@ -87,6 +89,7 @@ data MaudeSig = MaudeSig
     , enableNat          :: Bool
     , enableXor          :: Bool
     , enableDiff         :: Bool
+    , enableConc         :: Bool
     , stFunSyms          :: S.Set NoEqSym     -- ^ function signature for subterm theory
     , stRules            :: S.Set CtxtStRule  -- ^ rewriting rules for subterm theory
 
@@ -100,7 +103,7 @@ data MaudeSig = MaudeSig
 
 -- | Smart constructor for maude signatures. Computes funSyms and irreducibleFunSyms.
 maudeSig :: MaudeSig -> MaudeSig
-maudeSig msig@MaudeSig{enableDH, enableBP, enableMSet, enableNat, enableXor, enableDiff = _, stFunSyms, stRules} =
+maudeSig msig@MaudeSig{enableDH, enableBP, enableMSet, enableNat, enableXor, enableDiff = _, enableConc, stFunSyms, stRules} =
     msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns, reducibleFunSyms=reducible}
   where
     allfuns = S.map NoEq stFunSyms
@@ -109,22 +112,25 @@ maudeSig msig@MaudeSig{enableDH, enableBP, enableMSet, enableNat, enableXor, ena
                 `S.union` (if enableMSet           then msetFunSig else S.empty)
                 `S.union` (if enableNat            then natFunSig  else S.empty)
                 `S.union` (if enableXor            then xorFunSig  else S.empty)
+                `S.union` (if enableConc           then concatFunSig  else S.empty)                
     irreduciblefuns = allfuns `S.difference` reducibleWithoutMult
     reducibleWithoutMult =
         S.fromList [ o | CtxtStRule (viewTerm -> FApp o _) _ <- S.toList stRules]
-          `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig `S.union` xorReducibleFunSig  --careful! the AC Mult is missing here (probably intentionally)
+          `S.union` dhReducibleFunSig `S.union` bpReducibleFunSig `S.union` xorReducibleFunSig
+        --careful! the AC Mult is missing here (probably intentionally)
     reducible = S.fromList [ o | RRule (viewTerm -> FApp o _) _ <- S.toList $ rrulesForMaudeSig msig ]
 
 -- | A monoid instance to combine maude signatures.
 instance Semigroup MaudeSig where
-    MaudeSig dh1 bp1 mset1 nat1 xor1 diff1 stFunSyms1 stRules1 _ _ _ <>
-      MaudeSig dh2 bp2 mset2 nat2 xor2 diff2 stFunSyms2 stRules2 _ _ _ =
+    MaudeSig dh1 bp1 mset1 nat1 xor1 diff1 conc1 stFunSyms1 stRules1 _ _ _ <>
+      MaudeSig dh2 bp2 mset2 nat2 xor2 diff2 conc2 stFunSyms2 stRules2 _ _ _ =
           maudeSig (mempty {enableDH=dh1||dh2
                            ,enableBP=bp1||bp2
                            ,enableMSet=mset1||mset2
                            ,enableNat=nat1||nat2
                            ,enableXor=xor1||xor2
                            ,enableDiff=diff1||diff2
+                           ,enableConc=conc1||conc2
                            ,stFunSyms=unionExceptPairSym stFunSyms1 stFunSyms2
                            ,stRules=unionExceptPairRules stRules1 stRules2})
           -- an exception to merging is the destructor variants for pair, which is exclusive
@@ -137,9 +143,9 @@ instance Semigroup MaudeSig where
                                          S.union (st1 `S.difference` pairRules) st2
                                        else
                                          S.union st1 st2
-                  
+
 instance Monoid MaudeSig where
-    mempty = MaudeSig False False False False False False S.empty S.empty S.empty S.empty S.empty
+    mempty = MaudeSig False False False False False False False S.empty S.empty S.empty S.empty S.empty
 
 -- | Non-AC function symbols.
 noEqFunSyms :: MaudeSig -> NoEqFunSig
@@ -176,6 +182,10 @@ bpMaudeSig   = maudeSig $ mempty {enableBP=True}
 msetMaudeSig = maudeSig $ mempty {enableMSet=True}
 natMaudeSig  = maudeSig $ mempty {enableNat=True}
 xorMaudeSig  = maudeSig $ mempty {enableXor=True}
+
+-- | Maude signatures for the A symbols.
+concatMaudeSig :: MaudeSig
+concatMaudeSig   = maudeSig $ mempty {enableConc=True}
 
 -- | Maude signatures for the default subterm symbols.
 --pairMaudeSig :: Bool -> MaudeSig
@@ -228,6 +238,7 @@ prettyMaudeSigExcept sig excl = P.vcat
       , (enableMSet, "multiset")
       , (enableNat,  "natural-numbers")
       , (enableXor,  "xor")
+      , (enableConc, "concatenation")
       ]
 
     ppFunSymb (f,(k,priv,constr)) = P.text $ BC.unpack f ++ "/" ++ show k

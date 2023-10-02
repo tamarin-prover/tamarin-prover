@@ -56,6 +56,7 @@ module Theory.Text.Parser.Token (
 
   , opXor
 
+  , opConcat
   , opEqual
   , opSubterm
   , opLess
@@ -475,6 +476,10 @@ opPlus = symbol_ "%+"
 -- | The multiset operator @+@.
 opUnion :: Parser ()
 opUnion = symbol_ "++" <|> symbol_ "+"
+
+-- | The cons operator @*@.
+opConcat :: Parser ()
+opConcat = symbol_ "||"
 
 -- | The xor operator @XOR@ or @⊕@.
 opXor :: Parser ()

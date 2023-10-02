@@ -421,6 +421,12 @@ simpAbstractFun (subst:others) = case commonOperators of
         let substs' = zipWith (abstractTwo o v fv1 fv2) (subst:others) argss
             fsubst  = substFromList [(v, fApp o (map varTerm [fv1,fv2]))]
         return $ Just (Just fsubst, [S.fromList substs'])
+    (v, o@(A _), argss):_ -> do
+        fv1 <- freshLVar "x" LSortMsg
+        fv2 <- freshLVar "x" LSortMsg
+        let substs' = zipWith (abstractTwo o v fv1 fv2) (subst:others) argss
+            fsubst  = substFromList [(v, fApp o (map varTerm [fv1,fv2]))]
+        return $ Just (Just fsubst, [S.fromList substs'])
     (_, _ ,_):_ ->
         error "simpAbstract: impossible, invalid arities or List operator encountered."
   where

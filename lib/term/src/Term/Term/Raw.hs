@@ -31,6 +31,7 @@ module Term.Term.Raw (
     , lit
     , fApp
     , fAppAC
+    , fAppA
     , fAppC
     , fAppNoEq
     , fAppList
@@ -102,6 +103,7 @@ termViewToTerm (FApp sym ts) = FAPP sym ts
 {-# INLINE fApp #-}
 fApp :: Ord a => FunSym -> [Term a] -> Term a
 fApp (AC acSym)  ts = fAppAC acSym ts
+fApp (A aSym)    ts = fAppA aSym ts
 fApp (C o)       ts = fAppC o ts
 fApp List        ts = FAPP List ts
 fApp s@(NoEq _)  ts = FAPP s ts
@@ -118,6 +120,20 @@ fAppAC acsym as  =
     isOTerm _                     = False
     (o_as0, non_o_as) = partition isOTerm as
     o_as              = [ a | FAPP _ ts <- o_as0, a <- ts ]
+
+-- | Smart constructor for A terms (built using concat).
+fAppA :: Ord a => ASym -> [Term a] -> Term a
+fAppA _ []  = error "Term.fAppA: empty argument list"
+fAppA _ [a] = a
+fAppA asym as =
+    FAPP (A asym) $ flatten as
+  where
+    o = A asym
+    isOTerm (FAPP o' _) | o' == o = True
+    isOTerm _                     = False
+    flatten [] = []
+    flatten (t@(FAPP _ ts):xs) | isOTerm t = ts ++ flatten xs
+    flatten (t:xs) = t : flatten xs
 
 -- | Smart constructor for C terms.
 fAppC :: Ord a => CSym -> [Term a] -> Term a
@@ -150,6 +166,7 @@ data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | O
                  | FUnion [Term a]
                  | FNatPlus [Term a] | NatOne
                  | FPair (Term a) (Term a)
+                 | FConcat [Term a] | Null
                  | FDiff (Term a) (Term a)
                  | FAppNoEq NoEqSym [Term a]
                  | FAppC CSym [Term a]
@@ -169,6 +186,11 @@ viewTerm2 t@(FAPP (AC o) ts)
     acSymToConstr Union   = FUnion
     acSymToConstr NatPlus = FNatPlus
     acSymToConstr Xor   = FXor
+viewTerm2 t@(FAPP (A o) ts)
+  | length ts < 2 = error $ "viewTerm2: malformed term `"++show t++"'"
+  | otherwise     = (aSymToConstr o) ts
+  where
+    aSymToConstr Concat  = FConcat
 viewTerm2 (FAPP (C EMap) [ t1 ,t2 ]) = FEMap t1 t2
 viewTerm2 t@(FAPP (C _)  _)          = error $ "viewTerm2: malformed term `"++show t++"'"
 viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
@@ -216,6 +238,7 @@ instance Show a => Show (Term a) where
         FApp   (C EMap) as     -> BC.unpack emapSymString++"("++(intercalate "," (map show as))++")"
         FApp   List as         -> "LIST"++"("++(intercalate "," (map show as))++")"
         FApp   (AC o) as       -> show o++"("++(intercalate "," (map show as))++")"
+        FApp   (A o) as       -> show o++"("++(intercalate "," (map show as))++")"
 
 -- | The fold function for @Term a@.
 {-# INLINE foldTerm #-}
@@ -227,4 +250,3 @@ foldTerm fLIT fFAPP t = go t
 
 instance Sized a => Sized (Term a) where
     size = foldTerm size (const $ \xs -> sum xs + 1)
-
