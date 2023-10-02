@@ -2,7 +2,6 @@
 -- Copyright   : (c) 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Pretty-printing with support for highlighting keywords and comments.
