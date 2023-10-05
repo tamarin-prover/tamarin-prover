@@ -4,7 +4,6 @@
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Pretty printing and parsing of Maude terms and replies.
 module Term.Maude.Parser (

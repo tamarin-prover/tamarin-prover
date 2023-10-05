@@ -5,7 +5,6 @@
 -- Copyright   : (c) 2011,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Big-step proofs computing possible sources of a fact.
