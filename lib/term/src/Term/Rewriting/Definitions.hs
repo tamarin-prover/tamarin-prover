@@ -2,7 +2,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt, Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Term Equalities, Matching Problems, and Subterm Rules.
 module Term.Rewriting.Definitions (

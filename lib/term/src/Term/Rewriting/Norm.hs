@@ -4,7 +4,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- This module implements normalization and normal-form checks of terms.
 module Term.Rewriting.Norm (

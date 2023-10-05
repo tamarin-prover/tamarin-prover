@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2010 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
 -- Types and instances to handle series of disjunctions and conjunctions.
