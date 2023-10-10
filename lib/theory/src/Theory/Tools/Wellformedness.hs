@@ -5,7 +5,6 @@
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Wellformedness checks for intruder variants, protocol rules, and

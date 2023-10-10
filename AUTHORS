@@ -1,13 +1,11 @@
 Authors:
   Benedikt Schmidt <beschmi@gmail.com>
-  Simon Meier      <iridcode@gmail.com>
-
-Obervational Equivalence authors:
+  Simon Meier <iridcode@gmail.com>
+  Cas Cremers <cremers@cispa.de>
   Jannik Dreier <research@jannikdreier.net>
-  Ralf Sasse    <ralf.sasse@gmail.com>
+  Ralf Sasse <ralf.sasse@gmail.com>
 
 Contributors:
-  protocol models, GUI:   Cas Cremers <cremers@cispa.de>
   original web interface: Cedric Staub <cs@cssx.ch>
   YubiKey models, SAPIC:  Robert Kuennemann <robert.kuennemann@cispa.de>
   and many others

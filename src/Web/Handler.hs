@@ -4,7 +4,6 @@ Description :  Application-specific handler functions.
 Copyright   :  (c) 2011 Cedric Staub, 2012 Benedikt Schmidt
 License     :  GPL-3
 
-Maintainer  :  Cedric Staub <cstaub@ethz.ch>
 Stability   :  experimental
 Portability :  non-portable
 -}

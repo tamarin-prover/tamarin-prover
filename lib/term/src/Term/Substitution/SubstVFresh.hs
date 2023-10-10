@@ -7,7 +7,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Substitutions with fresh (or bound) variables in the range.
 module Term.Substitution.SubstVFresh (

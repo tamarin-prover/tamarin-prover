@@ -13,7 +13,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt, Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
 -- Support for reasoning with and about disjunctions of substitutions.

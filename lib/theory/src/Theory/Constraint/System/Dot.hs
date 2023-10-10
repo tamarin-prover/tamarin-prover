@@ -4,7 +4,6 @@
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Conversion of the graph part of a sequent to a Graphviz Dot file.

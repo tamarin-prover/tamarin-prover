@@ -5,7 +5,6 @@
 -- Copyright   : (c) 2011-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Context Subterm rewriting rules.
 module Term.SubtermRule (

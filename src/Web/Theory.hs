@@ -9,7 +9,6 @@ Description :  Pretty-printing security protocol theories into HTML code.
 Copyright   :  (c) 2011, 2012 Simon Meier & Cedric Staub
 License     :  GPL-3
 
-Maintainer  :  Simon Meier <iridcode@gmail.com>
 Stability   :  experimental
 Portability :  non-portable
 -}
