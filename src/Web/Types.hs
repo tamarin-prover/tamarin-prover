@@ -15,7 +15,6 @@ Description :  Central data type and Yesod typeclass instances.
 Copyright   :  (c) 2011 Cedric Staub
 License     :  GPL-3
 
-Maintainer  :  Simon Meier <iridcode@gmail.com>
 Stability   :  experimental
 Portability :  non-portable
 -}

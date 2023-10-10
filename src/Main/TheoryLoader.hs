@@ -8,7 +8,6 @@
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Theory loading infrastructure.
@@ -97,6 +96,8 @@ import qualified Accountability.Generation as Acc
 
 import           GHC.Records (HasField(getField))
 
+import           Debug.Trace
+
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
 ------------------------------------------------------------------------------
@@ -155,7 +156,7 @@ theoryLoadFlags =
   , flagOpt "5" ["saturation","s"] (updateArg "SaturationLimit" ) "PositiveInteger"
       "Limits the number of saturations during precomputations (default 5)"
 
-  , flagOpt "5" ["derivcheck-timeout"] (updateArg "derivcheck-timeout" ) "INT"
+  , flagOpt "5" ["derivcheck-timeout","d"] (updateArg "derivcheck-timeout" ) "INT"
       "Set timeout for message derivation checks in sec (default 5). 0 deactivates check."
 
 
@@ -368,47 +369,58 @@ loadTheory thyOpts input inFile = do
     unwrapError (Right (Left e)) = Left e
     unwrapError (Right (Right v)) = Right $ Right v
 
-    withTheory     f t = bitraverse f return t
+    withTheory f = bitraverse f return
 
 closeTheory :: MonadIO m => MonadError TheoryLoadError m => String -> TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
 closeTheory version thyOpts sign srcThy = do
-  let preReport = either (\t -> (Sapic.checkWellformedness t ++ Acc.checkWellformedness t))
+  let name = either (L.get thyName) (L.get diffThyName) srcThy
+
+  traceM ("[Theory " ++ show name ++ "] Loading Theory")
+
+  let preReport = either (\t -> Sapic.checkWellformedness t ++ Acc.checkWellformedness t)
                          (const []) srcThy
 
   transThy   <- withTheory (return . removeTranslationItems) srcThy
 
-  let transReport = either (\t -> checkWellformedness t sign)
-                           (\t -> checkWellformednessDiff t sign) transThy
+  let transReport = either (`checkWellformedness` sign)
+                           (`checkWellformednessDiff` sign) transThy
 
   let wellformednessReport = preReport ++ transReport
 
-  when (quitOnWarning && (not $ null wellformednessReport)) (throwError $ WarningError wellformednessReport)
+  when (quitOnWarning && not (null wellformednessReport)) (throwError $ WarningError wellformednessReport)
 
   deducThy   <- bitraverse (return . addMessageDeductionRuleVariants)
                            (return . addMessageDeductionRuleVariantsDiff) transThy
 
-  derivCheckSignature <- Control.Monad.Except.liftIO $ toSignatureWithMaude (get oMaudePath thyOpts) $ maudePublicSig (toSignaturePure sign)
   variableReport <- case compare derivChecks 0 of
     EQ -> pure $ Just []
-    _ -> Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ evaluate . force $ (either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
-      (\t-> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver) deducThy)
+    _ -> do
+      traceM ("[Theory " ++ show name ++ "] Derivation Checks Begin")
+      derivCheckSignature <- Control.Monad.Except.liftIO $ toSignatureWithMaude (get oMaudePath thyOpts) $ maudePublicSig (toSignaturePure sign)
+      rep <- Control.Monad.Except.liftIO $ timeout (1000000 * derivChecks) $ evaluate . force $ either (\t -> checkVariableDeducability  t derivCheckSignature autoSources defaultProver)
+        (\t-> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver) deducThy
+      traceM ("[Theory " ++ show name ++ "] Derivation Checks End")
+      return rep
 
-  let report = wellformednessReport  ++ (fromMaybe [(underlineTopic "Derivation Checks", Pretty.text "Derivation checks timed out. Use --derivcheck-timeout=INT to configure timeout, 0 to deactivate.")] variableReport)
 
-  checkedThy <- bitraverse (\t -> return $ addComment     (reportToDoc report) t)
-                           (\t -> return $ addDiffComment (reportToDoc report) t) deducThy
+  let report = wellformednessReport  ++ fromMaybe [(underlineTopic "Derivation Checks", Pretty.text "Derivation checks timed out. Use --derivcheck-timeout=INT to configure timeout, 0 to deactivate.")] variableReport
 
-  when (quitOnWarning && (not $ null report)) (throwError $ WarningError report)
+  checkedThy <- bitraverse (return . addComment     (reportToDoc report))
+                           (return . addDiffComment (reportToDoc report)) deducThy
+
+  when (quitOnWarning && not (null report)) (throwError $ WarningError report)
 
   diffLemThy <- withDiffTheory (return . addDefaultDiffLemma) checkedThy
-  closedThy  <- bitraverse (\t -> return $ closeTheoryWithMaude     sign t autoSources)
+  closedThy  <- bitraverse (\t -> return $ closeTheoryWithMaude     sign t autoSources True)
                            (\t -> return $ closeDiffTheoryWithMaude sign t autoSources) diffLemThy
-  partialThy <- bitraverse (return . (maybe id (\s -> applyPartialEvaluation     s autoSources) partialStyle))
-                           (return . (maybe id (\s -> applyPartialEvaluationDiff s autoSources) partialStyle)) closedThy
-  provedThy  <- bitraverse (\t -> return $ proveTheory     (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover t)
-                           (\t -> return $ proveDiffTheory (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover diffProver t) partialThy
+  partialThy <- bitraverse (return . maybe id (`applyPartialEvaluation` autoSources) partialStyle)
+                           (return . maybe id (`applyPartialEvaluationDiff` autoSources) partialStyle) closedThy
+  provedThy  <- bitraverse (return . proveTheory     (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover)
+                           (return . proveDiffTheory (lemmaSelectorByModule thyOpts &&& lemmaSelector thyOpts) prover diffProver) partialThy
   provedThyWithVersion <- bitraverse (return . addComment (Pretty.text version))
                            (return . addDiffComment (Pretty.text version) )  provedThy
+
+  traceM ("[Theory " ++ show name ++ "] Theory Loaded")
 
   return (report, provedThyWithVersion)
 
@@ -425,7 +437,7 @@ closeTheory version thyOpts sign srcThy = do
       , funSyms = makepublicsym (funSyms (getSignature s))
       , irreducibleFunSyms = makepublicsym (irreducibleFunSyms (getSignature s))
       , reducibleFunSyms = makepublicsym (reducibleFunSyms (getSignature s))}
-    getSignature s =  (Data.Label.get sigpMaudeSig s)
+    getSignature =  Data.Label.get sigpMaudeSig
     makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name,(int, Public, construct)))
     makepublicsym  = Data.Set.map (\el -> case el of
       NoEq (name, (int, _, constr)) -> NoEq (name,(int, Public, constr))
@@ -444,8 +456,8 @@ closeTheory version thyOpts sign srcThy = do
                         [ Pretty.text "WARNING: the following wellformedness checks failed!"
                         , prettyWfErrorReport report ]
 
-    withTheory     f t = bitraverse f return t
-    withDiffTheory f t = bitraverse return f t
+    withTheory f = bitraverse f return
+    withDiffTheory = bitraverse return
 
 (&&&) :: (t -> Bool) -> (t -> Bool) -> t -> Bool
 (&&&) f g x = f x && g x

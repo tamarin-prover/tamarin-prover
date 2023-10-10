@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- A variant of "Data.Monoid" that also exports '(<>)' for 'mappend'.
 module Extension.Data.Monoid (

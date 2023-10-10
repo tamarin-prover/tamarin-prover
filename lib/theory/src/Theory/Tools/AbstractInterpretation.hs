@@ -6,7 +6,6 @@
 -- Copyright   : (c) 2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- Abstract interpretation for partial evaluation of multiset rewriting
 -- systems.

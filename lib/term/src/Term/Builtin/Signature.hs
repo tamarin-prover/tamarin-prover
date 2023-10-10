@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Builtin function symbols and signatures.
 module Term.Builtin.Signature where
