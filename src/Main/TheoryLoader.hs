@@ -80,7 +80,7 @@ import           TheoryObject                        (diffThyOptions)
 import qualified Sapic
 import           Main.Console
 
-import           Text.Read (readEither, readMaybe)
+import           Text.Read (readEither)
 import           Text.Parsec                hiding ((<|>),try,parse)
 
 import           Safe
@@ -96,6 +96,7 @@ import qualified Accountability as Acc
 import qualified Accountability.Generation as Acc
 
 import           GHC.Records (HasField(getField))
+import           GHC.Num (integerFromInt)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -248,9 +249,14 @@ mkTheoryLoadOptions as = TheoryLoadOptions
       Just "seqdfs" -> return CutSingleThreadDFS
       Just unknown  -> throwError $ ArgumentError ("unknown stop-on-trace method: " ++ unknown)
 
-    proofBound = case maybe (Right Nothing) readEither (findArg "bound" as) of
-      Left _ -> throwError $ ArgumentError "bound: invalid bound given"
-      Right b -> liftEither $ Right b
+    parseIntArg args defaultValue conv errMsg = case args of
+      []    -> return defaultValue
+      (x:_) -> case (readEither x :: Either String Int) of
+        Left  _ -> throwError $ ArgumentError errMsg
+        Right i -> return $ conv i
+      -- FIXME : provide option to handle potential error without crash (ie, take default value and raise error but continue)
+
+    proofBound = parseIntArg (findArg "bound" as) Nothing Just "bound: invalid bound given"
 
     heuristic = case findArg "heuristic" as of
         Just rawRankings@(_:_) -> return $ Just $ roundRobinHeuristic
@@ -265,7 +271,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
       Just "summary" -> return $ Just Summary
       Just "verbose" -> return $ Just Tracing
       Just _         -> throwError $ ArgumentError "partial-evaluation: unknown option"
-      Nothing        -> return $ Nothing
+      Nothing        -> return   Nothing
 
     defines       = return $ findArg "defines" as
     diffMode      = return $ argExists "diff" as
@@ -286,24 +292,15 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 
     chain = findArg "OpenChainsLimit" as
     chainDefault = L.get oOpenChain defaultTheoryLoadOptions
-    openchain = if not (null chain)
-                  then return (fromMaybe chainDefault (readMaybe (head chain) ::Maybe Integer))
-                  else return chainDefault
-    -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
+    openchain = parseIntArg chain chainDefault integerFromInt "OpenChainsLimit: invalid bound given"
 
     sat = findArg "SaturationLimit" as
     satDefault = L.get oSaturation defaultTheoryLoadOptions
-    saturation = if not (null sat)
-                   then return (fromMaybe satDefault (readMaybe (head sat) ::Maybe Integer))
-                   else return satDefault
-    -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
-
+    saturation = parseIntArg sat satDefault integerFromInt "SaturationLimit: invalid bound given"
+    
     derivchecks = findArg "derivcheck-timeout" as
     derivDefault = L.get oDerivationChecks defaultTheoryLoadOptions
-    deriv = if not (null derivchecks)
-                   then return (fromMaybe derivDefault (readMaybe (head derivchecks) :: Maybe Int))
-                   else return derivDefault
-    -- FIXME : use "read" and handle potential error without crash (with default version and raising error)
+    deriv = parseIntArg derivchecks derivDefault id "derivcheck-timeout: invalid bound given"
 
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
 lemmaSelectorByModule thyOpt lem = case lemmaModules of
