@@ -70,6 +70,7 @@ let P =
     out(pk(sk($y)));
     (S | A | J | !Adv)
 
+process:
 !P
 
 
