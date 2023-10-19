@@ -541,12 +541,11 @@ transitiveReduction sys totalRed=
     where
         oldLessesWithR = S.toList $ get sLessAtoms sys
         oldLesses = rawLessRel sys
-        newLesses =
-            case totalRed of
-                True ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
+        newLesses = if totalRed
+            then [(x,y,z)| (x,y,z)<- oldLessesWithR,
                             (x,y) `elem` (D.transRed oldLesses) ]
-                False ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
-                            (x,y) `elem` (D.transRed oldLesses) || z == Formula]
+            else [(x,y,z)| (x,y,z)<- oldLessesWithR,
+                            (x,y) `elem` (D.transRed oldLesses) || z == Formula || z == Adversary ]
 
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
