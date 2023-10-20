@@ -200,8 +200,8 @@ the function definition.
     binary_fun  := <all-binary-functions-defined-up-to-here>
     nary_app    := nary_fun '(' multterm* ')'
 
-    literal     := "'"  ident "'" // a fixed, public name
-                 | "~'" ident "'" // a fixed, fresh name
+    literal     := "'"  ~('\'' | '\n')+ "'" // a fixed, public name
+                 | "~'" ~('\'' | '\n')+ "'" // a fixed, fresh name
                  | nonnode_var    // a non-temporal variable
     nonnode_var := ['$'] ident ['.' natural]         // 'pub' sort prefix
                  | ident ['.' natural] ':' 'pub'     // 'pub' sort suffix
