@@ -22,9 +22,6 @@ import qualified Text.PrettyPrint.Class          as Pretty
 
 import           Theory hiding (closeTheory)
 
-import qualified Sapic
-import qualified Export
-
 import           Main.Console
 import           Main.Environment
 import           Main.TheoryLoader
@@ -35,7 +32,6 @@ import           Control.Monad.Except (MonadIO(liftIO), runExceptT)
 import           System.Exit (die)
 import Theory.Tools.Wellformedness (prettyWfErrorReport)
 import           Text.Printf                     (printf)
-
 
 -- | Batch processing mode.
 batchMode :: TamarinMode
@@ -80,16 +76,17 @@ batchMode = tamarinMode
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as
   | null inFiles = helpAndExit thisMode (Just "no input files given")
-  | argExists "parseOnly" as || argExists "outModule" as = do
-      versionData <- ensureMaudeAndGetVersion as
-      res <- mapM (processThy versionData) inFiles
-      let (docs, reps) = unzip res
-
-      let repsWithInfo = ppRep <$> zip4 inFiles (repeat Nothing) (repeat Nothing) reps
-      let summary = Pretty.vcat $ intersperse (Pretty.text "") repsWithInfo
+  | argExists "parseOnly" as = do
+      res <- mapM (processThy "") inFiles
+      let (docs, _) = unzip res
 
       mapM_ (putStrLn . renderDoc) docs
-      putStrLn $ renderDoc $ ppSummary summary
+  | argExists "outModule" as = do
+      versionData <- ensureMaudeAndGetVersion as
+      res <- mapM (processThy versionData) inFiles
+      let (docs, _) = unzip res
+
+      mapM_ (putStrLn . renderDoc) docs
   | otherwise = do
       versionData <- ensureMaudeAndGetVersion as
       resTimed <- mapM (timedIO . processThy versionData) inFiles
@@ -170,14 +167,22 @@ run thisMode as
       let sig = either (get thySignature) (get diffThySignature) thy
       sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath thyLoadOptions) sig
 
+      -- | Pretty print the theory as is without performing any checks.
       if isParseOnlyMode then do
-        (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
+        either (\t -> return (prettyOpenTheory t, Pretty.emptyDoc))
+               (\d -> return (prettyOpenDiffTheory d, Pretty.emptyDoc)) thy
 
-        thy'' <- bitraverse (return . (modify thyItems (++ (TextItem <$> formalComments thy'))))
-                            (return . (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))) thy
+      -- | Translate and check thoery based on specified output module.
+      else if isTranslateOnlyMode then do
+        (report, thy') <- translateAndCheckTheory versionData thyLoadOptions sig' thy
 
-        either (\t -> bisequence (liftIO $ choosePretty t, return $ ppWf report))
+        thy'' <- bitraverse (return . modify thyItems (++ (TextItem <$> formalComments thy')))
+                            (return . modify diffThyItems (++ (DiffTextItem <$> formalComments thy'))) thy'
+
+        either (\t -> bisequence (liftIO $ prettyOpenTheoryByModule thyLoadOptions t, return $ ppWf report))
                (\d -> return (prettyOpenDiffTheory d, ppWf report)) thy''
+
+      -- | Close and potentially prove theory.
       else do
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
         either (\t -> return (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
@@ -186,29 +191,18 @@ run thisMode as
         formalComments = either (filter (/=("","")) . theoryFormalComments) (filter (/=("", "")) . diffTheoryFormalComments)
 
         isParseOnlyMode = get oParseOnlyMode thyLoadOptions
+        isTranslateOnlyMode = get oOutputModule thyLoadOptions `elem` 
+                                [ModuleSpthy, ModuleSpthyTyped, ModuleProVerif, ModuleProVerifEquivalence, ModuleDeepSec]
 
         handleError e@(ParserError _) = die $ show e
         handleError (WarningError report) = do
-          putStrLn $ renderDoc $ Pretty.vcat [ Pretty.text ""
-                                             , Pretty.text "WARNING: the following wellformedness checks failed!"
-                                             , Pretty.text ""
-                                             , prettyWfErrorReport report
-                                             , Pretty.text "" ]
+          putStrLn $ renderDoc $ Pretty.vcat $ [ Pretty.text ""
+                                               , Pretty.text "WARNING: the following wellformedness checks failed!" ]
+                                            ++ [ Pretty.text "" | not $ null report ]
+                                            ++ [ prettyWfErrorReport report
+                                               , Pretty.text "" ]
           die "quit-on-warning mode selected - aborting on wellformedness errors."
 
         ppWf []  = Pretty.emptyDoc
         ppWf rep = Pretty.vcat $ Pretty.text ("WARNING: " ++ show (length rep) ++ " wellformedness check failed!")
                              : [ Pretty.text   "         The analysis results might be wrong!" | get oProveMode thyLoadOptions ]
-
-        choosePretty = case get oOutputModule thyLoadOptions of
-          Nothing               -> return . prettyOpenTheory  <=< Sapic.warnings -- output as is, including SAPIC elements
-          Just ModuleSpthy      -> return . prettyOpenTheory  <=< Sapic.warnings -- output as is, including SAPIC elements
-          Just ModuleSpthyTyped -> return . prettyOpenTheory <=< Sapic.typeTheory <=< Sapic.warnings  -- additionally type
-          Just ModuleMsr        -> return . prettyOpenTranslatedTheory
-            <=< (return . filterLemma (lemmaSelector thyLoadOptions))
-            <=< (return . removeTranslationItems)
-            <=< Sapic.typeTheory
-            <=< Sapic.warnings
-          Just ModuleProVerif              -> Export.prettyProVerifTheory (lemmaSelector thyLoadOptions) <=< Sapic.typeTheoryEnv <=< Sapic.warnings
-          Just ModuleProVerifEquivalence   -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv <=< Sapic.warnings
-          Just ModuleDeepSec               -> Export.prettyDeepSecTheory <=< Sapic.typeTheory <=< Sapic.warnings
