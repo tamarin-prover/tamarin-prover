@@ -93,8 +93,8 @@ translationWarning s cont = unsafePerformIO printWarning
 -- Core Proverif Export
 ------------------------------------------------------------------------------
 
-proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> [d] -> d
-proverifTemplate headers queries process macroproc ruleproc lemmas =
+proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> [d] -> [d] -> d
+proverifTemplate headers queries process macroproc ruleproc lemmas comments =
   vcat headers
     $$ vcat queries
     $$ vcat lemmas
@@ -102,13 +102,14 @@ proverifTemplate headers queries process macroproc ruleproc lemmas =
     $$ vcat ruleproc
     $$ text "process"
     $$ nest 4 process
+    $--$ vcat (intersperse (text "") comments)
 
 prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO Doc
 prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
   headers2 <- checkDuplicates $ (S.toList . filterHeaders $ baseHeaders `S.union` headers `S.union` prochd `S.union` macroprochd) ++ S.toList (filterHeaders ruleHeaders)
   let hd = attribHeaders tc headers2
-  return $ proverifTemplate hd queries proc' macroproc ruleproc lemmas
+  return $ proverifTemplate hd queries proc' macroproc ruleproc lemmas comments
   where
     tc = emptyTC {predicates = theoryPredicates thy}
     (proc, prochd, hasBoundState, hasUnboundState) = loadProc tc thy
@@ -130,6 +131,7 @@ prettyProVerifTheory lemSel (thy, typEnv) = do
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
     uncurry4 f (a,b,c,d) = f a b c d
+    comments = [ text "(*" $$ text bd $$ text "*)" | (_, bd) <- theoryFormalComments thy ]
 
 -- ProVerif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProVerifHeader
@@ -244,12 +246,13 @@ loadQueries thy =
 -- Core Proverif Equivalence Export
 ------------------------------------------------------------------------------
 
-proverifEquivTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> d
-proverifEquivTemplate headers queries equivlemmas macroproc =
+proverifEquivTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> [d] -> d
+proverifEquivTemplate headers queries equivlemmas macroproc comments =
   vcat headers
     $$ vcat queries
     $$ vcat macroproc
     $$ vcat equivlemmas
+    $--$ vcat (intersperse (text "") comments)
 
 prettyProVerifEquivTheory :: (OpenTheory, TypingEnvironment) -> IO Doc
 prettyProVerifEquivTheory (thy, typEnv) = do
@@ -257,7 +260,7 @@ prettyProVerifEquivTheory (thy, typEnv) = do
   headers2 <- checkDuplicates . S.toList . filterHeaders $ baseHeaders `S.union` headers `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd
   let hd = attribHeaders tc headers2
   fproc <- finalproc
-  return $ proverifEquivTemplate hd queries fproc macroproc
+  return $ proverifEquivTemplate hd queries fproc macroproc comments
   where
     tc = emptyTC {predicates = theoryPredicates thy}
     (equivlemmas, equivhd, hasBoundState, hasUnboundState) = loadEquivProc tc thy
@@ -271,17 +274,19 @@ prettyProVerifEquivTheory (thy, typEnv) = do
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
+    comments = [ text "(*" $$ text bd $$ text "*)" | (_, bd) <- theoryFormalComments thy ]
 
 ------------------------------------------------------------------------------
 -- Core DeepSec Export
 ------------------------------------------------------------------------------
 
-deepsecTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> d
-deepsecTemplate headers macroproc requests equivlemmas =
+deepsecTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> [d] -> d
+deepsecTemplate headers macroproc requests equivlemmas comments =
   vcat headers
     $$ vcat macroproc
     $$ vcat requests
     $$ vcat equivlemmas
+    $--$ vcat (intersperse (text "") comments)
 
 emptyTypeEnv :: TypingEnvironment
 emptyTypeEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
@@ -296,12 +301,13 @@ prettyDeepSecTheory thy = do
                 `S.union` macroprochd
                 `S.union` equivhd
             )
-  return $ deepsecTemplate hd macroproc requests equivlemmas
+  return $ deepsecTemplate hd macroproc requests equivlemmas comments
   where
     tc = emptyTC {trans = DeepSec}
     requests = loadRequests thy
     (macroproc, macroprochd) = loadMacroProc tc thy
     (equivlemmas, equivhd, _, _) = loadEquivProc tc thy
+    comments = [ text "(*" $$ text bd $$ text "*)" | (_, bd) <- theoryFormalComments thy ]
 
 -- Loader of the export functions
 ------------------------------------------------------------------------------
