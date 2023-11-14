@@ -45,7 +45,7 @@ clean:	tamarin-clean
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.7.1
+VERSION=1.9.0
 
 ###############################################################################
 ## Case Studies

@@ -284,10 +284,10 @@ Failed to derive Variable(s): ~prog_, ~prog_11, a.1
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
-Compiled at: 2023-07-31 09:45:04.338688526 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -302,7 +302,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini6.spthy
 
   output:          examples/sapic/fast/feature-progress/mini6.spthy.tmp
-  processing time: 0.28s
+  processing time: 0.22s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

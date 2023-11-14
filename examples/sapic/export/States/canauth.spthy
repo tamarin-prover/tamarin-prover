@@ -10,7 +10,7 @@ section{* CANauth protocol *}
    Tamarin: ?
 
 */
-builtins: dest-pairing, multiset
+builtins: dest-pairing, natural-numbers
 
 options: translation-state-optimisation
 
@@ -56,7 +56,7 @@ let ReceiverA =
   lookup cellA as i:nat in
   event Read(cellA,i);
   in(<msg,'SIGN',j:nat,h>);
-  if i (<) j then
+  if i << j then
     if h = hmac(sk,<j,msg>)
     then
       event Received(sk,msg,j);
@@ -70,9 +70,9 @@ let SenderA =
   lookup cellA as i:nat in
   event Read(cellA,i);
   new msg;
-  event Sent(sk,msg,i+'one');
-  out(<msg,'SIGN',i+'one',hmac(sk,<i+'one',msg>)>);
-  insert cellA, i+'one';
+  event Sent(sk,msg,i%+%1);
+  out(<msg,'SIGN',i%+%1,hmac(sk,<i%+%1,msg>)>);
+  insert cellA, i%+%1;
   unlock cellA
 
 let ReceiverB =
@@ -80,7 +80,7 @@ let ReceiverB =
   lookup cellB as i:nat in
   event Read(cellB,i);
   in(<msg,'SIGN',j:nat,h>);
-  if i (<) j then
+  if i << j then
     if h = hmac(sk,<j,msg>)
     then
       event Received(sk,msg,j);
@@ -94,10 +94,10 @@ let SenderB =
   lookup cellB as i:nat in
   event Read(cellB,i);
   new msg;
-  let j:nat = i+'one' in
+  let j:nat = i%+%1 in
   event Sent(sk,msg,j);
-  out(<msg,'SIGN',i+'one',hmac(sk,<i+'one',msg>)>);
-  insert cellB, i+'one';
+  out(<msg,'SIGN',i%+%1,hmac(sk,<i%+%1,msg>)>);
+  insert cellB, i%+%1;
   unlock cellB
 
   /* We generate an unbounded number of sessions, each with two senders and two receivers    */
@@ -110,8 +110,8 @@ let SenderB =
   /* unbounded number of cells.                                                              */
 process:
 !( new sk;
-   new cellA; insert cellA, 'zero'; event InitC(cellA);
-   new cellB; insert cellB, 'zero'; event InitC(cellB);
+   new cellA; insert cellA, %1; event InitC(cellA);
+   new cellB; insert cellB, %1; event InitC(cellB);
    ! ( ReceiverA || SenderA || ReceiverB || SenderB )
 )
 

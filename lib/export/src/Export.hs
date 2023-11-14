@@ -204,6 +204,7 @@ filterHeaders = S.filter (not . isForbidden)
     isForbidden (Fun "fun" "true" _ _ _) = True
     isForbidden (Type "bitstring") = True
     isForbidden (Type "channel") = True
+    isForbidden (Type "nat") = True    
     isForbidden _ = False
 
 -- We cannot define a constant and a function with the same name in proverif
@@ -339,6 +340,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       Lit v -> ppLit v
       FApp (AC Xor) ts -> ppXor ts
       FApp (AC o) ts -> ppTerms (ppACOp o) 1 "(" ")" ts
+      FApp (NoEq s) [] | s == natOneSym -> text "1"      
       FApp (NoEq s) [t1, t2] | s == expSym -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
       FApp (NoEq s) [t1, t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
       FApp (NoEq _) [t1, t2] | isPair tm -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -348,8 +350,9 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       FApp List ts -> ppFun (BC.pack "LIST") ts
 
     ppACOp Mult = "*"
-    ppACOp Union = "+"
+    ppACOp NatPlus = "+"
     ppACOp Xor = "⊕"
+    ppACOp u = translationFail $ "Unsupported operator " ++ show u
 
     ppXor [] = text "one"
     ppXor [t1, t2] = text "xor(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -393,6 +396,10 @@ auxppSapicTerm tc mVars isPattern = auxppTerm ppLit
         | S.member lvar mVars ->
           translationWarning ("Pattern matching on fresh variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
           text "=" <> ppLVar lvar
+      Var (SapicLVar lvar@(LVar n LSortNat _) _)
+        | S.member lvar mVars ->
+          translationWarning ("Pattern matching on natural variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
+          text "=" <> ppLVar lvar          
       Var (SapicLVar lvar _)
         | S.member lvar mVars -> text "=" <> ppLVar lvar
       l | isPattern -> ppTypeLit tc l
@@ -880,6 +887,7 @@ ppProtoAtom _ True _ ppT (EqE l r) =
   (sep [ppT l <-> text "<>", ppT r], M.empty)
 -- sep [ppNTerm l <-> text "≈", ppNTerm r]
 ppProtoAtom _ _ _ ppT (Less u v) = (ppT u <-> opLess <-> ppT v, M.empty)
+ppProtoAtom _ _ _ ppT (Subterm u v) = (ppT u <-> opLess <-> ppT v, M.empty)
 ppProtoAtom _ _ _ _ (Last i) = (operator_ "last" <> parens (text (show i)), M.empty)
 
 ppAtom :: TypingEnvironment -> Bool -> (LNTerm -> Doc) -> ProtoAtom s LNTerm -> (Doc, M.Map LVar SapicType)
@@ -1077,9 +1085,8 @@ loadHeaders tc thy typeEnv = do
       foldl
         ( \y x -> case List.lookup x builtins of
             Nothing -> case x of
-              "multiset"         -> -- on the long run, this should throw UnsupportedBuiltinMS, but we currently allow to use multiset in a restricted fashion
-                translationWarning "you are using in the Sapic model the multiset builtin. Unless you are only using it to model natural numbers, this may result in a failure of the translation." y
-              "bilinear-pairing" -> throw UnsupportedBuiltinBP
+              "multiset"         -> translationFail "Multiset is not supported in ProVerif. If you want to model natural numbers, you can use the dedicated Tamarin builtin."
+              "bilinear-pairing" -> translationFail "Bilinear pairings are not supported in ProVerif."
               _                  -> y
             Just t -> y `S.union` t
         )

@@ -412,9 +412,30 @@ typep = ( try (symbol defaultSapicTypeS) *> return Nothing)
 --   are all valid, but
 --   x: pub: foo
 --   is not
+-- We first redefine lvars but forbidding the suffix
+
+sortedLVarNoSuffix :: [LSort] -> Parser LVar
+sortedLVarNoSuffix ss =
+    asum $ map mkPrefixParser ss
+  where
+    mkPrefixParser s = do
+        case s of
+          LSortMsg       -> pure ()
+          LSortPub       -> void $ char '$'
+          LSortFresh     -> void $ char '~'
+          LSortNode      -> void $ char '#'
+          LSortNat       -> void $ char '%'
+        (n, i) <- indexedIdentifier
+        return (LVar n s i)
+
+-- | An arbitrary logical variable.
+lvarNoSuffix :: Parser LVar
+lvarNoSuffix = sortedLVarNoSuffix [minBound..]
+
+
 sapicvar :: Parser SapicLVar
 sapicvar = do
-        v <- lvar
+        v <- lvarNoSuffix
         t <- option Nothing $ colon *> typep
         return (SapicLVar v t)
 

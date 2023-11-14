@@ -223,10 +223,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.7.1
+Tamarin version 1.8.0
 Maude version 3.2.1
-Git revision: af08d7fd0eaf723c6981fa57abca5c0b7e24a560, branch: subterm-new
-Compiled at: 2023-07-31 09:45:04.338688526 UTC
+Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
+Compiled at: 2023-08-29 12:56:59.317473841 UTC
 */
 
 end
@@ -241,7 +241,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.18s
+  processing time: 0.15s
   
   DiffLemma:  Observational_equivalence : verified (75 steps)
 
