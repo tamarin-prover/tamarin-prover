@@ -76,3 +76,9 @@ jobs:
         run: |
           tamarin-prover test
           python3 regressionTests.py -noi
+
+      - name: Archive case studies as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: case-studies
+          path: case-studies
