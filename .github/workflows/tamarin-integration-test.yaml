@@ -81,7 +81,5 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: case-studies-with-regression
-          path: |
-            case-studies
-            case-studies-regression
+          name: case-studies
+          path: case-studies
