@@ -75,11 +75,13 @@ jobs:
       - name: Regression tests
         run: |
           tamarin-prover test
-          python3 regressionTests.py -noi
+          python3 regressionTests.py -v 6 -noi
 
       - name: Archive case studies as artifact
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
-          name: case-studies
-          path: case-studies
+          name: case-studies-with-regression
+          path: |
+            case-studies
+            case-studies-regression
