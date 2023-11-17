@@ -78,6 +78,7 @@ jobs:
           python3 regressionTests.py -noi
 
       - name: Archive case studies as artifact
+        if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: case-studies
