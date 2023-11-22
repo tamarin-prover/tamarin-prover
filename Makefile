@@ -398,6 +398,10 @@ auto-sources-case-studies:	$(AUTO_SOURCES_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy
+FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
+
+
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
 
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
@@ -407,7 +411,7 @@ SEQDFS_TARGETS=$(subst .spthy,_analyzed-seqdfs.spthy,$(addprefix case-studies$(S
 
 
 # case studies
-regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
+regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS) $(FAST_REGRESSION_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)regression/trace/*.spthy
 
 
@@ -465,7 +469,7 @@ case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 ## Fast case studies
 ####################
 
-FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS)
+FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS)
 
 fast-case-studies: case-studies$(SUBDIR)system.info $(FAST_CS_TARGETS)
 	mkdir -p case-studies$(SUBDIR)
