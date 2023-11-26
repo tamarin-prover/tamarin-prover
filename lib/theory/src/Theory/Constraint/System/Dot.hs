@@ -102,7 +102,7 @@ dotOnce mapL k dot = do
     return i
 
 dotNode :: NodeId -> SeDot D.NodeId
-dotNode v = dotOnce dsNodes v $ do
+dotNode v = error "" $ dotOnce dsNodes v $ do
     (se, colorMap) <- ask
     let nodes = get sNodes se
         dot info moreStyle facts = do
@@ -133,14 +133,14 @@ dotNode v = dotOnce dsNodes v $ do
               sequence_ [ dotIntraRuleEdge premId vId | premId <- premIds ]
               sequence_ [ dotIntraRuleEdge vId concId | concId <- concIds ]
   where
-    label ru = " : " ++ render nameAndActs
+    label ru = error "1" $ " : " ++ render nameAndActs
       where
         nameAndActs = case filter isNotDiffAnnotation $ get rActs ru of
           [] -> prettyPrintRuleName
           xs -> prettyPrintRuleName <-> brackets (vcat $ punctuate comma $ map prettyLNFact xs)
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
         prettyPrintRuleName =
-          ruleInfo (prettyDotProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru)
+          ruleInfo ((prettyDotProtoRuleName (isSAPiCRule ru)) . get praciName) prettyIntrRuleACInfo (get rInfo ru)
 
 -- | An edge from a rule node to its premises or conclusions.
 dotIntraRuleEdge :: D.NodeId -> D.NodeId -> SeDot ()
@@ -361,7 +361,7 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
       -- single node, share node-id for all premises and conclusions
       | boringStyle == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
-            let lbl | hasOutgoingEdge = show v ++ " : " ++ showPrettyRuleCaseName ru
+            let lbl | hasOutgoingEdge = show v ++ " : " ++ showPrettyRuleCaseName True ru--(isSAPiCRule ru) ru
                     | otherwise       = concatMap snd as
             nid <- mkSimpleNode lbl []
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
@@ -386,7 +386,6 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
 
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
         -- prettyPrintNodeIDRuleName = prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru);
-
         -- check if a fact is from auto-source
         isAutoSource ::  LNFact -> Bool
         isAutoSource (Fact tag _ _) =not $ hasAutoLabel (showFactTag $ tag)

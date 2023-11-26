@@ -165,10 +165,7 @@ premsOfThyRules = map (L.get rPrems . L.get oprRuleE)
 ----------------------------------------------------
 
 generateRule ::  [LVar] -> [LNFact] -> Int -> OpenProtoRule
-generateRule freevars premises idx =  OpenProtoRule (Rule (ProtoRuleEInfo (StandRule $ NonSAPiCRuleName (show idx)) ([]) ([])) (freesToFresh . deleteGlobals $ freevars) (premisesToOut premises ) ([generateAction (deleteGlobals freevars) idx]) ([])) []
-
-generateDiffRule :: Side -> [LVar] -> [LNFact] -> Int -> OpenProtoRule
-generateDiffRule side freevars premises idx =  OpenProtoRule (Rule (ProtoRuleEInfo (StandRule $ NonSAPiCRuleName (show side ++ show idx)) ([]) ([])) (freesToFresh . deleteGlobals $ freevars) (premisesToOut premises ) ([generateAction (deleteGlobals freevars) idx]) ([])) []
+generateRule freevars premises idx =  OpenProtoRule (Rule (ProtoRuleEInfo (StandRule (show idx)) ([]) ([])) (freesToFresh . deleteGlobals $ freevars) (premisesToOut premises ) ([generateAction (deleteGlobals freevars) idx]) ([])) []
 
 generateAction :: [LVar] ->Int -> LNFact
 generateAction vars idx = protoFact Persistent ("Generated_" ++ show idx) (map lvarToLnterm (deleteGlobals vars))

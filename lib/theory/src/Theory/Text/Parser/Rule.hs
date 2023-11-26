@@ -94,14 +94,14 @@ protoRuleInfo = do
                 ident <- identifier
                 att <- ruleAttributesp
                 _ <- colon
-                return $ ProtoRuleEInfo (StandRule (NonSAPiCRuleName ident)) att []
+                return $ ProtoRuleEInfo (StandRule ident) att []
 
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
 -- contains them.
 diffRule :: Parser DiffProtoRule
 diffRule = do
-    ri@(ProtoRuleEInfo (StandRule (NonSAPiCRuleName name)) _ _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule name) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -115,7 +115,7 @@ diffRule = do
 -- contains them
 protoRule :: Parser OpenProtoRule
 protoRule = do
-    ri@(ProtoRuleEInfo (StandRule (NonSAPiCRuleName name)) _ _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule name) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -126,7 +126,7 @@ protoRule = do
 
 -- | Parse RuleInfo
 protoRuleACInfo :: Parser ProtoRuleACInfo
-protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$> NonSAPiCRuleName <$> (
+protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$> (
                                         (symbol "rule" *> moduloAC *> identifier)))
                                <*> ruleAttributesp)
                                <*> pure (Disj [emptySubstVFresh]) <*> pure []
@@ -135,7 +135,7 @@ protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$> NonSAPiCRuleName <$> (
 -- | Parse a protocol rule variant modulo AC.
 protoRuleAC :: Parser ProtoRuleAC
 protoRuleAC = do
-    ri@(ProtoRuleACInfo (StandRule (NonSAPiCRuleName name)) _ _ _)  <- try protoRuleACInfo
+    ri@(ProtoRuleACInfo (StandRule name) _ _ _)  <- try protoRuleACInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
