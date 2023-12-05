@@ -11,6 +11,15 @@
 theory OCSPS
 begin
 
+heuristic: {rank}
+
+tactic: rank
+prio:
+  regex "Insert|State|Judged|Let"
+prio:
+  regex "KU \( sk|#"
+
+
 functions:
   pk/1, sk/1[private],
   sig/2, verify/3,
@@ -32,17 +41,15 @@ let R =
     lock 'time';
     lookup 'time' as ~t in
       lookup <'cert_status', cert> as status in
-        let resp = <pk(sk($x)), cert, status, ~t> in
-          out(<resp, sig(resp, sk($x))>);
-          unlock 'time'
+        out(<<pk(sk($x)), cert, status, ~t>, sig(<pk(sk($x)), cert, status, ~t>, sk($x))>);
+        unlock 'time'
       else
-        let resp = <pk(sk($x)), cert, 'unkown', ~t> in
-          out(<resp, sig(resp, sk($x))>);
-          unlock 'time'
+        out(<<pk(sk($x)), cert, 'unkown', ~t>, sig(<pk(sk($x)), cert, 'unkown', ~t>, sk($x))>);
+        unlock 'time'
 
 let C =
+  in(<<pk_R, cert, status, ~t>, resp_sig, server_sig>);
   let resp = <pk_R, cert, status, ~t> in
-    in(<resp, resp_sig, server_sig>);
     lookup <'roles', id(pk_R), 'R'> as is_r in
       if verify(resp_sig, resp, pk_R) = true then
         if verify(server_sig, resp, extract(cert)) = true then
@@ -53,9 +60,9 @@ let C =
             event Judged(~t, cert)
 
 let S_h =
-  let resp = <pk_R, c, s, t> in
-    out(cert);
-    in(<resp, resp_sig>);
+  out(cert);
+  in(<<pk_R, c, s, ~t>, resp_sig>);
+  let resp = <pk_R, c, s, ~t> in
     lookup <'roles', id(pk_R), 'R'> as is_r in
       if c = cert then
         if verify(resp_sig, resp, pk_R) = true then
@@ -74,14 +81,12 @@ let S_c =
   unlock 'time'
 
 let S =
-      let cert = sig(pk(sk($x)), sk('CA'))
-          resp = <pk_R, c, s, t>
-      in
-        insert <'roles', $x, 'S'>, true;
-        insert <'cert_status', cert>, 'good';
-        event Secret(cert, sk($x));
-        out(pk(sk($x)));
-        ( S_h + S_c )
+  let cert = sig(pk(sk($x)), sk('CA')) in
+    insert <'roles', $x, 'S'>, true;
+    insert <'cert_status', cert>, 'good';
+    event Secret(cert, sk($x));
+    out(pk(sk($x)));
+    ( S_h + S_c )
 
 let Clock =
   lock 'time';
@@ -100,7 +105,8 @@ let Adv =
 let P = (in($x); R) | C | (in($x); S) | !Clock | !Adv
 
 
-P
+process:
+  P
 
 
 test blamed:
@@ -112,13 +118,11 @@ lemma acc:
                                 Revealed(sk)@k & Time(t)@l & #k < #l)"
 
 
-// restriction R_trusted: // uncomment for untrusted R
-//  "not Ex x #i #j. Corrupted(x)@i & Insert(<'roles', x, 'R'>, true)@j"
+restriction R_trusted: // uncomment for untrusted R
+  "not Ex x #i #j. Corrupted(x)@i & Insert(<'roles', x, 'R'>, true)@j"
 
 restriction one_role:
   "All x r_1 r_2 #i #j. Insert(<'roles', x, r_1>, true)@i &
                         Insert(<'roles', x, r_2>, true)@j
                           ==> #i = #j & r_1 = r_2"
-
-
 end
