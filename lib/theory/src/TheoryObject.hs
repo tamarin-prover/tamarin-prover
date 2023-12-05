@@ -54,12 +54,14 @@ module TheoryObject (
   , theoryProcessDefs
   , theoryPredicates
   , theoryMacros
+  , theoryFormalComments
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
   , diffTheoryLemmas
   , diffTheorySideLemmas
   , diffTheoryDiffLemmas
   , diffTheoryMacros
+  , diffTheoryFormalComments
   , expandFormula
   , expandRestriction
   , expandLemma
@@ -305,6 +307,11 @@ theoryMacros :: Theory sig c r p s -> [Macro]
 theoryMacros =
     foldTheoryItem (const []) (const []) (const []) (const []) (const []) (\m -> m) (const []) <=< L.get thyItems
 
+-- | All formal comments of a theory.
+theoryFormalComments :: Theory sig c r p s -> [FormalComment]
+theoryFormalComments =
+    foldTheoryItem (const []) (const []) (const []) return (const []) (const []) (const []) <=< L.get thyItems
+
 -- | All restrictions of a theory.
 theoryRestrictions :: Theory sig c r p s -> [Restriction]
 theoryRestrictions =
@@ -367,6 +374,11 @@ diffTheoryRestrictions =
 diffTheoryMacros :: DiffTheory sig c r r2 p p2 -> [Macro]
 diffTheoryMacros =
     foldDiffTheoryItem (const []) (const []) (const []) (const []) (const []) (\m -> m) (const []) <=< L.get diffThyItems
+
+-- | All formal comments of a diff theory.
+diffTheoryFormalComments :: DiffTheory sig c r r2 p p2 -> [FormalComment]
+diffTheoryFormalComments =
+    foldDiffTheoryItem (const []) (const []) (const []) (const []) (const []) (const []) return <=< L.get diffThyItems
 
 -- | All restrictions of one side of a theory.
 diffTheorySideRestrictions :: Side -> DiffTheory sig c r r2 p p2 -> [Restriction]
