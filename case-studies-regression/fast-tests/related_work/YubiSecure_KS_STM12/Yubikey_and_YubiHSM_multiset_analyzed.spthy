@@ -1252,12 +1252,13 @@ Facts occur in the left-hand-side but not in any right-hand-side
   
   3. in rule "YSM_AES_ESC_BLOCK_ENCRYPT":  factName `YSM_AES_ESC_BLOCK_ENCRYPT' arity: 1 multiplicity: Persistent
 
-Derivation Checks
-=================
+Message Derivation Checks
+=========================
 
-  Derivation checks timed out.
-  Use --derivcheck-timeout=INT to configure timeout.
-  Set to 0 to deactivate for no timeout.
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule YSM_AEAD_YUBIKEY_OTP_DECODE: 
+Failed to derive Variable(s): N
 */
 
 /*
@@ -1266,7 +1267,6 @@ Tamarin version 1.9.0
 Maude version 3.2.1
 Git revision: 55828cc94e8fd2506948a8324714350e405b4d92 (with uncommited changes), branch: HEAD
 Compiled at: 2023-11-17 17:48:21.524079663 UTC
-
 */
 
 end
@@ -1279,7 +1279,6 @@ analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
   processing time: 5.49s
-
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
