@@ -737,7 +737,7 @@ Tamarins reasoning for subterms works well for irreducible operators. For reduci
 
 In the following picture one can see the subterm with the reducible operator `fst` on the right side. Therefore, on the left side, the proof is marked yellow (with the blue line marking the current position). Also, this example demonstrates in `lemma GreenYellow`, that in an `exists-trace` lemma, a trace can be still found and the lemma proven even if there is a part of the proof that cannot be finished. Analogously, `lemma RedYellow` demonstrates that a `all-traces` lemma can still be disproven if a violating trace was found. The last two lemmas are ones where no traces were found in the rest of the proof, thus the overall result of the computation is `Tamarin cannot prove this property`.
 
-![Subterms](../images/YellowSubterms.png "Subterms")\
+![Subterms](../images/YellowSubterms.png "Subterms"){width=100%}\
 
 
 #### Subterm Store
