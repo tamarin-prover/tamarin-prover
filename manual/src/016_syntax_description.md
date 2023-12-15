@@ -4,7 +4,7 @@ Syntax Description
 Here, we explain the formal syntax of the security protocol theory format that
 is processed by Tamarin.
 
-Comments are C-style:
+Comments are C-style and are allowed to be nested:
 
     /* for a multi-line comment */
     // for a line-comment
@@ -21,7 +21,7 @@ function symbols and the equalities describing their interaction.  Note that
 our parser is stateful and remembers what functions have been defined. It will
 only parse function applications of defined functions.
 
-    signature_spec := functions | equations | built_in
+    signature_spec := functions | equations | built_in | macros
     functions      := 'functions' ':' function_sym (',' function_sym)* [',']
     function_sym   := ident '/' arity ['[private]']
     arity          := digit+
@@ -50,9 +50,11 @@ lemmas in the file. The specified goal ranking can be any of those discussed in
 Section [Heuristics](010_advanced-features.html#sec:heuristics).
 
     global_heuristic      := 'heuristic' ':' goal_ranking+
-    goal_ranking          := standard_goal_ranking | oracle_goal_ganking
+    goal_ranking          := standard_goal_ranking | oracle_goal_ganking | tactic_goal_ranking
     standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
     oracle_goal_ranking   := 'o' '"' [^'"']* '"' | 'O' '"' [^'"']* '"'
+    tactic_goal_ranking   := '{' tactic_name '}'
+    tactic_name           := <all-tactic-names-defined-up-to-here>
 
 The tactics allow the user to write their own heuristics based on the lemmas there are trying to prove. Their use is descibed in in Section [Using a Tactic](010_advanced-features.html#sec:fact-annotations#subsec:tactic).
 
@@ -82,7 +84,7 @@ well as the left and right instances of a rule in diff-mode.
     diff_rule   := simple_rule ['left' rule 'right' rule]
     simple_rule := 'rule' [modulo] ident [rule_attrs] ':'
             [let_block]
-            '[' facts ']' ( '-->' | '--[' facts ']->') '[' facts ']'
+            '[' [facts] ']' ( '-->' | '--[' facts ']->') '[' [facts] ']'
     variants    := 'variants' simple_rule (',' simple_rule)*
     modulo      := '(' 'modulo' ('E' | 'AC') ')'
     rule_attrs  := '[' rule_attr (',' rule_attr)* [','] ']'
@@ -131,7 +133,7 @@ quantifier.
     lemma := 'lemma' [modulo] ident [lemma_attrs] ':'
              [trace_quantifier]
              '"' formula '"'
-             proof_skeleton
+             [proof_skeleton]
     lemma_attrs      := '[' lemma_attr (',' lemma_attr)* [','] ']'
     lemma_attr       := 'sources' | 'reuse' | 'use_induction' |
                              'hide_lemma=' ident | 'heuristic=' goalRanking+
@@ -146,12 +148,13 @@ In observational equivalence mode, lemmas can be associated to one side.
 A proof skeleton is a complete or partial proof as output by the Tamarin prover.
 It indicates the proof method used at each step, which may include multiple cases.
 
-    proof_skeleton :=  'SOLVED' | 'by' proof_method
+    proof_skeleton :=  'SOLVED' | 'MIRRORED' | by' proof_method
                     | proof_method proof_skeleton
                     | proof_method 'case' ident proof_skeleton
-                        ('next 'case' ident proof_skeleton)* 'qed'
-    proof_method   := 'sorry' | 'simplify' | 'solve '(' goal ')' |
-                      'contradiction' | 'induction'
+                        ('next' 'case' ident proof_skeleton)* 'qed'
+    proof_method   := 'sorry' | 'simplify' | 'solve' '(' goal ')' |
+                      'contradiction' | 'induction' | 'rule-equivalence' |
+                      'backward-search' | 'ATTACK'
     goal           :=  fact "▶" natural_subscr node_var
                     | fact '@' node_var
                     | '(' node_var ',' natural ')' '~~>' '(' node_var ',' natural ')'
