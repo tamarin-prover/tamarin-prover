@@ -51,7 +51,6 @@ import Theory.Text.Parser.Signature
 import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
-
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
 ------------------------------------------------------------------------------

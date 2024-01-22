@@ -606,7 +606,7 @@ lookupProcessDef :: String -> Theory sig c r p TranslationElement -> Maybe (Proc
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the function typing info for a given function symbol.
-lookupFunctionTypingInfo :: NoEqSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
+lookupFunctionTypingInfo :: UserDefineSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
 lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.
@@ -696,7 +696,7 @@ prettyTranslationElement (ProcessDefItem p) =
     (text "=")
     <->
     nest 2 (prettyProcess $ L.get pBody p)
-prettyTranslationElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype)) =
+prettyTranslationElement (FunctionTypingInfo (NoEqUser (fsn,(_,priv,_)), intypes, outtype)) =
     (text "function:")
     <->
     text (unpack fsn)
@@ -706,6 +706,24 @@ prettyTranslationElement (FunctionTypingInfo ((fsn,(_,priv,_)), intypes, outtype
     text ":"
     <->
     printType outtype
+    <->
+    text (showPriv priv)
+    where
+        printType = maybe (text defaultSapicTypeS) text
+        showPriv Private = " [private]"
+        showPriv Public  = ""
+prettyTranslationElement (FunctionTypingInfo (ACfctUser (fsn,(_,priv,_)), intypes, outtype)) =
+    (text "function:")
+    <->
+    text (unpack fsn)
+    <->
+    parens (fsep $ punctuate comma $ map printType intypes)
+    <->
+    text ":"
+    <->
+    printType outtype
+    <->
+    text "  [AC]"
     <->
     text (showPriv priv)
     where

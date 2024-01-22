@@ -32,6 +32,7 @@ module Term.Term.Raw (
     , fAppAC
     , fAppC
     , fAppNoEq
+    , fAppACfct
     , fAppList
     , unsafefApp
 
@@ -104,6 +105,7 @@ fApp (AC acSym)  ts = fAppAC acSym ts
 fApp (C o)       ts = fAppC o ts
 fApp List        ts = FAPP List ts
 fApp s@(NoEq _)  ts = FAPP s ts
+fApp s@(ACfct _)  ts = FAPP s ts
 
 -- | Smart constructor for AC terms.
 fAppAC :: Ord a => ACSym -> [Term a] -> Term a
@@ -126,6 +128,11 @@ fAppC nacsym as = FAPP (C nacsym) (sort as)
 {-# INLINE fAppNoEq #-}
 fAppNoEq :: NoEqSym -> [Term a] -> Term a
 fAppNoEq freesym = FAPP (NoEq freesym)
+
+-- | Smart constructor for user define AC terms.
+{-# INLINE fAppACfct #-}
+fAppACfct :: ACfctSym -> [Term a] -> Term a
+fAppACfct freesym = FAPP (ACfct freesym)
 
 -- | Smart constructor for list terms.
 {-# INLINE fAppList #-}
@@ -151,6 +158,7 @@ data TermView2 a = FExp (Term a) (Term a)   | FInv (Term a) | FMult [Term a] | O
                  | FPair (Term a) (Term a)
                  | FDiff (Term a) (Term a)
                  | FAppNoEq NoEqSym [Term a]
+                 | FAppACfct ACfctSym [Term a]
                  | FAppC CSym [Term a]
                  | FList [Term a]
                  | Lit2 a
@@ -180,7 +188,10 @@ viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
     []         | o == natOneSym -> NatOne
     []         | o == dhNeutralSym  -> DHNeutral
     _          | o `elem` ssyms -> error $ "viewTerm2: malformed term `"++show t++"'"
+     where
+      ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, dhNeutralSym ]
     _                           -> FAppNoEq o ts
+viewTerm2 t@(FAPP (ACfct o) ts) = if (o `elem` ssyms) then (error $ "viewTerm2: malformed term `"++show t++"'") else FAppACfct o ts
   where
     -- special symbols
     ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, dhNeutralSym ]
@@ -212,6 +223,8 @@ instance Show a => Show (Term a) where
         Lit l                  -> show l
         FApp   (NoEq (s,_)) [] -> BC.unpack s
         FApp   (NoEq (s,_)) as -> BC.unpack s++"("++(intercalate "," (map show as))++")"
+        FApp   (ACfct (s,_)) [] -> BC.unpack s
+        FApp   (ACfct (s,_)) as -> BC.unpack s++"("++(intercalate "," (map show as))++")"
         FApp   (C EMap) as     -> BC.unpack emapSymString++"("++(intercalate "," (map show as))++")"
         FApp   List as         -> "LIST"++"("++(intercalate "," (map show as))++")"
         FApp   (AC o) as       -> show o++"("++(intercalate "," (map show as))++")"

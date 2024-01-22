@@ -11,17 +11,23 @@
 --
 -- Function Symbols and Signatures.
 module Term.Term.FunctionSymbols (
-    -- ** AC, C, and NonAC funcion symbols
+    -- ** AC, C, and NonAC function symbols
       FunSym(..)
     , ACSym(..)
     , CSym(..)
     , Privacy(..)
     , Constructability(..)
+    , ACstate(..)
+    , FctAttr(..)
+    , UserDefineSym(..)
+    , ACfctSym
     , NoEqSym
 
     -- ** Signatures
     , FunSig
     , NoEqFunSig
+    , ACfctFunSig
+    , UserDefineSig
 
     -- ** concrete symbols strings
     , diffSymString
@@ -89,10 +95,6 @@ import qualified Data.Set as S
 -- Function symbols
 ----------------------------------------------------------------------
 
--- | AC function symbols.
-data ACSym = Union | Mult | Xor | NatPlus
-  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
-
 -- | A function symbol can be either Private (unknown to adversary) or Public.
 data Privacy = Private | Public
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
@@ -102,16 +104,35 @@ data Privacy = Private | Public
 data Constructability = Constructor | Destructor
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
+-- | A function symbol can be AC or not.
+data ACstate = IsAC | NotAC
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
+
+data FctAttr = Privacy Privacy | Constructability Constructability | ACstate ACstate
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
+
 -- | NoEq function symbols (with respect to the background theory).
 type NoEqSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
+
+-- | AC function symbols (with respect to the background theory).
+type ACfctSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
+
+-- | AC function symbols.
+data ACSym = Union | Mult | Xor | NatPlus
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | C(ommutative) function symbols
 data CSym = EMap
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
+-- | User define function symbol
+data UserDefineSym = NoEqUser NoEqSym | ACfctUser ACfctSym
+  deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
+
 -- | Function symbols
-data FunSym = NoEq  NoEqSym   -- ^ a free function function symbol of a given arity
+data FunSym = NoEq  NoEqSym   -- ^ a free function symbol of a given arity
             | AC    ACSym     -- ^ an AC function symbol, can be used n-ary
+            | ACfct ACfctSym  -- ^ a free AC function symbol of a given arity
             | C     CSym      -- ^ a C function symbol of a given arity
             | List            -- ^ a free n-ary function symbol of TOP sort
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
@@ -121,6 +142,10 @@ type FunSig = Set FunSym
 
 -- | NoEq function signatures.
 type NoEqFunSig = Set NoEqSym
+
+type ACfctFunSig = Set ACfctSym
+
+type UserDefineSig = Set UserDefineSym
 
 ----------------------------------------------------------------------
 -- Fixed function symbols

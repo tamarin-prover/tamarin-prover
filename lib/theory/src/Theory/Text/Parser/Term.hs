@@ -55,12 +55,19 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 
 -- | Lookup the arity of a non-ac symbol. Fails with a sensible error message
 -- if the operator is not known.
-lookupArity :: String -> Parser (Int, Privacy,Constructability)
+lookupArity :: String -> Parser (Int, Privacy,Constructability, ACstate)
 lookupArity op = do
     maudeSig <- sig <$> getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
+    case lookup (BC.pack op) (S.toList (noEqorACSet (userDefineFunSyms maudeSig)) ++ [(emapSymString, (2,Public,Constructor,NotAC))]) of
         Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
-        Just (k,priv,cnstr) -> return (k,priv,cnstr)
+        Just (k,priv,cnstr,acstate) -> return (k,priv,cnstr,acstate)
+        -- Just (NoEqUser (_,(k,priv,cnstr))) -> return (k,priv,cnstr,NotAC)
+        -- Just (ACfctUser (_,(k,priv,cnstr))) -> return (k,priv,cnstr,IsAC)
+        where
+          noEqorACSet = S.map function
+          function (NoEqUser (o,(k,p,c))) = (o,(k,p,c,NotAC))
+          function (ACfctUser (o,(k,p,c))) = (o,(k,p,c,IsAC))
+
 
 reservedBuiltins :: [[Char]]
 reservedBuiltins =  map unpackChars [
@@ -82,7 +89,7 @@ naryOpApp eqn plit = do
     --traceM $ show op ++ " " ++ show eqn
     when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
-    ar@(k,_,_) <- lookupArity op
+    (k,priv,constr,acstate) <- lookupArity op
     ts <- parens $ if k == 1
                      then return <$> tupleterm eqn plit
                      else commaSep (msetterm eqn plit)
@@ -90,8 +97,12 @@ naryOpApp eqn plit = do
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
-    let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
-    return $ app (BC.pack op, ar) ts
+    --let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
+    case (BC.pack op,(k,priv,constr,acstate)) of
+      (o,(_,_,_,_)) | o == emapSymString -> return $ fAppC EMap ts
+      (_,(_,_,_,NotAC)) -> return $ fAppNoEq (BC.pack op, (k,priv,constr)) ts
+      (_,(_,_,_,IsAC)) -> return $ fAppACfct (BC.pack op, (k,priv,constr)) ts
+    --return $ app (BC.pack op, (k,priv,constr)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
 binaryAlgApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
@@ -99,12 +110,14 @@ binaryAlgApp eqn plit = do
     op <- identifier
     when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
-    ar@(k,_,_) <- lookupArity op
+    (k,priv,constr,acstate) <- lookupArity op
     arg1 <- braced (tupleterm eqn plit)
     arg2 <- term plit eqn
     when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
-    return $ fAppNoEq (BC.pack op, ar) [arg1, arg2]
+    case acstate of
+      NotAC -> return $ fAppNoEq (BC.pack op, (k,priv,constr)) [arg1, arg2]
+      IsAC -> return $ fAppACfct (BC.pack op, (k,priv,constr)) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do

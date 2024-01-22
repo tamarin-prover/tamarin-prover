@@ -108,6 +108,7 @@ applyVTermProj f subst t = case viewTerm t of
     FApp (AC o) ts   -> fAppAC   o (map (applyVTermProj f subst) ts)
     FApp (C o)  ts   -> fAppC    o (map (applyVTermProj f subst) ts)
     FApp (NoEq o) ts -> fAppNoEq o (map (applyVTermProj f subst) ts)
+    FApp (ACfct o) ts -> fAppACfct o (map (applyVTermProj f subst) ts)
     FApp List ts     -> fAppList   (map (applyVTermProj f subst) ts)
 
 

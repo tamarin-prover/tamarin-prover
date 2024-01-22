@@ -53,11 +53,17 @@ module Term.Term (
     , CSym(..)
     , Privacy(..)
     , Constructability(..)
+    , ACstate(..)
+    , FctAttr(..)
+    , UserDefineSym(..)
+    , ACfctSym
     , NoEqSym
 
     -- ** Signatures
     , FunSig
     , NoEqFunSig
+    , ACfctFunSig
+    , UserDefineSig
 
     -- ** concrete symbols strings
     , diffSymString
@@ -255,10 +261,11 @@ elemNotBelowReducible _ _ _ = False
 
 -- | Convert a function symbol to its name.
 showFunSymName :: FunSym -> String
-showFunSymName (NoEq (bs, _)) = BC.unpack bs
-showFunSymName (AC op)        = show op
-showFunSymName (C op )           = show op
-showFunSymName List              = "List"
+showFunSymName (NoEq (bs, _))       = BC.unpack bs
+showFunSymName (ACfct (bs, _))      = BC.unpack bs
+showFunSymName (AC op)              = show op
+showFunSymName (C op )              = show op
+showFunSymName List                 = "List"
 
 -- | Pretty print a term.
 prettyTerm :: (Document d, Show l) => (l -> d) -> Term l -> d
@@ -266,7 +273,12 @@ prettyTerm ppLit = ppTerm
   where
     ppTerm t = case viewTerm t of
         Lit l                                     -> ppLit l
-        FApp (AC o)            ts                 -> ppTerms (ppACOp o) 1 "(" ")" ts
+        FApp (ACfct (f, _)) []                    -> text (BC.unpack f)
+        FApp (ACfct (f, _)) ts                    -> ppFun f ts
+        FApp (AC Mult)     ts                     -> ppTerms "*" 1 "(" ")" ts
+        FApp (AC Xor)      ts                     -> ppTerms "⊕" 1 "(" ")" ts
+        FApp (AC Union)    ts                     -> ppTerms "++" 1 "(" ")" ts
+        FApp (AC NatPlus)  ts                     -> ppTerms "%+" 1 "(" ")" ts
         FApp (NoEq s)   [t1,t2] | s == expSym     -> ppTerm t1 <> text "^" <> ppTerm t2
         FApp (NoEq s)   [t1,t2] | s == diffSym    -> text "diff" <> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
         FApp (NoEq s)   []      | s == natOneSym  -> text "%1"
@@ -275,11 +287,6 @@ prettyTerm ppLit = ppTerm
         FApp (NoEq (f, _)) ts                     -> ppFun f ts
         FApp (C EMap)      ts                     -> ppFun emapSymString ts
         FApp List          ts                     -> ppFun "LIST" ts
-
-    ppACOp Mult    = "*"
-    ppACOp Xor     = "⊕"
-    ppACOp Union   = "++"
-    ppACOp NatPlus = "%+"
  
     ppTerms sepa n lead finish ts =
         fcat . (text lead :) . (++[text finish]) .

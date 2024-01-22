@@ -41,7 +41,7 @@ data WFerror = WFLock WFLockTag
                 | WFBoundTwice SapicLVar
                 | TypingErrorArgument SapicTerm [SapicType]
                 | TypingError SapicTerm SapicType SapicType
-                | TypingErrorFunctionMerge NoEqSym SapicFunType SapicFunType
+                | TypingErrorFunctionMerge UserDefineSym SapicFunType SapicFunType
                 | FunctionNotDefined NoEqSym
     deriving (Typeable)
 

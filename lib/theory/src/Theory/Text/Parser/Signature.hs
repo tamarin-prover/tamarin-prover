@@ -24,7 +24,7 @@ where
 
 import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
-import           Data.Either
+import           Data.Either()
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 --import           Data.Char
@@ -124,11 +124,11 @@ functionType = try (do
                     return (argTypes, outType)
                     )
 
--- | Parse a 'FunctionAttribute'.
-functionAttribute :: Parser (Either Privacy Constructability)
+functionAttribute :: Parser FctAttr
 functionAttribute = asum
-  [ symbol "private" Data.Functor.$> Left Private
-  , symbol "destructor" Data.Functor.$> Right Destructor
+  [ symbol "private" Data.Functor.$> Privacy Private
+  , symbol "destructor" Data.Functor.$> Constructability Destructor
+  , symbol "AC" Data.Functor.$> ACstate IsAC
   ]
 
 function :: Parser SapicFunSym
@@ -139,18 +139,23 @@ function =  do
         when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
         sign <- sig <$> getState
         let k = length argTypes
-        let priv = if Private `elem` lefts atts then Private else Public
-        let destr = if Destructor `elem` rights atts then Destructor else Constructor
+        let priv = if Privacy Private `elem` atts then Private else Public
+        let destr = if Constructability Destructor `elem` atts then Destructor else Constructor
+        let ac = if ACstate IsAC `elem` atts then IsAC else NotAC
         case lookup f (S.toList $ stFunSyms sign) of
           Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
             fail $ "conflicting arities/private " ++
                    show kp' ++ " and " ++ show (k,priv,destr) ++
                    " for `" ++ BC.unpack f
           Just kp' | BC.unpack f == "fst" || BC.unpack f == "snd" -> do
-                return ((f,kp'),argTypes,outType)
-          _ -> do
-                modifyStateSig $ addFunSym (f,(k,priv,destr))
-                return ((f,(k,priv,destr)),argTypes,outType)
+                return (NoEqUser (f,kp'),argTypes,outType)
+          _ -> case ac of
+            IsAC    -> do
+                modifyStateSig $ addFunSym (ACfctUser (f,(k,priv,destr)))
+                return (ACfctUser (f,(k,priv,destr)),argTypes,outType)
+            NotAC -> do
+                modifyStateSig $ addFunSym (NoEqUser (f,(k,priv,destr)))
+                return (NoEqUser (f,(k,priv,destr)),argTypes,outType)
 
 
 functions :: Parser [SapicFunSym]

@@ -716,7 +716,9 @@ prettyOpenTheory thy =
                  where
                     funsyms = S.fromList $ map fst' $ theoryFunctionTypingInfos thy
                         -- function symbols that are printed by sapic printer already
-                    fst' (a,_,_) = a
+                    fst' (NoEqUser a,_,_) = a
+                    fst' (ACfctUser a, _, _) = a
+
 
 -- | Pretty print an open theory.
 prettyOpenDiffTheory :: HighlightDocument d => OpenDiffTheory -> d

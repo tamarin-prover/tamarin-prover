@@ -42,10 +42,10 @@ macros = do
         sign <- sig <$> getState
         let mc = (op, args, out)
         let k = length args
-        case lookup op (S.toList $ stFunSyms sign) of
+        case lookup op (S.toList $ stFunSyms sign) of                               -- Warning : just for stFunSyms, not stACFunSyms
             Just _ -> fail $ "Conflicting name for macro " ++ BC.unpack op
             _ -> do 
-                modifyStateSig $ addFunSym (op,(k,Private,Destructor)) 
+                modifyStateSig $ addFunSym (NoEqUser (op,(k,Private,Destructor))) 
                 return (mc)
 
 getMacroName :: Macro -> String
