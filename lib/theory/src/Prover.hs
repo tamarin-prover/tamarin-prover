@@ -45,7 +45,7 @@ closeTheory :: FilePath         -- ^ Path to the Maude executable.
             -> IO ClosedTheory
 closeTheory maudePath thy0 autosources = do
     sig <- toSignatureWithMaude maudePath $ L.get thySignature thy0
-    return $ closeTheoryWithMaude sig thy0 autosources
+    return $ closeTheoryWithMaude sig thy0 autosources True
 
 
 
@@ -76,7 +76,7 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
         (DiffTheory (L.get diffThyName thy0) (L.get diffThyInFile thy0) h t sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items (L.get diffThyOptions thy0) (_diffThyIsSapic thy0))
 
   where
-    parameters = Sources.IntegerParameters (L.get (openChainsLimit.diffThyOptions) thy0) (L.get (saturationLimit.diffThyOptions) thy0)
+    parameters = Sources.IntegerParameters (L.get (openChainsLimit.diffThyOptions) thy0) (L.get (saturationLimit.diffThyOptions) thy0) True
     h              = L.get diffThyHeuristic thy0
     t              = L.get diffThyTactic thy0
     diffCacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyDiffCacheLeft  thy0) (L.get (verboseOption.diffThyOptions) thy0) True (L.get diffThyIsSapic thy0)
@@ -167,8 +167,8 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
 
 -- | Close a theory given a maude signature. This signature must be valid for
 -- the given theory.
-closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> Bool -> ClosedTheory
-closeTheoryWithMaude sig thy0 autoSources =
+closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> Bool -> Bool -> ClosedTheory
+closeTheoryWithMaude sig thy0 autoSources showSaturation =
   if autoSources && containsPartialDeconstructions (cache items)
     then
         proveTheory (const True) checkProof
@@ -177,7 +177,7 @@ closeTheoryWithMaude sig thy0 autoSources =
         proveTheory (const True) checkProof
       $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items) items (L.get thyOptions thy0) (L.get thyIsSapic thy0)
   where
-    parameters = Sources.IntegerParameters (L.get (openChainsLimit.thyOptions) thy0) (L.get (saturationLimit.thyOptions) thy0)
+    parameters = Sources.IntegerParameters (L.get (openChainsLimit.thyOptions) thy0) (L.get (saturationLimit.thyOptions) thy0) showSaturation
     h          = L.get thyHeuristic thy0
     t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
@@ -374,7 +374,7 @@ applyPartialEvaluation :: EvaluationStyle -> Bool -> ClosedTheory -> ClosedTheor
 applyPartialEvaluation evalStyle autosources thy0 =
     closeTheoryWithMaude sig
       (removeTranslationItems (L.modify thyItems replaceProtoRules (openTheory thy0)))
-      autosources
+      autosources True
   where
     sig          = L.get thySignature thy0
     ruEs         = getProtoRuleEs thy0

@@ -408,6 +408,17 @@ AUTO_SOURCES_CS_TARGETS=$(subst .spthy,_analyzed-auto-sources.spthy,$(addprefix 
 auto-sources-case-studies:	$(AUTO_SOURCES_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)features/auto-sources/spore/*.spthy
 
+## Accountability
+################
+
+ACCOUNTABILITY_CASE_STUDIES=ct.spthy whodunit.spthy ocsps-msr.spthy ocsps-msr-untrusted.spthy
+
+ACCOUNTABILITY_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)accountability/csf21-acc-unbounded/previous/,$(ACCOUNTABILITY_CASE_STUDIES)))
+
+# case studies
+accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)accountability/csf21-acc-unbounded/previous/*.spthy
+
 ## Regression (old issues)
 ##########################
 
@@ -471,7 +482,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS)
+CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS)
 
 case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies$(SUBDIR)

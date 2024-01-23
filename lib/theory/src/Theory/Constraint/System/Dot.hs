@@ -4,7 +4,6 @@
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Conversion of the graph part of a sequent to a Graphviz Dot file.
@@ -542,12 +541,11 @@ transitiveReduction sys totalRed=
     where
         oldLessesWithR = S.toList $ get sLessAtoms sys
         oldLesses = rawLessRel sys
-        newLesses =
-            case totalRed of
-                True ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
+        newLesses = if totalRed
+            then [(x,y,z)| (x,y,z)<- oldLessesWithR,
                             (x,y) `elem` (D.transRed oldLesses) ]
-                False ->[(x,y,z)| (x,y,z)<- oldLessesWithR,
-                            (x,y) `elem` (D.transRed oldLesses) || z == Formula]
+            else [(x,y,z)| (x,y,z)<- oldLessesWithR,
+                            (x,y) `elem` (D.transRed oldLesses) || z == Formula || z == Adversary ]
 
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a

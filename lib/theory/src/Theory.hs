@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>, Alexander Dax <alexander@dax.saarland>
 -- Portability : GHC only
 --
 -- Theory datatype and transformations on it.
@@ -120,6 +119,7 @@ module Theory (
   , theoryRules
   , theoryLemmas
   , theoryCaseTests
+  , theoryFormalComments
   , theoryRestrictions
   , theoryProcesses
   , theoryProcessDefs
@@ -131,6 +131,7 @@ module Theory (
   , theoryAccLemmas
   , diffTheoryRestrictions
   , diffTheorySideRestrictions
+  , diffTheoryFormalComments
   , addTactic
   , addRestriction
   , addLemma

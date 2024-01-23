@@ -191,23 +191,6 @@ guarded formula characterizing all satisfying traces:
 */
 by sorry
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Check presence of the --prove/--lemma arguments in theory
-=========================================================
-
-  --> 'Observational_equivalence' from arguments do(es) not correspond to a specified lemma in the theory 
-
-Message Derivation Checks
-=========================
-
-  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule reader2: 
-Failed to derive Variable(s): hash
-*/
-
 diffLemma Observational_equivalence:
 rule-equivalence
   case Rule_Equality
@@ -273,18 +256,32 @@ rule-equivalence
 qed
 
 /*
+WARNING: the following wellformedness checks failed!
+
+Check presence of the --prove/--lemma arguments in theory
+=========================================================
+
+  --> 'Observational_equivalence' from arguments do(es) not correspond to a specified lemma in the theory 
+
+Message Derivation Checks
+=========================
+
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule reader2: 
+Failed to derive Variable(s): hash
+*/
+
+/*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.2.2
+Git revision: 0194f3b61d6d8b8c1d70bbad8fe0a7143cac0fb3, branch: feature/export-wellformedness
+Compiled at: 2023-10-25 08:40:09.47146758 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -292,7 +289,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 118.44s
+  processing time: 248.08s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

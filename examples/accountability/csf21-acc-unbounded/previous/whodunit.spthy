@@ -28,10 +28,9 @@ Specification
 *********************************************/
 
 let S =
-  let m = <<sid, v>, sig(<sid, v>, sk($x))> in
-    in(v);
-    out(c_SA, m);
-    out(c_SJ, m)
+  in(v);
+  out(c_SA, <<sid, v>, sig(<sid, v>, sk($x))>);
+  out(c_SJ, <<sid, v>, sig(<sid, v>, sk($x))>)
 
 let A =
   let pk_x = pk(sk($x)) in
@@ -70,6 +69,7 @@ let P =
     out(pk(sk($y)));
     (S | A | J | !Adv)
 
+process:
 !P
 
 

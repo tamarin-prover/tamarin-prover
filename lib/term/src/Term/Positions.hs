@@ -5,7 +5,6 @@
 -- Copyright   : (c) 2010-12 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Positions and replacement in terms.
 module Term.Positions

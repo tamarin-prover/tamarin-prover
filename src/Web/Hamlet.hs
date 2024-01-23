@@ -382,10 +382,7 @@ introTpl = [whamlet|
         \ <a href="https://beschmi.net">Benedikt Schmidt</a><br>
         Tamarin is a collaborative effort: see the <a href="http://tamarin-prover.github.io/manual/index.html">manual</a> for a more extensive overview of its development and additional contributors.
       <p>
-        <span class="tamarin">Tamarin</span> was developed at the
-        \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
-        \ <a href="https://www.ethz.ch">ETH Zurich</a>.
-        \ This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
+        This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
         \ you are welcome to redistribute it according to its
         \ <a href="/static/LICENSE" type="text/plain">LICENSE.</a>
       <p>
