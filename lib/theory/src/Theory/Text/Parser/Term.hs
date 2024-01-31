@@ -33,6 +33,8 @@ import           Theory.Text.Parser.Token
 import           Data.ByteString.Internal        (unpackChars)
 import Data.Functor (($>))
 
+import Debug.Trace
+
 
 -- | Parse a lit with logical variables parsed by @varp@
 vlit :: Parser v -> Parser (NTerm v)
@@ -93,7 +95,7 @@ naryOpApp eqn plit = do
     ts <- parens $ if k == 1
                      then return <$> tupleterm eqn plit
                      else commaSep (msetterm eqn plit)
-    let k' = length ts
+    let k' = (length ts)
     when (k /= k') $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'

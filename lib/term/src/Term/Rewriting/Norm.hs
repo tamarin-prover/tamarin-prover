@@ -60,7 +60,7 @@ nfViaHaskell t0 = reader $ \hnd -> check hnd
         go t = case viewTerm2 t of
             -- irreducible function symbols
             FAppNoEq o ts  | (NoEq o) `S.member` irreducible  -> all go ts
-            FAppACfct o ts | (ACfct o) `S.member` irreducible -> all go ts
+            FAppACfct o ts | AC (ACfct o) `S.member` irreducible -> all go ts
             FList ts                                          -> all go ts
             FPair t1 t2                                       -> go t1 && go t2
             FDiff t1 t2                                       -> go t1 && go t2

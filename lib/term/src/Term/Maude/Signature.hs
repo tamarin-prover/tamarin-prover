@@ -112,7 +112,7 @@ maudeSig msig@MaudeSig{enableDH, enableBP, enableMSet, enableNat, enableXor, ena
                 `S.union` (if enableMSet           then msetFunSig else S.empty)
                 `S.union` (if enableNat            then natFunSig  else S.empty)
                 `S.union` (if enableXor            then xorFunSig  else S.empty)
-                `S.union` S.map ACfct stACFunSyms
+                `S.union` S.map (AC . ACfct) stACFunSyms
     irreduciblefuns = allfuns `S.difference` reducibleWithoutMult
     reducibleWithoutMult =
         S.fromList [ o | CtxtStRule (viewTerm -> FApp o _) _ <- S.toList stRules]
@@ -152,10 +152,10 @@ noEqFunSyms msig = S.fromList [ o | NoEq o <- S.toList (funSyms msig) ]
 
 -- | AC function symbols.
 acUserFunSyms :: MaudeSig -> ACfctFunSig
-acUserFunSyms msig = S.fromList [ o | ACfct o <- S.toList (funSyms msig) ]
+acUserFunSyms msig = S.fromList [ o | AC (ACfct o) <- S.toList (funSyms msig) ]
 
 userDefineFunSyms :: MaudeSig -> UserDefineSig
-userDefineFunSyms msig = S.map (\f -> (NoEqUser f)) (noEqFunSyms msig) `S.union` S.map (\f -> (ACfctUser f)) (acUserFunSyms msig)
+userDefineFunSyms msig = S.map NoEqUser (noEqFunSyms msig) `S.union` S.map ACfctUser (acUserFunSyms msig)
 
 -- | Add function symbol to given maude signature.
 addFunSym :: UserDefineSym -> MaudeSig -> MaudeSig
@@ -248,7 +248,7 @@ prettyMaudeSigExcept sig excl = P.vcat
       where
             showAttrNoEq (Public,Destructor) = "[destructor]"
             showAttrNoEq (Private,Destructor) = "[private,destructor]"
-            showAttrNoEq (Private,Constructor) = "[private,destructor]" -- FIX-ME ?
+            showAttrNoEq (Private,Constructor) = "[private]"
             showAttrNoEq (Public,Constructor) = ""
 
     ppFunSymb (ACfctUser (f,(k,priv,constr))) = P.text $ BC.unpack f ++ "/" ++ show k
@@ -256,7 +256,7 @@ prettyMaudeSigExcept sig excl = P.vcat
       where
             showAttrAC (Public,Destructor) = "[destructor,AC]"
             showAttrAC (Private,Destructor) = "[private,destructor,AC]"
-            showAttrAC (Private,Constructor) = "[private,destructor,AC]" -- FIX-ME ?
+            showAttrAC (Private,Constructor) = "[private,AC]"
             showAttrAC (Public,Constructor) = "[AC]"
 
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d

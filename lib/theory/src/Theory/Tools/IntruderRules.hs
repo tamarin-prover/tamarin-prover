@@ -43,8 +43,7 @@ import           Term.Subsumption
 import           Term.Positions
 
 import           Theory.Model
-
--- import           Debug.Trace
+import Debug.Trace
 
 -- Variants of intruder deduction rules
 ----------------------------------------------------------------------
@@ -110,13 +109,13 @@ specialIntruderRules diff =
 -- context subterm rule @st@
 destructionRules :: Bool -> CtxtStRule -> [IntrRuleAC]
 destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs)) | (bool || (frees rhs /= []) || (containsPrivate rhs)) =
-    go [] lhs pos empty []
+   go [] lhs pos empty []
   where
-    go _      _                       []     _ _                     = []
+    go _      _                       []     _ _                     = trace (show "1 : " ++ show lhs) []
     -- term already in premises, but necessary for constant conclusions
-    go _      (viewTerm -> FApp _ _)  (_:[]) _ _ | (frees rhs /= []) = []
+    go _      (viewTerm -> FApp (NoEq (_,(_,_,_))) _)  (_:[]) _ _ | (frees rhs /= []) = trace (show "2 : " ++ show lhs ++ " rhs : " ++ show rhs ++ " frees ? : " ++ (show (frees rhs))) []
     go uprems (viewTerm -> FApp (NoEq (f,(_,Public,_))) as) (i:p) n pd =
-        irule ++ go uprems' t' p funs posname
+        trace (show "3 : " ++ show lhs ++ " i : " ++ show i ++ " p : " ++ show p) (irule ++ go uprems' t' p funs posname)
       where
         uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
         t'      = as!!i
@@ -128,15 +127,29 @@ destructionRules bool (CtxtStRule lhs@(viewTerm -> FApp _ _) (StRhs (pos:[]) rhs
                             ((kdFact  t'):(map kuFact uprems'))
                             [kdFact rhs] [] [] ]
                 else []
-    go _      (viewTerm -> FApp (NoEq (_,(_,Private,_))) _) _     _ _  = []
+    go uprems (viewTerm -> FApp (AC (ACfct (f,(_,Public,_)))) as) (i:p) n pd =
+        trace (show "4 : " ++ show lhs) (irule ++ go uprems' t' p funs posname)
+      where
+        uprems' = uprems++[ t | (j, t) <- zip [0..] as, i /= j ]
+        t'      = as!!i
+        funs = append (append n (pack "_")) f
+        posname = "_" ++ show i ++ pd
+        name    = append (pack posname) funs
+        irule = if (t' /= rhs && rhs `notElem` uprems')
+                then [ Rule (DestrRule name (-1) (rhs == lhs `atPos` pos) (frees rhs == []))
+                            ((kdFact  t'):(map kuFact uprems'))
+                            [kdFact rhs] [] [] ]
+                else []
+    go _      (viewTerm -> FApp (NoEq (_,(_,Private,_))) _) _     _ _  = trace (show "5 : " ++ show lhs) []
+    go _      (viewTerm -> FApp (AC (ACfct (_,(_,Private,_)))) _) _     _ _  = trace (show "6 : " ++ show lhs) []
     go _      (viewTerm -> Lit _)                         (_:_) _ _  =
-        error "IntruderRules.destructionRules: impossible, position invalid"   
+        trace (show "7 : " ++ show lhs) (error "IntruderRules.destructionRules: impossible, position invalid")   
      
 destructionRules bool (CtxtStRule lhs (StRhs (pos:posit) rhs)) 
     | (bool || (frees rhs /= []) || (containsPrivate rhs)) = 
-       destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) 
-           ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs))
-destructionRules _ _ = []
+       trace ("next step / " ++ show lhs) (destructionRules bool (CtxtStRule lhs (StRhs [pos] rhs)) 
+           ++ destructionRules bool (CtxtStRule lhs (StRhs posit rhs)))
+destructionRules _ c = trace ("last : " ++ show c) []
 
 -- returns all equations with private constructors on the RHS
 privateConstructorEquations :: [CtxtStRule] -> [(LNTerm, ByteString)]
@@ -191,19 +204,24 @@ minimizeIntruderRules diff rules =
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
 subtermIntruderRules :: Bool -> MaudeSig -> [IntrRuleAC]
 subtermIntruderRules diff maudeSig =
-   minimizeIntruderRules diff $ concatMap (destructionRules diff) (S.toList $ stRules maudeSig)
-     ++ constructionRules (stFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig) 
+   trace (show (stRules maudeSig)) minimizeIntruderRules diff $ (concatMap  (destructionRules diff) (S.toList $ stRules maudeSig)
+     ++ constructionRules (userDefineFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@
-constructionRules :: NoEqFunSig -> [IntrRuleAC]
+constructionRules :: UserDefineSig -> [IntrRuleAC]
 constructionRules fSig =
-    [ createRule s k | (s,(k,Public,Constructor)) <- S.toList fSig ]
+    [ createRule s k acstate | (s,(k,Public,Constructor,acstate)) <- S.toList (noEqorACSet fSig) ]
   where
-    createRule s k = Rule (ConstrRule (append (pack "_") s)) (map kuFact vars) [concfact] [concfact] []
+    noEqorACSet = S.map function
+    function (NoEqUser (o,(k,p,c))) = (o,(k,p,c,NotAC))
+    function (ACfctUser (o,(k,p,c))) = (o,(k,p,c,IsAC))
+    createRule s k acstate = Rule (ConstrRule (append (pack "_") s)) (map kuFact vars) [concfact acstate] [concfact acstate] []
       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
             m        = fAppNoEq (s,(k,Public,Constructor)) vars
-            concfact = kuFact m
+            mAC      = fAppACfct (s,(k,Public,Constructor)) vars
+            concfact NotAC = kuFact m
+            concfact IsAC = kuFact mAC
 
 ------------------------------------------------------------------------------
 -- Diffie-Hellman Intruder Rules

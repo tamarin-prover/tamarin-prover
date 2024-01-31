@@ -118,7 +118,7 @@ type NoEqSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name,
 type ACfctSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
 
 -- | AC function symbols.
-data ACSym = Union | Mult | Xor | NatPlus
+data ACSym = Union | Mult | Xor | NatPlus | ACfct ACfctSym 
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | C(ommutative) function symbols
@@ -132,7 +132,6 @@ data UserDefineSym = NoEqUser NoEqSym | ACfctUser ACfctSym
 -- | Function symbols
 data FunSym = NoEq  NoEqSym   -- ^ a free function symbol of a given arity
             | AC    ACSym     -- ^ an AC function symbol, can be used n-ary
-            | ACfct ACfctSym  -- ^ a free AC function symbol of a given arity
             | C     CSym      -- ^ a C function symbol of a given arity
             | List            -- ^ a free n-ary function symbol of TOP sort
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)

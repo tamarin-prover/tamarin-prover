@@ -344,6 +344,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
   where
     ppTerm tm = case viewTerm tm of
       Lit v -> ppLit v
+      FApp (AC (ACfct (f, _))) _ -> translationFail $ "User defined AC function" ++ show f ++ "not supported "
       FApp (AC Xor) ts -> ppXor ts
       FApp (AC o) ts -> ppTerms (ppACOp o) 1 "(" ")" ts
       FApp (NoEq s) [] | s == natOneSym -> text "1"      
@@ -352,8 +353,6 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       FApp (NoEq _) [t1, t2] | isPair tm -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
       FApp (NoEq (f, _)) [] -> text $ ppFunSym f
       FApp (NoEq (f, _)) ts -> ppFun f ts
-      FApp (ACfct (f, _)) [] -> text $ ppFunSym f
-      FApp (ACfct (f, _)) ts -> ppFun f ts
       FApp (C EMap) ts -> ppFun emapSymString ts
       FApp List ts -> ppFun (BC.pack "LIST") ts
 
@@ -1078,11 +1077,7 @@ headerOfFunSym ((NoEqUser (f, (k, pub, Constructor))), inTypes, outType) =
   where
     priv_or_pub Public = []
     priv_or_pub Private = ["private"]
-headerOfFunSym ((ACfctUser (f, (k, pub, Constructor))), inTypes, outType) =
-  Fun "fun" (ppFunSym f) k ("(" ++ makeArgtypes inTypes ++ "):" ++ ppType outType) (priv_or_pub pub) `S.insert` headersOfType (outType : inTypes)
-  where
-    priv_or_pub Public = []
-    priv_or_pub Private = ["private"]
+headerOfFunSym ((ACfctUser f), _, _) = translationFail $ "User defined AC function" ++ show f ++ "not supported "-- "AC function not supported"
 headerOfFunSym _ = S.empty
 
 -- Load the proverif headers from the OpenTheory

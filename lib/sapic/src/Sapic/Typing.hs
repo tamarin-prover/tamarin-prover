@@ -103,25 +103,6 @@ typeWith t tt
         (ts',ptypes') <- unzip <$> zipWithM typeWith ts intypes2
         insertFun (NoEqUser fs) (ptypes', outtype2)
         return (termViewToTerm $ FApp (NoEq fs) ts', outtype2)
-     | FAppACfct fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: user define AC function application
-    = do
-        -- First determine output type of function from target constraint and update FunctionTypingEnvironment
-        (intypes1,outtype1) <- getFun n (ACfctUser fs)
-        mintype1 <- catch (sqcap outtype1 tt) (sqHandler t)
-        insertFun (ACfctUser fs) (intypes1, mintype1)
-        -- Then try to type arguments
-        (_,ptypes) <- unzip <$> zipWithM typeWith ts intypes1
-        -- From typing our arguments, we might have learned a more precise
-        -- output type, e.g., for t=h(h(x:lol)) we learn that h must have output
-        -- lol.
-        -- So we recompute the output type ...
-        (intypes2,outtype2) <- getFun n (ACfctUser fs)
-        mintype2 <- catch (sqcap outtype2 tt) (sqHandler t)
-        insertFun (ACfctUser fs) (ptypes, mintype2)
-        -- ... and now type the arguments for real.
-        (ts',ptypes') <- unzip <$> zipWithM typeWith ts intypes2
-        insertFun (ACfctUser fs) (ptypes', outtype2)
-        return (termViewToTerm $ FApp (ACfct fs) ts', outtype2)
     | FApp fs ts <- viewTerm t = do  -- list, AC or C symbol: ignore, i.e., assume polymorphic
         ts' <- mapM (\t' -> fst <$> typeWith t' Nothing) ts
         return (termViewToTerm $ FApp fs ts', Nothing)

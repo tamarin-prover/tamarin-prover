@@ -429,7 +429,7 @@ checkTranslatedTheory thyOpts sign thy = do
     makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name,(int, Public, construct)))
     makepublicsym  = Data.Set.map (\el -> case el of
       NoEq (name, (int, _, constr)) -> NoEq (name,(int, Public, constr))
-      ACfct (name, (int, _, constr)) -> ACfct (name,(int, Public, constr))
+      AC (ACfct (name, (int, _, constr))) -> AC (ACfct (name,(int, Public, constr)))
       x -> x
       )
 

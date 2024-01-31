@@ -105,12 +105,11 @@ fApp (AC acSym)  ts = fAppAC acSym ts
 fApp (C o)       ts = fAppC o ts
 fApp List        ts = FAPP List ts
 fApp s@(NoEq _)  ts = FAPP s ts
-fApp s@(ACfct _)  ts = FAPP s ts
 
 -- | Smart constructor for AC terms.
 fAppAC :: Ord a => ACSym -> [Term a] -> Term a
 fAppAC _     []  = error "Term.fAppAC: empty argument list"
-fAppAC _     [a] = a
+fAppAC _     [a] = a                                            -- FIX-ME : true for ACfct ?
 fAppAC acsym as  =
     FAPP (AC acsym) (sort (o_as ++ non_o_as))
   where
@@ -131,8 +130,8 @@ fAppNoEq freesym = FAPP (NoEq freesym)
 
 -- | Smart constructor for user define AC terms.
 {-# INLINE fAppACfct #-}
-fAppACfct :: ACfctSym -> [Term a] -> Term a
-fAppACfct freesym = FAPP (ACfct freesym)
+fAppACfct :: Ord a => ACfctSym -> [Term a] -> Term a
+fAppACfct f = fAppAC (ACfct f)
 
 -- | Smart constructor for list terms.
 {-# INLINE fAppList #-}
@@ -172,10 +171,12 @@ viewTerm2 t@(FAPP (AC o) ts)
   | length ts < 2 = error $ "viewTerm2: malformed term `"++show t++"'"
   | otherwise     = (acSymToConstr o) ts
   where
-    acSymToConstr Mult    = FMult
-    acSymToConstr Union   = FUnion
-    acSymToConstr NatPlus = FNatPlus
-    acSymToConstr Xor   = FXor
+    ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, dhNeutralSym ]
+    acSymToConstr Mult      = FMult
+    acSymToConstr Union     = FUnion
+    acSymToConstr NatPlus   = FNatPlus
+    acSymToConstr Xor       = FXor
+    acSymToConstr (ACfct f) = if f `elem` ssyms then error $ "viewTerm2: malformed term `"++show t++"'" else FAppACfct f
 viewTerm2 (FAPP (C EMap) [ t1 ,t2 ]) = FEMap t1 t2
 viewTerm2 t@(FAPP (C _)  _)          = error $ "viewTerm2: malformed term `"++show t++"'"
 viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
@@ -191,10 +192,6 @@ viewTerm2 t@(FAPP (NoEq o) ts) = case ts of
      where
       ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, dhNeutralSym ]
     _                           -> FAppNoEq o ts
-viewTerm2 t@(FAPP (ACfct o) ts) = if (o `elem` ssyms) then (error $ "viewTerm2: malformed term `"++show t++"'") else FAppACfct o ts
-  where
-    -- special symbols
-    ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, dhNeutralSym ]
 
 ----------------------------------------------------------------------
 -- Instances
@@ -220,14 +217,14 @@ instance Foldable Term where
 instance Show a => Show (Term a) where
     show t =
       case viewTerm t of
-        Lit l                  -> show l
-        FApp   (NoEq (s,_)) [] -> BC.unpack s
-        FApp   (NoEq (s,_)) as -> BC.unpack s++"("++(intercalate "," (map show as))++")"
-        FApp   (ACfct (s,_)) [] -> BC.unpack s
-        FApp   (ACfct (s,_)) as -> BC.unpack s++"("++(intercalate "," (map show as))++")"
-        FApp   (C EMap) as     -> BC.unpack emapSymString++"("++(intercalate "," (map show as))++")"
-        FApp   List as         -> "LIST"++"("++(intercalate "," (map show as))++")"
-        FApp   (AC o) as       -> show o++"("++(intercalate "," (map show as))++")"
+        Lit l                         -> show l
+        FApp   (NoEq (s,_)) []        -> BC.unpack s
+        FApp   (NoEq (s,_)) as        -> BC.unpack s ++ "(" ++ (intercalate "," (map show as)) ++ ")"
+        FApp   (AC (ACfct (s,_))) []  -> BC.unpack s
+        FApp   (AC (ACfct (s,_))) as  -> BC.unpack s ++ "(" ++ (intercalate "," (map show as)) ++ ")"
+        FApp   (C EMap) as            -> BC.unpack emapSymString ++ "(" ++ (intercalate "," (map show as)) ++ ")"
+        FApp   List as                -> "LIST" ++ "(" ++ (intercalate "," (map show as)) ++ ")"
+        FApp   (AC o) as              -> show o ++ "(" ++ (intercalate "," (map show as)) ++ ")"
 
 -- | The fold function for @Term a@.
 {-# INLINE foldTerm #-}
