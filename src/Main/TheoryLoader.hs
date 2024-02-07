@@ -246,14 +246,6 @@ mkTheoryLoadOptions as = TheoryLoadOptions
     proveMode  = return $ argExists "prove" as
     lemmaNames = return $ findArg "prove" as ++ findArg "lemma" as
 
-    stopOnTrace = case map toLower <$> findArg "stop-on-trace" as of
-      Nothing       -> return CutDFS
-      Just "dfs"    -> return CutDFS
-      Just "none"   -> return CutNothing
-      Just "bfs"    -> return CutBFS
-      Just "seqdfs" -> return CutSingleThreadDFS
-      Just unknown  -> throwError $ ArgumentError ("unknown stop-on-trace method: " ++ unknown)
-
     parseIntArg args defaultValue conv errMsg = case args of
       []    -> return defaultValue
       (x:_) -> case (readEither x :: Either String Int) of
@@ -494,7 +486,7 @@ closeTranslatedTheory thyOpts sign srcThy = do
 
 -- | Translate an open theory, perform checks on the translated theory and finally close it.
 closeTheory :: MonadCatch m => MonadIO m => MonadError TheoryLoadError m => String -> TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either ClosedTheory ClosedDiffTheory))
-closeTheory version thyOpts sign srcThy = do
+closeTheory version loadedThyOpts sign srcThy = do
   (preReport, transThy)    <- translateTheory thyOpts srcThy
   removedThy               <- withTheory (return . removeTranslationItems) transThy
   (postReport, checkedThy) <- checkTranslatedTheory thyOpts sign removedThy
@@ -504,6 +496,37 @@ closeTheory version thyOpts sign srcThy = do
   return (preReport ++ postReport, finalThy)
   where
     withTheory f = bitraverse f return
+
+    loadedAutoSources = L.get oAutoSources loadedThyOpts
+    loadedStopOnTrace = L.get oStopOnTrace loadedThyOpts
+    loadedHeuristic   = L.get oHeuristic loadedThyOpts
+
+    srcThyInFileName = either (L.get thyInFile) (L.get diffThyInFile) srcThy
+
+    -- Update command line arguments with arguments taken from the configuration block.
+    -- Set the default oraclename if needed.
+    thyOpts = (thyHeurDefOracle . configStopOnTrace . configAutoSources) loadedThyOpts
+
+    -- Set the oraclename to theory_filename.oracle (if none was supplied).
+    thyHeurDefOracle =
+      set oHeuristic $ (\(Heuristic grl) -> Just $ Heuristic $ defaultOracleNames srcThyInFileName grl) =<< loadedHeuristic
+
+    -- Read and process the arguments from the theory's config block.
+    srcThyConfigBlockArgs = argsConfigString $ either theoryConfigBlock diffTheoryConfigBlock srcThy
+
+    argsConfigString =
+      processValue (mode "configuration block arguments" [] "" (flagArg (updateArg "") "") theoryConfFlags) <$> splitArgs
+
+    theoryConfFlags =
+      [flagOpt "dfs" ["stop-on-trace"] (updateArg "stop-on-trace") "" ""
+     , flagNone ["auto-sources"] (addEmptyArg "auto-sources") ""]
+
+    configStopOnTrace =
+      if isNothing loadedStopOnTrace
+        then L.set oStopOnTrace (either (\(ArgumentError e) -> error e) id $ stopOnTrace srcThyConfigBlockArgs)
+        else id
+
+    configAutoSources = L.set oAutoSources (argExists "auto-sources" srcThyConfigBlockArgs || loadedAutoSources)
 
 -- | Translate an open theory and perform checks on the translated theory.
 translateAndCheckTheory :: MonadCatch m => MonadIO m => MonadError TheoryLoadError m => String -> TheoryLoadOptions -> SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> m ((WfErrorReport, Either OpenTheory OpenDiffTheory))
@@ -529,38 +552,6 @@ prettyOpenTheoryByModule thyOpts = case modType of
   where
     modType = L.get oOutputModule thyOpts
     lemmas = lemmaSelector thyOpts
-
-
-    loadedAutoSources = L.get oAutoSources loadedThyOptions
-    loadedStopOnTrace = L.get oStopOnTrace loadedThyOptions
-    loadedHeuristic   = L.get oHeuristic loadedThyOptions
-
-    srcThyInFileName = either (L.get thyInFile) (L.get diffThyInFile) srcThy
-
-    -- Update command line arguments with arguments taken from the configuration block.
-    -- Set the default oraclename if needed.
-    thyOpts = (thyHeurDefOracle . configStopOnTrace . configAutoSources) loadedThyOptions
-
-    -- Set the oraclename to theory_filename.oracle (if none was supplied).
-    thyHeurDefOracle =
-      set oHeuristic $ (\(Heuristic grl) -> Just $ Heuristic $ defaultOracleNames srcThyInFileName grl) =<< loadedHeuristic
-
-    -- Read and process the arguments from the theory's config block.
-    srcThyConfigBlockArgs = argsConfigString $ either theoryConfigBlock diffTheoryConfigBlock srcThy
-
-    argsConfigString =
-      processValue (mode "configuration block arguments" [] "" (flagArg (updateArg "") "") theoryConfFlags) <$> splitArgs
-
-    theoryConfFlags =
-      [flagOpt "dfs" ["stop-on-trace"] (updateArg "stop-on-trace") "" ""
-     , flagNone ["auto-sources"] (addEmptyArg "auto-sources") ""]
-
-    configStopOnTrace =
-      if isNothing loadedStopOnTrace
-        then L.set oStopOnTrace (either (\(ArgumentError e) -> error e) id $ stopOnTrace srcThyConfigBlockArgs)
-        else id
-
-    configAutoSources = L.set oAutoSources (argExists "auto-sources" srcThyConfigBlockArgs || loadedAutoSources)
 
 (&&&) :: (t -> Bool) -> (t -> Bool) -> t -> Bool
 (&&&) f g x = f x && g x
