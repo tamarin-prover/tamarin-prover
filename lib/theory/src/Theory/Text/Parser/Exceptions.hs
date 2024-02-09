@@ -39,6 +39,7 @@ instance Show (ParsingException) where
     show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ get lName lem
     show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
     show (DuplicateItem (TextItem _)) =  undefined
+    show (DuplicateItem (ConfigBlockItem b)) =  "duplicate configuration block:" ++ show b
     show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
     show (DuplicateItem (MacroItem mc)) = "duplicate macro: " ++ render (prettyMacros mc)
     show (DuplicateItem (TranslationItem (ProcessDefItem pDef))) =

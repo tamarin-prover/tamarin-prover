@@ -99,11 +99,13 @@ module Theory (
   , TheoryItem(..)
   , DiffTheoryItem(..)
   , thyName
+  , thyInFile
   , thySignature
   , thyTactic
   , thyCache
   , thyItems
   , diffThyName
+  , diffThyInFile
   , diffThySignature
   , diffThyCacheLeft
   , diffThyCacheRight
