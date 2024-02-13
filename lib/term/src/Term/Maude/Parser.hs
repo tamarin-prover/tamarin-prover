@@ -109,10 +109,6 @@ replaceUnderscore s = BC.map f s
 replaceUnderscoreFun :: NoEqSym -> NoEqSym
 replaceUnderscoreFun (s, p) = (replaceUnderscore s, p)
 
--- | Replace underscores "_" with minus "-" for Maude.
-replaceUnderscoreFunAC :: ACfctSym -> ACfctSym
-replaceUnderscoreFunAC (s, p) = (replaceUnderscore s, p)
-
 -- | Replace minus "-" with underscores "_" when parsing back from Maude.
 replaceMinus :: ByteString -> ByteString
 replaceMinus s = BC.map f s
@@ -337,7 +333,11 @@ parseTerm msig = choice
                                         (ident , (length args,Public,Constructor))
                                   else  (ident', (length args, priv, cnstr))
             allowedfunSyms = [consSym, nilSym, natOneSym]
-                ++ map replaceUnderscoreFun (S.toList $ noEqFunSyms msig) ++ map replaceUnderscoreFunAC (S.toList $ acUserFunSyms msig)
+                ++ map replaceUnderscoreFun (S.toList $ noEqFunSyms msig)
+
+    parseFunACSym ident args = replaceMinusFun (ident', (length args, priv, cnstr))
+      where
+        (ident',priv,cnstr) = funSymDecode ident
 
     parseConst s = lit <$> (flip MaudeConst s <$> decimal) <* string ")"
 
@@ -348,10 +348,10 @@ parseTerm msig = choice
                        | ident == ppMaudeACSym Union      = fAppAC Union   args
                        | ident == ppMaudeACSym NatPlus    = fAppAC NatPlus args
                        | ident == ppMaudeACSym Xor        = fAppAC Xor   args
-                       | BC.isInfixOf "tamPDA" ident      = fAppACfct (parseFunSym ident args) args
-                       | BC.isInfixOf "tamPCA" ident      = fAppACfct (parseFunSym ident args) args
-                       | BC.isInfixOf "tamXDA" ident      = fAppACfct (parseFunSym ident args) args
-                       | BC.isInfixOf "tamXCA" ident      = fAppACfct (parseFunSym ident args) args
+                       | BC.isInfixOf "tamPDA" ident      = fAppACfct (parseFunACSym ident args) args
+                       | BC.isInfixOf "tamPCA" ident      = fAppACfct (parseFunACSym ident args) args
+                       | BC.isInfixOf "tamXDA" ident      = fAppACfct (parseFunACSym ident args) args
+                       | BC.isInfixOf "tamXCA" ident      = fAppACfct (parseFunACSym ident args) args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
         appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)
         appIdent args                                     = fAppNoEq op args

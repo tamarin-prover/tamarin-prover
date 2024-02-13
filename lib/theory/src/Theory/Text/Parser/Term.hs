@@ -33,8 +33,6 @@ import           Theory.Text.Parser.Token
 import           Data.ByteString.Internal        (unpackChars)
 import Data.Functor (($>))
 
-import Debug.Trace
-
 
 -- | Parse a lit with logical variables parsed by @varp@
 vlit :: Parser v -> Parser (NTerm v)
@@ -103,7 +101,7 @@ naryOpApp eqn plit = do
     case (BC.pack op,(k,priv,constr,acstate)) of
       (o,(_,_,_,_)) | o == emapSymString -> return $ fAppC EMap ts
       (_,(_,_,_,NotAC)) -> return $ fAppNoEq (BC.pack op, (k,priv,constr)) ts
-      (_,(_,_,_,IsAC)) -> return $ fAppACfct (BC.pack op, (k,priv,constr)) ts
+      (_,(_,_,_,IsAC)) -> return $ fAppACEqn (BC.pack op, (k,priv,constr)) ts
     --return $ app (BC.pack op, (k,priv,constr)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
@@ -119,7 +117,7 @@ binaryAlgApp eqn plit = do
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     case acstate of
       NotAC -> return $ fAppNoEq (BC.pack op, (k,priv,constr)) [arg1, arg2]
-      IsAC -> return $ fAppACfct (BC.pack op, (k,priv,constr)) [arg1, arg2]
+      IsAC -> return $ fAppACEqn (BC.pack op, (k,priv,constr)) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do

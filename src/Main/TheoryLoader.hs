@@ -71,7 +71,7 @@ import           Theory.Text.Parser.Token
 import qualified Theory.Text.Pretty as Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
-                                                     , multisetIntruderRules, xorIntruderRules)
+                                                     , multisetIntruderRules, xorIntruderRules, destructionRulesAC)
 import           Theory.Tools.Wellformedness
 import           Theory.Tools.MessageDerivationChecks
 import           Theory.Module
@@ -92,6 +92,7 @@ import           Items.OptionItem                    (openChainsLimit,saturation
 
 import           Control.Monad.Except
 import           Control.Monad.Catch (MonadCatch)
+import           Control.Monad.Reader
 
 
 import qualified Accountability as Acc
@@ -391,8 +392,8 @@ checkTranslatedTheory thyOpts sign thy = do
   let transReport = either (`checkWellformedness` sign)
                            (`checkWellformednessDiff` sign) thy
 
-  deducThy <- bitraverse (return . addMessageDeductionRuleVariants)
-                         (return . addMessageDeductionRuleVariantsDiff) thy
+  deducThy <- bitraverse (return . (addMessageDeductionRuleVariants `runReader` (L.get sigmMaudeHandle sign))) 
+                         (return . (addMessageDeductionRuleVariantsDiff `runReader` (L.get sigmMaudeHandle sign))) thy
 
 
   variableReport <- case compare derivChecks 0 of
@@ -591,7 +592,7 @@ mkBpIntruderVariants msig =
 -- | Add the variants of the message deduction rule. Uses built-in cached
 -- files for the variants of the message deduction rules for Diffie-Hellman
 -- exponentiation and Bilinear-Pairing.
-addMessageDeductionRuleVariants :: OpenTranslatedTheory -> OpenTranslatedTheory
+addMessageDeductionRuleVariants :: OpenTranslatedTheory -> WithMaude OpenTranslatedTheory
 addMessageDeductionRuleVariants thy0
   | enableBP msig = addIntruderVariants [ mkDhIntruderVariants
                                         , mkBpIntruderVariants ]
@@ -601,14 +602,14 @@ addMessageDeductionRuleVariants thy0
     msig         = get (sigpMaudeSig . thySignature) thy0
     rules        = subtermIntruderRules False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
-                   ++ (if enableXor msig then xorIntruderRules else [])
+                   ++ (if enableXor msig then xorIntruderRules else []) ++ destructionRulesAC False (acUserFunSyms msig)
     thy          = addIntrRuleACsAfterTranslate rules thy0
     addIntruderVariants mkRuless = addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
 
 -- | Add the variants of the message deduction rule. Uses the cached version
 -- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
 -- deduction rules for Diffie-Hellman exponentiation.
-addMessageDeductionRuleVariantsDiff :: OpenDiffTheory -> OpenDiffTheory
+addMessageDeductionRuleVariantsDiff :: OpenDiffTheory -> WithMaude OpenDiffTheory
 addMessageDeductionRuleVariantsDiff thy0
   | enableBP msig = addIntruderVariantsDiff [ mkDhIntruderVariants
                                             , mkBpIntruderVariants ]
@@ -618,7 +619,7 @@ addMessageDeductionRuleVariantsDiff thy0
     msig         = get (sigpMaudeSig . diffThySignature) thy0
     rules diff'  = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
                     ++ (if enableMSet msig then multisetIntruderRules else [])
-                    ++ (if enableXor msig then xorIntruderRules else [])
+                    ++ (if enableXor msig then xorIntruderRules else [])-- ++ destructionRulesAC diff' (acUserFunSyms msig)
     thy          = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
     addIntruderVariantsDiff mkRuless =
         addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)

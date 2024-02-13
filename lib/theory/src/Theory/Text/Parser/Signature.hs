@@ -173,7 +173,7 @@ equations =
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         case rRuleToCtxtStRule rrule of
           Just str ->
-              trace (show rrule) modifyStateSig (addCtxtStRule str)
+              modifyStateSig (addCtxtStRule str)
           Nothing  ->
               fail $ "Not a correct equation: " ++ show rrule
 
