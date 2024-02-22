@@ -107,7 +107,7 @@ executable tamarin-prover
     default-language: Haskell2010
 
     if flag(threaded)
-        ghc-options:   -threaded -eventlog
+        ghc-options:   -threaded
 
     -- -XFlexibleInstances
 

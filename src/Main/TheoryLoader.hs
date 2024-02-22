@@ -44,15 +44,13 @@ module Main.TheoryLoader (
 
   ) where
 
--- import           Debug.Trace
-
 import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
 import           Data.Label
 import           Data.List                           (isPrefixOf, intercalate, find)
 import qualified Data.Set
-import           Data.Maybe                          (fromMaybe, fromJust, isJust, isNothing)
+import           Data.Maybe                          (fromMaybe, isNothing)
 import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
 import qualified Data.Label as L
@@ -60,8 +58,10 @@ import           Data.Bifunctor (Bifunctor(bimap))
 import           Data.Bitraversable (Bitraversable(bitraverse))
 
 import           Control.Category
-import           Control.Exception (evaluate)
 import           Control.DeepSeq (force)
+import           Control.Exception (evaluate)
+import           Control.Monad
+import           Control.Monad.IO.Class (MonadIO(liftIO))
 
 import           System.Console.CmdArgs.Explicit
 import           System.Timeout (timeout)
@@ -293,7 +293,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
     sat = findArg "SaturationLimit" as
     satDefault = L.get oSaturation defaultTheoryLoadOptions
     saturation = parseIntArg sat satDefault integerFromInt "SaturationLimit: invalid bound given"
-    
+
     derivchecks = findArg "derivcheck-timeout" as
     derivDefault = L.get oDerivationChecks defaultTheoryLoadOptions
     deriv = parseIntArg derivchecks derivDefault id "derivcheck-timeout: invalid bound given"

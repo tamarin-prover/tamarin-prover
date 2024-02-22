@@ -47,6 +47,7 @@ library
       , deepseq
       , dlist
       , fclabels
+      , list-t
       , mtl
       , pretty
       , safe
