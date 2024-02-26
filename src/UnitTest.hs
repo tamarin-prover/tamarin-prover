@@ -24,4 +24,4 @@ main = do
   args <- getArgs
   case args of
     ["variants"] -> TU.mainVariants
-    _            -> mainUnit >> return ()
+    _            -> mainUnit >> pure ()

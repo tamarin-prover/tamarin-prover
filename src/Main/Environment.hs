@@ -106,7 +106,7 @@ ensureGraphCommand as = do
   hPutStrLn stderr $ "Graph rendering command: " ++ cmd
   testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False False
   where
-    cmd = ocGraphCommand $ readOutputCommand as
+    cmd = (readOutputCommand as).ocGraphCommand
     check _ err
       | err == ""  = Right " OK."
       | otherwise  = Left  errMsg

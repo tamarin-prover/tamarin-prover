@@ -86,7 +86,7 @@ run thisMode as = case findArg "workDir" as of
       version <- ensureMaudeAndGetVersion as
 
       -- process theories
-      _ <- case (ocFormat $ readOutputCommand as) of
+      _ <- case (readOutputCommand as).ocFormat of
           OutDot  -> ensureGraphVizDot as
           OutJSON -> ensureGraphCommand as
 
@@ -103,12 +103,12 @@ run thisMode as = case findArg "workDir" as of
       withWebUI
         ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
         cacheDir
-        workDir 
-        
+        workDir
+
         enableLogging
-        (argExists "loadstate" as) 
+        (argExists "loadstate" as)
         (argExists "autosave" as)
-        
+
         thyLoadOptions
 
         (loadTheory thyLoadOptions)
