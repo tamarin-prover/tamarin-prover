@@ -1,0 +1,66 @@
+theory auth_signing
+begin
+
+builtins: signing
+
+/* We formalize the following protocol:
+
+    1. A -> B: {A,na}sk(A)
+
+using Tamarin's builtin signing and verification functions.
+
+*/
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltkA) ]
+  -->
+  [ !Ltk($A, ~ltkA)
+  , !Pk($A, pk(~ltkA))
+  , Out(pk(~ltkA)) 
+  ] 
+
+// Compromising an agent's long-term key
+rule Reveal_ltk:
+  [ !Ltk(A, ltkA) ] --[ Reveal(A) ]-> [ Out(ltkA) ]
+
+// Role A sends first message
+rule A_1_send:
+  let m = <A, ~na>
+  in 
+  [ Fr(~na)
+  , !Ltk(A, ltkA)
+  , !Pk(B, pkB)
+  ]
+--[ Send(A, m) 
+  ]->
+  [ St_A_1(A, ltkA, pkB, B, ~na) 
+  , Out(<m,sign(m,ltkA)>)
+  ]
+
+// Role B receives first message
+rule B_1_receive:
+  [ !Ltk(B, ltkB)
+  , !Pk(A, pkA)
+  , In(<m,sig>)
+  ]
+--[ Recv(B, m)
+  , Eq(verify(sig,m,pkA),true) 
+  , Authentic(A,m), Honest(B), Honest(A)
+  ]->
+  [ St_B_1(B, ltkB, pkA, A, m)
+  ]
+
+restriction Equality:
+  "All x y #i. Eq(x,y) @i ==> x = y"
+
+lemma executable:
+  exists-trace
+    "Ex A B m #i #j. Send(A,m)@i & Recv(B,m) @j"
+
+lemma message_authentication: 
+    "All b m #i. Authentic(b,m) @i
+     ==> (Ex #j. Send(b,m) @j & j<i)
+         | (Ex B #r. Reveal(B)@r & Honest(B) @i & r < i)"
+
+end
