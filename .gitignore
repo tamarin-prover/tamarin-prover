@@ -14,6 +14,7 @@ tamarin-prover-img
 cabal-sandbox/
 cabal.sandbox.config
 .stack-work/
+dist-newstyle
 
 *.spthy.out
 *.spthy.tmp
