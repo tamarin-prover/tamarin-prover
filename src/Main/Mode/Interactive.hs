@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -10,25 +9,25 @@ module Main.Mode.Interactive (
     interactiveMode
   ) where
 
-import           Control.Basics
-import           Control.Exception               (IOException, handle)
-import           Data.Char                       (toLower)
-import           Data.List
-import           Data.Maybe
-import           Data.String                     (fromString)
-import           System.Console.CmdArgs.Explicit as CmdArgs
-import           System.Directory                (doesDirectoryExist, doesFileExist, getTemporaryDirectory)
-import           System.Environment              (lookupEnv)
-import           System.FilePath
+import Control.Basics
+import Control.Exception (IOException, handle)
+import Data.Char (toLower)
+import Data.List
+import Data.Maybe
+import Data.String (fromString)
+import System.Console.CmdArgs.Explicit as CmdArgs
+import System.Directory (doesDirectoryExist, doesFileExist, getTemporaryDirectory)
+import System.Environment (lookupEnv)
+import System.FilePath
 
-import           Network.Wai.Handler.Warp        (defaultSettings, setHost, setPort)
-import qualified Network.Wai.Handler.Warp        as Warp
-import           Web.Dispatch
-import qualified Web.Settings
+import Network.Wai.Handler.Warp (defaultSettings, setHost, setPort)
+import Network.Wai.Handler.Warp qualified as Warp
+import Web.Dispatch
+import Web.Settings qualified
 
-import           Main.Console 
-import           Main.Environment
-import           Main.TheoryLoader
+import Main.Console
+import Main.Environment
+import Main.TheoryLoader
 
 
 
@@ -39,10 +38,10 @@ import           Main.TheoryLoader
 -- | Batch processing mode.
 interactiveMode :: TamarinMode
 interactiveMode = tamarinMode
-    "interactive"
-    "Start a web-server to construct proofs interactively."
-    setupFlags
-    run
+  "interactive"
+  "Start a web-server to construct proofs interactively."
+  setupFlags
+  run
   where
     setupFlags defaultMode = defaultMode
       { modeArgs       = ([], Just $ flagArg (updateArg "workDir") "WORKDIR")
@@ -67,61 +66,59 @@ interactiveMode = tamarinMode
 -- | Start the interactive theorem proving mode.
 run :: TamarinMode -> Arguments -> IO ()
 run thisMode as = case findArg "workDir" as of
-    Nothing       -> helpAndExit thisMode
-                       (Just "no working directory specified")
-    Just workDir0 -> do
-      -- determine working directory
-      wdIsFile <- doesFileExist workDir0
-      let workDir | wdIsFile  = takeDirectory workDir0
-                  | otherwise = workDir0
-      wdIsDir  <- doesDirectoryExist workDir
-      if wdIsDir
-        then do
-          -- determine caching directory
-          tempDir <- getTemporaryDirectory
-          winLoginName <- lookupEnv "USERNAME"
-          unixLoginName <- lookupEnv "USER"
-          let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
-              cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
+  Nothing -> helpAndExit thisMode (Just "no working directory specified")
+  Just workDir0 -> do
+    -- determine working directory
+    wdIsFile <- doesFileExist workDir0
+    let workDir | wdIsFile  = takeDirectory workDir0
+                | otherwise = workDir0
+    wdIsDir  <- doesDirectoryExist workDir
+    if wdIsDir then do
+      -- determine caching directory
+      tempDir <- getTemporaryDirectory
+      winLoginName <- lookupEnv "USERNAME"
+      unixLoginName <- lookupEnv "USER"
+      let loginName = fromMaybe "" (winLoginName <|> unixLoginName)
+          cacheDir = tempDir </> ("tamarin-prover-cache-" ++ loginName)
 
-          -- Ensure Maude and get the Version in the arguments (__versionPrettyPrint__)
-          version <- ensureMaudeAndGetVersion as
+      -- Ensure Maude and get the Version in the arguments (__versionPrettyPrint__)
+      version <- ensureMaudeAndGetVersion as
 
-          -- process theories
-          _ <- case (fst $ graphPath as) of
-              "dot"  -> ensureGraphVizDot as
-              "json" -> ensureGraphCommand as
-              _      -> return (Just "")
+      -- process theories
+      _ <- case fst (graphPath as) of
+          "dot"  -> ensureGraphVizDot as
+          "json" -> ensureGraphCommand as
+          _      -> pure (Just "")
 
-          port <- readPort
-          let webUrl = serverUrl port
-          putStrLn $ intercalate "\n"
-            [ "The server is starting up on port " ++ show port ++ "."
-            , "Browse to " ++ webUrl ++ " once the server is ready."
-            , ""
-            , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
-            , ""
-            ]
+      port <- readPort
+      let webUrl = serverUrl port
+      putStrLn $ intercalate "\n"
+        [ "The server is starting up on port " ++ show port ++ "."
+        , "Browse to " ++ webUrl ++ " once the server is ready."
+        , ""
+        , "Loading the security protocol theories '" ++ workDir </> "*.spthy"  ++ "' ..."
+        , ""
+        ]
 
-          withWebUI
-            ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
-            cacheDir
-            workDir (argExists "loadstate" as) (argExists "autosave" as)
+      withWebUI
+        ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
+        cacheDir
+        workDir (argExists "loadstate" as) (argExists "autosave" as)
 
-            thyLoadOptions
+        thyLoadOptions
 
-            (loadTheory thyLoadOptions)
-            (closeTheory version thyLoadOptions)
+        (loadTheory thyLoadOptions)
+        (closeTheory version thyLoadOptions)
 
-            (argExists "debug" as) (graphPath as) readImageFormat
-            (constructAutoProver thyLoadOptions)
-            (runWarp port)
+        (argExists "debug" as) (graphPath as) readImageFormat
+        (constructAutoProver thyLoadOptions)
+        (runWarp port)
 
-        else
-          helpAndExit thisMode
-            (Just $ "directory '" ++ workDir ++ "' does not exist.")
+    else
+      helpAndExit thisMode
+        (Just $ "directory '" ++ workDir ++ "' does not exist.")
   where
-    thyLoadOptions = case (mkTheoryLoadOptions as) of
+    thyLoadOptions = case mkTheoryLoadOptions as of
       Left (ArgumentError e) -> error e
       Right opts             -> opts
 
@@ -133,17 +130,18 @@ run thisMode as = case findArg "workDir" as of
         (argExists "port" as && isNothing port)
         (putStrLn $ "Unable to read port from argument `"
                     ++ fromMaybe "" (findArg "port" as) ++ "'. Using default.")
-      return $ fromMaybe Web.Settings.defaultPort port
+      pure $ fromMaybe Web.Settings.defaultPort port
 
     -- Interface argument, we use 127.0.0.1 as default
     --------------------------------------------------
     interface = fromMaybe "127.0.0.1" $ findArg "interface" as
 
-    readImageFormat = case map toLower <$> findArg "image-format" as of
-                          Just "svg" -> SVG
-                          Just "png" -> PNG
-                          Nothing    -> PNG
-                          _          -> error "image-format must be one of PNG|SVG"
+    readImageFormat =
+      case map toLower <$> findArg "image-format" as of
+        Just "svg" -> SVG
+        Just "png" -> PNG
+        Nothing    -> PNG
+        Just _     -> error "image-format must be one of PNG|SVG"
 
     serverUrl port = "http://" ++ address ++ ":" ++ show port
       where
@@ -151,11 +149,12 @@ run thisMode as = case findArg "workDir" as of
                 | otherwise                        = interface
 
     runWarp port wapp =
-        handle (\e -> err (e::IOException)) $
-            Warp.runSettings
-               (setHost (fromString interface) $ setPort port defaultSettings)
-               wapp
+      handle (\e -> err (e::IOException)) $
+        Warp.runSettings
+          (setHost (fromString interface) $ setPort port defaultSettings)
+          wapp
 
-    err e = error $ "Starting the webserver on "++interface++" failed: \n"
-                    ++ show e
-                    ++ "\nNote that you can use '--interface=\"*4\"' for binding to all interfaces."
+    err e = error $
+      "Starting the webserver on "++interface++" failed: \n"
+      ++ show e
+      ++ "\nNote that you can use '--interface=\"*4\"' for binding to all interfaces."
