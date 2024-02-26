@@ -28,7 +28,8 @@ import           Main.TheoryLoader
 import           Main.Utils
 
 import           Theory.Module
-import           Control.Monad.Except (MonadIO(liftIO), runExceptT)
+import           Control.Monad.Except (runExceptT)
+import           Control.Monad.IO.Class (MonadIO(liftIO))
 import           System.Exit (die)
 import Theory.Tools.Wellformedness (prettyWfErrorReport)
 import           Text.Printf                     (printf)
@@ -191,7 +192,7 @@ run thisMode as
         formalComments = either (filter (/=("","")) . theoryFormalComments) (filter (/=("", "")) . diffTheoryFormalComments)
 
         isParseOnlyMode = get oParseOnlyMode thyLoadOptions
-        isTranslateOnlyMode = get oOutputModule thyLoadOptions `elem` 
+        isTranslateOnlyMode = get oOutputModule thyLoadOptions `elem`
                                 [ModuleSpthy, ModuleSpthyTyped, ModuleProVerif, ModuleProVerifEquivalence, ModuleDeepSec]
 
         handleError e@(ParserError _) = die $ show e

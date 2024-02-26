@@ -60,7 +60,7 @@ module Term.Unification (
   , pairDestMaudeSig
   , symEncDestMaudeSig
   , asymEncDestMaudeSig
-  , signatureDestMaudeSig  
+  , signatureDestMaudeSig
   , locationReportMaudeSig
   , revealSignatureMaudeSig
   , hashMaudeSig
@@ -79,7 +79,7 @@ module Term.Unification (
   , module Term.Rewriting.Definitions
 ) where
 
--- import           Control.Applicative
+import           Control.Monad
 import           Control.Monad.RWS
 import           Control.Monad.Except
 import           Control.Monad.State
