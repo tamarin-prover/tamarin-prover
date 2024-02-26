@@ -7,7 +7,6 @@
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Parsing protocol theories. See the MANUAL for a high-level description of
@@ -208,15 +207,22 @@ theory inFile = do
     when ("diff" `S.member` flags0) $ modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    thy' <- symbol_ "begin"
-        *> addItems inFile (set thyName thyId (defaultOpenTheory ("diff" `S.member` flags0)))
-        <* symbol "end"
-    return thy'
+    let defThy = defaultOpenTheory ("diff" `S.member` flags0)
+    block <- try (symbol "configuration" <* colon) <|> symbol "begin" <?> "configuration or begin"
+    if block == "configuration"
+        then do
+            fileArgs <- stringLiteral <* symbol_ "begin"
+            addItems inFile (set thyInFile (fromMaybe "" inFile) 
+              $ set thyName thyId (modify thyItems (++ [ConfigBlockItem fileArgs]) defThy)) <* symbol_ "end"
+        else do
+            addItems inFile (set thyInFile (fromMaybe "" inFile) $ set thyName thyId defThy) <* symbol_ "end"
   where
     addItems :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     addItems inFile0 thy = asum
-      [ do thy' <- liftedAddHeuristic thy =<< heuristic False workDir
-           addItems inFile0 thy'
+      [ do
+          thyHeuristic <- heuristic False workDir
+          thy' <- liftedAddHeuristic thy $ defaultOracleNames (fromMaybe "" inFile0) thyHeuristic
+          addItems inFile0 thy'
       , do thy' <- liftedAddTactic thy =<< tactic False
            addItems inFile0 thy'
       , do thy' <- builtins thy
@@ -245,9 +251,10 @@ theory inFile = do
            addItems inFile0 thy'
       , do accLem <- lemmaAcc workDir
            let tests = mapMaybe (flip lookupCaseTest $ thy) (get aCaseIdentifiers accLem)
-           thy' <- liftedAddAccLemma thy (defineCaseTests accLem tests)
+           thy' <- liftedAddAccLemma thy (rewriteAccLemmaOracle inFile0 $ defineCaseTests accLem tests)
            addItems inFile0 thy'
-      , do thy' <- liftedAddLemma thy =<< lemma workDir
+      , do lem <- lemma workDir
+           thy' <- liftedAddLemma thy (rewriteLemmaOracle inFile0 lem)
            addItems inFile0 thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
@@ -283,6 +290,18 @@ theory inFile = do
        modifyStateFlag (S.insert flag)
        addItems inFile0 thy
 
+    rewriteLemmaOracle inFile' lem =
+      set lAttributes (map (rwOracleLemHeurAttr inFile') lattrs) lem
+      where
+        lattrs  = get lAttributes lem
+
+    rewriteAccLemmaOracle inFile' accLemma =
+      set aAttributes (map (rwOracleLemHeurAttr inFile') acclattrs) accLemma
+      where
+        acclattrs  = get aAttributes accLemma
+
+    rwOracleLemHeurAttr inFile' (LemmaHeuristic grl) = LemmaHeuristic $ defaultOracleNames (fromMaybe "" inFile') grl
+    rwOracleLemHeurAttr _ attr = attr
 
     include :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     include inFile0 thy = do
@@ -359,10 +378,13 @@ diffTheory inFile = do
     modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
-    thy' <- symbol_ "begin"
-        *> addItems inFile (set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0)))
-        <* symbol "end"
-    return thy'
+    block <- try (symbol "configuration" <* colon) <|> symbol "begin" <?> "configuration or begin"
+    if block == "configuration"
+        then do
+            fileArgs <- stringLiteral <* symbol_ "begin"
+            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (modify diffThyItems (++ [DiffConfigBlockItem fileArgs]) (defaultOpenDiffTheory ("diff" `S.member` flags0)))) <* symbol_ "end"
+        else do
+            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0))) <* symbol "end"
   where
     addItems :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems inFile0 thy = asum

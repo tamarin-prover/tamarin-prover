@@ -3,7 +3,6 @@
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Parsing Rules
@@ -70,6 +69,7 @@ ruleAttribute = asum
     , symbol "color="  *> (Just . RuleColor <$> parseColor)
     , symbol "process="  *> parseAndIgnore
     , symbol "derivchecks" *> ignore
+    , symbol "no_derivcheck" *> ignore
     ]
   where
     parseColor = do

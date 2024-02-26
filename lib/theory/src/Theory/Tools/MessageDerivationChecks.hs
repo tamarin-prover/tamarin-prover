@@ -29,7 +29,7 @@ checkVariableDeducability thy sig sources prover =
     where
         originalRules = map (applyMacroInProtoRule (theoryMacros thy)) $ theoryRules thy
         provenTheories =  map (proveTheory (const True) prover) closedTheories
-        closedTheories = map (\t -> closeTheoryWithMaude sig t sources) modifiedTheories
+        closedTheories = map (\t -> closeTheoryWithMaude sig t sources False) modifiedTheories
         modifiedTheories =  zipWith3 (\r l t -> (addRules [r] . addLemmas l ) t)  newRules newLemmas (repeat emptyPublicThy)
         emptyPublicThy = makeFunsPublic (toSignaturePure sig) $ deleteRulesAndLemmasFromTheory thy
         newRules = zipWith3 (\idx freevs prems -> generateRule freevs (premisesToOut prems) idx) [0..] freeVars premises

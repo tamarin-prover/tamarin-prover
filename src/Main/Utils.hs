@@ -2,7 +2,6 @@
 -- Copyright   : (c) 2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- Various utility functions for interacting with the user.
 module Main.Utils (

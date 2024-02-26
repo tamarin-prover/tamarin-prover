@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Helpers for inspecting the environment of the Tamarin prover.
@@ -18,6 +17,7 @@ import           Control.Exception               as E
 import           System.Console.CmdArgs.Explicit
 import           System.Environment
 import           System.Process
+import           System.IO
 
 import           Main.Console
 
@@ -71,7 +71,7 @@ getCpuModel =
 -- | Ensure a suitable version of the Graphviz dot tool is installed.
 ensureGraphVizDot :: Arguments -> IO (Maybe String)
 ensureGraphVizDot as = do
-    putStrLn $ "GraphViz tool: '" ++ dot ++ "'"
+    hPutStrLn stderr $ "GraphViz tool: '" ++ dot ++ "'"
     dotExists <- testProcess (check "graphviz" "") errMsg1 " checking version: " dot ["-V"] "" False False
     if isJust dotExists
        then testProcess (check "png" "OK.") errMsg2 " checking PNG support: " dot ["-T?"] "" True False
@@ -103,7 +103,7 @@ ensureGraphVizDot as = do
 -- | Check whether a the graph rendering command supplied is pointing to an existing file
 ensureGraphCommand :: Arguments -> IO (Maybe String)
 ensureGraphCommand as = do
-    putStrLn $ "Graph rendering command: " ++ cmd
+    hPutStrLn stderr $ "Graph rendering command: " ++ cmd
     testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False False
   where
     cmd = snd $ graphPath as

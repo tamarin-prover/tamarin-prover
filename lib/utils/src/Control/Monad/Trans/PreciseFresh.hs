@@ -4,7 +4,6 @@
 -- Copyright   : (c) 2010-2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- A monad transformer for passing a fresh name supply through a computation.

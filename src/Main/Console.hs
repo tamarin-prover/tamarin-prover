@@ -2,7 +2,6 @@
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Support for interaction with the console: argument parsing.
@@ -110,22 +109,23 @@ testProcess
   -> Bool           -- ^ Whether Maude is being tested - hard fail for exceptions on Maude.
   -> IO (Maybe String)    -- ^ String with the process output, if test was successful
 testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = do
-    putStr testName
+    putStrErr testName
     hFlush stdout
+    hFlush stderr
     handle handler $ do
         (exitCode, out, err) <- readProcessWithExitCode prog args inp
         let errMsg reason = do
-                putStrLn reason
-                putStrLn $ "Detailed results from testing '" ++ prog ++ "'"
-                putStrLn $ " command: " ++ commandLine prog args
-                putStrLn $ " stdin:   " ++ inp
-                putStrLn $ " stdout:  " ++ out
-                putStrLn $ " stderr:  " ++ err
+                putStrErrLn reason
+                putStrErrLn $ "Detailed results from testing '" ++ prog ++ "'"
+                putStrErrLn $ " command: " ++ commandLine prog args
+                putStrErrLn $ " stdin:   " ++ inp
+                putStrErrLn $ " stdout:  " ++ out
+                putStrErrLn $ " stderr:  " ++ err
                 return Nothing
 
         let check' = case check out err of
                       Left msg     -> errMsg msg
-                      Right msg    -> do putStrLn msg
+                      Right msg    -> do putStrErrLn msg
                                          return (Just out)
 
         if not ignoreExitCode
@@ -136,21 +136,24 @@ testProcess check defaultMsg testName prog args inp ignoreExitCode maudeTest = d
            else check'
 
   where
+    putStrErrLn = hPutStrLn stderr
+    putStrErr = hPutStr stderr
+
     handler :: IOException -> IO (Maybe String)
     handler exception =
-                do putStrLn "caught exception while executing:"
-                   putStrLn $ commandLine prog args
-                   putStrLn $ "with input: " ++ inp
-                   putStrLn $ "Exception: "
-                   putStrLn $ "   " ++ show exception
+                do putStrErrLn "caught exception while executing:"
+                   putStrErrLn $ commandLine prog args
+                   putStrErrLn $ "with input: " ++ inp
+                   putStrErrLn $ "Exception: "
+                   putStrErrLn $ "   " ++ show exception
                    if maudeTest then
                      error "Maude is not installed. Ensure Maude is available and on the path."
-                     else putStrLn ""
+                     else putStrErrLn ""
                    return Nothing
 
 ensureMaude :: Arguments -> IO (Bool, String)
 ensureMaude as = do
-    putStrLn $ "maude tool: '" ++ maude ++ "'"
+    hPutStrLn stderr $ "maude tool: '" ++ maude ++ "'"
     t1 <- testProcess checkVersion errMsg' " checking version: " maude ["--version"] "" False True
     t2 <- testProcess checkInstall errMsg' " checking installation: "   maude [] "quit\n" False True
     (_, out, _) <- readProcessWithExitCode maude ["--version"] ""

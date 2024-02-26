@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : unknown
 --
 -- A monad to represent logical disjunctions.

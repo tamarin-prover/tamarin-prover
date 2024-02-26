@@ -21,8 +21,8 @@ equations:
 
 
 let S =
+  in(v);
   let m = <<sid, v>, sig(<sid, v>, sk($x))> in
-    in(v);
     out(c_SA, m);
     out(c_SJ, m)
 
@@ -64,7 +64,8 @@ let P =
     (S | A | J | !Adv)
 
 
-!P
+process:
+  !P
 
 
 test blamed:

@@ -16,7 +16,6 @@ Description :  Yesod dispatch functions and default handlers.
 Copyright   :  (c) 2011 Cedric Staub
 License     :  GPL-3
 
-Maintainer  :  Cedric Staub <cstaub@ethz.ch>
 Stability   :  experimental
 Portability :  non-portable
 -}
