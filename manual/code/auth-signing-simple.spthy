@@ -1,0 +1,51 @@
+theory auth_signing_simple
+begin
+
+builtins: asymmetric-encryption
+
+/* We formalize the following protocol:
+
+    1. A -> B: {A,na}sk(A)
+
+*/
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltkX) ]
+  -->
+  [ !Ltk($X, ~ltkX)
+  , !Pk($X, pk(~ltkX))
+  , Out(pk(~ltkX)) 
+  ] 
+
+// Role A sends first message
+rule A_1_send:
+  [ Fr(~na)
+  , !Ltk($A, ltkA)
+  ]
+--[ Send($A, <$A, ~na>) 
+  ]->
+  [ St_A_1($A, ltkA, ~na) 
+  , Out(aenc(<$A, ~na>,ltkA))
+  ]
+
+// Role B receives first message
+rule B_1_receive:
+  [ !Pk($A, pk(skA))
+  , In(aenc(<$A, na>,skA))
+  ]
+--[ Recv($B, <$A, na>)
+  , Authentic($A,<$A, na>), Honest($B), Honest($A)
+  ]->
+  [ St_B_1($B, pk(skA), $A, <$A, na>)
+  ]
+
+lemma executable:
+  exists-trace
+    "Ex A B m #i #j. Send(A,m)@i & Recv(B,m) @j"
+
+lemma message_authentication: 
+    "All b m #i. Authentic(b,m) @i
+     ==> (Ex #j. Send(b,m) @j & j<i)"
+
+end

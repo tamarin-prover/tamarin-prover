@@ -1,0 +1,30 @@
+/*
+This is a simple example showing that induction is required, based on
+the example given in the thesis of Simon Meier.
+*/
+
+theory InductionExample
+begin
+
+rule start:
+  [ Fr(x) ]
+--[ Start(x) ]->
+  [ A(x) ]
+
+rule repeat:
+  [ A(x) ]
+--[ Loop(x) ]->
+  [ A(x) ]
+
+lemma AlwaysStarts [use_induction]:
+  "All x #i. Loop(x) @i ==> Ex #j. Start(x) @j"
+
+rule finish:
+  [ A(x) ]
+--[ End(x) ]->
+  []
+
+lemma AlwaysStartsWhenEnds [use_induction]:
+  "All x #i. End(x) @i ==> Ex #j. Start(x) @j"
+
+end

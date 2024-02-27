@@ -1,0 +1,41 @@
+theory FirstTimeUser
+begin
+
+
+/* Alice&Bob specification
+
+	I knows:k
+	R knows:k
+	I -> R: senc(n,k)
+
+*/
+
+builtins: symmetric-encryption
+
+/* protocol */
+
+rule setup:
+	[ Fr(~k), Fr(~m) ]
+	--[]->
+	[ AgSt($I,<~k,~m>), AgSt($R,~k) ]
+
+rule I_1:
+	[ AgSt($I,<~k,~m>) ]
+ 	--[ Send($I,~m) ]->
+	[ Out(senc(~m,~k)) ]
+
+// WARNING: this rule illustrates an error message
+rule R_1:
+	[ In(senc(m,~k))  ]
+	--[ Receive($R,m), Secret(m) ]->
+	[ Out(m) ]
+
+lemma nonce_secret:
+	"All m #i #j. Secret(m) @i & K(m) @j ==> F"
+
+lemma functional: exists-trace
+	"Ex I R m #i #j.
+		Send(I,m) @i
+		& Receive(R,m) @j "
+
+end

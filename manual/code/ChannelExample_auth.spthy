@@ -1,0 +1,47 @@
+theory ChannelExample_auth
+begin
+
+
+/* Alice&Bob specification (sent over an authentic channel)
+
+	I: 	fresh(n)
+	I -> R: n 
+
+*/
+
+/* Channel rules */
+
+rule ChanOut_A:
+	[ Out_A($A,$B,x) ]
+	--[ ChanOut_A($A,$B,x) ]->
+	[ !Auth($A,x), Out(<$A,$B,x>) ]
+
+rule ChanIn_A:
+	[ !Auth($A,x), In($B) ]
+	--[ ChanIn_A($A,$B,x) ]->
+	[ In_A($A,$B,x) ]
+
+/* Protocol */
+
+rule I_1: 
+	[ Fr(~n) ]
+ 	--[ Send($I,~n), Secret_I(~n) ]-> 
+	[ Out_A($I,$R,~n) ]
+		
+rule R_1:
+	[ In_A($I,$R,~n)  ]
+	--[ Secret_R(~n), Authentic($I,~n) ]->
+	[ ]
+
+/* Security Properties */
+
+lemma nonce_secret_initiator: 
+	"All n #i #j. Secret_I(n) @i & K(n) @j ==> F"
+
+lemma nonce_secret_receiver: 
+	"All n #i #j. Secret_R(n) @i & K(n) @j ==> F"
+
+lemma message_authentication: 
+	"All I n #j. Authentic(I,n) @j ==> Ex #i. Send(I,n) @i &i<j"
+
+end

@@ -1,0 +1,34 @@
+theory ChannelExample
+begin
+
+/* Alice&Bob specification
+
+	I: 	fresh(n)
+	I -> R: n 
+
+*/
+
+/* Protocol */
+
+rule I_1: 
+	[ Fr(~n) ]
+ 	--[ Send($I,~n), Secret_I(~n) ]-> 
+	[ Out(<$I,$R,~n>) ]
+		
+rule R_1:
+	[ In(<$I,$R,~n>)  ]
+	--[ Secret_R(~n), Authentic($I,~n) ]->
+	[ ]
+
+/* Security Properties */
+
+lemma nonce_secret_initiator: 
+	"All n #i #j. Secret_I(n) @i & K(n) @j ==> F"
+
+lemma nonce_secret_receiver: 
+	"All n #i #j. Secret_R(n) @i & K(n) @j ==> F"
+
+lemma message_authentication: 
+	"All I n #j. Authentic(I,n) @j ==> Ex #i. Send(I,n) @i &i<j"
+
+end
