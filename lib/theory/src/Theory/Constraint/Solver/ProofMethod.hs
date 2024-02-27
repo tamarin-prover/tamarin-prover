@@ -244,11 +244,11 @@ execProofMethod ctxt method sys =
       case method of
         Sorry _                                -> return M.empty
         Solved
-          | null (openGoals sys)
+          | null (openGoals sys)  && not (contradictorySystem ctxt sys)
             && finishedSubterms ctxt sys       -> return M.empty
           | otherwise                          -> Nothing
         Unfinishable
-          | null (openGoals sys)
+          | null (openGoals sys)  && not (contradictorySystem ctxt sys)
             && not (finishedSubterms ctxt sys) -> return M.empty
           | otherwise                          -> Nothing
         SolveGoal goal
