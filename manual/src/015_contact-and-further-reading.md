@@ -9,7 +9,7 @@ Tamarin Web Page
 ----------------
 
 The official Tamarin web page is available at 
-<http://tamarin-prover.github.io/>.
+<http://tamarin-prover.com/>.
 
 Tamarin Repository
 ------------------
@@ -54,7 +54,7 @@ Scientific Papers and Theory
 ----------------------------
 
 The paper and theses documenting the theory are available at the Tamarin web 
-page: <http://tamarin-prover.github.io/>.
+page: <http://tamarin-prover.com/>.
 
 Acknowledgments
 ---------------

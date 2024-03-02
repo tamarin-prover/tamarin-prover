@@ -134,9 +134,9 @@ License
 -------
 
 Tamarin Prover Manual, by The Tamarin Team.
-Copyright © 2016.
+Copyright © 2016--2024.
 
-[tamarin-prover.github.io](https://tamarin-prover.github.io)
+[tamarin-prover.com](https://tamarin-prover.com)
 
 
 This written work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0
