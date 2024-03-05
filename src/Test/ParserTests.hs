@@ -20,7 +20,7 @@ import           System.FilePath
 import           Theory
 import           Theory.Text.Parser
 import           Theory.Text.Pretty (render)
-import           Main.TheoryLoader (addMessageDeductionRuleVariants)
+import           Main.TheoryLoader (addMessageDeductionRuleVariantsWithoutMaude)
 
 -- | Test wether a given file exists, can be parsed, and can still be parsed
 -- after being pretty printed.
@@ -58,7 +58,7 @@ testParseFile optionalProver inpFile = TestLabel inpFile $ TestCase $ do
     parse msg str = case parseOpenTheoryString [] str  of
         Left err  -> do _ <- assertFailure $ withLineNumbers $ indent $ show err
                         return (error "testParseFile: dead code")
-        Right thy -> normalizeTheory <$> openTranslatedTheory <$> (return $ addMessageDeductionRuleVariants (removeTranslationItems thy))
+        Right thy -> return ((normalizeTheory <$> openTranslatedTheory) (addMessageDeductionRuleVariantsWithoutMaude (removeTranslationItems thy))) -- FIX-ME : see comments for addMessageDeductionRuleVariantsWithoutMaude
       where
         withLineNumbers err =
             unlines $ zipWith (\i l -> nr (show i) ++ l) [(1::Int)..] ls

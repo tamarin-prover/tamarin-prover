@@ -40,6 +40,7 @@ module Main.TheoryLoader (
   , dhIntruderVariantsFile
   , bpIntruderVariantsFile
   , addMessageDeductionRuleVariants
+  , addMessageDeductionRuleVariantsWithoutMaude
 
   ) where
 
@@ -392,10 +393,10 @@ checkTranslatedTheory thyOpts sign thy = do
   let transReport = either (`checkWellformedness` sign)
                            (`checkWellformednessDiff` sign) thy
 
-  deducThy <- bitraverse (return . (addMessageDeductionRuleVariants `runReader` (L.get sigmMaudeHandle sign))) 
-                         (return . (addMessageDeductionRuleVariantsDiff `runReader` (L.get sigmMaudeHandle sign))) thy
+  deducThy <- bitraverse (\x -> return ((addMessageDeductionRuleVariants x) `runReader` (L.get sigmMaudeHandle sign)))
+                         (\x -> return ((addMessageDeductionRuleVariantsDiff x) `runReader` (L.get sigmMaudeHandle sign))) thy
 
-
+  -- traceM ("Open : " ++ show deducThy)
   variableReport <- case compare derivChecks 0 of
     EQ -> pure $ Just []
     _ -> do
@@ -600,9 +601,25 @@ addMessageDeductionRuleVariants thy0
   | otherwise     = thy
   where
     msig         = get (sigpMaudeSig . thySignature) thy0
+    rules0     = subtermIntruderRules False msig ++ specialIntruderRules False
+                   ++ (if enableMSet msig then multisetIntruderRules else [])
+                   ++ (if enableXor msig then xorIntruderRules else [])
+    rules = (destructionRulesAC False (acUserFunSyms msig)) >>= (\x -> return (rules0 ++ x))
+    thy          = rules >>= \x -> return (addIntrRuleACsAfterTranslate x thy0)
+    addIntruderVariants mkRuless = thy >>= \x -> return (addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) x)
+
+-- FIX-ME : this function exists only for compilation of testParseFile in ParserTests.hs, it don't contain destruction rules for AC user defined function symbol
+addMessageDeductionRuleVariantsWithoutMaude :: OpenTranslatedTheory -> OpenTranslatedTheory
+addMessageDeductionRuleVariantsWithoutMaude thy0
+  | enableBP msig = addIntruderVariants [ mkDhIntruderVariants
+                                        , mkBpIntruderVariants ]
+  | enableDH msig = addIntruderVariants [ mkDhIntruderVariants ]
+  | otherwise     = thy
+  where
+    msig         = get (sigpMaudeSig . thySignature) thy0
     rules        = subtermIntruderRules False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
-                   ++ (if enableXor msig then xorIntruderRules else []) ++ destructionRulesAC False (acUserFunSyms msig)
+                   ++ (if enableXor msig then xorIntruderRules else [])
     thy          = addIntrRuleACsAfterTranslate rules thy0
     addIntruderVariants mkRuless = addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
 
@@ -614,14 +631,16 @@ addMessageDeductionRuleVariantsDiff thy0
   | enableBP msig = addIntruderVariantsDiff [ mkDhIntruderVariants
                                             , mkBpIntruderVariants ]
   | enableDH msig = addIntruderVariantsDiff [ mkDhIntruderVariants ]
-  | otherwise     = addIntrRuleLabels thy
+  | otherwise     = thy >>= \x -> return (addIntrRuleLabels x)
   where
     msig         = get (sigpMaudeSig . diffThySignature) thy0
-    rules diff'  = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
+    rules0 diff'  = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
                     ++ (if enableMSet msig then multisetIntruderRules else [])
-                    ++ (if enableXor msig then xorIntruderRules else [])-- ++ destructionRulesAC diff' (acUserFunSyms msig)
-    thy          = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
+                    ++ (if enableXor msig then xorIntruderRules else [])
+    rules diff' = (destructionRulesAC diff' (acUserFunSyms msig)) >>= (\x -> return ((rules0 diff') ++ x))
+    bothDiffTh = (rules True) >>= \x -> return (addIntrRuleACsDiffBothDiff x thy0)
+    thy          = ((rules False) >>= (\x -> (bothDiffTh >>= (\y -> return (addIntrRuleACsDiffBoth x y)))))
     addIntruderVariantsDiff mkRuless =
-        addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)
+         thy >>= (\x -> return (addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) x)))
 
 

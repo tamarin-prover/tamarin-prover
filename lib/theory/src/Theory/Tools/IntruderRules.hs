@@ -44,6 +44,7 @@ import           Term.Subsumption
 import           Term.Positions
 
 import           Theory.Model
+
 import Debug.Trace
 
 -- Variants of intruder deduction rules
@@ -166,12 +167,10 @@ privateConstructorRules rules = map createRule $ derivablePrivateConstants (priv
       where m        = fAppNoEq (s,(0,Private,Constructor)) []
             concfact = kuFact m
 
--- TODO : Ajout des AC user define
-
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: Bool -> [IntrRuleAC] -> [IntrRuleAC]
 minimizeIntruderRules diff rules =
-    filter (\x -> (not $ isDoublePremiseRule x))
+    filter (not . isDoublePremiseRule)
       $ if diff then rules else go [] rules
   where
     go checked [] = reverse checked
@@ -185,20 +184,25 @@ minimizeIntruderRules diff rules =
 
     -- We assume that the KD-Fact is the first fact, which is the case in destructionRules above
     isDoublePremiseRule (Rule _ ((Fact KDFact _ [t]):prems) concs _ _) =
-        frees concs == []
+      isAntiCoerce concs prems || nullIntersect [t] concs || (frees concs == []
          && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
-         && isMsgVar t && any (==(kuFact t)) prems
+         && isMsgVar t && any (==(kuFact t)) prems)
     isDoublePremiseRule _                                               = False
 
-    -- isWhat r@(Rule (DestrRule _ _ _ _) _ [n] _ _) | n == kdFact (fAppAC ((ACfct ((pack "xorr"),(2,Public,Constructor)))) [varTerm (LVar "x"  LSortMsg   0), varTerm (LVar "x"  LSortMsg   1)]) = trace ("ALLEZ : " ++ show r) False
-    -- isWhat _ = True
+    isAntiCoerce :: [LNFact] -> [LNFact] -> Bool
+    isAntiCoerce ((Fact KDFact _ [x]):facts) prems = any (==(kuFact x)) prems || isAntiCoerce facts prems
+    isAntiCoerce (_:facts) prems = isAntiCoerce facts prems
+    isAntiCoerce [] _ = False
+
+    nullIntersect kdprems [Fact KDFact _ tc] = (frees kdprems `intersect` frees tc) == []
+    nullIntersect _ _ = False
 
 
 -- | @subtermIntruderRules diff maudeSig@ returns the set of intruder rules for
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
 subtermIntruderRules :: Bool -> MaudeSig -> [IntrRuleAC]
 subtermIntruderRules diff maudeSig =
-   minimizeIntruderRules diff (concatMap  (destructionRules diff) (S.toList $ stRules maudeSig)
+    minimizeIntruderRules diff (concatMap  (destructionRules diff) (S.toList $ stRules maudeSig)
      ++ constructionRules (userDefineFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))-- ++ destructionRulesAC (acUserFunSyms maudeSig)
 
 -- | @constructionRules fSig@ returns the construction rules for the given
@@ -216,22 +220,6 @@ constructionRules fSig =
             mAC      = fAppACfct (s,(k,Public,Constructor)) vars
             concfact NotAC = kuFact m
             concfact IsAC = kuFact mAC
-
--- | @destructionRulesAC fSig@ returns the destruction rules for the given
--- function signature AC @fSig@
--- destructionRulesAC :: ACfctFunSig -> [IntrRuleAC]
--- destructionRulesAC fSig =
---     [ createRule s k | (s,(k,Public,Constructor)) <- S.toList fSig ]
---   where
---     createRule s k = Rule (DestrRule (append (pack "_") s) (-1) False free_rhs) [kdFact (varTerm (LVar "x"  LSortMsg 0)), kuFact (varTerm (LVar "x"  LSortMsg 1))] [concfact] [concfact] []
---       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
---             mAC      = fAppACfct (s,(k,Public,Constructor)) vars
---             concfact = kdFact mAC
---             free_rhs = frees concfact == []
-
--- TODO : destructionRulesAC pas dans subtermIntruderRules parce qu'on appelle minimize avant le calcul des variants
--- -> il faut se baser sur l'exemple de dhIntruderRules qui renvoie un WithMaude [IntrRuleAC] et appelle variantsIntruder
--- -> c'est appelé dans TheoryLoader -> addmachin -> faut ajouter le type WithMaude -> utiliser le runreader sigmMaudeHandle sign pour sortir de la monad dans checkmachin
 
 -- | @destructionRulesAC fSig@ returns the destruction rules for the given
 -- function signature AC @fSig@

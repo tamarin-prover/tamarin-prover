@@ -31,7 +31,10 @@ import           Term.Macro
 import Theory.Constraint.Solver.Sources (IntegerParameters)
 
 
-
+import Debug.Trace
+import Control.Monad.Bind (MonadFresh)
+import qualified Data.Map as M
+import Data.Aeson (Value(Bool))
 
 
 -- | Get an OpenProtoRule's name
@@ -97,18 +100,84 @@ closeProtoRule hnd []     (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (varia
 closeProtoRule hnd macros (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd (applyMacroInRule macros ruE))]
 closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
 
+
+-- -- | @unifyLNTerm eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
+-- unifyLNTerm :: [Equal LNTerm] -> WithMaude [SubstVFresh Name LVar]
+-- unifyLNTerm = unifyLTerm sortOfName
+
+-- -- | 'True' iff the terms are unifiable.
+-- unifiableLNTerms :: LNTerm -> LNTerm -> WithMaude Bool
+-- unifiableLNTerms t1 t2 = (not . null) <$> unifyLNTerm [Equal t1 t2]
+
+checkChainReduction :: MaudeHandle -> IntrRuleAC -> Bool
+checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) (f@(Fact KDFact _ _):tl) conc@[Fact KDFact _ _] _ _) =
+ case (runMaude $ unifyLNFactEqs [Equal (head conc) f1]) of
+    [] -> False
+    subst -> trace ("subst : " ++ show subst) searchMatcher subst
+  where
+    runMaude   = (`runReader` hnd)
+    inst1 = r `renameAvoiding` r
+
+    getPremsFactKD (Rule _ (fact:_) _ _ _) = fact
+    getPremsFactTail (Rule _ ((Fact KDFact _ _):tls) _ _ _) = tls
+    getConcFact (Rule _ _ [fact] _ _) = fact
+
+    f1 = getPremsFactKD inst1
+    tl1 = getPremsFactTail inst1
+    rhs1 = getConcFact inst1
+
+    searchMatcher :: [LNSubstVFresh] -> Bool
+    searchMatcher subst  =
+      case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
+        [] -> trace ("sigmay : " ++ show sigmaRHS1 ++ "\nsigmax : " ++ show sigmaF ++ "\ninstance 0 : " ++ show r ++ "\ninstance 1 : " ++ show inst1 ++ "\nsigma instance 0 : " ++ show instSigma ++ "\nsigma instance 1 : " ++ show inst1Sigma ++ "\ninstance 2 : " ++ show inst2) False
+        match@(h:_) -> trace ("sigmay : " ++ show sigmaRHS1 ++ "\nsigmax : " ++ show sigmaF ++ "\nmatch : " ++ show h ++ "\ninstance 0 : " ++ show r ++ "\ninstance 1 : " ++ show inst1 ++ "\nsigma instance 0 : " ++ show instSigma ++ "\nsigma instance 1 : " ++ show inst1Sigma ++ "\ninstance 2 : " ++ show inst2) checkDeducible match
+      where
+        doMatch match = runReader (solveMatchLNTerm match) hnd
+        
+        instSigma = evalFreshAvoiding (appSubst subst r) ()
+        inst1Sigma = evalFreshAvoiding (appSubst subst inst1) ()
+        inst2 = r `renameAvoiding` inst1Sigma `renameAvoiding` instSigma
+
+        f2 = getPremsFactKD inst2
+        tl2 = getPremsFactTail inst2
+        rhs2 = getConcFact inst2
+
+        sigmaRHS1 = getConcFact (head inst1Sigma)
+        sigmaF = getPremsFactKD (head instSigma)
+
+        appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> m [IntrRuleAC]
+        appSubst [] _    = return []
+        appSubst (x:xs) inst = do
+          sub <- freshToFree x
+          let instt = apply sub inst
+          --instt <- rename(apply sub inst)
+          rest <- appSubst xs inst
+          return (instt:rest)
+
+        checkDeducible :: [Subst Name LVar] -> Bool
+        checkDeducible match = True
+
+         where
+          terms = getPremsFactTail (head instSigma) ++ getPremsFactTail (head inst1Sigma)
+          inst2sigma2 = apply (head match) inst2
+
+
+
+checkChainReduction _ _ = False
+
+
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
 --   Should be parallelized like the variant computation for protocol rules (JD)
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
-  if subterm then [ru] else variantsIntruder hnd id False ru
+closeIntrRule hnd r@(Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
+  trace ("Bool : " ++ show (checkChainReduction hnd r) ++ " for " ++ show r) $ if subterm then [ru] else variantsIntruder hnd id False ru
     where
-      ru = (Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
+      ru = Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
                               then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
                               -- We do not need to count t itself, hence - 1.
                               -- If t is a private function symbol we need to permit one more rule
                               -- application as there is no associated constructor.
-                              else 0) subterm constant) prems concs acts nvs)
+                              else 0) subterm constant) prems concs acts nvs
         where
            runMaude = (`runReader` hnd)
 closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder hnd id False ir
