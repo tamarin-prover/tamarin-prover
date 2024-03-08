@@ -104,12 +104,10 @@ flag build-tests
 ----------------------
 
 executable tamarin-prover
-    default-language: Haskell2010
+    default-language: GHC2021
 
     if flag(threaded)
         ghc-options:   -threaded
-
-    -- -XFlexibleInstances
 
     ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing -main-is Main
     ghc-prof-options:  -auto-all
@@ -187,7 +185,9 @@ executable tamarin-prover
 
       Test.ParserTests
 
-    other-extensions:
+    default-extensions:
+      DuplicateRecordFields
+      OverloadedRecordDot
       TemplateHaskell
 
 

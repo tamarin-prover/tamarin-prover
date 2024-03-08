@@ -915,7 +915,7 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
           (tiTheory ti) path
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
-    graphStyle d c s l= dotStyle s d .simplifySystem l. compression c
+    graphStyle d c s l= dotStyle s d . simplifySystem l . compression c
     dotStyle s True = dotSystemCompact CompactBoringNodes s
     dotStyle s False = dotSystemCompact FullBoringNodes s
     compression True = compressSystem
@@ -946,7 +946,7 @@ getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
           (mirror)
       sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
-    graphStyle d c s l= dotStyle s d .simplifySystem l. compression c
+    graphStyle d c s l= dotStyle s d . simplifySystem l . compression c
     dotStyle s True = dotSystemCompact CompactBoringNodes s
     dotStyle s False = dotSystemCompact FullBoringNodes s
     compression True = compressSystem
