@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -8,18 +7,18 @@
 -- Helpers for inspecting the environment of the Tamarin prover.
 module Main.Environment where
 
-import           Data.Char                       (toLower)
-import           Data.List
-import           Data.Maybe                      (fromMaybe, isJust)
+import Data.Char (toLower)
+import Data.List
+import Data.Maybe (fromMaybe, isJust)
 
-import           Control.Exception               as E
+import Control.Exception as E
 
-import           System.Console.CmdArgs.Explicit
-import           System.Environment
-import           System.Process
-import           System.IO
+import System.Console.CmdArgs.Explicit
+import System.Environment
+import System.IO
+import System.Process
 
-import           Main.Console
+import Main.Console
 
 ------------------------------------------------------------------------------
 -- Retrieving the paths to required tools.
@@ -53,29 +52,29 @@ graphPath as =
 getCommandLine :: IO String
 getCommandLine = do
   arguments <- getArgs
-  return . unwords $ programName : arguments
+  pure . unwords $ programName : arguments
 
 -- | Read the cpu info using a call to cat /proc/cpuinfo
 getCpuModel :: IO String
 getCpuModel =
   handle handler $ do
     (_, info, _) <- readProcessWithExitCode "cat" ["/proc/cpuinfo"] []
-    return $ maybe errMsg
-               (("Linux running on an "++) . drop 2 . dropWhile (/=':'))
-               (find (isPrefixOf "model name") $ lines info)
+    pure $ maybe errMsg
+             (("Linux running on an "++) . drop 2 . dropWhile (/=':'))
+             (find (isPrefixOf "model name") $ lines info)
   where
   errMsg = "could not extract CPU model"
   handler :: IOException -> IO String
-  handler _ = return errMsg
+  handler _ = pure errMsg
 
 -- | Ensure a suitable version of the Graphviz dot tool is installed.
 ensureGraphVizDot :: Arguments -> IO (Maybe String)
 ensureGraphVizDot as = do
-    hPutStrLn stderr $ "GraphViz tool: '" ++ dot ++ "'"
-    dotExists <- testProcess (check "graphviz" "") errMsg1 " checking version: " dot ["-V"] "" False False
-    if isJust dotExists
-       then testProcess (check "png" "OK.") errMsg2 " checking PNG support: " dot ["-T?"] "" True False
-       else return dotExists
+  hPutStrLn stderr $ "GraphViz tool: '" ++ dot ++ "'"
+  dotExists <- testProcess (check "graphviz" "") errMsg1 " checking version: " dot ["-V"] "" False False
+  if isJust dotExists
+     then testProcess (check "png" "OK.") errMsg2 " checking PNG support: " dot ["-T?"] "" True False
+     else pure dotExists
   where
     dot = dotPath as
     check str okMsg _ err
@@ -103,12 +102,12 @@ ensureGraphVizDot as = do
 -- | Check whether a the graph rendering command supplied is pointing to an existing file
 ensureGraphCommand :: Arguments -> IO (Maybe String)
 ensureGraphCommand as = do
-    hPutStrLn stderr $ "Graph rendering command: " ++ cmd
-    testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False False
+  hPutStrLn stderr $ "Graph rendering command: " ++ cmd
+  testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False False
   where
     cmd = snd $ graphPath as
     check _ err
-      | err == ""  = Right $ " OK."
-      | otherwise  = Left  $ errMsg
+      | err == ""  = Right " OK."
+      | otherwise  = Left  errMsg
     errMsg = unlines
       [ "Command not found" ]

@@ -1,8 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeApplications #-}
 
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
@@ -576,20 +572,20 @@ addParamsOptions opt = addVerboseOptions . addSatArg . addChainsArg . addLemmaTo
     where
       -- Add Open Chain Limit parameters in the Options
       chain = L.get oOpenChain opt
-      addChainsArg (Left thy) = Left $ set (openChainsLimit.thyOptions) chain thy
-      addChainsArg (Right diffThy) = Right $ set (openChainsLimit.diffThyOptions) chain diffThy
+      addChainsArg (Left thy) = Left $ set (openChainsLimit . thyOptions) chain thy
+      addChainsArg (Right diffThy) = Right $ set (openChainsLimit . diffThyOptions) chain diffThy
       -- Add Saturation Limit parameters in the Options
       sat = L.get oSaturation opt
-      addSatArg (Left thy) = Left $ set (saturationLimit.thyOptions) sat thy
-      addSatArg (Right diffThy) = Right $ set (saturationLimit.diffThyOptions) sat diffThy
+      addSatArg (Left thy) = Left $ set (saturationLimit . thyOptions) sat thy
+      addSatArg (Right diffThy) = Right $ set (saturationLimit . diffThyOptions) sat diffThy
       -- Add lemmas to Prove in the Options
       lem = L.get oLemmaNames opt
-      addLemmaToProve (Left thy) = Left $ set (lemmasToProve.thyOptions) lem thy
-      addLemmaToProve (Right diffThy) = Right $ set (lemmasToProve.diffThyOptions) lem diffThy
+      addLemmaToProve (Left thy) = Left $ set (lemmasToProve . thyOptions) lem thy
+      addLemmaToProve (Right diffThy) = Right $ set (lemmasToProve . diffThyOptions) lem diffThy
       -- Add Verbose parameter in the Options
       verb = L.get oVerboseMode opt
-      addVerboseOptions (Left thy) = Left $ set (verboseOption.thyOptions) verb thy
-      addVerboseOptions (Right diffThy) = Right $ set (verboseOption.diffThyOptions) verb diffThy
+      addVerboseOptions (Left thy) = Left $ set (verboseOption . thyOptions) verb thy
+      addVerboseOptions (Right diffThy) = Right $ set (verboseOption . diffThyOptions) verb diffThy
 
 
 ------------------------------------------------------------------------------
