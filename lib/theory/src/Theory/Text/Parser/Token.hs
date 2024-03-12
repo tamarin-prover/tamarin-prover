@@ -116,6 +116,7 @@ module Theory.Text.Parser.Token (
   , parseFile
   , parseFileWState
   , parseString
+  , parseStringWState
   ,opLessTerm) where
 
 import           Prelude             hiding (id, (.))

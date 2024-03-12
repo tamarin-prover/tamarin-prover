@@ -146,7 +146,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     runMaude   = (`runReader` hnd)
 
     -- searching for the lemma
-    lemma (LemmaItem (Lemma name _ _ _ _)) | name == lemmaName = True
+    lemma (LemmaItem (Lemma name _ _ _ _ _ _)) | name == lemmaName = True
     lemma _                                                    = False
 
     -- build the lemma
