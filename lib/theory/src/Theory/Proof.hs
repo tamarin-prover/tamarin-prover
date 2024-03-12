@@ -72,6 +72,7 @@ module Theory.Proof (
   , focusDiff
   , checkAndExtendProver
   , checkAndExtendDiffProver
+  , checkProof
   , replaceSorryProver
   , replaceDiffSorryProver
   , contradictionProver
@@ -393,9 +394,12 @@ data ProofStatus =
        | TraceFound         -- ^ There is an annotated solved step
        | UnfinishableProof  -- ^ The proof cannot be finished (due to reducible operators in subterms)
                             --   i.e. all ends are either Completed or Unfinishable (if a trace is found, then the status is TraceFound)
+       | InvalidatedProof   -- ^ The proof has been Invalidated (eg. by editing a reuse lemma)
     deriving ( Show, Generic, NFData, Binary, Eq )
 
 instance Semigroup ProofStatus where
+    InvalidatedProof <> _                  = InvalidatedProof
+    _ <> InvalidatedProof                  = InvalidatedProof
     TraceFound <> _                        = TraceFound
     _ <> TraceFound                        = TraceFound
     IncompleteProof <> _                   = IncompleteProof
@@ -416,6 +420,7 @@ proofStepStatus (ProofStep _            Nothing ) = UndeterminedProof
 proofStepStatus (ProofStep Solved       (Just _)) = TraceFound
 proofStepStatus (ProofStep Unfinishable (Just _)) = UnfinishableProof
 proofStepStatus (ProofStep (Sorry _)    (Just _)) = IncompleteProof
+proofStepStatus (ProofStep Invalidated  (Just _)) = InvalidatedProof
 proofStepStatus (ProofStep _            (Just _)) = CompleteProof
 
 -- | The status of a 'DiffProofStep'.
@@ -1175,6 +1180,7 @@ showProofStatus ExistsSomeTrace TraceFound        = "verified"
 showProofStatus _               UnfinishableProof = "analysis cannot be finished (reducible operators in subterms)"
 showProofStatus _               IncompleteProof   = "analysis incomplete"
 showProofStatus _               UndeterminedProof = "analysis undetermined"
+showProofStatus _               InvalidatedProof  = "proof has been invalidated"
 
 -- | Convert a proof status to a readable string.
 showDiffProofStatus :: ProofStatus -> String
@@ -1183,6 +1189,7 @@ showDiffProofStatus CompleteProof     = "verified"
 showDiffProofStatus UnfinishableProof = "analysis cannot be finished (reducible operators in subterms)"
 showDiffProofStatus IncompleteProof   = "analysis incomplete"
 showDiffProofStatus UndeterminedProof = "analysis undetermined"
+showDiffProofStatus InvalidatedProof  = "proof has been invalidated" 
 
 -- Instances
 --------------------

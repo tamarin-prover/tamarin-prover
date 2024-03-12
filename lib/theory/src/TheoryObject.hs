@@ -71,6 +71,8 @@ module TheoryObject (
   , expandLemma
   , addRestriction
   , addLemma
+  , addLemmaAtIndex
+  , modifyLemma
   , addProcess
   , findProcess
   , addProcessDef
@@ -99,6 +101,8 @@ module TheoryObject (
   , lookupDiffLemma
   , lookupLemmaDiff
   , lookupLemma
+  , lookupLemmaIndex
+  , getLemmaPreItems
   , lookupProcessDef
   , filterSide
   , mapMProcesses
@@ -425,7 +429,7 @@ expandRestriction thy (Restriction n f) =  Restriction n <$> expandFormula (theo
 expandLemma :: Theory sig c r p1 s
                -> ProtoLemma SyntacticLNFormula p2
                -> Either FactTag (ProtoLemma LNFormula p2)
-expandLemma thy (Lemma n tq f a p) =  (\f' -> Lemma n tq f' a p) <$> expandFormula (theoryPredicates thy) f
+expandLemma thy (Lemma n u m tq f a p) =  (\f' -> Lemma n u m tq f' a p) <$> expandFormula (theoryPredicates thy) f
 
 
 -- | Add a new restriction. Fails, if restriction with the same name exists.
@@ -439,6 +443,22 @@ addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem l]) thy
+
+-- | Add a new lemma at a specific index. Fails, if a lemma with the same name exists.
+addLemmaAtIndex :: Lemma p -> Int -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addLemmaAtIndex l i thy = do
+    guard (isNothing $ lookupLemma (L.get lName l) thy)
+    return $ modify thyItems (\ls -> (take i ls) ++ [LemmaItem l] ++ (drop i ls)) thy
+
+
+
+-- | apply function on lemmas, temporary test
+modifyLemma :: (Lemma p -> Lemma p) -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+modifyLemma f thy = do
+    return $ modify thyItems (map mlemma) thy
+  where
+    mlemma (LemmaItem l) = (LemmaItem (f l))
+    mlemma i             = i
 
 addProcess :: PlainProcess -> Theory sig c r p TranslationElement -> Theory sig c r p TranslationElement
 addProcess l = modify thyItems (++ [TranslationItem (ProcessItem l)])
@@ -612,6 +632,12 @@ lookupRestriction name = find ((name ==) . L.get rstrName) . theoryRestrictions
 -- | Find the lemma with the given name.
 lookupLemma :: String -> Theory sig c r p s -> Maybe (Lemma p)
 lookupLemma name = find ((name ==) . L.get lName) . theoryLemmas
+
+lookupLemmaIndex :: String -> Theory sig c r p s -> Maybe Int
+lookupLemmaIndex name ti = (+1) <$> findIndex (\i -> case i of (LemmaItem l) -> name == L.get lName l; _ -> False) (L.get thyItems ti)
+
+getLemmaPreItems :: String -> Theory sig c r p s -> [TheoryItem r p s]
+getLemmaPreItems name ti = fromMaybe [] $ (\li -> [i | (nr, i) <- zip [1..] (L.get thyItems ti), nr < li]) <$> lookupLemmaIndex name ti
 
 -- | Find the case test with the given name.
 lookupCaseTest :: CaseIdentifier -> Theory sig c r p TranslationElement -> Maybe CaseTest

@@ -35,4 +35,3 @@ lemma lesser_senc_secret[use_induction]:
       ==> (#i < #j | Ex z. y + z = x)"
 
 end
-
