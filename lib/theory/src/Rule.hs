@@ -33,8 +33,6 @@ import Theory.Constraint.Solver.Sources (IntegerParameters)
 
 import Debug.Trace
 import Control.Monad.Bind (MonadFresh)
-import qualified Data.Map as M
-import Data.Aeson (Value(Bool))
 
 
 -- | Get an OpenProtoRule's name
@@ -101,19 +99,38 @@ closeProtoRule hnd macros (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (varia
 closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
 
 
--- -- | @unifyLNTerm eqs@ returns a complete set of unifiers for @eqs@ modulo AC.
--- unifyLNTerm :: [Equal LNTerm] -> WithMaude [SubstVFresh Name LVar]
--- unifyLNTerm = unifyLTerm sortOfName
+-- appSubst :: (MonadFresh m, Apply (Subst Name LVar) t) => LNSubstVFresh -> t -> m t
+-- appSubst :: MonadFresh m => LNSubstVFresh -> (IntrRuleAC, IntrRuleAC) -> m (IntrRuleAC,IntrRuleAC)
+-- appSubst x inst = do
+--   subb <- freshToFree x
+--   let instt = apply subb inst
+--   --instt <- rename(apply subb inst)
+--   return instt
 
--- -- | 'True' iff the terms are unifiable.
--- unifiableLNTerms :: LNTerm -> LNTerm -> WithMaude Bool
--- unifiableLNTerms t1 t2 = (not . null) <$> unifyLNTerm [Equal t1 t2]
+appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> m [IntrRuleAC]
+appSubst [] _    = return []
+appSubst (x:xs) inst = do
+  sub <- freshToFree x
+  let instt = apply sub inst
+  rest <- appSubst xs inst
+  return (instt:rest)
+
+derivationTest :: LNFact -> [LNFact] -> Bool
+derivationTest fact terms = False
+  where
+    set = decompose terms
+
+    decompose ((Fact KUFact annot [FAPP (NoEq (b,(n,Private,c))) p]):l) = map ([Fact KDFact annot [FAPP (NoEq (b,(n,Private,c))) p]] ++) (decompose l)
+    decompose ((Fact KUFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]):l) = map ([Fact KDFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]] ++) (decompose l)
+    decompose ((Fact KUFact annot [FAPP s p]):l) = map ([Fact KDFact annot [FAPP s p]] ++) (decompose l) ++ map (map (\x -> Fact KUFact annot [x]) p ++) (decompose l)
+    decompose (f:l) = map ([f] ++) (decompose l)
+    decompose [] = [[]]
 
 checkChainReduction :: MaudeHandle -> IntrRuleAC -> Bool
-checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) (f@(Fact KDFact _ _):tl) conc@[Fact KDFact _ _] _ _) =
- case (runMaude $ unifyLNFactEqs [Equal (head conc) f1]) of
+checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) =
+ case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
     [] -> False
-    subst -> trace ("subst : " ++ show subst) searchMatcher subst
+    subst -> trace ("subst : " ++ show subst) searchMatcheraux (auxMatcher subst r) (auxMatcher subst inst1) -- searchMatcheraux subst
   where
     runMaude   = (`runReader` hnd)
     inst1 = r `renameAvoiding` r
@@ -123,43 +140,58 @@ checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) (f@(Fact KDFact _ _):tl) con
     getConcFact (Rule _ _ [fact] _ _) = fact
 
     f1 = getPremsFactKD inst1
-    tl1 = getPremsFactTail inst1
-    rhs1 = getConcFact inst1
 
-    searchMatcher :: [LNSubstVFresh] -> Bool
-    searchMatcher subst  =
+    auxMatcher :: [LNSubstVFresh] -> IntrRuleAC -> [IntrRuleAC]
+    auxMatcher subst ru = evalFreshAvoiding (appSubst subst ru) ()
+
+    -- searchMatcheraux (s1:sq) = searchMatcher s1 && searchMatcheraux sq
+    -- searchMatcheraux [] = True
+
+    searchMatcheraux (s1:sq) (h1:hq) = searchMatcher s1 h1 && searchMatcheraux sq hq
+    searchMatcheraux [] [] = True
+    searchMatcheraux _ [] = True
+    searchMatcheraux [] _ = True
+
+    -- searchMatcher :: LNSubstVFresh -> Bool
+    -- searchMatcher sub  =
+
+    searchMatcher :: IntrRuleAC -> IntrRuleAC -> Bool
+    searchMatcher instSigma inst1Sigma  =
       case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
-        [] -> trace ("sigmay : " ++ show sigmaRHS1 ++ "\nsigmax : " ++ show sigmaF ++ "\ninstance 0 : " ++ show r ++ "\ninstance 1 : " ++ show inst1 ++ "\nsigma instance 0 : " ++ show instSigma ++ "\nsigma instance 1 : " ++ show inst1Sigma ++ "\ninstance 2 : " ++ show inst2) False
-        match@(h:_) -> trace ("sigmay : " ++ show sigmaRHS1 ++ "\nsigmax : " ++ show sigmaF ++ "\nmatch : " ++ show h ++ "\ninstance 0 : " ++ show r ++ "\ninstance 1 : " ++ show inst1 ++ "\nsigma instance 0 : " ++ show instSigma ++ "\nsigma instance 1 : " ++ show inst1Sigma ++ "\ninstance 2 : " ++ show inst2) checkDeducible match
+        [] -> trace ("\nsigma instance 0 : " ++ show instSigma ++ "\nsigma instance 1 : " ++ show inst1Sigma ++ "\ninstance 2 : " ++ show inst2) False
+        match -> trace ("\nmatch : " ++ show match ++ "\nsigma instance 0 : " ++ show instSigma ++ "\nsigma instance 1 : " ++ show inst1Sigma) checkDeducible match
       where
         doMatch match = runReader (solveMatchLNTerm match) hnd
-        
-        instSigma = evalFreshAvoiding (appSubst subst r) ()
-        inst1Sigma = evalFreshAvoiding (appSubst subst inst1) ()
-        inst2 = r `renameAvoiding` inst1Sigma `renameAvoiding` instSigma
+
+        --(instSigma, inst1Sigma) = evalFreshAvoiding (appSubst sub (r, inst1)) (r, inst1)
+
+        inst2 = r `renameAvoiding` (inst1Sigma, instSigma)
 
         f2 = getPremsFactKD inst2
-        tl2 = getPremsFactTail inst2
         rhs2 = getConcFact inst2
 
-        sigmaRHS1 = getConcFact (head inst1Sigma)
-        sigmaF = getPremsFactKD (head instSigma)
-
-        appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> m [IntrRuleAC]
-        appSubst [] _    = return []
-        appSubst (x:xs) inst = do
-          sub <- freshToFree x
-          let instt = apply sub inst
-          --instt <- rename(apply sub inst)
-          rest <- appSubst xs inst
-          return (instt:rest)
+        sigmaRHS1 = getConcFact inst1Sigma
+        sigmaF = getPremsFactKD instSigma
 
         checkDeducible :: [Subst Name LVar] -> Bool
-        checkDeducible match = True
+        checkDeducible m = trace (show (aux prems)) aux prems || True
 
          where
-          terms = getPremsFactTail (head instSigma) ++ getPremsFactTail (head inst1Sigma)
-          inst2sigma2 = apply (head match) inst2
+          terms = getPremsFactTail instSigma ++ getPremsFactTail inst1Sigma
+          termsT = foldMap getFactTerms terms
+          inst2sigma2 = apply (head m) inst2
+          prems = getPremsFactTail inst2sigma2
+
+          aux (fa@(Fact KUFact _ [f]):q) = (aux1 f || derivationTest fa terms) && aux q
+          aux ((Fact KDFact _ _):_) = False
+          aux []                    = True
+          aux _                     = False
+
+          aux1 f | f `elem` termsT    = True
+          aux1 (FAPP (NoEq (_,(_,Private,_))) _) = False
+          aux1 (FAPP (AC (ACfct (_,(_,Private,_)))) _) = False
+          aux1 (FAPP _ p) = foldr (\x1 -> (&& aux1 x1)) True p
+          aux1 _                     = False
 
 
 
@@ -170,7 +202,7 @@ checkChainReduction _ _ = False
 --   Should be parallelized like the variant computation for protocol rules (JD)
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
 closeIntrRule hnd r@(Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
-  trace ("Bool : " ++ show (checkChainReduction hnd r) ++ " for " ++ show r) $ if subterm then [ru] else variantsIntruder hnd id False ru
+  trace ("Bool : " ++ show (checkChainReduction hnd r)) $ if subterm then [ru] else variantsIntruder hnd id False ru
     where
       ru = Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
                               then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
@@ -202,7 +234,7 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
         classifiedRules rawSources refinedSources injFactInstances
   where
     ctxt0 = ProofContext
-        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing 
+        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing
         (error "closeRuleCache: trace quantifier should not matter here")
         (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
