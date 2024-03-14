@@ -107,13 +107,13 @@ closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) r
 --   --instt <- rename(apply subb inst)
 --   return instt
 
-appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> m [IntrRuleAC]
-appSubst [] _    = return []
-appSubst (x:xs) inst = do
+appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> m [(IntrRuleAC,IntrRuleAC)]
+appSubst [] _ _    = return []
+appSubst (x:xs) inst0 inst1 = do
   sub <- freshToFree x
-  let instt = apply sub inst
-  rest <- appSubst xs inst
-  return (instt:rest)
+  let (instt0,instt1) = apply sub (inst0,inst1)
+  rest <- appSubst xs inst0 inst1
+  return ((instt0,instt1):rest)
 
 derivationTest :: LNFact -> [LNFact] -> Bool
 derivationTest fact terms = False
@@ -130,7 +130,7 @@ checkChainReduction :: MaudeHandle -> IntrRuleAC -> Bool
 checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) =
  case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
     [] -> False
-    subst -> trace ("subst : " ++ show subst) searchMatcheraux (auxMatcher subst r) (auxMatcher subst inst1) -- searchMatcheraux subst
+    subst -> trace ("\nsubst : " ++ show subst ++ "\nsigma instance : " ++ (show (auxMatcher subst r inst1))) searchMatcheraux (auxMatcher subst r inst1)-- searchMatcheraux subst
   where
     runMaude   = (`runReader` hnd)
     inst1 = r `renameAvoiding` r
@@ -141,16 +141,14 @@ checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[
 
     f1 = getPremsFactKD inst1
 
-    auxMatcher :: [LNSubstVFresh] -> IntrRuleAC -> [IntrRuleAC]
-    auxMatcher subst ru = evalFreshAvoiding (appSubst subst ru) ()
+    auxMatcher :: [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> [(IntrRuleAC,IntrRuleAC)]
+    auxMatcher subst ru0 ru1 = evalFreshAvoiding (appSubst subst ru0 ru1) ()
 
     -- searchMatcheraux (s1:sq) = searchMatcher s1 && searchMatcheraux sq
     -- searchMatcheraux [] = True
 
-    searchMatcheraux (s1:sq) (h1:hq) = searchMatcher s1 h1 && searchMatcheraux sq hq
-    searchMatcheraux [] [] = True
-    searchMatcheraux _ [] = True
-    searchMatcheraux [] _ = True
+    searchMatcheraux ((s1,h1):sq)  = searchMatcher s1 h1 && searchMatcheraux sq
+    searchMatcheraux [] = True
 
     -- searchMatcher :: LNSubstVFresh -> Bool
     -- searchMatcher sub  =
@@ -158,8 +156,8 @@ checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[
     searchMatcher :: IntrRuleAC -> IntrRuleAC -> Bool
     searchMatcher instSigma inst1Sigma  =
       case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
-        [] -> trace ("\nsigma instance 0 : " ++ show instSigma ++ "\nsigma instance 1 : " ++ show inst1Sigma ++ "\ninstance 2 : " ++ show inst2) False
-        match -> trace ("\nmatch : " ++ show match ++ "\nsigma instance 0 : " ++ show instSigma ++ "\nsigma instance 1 : " ++ show inst1Sigma) checkDeducible match
+        [] -> trace ("\ninstance 2 : " ++ show inst2) False
+        match -> trace ("\nmatch : " ++ show match) auxDeducible match
       where
         doMatch match = runReader (solveMatchLNTerm match) hnd
 
@@ -173,13 +171,16 @@ checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[
         sigmaRHS1 = getConcFact inst1Sigma
         sigmaF = getPremsFactKD instSigma
 
-        checkDeducible :: [Subst Name LVar] -> Bool
+        auxDeducible (m1:mq) = checkDeducible m1 && auxDeducible mq
+        auxDeducible [] = True
+
+        checkDeducible :: Subst Name LVar -> Bool
         checkDeducible m = trace (show (aux prems)) aux prems || True
 
          where
           terms = getPremsFactTail instSigma ++ getPremsFactTail inst1Sigma
           termsT = foldMap getFactTerms terms
-          inst2sigma2 = apply (head m) inst2
+          inst2sigma2 = apply m inst2
           prems = getPremsFactTail inst2sigma2
 
           aux (fa@(Fact KUFact _ [f]):q) = (aux1 f || derivationTest fa terms) && aux q
