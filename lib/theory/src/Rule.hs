@@ -131,10 +131,12 @@ checkChainReduction :: MaudeHandle -> IntrRuleAC -> Bool
 checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) =
  case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
     [] -> False
-    subst -> trace ("\nsubst : " ++ show subst ++ "\nsigma instance : " ++ (show (auxMatcher subst r inst1))) searchMatcheraux (auxMatcher subst r inst1)-- searchMatcheraux subst
+    subst -> trace ("\nsubst : " ++ show subst ++ "\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1)) searchMatcheraux (auxMatcher subst r inst1)-- searchMatcheraux subst
   where
     runMaude   = (`runReader` hnd)
     inst1 = r `renameAvoiding` r
+
+    ppPair (x, y) = render (prettyIntrRuleAC x) ++ "\n" ++ render (prettyIntrRuleAC y)
 
     getPremsFactKD (Rule _ (fact:_) _ _ _) = fact
     getPremsFactTail (Rule _ ((Fact KDFact _ _):tls) _ _ _) = tls
