@@ -83,6 +83,7 @@ deleteRulesAndLemmasFromTheory = L.modify thyItems deleteRules
 replacePrivate :: Term t -> Term t
 replacePrivate t = case viewTerm t of
     FApp (NoEq (num,(name,Private,constr))) term  -> termViewToTerm $ FApp (NoEq (num, (name, Public, constr))) (map replacePrivate term)
+    FApp (AC (ACfct (num,(name,Private,constr)))) term  -> termViewToTerm $ FApp (AC (ACfct (num, (name, Public, constr)))) (map replacePrivate term)
     FApp sym as -> termViewToTerm $ FApp sym (map replacePrivate as)
     x -> termViewToTerm x
 
@@ -112,7 +113,7 @@ reportVars :: [[ProofStatus]] -> [OpenProtoRule] -> [[LVar]] -> WfErrorReport
 reportVars analysisresults rules vars = case rulesAndVars of
     []     -> []
     errors -> [(underlineTopic "Message Derivation Checks",
-        text $ "The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
+        text $ "The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
         ++ errors)]
     where
         rulesAndVars :: String

@@ -111,6 +111,7 @@ appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> m [(I
 appSubst [] _ _    = return []
 appSubst (x:xs) inst0 inst1 = do
   sub <- freshToFree x
+  traceM ("sub dans apply : " ++ show sub)
   let (instt0,instt1) = apply sub (inst0,inst1)
   rest <- appSubst xs inst0 inst1
   return ((instt0,instt1):rest)
