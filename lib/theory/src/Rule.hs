@@ -32,6 +32,7 @@ import Theory.Constraint.Solver.Sources (IntegerParameters)
 
 
 import Debug.Trace
+import Text.PrettyPrint.Class
 import Control.Monad.Bind (MonadFresh)
 
 
@@ -143,7 +144,7 @@ checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[
     f1 = getPremsFactKD inst1
 
     auxMatcher :: [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> [(IntrRuleAC,IntrRuleAC)]
-    auxMatcher subst ru0 ru1 = evalFreshAvoiding (appSubst subst ru0 ru1) ()
+    auxMatcher subst ru0 ru1 = evalFreshAvoiding (appSubst subst ru0 ru1) (ru0, ru1)
 
     -- searchMatcheraux (s1:sq) = searchMatcher s1 && searchMatcheraux sq
     -- searchMatcheraux [] = True
@@ -157,7 +158,7 @@ checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[
     searchMatcher :: IntrRuleAC -> IntrRuleAC -> Bool
     searchMatcher instSigma inst1Sigma  =
       case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
-        [] -> trace ("\ninstance 2 : " ++ show inst2) False
+        [] -> trace ("\ninstance 2 : " ++ render ( prettyIntrRuleAC inst2)) False
         match -> trace ("\nmatch : " ++ show match) auxDeducible match
       where
         doMatch match = runReader (solveMatchLNTerm match) hnd
