@@ -58,6 +58,11 @@ $(mkLabels [''ProtoLemma])
 type Lemma = ProtoLemma LNFormula
 type SyntacticLemma = ProtoLemma SyntacticLNFormula
 
+applyToLemmaFormula :: (f -> f) -> ProtoLemma f p -> ProtoLemma f p
+applyToLemmaFormula f l = L.set lFormula (f lemFormula) l
+  where 
+    lemFormula = L.get lFormula l
+
 deriving instance Eq p => Eq (Lemma p)
 deriving instance Ord p => Ord (Lemma p)
 deriving instance Show p => Show (Lemma p)

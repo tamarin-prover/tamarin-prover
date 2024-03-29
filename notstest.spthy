@@ -1,0 +1,62 @@
+theory NotTest
+begin
+
+rule A:
+  []
+  --[ A() ]->
+  []
+
+
+rule B:
+  []
+  --[ B() ]->
+  []
+
+rule C:
+  []
+  --[ C() ]->
+  []
+
+lemma Test1:
+  "Ex #t. not A()@t"
+
+lemma Test2:
+  "Ex #t. (not A()@t & not B()@t)"
+
+lemma Test3:
+  "All #t. (A()@t ==> not B()@t)"
+  
+lemma Test4:
+  "All #t. not (A()@t ==> B()@t)"
+
+lemma Test5:
+  "All #t. (A()@t ==> not ((not B()@t) | not (A()@t)))"
+
+lemma Test6:
+  "Ex #t. (A()@t & not (B()@t))"
+
+lemma Test7:
+  "All #t. (A()@t ==> (not B()@t | not C()@t))"
+
+lemma Test8:
+  "All #i. (A()@i ==> (All #j. B()@j ==> not C()@j))"
+
+lemma Test9:
+  "All #i. (A()@i ==> All #j #k. (B()@j & B()@k) ==> (not C()@j | not C()@k))"
+
+lemma Test10:
+  "All #i. (A()@i ==> All #j #k. (B()@j & B()@k) ==> (not C()@j | not C()@k | (Ex #l. A()@l & not B()@l)))"
+
+lemma Test11:
+  "All #i. (A()@i ==> All #j #k. (B()@j & B()@k) ==> (not C()@j | not C()@k | (not Ex #l. A()@l & B()@l)))"
+
+lemma Test12:
+  "Ex #i. (A()@i & Ex #j #k. (B()@j & B()@k) & ((not Ex #m. C()@m) | not C()@k | (not Ex #l. A()@l & B()@l)))"
+
+lemma Test13:
+  "Ex #i #j. ((not Ex #m. C()@i) | not C()@j | (not Ex #l. A()@l & B()@l))"
+
+lemma Test14:
+  "All #i #j. (A()@i & B()@j) ==> ((not Ex #m. C()@m) | not C()@j | (not Ex #l. A()@l & B()@l))"
+
+end

@@ -49,6 +49,9 @@ import Data.Bifunctor
 import Data.Char
 import Data.Data
 import Data.Maybe
+import Items.LemmaItem (applyToLemmaFormula)
+import Debug.Trace (trace)
+import Theory.Model.Formula (prettyLFormula)
 
 data Translation =
    ProVerif
@@ -88,7 +91,7 @@ translationWarning s cont = unsafePerformIO printWarning
     printWarning = do
       hPutStr stderr $ "WARNING: " ++ s
       return cont
-                    
+
 ------------------------------------------------------------------------------
 -- Core Proverif Export
 ------------------------------------------------------------------------------
@@ -206,7 +209,7 @@ filterHeaders = S.filter (not . isForbidden)
     isForbidden (Fun "fun" "true" _ _ _) = True
     isForbidden (Type "bitstring") = True
     isForbidden (Type "channel") = True
-    isForbidden (Type "nat") = True    
+    isForbidden (Type "nat") = True
     isForbidden _ = False
 
 -- We cannot define a constant and a function with the same name in proverif
@@ -346,7 +349,7 @@ auxppTerm ppLit t = (ppTerm t, getHdTerm t)
       Lit v -> ppLit v
       FApp (AC Xor) ts -> ppXor ts
       FApp (AC o) ts -> ppTerms (ppACOp o) 1 "(" ")" ts
-      FApp (NoEq s) [] | s == natOneSym -> text "1"      
+      FApp (NoEq s) [] | s == natOneSym -> text "1"
       FApp (NoEq s) [t1, t2] | s == expSym -> text "exp(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
       FApp (NoEq s) [t1, t2] | s == diffSym -> text "choice" <> text "[" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text "]"
       FApp (NoEq _) [t1, t2] | isPair tm -> text "(" <> ppTerm t1 <> text ", " <> ppTerm t2 <> text ")"
@@ -405,7 +408,7 @@ auxppSapicTerm tc mVars isPattern = auxppTerm ppLit
       Var (SapicLVar lvar@(LVar n LSortNat _) _)
         | S.member lvar mVars ->
           translationWarning ("Pattern matching on natural variable "++n++" makes Tamarin and Proverif behaviours diverge.") $
-          text "=" <> ppLVar lvar          
+          text "=" <> ppLVar lvar
       Var (SapicLVar lvar _)
         | S.member lvar mVars -> text "=" <> ppLVar lvar
       l | isPattern -> ppTypeLit tc l
@@ -1045,7 +1048,7 @@ ppLemma te p =
 loadLemmas :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> TranslationContext -> TypingEnvironment -> OpenTheory -> [Doc]
 loadLemmas lemSel tc te thy = map (ppLemma te) proverifLemmas
   where
-    thyLemmas = theoryLemmas thy
+    thyLemmas = map (applyToLemmaFormula pullnots) (theoryLemmas thy)
     proverifLemmas =
       filter
         ( \lem ->

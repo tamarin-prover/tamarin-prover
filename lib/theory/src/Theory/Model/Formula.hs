@@ -19,6 +19,7 @@
 -- Types and operations for handling sorted first-order logic
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 module Theory.Model.Formula (
 
    -- * Formulas
@@ -61,12 +62,14 @@ module Theory.Model.Formula (
   -- ** Normal forms / simplification
   , simplifyFormula
   , nnf
+  , pullnots
   , pullquants
   , prenex
   , pnf
   , shiftFreeIndices
 
   -- ** Pretty-Printing
+  , prettyLFormula
   , prettyLNFormula
   , prettySyntacticLNFormula
 
@@ -93,6 +96,8 @@ import           Theory.Text.Pretty
 
 import           Term.LTerm
 import           Term.Substitution
+import Debug.Trace (trace)
+import Data.Maybe (fromMaybe)
 
 ------------------------------------------------------------------------------
 -- Types
@@ -289,7 +294,7 @@ mapLits f t = case viewTerm t of
 -- modulo alpha renaming and @Nothing otherwise@. @vs@ is always chosen to be
 -- fresh.
 openFormulaPrefix :: (MonadFresh m, Ord c, Functor syn)
-                  => ProtoLFormula syn c 
+                  => ProtoLFormula syn c
                   -> m ([LVar], Quantifier, ProtoLFormula syn c)
 openFormulaPrefix f0 = case openFormula f0 of
     Nothing        -> error $ "openFormulaPrefix: no outermost quantifier"
@@ -352,7 +357,7 @@ hinted f v = f (hint v) v
 -- | Convert to LNFormula, if possible.
 -- toLNFormula :: Formula s c0 (ProtoAtom s0 t0) -> Maybe (Formula s c0 (Atom t0))
 toLNFormula :: ProtoFormula syn s c v -> Maybe (Formula s c v)
-toLNFormula = traverseFormulaAtom (liftA Ato . f) 
+toLNFormula = traverseFormulaAtom (liftA Ato . f)
   where
         f x |  (Syntactic _) <- x = Nothing
             | otherwise           = Just (toAtom x)
@@ -398,7 +403,7 @@ simplifyFormula fm0 = case fm0 of
 
 -- | Negation normal form.
 nnf :: ProtoFormula sync s c v -> ProtoFormula sync s c v
-nnf fm = case fm of 
+nnf fm = case fm of
     Conn And p q        -> nnf p       .&&. nnf q
     Conn Or  p q        -> nnf p       .||. nnf q
     Conn Imp p q        -> nnf (Not p) .||. nnf q
@@ -407,11 +412,39 @@ nnf fm = case fm of
     Not (Conn And p q ) -> nnf (Not p) .||. nnf (Not q)
     Not (Conn Or  p q ) -> nnf (Not p) .&&. nnf (Not q)
     Not (Conn Imp p q ) -> nnf p       .&&. nnf (Not q)
-    Not (Conn Iff p q ) -> (nnf p .&&. nnf (Not q)) .||. (nnf(Not p) .&&. nnf q)
+    Not (Conn Iff p q ) -> (nnf p .&&. nnf (Not q)) .||. (nnf (Not p) .&&. nnf q)
     Qua qua x p         -> Qua qua     x $ nnf p
     Not (Qua All x p)   -> Qua Ex  x $ nnf (Not p)
     Not (Qua Ex  x p)   -> Qua All x $ nnf (Not p)
     _                   -> fm
+
+-- | Pulling out nots.
+pullnots :: LNFormula -> LNFormula
+pullnots fm = trace ("old: " ++ pfm ++ "\n" ++ "new: " ++ nfms ++ "\n") nfm
+  where
+    nfm = fromMaybe fm (pulledNots $ pullnots' fm)
+    nfms = render $ prettyLNFormula nfm
+    pulledNots lfm = case lfm of
+      f@(Not p) -> if pulledNots' p then Just f else Nothing
+      _ -> Nothing
+      where
+        pulledNots' lfm' = case lfm' of
+          Not _         -> False
+          Conn _ p q    -> pulledNots' p && pulledNots' q
+          Qua _ _ p     -> pulledNots' p
+          _             -> True
+
+    pullStep fm' = case fm' of
+      Conn And (Not p) (Not q)  -> Not $ pullStep p .||. pullStep q
+      Conn Or (Not p) (Not q)   -> Not $ pullStep p .&&. pullStep q
+      Conn Imp p (Not q)        -> Not $ pullStep p .&&. pullStep q
+      Conn c p q                -> Conn c (pullStep p) (pullStep q)
+      Qua All x (Not p)         -> Not $ Qua Ex x $ pullStep p
+      Qua Ex x (Not p)          -> Not $ Qua All x $ pullStep p
+      Qua qua x p               -> Qua qua x $ pullStep p
+      _                         -> fm'
+    pullnots' f = if f /= pullStep f then pullnots' (pullStep f) else f
+    pfm = render $ prettyLNFormula fm
 
 -- | Pulling out quantifiers.
 pullquants :: (Functor sync, Ord c, Ord v, Eq s) => ProtoFormula sync s c v -> ProtoFormula sync s c v
