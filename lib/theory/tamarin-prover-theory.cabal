@@ -133,6 +133,7 @@ library
       ClosedTheory
       Rule
       Prover
+      CloseRule
       Items.LemmaItem
       Items.OpenTheoryItem
       Items.OptionItem

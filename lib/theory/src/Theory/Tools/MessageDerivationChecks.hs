@@ -11,13 +11,14 @@ import TheoryObject
 import Theory.Model
 import Theory.Proof
 import Prover
-import Data.Maybe ( fromJust, fromMaybe, catMaybes, mapMaybe )
+import Data.Maybe ( catMaybes, mapMaybe )
 import Data.List
 import Theory.Tools.Wellformedness (WfErrorReport, underlineTopic)
 import Text.PrettyPrint.Class
 import qualified Text.PrettyPrint.Class as Pretty
 import ClosedTheory
 import qualified Data.List as List
+import CloseRule (closeTheoryWithMaude,proveTheory)
 
 -----------------------------------------------
 -- DerivationChecks
@@ -93,17 +94,8 @@ makeFunsPublic = L.set thySignature
 diffmakeFunsPublic :: a -> DiffTheory a c r r2 p p2 -> DiffTheory a c r r2 p p2
 diffmakeFunsPublic = L.set diffThySignature
 
-addLemmas :: Foldable t =>t (Lemma p) -> Theory sig c r p s -> Theory sig c r p s
-addLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma -> addLemma lemma (fromJust fm)) (Just thy) lemmas
-
 addDiffRules :: [OpenProtoRule] -> DiffTheory sig c DiffProtoRule r2 p p2-> DiffTheory sig c DiffProtoRule r2 p p2
 addDiffRules rules = L.modify diffThyItems (++ map (DiffRuleItem . (\t -> DiffProtoRule (L.get oprRuleE t) (Just (t,t)))) rules)
-
-addRules :: [r] -> Theory sig c r p s -> Theory sig c r p s
-addRules rules = L.modify thyItems (++ map RuleItem rules)
-
-addDiffLemmas :: Foldable t =>t (Lemma p2)-> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
-addDiffLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma ->  addLemmaDiff LHS lemma (fromJust fm)) (Just thy) lemmas
 
 -----------------------------------------------
 -- Generating error reports
@@ -144,12 +136,6 @@ reportDiffVars analysisresults rules vars = case rulesAndVars of
         generateError :: [ProofStatus] -> DiffProtoRule -> [LVar] -> String
         generateError results rule vars' = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get dprRule rule)))
                 ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars'))
-
-checkProofStatuses :: ClosedTheory -> [ProofStatus]
-checkProofStatuses thy =  map (foldProof proofStepStatus . L.get lProof) $ theoryLemmas thy
-
-checkDiffProofStatuses :: ClosedDiffTheory -> [ProofStatus]
-checkDiffProofStatuses thy = map (foldProof proofStepStatus . L.get lProof . snd) $ diffTheoryLemmas thy
 
 -----------------------------------------------
 -- Convenience getter functions

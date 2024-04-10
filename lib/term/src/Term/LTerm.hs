@@ -62,6 +62,7 @@ module Term.LTerm (
   , niFactors
   , flattenedACTerms
   , containsPrivate
+  , containsOnlyNoEq
   , containsNoPrivateExcept
   , neverContainsFreshPriv
 
@@ -366,6 +367,13 @@ containsPrivate t = case viewTerm t of
     Lit _                          -> False
     FApp (NoEq (_,(_,Private,_))) _  -> True
     FApp _                      as -> any containsPrivate as
+
+-- | @containsOnlyNoEq t@ returns @True@ if @t@ contains only NoEq function symbols (no AC function or C function)
+containsOnlyNoEq :: Term t -> Bool
+containsOnlyNoEq t = case viewTerm t of
+    Lit _            -> True
+    FApp (NoEq _) as -> foldr (\x -> (&& containsOnlyNoEq x)) True as
+    FApp _ _         -> False
 
 -- | containsNoPrivateExcept t t2@ returns @True@ if @t2@ contains private function symbols other than @t@.
 containsNoPrivateExcept :: [BC.ByteString] -> Term t -> Bool

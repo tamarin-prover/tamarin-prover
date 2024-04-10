@@ -67,6 +67,8 @@ module TheoryObject (
   , expandLemma
   , addRestriction
   , addLemma
+  , addLemmas
+  , addRules
   , addProcess
   , findProcess
   , addProcessDef
@@ -75,6 +77,7 @@ module TheoryObject (
   , addRestrictionDiff
   , addLemmaDiff
   , addDiffLemma
+  , addDiffLemmas
   , addHeuristic
   , addDiffHeuristic
   , addTactic
@@ -424,6 +427,12 @@ addLemma l thy = do
     guard (isNothing $ lookupLemma (L.get lName l) thy)
     return $ modify thyItems (++ [LemmaItem l]) thy
 
+addLemmas :: Foldable t =>t (Lemma p) -> Theory sig c r p s -> Theory sig c r p s
+addLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma -> addLemma lemma (fromJust fm)) (Just thy) lemmas
+
+addRules :: [r] -> Theory sig c r p s -> Theory sig c r p s
+addRules rules = L.modify thyItems (++ map RuleItem rules)
+
 addProcess :: PlainProcess -> Theory sig c r p TranslationElement -> Theory sig c r p TranslationElement
 addProcess l = modify thyItems (++ [TranslationItem (ProcessItem l)])
 
@@ -521,6 +530,9 @@ addDiffLemma :: DiffLemma p -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory s
 addDiffLemma l thy = do
     guard (isNothing $ lookupDiffLemma (L.get lDiffName l) thy)
     return $ modify diffThyItems (++ [DiffLemmaItem l]) thy
+
+addDiffLemmas :: Foldable t =>t (Lemma p2)-> DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
+addDiffLemmas lemmas thy = fromMaybe thy $ foldl ( \fm lemma ->  addLemmaDiff LHS lemma (fromJust fm)) (Just thy) lemmas
 
 -- | Add a new default heuristic. Fails if a heuristic is already defined.
 addHeuristic :: [GoalRanking ProofContext] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -650,7 +662,6 @@ isRuleItem _            = False
 itemToRule :: TheoryItem r p s -> Maybe r
 itemToRule (RuleItem r) = Just r
 itemToRule _            = Nothing
-
 
 ------------------------------------------------------------------------------
 -- Pretty Print

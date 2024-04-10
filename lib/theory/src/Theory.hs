@@ -322,6 +322,7 @@ import Items.ExportInfo
 import OpenTheory
 import Pretty
 import Prover
+import CloseRule
 import Theory.Model
 import Theory.Proof
 import Theory.Syntactic.Predicate

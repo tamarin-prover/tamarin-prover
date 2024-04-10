@@ -10,31 +10,33 @@ import Items.RuleItem
 
 import           Prelude                             hiding (id, (.))
 
-import           Data.List
+--import           Data.List
 
-import qualified Data.Set                            as S
+--import qualified Data.Set                            as S
 
-import           Control.Basics
+--import           Control.Basics
 import           Control.Category
-import           Control.Monad.Reader
+--import           Control.Monad.Reader
 
 import qualified Extension.Data.Label                as L
 
 import           Theory.Model
 import           Theory.Proof
-import           Theory.Tools.InjectiveFactInstances
+--import           Theory.Tools.InjectiveFactInstances
 import           Theory.Tools.RuleVariants
-import           Theory.Tools.IntruderRules
+--import           Theory.Tools.IntruderRules
 
-import           Term.Positions
+--import           Term.Positions
 import           Term.Macro
-import Theory.Constraint.Solver.Sources (IntegerParameters)
+
+--import Theory.Constraint.Solver.Sources (IntegerParameters)
 
 
-import Debug.Trace
-import Text.PrettyPrint.Class
-import Control.Monad.Bind (MonadFresh)
+--import Debug.Trace
+--import Text.PrettyPrint.Class
+--import Control.Monad.Bind (MonadFresh)
 
+--import Data.Function (on)
 
 -- | Get an OpenProtoRule's name
 getOpenProtoRuleName :: OpenProtoRule -> String
@@ -100,185 +102,191 @@ closeProtoRule hnd macros (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (varia
 closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
 
 
--- appSubst :: (MonadFresh m, Apply (Subst Name LVar) t) => LNSubstVFresh -> t -> m t
--- appSubst :: MonadFresh m => LNSubstVFresh -> (IntrRuleAC, IntrRuleAC) -> m (IntrRuleAC,IntrRuleAC)
--- appSubst x inst = do
---   subb <- freshToFree x
---   let instt = apply subb inst
---   --instt <- rename(apply subb inst)
---   return instt
+-- appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> m [(IntrRuleAC,IntrRuleAC)]
+-- appSubst [] _ _    = return []
+-- appSubst (x:xs) inst0 inst1 = do
+--   sub <- freshToFree x
+--   traceM ("sub dans apply : " ++ show sub)
+--   let (instt0,instt1) = apply sub (inst0,inst1)
+--   rest <- appSubst xs inst0 inst1
+--   return ((instt0,instt1):rest)
 
-appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> m [(IntrRuleAC,IntrRuleAC)]
-appSubst [] _ _    = return []
-appSubst (x:xs) inst0 inst1 = do
-  sub <- freshToFree x
-  traceM ("sub dans apply : " ++ show sub)
-  let (instt0,instt1) = apply sub (inst0,inst1)
-  rest <- appSubst xs inst0 inst1
-  return ((instt0,instt1):rest)
+-- derivationTest :: LNFact -> [LNFact] -> Bool
+-- derivationTest fact terms = False
+--   where
+--     set = decompose terms
 
-derivationTest :: LNFact -> [LNFact] -> Bool
-derivationTest fact terms = False
-  where
-    set = decompose terms
+--     decompose ((Fact KUFact annot [FAPP (NoEq (b,(n,Private,c))) p]):l) = map ([Fact KDFact annot [FAPP (NoEq (b,(n,Private,c))) p]] ++) (decompose l)
+--     decompose ((Fact KUFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]):l) = map ([Fact KDFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]] ++) (decompose l)
+--     decompose ((Fact KUFact annot [FAPP s p]):l) = map ([Fact KDFact annot [FAPP s p]] ++) (decompose l) ++ map (map (\x -> Fact KUFact annot [x]) p ++) (decompose l)
+--     decompose (f:l) = map ([f] ++) (decompose l)
+--     decompose [] = [[]]
 
-    decompose ((Fact KUFact annot [FAPP (NoEq (b,(n,Private,c))) p]):l) = map ([Fact KDFact annot [FAPP (NoEq (b,(n,Private,c))) p]] ++) (decompose l)
-    decompose ((Fact KUFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]):l) = map ([Fact KDFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]] ++) (decompose l)
-    decompose ((Fact KUFact annot [FAPP s p]):l) = map ([Fact KDFact annot [FAPP s p]] ++) (decompose l) ++ map (map (\x -> Fact KUFact annot [x]) p ++) (decompose l)
-    decompose (f:l) = map ([f] ++) (decompose l)
-    decompose [] = [[]]
+--    -- emptyThy = defaultOpenTheory False
 
-checkChainReduction :: MaudeHandle -> IntrRuleAC -> Bool
-checkChainReduction hnd r@(Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) =
- case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
-    [] -> False
-    subst -> trace ("\nsubst : " ++ show subst ++ "\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1)) searchMatcheraux (auxMatcher subst r inst1)-- searchMatcheraux subst
-  where
-    runMaude   = (`runReader` hnd)
-    inst1 = r `renameAvoiding` r
+-- checkChainReduction :: MaudeHandle -> IntrRuleAC -> IntrRuleAC -> [IntrRuleAC] -> Bool
+-- checkChainReduction hnd r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule _ j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) allR | (i /= 1 && j /=1) =
+--  case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
+--     [] -> False
+--     subst -> trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1))) searchMatcheraux (auxMatcherFilter (auxMatcher subst r inst1))
+--   where
+--     runMaude   = (`runReader` hnd)
+--     inst1 = r1 `renameAvoiding` r
 
-    ppPair (x, y) = render (prettyIntrRuleAC x) ++ "\n" ++ render (prettyIntrRuleAC y)
+--     ppPair (x, y) = render (prettyIntrRuleAC x) ++ "\n" ++ render (prettyIntrRuleAC y)
 
-    getPremsFactKD (Rule _ (fact:_) _ _ _) = fact
-    getPremsFactTail (Rule _ ((Fact KDFact _ _):tls) _ _ _) = tls
-    getConcFact (Rule _ _ [fact] _ _) = fact
+--     getPremsFactKD (Rule _ (fact:_) _ _ _) = fact
+--     getPremsFactTail (Rule _ ((Fact KDFact _ _):tls) _ _ _) = tls
+--     getConcFact (Rule _ _ [fact] _ _) = fact
 
-    f1 = getPremsFactKD inst1
+--     f1 = getPremsFactKD inst1
 
-    auxMatcher :: [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> [(IntrRuleAC,IntrRuleAC)]
-    auxMatcher subst ru0 ru1 = evalFreshAvoiding (appSubst subst ru0 ru1) (ru0, ru1)
+--     auxMatcher :: [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> [(IntrRuleAC,IntrRuleAC)]
+--     auxMatcher s ru0 ru1 = evalFreshAvoiding (appSubst s ru0 ru1) (ru0, ru1)
 
-    -- searchMatcheraux (s1:sq) = searchMatcher s1 && searchMatcheraux sq
-    -- searchMatcheraux [] = True
+--     auxMatcherFilter = filter nullIntersect
+--     nullIntersect (i0,i1) = (frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= []
 
-    searchMatcheraux ((s1,h1):sq)  = searchMatcher s1 h1 && searchMatcheraux sq
-    searchMatcheraux [] = True
+--     searchMatcheraux ((s1,h1):sq)  = foldr (\ru -> (|| searchMatcher s1 h1 ru)) False allR && searchMatcheraux sq
+--     searchMatcheraux [] = True
 
-    -- searchMatcher :: LNSubstVFresh -> Bool
-    -- searchMatcher sub  =
+--     searchMatcher :: IntrRuleAC -> IntrRuleAC -> IntrRuleAC -> Bool
+--     searchMatcher instSigma inst1Sigma inst2init =
+--       case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
+--         [] -> trace ("\ninstance 2 for false : " ++ render ( prettyIntrRuleAC inst2)) False
+--         match -> trace ("\nmatch : " ++ show match) auxDeducible match
+--       where
+--         doMatch match = runReader (solveMatchLNTerm match) hnd
 
-    searchMatcher :: IntrRuleAC -> IntrRuleAC -> Bool
-    searchMatcher instSigma inst1Sigma  =
-      case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
-        [] -> trace ("\ninstance 2 : " ++ render ( prettyIntrRuleAC inst2)) False
-        match -> trace ("\nmatch : " ++ show match) auxDeducible match
-      where
-        doMatch match = runReader (solveMatchLNTerm match) hnd
+--         inst2 = inst2init `renameAvoiding` (inst1Sigma, instSigma)
 
-        --(instSigma, inst1Sigma) = evalFreshAvoiding (appSubst sub (r, inst1)) (r, inst1)
+--         f2 = getPremsFactKD inst2
+--         rhs2 = getConcFact inst2
 
-        inst2 = r `renameAvoiding` (inst1Sigma, instSigma)
+--         sigmaRHS1 = getConcFact inst1Sigma
+--         sigmaF = getPremsFactKD instSigma
 
-        f2 = getPremsFactKD inst2
-        rhs2 = getConcFact inst2
+--         auxDeducible (m1:mq) = checkDeducible m1 && auxDeducible mq
+--         auxDeducible [] = True
 
-        sigmaRHS1 = getConcFact inst1Sigma
-        sigmaF = getPremsFactKD instSigma
+--         checkDeducible :: Subst Name LVar -> Bool
+--         checkDeducible m = trace ("deduce : " ++ show (aux prems)) aux prems || True
 
-        auxDeducible (m1:mq) = checkDeducible m1 && auxDeducible mq
-        auxDeducible [] = True
+--          where
+--           terms = getPremsFactTail instSigma ++ getPremsFactTail inst1Sigma
+--           termsT = foldMap getFactTerms terms
+--           inst2sigma2 = apply m inst2
+--           prems = getPremsFactTail inst2sigma2
 
-        checkDeducible :: Subst Name LVar -> Bool
-        checkDeducible m = trace (show (aux prems)) aux prems || True
+--           aux (fa@(Fact KUFact _ [f]):q) = (aux1 f || derivationTest fa terms) && aux q
+--           aux ((Fact KDFact _ _):_) = False
+--           aux []                    = True
+--           aux _                     = False
 
-         where
-          terms = getPremsFactTail instSigma ++ getPremsFactTail inst1Sigma
-          termsT = foldMap getFactTerms terms
-          inst2sigma2 = apply m inst2
-          prems = getPremsFactTail inst2sigma2
-
-          aux (fa@(Fact KUFact _ [f]):q) = (aux1 f || derivationTest fa terms) && aux q
-          aux ((Fact KDFact _ _):_) = False
-          aux []                    = True
-          aux _                     = False
-
-          aux1 f | f `elem` termsT    = True
-          aux1 (FAPP (NoEq (_,(_,Private,_))) _) = False
-          aux1 (FAPP (AC (ACfct (_,(_,Private,_)))) _) = False
-          aux1 (FAPP _ p) = foldr (\x1 -> (&& aux1 x1)) True p
-          aux1 _                     = False
+--           aux1 f | f `elem` termsT    = True
+--           aux1 (FAPP (NoEq (_,(_,Private,_))) _) = False
+--           aux1 (FAPP (AC (ACfct (_,(_,Private,_)))) _) = False
+--           aux1 (FAPP _ p) = foldr (\x1 -> (&& aux1 x1)) True p
+--           aux1 _                     = False
 
 
 
-checkChainReduction _ _ = False
+-- checkChainReduction _ _ _ _ = False
 
 
--- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
---   Should be parallelized like the variant computation for protocol rules (JD)
-closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-closeIntrRule hnd r@(Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
-  trace ("Bool : " ++ show (checkChainReduction hnd r)) $ if subterm then [ru] else variantsIntruder hnd id False ru
-    where
-      ru = Rule (DestrRule name (if runMaude (unifiableLNTerms rhs t)
-                              then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
-                              -- We do not need to count t itself, hence - 1.
-                              -- If t is a private function symbol we need to permit one more rule
-                              -- application as there is no associated constructor.
-                              else 0) subterm constant) prems concs acts nvs
-        where
-           runMaude = (`runReader` hnd)
-closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder hnd id False ir
-closeIntrRule _   ir                                        = [ir]
+-- applyChainReduction :: MaudeHandle -> [[IntrRuleAC]] -> [IntrRuleAC]
+-- applyChainReduction hnd (t1:tq) = trace ("tuple : " ++ show tupleRule) (if checkChainReductionIter tupleRule then set1ru t1 else t1) ++ applyChainReduction hnd tq
+--   where
+--     tupleRule = [(x,y) | x <- t1, y <- t1]
+--     checkChainReductionIter = foldr (\(x,y) -> (&& checkChainReduction hnd x y t1)) True
+
+--     set1ru = map change
+
+--     change (Rule (DestrRule name _ subterm constant) prems concs acts nvs) = Rule (DestrRule name 1 subterm constant) prems concs acts nvs
+--     change r = r
+-- applyChainReduction _ [] = []
+
+-- -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
+-- --   Should be parallelized like the variant computation for protocol rules (JD)
+-- closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
+-- closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
+--   if subterm then [ru] else variantsIntruder hnd id False ru
+--     where
+--       ru = Rule (DestrRule name (if containsOnlyNoEq rhs && containsOnlyNoEq t && runMaude (unifiableLNTerms rhs t)
+--                               then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
+--                               -- We do not need to count t itself, hence - 1.
+--                               -- If t is a private function symbol we need to permit one more rule
+--                               -- application as there is no associated constructor.
+--                               else 0) subterm constant) prems concs acts nvs
+--         where
+--            runMaude = (`runReader` hnd)
+-- closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder hnd id False ir
+-- closeIntrRule _   ir                                        = [ir]
 
 
--- | Close a rule cache. Hower, note that the
--- requires case distinctions are not computed here.
-closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturation limits
-               -> [LNGuarded]        -- ^ Restrictions to use.
-               -> [LNGuarded]        -- ^ Source lemmas to use.
-               -> S.Set FactTag      -- ^ Fact tags forced to be injective
-               -> SignatureWithMaude -- ^ Signature of theory.
-               -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
-               -> OpenRuleCache      -- ^ Intruder rules modulo AC.
-               -> Bool               -- ^ Verbose option
-               -> Bool               -- ^ Diff or not
-               -> Bool               -- ^ isSapic or not
-               -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $
-    ClosedRuleCache
-        classifiedRules rawSources refinedSources injFactInstances
-  where
-    ctxt0 = ProofContext
-        sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing
-        (error "closeRuleCache: trace quantifier should not matter here")
-        (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
-        (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
-        isSapic
+-- -- | Close a rule cache. Hower, note that the
+-- -- requires case distinctions are not computed here.
+-- closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturation limits
+--                -> [LNGuarded]        -- ^ Restrictions to use.
+--                -> [LNGuarded]        -- ^ Source lemmas to use.
+--                -> S.Set FactTag      -- ^ Fact tags forced to be injective
+--                -> SignatureWithMaude -- ^ Signature of theory.
+--                -> [ClosedProtoRule]  -- ^ Protocol rules with variants.
+--                -> OpenRuleCache      -- ^ Intruder rules modulo AC.
+--                -> Bool               -- ^ Verbose option
+--                -> Bool               -- ^ Diff or not
+--                -> Bool               -- ^ isSapic or not
+--                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
+-- closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $
+--     trace ("Rules reduction : " ++ show intrRulesACred) 
+--     ClosedRuleCache
+--         classifiedRules rawSources refinedSources injFactInstances
+--   where
+--     ctxt0 = ProofContext
+--         sig classifiedRules injFactInstances RawSource [] AvoidInduction Nothing Nothing
+--         (error "closeRuleCache: trace quantifier should not matter here")
+--         (error "closeRuleCache: lemma name should not matter here") [] verbose isdiff
+--         (all isSubtermRule {-- $ trace (show destr ++ " - " ++ show (map isSubtermRule destr))-} destr) (any isConstantRule destr)
+--         isSapic
 
-    -- Maude handle
-    hnd = L.get sigmMaudeHandle sig
-    reducibles = reducibleFunSyms $ mhMaudeSig hnd
+--     -- Maude handle
+--     hnd = L.get sigmMaudeHandle sig
+--     reducibles = reducibleFunSyms $ mhMaudeSig hnd
 
-    forcedInjFacts' = S.map (\x -> (x, replicate (factTagArity x) [Unspecified])) forcedInjFacts
-    -- inj fact instances
-    injFactInstances = forcedInjFacts' `S.union`
-        simpleInjectiveFactInstances reducibles (L.get cprRuleE <$> protoRules)
+--     forcedInjFacts' = S.map (\x -> (x, replicate (factTagArity x) [Unspecified])) forcedInjFacts
+--     -- inj fact instances
+--     injFactInstances = forcedInjFacts' `S.union`
+--         simpleInjectiveFactInstances reducibles (L.get cprRuleE <$> protoRules)
 
-    -- precomputing the case distinctions: we make sure to only add safety
-    -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
-    -- distinctions for properties proven using induction.
-    safetyRestrictions = filter isSafetyFormula restrictions
-    rawSources         = precomputeSources parameters ctxt0 safetyRestrictions
-    refinedSources     = refineWithSourceAsms parameters typAsms ctxt0 rawSources
+--     -- precomputing the case distinctions: we make sure to only add safety
+--     -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
+--     -- distinctions for properties proven using induction.
+--     safetyRestrictions = filter isSafetyFormula restrictions
+--     rawSources         = precomputeSources parameters ctxt0 safetyRestrictions
+--     refinedSources     = refineWithSourceAsms parameters typAsms ctxt0 rawSources
 
-    -- close intruder rules
-    intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
+--     -- close intruder rules
+--     intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
 
-    -- classifying the rules
-    rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|>
-              ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
+--     tabT = groupBy ((==) `on` getRuleName) $ sortOn getRuleName intrRulesAC
 
-    anyOf ps = partition (\x -> any ($ x) ps)
+--     intrRulesACred = applyChainReduction hnd tabT
 
-    (nonProto, proto) = anyOf [isDestrRule, isConstrRule] rulesAC
-    (constr, destr)   = anyOf [isConstrRule] nonProto
+--     -- classifying the rules
+--     rulesAC = (fmap IntrInfo                      <$> intrRulesACred) <|>
+--               ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
 
-    -- and sort them into ClassifiedRules datastructure for later use in proofs
-    classifiedRules = ClassifiedRules
-      { _crConstruct  = constr
-      , _crDestruct   = destr
-      , _crProtocol   = proto
-      }
+--     anyOf ps = partition (\x -> any ($ x) ps)
+
+--     (nonProto, proto) = anyOf [isDestrRule, isConstrRule] rulesAC
+--     (constr, destr)   = anyOf [isConstrRule] nonProto
+
+--     -- and sort them into ClassifiedRules datastructure for later use in proofs
+--     classifiedRules = ClassifiedRules
+--       { _crConstruct  = constr
+--       , _crDestruct   = destr
+--       , _crProtocol   = proto
+--       }
 
 
 -- | Returns true if the REFINED sources contain open chains.

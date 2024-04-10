@@ -45,8 +45,6 @@ import           Term.Positions
 
 import           Theory.Model
 
-import Debug.Trace
-
 -- Variants of intruder deduction rules
 ----------------------------------------------------------------------
 
@@ -228,10 +226,11 @@ destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules diff $
     concatMap (variantsIntruder hnd id True) [ createRule s k cnstr | (s,(k,Public,cnstr)) <- S.toList fSig ]
   where
     createRule s k cnstr = Rule (DestrRule (append (pack "_") s) (-1) True free_rhs) [kdFact (varTerm (LVar "x"  LSortMsg 0)), kuFact (varTerm (LVar "x"  LSortMsg 1))] [concfact] [concfact] []
+    -- subterm boolean is set arbitrary to True, it follow the logic for the others rules
       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
             mAC      = fAppACfct (s,(k,Public,cnstr)) vars
             concfact = kdFact mAC
-            free_rhs = frees concfact == [] -- TODO : voir si c'est à la bonne place
+            free_rhs = frees concfact == []
 
 ------------------------------------------------------------------------------
 -- Diffie-Hellman Intruder Rules

@@ -48,7 +48,7 @@ import Data.Label.Mono (Lens)
 import Theory.Sapic
 import qualified Data.Functor
 
-import Debug.Trace
+--import Debug.Trace
 
 
 
