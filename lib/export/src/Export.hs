@@ -1048,7 +1048,10 @@ ppLemma te p =
 loadLemmas :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> TranslationContext -> TypingEnvironment -> OpenTheory -> [Doc]
 loadLemmas lemSel tc te thy = map (ppLemma te) proverifLemmas
   where
-    thyLemmas = map (applyToLemmaFormula pullnots) (theoryLemmas thy)
+    thyLemmas = map (applyToLemmaFormula transformWithPullnots) (theoryLemmas thy)
+    transformWithPullnots f = case pullnots f of
+      Left f' -> translationWarning ("Formula " ++ render (prettyLNFormula f') ++ " cannot be transformed so that it contains only one negation at the leftmost position.\n") f'
+      Right f' -> f'
     proverifLemmas =
       filter
         ( \lem ->

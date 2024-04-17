@@ -419,14 +419,12 @@ nnf fm = case fm of
     _                   -> fm
 
 -- | Pulling out nots.
-pullnots :: LNFormula -> LNFormula
-pullnots fm = trace ("old: " ++ pfm ++ "\n" ++ "new: " ++ nfms ++ "\n") nfm
+pullnots :: LNFormula -> Either LNFormula LNFormula
+pullnots fm = if pulledNots $ pullnots' fm then Right $ pullnots' fm else Left fm
   where
-    nfm = fromMaybe fm (pulledNots $ pullnots' fm)
-    nfms = render $ prettyLNFormula nfm
     pulledNots lfm = case lfm of
-      f@(Not p) -> if pulledNots' p then Just f else Nothing
-      _ -> Nothing
+      (Not p) -> pulledNots' p
+      _ -> False
       where
         pulledNots' lfm' = case lfm' of
           Not _         -> False
@@ -444,7 +442,6 @@ pullnots fm = trace ("old: " ++ pfm ++ "\n" ++ "new: " ++ nfms ++ "\n") nfm
       Qua qua x p               -> Qua qua x $ pullStep p
       _                         -> fm'
     pullnots' f = if f /= pullStep f then pullnots' (pullStep f) else f
-    pfm = render $ prettyLNFormula fm
 
 -- | Pulling out quantifiers.
 pullquants :: (Functor sync, Ord c, Ord v, Eq s) => ProtoFormula sync s c v -> ProtoFormula sync s c v
