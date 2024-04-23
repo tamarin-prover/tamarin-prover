@@ -1277,3 +1277,29 @@ makeAnnotations thy p = res
       if isNothing (List.find (== "locations-report") (theoryBuiltins thy))
         then pr
         else translateTermsReport pr
+
+
+-- | Pulling out nots.
+pullnots :: LNFormula -> Either LNFormula LNFormula
+pullnots fm = if pulledNots $ pullnots' fm then Right $ pullnots' fm else Left fm
+  where
+    pulledNots lfm = case lfm of
+      (Not p) -> pulledNots' p
+      _ -> False
+      where
+        pulledNots' lfm' = case lfm' of
+          Not _         -> False
+          Conn _ p q    -> pulledNots' p && pulledNots' q
+          Qua _ _ p     -> pulledNots' p
+          _             -> True
+
+    pullStep fm' = case fm' of
+      Conn And (Not p) (Not q)  -> Not $ pullStep p .||. pullStep q
+      Conn Or (Not p) (Not q)   -> Not $ pullStep p .&&. pullStep q
+      Conn Imp p (Not q)        -> Not $ pullStep p .&&. pullStep q
+      Conn c p q                -> Conn c (pullStep p) (pullStep q)
+      Qua All x (Not p)         -> Not $ Qua Ex x $ pullStep p
+      Qua Ex x (Not p)          -> Not $ Qua All x $ pullStep p
+      Qua qua x p               -> Qua qua x $ pullStep p
+      _                         -> fm'
+    pullnots' f = if f /= pullStep f then pullnots' (pullStep f) else f
