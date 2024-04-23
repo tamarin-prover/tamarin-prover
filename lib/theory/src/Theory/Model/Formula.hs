@@ -19,7 +19,6 @@
 -- Types and operations for handling sorted first-order logic
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
 module Theory.Model.Formula (
 
    -- * Formulas
@@ -290,7 +289,7 @@ mapLits f t = case viewTerm t of
 -- modulo alpha renaming and @Nothing otherwise@. @vs@ is always chosen to be
 -- fresh.
 openFormulaPrefix :: (MonadFresh m, Ord c, Functor syn)
-                  => ProtoLFormula syn c
+                  => ProtoLFormula syn c 
                   -> m ([LVar], Quantifier, ProtoLFormula syn c)
 openFormulaPrefix f0 = case openFormula f0 of
     Nothing        -> error $ "openFormulaPrefix: no outermost quantifier"
@@ -353,7 +352,7 @@ hinted f v = f (hint v) v
 -- | Convert to LNFormula, if possible.
 -- toLNFormula :: Formula s c0 (ProtoAtom s0 t0) -> Maybe (Formula s c0 (Atom t0))
 toLNFormula :: ProtoFormula syn s c v -> Maybe (Formula s c v)
-toLNFormula = traverseFormulaAtom (liftA Ato . f)
+toLNFormula = traverseFormulaAtom (liftA Ato . f) 
   where
         f x |  (Syntactic _) <- x = Nothing
             | otherwise           = Just (toAtom x)
@@ -399,7 +398,7 @@ simplifyFormula fm0 = case fm0 of
 
 -- | Negation normal form.
 nnf :: ProtoFormula sync s c v -> ProtoFormula sync s c v
-nnf fm = case fm of
+nnf fm = case fm of 
     Conn And p q        -> nnf p       .&&. nnf q
     Conn Or  p q        -> nnf p       .||. nnf q
     Conn Imp p q        -> nnf (Not p) .||. nnf q
@@ -408,7 +407,7 @@ nnf fm = case fm of
     Not (Conn And p q ) -> nnf (Not p) .||. nnf (Not q)
     Not (Conn Or  p q ) -> nnf (Not p) .&&. nnf (Not q)
     Not (Conn Imp p q ) -> nnf p       .&&. nnf (Not q)
-    Not (Conn Iff p q ) -> (nnf p .&&. nnf (Not q)) .||. (nnf (Not p) .&&. nnf q)
+    Not (Conn Iff p q ) -> (nnf p .&&. nnf (Not q)) .||. (nnf(Not p) .&&. nnf q)
     Qua qua x p         -> Qua qua     x $ nnf p
     Not (Qua All x p)   -> Qua Ex  x $ nnf (Not p)
     Not (Qua Ex  x p)   -> Qua All x $ nnf (Not p)

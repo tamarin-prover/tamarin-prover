@@ -1303,3 +1303,8 @@ pullnots fm = if pulledNots $ pullnots' fm then Right $ pullnots' fm else Left f
       Qua qua x p               -> Qua qua x $ pullStep p
       _                         -> fm'
     pullnots' f = if f /= pullStep f then pullnots' (pullStep f) else f
+
+applyToLemmaFormula :: (f -> f) -> ProtoLemma f p -> ProtoLemma f p
+applyToLemmaFormula f l = L.set lFormula (f lemFormula) l
+  where 
+    lemFormula = L.get lFormula l

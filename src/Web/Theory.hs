@@ -876,7 +876,7 @@ rulesSnippet thy = vcat
                                 else ppWithHeader "Macros" $ 
         (prettyMacros $ theoryMacros thy)
     , ppWithHeader "Fact Symbols with Injective Instances" $
-        (if null injFacts then text "None" else fsepList (text . showInjFact) injFacts)
+        fsepList (text . showInjFact) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
@@ -942,7 +942,7 @@ rulesDiffSnippetSide s isdiff thy = vcat
                                      else ppWithHeader "Macros" $
         (prettyMacros $ diffTheoryMacros thy)
     ,ppWithHeader "Fact Symbols with Injective Instances" $
-        (if null injFacts then text "None" else fsepList (text . showInjFact) injFacts)
+        fsepList (text . showInjFact) injFacts
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null(diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
