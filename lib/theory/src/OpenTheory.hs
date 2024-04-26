@@ -758,3 +758,8 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy = vsep $
     thyH = L.get diffThyHeuristic thy
     thyT = L.get diffThyTactic thy
 
+prettyOpenRuleCache :: HighlightDocument d => OpenRuleCache -> d
+prettyOpenRuleCache = vcat . map prettyIntrRuleAC
+
+prettyOpenRuleCacheWithLimit :: HighlightDocument d => OpenRuleCache -> d
+prettyOpenRuleCacheWithLimit = vcat . map prettyIntrRuleACWithLimit

@@ -147,6 +147,7 @@ module Theory.Model.Rule (
   , prettyProtoRuleACasE
   , prettyIntrRuleAC
   , prettyIntrRuleACInfo
+  , prettyIntrRuleACWithLimit
   , prettyRuleAC
   , prettyLoopBreakers
   , prettyRuleACInst
@@ -1252,6 +1253,10 @@ prettyProtoRuleACasE =
 
 prettyIntrRuleAC :: HighlightDocument d => IntrRuleAC -> d
 prettyIntrRuleAC = prettyNamedRule (kwRuleModulo "AC") (const emptyDoc)
+
+prettyIntrRuleACWithLimit :: HighlightDocument d => IntrRuleAC -> d
+prettyIntrRuleACWithLimit r@(Rule (DestrRule _ i _ _) _ _ _ _) = vcat [prettyNamedRule (kwRuleModulo "AC") (const emptyDoc) r, text ("Remaining consecutive applications : " ++ show i ++ "\n")]
+prettyIntrRuleACWithLimit r = prettyNamedRule (kwRuleModulo "AC") (const emptyDoc) r
 
 prettyProtoRuleAC :: HighlightDocument d => ProtoRuleAC -> d
 prettyProtoRuleAC = prettyNamedRule (kwRuleModulo "AC") prettyProtoRuleACInfo

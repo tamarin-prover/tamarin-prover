@@ -85,6 +85,8 @@ module Theory.Model.Fact (
   , protoFactAnn
   , annotateFact
   , applyMacroInFact
+  , freesToFresh
+  , lvarToLnterm
 
   -- * NFact
   , NFact
@@ -305,6 +307,15 @@ annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
 applyMacroInFact :: [Macro] -> LNFact -> LNFact
 applyMacroInFact mcs (Fact tag annot terms) = let mTerms = map (applyMacros mcs) terms in
                                               Fact tag annot mTerms
+
+
+-- Transforms different kind of facts into the desired form
+freesToFresh :: [LVar] -> [LNFact]
+freesToFresh = map (freshFact . lvarToLnterm)
+
+lvarToLnterm :: LVar -> LNTerm
+lvarToLnterm (LVar name LSortNat idx) = LIT $ Var $ LVar name LSortFresh idx
+lvarToLnterm v                        = LIT $ Var v
 
 -- Queries on facts
 -------------------

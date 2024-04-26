@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
@@ -185,34 +186,18 @@ appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> m [(I
 appSubst [] _ _    = return []
 appSubst (x:xs) inst0 inst1 = do
   sub <- freshToFree x
-  traceM ("sub dans apply : " ++ show sub)
   let (instt0,instt1) = apply sub (inst0,inst1)
   rest <- appSubst xs inst0 inst1
   return ((instt0,instt1):rest)
 
--- type OpenTranslatedTheory =
---     Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton ()
-
--- type OpenTheory =
---     Theory SignaturePure [IntrRuleAC] OpenProtoRule ProofSkeleton TranslationElement
-
--- data Theory sig c r p s = Theory {
---          _thyName      :: String
---        , _thyHeuristic :: [GoalRanking ProofContext]
---        , _thyTactic    :: [Tactic ProofContext]
---        , _thySignature :: sig
---        , _thyCache     :: c
---        , _thyItems     :: [TheoryItem r p s]
---        , _thyOptions   :: Option
---        , _thyIsSapic   :: Bool
---        }
---        deriving( Eq, Ord, Show, Generic, NFData, Binary )
-
+-- Takes a list of facts and logically ands them into a formula that can be used for a lemma : see MessageDerivationChecks.hs for more details
+landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
+landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map (fmap (fmap (fmap Free))) facts))
 
 derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-derivationTest sig intrR fact terms = trace ("tabProof" ++ show tabProof) checkProof tabProof
+derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) (checkProof tabProof)
   where
-    set = decompose terms
+    setD = decompose terms
 
     decompose ((Fact KUFact annot [FAPP (NoEq (b,(n,Private,c))) p]):l) = map ([Fact KDFact annot [FAPP (NoEq (b,(n,Private,c))) p]] ++) (decompose l)
     decompose ((Fact KUFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]):l) = map ([Fact KDFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]] ++) (decompose l)
@@ -222,12 +207,29 @@ derivationTest sig intrR fact terms = trace ("tabProof" ++ show tabProof) checkP
     decompose [] = [[]]
 
     emptyThy = Theory "checkReduction" [] [] (toSignaturePure sig) intrR [] defaultOption False
-    tabProof = checkProofStatuses provenTheory
-    provenTheory = proveTheory (const True) defaultProver closedTheory
-    closedTheory = closeTheoryWithMaude sig modifiedTheory False False -- no AutoSources
-    modifiedTheory =  (addRules newRules . addLemmas newLemmas) emptyThy
-    newRules = []
-    newLemmas = []
+
+    tabProof = concatMap (\_ -> [TraceFound]) provenTheory
+    --tabProof = concatMap checkProofStatuses provenTheory
+    provenTheory = closedTheory 
+    --provenTheory = map (proveTheory (const True) defaultProver) closedTheory
+    closedTheory = trace ("\ntheory : \n" ++ tabTheory modifiedTheory) map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory -- no AutoSources
+    modifiedTheory = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s)) t) setD (repeat emptyThy)
+
+    tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimit prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
+    tabTheory [] = ""
+
+    -- trace ("\nterms for deduction : " ++ show s1 ++ "\nfact : " ++ show fact)
+
+    newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "0") [] []) (pre s) (co s) (a s) []) []]
+    varD s = frees $ concatMap factTerms s
+    varFresh s = map msgToFreshVars (varD s)
+    pre = freesToFresh . varFresh
+    co = map (outFact . msgToFreshTerms) . concatMap factTerms
+    a s = [protoFact Linear "Generated_0" (map (msgToFreshTerms . lvarToLnterm) (varD s))]
+    alemma s = [protoFact Linear "Generated_0" (map lvarToLnterm (varD s))]
+
+    newLemmas s = [Lemma "Derivation" AllTraces (Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])) [] (unproven ())] -- TODO : faire sans le head
+    
 
     defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS)
 
@@ -235,17 +237,28 @@ derivationTest sig intrR fact terms = trace ("tabProof" ++ show tabProof) checkP
     checkProof [] = True
     checkProof _ = False
 
+    msgToFreshVars :: LVar -> LVar
+    msgToFreshVars (LVar name LSortMsg idx) = LVar name LSortFresh idx
+    msgToFreshVars v@(LVar _ _ _) = v
+
+    msgToFreshTerms :: LNTerm -> LNTerm
+    msgToFreshTerms t = case viewTerm t of
+      Lit (Var (LVar name LSortMsg idx)) -> varTerm (LVar name LSortFresh idx)
+      Lit _                              -> t
+      FApp f as                          -> termViewToTerm $ FApp f (map msgToFreshTerms as)
+
 checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> [IntrRuleAC] -> Bool
 checkChainReduction sig intrR r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule _ j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) allR | (i /= 1 && j /=1) =
  case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
     [] -> False
-    subst -> trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1))) searchMatcheraux (auxMatcherFilter (auxMatcher subst r inst1))
+    subst -> trace ("\nsubst : " ++ show subst) searchMatcheraux (auxMatcherFilter (auxMatcher subst r inst1))
+    -- trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\n\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1)))
   where
     hnd = L.get sigmMaudeHandle sig
     runMaude   = (`runReader` hnd)
     inst1 = r1 `renameAvoiding` r
 
-    ppPair (x, y) = render (prettyIntrRuleAC x) ++ "\n" ++ render (prettyIntrRuleAC y)
+    -- ppPair (x, y) = render (prettyIntrRuleAC x) ++ " \n " ++ render (prettyIntrRuleAC y)
 
     getPremsFactKD (Rule _ (fact:_) _ _ _) = fact
     getPremsFactTail (Rule _ ((Fact KDFact _ _):tls) _ _ _) = tls
@@ -265,7 +278,7 @@ checkChainReduction sig intrR r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) 
     searchMatcher :: IntrRuleAC -> IntrRuleAC -> IntrRuleAC -> Bool
     searchMatcher instSigma inst1Sigma inst2init =
       case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
-        [] -> trace ("\ninstance 2 for false : " ++ render ( prettyIntrRuleAC inst2)) False
+        [] -> False
         match -> trace ("\nmatch : " ++ show match) auxDeducible match
       where
         doMatch match = runReader (solveMatchLNTerm match) hnd
@@ -282,7 +295,7 @@ checkChainReduction sig intrR r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) 
         auxDeducible [] = True
 
         checkDeducible :: Subst Name LVar -> Bool
-        checkDeducible m = trace ("deduce : " ++ show (aux prems)) aux prems || True
+        checkDeducible m = aux prems -- trace ("\ndeduce : " ++ show (aux prems))
 
          where
           terms = getPremsFactTail instSigma ++ getPremsFactTail inst1Sigma
@@ -311,7 +324,7 @@ checkChainReduction _ _ _ _ _ = False
 
 
 applyChainReduction :: SignatureWithMaude -> OpenRuleCache -> [[IntrRuleAC]] -> [IntrRuleAC]
-applyChainReduction sig intrR (t1:tq) = trace ("tuple : " ++ show tupleRule) (if checkChainReductionIter tupleRule then set1ru t1 else t1) ++ applyChainReduction sig intrR tq
+applyChainReduction sig intrR (t1:tq) = (if checkChainReductionIter tupleRule then set1ru t1 else t1) ++ applyChainReduction sig intrR tq
   where
     tupleRule = [(x,y) | x <- t1, y <- t1]
     checkChainReductionIter = foldr (\(x,y) -> (&& checkChainReduction sig intrR x y t1)) True
@@ -353,9 +366,8 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> Bool               -- ^ Diff or not
                -> Bool               -- ^ isSapic or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $
-    trace ("Rules reduction : " ++ show intrRulesACred) 
-    ClosedRuleCache
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $ 
+   ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
     ctxt0 = ProofContext

@@ -163,10 +163,6 @@ generateSeparatedLemmas idx vars = map (\v -> Lemma (show v) ExistsTrace (exists
 deleteGlobals :: [LVar] -> [LVar]
 deleteGlobals = filter (\v -> lvarSort v /= LSortPub)
 
--- Exists-quantifies every non-time LVar of a formula
-existFormula ::  ProtoFormula Unit2 (String,LSort) Name LVar -> ProtoFormula Unit2 (String,LSort) Name LVar
-existFormula fm = foldl (\ formula var -> exists (lvarName var, lvarSort var) var formula) fm (frees fm)
-
 -- Assumes function passed only has free time variables anymore and exists-quantifies them
 existsTimeFormula :: ProtoFormula Unit2 (String,LSort) Name LVar -> ProtoFormula Unit2 (String,LSort) Name LVar
 existsTimeFormula fm = foldl (\ formula var -> exists (lvarName var, LSortNode) var formula) fm (frees fm)
@@ -174,10 +170,6 @@ existsTimeFormula fm = foldl (\ formula var -> exists (lvarName var, LSortNode) 
 -- Takes a list of facts and logically ands them into a formula that can be used for a lemma
 landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
 landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map freeFact facts))
-
--- Transforms different kind of facts into the desired form
-freesToFresh :: [LVar] -> [LNFact]
-freesToFresh = map (freshFact . lvarToLnterm)
 
 premisesToOut :: [LNFact] -> [LNFact]
 premisesToOut =  map (outFact . natToFreshVars) . concatMap factTerms
@@ -191,10 +183,6 @@ freeTerm =  fmap (fmap freeLNTerm)
 
 freeFact :: LNFact ->  Fact (Term (Lit Name (BVar LVar)))
 freeFact = fmap freeTerm
-
-lvarToLnterm :: LVar -> LNTerm
-lvarToLnterm (LVar name LSortNat idx) = LIT $ Var $ LVar name LSortFresh idx
-lvarToLnterm v                        = LIT $ Var v
 
 lntermToKUFact :: LNTerm -> LNFact
 lntermToKUFact = kuFact
