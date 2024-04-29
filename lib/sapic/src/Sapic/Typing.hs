@@ -193,7 +193,7 @@ initTEFromSig th = do
     funSet = stFunSyms sig
     funACSet = stACFunSyms sig
     funTyped = foldMap (\fs@(_,(n,_,_)) -> Map.singleton (NoEqUser fs) (defaultFunctionType n)) funSet
-    funACTyped = foldMap (\fs@(_,(n,_,_)) -> Map.singleton (ACfctUser fs) (defaultFunctionType n)) funACSet
+    funACTyped = foldMap (\fs@(_,(_,_)) -> Map.singleton (ACfctUser fs) (defaultFunctionType 2)) funACSet
     funAll = Map.union funTyped funACTyped
     -- we then also add the custom used defined types
     withUserDefinedFuns = foldr (\(s,inp,out) acc -> Map.insert s (inp,out) acc) funAll (theoryFunctionTypingInfos th)

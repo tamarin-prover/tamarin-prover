@@ -170,7 +170,7 @@ prettySignaturePure sig =
 -- | Pretty-print a pure signature, but omit given set of
 --   NoEqSym function symbols. Used for pretty-printing OpenTheories
 --   with typed function declarations
-prettySignaturePureExcept :: HighlightDocument d => S.Set NoEqSym -> SignaturePure -> d
+prettySignaturePureExcept :: HighlightDocument d => S.Set UserDefineSym -> SignaturePure -> d
 prettySignaturePureExcept exc sig  =
     prettyMaudeSigExcept (L.get sigpMaudeSig sig) exc
 

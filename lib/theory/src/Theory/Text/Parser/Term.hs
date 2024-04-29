@@ -66,7 +66,7 @@ lookupArity op = do
         where
           noEqorACSet = S.map function
           function (NoEqUser (o,(k,p,c))) = (o,(k,p,c,NotAC))
-          function (ACfctUser (o,(k,p,c))) = (o,(k,p,c,IsAC))
+          function (ACfctUser (o,(p,c))) = (o,(2,p,c,IsAC))
 
 
 reservedBuiltins :: [[Char]]
@@ -94,14 +94,14 @@ naryOpApp eqn plit = do
                      then return <$> tupleterm eqn plit
                      else commaSep (msetterm eqn plit)
     let k' = (length ts)
-    when (k /= k') $
+    when (acstate == NotAC && (k /= k')) $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'
     --let app o = if BC.pack op == emapSymString then fAppC EMap else fAppNoEq o
     case (BC.pack op,(k,priv,constr,acstate)) of
       (o,(_,_,_,_)) | o == emapSymString -> return $ fAppC EMap ts
       (_,(_,_,_,NotAC)) -> return $ fAppNoEq (BC.pack op, (k,priv,constr)) ts
-      (_,(_,_,_,IsAC)) -> return $ fAppACEqn (BC.pack op, (k,priv,constr)) ts
+      (_,(_,_,_,IsAC)) -> return $ fAppACEqn (BC.pack op, (priv,constr)) ts
     --return $ app (BC.pack op, (k,priv,constr)) ts
 
 -- | Parse a binary operator written as @op{arg1}arg2@.
@@ -117,7 +117,7 @@ binaryAlgApp eqn plit = do
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     case acstate of
       NotAC -> return $ fAppNoEq (BC.pack op, (k,priv,constr)) [arg1, arg2]
-      IsAC -> return $ fAppACEqn (BC.pack op, (k,priv,constr)) [arg1, arg2]
+      IsAC -> return $ fAppACEqn (BC.pack op, (priv,constr)) [arg1, arg2]
 
 diffOp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 diffOp eqn plit = do

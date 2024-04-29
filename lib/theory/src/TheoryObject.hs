@@ -723,7 +723,7 @@ prettyTranslationElement (FunctionTypingInfo (NoEqUser (fsn,(_,priv,_)), intypes
         printType = maybe (text defaultSapicTypeS) text
         showPriv Private = " [private]"
         showPriv Public  = ""
-prettyTranslationElement (FunctionTypingInfo (ACfctUser (fsn,(_,priv,_)), intypes, outtype)) =
+prettyTranslationElement (FunctionTypingInfo (ACfctUser (fsn,(priv,_)), intypes, outtype)) =
     (text "function:")
     <->
     text (unpack fsn)

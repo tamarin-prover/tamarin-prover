@@ -120,6 +120,9 @@ replaceMinus s = BC.map f s
 replaceMinusFun :: NoEqSym -> NoEqSym
 replaceMinusFun (s, p) = (replaceMinus s, p)
 
+replaceMinusFunAC :: ACfctSym -> ACfctSym
+replaceMinusFunAC (s, p) = (replaceMinus s, p)
+
 
 -- | Pretty print an AC symbol for Maude.
 ppMaudeACSym :: ACSym -> ByteString
@@ -129,7 +132,7 @@ ppMaudeACSym o =
                       Union                   -> munSymString
                       Xor                     -> xorSymString
                       NatPlus                 -> natPlusSymString
-                      ACfct (f,(_,prv,cnstr)) -> funSymEncodeAttr prv cnstr IsAC <> replaceUnderscore f
+                      ACfct (f,(prv,cnstr))   -> funSymEncodeAttr prv cnstr IsAC <> replaceUnderscore f
 
 -- | Pretty print a non-AC symbol for Maude.
 ppMaudeNoEqSym :: NoEqSym -> ByteString
@@ -235,8 +238,8 @@ ppTheory msig = BC.unlines $
     theoryOpC  = theoryOp Nothing
     theoryFunSym (s,(ar,priv,cnstr)) =
         theoryOp  (Just (priv,cnstr,NotAC)) (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> " -> Msg")
-    theoryACFunSym (s,(ar,priv,cnstr)) =
-        theoryOpACUser  (Just (priv,cnstr,IsAC)) (replaceUnderscore s <> " : " <> (B.concat $ replicate ar "Msg ") <> "-> Msg" <> " [comm assoc]")
+    theoryACFunSym (s,(priv,cnstr)) =
+        theoryOpACUser  (Just (priv,cnstr,IsAC)) (replaceUnderscore s <> " : " <> (B.concat $ replicate 2 "Msg ") <> "-> Msg" <> " [comm assoc]")
     theoryRule (l `RRule` r) =
         "  eq " <> ppMaude lm <> " = " <> ppMaude rm <> " [variant] ."
       where (lm,rm) = evalBindT ((,) <$>  lTermToMTerm' l <*> lTermToMTerm' r) noBindings
@@ -335,7 +338,7 @@ parseTerm msig = choice
             allowedfunSyms = [consSym, nilSym, natOneSym]
                 ++ map replaceUnderscoreFun (S.toList $ noEqFunSyms msig)
 
-    parseFunACSym ident args = replaceMinusFun (ident', (length args, priv, cnstr))
+    parseFunACSym ident = replaceMinusFunAC (ident', (priv, cnstr))
       where
         (ident',priv,cnstr) = funSymDecode ident
 
@@ -348,10 +351,10 @@ parseTerm msig = choice
                        | ident == ppMaudeACSym Union      = fAppAC Union   args
                        | ident == ppMaudeACSym NatPlus    = fAppAC NatPlus args
                        | ident == ppMaudeACSym Xor        = fAppAC Xor   args
-                       | BC.isInfixOf "tamPDA" ident      = fAppACfct (parseFunACSym ident args) args
-                       | BC.isInfixOf "tamPCA" ident      = fAppACfct (parseFunACSym ident args) args
-                       | BC.isInfixOf "tamXDA" ident      = fAppACfct (parseFunACSym ident args) args
-                       | BC.isInfixOf "tamXCA" ident      = fAppACfct (parseFunACSym ident args) args
+                       | BC.isInfixOf "tamPDA" ident      = fAppACfct (parseFunACSym ident) args
+                       | BC.isInfixOf "tamPCA" ident      = fAppACfct (parseFunACSym ident) args
+                       | BC.isInfixOf "tamXDA" ident      = fAppACfct (parseFunACSym ident) args
+                       | BC.isInfixOf "tamXCA" ident      = fAppACfct (parseFunACSym ident) args
                        | ident == ppMaudeCSym  EMap       = fAppC  EMap  args
         appIdent [arg] | ident == "list"                  = fAppList (flattenCons arg)
         appIdent args                                     = fAppNoEq op args

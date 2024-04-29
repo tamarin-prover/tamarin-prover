@@ -130,7 +130,7 @@ instance Semigroup MaudeSig where
                            ,enableXor=xor1||xor2
                            ,enableDiff=diff1||diff2
                            ,stFunSyms=unionExceptPairSym stFunSyms1 stFunSyms2
-                           ,stACFunSyms=unionExceptPairSym stACFunSyms1 stACFunSyms2
+                           ,stACFunSyms=S.union stACFunSyms1 stACFunSyms2
                            ,stRules=unionExceptPairRules stRules1 stRules2})
           -- an exception to merging is the destructor variants for pair, which is exclusive
           -- in general, it might make sense to not merge fun syms with same identifier
@@ -222,10 +222,10 @@ enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
 -- Pretty Printing
 ------------------------------------------------------------------------------
 
-prettyMaudeSigExcept :: P.HighlightDocument d => MaudeSig -> S.Set NoEqSym -> d
+prettyMaudeSigExcept :: P.HighlightDocument d => MaudeSig -> S.Set UserDefineSym -> d
 prettyMaudeSigExcept sig excl = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
-    , ppNonEmptyList' "functions:" ppFunSymb $ (S.toList (S.map (\fct -> (NoEqUser fct)) (stFunSyms sig S.\\ excl)) ++ S.toList (S.map (\fct -> (ACfctUser fct)) (stACFunSyms sig)))
+    , ppNonEmptyList' "functions:" ppFunSymb $ (S.toList (S.map (\fct -> (NoEqUser fct)) (stFunSyms sig S.\\ exclNoEq)) ++ S.toList (S.map (\fct -> (ACfctUser fct)) (stACFunSyms sig S.\\ exclAC)))
     , ppNonEmptyList
         (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
         prettyCtxtStRule $ S.toList (stRules sig)
@@ -251,13 +251,16 @@ prettyMaudeSigExcept sig excl = P.vcat
             showAttrNoEq (Private,Constructor) = "[private]"
             showAttrNoEq (Public,Constructor) = ""
 
-    ppFunSymb (ACfctUser (f,(k,priv,constr))) = P.text $ BC.unpack f ++ "/" ++ show k
-                                             ++ showAttrAC (priv,constr)
+    ppFunSymb (ACfctUser (f,(priv,constr))) = P.text $ BC.unpack f ++ "/2" ++ showAttrAC (priv,constr)
       where
             showAttrAC (Public,Destructor) = "[destructor,AC]"
             showAttrAC (Private,Destructor) = "[private,destructor,AC]"
             showAttrAC (Private,Constructor) = "[private,AC]"
             showAttrAC (Public,Constructor) = "[AC]"
+
+
+    exclNoEq = S.fromList [ o | NoEqUser o <- S.toList excl ]
+    exclAC = S.fromList [ o | ACfctUser o <- S.toList excl ]
 
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
 prettyMaudeSig sig  = prettyMaudeSigExcept sig S.empty

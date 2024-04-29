@@ -178,12 +178,11 @@ viewTerm2 t@(FAPP (AC o) ts)
   | length ts < 2 = error $ "viewTerm2: malformed term `"++show t++"'"
   | otherwise     = (acSymToConstr o) ts
   where
-    ssyms = [ expSym, pairSym, diffSym, invSym, oneSym, pmultSym, dhNeutralSym ]
     acSymToConstr Mult      = FMult
     acSymToConstr Union     = FUnion
     acSymToConstr NatPlus   = FNatPlus
     acSymToConstr Xor       = FXor
-    acSymToConstr (ACfct f) = if f `elem` ssyms then error $ "viewTerm2: malformed term `"++show t++"'" else FAppACfct f
+    acSymToConstr (ACfct f) = FAppACfct f
 viewTerm2 (FAPP (C EMap) [ t1 ,t2 ]) = FEMap t1 t2
 viewTerm2 t@(FAPP (C _)  _)          = error $ "viewTerm2: malformed term `"++show t++"'"
 viewTerm2 t@(FAPP (NoEq o) ts) = case ts of

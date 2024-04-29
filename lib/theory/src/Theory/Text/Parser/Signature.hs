@@ -152,9 +152,9 @@ function =  do
           Just kp' | BC.unpack f == "fst" || BC.unpack f == "snd" -> do
                 return (NoEqUser (f,kp'),argTypes,outType)
           _ -> case ac of
-            IsAC    -> do
-                modifyStateSig $ addFunSym (ACfctUser (f,(k,priv,destr)))
-                return (ACfctUser (f,(k,priv,destr)),argTypes,outType)
+            IsAC -> if k /= 2 then fail "conflicting arity : AC function must be binary" else do
+                modifyStateSig $ addFunSym (ACfctUser (f,(priv,destr)))
+                return (ACfctUser (f,(priv,destr)),argTypes,outType)
             NotAC -> do
                 modifyStateSig $ addFunSym (NoEqUser (f,(k,priv,destr)))
                 return (NoEqUser (f,(k,priv,destr)),argTypes,outType)

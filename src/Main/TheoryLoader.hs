@@ -423,15 +423,16 @@ checkTranslatedTheory thyOpts sign thy = do
     defaultDiffProver = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver defaultTheoryLoadOptions
     maudePublicSig s = Signature $ (getSignature s)
       {stFunSyms = makepublic (stFunSyms (getSignature s))
-      , stACFunSyms = makepublic (stACFunSyms (getSignature s))
+      , stACFunSyms = makepublicAC (stACFunSyms (getSignature s))
       , funSyms = makepublicsym (funSyms (getSignature s))
       , irreducibleFunSyms = makepublicsym (irreducibleFunSyms (getSignature s))
       , reducibleFunSyms = makepublicsym (reducibleFunSyms (getSignature s))}
     getSignature =  Data.Label.get sigpMaudeSig
     makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name,(int, Public, construct)))
+    makepublicAC = Data.Set.map (\(name, (_, construct)) -> (name,(Public, construct)))
     makepublicsym  = Data.Set.map (\el -> case el of
       NoEq (name, (int, _, constr)) -> NoEq (name,(int, Public, constr))
-      AC (ACfct (name, (int, _, constr))) -> AC (ACfct (name,(int, Public, constr)))
+      AC (ACfct (name, (_, constr))) -> AC (ACfct (name,(Public, constr)))
       x -> x
       )
 

@@ -50,7 +50,7 @@ macros = do
             where
                 noEqorACSet = S.map function
                 function (NoEqUser (o,(k,p,c))) = (o,(k,p,c))
-                function (ACfctUser (o,(k,p,c))) = (o,(k,p,c))
+                function (ACfctUser (o,(p,c))) = (o,(2,p,c))
 
 getMacroName :: Macro -> String
 getMacroName (op, _, _) = BC.unpack op

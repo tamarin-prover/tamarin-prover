@@ -211,11 +211,11 @@ constructionRules fSig =
   where
     noEqorACSet = S.map function
     function (NoEqUser (o,(k,p,c))) = (o,(k,p,c,NotAC))
-    function (ACfctUser (o,(k,p,c))) = (o,(k,p,c,IsAC))
+    function (ACfctUser (o,(p,c))) = (o,(2,p,c,IsAC))
     createRule s k acstate = Rule (ConstrRule (append (pack "_") s)) (map kuFact vars) [concfact acstate] [concfact acstate] []
       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
             m        = fAppNoEq (s,(k,Public,Constructor)) vars
-            mAC      = fAppACfct (s,(k,Public,Constructor)) vars
+            mAC      = fAppACfct (s,(Public,Constructor)) vars
             concfact NotAC = kuFact m
             concfact IsAC = kuFact mAC
 
@@ -223,12 +223,12 @@ constructionRules fSig =
 -- function signature AC @fSig@
 destructionRulesAC :: Bool -> ACfctFunSig -> WithMaude [IntrRuleAC]
 destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules diff $
-    concatMap (variantsIntruder hnd id True) [ createRule s k cnstr | (s,(k,Public,cnstr)) <- S.toList fSig ]
+    concatMap (variantsIntruder hnd id True) [ createRule s cnstr | (s,(Public,cnstr)) <- S.toList fSig ]
   where
-    createRule s k cnstr = Rule (DestrRule (append (pack "_") s) (-1) True free_rhs) [kdFact (varTerm (LVar "x"  LSortMsg 0)), kuFact (varTerm (LVar "x"  LSortMsg 1))] [concfact] [concfact] []
+    createRule s cnstr = Rule (DestrRule (append (pack "_") s) (-1) True free_rhs) [kdFact (varTerm (LVar "x"  LSortMsg 0)), kuFact (varTerm (LVar "x"  LSortMsg 1))] [concfact] [concfact] []
     -- subterm boolean is set arbitrary to True, it follow the logic for the others rules
-      where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
-            mAC      = fAppACfct (s,(k,Public,cnstr)) vars
+      where vars     = take 2 [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ] -- TODO : check si c'est ok
+            mAC      = fAppACfct (s,(Public,cnstr)) vars
             concfact = kdFact mAC
             free_rhs = frees concfact == []
 

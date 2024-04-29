@@ -390,7 +390,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False False False False False False S.empty [] 10 5
+defaultOption = Option False False False False False False False False True S.empty [] 10 5
 
 
 
@@ -716,8 +716,8 @@ prettyOpenTheory thy =
                  where
                     funsyms = S.fromList $ map fst' $ theoryFunctionTypingInfos thy
                         -- function symbols that are printed by sapic printer already
-                    fst' (NoEqUser a,_,_) = a
-                    fst' (ACfctUser a, _, _) = a
+                    fst' (NoEqUser a,_,_) = NoEqUser a
+                    fst' (ACfctUser a, _, _) = ACfctUser a
 
 
 -- | Pretty print an open theory.

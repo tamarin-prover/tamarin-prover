@@ -65,8 +65,9 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     parameters = Sources.IntegerParameters (L.get (openChainsLimit.thyOptions) thy0) (L.get (saturationLimit.thyOptions) thy0) showSaturation
     h          = L.get thyHeuristic thy0
     t          = L.get thyTactic thy0
+    chainReductionBool = L.get chainReductionCheck (L.get thyOptions thy0)
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
-    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption.thyOptions) thy0) False (L.get thyIsSapic thy0)
+    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption.thyOptions) thy0) False (L.get thyIsSapic thy0) chainReductionBool
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
@@ -200,18 +201,17 @@ derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) (
     setD = decompose terms
 
     decompose ((Fact KUFact annot [FAPP (NoEq (b,(n,Private,c))) p]):l) = map ([Fact KDFact annot [FAPP (NoEq (b,(n,Private,c))) p]] ++) (decompose l)
-    decompose ((Fact KUFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]):l) = map ([Fact KDFact annot [FAPP (AC (ACfct (b,(n,Private,c)))) p]] ++) (decompose l)
-    decompose ((Fact KUFact annot [FAPP s p]):l) = map ([Fact KDFact annot [FAPP s p]] ++) (decompose l) ++ [x1 ++ y | x1 <- decompose (map (\x -> Fact KUFact annot [x]) p), y <- decompose l]-- ++ map (\x -> x ++ decompose l) (decompose (map (\x -> Fact KUFact annot [x]) p))
-    -- problème s'il y a des doublons ?
+    decompose ((Fact KUFact annot [FAPP (AC (ACfct (b,(Private,c)))) p]):l) = map ([Fact KDFact annot [FAPP (AC (ACfct (b,(Private,c)))) p]] ++) (decompose l)
+    decompose ((Fact KUFact annot [FAPP s p]):l) = map ([Fact KDFact annot [FAPP s p]] ++) (decompose l) ++ [x1 ++ y | x1 <- decompose (map (\x -> Fact KUFact annot [x]) p), y <- decompose l]
     decompose (f:l) = map ([f] ++) (decompose l)
     decompose [] = [[]]
 
-    emptyThy = Theory "checkReduction" [] [] (toSignaturePure sig) intrR [] defaultOption False
+    emptyThy = Theory "checkReduction" [] [] (toSignaturePure sig) intrR [] (Option False False False False False False False False False S.empty [] 10 5) False
 
-    tabProof = concatMap (\_ -> [TraceFound]) provenTheory
-    --tabProof = concatMap checkProofStatuses provenTheory
-    provenTheory = closedTheory 
-    --provenTheory = map (proveTheory (const True) defaultProver) closedTheory
+    --tabProof = concatMap (\_ -> [TraceFound]) provenTheory
+    tabProof = concatMap checkProofStatuses provenTheory
+    --provenTheory = closedTheory 
+    provenTheory = map (proveTheory (const True) defaultProver) closedTheory
     closedTheory = trace ("\ntheory : \n" ++ tabTheory modifiedTheory) map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory -- no AutoSources
     modifiedTheory = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s)) t) setD (repeat emptyThy)
 
@@ -314,7 +314,7 @@ checkChainReduction sig intrR r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) 
 
           aux1 f | f `elem` termsT    = True
           aux1 (FAPP (NoEq (_,(_,Private,_))) _) = False
-          aux1 (FAPP (AC (ACfct (_,(_,Private,_)))) _) = False
+          aux1 (FAPP (AC (ACfct (_,(Private,_)))) _) = False
           aux1 (FAPP _ p) = foldr (\x1 -> (&& aux1 x1)) True p
           aux1 _                     = False
 
@@ -323,8 +323,9 @@ checkChainReduction sig intrR r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) 
 checkChainReduction _ _ _ _ _ = False
 
 
-applyChainReduction :: SignatureWithMaude -> OpenRuleCache -> [[IntrRuleAC]] -> [IntrRuleAC]
-applyChainReduction sig intrR (t1:tq) = (if checkChainReductionIter tupleRule then set1ru t1 else t1) ++ applyChainReduction sig intrR tq
+applyChainReduction :: SignatureWithMaude -> OpenRuleCache -> [[IntrRuleAC]] -> Bool -> [IntrRuleAC]
+applyChainReduction _ intrR _ False = intrR
+applyChainReduction sig intrR (t1:tq) True = (if checkChainReductionIter tupleRule then set1ru t1 else t1) ++ applyChainReduction sig intrR tq True
   where
     tupleRule = [(x,y) | x <- t1, y <- t1]
     checkChainReductionIter = foldr (\(x,y) -> (&& checkChainReduction sig intrR x y t1)) True
@@ -333,7 +334,7 @@ applyChainReduction sig intrR (t1:tq) = (if checkChainReductionIter tupleRule th
 
     change (Rule (DestrRule name _ subterm constant) prems concs acts nvs) = Rule (DestrRule name 1 subterm constant) prems concs acts nvs
     change r = r
-applyChainReduction _ _ [] = []
+applyChainReduction _ _ [] _ = []
 
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
 --   Should be parallelized like the variant computation for protocol rules (JD)
@@ -365,8 +366,9 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> Bool               -- ^ Verbose option
                -> Bool               -- ^ Diff or not
                -> Bool               -- ^ isSapic or not
+               -> Bool               -- ^ chain reduction check activated or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $ 
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic chainReductionBool = -- trace ("closeRuleCache: " ++ show classifiedRules) $ 
    ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
@@ -398,7 +400,7 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
 
     tabT = groupBy ((==) `on` getRuleName) $ sortOn getRuleName intrRulesAC
 
-    intrRulesACred = applyChainReduction sig intrRulesAC tabT
+    intrRulesACred = applyChainReduction sig intrRulesAC tabT chainReductionBool
 
     -- classifying the rules
     rulesAC = (fmap IntrInfo                      <$> intrRulesACred) <|>

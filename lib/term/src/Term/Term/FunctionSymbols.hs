@@ -115,7 +115,7 @@ data FctAttr = Privacy Privacy | Constructability Constructability | ACstate ACs
 type NoEqSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
 
 -- | AC function symbols (with respect to the background theory).
-type ACfctSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
+type ACfctSym = (ByteString, (Privacy,Constructability)) -- ^ operator name, private, destructor
 
 -- | AC function symbols.
 data ACSym = Union | Mult | Xor | NatPlus | ACfct ACfctSym 
