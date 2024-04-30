@@ -49,9 +49,6 @@ import Data.Bifunctor
 import Data.Char
 import Data.Data
 import Data.Maybe
-import Items.LemmaItem (applyToLemmaFormula)
-import Debug.Trace (trace)
-import Theory.Model.Formula (prettyLFormula)
 
 data Translation =
    ProVerif
@@ -1048,11 +1045,13 @@ ppLemma te p =
 loadLemmas :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> TranslationContext -> TypingEnvironment -> OpenTheory -> [Doc]
 loadLemmas lemSel tc te thy = map (ppLemma te) proverifLemmas
   where
-    thyLemmas = map (applyToLemmaFormula transformWithPullnots) (theoryLemmas thy)
-    transformWithPullnots f = case pullnots f of
-      Left f' -> translationWarning ("Formula " ++ render (prettyLNFormula f') ++ " cannot be transformed so that it contains only one negation at the leftmost position.\n") f'
-      Right f' -> f'
-    proverifLemmas =
+    thyLemmas = theoryLemmas thy
+    transformWithPullnots l = case pullnots (L.get lFormula l) of
+      Left fm' -> 
+        translationWarning ("Lemma " ++ L.get lName l ++ "\n" ++ render (prettyLNFormula (L.get lFormula l)) ++" cannot be rewritten s.t. it has only 1 ¬, the result is:\n" ++ render (prettyLNFormula fm') ++ "!\n\n") 
+        $ L.set lFormula fm' l
+      Right fm' -> L.set lFormula fm' l
+    proverifLemmas = map transformWithPullnots $
       filter
         ( \lem ->
             lemSel lem && case concat [ls | LemmaModule ls <- L.get lAttributes lem] of
@@ -1278,10 +1277,9 @@ makeAnnotations thy p = res
         then pr
         else translateTermsReport pr
 
-
 -- | Pulling out nots.
 pullnots :: LNFormula -> Either LNFormula LNFormula
-pullnots fm = if pulledNots $ pullnots' fm then Right $ pullnots' fm else Left fm
+pullnots fm = if pulledNots $ pullnots' fm then Right $ pullnots' fm else Left $ pullnots' fm
   where
     pulledNots lfm = case lfm of
       (Not p) -> pulledNots' p
@@ -1294,17 +1292,14 @@ pullnots fm = if pulledNots $ pullnots' fm then Right $ pullnots' fm else Left f
           _             -> True
 
     pullStep fm' = case fm' of
-      Conn And (Not p) (Not q)  -> Not $ pullStep p .||. pullStep q
-      Conn Or (Not p) (Not q)   -> Not $ pullStep p .&&. pullStep q
-      Conn Imp p (Not q)        -> Not $ pullStep p .&&. pullStep q
+      Conn And (Not p) (Not q)  -> Not $ p .||. q
+      Conn Or (Not p) (Not q)   -> Not $ p .&&. q
+      Conn Imp p (Not q)        -> Not $ p .&&. q
       Conn c p q                -> Conn c (pullStep p) (pullStep q)
-      Qua All x (Not p)         -> Not $ Qua Ex x $ pullStep p
-      Qua Ex x (Not p)          -> Not $ Qua All x $ pullStep p
+      Qua All x (Not p)         -> Not $ Qua Ex x p
+      Qua Ex x (Not p)          -> Not $ Qua All x p
       Qua qua x p               -> Qua qua x $ pullStep p
+      Not (Not p)               -> p
+      Not p                     -> Not $ pullStep p
       _                         -> fm'
     pullnots' f = if f /= pullStep f then pullnots' (pullStep f) else f
-
-applyToLemmaFormula :: (f -> f) -> ProtoLemma f p -> ProtoLemma f p
-applyToLemmaFormula f l = L.set lFormula (f lemFormula) l
-  where 
-    lemFormula = L.get lFormula l
