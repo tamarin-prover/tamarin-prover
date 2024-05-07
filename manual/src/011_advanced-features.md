@@ -139,6 +139,12 @@ with a rule conclusion containing `A(x)`. This allows multiple instances
 of the same fact to be solved with different priorities by annotating them
 differently.
 
+When an `In()` premise is annotated, the annotations are propagated up
+to the corresponding `!KU()` goals. For example, the premise `In(f(x))[+]`
+will generate a `!KU(f(x))[+]` goal that will be solved with high priority,
+while the premise `In(<y,g(y,z)>)[-]` will generate `!KU(y)[-]` and `!KU(g(y,z))[-]`
+goals to be solved with low priority.
+
 The `+` and `-` annotations can also be used to prioritize actions.
 For example, A reusable lemma of the form
 ```
@@ -153,13 +159,15 @@ respectively. Note however that these prefixes must apply to every instance
 of the fact, as a fact `F_A(x)` cannot unify with a fact `A(x)`.
 
 Facts in rule premises can also be annotated with `no_precomp` to prevent the
-tool from precomputing their sources.
-Use of the `no_precomp` annotation in key places can be very
-useful for reducing the precomputation time required to load large models, however
-it should be used sparingly. Preventing the precomputation of sources for a premise
-that is solved frequently will typically slow down the tool, as it must solve the
-premise each time instead of directly applying precomputed sources. Note also that
-using this annotation may cause partial deconstructions if the source of a premise
+tool from precomputing their sources, and to prevent them from being considered
+during the computation of loop-breakers.
+Use of the `no_precomp` annotation allows the modeller to manually control how
+loops are broken, or can be used to reduce
+the precomputation time required to load large models. Note, however
+that preventing the precomputation of sources for a premise
+that is solved frequently will typically slow down the tool, as there will be no
+precomputed sources to apply. Using this annotation may also cause 
+partial deconstructions if the source of a premise
 was necessary to compute a full deconstruction.
 
 The `no_precomp` annotation can be used in combination with heuristic annotations
