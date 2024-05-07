@@ -231,3 +231,24 @@ Tamarin shows a warning on the command line when this limit is reached.
 Default value: `5`
 
 In case Tamarin's precomputations take too long, try fixing smaller values for both parameters, and analyze the sources shown in interactive mode to understand what exactly caused the problem.
+
+Loop breakers {#sec:loopbreakers}
+-----------
+During the precomputation phase, Tamarin determines a minimal set of 'loop-breakers',
+which are premises that can be excluded from the general precomputation of all premise goals 
+to prevent looping. Specifically, the set of loop breakers is a minimal set of premises
+that can be excluded to make the directed graph of rules, when connected from conclusions
+to premises, acyclic.
+
+It is important to note that there is often no unique minimal set of loop-breakers. The
+loop-breaker computation is deterministic for a given set of rules, but a change to
+the set of rules may result in different premises being considered loop-breakers. As such,
+you may find that a small change or addition of a rule to your model can result in changes
+to how some seemingly unrelated properties are solved.
+
+It is possible to manually break loops in particular places by annotating the relevant
+premise with the `no_precomp` annotation. These premises will then be excluded when computing
+loop-breakers over the rule set, and will not have their sources precomputed.
+For more on fact annotations, see 
+[Fact Annotations](011_advanced-features.html#sec:fact-annotations).
+
