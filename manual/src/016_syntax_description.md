@@ -111,6 +111,14 @@ Macros works similarly to let-blocks, but apply globally to all rules.
     macros      := 'macros' ':' macro (',' macro)*
     macro       := ident '(' [(var) (',' var)*] ')' '=' term
 
+Configuration blocks allow the specification of certain Tamarin command line options
+in the model file itself. Options passed over the command line override options given
+in a configuration block.
+
+    configuration := 'configuration' ':' '"' option (' ' option)* '"'
+    option          := '--auto-sources' | ('--stop-on-trace' '=' search_method)
+    search_method := 'DFS' | 'BFS' | 'SEQDFS' | 'NONE'
+
 Restrictions specify restrictions on the set of traces considered, i.e., they filter
 the set of traces of a protocol. The formula of a restriction is available as an
 assumption in the proofs of *all* security properties specified in this
