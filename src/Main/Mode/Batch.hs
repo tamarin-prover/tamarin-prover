@@ -41,6 +41,8 @@ import Text.Dot qualified as D
 import Theory.Constraint.System.Graph.Graph
 import Theory.Constraint.System.JSON (sequentsToJSONPretty)
 
+import ClosedTheory (theoryIndexStr,diffTheoryIndexStr)
+import Debug.Trace (traceM)
 
 -- | Batch processing mode.
 batchMode :: TamarinMode
@@ -63,6 +65,9 @@ batchMode = tamarinMode
 
               , flagNone ["parse-only"] (addEmptyArg "parseOnly")
                   "Just parse the input file and pretty print it as-is"
+
+              , flagNone ["precompute-only"] (addEmptyArg "precomputeOnly")
+                  "Just run precomputation and show partial deconstructions"
               ] ++
               outputFlags ++
               toolFlags
@@ -90,6 +95,11 @@ run thisMode as
       res <- mapM (processThy "") inFiles
       let (docs, _) = unzip res
 
+      mapM_ (putStrLn . renderDoc) docs
+  | argExists "precomputeOnly" as = do
+      versionData <- ensureMaudeAndGetVersion as
+      res <- mapM (processThy versionData) inFiles
+      let (docs, _) = unzip res
       mapM_ (putStrLn . renderDoc) docs
   | argExists "outModule" as = do
       versionData <- ensureMaudeAndGetVersion as
@@ -184,6 +194,16 @@ run thisMode as
       if thyLoadOptions._oParseOnlyMode then
         pure $ (, Pretty.emptyDoc) $ either prettyOpenTheory prettyOpenDiffTheory thy
 
+      -- | Execute precomputation steps and print the partial deconstructions
+      else if isPrecomputeOnlyMode then do
+        (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
+        case thy' of
+          Left thy'' -> do
+            traceM (theoryIndexStr thy'')
+            return (Pretty.emptyDoc, ppWf report)
+          Right thy'' -> do
+            traceM (diffTheoryIndexStr thy'')
+            return (Pretty.emptyDoc, ppWf report)
       -- | Translate and check thoery based on specified output module.
       else if isTranslateOnlyMode then do
         (report, thy') <- translateAndCheckTheory versionData thyLoadOptions sig' thy
@@ -209,6 +229,7 @@ run thisMode as
         formalComments =
           filter (/= ("", "")) . either theoryFormalComments diffTheoryFormalComments
 
+        isPrecomputeOnlyMode = L.get oPrecomputeOnlyMode thyLoadOptions
         isTranslateOnlyMode = isJust $ L.get oOutputModule thyLoadOptions
 
         handleError e@(ParserError _) = die $ show e

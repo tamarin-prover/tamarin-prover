@@ -20,6 +20,7 @@ module Main.TheoryLoader (
   , oMaudePath
   , oVerboseMode
   , oParseOnlyMode
+  , oPrecomputeOnlyMode
   , defaultTheoryLoadOptions
   , ArgumentError(..)
   , mkTheoryLoadOptions
@@ -85,7 +86,7 @@ import           Text.Parsec                hiding ((<|>),try,parse)
 import           Safe
 
 import           Items.LemmaItem (HasLemmaName, HasLemmaAttributes)
-import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve,verboseOption)
+import           Items.OptionItem                    (openChainsLimit,saturationLimit,lemmasToProve,verboseOption,precomputationOnlyOption)
 
 import           Control.Monad.Except
 import           Control.Monad.Catch (MonadCatch)
@@ -184,6 +185,7 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oOutputModule      :: Maybe ModuleType -- Note: This flag is only used for batch mode.
   , _oMaudePath         :: FilePath -- FIXME: Other functions defined in Environment.hs
   , _oParseOnlyMode     :: Bool
+  , _oPrecomputeOnlyMode:: Bool
   , _oOpenChain         :: Integer
   , _oSaturation        :: Integer
   , _oDerivationChecks  :: Int
@@ -206,6 +208,7 @@ defaultTheoryLoadOptions = TheoryLoadOptions {
   , _oOutputModule      = Nothing
   , _oMaudePath         = "maude"
   , _oParseOnlyMode     = False
+  , _oPrecomputeOnlyMode= False
   , _oOpenChain         = 10
   , _oSaturation        = 5
   , _oDerivationChecks  = 5
@@ -235,6 +238,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
                          <*> outputModule
                          <*> (return $ maudePath as)
                          <*> parseOnlyMode
+                         <*> precomputeOnlyMode
                          <*> openchain
                          <*> saturation
                          <*> deriv
@@ -281,6 +285,8 @@ mkTheoryLoadOptions as = TheoryLoadOptions
       Nothing   -> return $ L.get oOutputModule defaultTheoryLoadOptions
 
     parseOnlyMode = return $ argExists "parseOnly" as
+
+    precomputeOnlyMode = return $ argExists "precomputeOnly" as
 
     chain = findArg "OpenChainsLimit" as
     chainDefault = L.get oOpenChain defaultTheoryLoadOptions
@@ -571,7 +577,7 @@ constructAutoProver thyOpts =
 
 -- | Add parameters in the OpenTheory, here openchain and saturation in the options
 addParamsOptions :: TheoryLoadOptions -> Either OpenTheory OpenDiffTheory -> Either OpenTheory OpenDiffTheory
-addParamsOptions opt = addVerboseOptions . addSatArg . addChainsArg . addLemmaToProve
+addParamsOptions opt = addVerboseOptions . addPrecomputationOnlyOptions . addSatArg . addChainsArg . addLemmaToProve
 
     where
       -- Add Open Chain Limit parameters in the Options
@@ -590,6 +596,10 @@ addParamsOptions opt = addVerboseOptions . addSatArg . addChainsArg . addLemmaTo
       verb = L.get oVerboseMode opt
       addVerboseOptions (Left thy) = Left $ set (verboseOption . thyOptions) verb thy
       addVerboseOptions (Right diffThy) = Right $ set (verboseOption . diffThyOptions) verb diffThy
+      -- Add PrecomputationOnly parameter in the Options
+      precomputationOnly = L.get oPrecomputeOnlyMode opt
+      addPrecomputationOnlyOptions (Left thy) = Left $ set (precomputationOnlyOption . thyOptions) precomputationOnly thy
+      addPrecomputationOnlyOptions (Right diffThy) = Right $ set (precomputationOnlyOption . diffThyOptions) precomputationOnly diffThy
 
 
 ------------------------------------------------------------------------------

@@ -541,3 +541,65 @@ prettyClosedDiffSummary thy =
 
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
     diffProofStepSummary = diffProofStepStatus &&& const (Sum (1::Integer))
+
+
+-- | Render the theory index.
+theoryIndexStr ::  ClosedTheory -> String
+theoryIndexStr thy = foldr1 (\x acc -> x ++ "\n" ++ acc)
+    [ 
+    ruleLink
+    , reqCasesLink "Raw sources" RawSource
+    , reqCasesLink "Refined sources " RefinedSource
+    ]
+  where
+    rules          = getClassifiedRules thy
+    rulesInfo      = show $ length $ L.get crProtocol rules
+    casesInfo kind = nCases ++ ", " ++ chainInfo
+      where
+        cases   = getSource kind thy
+        nChains = sum $ map (sum . unsolvedChainConstraints) cases
+        nCases  = show (length cases) ++ " " ++ "cases"
+        chainInfo | nChains == 0 = "deconstructions complete"
+                  | otherwise    = show nChains ++ " partial deconstructions left"
+
+    overview n p   = n ++ " " ++ p
+    ruleLinkMsg         = "Multiset rewriting rules" ++
+                          if null(theoryRestrictions thy) then "" else " and restrictions"
+    ruleLink            = overview ruleLinkMsg rulesInfo
+    reqCasesLink name k = overview name (casesInfo k)
+
+
+diffTheoryIndexStr :: ClosedDiffTheory -> String
+diffTheoryIndexStr thy = foldr1 (\x acc -> x ++ "\n" ++ acc)
+    [
+    ruleLink LHS False
+    , ruleLink RHS False
+    , ruleLink LHS True
+    , ruleLink RHS True
+    , reqCasesLink LHS "LHS: Raw sources "            RawSource False
+    , reqCasesLink RHS "RHS: Raw sources "            RawSource False
+    , reqCasesLink LHS "LHS: Raw sources [Diff] "     RawSource True
+    , reqCasesLink RHS "RHS: Raw sources [Diff] "     RawSource True
+    , reqCasesLink LHS "LHS: Refined sources "        RefinedSource   False
+    , reqCasesLink RHS "RHS: Refined sources "        RefinedSource   False
+    , reqCasesLink LHS "LHS: Refined sources [Diff] " RefinedSource   True
+    , reqCasesLink RHS "RHS: Refined sources [Diff] " RefinedSource   True
+    ]
+  where
+    rules s isdiff     = getDiffClassifiedRules s isdiff thy
+    rulesInfo s isdiff = show $ length $ L.get crProtocol (rules s isdiff)
+    casesInfo s kind isdiff = nCases ++ ", " ++ chainInfo
+      where
+        cases   = getDiffSource s isdiff kind thy
+        nChains = sum $ map (sum . unsolvedChainConstraints) cases
+        nCases  = show (length cases) ++ " " ++ "cases"
+        chainInfo | nChains == 0 = "deconstructions complete"
+                  | otherwise    = show nChains ++ " partial deconstructions left"
+
+    overview n p   = n ++ " " ++ p
+    messageLink s isdiff = overview (show s ++ ": Message theory" ++ if isdiff then " [Diff]" else "")
+    ruleLink s isdiff    = overview (ruleLinkMsg s isdiff) (rulesInfo s isdiff)
+    ruleLinkMsg s isdiff = show s ++ ": Multiset rewriting rules " ++
+                           (if null(diffTheorySideRestrictions s thy) then "" else " and restrictions") ++ (if isdiff then " [Diff]" else "")
+
+    reqCasesLink s name k isdiff = overview name (casesInfo s k isdiff)
