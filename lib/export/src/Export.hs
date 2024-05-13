@@ -28,14 +28,12 @@ import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
-import         Sapic.Exceptions
 
 import         RuleTranslation
 
 import         System.IO.Unsafe
 import         System.IO
 import           Control.Monad.Fresh
-import           Control.Exception
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Set as S
@@ -1277,19 +1275,23 @@ makeAnnotations thy p = res
         then pr
         else translateTermsReport pr
 
--- | Pulling out nots.
+-- | Pull out nots in formula
 pullnots :: LNFormula -> Either LNFormula LNFormula
-pullnots fm = if pulledNots $ pullnots' fm then Right $ pullnots' fm else Left $ pullnots' fm
+pullnots fm = 
+  let fm_partially_rewritten = pullnots' fm in
+  if notsArePulledOut fm_partially_rewritten 
+    then Right fm_partially_rewritten -- in this case, formula is fully rewritten
+    else Left fm_partially_rewritten  -- Error with partially rewritten formula
   where
-    pulledNots lfm = case lfm of
-      (Not p) -> pulledNots' p
-      _ -> False
-      where
-        pulledNots' lfm' = case lfm' of
-          Not _         -> False
-          Conn _ p q    -> pulledNots' p && pulledNots' q
-          Qua _ _ p     -> pulledNots' p
-          _             -> True
+    notsArePulledOut (Not p) = notsArePulledOut' p -- top-level not expected
+    notsArePulledOut _       =  False
+
+    notsArePulledOut' (Not _)      = False -- check that there are  no nots below top level
+    notsArePulledOut' (Conn _ p q) = notsArePulledOut' p && notsArePulledOut' q
+    notsArePulledOut' (Qua _ _ p ) = notsArePulledOut' p
+    notsArePulledOut' _            = True
+
+    pullnots' f = if f /= pullStep f then pullnots' (pullStep f) else f
 
     pullStep fm' = case fm' of
       Conn And (Not p) (Not q)  -> Not $ p .||. q
@@ -1302,4 +1304,3 @@ pullnots fm = if pulledNots $ pullnots' fm then Right $ pullnots' fm else Left $
       Not (Not p)               -> p
       Not p                     -> Not $ pullStep p
       _                         -> fm'
-    pullnots' f = if f /= pullStep f then pullnots' (pullStep f) else f
