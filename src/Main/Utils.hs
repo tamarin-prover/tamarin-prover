@@ -7,13 +7,10 @@
 module Main.Utils (
     -- * File handling
     writeFileWithDirs
-
   ) where
-
 
 import System.FilePath
 import System.Directory
-
 
 ------------------------------------------------------------------------------
 -- File Handling
@@ -24,4 +21,3 @@ writeFileWithDirs :: FilePath -> String -> IO ()
 writeFileWithDirs file output = do
     createDirectoryIfMissing True (takeDirectory file)
     writeFile file output
-
