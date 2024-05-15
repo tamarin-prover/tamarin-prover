@@ -1,0 +1,40 @@
+/*
+Observational Equivalence Example for the Tamarin Manual
+========================================================
+
+Authors: 	Jannik Dreier
+Date: 	        June 2016
+
+This file is documented in the Tamarin user manual.
+
+*/
+
+theory ObservationalEquivalenceExample
+begin
+
+builtins: asymmetric-encryption
+
+// Generate a public key and output it
+// Choose two fresh values and reveal one of it
+// Encrypt either the first or the second fresh value
+rule Example:
+    [ Fr(~ltk)
+    , Fr(~a)
+    , Fr(~b) ]
+  --[ Secret( ~b ) ]->
+    [ Out( pk(~ltk) )
+    , Out( ~a )
+    , Out( aenc( diff(~a,~b), pk(~ltk) ) )
+    ]
+
+lemma B_is_secret:
+  " /* The intruder cannot know ~b: */
+    All B #i. (
+      /* ~b is claimed secret implies */
+      Secret(B) @ #i ==>
+      /* the adversary does not know '~b' */
+      not( Ex #j. K(B) @ #j )
+    )
+  "
+
+end
