@@ -1,0 +1,86 @@
+theory secrecy_template
+begin
+
+builtins: asymmetric-encryption
+
+/* We formalize the following protocol:
+
+    1. A -> B: {A,na}pk(B)
+
+*/
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltkA) ]
+  -->
+  [ !Ltk($A, ~ltkA)
+  , !Pk($A, pk(~ltkA))
+  , Out(pk(~ltkA)) 
+  ] 
+
+rule Reveal_ltk:
+  [ !Ltk(A, ltkA) ] --[ Reveal(A) ]-> [ Out(ltkA) ]
+
+// Initialize Role A
+rule Init_A:
+  [ Fr(~id)
+  , !Ltk(A, ltkA)
+  , !Pk(B, pkB)
+  ]
+--[ Create(A, ~id), Role('A') ]->
+  [ St_A_1(A, ~id, ltkA, pkB, B)
+  ]
+
+// Initialize Role B
+rule Init_B:
+  [ Fr(~id)
+  , !Ltk(B, ltkB)
+  , !Pk(A, pkA)
+  ]
+--[ Create(B, ~id), Role('B') ]->
+  [ St_B_1(B, ~id, ltkB, pkA, A)
+  ]
+
+// Role A sends first message
+rule A_1_send:
+  [ St_A_1(A, ~id, ltkA, pkB, B) 
+  , Fr(~na)
+  ]
+--[ Send(A, aenc{A, ~na}pkB) 
+  , Secret(~na), Honest(A), Honest(B), Role('A')
+  ]->
+  [ St_A_2(A, ~id, ltkA, pkB, B, ~na) 
+  , Out(aenc{A, ~na}pkB)
+  ]
+
+// Role B receives first message
+rule B_1_receive:
+  [ St_B_1(B, ~id, ltkB, pkA, A)
+  , In(aenc{A, na}pkB)
+  ]
+--[ Recv(B, aenc{A, na}pkB) 
+  , Secret(na), Honest(B), Honest(A), Role('B')
+  ]->
+  [ St_B_2(B, ~id, ltkB, pkA, A, na)
+  ]
+
+lemma executable:
+  exists-trace
+    "Ex A B m #i #j. Send(A,m)@i & Recv(B,m) @j"
+
+lemma secret_A:
+    "All n #i. Secret(n) @i & Role('A') @i ==> 
+     (not (Ex #j. K(n)@j)) | (Ex X #j. Reveal(X)@j & Honest(X)@i)"
+
+lemma secret_B:
+    "All n #i. Secret(n) @i & Role('B') @i ==> 
+     (not (Ex #j. K(n)@j)) | (Ex X #j. Reveal(X)@j & Honest(X)@i)"
+
+lemma secrecy_PFS_A:
+  exists-trace
+  "not All x #i. 
+    Secret(x) @i & Role('A') @i ==> 
+    not (Ex #j. K(x)@j)
+        | (Ex B #r. Reveal(B)@r & Honest(B) @i & r < i)"
+
+end
