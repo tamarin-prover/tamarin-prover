@@ -168,10 +168,10 @@ run thisMode as
       thy    <- loadTheory thyLoadOptions srcThy inFile
 
       let sig = either (._thySignature) (._diffThySignature) thy
-      sig'   <- liftIO $ toSignatureWithMaude thyLoadOptions._oMaudePath sig
+      sig'   <- liftIO $ toSignatureWithMaude thyLoadOptions.maudePath sig
 
       -- | Pretty print the theory as is without performing any checks.
-      if thyLoadOptions._oParseOnlyMode then
+      if thyLoadOptions.parseOnlyMode then
         pure $ (, Pretty.emptyDoc) $ either prettyOpenTheory prettyOpenDiffTheory thy
 
       -- | Translate and check thoery based on specified output module.
@@ -198,7 +198,7 @@ run thisMode as
           filter (/= ("", "")) . either theoryFormalComments diffTheoryFormalComments
 
         isTranslateOnlyMode =
-          thyLoadOptions._oOutputModule `elem`
+          thyLoadOptions.outputModule `elem`
             [ ModuleSpthy
             , ModuleSpthyTyped
             , ModuleProVerif
@@ -218,4 +218,4 @@ run thisMode as
         ppWf []  = Pretty.emptyDoc
         ppWf rep = Pretty.vcat $
           Pretty.text ("WARNING: " ++ show (length rep) ++ " wellformedness check failed!")
-          : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions._oProveMode ]
+          : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions.proveMode ]
