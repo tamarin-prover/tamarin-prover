@@ -903,17 +903,17 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
       abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
       simplificationLevel <- fromMaybe "2" <$> lookupGetParam "simplification"
       showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
-      img <- liftIO $ traceExceptions "getTheoryGraphR" $
+      img' <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
-          (graphCmd yesod)
+          (outputCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress ( not showAutosource) ( read $ T.unpack simplificationLevel) )
           (sequentToJSONPretty)
-          (show simplificationLevel)
-          (abbreviate)
           (tiTheory ti) path
-      sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
+      case img' of
+        Nothing -> notFound
+        Just img -> sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
     graphStyle d c s l= dotStyle s d . simplifySystem l . compression c
     dotStyle s True = dotSystemCompact CompactBoringNodes s
@@ -934,17 +934,18 @@ getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
       abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
       simplificationLevel <- fromMaybe "2" <$> lookupGetParam "simplification"
       showAutosource <- isNothing <$> lookupGetParam "auto-sources"
-      img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
+      img' <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
-          (snd $ graphCmd yesod)
+          -- a.d. TODO should diff theories support JSON output?
+          (ocGraphCommand $ outputCmd yesod)
           (cacheDir yesod)
           (graphStyle compact compress showAutosource (read $ T.unpack simplificationLevel))
-          (show simplificationLevel)
-          (abbreviate)
           (dtiTheory ti) path
           (mirror)
-      sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
+      case img' of
+        Nothing -> notFound
+        Just img -> sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
   where
     graphStyle d c s l= dotStyle s d . simplifySystem l . compression c
     dotStyle s True = dotSystemCompact CompactBoringNodes s

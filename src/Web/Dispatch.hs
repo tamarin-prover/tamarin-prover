@@ -93,14 +93,14 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> (SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> ExceptT TheoryLoadError IO (WfErrorReport, Either ClosedTheory ClosedDiffTheory))
           -- ^ Theory closer.
           -> Bool                            -- ^ Show debugging messages?
-          -> (String, FilePath)              -- ^ Path to graph rendering binary (dot or json)
+          -> OutputCommand                   -- ^ Path to graph rendering binary (dot or json)
                                              -- ^ together with indication of choice "dot", "json", ...
           -> ImageFormat                     -- ^ The preferred image format
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
 withWebUI readyMsg cacheDir_ thDir loadState autosave thOpts thLoad thClose debug'
-          graphCmd' imgFormat' defaultAutoProver' f
+          outputCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
     thrVar <- newMVar M.empty
@@ -121,7 +121,7 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thOpts thLoad thClose debu
         , theoryVar          = thyVar
         , threadVar          = thrVar
         , autosaveProofstate = autosave
-        , graphCmd           = graphCmd'
+        , outputCmd           = outputCmd'
         , imageFormat        = imgFormat'
         , defaultAutoProver  = defaultAutoProver'
         , debug              = debug'
