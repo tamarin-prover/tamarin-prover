@@ -76,7 +76,7 @@ import           System.Process
 
 import           Logic.Connectives
 import           Theory
-import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
+import           Theory.Constraint.System (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
 import           TheoryObject
 

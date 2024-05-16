@@ -8,9 +8,7 @@
 --
 -- Conversion of the graph part of a sequent to a Graphviz Dot file.
 module Theory.Constraint.System.Dot (
-    nonEmptyGraph
-  , nonEmptyGraphDiff
-  , dotSystemLoose
+    dotSystemLoose
   , dotSystemCompact
   , compressSystem
   , simplifySystem
@@ -44,21 +42,6 @@ import           Theory.Model
 import           Theory.Text.Pretty       (opAction)
 
 import           Utils.Misc
--- | 'True' iff the dotted system will be a non-empty graph.
-nonEmptyGraph :: System -> Bool
-nonEmptyGraph sys = not $
-    M.null (get sNodes sys) && null (unsolvedActionAtoms sys) &&
-    null (unsolvedChains sys) &&
-    S.null (get sEdges sys) && S.null (get sLessAtoms sys)
-
--- | 'True' iff the dotted system will be a non-empty graph.
-nonEmptyGraphDiff :: DiffSystem -> Bool
-nonEmptyGraphDiff diffSys = not $
-     case (get dsSystem diffSys) of
-          Nothing    -> True
-          (Just sys) -> M.null (get sNodes sys) && null (unsolvedActionAtoms sys) &&
-                        null (unsolvedChains sys) &&
-                        S.null (get sEdges sys) && S.null (get sLessAtoms sys)
 
 type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (RGB Rational)
 type SeDot = ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
