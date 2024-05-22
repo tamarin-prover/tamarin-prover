@@ -66,6 +66,7 @@ module TheoryObject (
   , expandRestriction
   , expandLemma
   , addRestriction
+  , addRestrictions
   , addLemma
   , addLemmas
   , addRules
@@ -420,6 +421,9 @@ addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s
 addRestriction l thy = do
     guard (isNothing $ lookupRestriction (L.get rstrName l) thy)
     return $ modify thyItems (++ [RestrictionItem l]) thy
+
+addRestrictions :: [Restriction] -> Theory sig c r p s -> Theory sig c r p s
+addRestrictions rts thy = fromMaybe thy $ foldl ( \fm rest -> addRestriction rest (fromJust fm)) (Just thy) rts
 
 -- | Add a new lemma. Fails, if a lemma with the same name exists.
 addLemma :: Lemma p -> Theory sig c r p s -> Maybe (Theory sig c r p s)

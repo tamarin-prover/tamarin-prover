@@ -196,6 +196,10 @@ module Theory (
   , openTranslatedTheory
   , openDiffTheory
 
+  , closeIntrRule
+  , applyChainReduction
+  , prettyChainReduction
+
   , ClosedProtoRule(..)
   , OpenProtoRule(..)
   , oprRuleE

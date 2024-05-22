@@ -76,6 +76,8 @@ module Term.Term (
     , natPlusSymString
     , natOneSymString
     , oneSymString
+    , fstSymString
+    , sndSymString
     , dhNeutralSymString
     , multSymString
     , zeroSymString

@@ -53,7 +53,7 @@ type ClosedTheory =
 type ClosedDiffTheory =
     DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule ClosedProtoRule IncrementalDiffProof IncrementalProof
 
--- | Either Therories can be Either a normal or a diff theory
+-- | Either Theories can be Either a normal or a diff theory
 type EitherClosedTheory = Either ClosedTheory ClosedDiffTheory
 
 -- querying

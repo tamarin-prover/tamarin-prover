@@ -6,23 +6,33 @@ module CloseRule (
     closeRuleCache,
     closeTheoryWithMaude,
     proveTheory,
-    mkSystem
+    mkSystem,
+    closeIntrRule,
+    applyChainReduction,
+    prettyChainReduction
 )where
 
 import Items.RuleItem
 
 import           Prelude                             hiding (id, (.))
 
+import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BC
 import           Data.List
-
+import           Data.Maybe
 import qualified Data.Set                            as S
 
 import           Control.Basics
 import           Control.Category
+import           Control.Exception (evaluate)
+import           Control.DeepSeq (force)
 import           Control.Monad.Reader
 import           Control.Monad.Bind (MonadFresh)
+import qualified Control.Monad.State                 as MS
+import           Control.Parallel.Strategies
 
 import qualified Extension.Data.Label                as L
+import           Extension.Data.Label                hiding (get)
 
 import           ClosedTheory
 import           TheoryObject
@@ -35,19 +45,15 @@ import           Theory.Tools.IntruderRules
 import           Term.Positions
 
 import           Theory.Constraint.Solver.Sources (IntegerParameters)
+import           Theory.Constraint.Solver.Sources     as Sources (IntegerParameters(..))
+
+
+import           Theory.Tools.LoopBreakers
+
 
 import Debug.Trace
 import Text.PrettyPrint.Class
-
-import Data.Function (on)
-
-import           Theory.Constraint.Solver.Sources     as Sources (IntegerParameters(..))
-
-import qualified Control.Monad.State                 as MS
-import           Control.Parallel.Strategies
-import           Theory.Tools.LoopBreakers
-import           Data.Maybe
-import           Extension.Data.Label                hiding (get)
+import GHC.IO (unsafePerformIO)
 
 
 -- | Close a theory given a maude signature. This signature must be valid for
@@ -65,9 +71,8 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     parameters = Sources.IntegerParameters (L.get (openChainsLimit.thyOptions) thy0) (L.get (saturationLimit.thyOptions) thy0) showSaturation
     h          = L.get thyHeuristic thy0
     t          = L.get thyTactic thy0
-    chainReductionBool = L.get chainReductionCheck (L.get thyOptions thy0)
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
-    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption.thyOptions) thy0) False (L.get thyIsSapic thy0) chainReductionBool
+    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption.thyOptions) thy0) False (L.get thyIsSapic thy0)
     checkProof = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
@@ -196,7 +201,7 @@ landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
 landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map (fmap (fmap (fmap Free))) facts))
 
 derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) (checkProof tabProof)
+derivationTest sig intrR fact terms = trace ("\ntabproof : " ++ show tabProof) checkProof tabProof || checkProof tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
   where
     setD = decompose terms
 
@@ -213,8 +218,13 @@ derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) (
     --provenTheory = closedTheory 
     provenTheory = map (proveTheory (const True) defaultProver) closedTheory
     closedTheory = trace ("\ntheory : \n" ++ tabTheory modifiedTheory) map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory -- no AutoSources
-    modifiedTheory = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s)) t) setD (repeat emptyThy)
+    modifiedTheory = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction1]) t) setD (repeat emptyThy)
 
+    tabProof1 = concatMap checkProofStatuses provenTheory1
+    provenTheory1 = map (proveTheory (const True) defaultProver) closedTheory1
+    closedTheory1 = trace ("\ntheory : \n" ++ tabTheory modifiedTheory1) map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
+    modifiedTheory1 = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0]) t) setD (repeat emptyThy)
+ 
     tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimit prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
     tabTheory [] = ""
 
@@ -225,11 +235,19 @@ derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) (
     varFresh s = map msgToFreshVars (varD s)
     pre = freesToFresh . varFresh
     co = map (outFact . msgToFreshTerms) . concatMap factTerms
-    a s = [protoFact Linear "Generated_0" (map (msgToFreshTerms . lvarToLnterm) (varD s))]
+    a s = [protoFact Linear "Generated_0" (map (msgToFreshTerms . lvarToLnterm) (varD s)),factOnlyOnce]
     alemma s = [protoFact Linear "Generated_0" (map lvarToLnterm (varD s))]
 
     newLemmas s = [Lemma "Derivation" AllTraces (Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])) [] (unproven ())] -- TODO : faire sans le head
     
+    newRestriction0 = Restriction "OnlyOnce" (forAllFormula (factAnd "i" .&&. factAnd "j" .==>. factEq))
+    factAnd x = Ato (Action (LIT (Var (Free (LVar x LSortNode 0)))) factOnlyOnce)
+    factEq = Ato (EqE (LIT (Var (Free (LVar "i" LSortNode 0)))) (LIT (Var (Free (LVar "j" LSortNode 0)))))
+    factOnlyOnce = protoFact Linear "OnlyOnce" []
+
+    newRestriction1 = Restriction "OnlyOnceD" (forAllFormula (factAndD "i" .&&. factAndD "j" .==>. factEq))
+    factAndD x = Ato (Action (LIT (Var (Free (LVar x LSortNode 0)))) factOnlyOnceD)
+    factOnlyOnceD = protoFact Linear "OnlyOnceD" []
 
     defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS)
 
@@ -247,9 +265,15 @@ derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) (
       Lit _                              -> t
       FApp f as                          -> termViewToTerm $ FApp f (map msgToFreshTerms as)
 
+builtInDestrRule :: [ByteString]
+builtInDestrRule = map (BC.append (BC.pack "_")) symBI
+  where
+    symBI = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString, fstSymString, sndSymString]
+
 checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> [IntrRuleAC] -> Bool
-checkChainReduction sig intrR r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule _ j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) allR | (i /= 1 && j /=1) =
- case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
+checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) allR 
+  | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
+  case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
     [] -> False
     subst -> trace ("\nsubst : " ++ show subst) searchMatcheraux (auxMatcherFilter (auxMatcher subst r inst1))
     -- trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\n\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1)))
@@ -295,7 +319,7 @@ checkChainReduction sig intrR r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) 
         auxDeducible [] = True
 
         checkDeducible :: Subst Name LVar -> Bool
-        checkDeducible m = aux prems -- trace ("\ndeduce : " ++ show (aux prems))
+        checkDeducible m = aux prems
 
          where
           terms = getPremsFactTail instSigma ++ getPremsFactTail inst1Sigma
@@ -303,8 +327,10 @@ checkChainReduction sig intrR r@(Rule (DestrRule _ i _ _) ((Fact KDFact _ _):_) 
           inst2sigma2 = apply m inst2
           prems = getPremsFactTail inst2sigma2
 
+          factOnlyOnce = protoFact Linear "OnlyOnceD" []
+
           intrRmodified = map boundToOne intrR
-          boundToOne rule@(Rule (DestrRule name _ subterm constant) premis concs acts nvs) | getRuleName rule == getRuleName r = Rule (DestrRule name 1 subterm constant) premis concs acts nvs
+          boundToOne rule@(Rule (DestrRule name _ subterm constant) premis concs acts nvs) | getRuleName rule == getRuleName r = Rule (DestrRule name 1 subterm constant) premis concs (acts ++ [factOnlyOnce]) nvs
           boundToOne rr = rr
 
           aux (fa@(Fact KUFact _ [f]):q) = (aux1 f || derivationTest sig intrRmodified fa terms) && aux q
@@ -354,6 +380,13 @@ closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder h
 closeIntrRule _   ir                                        = [ir]
 
 
+prettyChainReduction :: SignatureWithMaude -> String -> OpenRuleCache -> [[IntrRuleAC]] -> Bool -> [IntrRuleAC]
+prettyChainReduction s name o t b = unsafePerformIO $ do
+  traceM ("[Theory " ++ name ++ "] Chain reduction check begins")
+  rule <- evaluate . force $ applyChainReduction s o t b
+  traceM ("[Theory " ++ name ++ "] Chain reduction check finishes")
+  return rule
+
 -- | Close a rule cache. Hower, note that the
 -- requires case distinctions are not computed here.
 closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturation limits
@@ -366,9 +399,8 @@ closeRuleCache :: IntegerParameters  -- ^ Parameters for open chains and saturat
                -> Bool               -- ^ Verbose option
                -> Bool               -- ^ Diff or not
                -> Bool               -- ^ isSapic or not
-               -> Bool               -- ^ chain reduction check activated or not
                -> ClosedRuleCache    -- ^ Cached rules and case distinctions.
-closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic chainReductionBool = -- trace ("closeRuleCache: " ++ show classifiedRules) $ 
+closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules intrRules verbose isdiff isSapic = -- trace ("closeRuleCache: " ++ show classifiedRules) $ 
    ClosedRuleCache
         classifiedRules rawSources refinedSources injFactInstances
   where
@@ -395,15 +427,8 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
     rawSources         = precomputeSources parameters ctxt0 safetyRestrictions
     refinedSources     = refineWithSourceAsms parameters typAsms ctxt0 rawSources
 
-    -- close intruder rules
-    intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
-
-    tabT = groupBy ((==) `on` getRuleName) $ sortOn getRuleName intrRulesAC
-
-    intrRulesACred = applyChainReduction sig intrRulesAC tabT chainReductionBool
-
     -- classifying the rules
-    rulesAC = (fmap IntrInfo                      <$> intrRulesACred) <|>
+    rulesAC = (fmap IntrInfo                      <$> intrRules) <|>
               ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
 
     anyOf ps = partition (\x -> any ($ x) ps)

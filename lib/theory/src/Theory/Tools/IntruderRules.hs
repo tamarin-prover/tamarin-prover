@@ -201,7 +201,7 @@ minimizeIntruderRules diff rules =
 subtermIntruderRules :: Bool -> MaudeSig -> [IntrRuleAC]
 subtermIntruderRules diff maudeSig =
     minimizeIntruderRules diff (concatMap  (destructionRules diff) (S.toList $ stRules maudeSig)
-     ++ constructionRules (userDefineFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))-- ++ destructionRulesAC (acUserFunSyms maudeSig)
+     ++ constructionRules (userDefineFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@

@@ -50,11 +50,12 @@ import           Prelude                             hiding (id, (.))
 
 import           Data.Char                           (toLower)
 import           Data.Label
-import           Data.List                           (isPrefixOf, intercalate, find)
+import           Data.List                           (isPrefixOf, intercalate, find, groupBy, sortOn)
 import qualified Data.Set
 import           Data.Maybe                          (fromMaybe)
 import           Data.Map                            (keys)
 import           Data.FileEmbed                      (embedFile)
+import           Data.Function (on)
 import qualified Data.Label as L
 import           Data.Bifunctor (Bifunctor(bimap))
 import           Data.Bitraversable (Bitraversable(bitraverse))
@@ -77,7 +78,7 @@ import           Theory.Tools.Wellformedness
 import           Theory.Tools.MessageDerivationChecks
 import           Theory.Module
 
-import           TheoryObject                        (diffThyOptions)
+import           TheoryObject                        (diffThyOptions, chainReductionCheck)
 
 import qualified Sapic
 import qualified Export
@@ -387,14 +388,66 @@ translateTheory thyOpts thy = do
     withTheory f = bitraverse f return
     theoryName = either (L.get thyName) (L.get diffThyName)
 
+checkCloseIntrRule :: SignatureWithMaude -> String -> OpenTranslatedTheory -> OpenTranslatedTheory
+checkCloseIntrRule sign name thy = L.set thyCache intrRulesACred thy
+  where
+    hnd = L.get sigmMaudeHandle sign
+
+    intrRules = L.get thyCache thy
+    intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
+
+    tabT = groupBy ((==) `on` getRuleName) $ sortOn getRuleName intrRulesAC
+
+    chainReductionBool = L.get chainReductionCheck (L.get thyOptions thy)
+
+    intrRulesACred = if chainReductionBool then prettyChainReduction sign name intrRulesAC tabT chainReductionBool else applyChainReduction sign intrRulesAC tabT chainReductionBool
+
+checkCloseIntrRuleDiff :: SignatureWithMaude -> String -> OpenDiffTheory -> OpenDiffTheory
+checkCloseIntrRuleDiff sign name diffthy = L.set diffThyCacheRight crACred diffCLthy
+
+  where
+    hnd = L.get sigmMaudeHandle sign
+
+    dcl = L.get diffThyDiffCacheLeft diffthy
+    dcr = L.get diffThyDiffCacheRight diffthy
+    cl = L.get diffThyCacheLeft diffthy
+    cr = L.get diffThyCacheRight diffthy
+
+    dclAC = concat $ map (closeIntrRule hnd) dcl
+    dcrAC = concat $ map (closeIntrRule hnd) dcr
+    clAC = concat $ map (closeIntrRule hnd) cl
+    crAC = concat $ map (closeIntrRule hnd) cr
+
+    tabTDCL = groupBy ((==) `on` getRuleName) $ sortOn getRuleName dclAC
+    tabTDCR = groupBy ((==) `on` getRuleName) $ sortOn getRuleName dcrAC
+    tabTCL = groupBy ((==) `on` getRuleName) $ sortOn getRuleName clAC
+    tabTCR = groupBy ((==) `on` getRuleName) $ sortOn getRuleName crAC
+
+    chainReductionBool = L.get chainReductionCheck (L.get diffThyOptions diffthy)
+
+    dclACred = if chainReductionBool then prettyChainReduction sign name dclAC tabTDCL chainReductionBool else applyChainReduction sign dclAC tabTDCL chainReductionBool
+    diffDCLthy = L.set diffThyDiffCacheLeft dclACred diffthy
+
+    dcrACred = if chainReductionBool then prettyChainReduction sign name dcrAC tabTDCR chainReductionBool else applyChainReduction sign dcrAC tabTDCR chainReductionBool
+    diffDCRthy = L.set diffThyDiffCacheRight dcrACred diffDCLthy
+
+    clACred = if chainReductionBool then prettyChainReduction sign name clAC tabTCL chainReductionBool else applyChainReduction sign clAC tabTCL chainReductionBool
+    diffCLthy = L.set diffThyCacheLeft clACred diffDCRthy
+
+    crACred = if chainReductionBool then prettyChainReduction sign name crAC tabTCR chainReductionBool else applyChainReduction sign crAC tabTCR chainReductionBool
+
+
+
 -- | Perform wellformedness and deducability checks on a theory.
 checkTranslatedTheory :: MonadIO m => MonadError TheoryLoadError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTranslatedTheory OpenDiffTheory -> m ((WfErrorReport, Either OpenTranslatedTheory OpenDiffTheory))
 checkTranslatedTheory thyOpts sign thy = do
   let transReport = either (`checkWellformedness` sign)
                            (`checkWellformednessDiff` sign) thy
 
-  deducThy <- bitraverse (\x -> return ((addMessageDeductionRuleVariants x) `runReader` (L.get sigmMaudeHandle sign)))
+  deducThy0 <- bitraverse (\x -> return ((addMessageDeductionRuleVariants x) `runReader` (L.get sigmMaudeHandle sign)))
                          (\x -> return ((addMessageDeductionRuleVariantsDiff x) `runReader` (L.get sigmMaudeHandle sign))) thy
+
+  deducThy <- bitraverse (liftIO . evaluate . force . (checkCloseIntrRule sign (theoryName thy))) (liftIO . evaluate . force . (checkCloseIntrRuleDiff sign (theoryName thy))) deducThy0
 
   -- traceM ("Open : " ++ show deducThy)
   variableReport <- case compare derivChecks 0 of
