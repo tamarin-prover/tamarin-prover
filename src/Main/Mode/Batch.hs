@@ -33,7 +33,6 @@ import Main.Console
 import Main.Environment
 import Main.TheoryLoader
 import Main.Utils
-import Data.Label qualified as L
 import Data.Map qualified as M
 import Theory.Constraint.System.Dot
 import Text.Dot qualified as D
@@ -177,10 +176,10 @@ run thisMode as
       thy    <- loadTheory thyLoadOptions srcThy inFile
 
       let sig = either (._thySignature) (._diffThySignature) thy
-      sig'   <- liftIO $ toSignatureWithMaude thyLoadOptions._oMaudePath sig
+      sig'   <- liftIO $ toSignatureWithMaude thyLoadOptions.maudePath sig
 
       -- | Pretty print the theory as is without performing any checks.
-      if thyLoadOptions._oParseOnlyMode then
+      if thyLoadOptions.parseOnlyMode then
         pure $ (, Pretty.emptyDoc) $ either prettyOpenTheory prettyOpenDiffTheory thy
 
       -- | Translate and check thoery based on specified output module.
@@ -198,8 +197,8 @@ run thisMode as
       -- | Close and potentially prove theory.
       else do
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
-        _ <- liftIO $ bitraverse outputTraces (const $ return ()) thy'
-        
+        _ <- liftIO $ bitraverse outputTraces (const $ pure ()) thy'
+
         pure $
           either (\t -> (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
                  (\d -> (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
@@ -209,7 +208,7 @@ run thisMode as
           filter (/= ("", "")) . either theoryFormalComments diffTheoryFormalComments
 
         isTranslateOnlyMode =
-          thyLoadOptions._oOutputModule `elem`
+          thyLoadOptions.outputModule `elem`
             [ ModuleSpthy
             , ModuleSpthyTyped
             , ModuleProVerif
@@ -219,83 +218,84 @@ run thisMode as
 
         handleError e@(ParserError _) = die $ show e
         handleError (WarningError report) = do
-          putStrLn $ renderDoc $ Pretty.vcat $ [ Pretty.text ""
-                                               , Pretty.text "WARNING: the following wellformedness checks failed!" ]
-                                            ++ [ Pretty.text "" | not $ null report ]
-                                            ++ [ prettyWfErrorReport report
-                                               , Pretty.text "" ]
+          putStrLn $ renderDoc $ Pretty.vcat $
+            [ Pretty.text ""
+            , Pretty.text "WARNING: the following wellformedness checks failed!" ]
+            ++ [ Pretty.text "" | not $ null report ]
+            ++ [ prettyWfErrorReport report
+            , Pretty.text "" ]
           die "quit-on-warning mode selected - aborting on wellformedness errors."
 
         ppWf []  = Pretty.emptyDoc
         ppWf rep = Pretty.vcat $
           Pretty.text ("WARNING: " ++ show (length rep) ++ " wellformedness check failed!")
-          : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions._oProveMode ]
+          : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions.proveMode ]
 
         -- | Output any found traces of the analyzed theory in dot/JSON format if the corresponing command line option is set.
-        -- The output is dumped into a single file per format. Multiple dot graphs are simply concatenated into a single file, 
+        -- The output is dumped into a single file per format. Multiple dot graphs are simply concatenated into a single file,
         -- while the JSON schema already allows for multiple graphs.
         outputTraces :: ClosedTheory -> IO ()
         outputTraces thy = do
             let graphOptions = defaultGraphOptions
-                dotOptions = defaultDotOptions 
+                dotOptions = defaultDotOptions
                 serializeDot (label, system) = D.showDot label $ dotSystemCompact graphOptions dotOptions system
                 serializeJSON = sequentsToJSONPretty graphOptions
-                labelledSystems = map (\(lemma, proof, system) -> 
+                labelledSystems = map (\(lemma, proof, system) ->
                   let label = traceOutputLabel graphOptions dotOptions lemma proof in
                   (label, system)) systemsWithMetadata
 
             case findArg "traceDot" as of
-              Nothing -> pure () 
-              Just outfile -> 
+              Nothing -> pure ()
+              Just outfile ->
                 let serialized = intercalate "\n" $ map serializeDot labelledSystems in
                 writeFile outfile serialized
-                
+
             case findArg "traceJSON" as of
               Nothing -> pure ()
               Just outfile ->
                 let serialized = serializeJSON labelledSystems in
                 writeFile outfile serialized
           where
-            -- | Collect all solved (i.e. a trace was found) systems of the theory along with their 
+            -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof and the lemma in which they appear in the given theory.
             systemsWithMetadata :: [(Lemma IncrementalProof, ProofPath, System)]
             systemsWithMetadata = do
               lemma <- getLemmas thy
-              let proof = L.get lProof lemma
+              let proof = lemma._lProof
               [(lemma, proofPath, system) | (proofPath, system) <- proofSystems proof]
 
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof.
             proofSystems :: IncrementalProof -> [(ProofPath, System)]
             proofSystems (LNode (ProofStep Solved (Just rootSystem)) _) =  [([], rootSystem)]
-            proofSystems (LNode (ProofStep _ _) children) =  
-              [(l : ls, system) | (l, subProof) <- M.toList children 
+            proofSystems (LNode (ProofStep _ _) children) =
+              [(l : ls, system) | (l, subProof) <- M.toList children
                                 , (ls, system) <- proofSystems subProof ]
-            
+
             -- | Make a label for use in the trace output out of all relevant information for a constraint system.
             traceOutputLabel :: GraphOptions
                              -> DotOptions
-                             -> Lemma IncrementalProof 
+                             -> Lemma IncrementalProof
                              -> ProofPath
                              -> String
             traceOutputLabel graphOptions dotOptions lemma proofPath =
-              "trace_" 
-              ++ L.get thyName thy                         -- Name of the theory in which the constraint system appears.
+              "trace_"
+              ++ thy._thyName                              -- Name of the theory in which the constraint system appears.
               ++ "_"
               ++ traceLabelOptions graphOptions dotOptions -- Graph options are included in a short format.
               ++ "_"
-              ++ L.get lName lemma                         -- Name of the lemma in which the constraint system appears.
+              ++ lemma._lName                              -- Name of the lemma in which the constraint system appears.
               ++ intercalate "-" proofPath                 -- Path through the proof where the constraint system is located.
 
             -- | Format the graph rendering options in a concise way.
             traceLabelOptions :: GraphOptions -> DotOptions -> String
-            traceLabelOptions graphOptions dotOptions = 
-              let s1 = show $ L.get goSimplificationLevel graphOptions
-                  s2 = if L.get goShowAutoSource graphOptions then "AS1" else "AS0"
-                  s3 = if L.get goClustering graphOptions then "CL1" else "CL0"
-                  s4 = if L.get goAbbreviate graphOptions then "A1" else "A0"
-                  s5 = if L.get goCompress graphOptions then "C1" else "C0"
-                  s6 = case L.get doNodeStyle dotOptions of
+            traceLabelOptions graphOptions dotOptions =
+              let s1 = show graphOptions._goSimplificationLevel
+                  s2 = if graphOptions._goShowAutoSource then "AS1" else "AS0"
+                  s3 = if graphOptions._goClustering then "CL1" else "CL0"
+                  s4 = if graphOptions._goAbbreviate then "A1" else "A0"
+                  s5 = if graphOptions._goCompress then "C1" else "C0"
+                  s6 = case dotOptions._doNodeStyle of
                          FullBoringNodes -> "NF"
                          CompactBoringNodes -> "NB"
               in
