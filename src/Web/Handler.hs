@@ -82,7 +82,7 @@ import           Yesod.Core
 
 import           Control.Monad.Trans.Resource (runResourceT)
 
-import           Data.Label
+import           Data.Label                   as L
 import           Data.Maybe
 import           Data.String                  (fromString)
 import           Data.List                    (intersperse)
@@ -115,6 +115,9 @@ import Control.Monad.Except (runExceptT)
 import Main.TheoryLoader
 import Main.Console (renderDoc)
 import Theory.Tools.Wellformedness (prettyWfErrorReport)
+import           Text.Read                    (readMaybe)
+import           Theory.Constraint.System.Graph.Graph
+import           Theory.Constraint.System.Dot (BoringNodeStyle, dotSystemCompact, doNodeStyle)
 
 -- Quasi-quotation syntax changed from GHC 6 to 7,
 -- so we need this switch in order to support both
@@ -894,32 +897,39 @@ getTheoryPathDR idx path = withTheory idx $ \ti -> ajaxLayout $ do
   -}
 -}
 
+getOptions :: Handler (GraphOptions, DotOptions)
+getOptions = do
+  compact <- isNothing <$> lookupGetParam "uncompact"
+  let nodeStyle = if compact then CompactBoringNodes else FullBoringNodes
+  compress <- isNothing <$> lookupGetParam "uncompress"
+  abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
+  simpl <- lookupGetParam "simplification"
+  showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
+  let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack) 
+      graphOptions = L.set goSimplificationLevel simplificationLevel $
+                     L.set goCompress compress $
+                     L.set goShowAutoSource showAutosource $
+                     L.set goAbbreviate abbreviate $
+                     defaultGraphOptions
+      dotOptions = L.set doNodeStyle nodeStyle defaultDotOptions
+  return (graphOptions, dotOptions)
+
 -- | Get rendered graph for theory and given path.
 getTheoryGraphR :: TheoryIdx -> TheoryPath -> Handler ()
 getTheoryGraphR idx path = withTheory idx ( \ti -> do
       yesod <- getYesod
-      compact <- isNothing <$> lookupGetParam "uncompact"
-      compress <- isNothing <$> lookupGetParam "uncompress"
-      abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
-      simplificationLevel <- fromMaybe "2" <$> lookupGetParam "simplification"
-      showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
+      (graphOptions, dotOptions) <- getOptions
       img' <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
           (outputCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress ( not showAutosource) ( read $ T.unpack simplificationLevel) )
-          (sequentToJSONPretty)
+          (dotSystemCompact graphOptions dotOptions)
+          (sequentToJSONPretty graphOptions)
           (tiTheory ti) path
       case img' of
         Nothing -> notFound
         Just img -> sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
-  where
-    graphStyle d c s l= dotStyle s d . simplifySystem l . compression c
-    dotStyle s True = dotSystemCompact CompactBoringNodes s
-    dotStyle s False = dotSystemCompact FullBoringNodes s
-    compression True = compressSystem
-    compression False = id
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
@@ -929,29 +939,19 @@ getTheoryGraphDiffR idx path = getTheoryGraphDiffR' idx path False
 getTheoryGraphDiffR' :: TheoryIdx -> DiffTheoryPath -> Bool -> Handler ()
 getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
       yesod <- getYesod
-      compact <- isNothing <$> lookupGetParam "uncompact"
-      compress <- isNothing <$> lookupGetParam "uncompress"
-      abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
-      simplificationLevel <- fromMaybe "2" <$> lookupGetParam "simplification"
-      showAutosource <- isNothing <$> lookupGetParam "auto-sources"
+      (graphOptions, dotOptions) <- getOptions
       img' <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
           -- a.d. TODO should diff theories support JSON output?
           (ocGraphCommand $ outputCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress showAutosource (read $ T.unpack simplificationLevel))
+          (dotSystemCompact graphOptions dotOptions)
           (dtiTheory ti) path
           (mirror)
       case img' of
         Nothing -> notFound
         Just img -> sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
-  where
-    graphStyle d c s l= dotStyle s d . simplifySystem l . compression c
-    dotStyle s True = dotSystemCompact CompactBoringNodes s
-    dotStyle s False = dotSystemCompact FullBoringNodes s
-    compression True = compressSystem
-    compression False = id
 
 -- | Get rendered mirror graph for theory and given path.
 getTheoryMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
