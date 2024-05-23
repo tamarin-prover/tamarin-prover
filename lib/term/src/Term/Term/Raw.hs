@@ -35,6 +35,12 @@ module Term.Term.Raw (
     , fAppList
     , unsafefApp
 
+    -- * Subterm functions
+    , isSubterm
+    , isProperSubterm
+    , replaceSubterm
+    , replaceProperSubterm
+
     ) where
 
 import           GHC.Generics (Generic)
@@ -227,3 +233,27 @@ foldTerm fLIT fFAPP t = go t
 instance Sized a => Sized (Term a) where
     size = foldTerm size (const $ \xs -> sum xs + 1)
 
+
+----------------------------------------------------------------------
+-- Subterm Handling
+----------------------------------------------------------------------
+
+isSubterm :: Eq a => Term a -> Term a -> Bool
+isSubterm x y = (x == y) || go x y
+  where
+    go t (FAPP _ ts) = any (isSubterm t) ts
+    go _ _ = False
+
+isProperSubterm :: Eq a => Term a -> Term a -> Bool
+isProperSubterm x y = (x /= y) && isSubterm x y
+
+replaceSubterm :: (Term a -> Term a) -> Term a -> Term a
+replaceSubterm f originalTerm =
+  let newTerm = f originalTerm  in
+  case viewTerm newTerm of
+    (Lit _) -> newTerm
+    FApp s ts -> termViewToTerm (FApp s (map (replaceSubterm f) ts))
+
+replaceProperSubterm :: (Term a -> Term a) -> Term a -> Term a
+replaceProperSubterm f (viewTerm -> FApp s ts) = termViewToTerm (FApp s (map (replaceSubterm f) ts))
+replaceProperSubterm _ t = t
