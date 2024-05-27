@@ -49,8 +49,27 @@ import           Data.GraphViz.Attributes.HTML
 import qualified Data.GraphViz.Attributes.Colors as GColor
 import           Data.GraphViz.Printing   (renderDot, unqtDot)
 
+-- | The style for nodes of the intruder.
+data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
+    deriving( Eq, Ord, Show )
+
+-- | Options for dot generation.
+data DotOptions = DotOptions 
+  { _doNodeStyle :: BoringNodeStyle -- ^ The style for nodes of the intruder.
+  , _doAbbrevColor :: GColor.Color
+  }
+    deriving ( Eq, Ord, Show )
+
+-- | The default dot options.
+defaultDotOptions :: DotOptions
+defaultDotOptions = DotOptions FullBoringNodes black
+  where
+    black = GColor.RGB 0 0 0
+
+$(mkLabels [''DotOptions])
+
 type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (RGB Rational)
-type SeDot = ReaderT (Graph, NodeColorMap) (StateT DotState D.Dot)
+type SeDot = ReaderT (Graph, NodeColorMap, DotOptions) (StateT DotState D.Dot)
 
 -- | State to track the dot NodeId (different from a System NodeId) of created dot components.
 data DotState = DotState {
@@ -140,22 +159,10 @@ nodeColorMap rules =
 -- Record based dotting
 ------------------------------------------------------------------------------
 
--- | The style for nodes of the intruder.
-data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
-    deriving( Eq, Ord, Show )
-
-data DotOptions = DotOptions 
-  { _doNodeStyle :: BoringNodeStyle }
-    deriving ( Eq, Ord, Show )
-
-defaultDotOptions = DotOptions FullBoringNodes
-
-$(mkLabels [''DotOptions])
-
 -- | Render an LNFact using the abbreviations given by the graph.
 renderLNFact :: Document d => LNFact -> SeDot d
 renderLNFact fact = do
-  (graph, _) <- ask
+  (graph, _, _) <- ask
   let abbreviate = get ((L..) goAbbreviate gOptions) graph
       abbrevs = get gAbbreviations graph
       replacedFact = applyAbbreviationsFact abbrevs fact
@@ -164,10 +171,10 @@ renderLNFact fact = do
     else return $ prettyLNFact fact
 
 -- | Dot a node in record based (compact) format.
-dotNodeCompact :: DotOptions -> Node -> SeDot ()
-dotNodeCompact dotOptions node = do
+dotNodeCompact :: Node -> SeDot ()
+dotNodeCompact node = do
   let v = get nNodeId node
-  (graph, colorMap) <- ask
+  (graph, colorMap, dotOptions) <- ask
   case get nNodeType node of
     SystemNode ru -> cacheState dsNodes v $ do
       let outgoingEdge = hasOutgoingEdge graph v
@@ -175,7 +182,7 @@ dotNodeCompact dotOptions node = do
           nodeColor = maybe "white" rgbToHex color
           attrs     = [("fillcolor", nodeColor),("style","filled")
                         , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
-      ids <- mkNode v ru attrs outgoingEdge
+      ids <- mkNode v ru attrs outgoingEdge dotOptions
       let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
           concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
       modM dsPrems $ M.union $ M.fromList prems
@@ -206,10 +213,9 @@ dotNodeCompact dotOptions node = do
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
 
-    mkNode  :: NodeId -> RuleACInst -> [(String, String)] -> Bool
-      -> ReaderT (Graph, NodeColorMap) (StateT DotState D.Dot)
-       [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
-    mkNode v ru attrs outgoingEdge
+    mkNode  :: NodeId -> RuleACInst -> [(String, String)] -> Bool -> DotOptions
+      -> SeDot [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
+    mkNode v ru attrs outgoingEdge dotOptions 
       -- single node, share node-id for all premises and conclusions
       | get doNodeStyle dotOptions == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
@@ -246,7 +252,7 @@ dotNodeCompact dotOptions node = do
           return $ renderRow row
         
         ruleLabelM = do
-          showAutoSource <- asks (get ((L..) goShowAutoSource gOptions) . fst)
+          showAutoSource <- asks (get ((L..) goShowAutoSource gOptions) . fst3)
           case showAutoSource of
             True -> do
               lbl <- mapM renderLNFact $ filter isAutoSource
@@ -303,7 +309,7 @@ dotEdge :: Edge -> SeDot ()
 dotEdge edge = 
   case edge of
     SystemEdge (src, tgt) -> do
-      (graph, _) <- ask 
+      (graph, _, _) <- ask 
       let check p = maybe False p (resolveNodePremFact tgt graph) ||
                     maybe False p (resolveNodeConcFact src graph) 
           attrs | check isProtoFact =
@@ -331,18 +337,19 @@ dotLessEdge (src, tgt, color) = do
 -- | Dot a legend listing all abbreviations by adding a sink node with a suitable HTML table label.
 generateLegend :: SeDot ()
 generateLegend = do
-  (graph, _) <- ask
+  (graph, _, dotOptions) <- ask
   let abbrevs = get gAbbreviations graph
-  -- Akip generating anything if no abbreviations exist.
+  -- Skip generating anything if no abbreviations exist.
   unless (null abbrevs) $ do
     nLegend <- liftDot $ D.scope (do 
       D.attribute ("rank", "sink")
       let sortedAbbrevs = topoSortAbbrevs $ zip [0..] $
             sortOn (Data.Ord.Down . render . Sys.prettyLNTerm . fst) $ M.elems abbrevs
-          label = "<" ++ (T.unpack $ renderDot $ unqtDot $ htmlLabel sortedAbbrevs) ++ ">" 
+          labelColor = get doAbbrevColor dotOptions
+          label = "<" ++ T.unpack (renderDot $ unqtDot $ htmlLabel sortedAbbrevs labelColor) ++ ">" 
       D.node [("shape", "plain"), ("raw_label", label)])
     -- We add invisible edges from all sink nodes of the graph to the legend node to place it somewhere in the middle of the bottom row.
-    -- We only add edges from the sink nodes because edges from earlier nodes will be routed avoid later nodes (even if they are invisible) and create constraints that lead to excessive whitespace.
+    -- We only add edges from the sink nodes because edges from earlier nodes will be routed avoid later nodes (even if they are invisible) and create constraints that lead to excessive whitespace on the edges of the graph.
     let sinks = getGraphSinks graph 
     dotIds <- getM dsNodes
     mapM_ (\nsink ->
@@ -351,21 +358,20 @@ generateLegend = do
       Just nid -> liftDot $ D.edge nid nLegend [("style", "invis")]) sinks
   where
     -- | Render all abbreviations as a table using graphviz' HTML notation.
-    htmlLabel sortedAbbrevs = 
+    htmlLabel sortedAbbrevs labelColor = 
       let tableAttributes = [Border 1, CellBorder 0, CellSpacing 3, CellPadding 1] in
-        Table $ HTable Nothing tableAttributes $ map renderLine sortedAbbrevs
+        Table $ HTable Nothing tableAttributes $ map (renderLine labelColor) sortedAbbrevs
 
     -- | Render an abbreviation to a table row in the legend using graphviz' HTML notation.
-    renderLine :: (AbbreviationTerm, AbbreviationExpansion) -> Row
-    renderLine (abbrevName, recursiveExpansion) = 
-      let red = GColor.RGB 255 0 0 
-          cellAttributes = [Align HLeft, VAlign HTop]
-          font txt = Text [Font [Color red] txt]
+    renderLine :: GColor.Color -> (AbbreviationTerm, AbbreviationExpansion) -> Row
+    renderLine labelColor (abbrevName, recursiveExpansion) = 
+      let cellAttributes = [Align HLeft, VAlign HTop]
+          font txt = Text [Font [Color labelColor] txt]
           name = LabelCell cellAttributes (font [Str $ T.pack $ render $ Sys.prettyLNTerm abbrevName])
           eq = LabelCell cellAttributes (Text [Str $ "="])
           expansion = render $ Sys.prettyLNTerm recursiveExpansion
           -- The expansions can get pretty big, i.e. span multiple lines. To handle linebreaks we replace them with HTML <br> tags.
-          expansionBR = LabelCell cellAttributes (Text $ expansion `joinLinesWith` (Newline [Align HLeft])) in
+          expansionBR = LabelCell cellAttributes (Text $ expansion `joinLinesWith` Newline [Align HLeft]) in
       Cells [name, eq, expansionBR]
     
     -- | Replace newlines in `s` with the given separator.
@@ -407,12 +413,12 @@ dotSystemCompact graphOptions dotOptions se =
 dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
 dotGraphCompact dotOptions colorMap graph =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
-    (`runReaderT` (graph, colorMap)) $ do
+    (`runReaderT` (graph, colorMap, dotOptions)) $ do
         liftDot $ setDefaultAttributes
         let (clusters, nodes, edges) = get gRepr graph
             (lessEdges, restEdges) = mergeLessEdges edges
             abbreviate = get ((L..) goAbbreviate gOptions) graph 
-        mapM_ (dotNodeCompact dotOptions) nodes
+        mapM_ dotNodeCompact nodes
         mapM_ dotEdge restEdges
         mapM_ dotLessEdge lessEdges
 
