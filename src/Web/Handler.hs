@@ -528,8 +528,11 @@ postRootR = do
 getOverviewR :: TheoryIdx -> TheoryPath -> Handler Html
 getOverviewR idx path = withTheory idx ( \ti -> do
   renderF <- getUrlRender
+  renderParamsF <- getUrlRenderParams
   defaultLayout $ do
-    overview <- liftIO $ overviewTpl renderF ti path
+    getParams <- reqGetParams <$> getRequest
+    let renderParamsF' route = renderParamsF route getParams
+    overview <- liftIO $ overviewTpl renderF renderParamsF' ti path
     setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
     overview )
 
@@ -615,7 +618,7 @@ getTheoryPathMR idx path = do
     --
     go renderUrl _ ti = do
       let title = T.pack $ titleThyPath (tiTheory ti) path
-      let html = htmlThyPath renderUrl ti path
+      let html = htmlThyPath renderUrl renderUrl ti path
       return $ responseToJson (JsonHtml title $ toContent html)
 
 -- | Show a given path within a diff theory (main view).

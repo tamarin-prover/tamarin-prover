@@ -506,6 +506,7 @@ sequentSnippet se path = refDotPath path $-$ preformatted Nothing (prettySystem 
 -- open-goals, and the new cases.
 subProofSnippet :: HtmlDocument d
                 => RenderUrl
+                -> RenderUrl                 -- ^ URL renderer that includes GET parameters for the image.
                 -> TheoryIdx                 -- ^ The theory index.
                 -> TheoryInfo                -- ^ The theory info of this index.
                 -> String                    -- ^ The lemma.
@@ -513,7 +514,7 @@ subProofSnippet :: HtmlDocument d
                 -> ProofContext              -- ^ The proof context.
                 -> IncrementalProof          -- ^ The sub-proof.
                 -> d
-subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
+subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
     case psInfo $ root prf of
       Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
       Just se -> vcat $
@@ -522,7 +523,7 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         [ text ""
         , withTag "h3" [] (text "Constraint system")
         ] ++
-        [ refDotPath renderUrl tidx (TheoryProof lemma proofPath)
+        [ refDotPath renderImgUrl tidx (TheoryProof lemma proofPath)
         | nonEmptyGraph se ]
         ++
         [ preformatted (Just "sequent") (prettyNonGraphSystem se)
@@ -979,11 +980,12 @@ messageDiffSnippet s isdiff thy = vcat
         (vcat (intersperse (text "") $ t))
 
 -- | Render the item in the given theory given by the supplied path.
-htmlThyPath :: RenderUrl    -- ^ The function for rendering Urls.
-            -> TheoryInfo   -- ^ The info of the theory to render
-            -> TheoryPath   -- ^ Path to render
-            ->  Html
-htmlThyPath renderUrl info path =
+htmlThyPath :: RenderUrl      -- ^ The function for rendering Urls.
+            -> RenderUrl      -- ^ URL renderer that includes GET parameters for the image.
+            -> TheoryInfo     -- ^ The info of the theory to render
+            -> TheoryPath     -- ^ Path to render
+            -> Html
+htmlThyPath renderUrl renderImgUrl info path =
   go path
   where
     thy  = tiTheory info
@@ -1005,7 +1007,7 @@ htmlThyPath renderUrl info path =
     go (TheoryProof l p)       = pp $
         fromMaybe (text "No such lemma or proof path.") $ do
            lemma <- lookupLemma l thy
-           subProofSnippet renderUrl tidx info l p (getProofContext lemma thy)
+           subProofSnippet renderUrl renderImgUrl tidx info l p (getProofContext lemma thy)
              <$> resolveProofPath thy l p
 
     go (TheoryLemma _)         = pp $ text "Implement lemma pretty printing!"
