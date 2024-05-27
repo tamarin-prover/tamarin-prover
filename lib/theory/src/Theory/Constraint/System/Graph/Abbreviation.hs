@@ -7,10 +7,11 @@
 -- Portability : GHC only
 --
 -- s implements generating abbreviations for a given graph representation.
+-- hlsearch
 --  abbreviation are computed from all LNTerm's in the graph and the method is based on cleandot.py 
 -- All terms in the graph are weighted based on their multiplicity and length, highest weighted terms are abbreviated first.
 --  abbreviation itself is based on the string representation of a term. 
--- E.g. Function(a,b,c) => Fun1
+-- E.g. Function(a,b,c) => FU1
 module Theory.Constraint.System.Graph.Abbreviation (
     Abbreviations
   , lookupAbbreviation
@@ -37,7 +38,9 @@ import           Theory.Constraint.System.Graph.GraphRepr
 import           Term.LTerm
 import           Theory                   (LNFact, rPrems, rConcs, rActs, factTerms)
 
+-- | Type for the abbreviation itself, which is always a literal containing the string representation.
 type AbbreviationTerm = LNTerm
+-- | Type for the expanded abbreviation, which is the original term where subterms are replaced by other abbreviations where possible.
 type AbbreviationExpansion = LNTerm
 -- | Abbreviations are represented as a map from the original LNTerm 
 -- to the abbreviated LNTerm and the original LNTerm where all existing
@@ -47,16 +50,20 @@ type AbbreviationExpansion = LNTerm
 --   , Function2(Function1(a,b),c) => Fun2, Function2(Fun1,c)
 --   ]
 type Abbreviations = M.Map LNTerm (AbbreviationTerm, AbbreviationExpansion)
+-- | Options to control the abbreviation generation.
 data AbbreviationOptions = AbbreviationOptions 
-  { aoMaxAbbrevs :: Int
-  , aoFirstIndex :: Int
+  { aoMaxAbbrevs :: Int   -- ^ The maximum number of abbreviations to generate.
+  , aoFirstIndex :: Int   -- ^ The first index to use when generating abbreviations.
+  , aoPrefixLength :: Int -- ^ The length of an abbreviation prefixes.
   }
   deriving( Eq, Ord )
 
+-- | The default abbreviation options.
 defaultAbbreviationOptions :: AbbreviationOptions
 defaultAbbreviationOptions = AbbreviationOptions 
   { aoMaxAbbrevs = 10
   , aoFirstIndex = 1
+  , aoPrefixLength = 2
   }
 
 -- | Lookup a single term in an abbreviations map and return the abbreviation name.
@@ -70,15 +77,15 @@ judgeTerm t occs
   | (termSize < 20) && occs == 1 = -1.0
   | otherwise = (fromIntegral (2 + occs) ^ (2 :: Integer)) * fromIntegral termSize
   where
+    -- | The termsize is the length of the term rendered as a string.
     termSize :: Int
     termSize = length $ render $ prettyLNTerm t
 
-
 -- | Find a suitable abbreviation prefix for the given term in upper-case.
--- For a literal we take the first 3 characters and for function symbols we either special-case the name or also take the first 3 characters.
+-- For a literal we take the first 2 characters and for function symbols we either special-case the name or also take the first 2 characters.
 -- If more fine-grained control is needed we can use viewTerm2 instead of viewTerm.
-getTermPrefix :: LNTerm -> String
-getTermPrefix t = map toUpper $ take 3 $ filter isAlpha go
+getTermPrefix :: AbbreviationOptions -> LNTerm -> String
+getTermPrefix options t = map toUpper $ take (aoPrefixLength options) $ filter isAlpha go
   where
     go = case viewTerm t of
          Lit l                  -> show l
@@ -95,24 +102,24 @@ type PrefixMap = M.Map String Int
 -- The prefixMap maps a prefix to the next possible index candidate.
 abbreviateTerm :: AbbreviationOptions -> [String] -> PrefixMap -> LNTerm -> (PrefixMap, LNTerm)
 abbreviateTerm options allNames prefixMap t = 
-  let pref = getTermPrefix t
+  let pref = getTermPrefix options t
       idxCandidate = getIndexCandidate pref in
     go pref idxCandidate
   where
     -- | Try out successive index candidates to create an abbreviation. 
     -- For each candidate we create the abbreviation and check if it is contained in the global map.
     -- If it already exists we try the next index candidate.
-    go :: String -> Maybe Int -> (PrefixMap, LNTerm)
+    go :: String -> Int -> (PrefixMap, LNTerm)
     go pref idxCandidate = 
-      let nameCandidate = pref ++ maybe "" show idxCandidate 
-          idxCandidateNext = maybe (aoFirstIndex options) (+1) idxCandidate in
+      let nameCandidate = pref ++ show idxCandidate 
+          idxCandidateNext = idxCandidate + 1 in
       if nameCandidate `elem` allNames 
-      then go pref (Just idxCandidateNext)
+      then go pref idxCandidateNext
       else (M.insert pref idxCandidateNext prefixMap, var nameCandidate)
 
     -- | Check the prefix index map for a suitable index for the given prefix.
-    getIndexCandidate :: String -> Maybe Int
-    getIndexCandidate pref = M.lookup pref prefixMap 
+    getIndexCandidate :: String -> Int
+    getIndexCandidate pref = fromMaybe (aoFirstIndex options) $ M.lookup pref prefixMap 
         
     -- | Create a variable from some prefix and index. 
     -- We append the index to the string directly instead of using the variable index since 
