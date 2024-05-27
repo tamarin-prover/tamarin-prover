@@ -31,7 +31,6 @@ import Main.Environment
 import Main.TheoryLoader
 
 
-
 ------------------------------------------------------------------------------
 -- Run
 ------------------------------------------------------------------------------
@@ -56,6 +55,7 @@ interactiveMode = tamarinMode
                 "Interface to listen on (use '*4' for all IPv4 interfaces)"
       , flagOpt "" ["image-format"] (updateArg "image-format") "PNG|SVG" "image format used for graphs (default PNG)"
       , flagNone ["debug"] (addEmptyArg "debug") "Show server debugging output"
+      , flagNone ["no-logging"] (addEmptyArg "no-logging") "Suppress web server logs."
       -- , flagNone ["autosave"] (addEmptyArg "autosave") "Automatically save proof state"
       -- , flagNone ["loadstate"] (addEmptyArg "loadstate") "Load proof state if present"
       ] ++
@@ -103,8 +103,12 @@ run thisMode as = case findArg "workDir" as of
       withWebUI
         ("Finished loading theories ... server ready at \n\n    " ++ webUrl ++ "\n")
         cacheDir
-        workDir (argExists "loadstate" as) (argExists "autosave" as)
-
+        workDir 
+        
+        enableLogging
+        (argExists "loadstate" as) 
+        (argExists "autosave" as)
+        
         thyLoadOptions
 
         (loadTheory thyLoadOptions)
@@ -118,6 +122,8 @@ run thisMode as = case findArg "workDir" as of
       helpAndExit thisMode
         (Just $ "directory '" ++ workDir ++ "' does not exist.")
   where
+    enableLogging = not $ argExists "no-logging" as
+
     thyLoadOptions = case mkTheoryLoadOptions as of
       Left (ArgumentError e) -> error e
       Right opts             -> opts
