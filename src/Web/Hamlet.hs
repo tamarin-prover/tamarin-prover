@@ -286,12 +286,13 @@ proofStateDiffTpl renderUrl ti = do
 
 -- | Framing/UI-layout template (based on JavaScript/JQuery)
 overviewTpl :: RenderUrl
+            -> RenderUrl -- ^ URL renderer that includes GET parameters for the image.
             -> TheoryInfo -- ^ Theory information
             -> TheoryPath -- ^ Theory path to load into main
             -> IO Widget
-overviewTpl renderUrl info path = do
+overviewTpl renderUrl renderImgUrl info path = do
   proofState <- proofStateTpl renderUrl info
-  mainView <- pathTpl renderUrl info path
+  mainView <- pathTpl renderUrl renderImgUrl info path
   return [whamlet|
     $newline never
     <div .ui-layout-north>
@@ -343,13 +344,14 @@ overviewDiffTpl renderUrl info path = do
   
 -- | Theory path, displayed when loading main screen for first time.
 pathTpl :: RenderUrl
-        -> TheoryInfo   -- ^ The theory
-        -> TheoryPath   -- ^ Path to display on load
+        -> RenderUrl      -- ^ URL renderer that includes GET parameters for the image.
+        -> TheoryInfo     -- ^ The theory
+        -> TheoryPath     -- ^ Path to display on load
         -> IO Widget
-pathTpl renderUrl info path =
+pathTpl renderUrl renderImgUrl info path =
     return $ [whamlet|
                 $newline never
-                #{htmlThyPath renderUrl info path} |]
+                #{htmlThyPath renderUrl renderImgUrl info path} |]
 
 -- | Theory path, displayed when loading main screen for first time.
 pathDiffTpl :: RenderUrl
