@@ -8,6 +8,7 @@
 -- This will enable all debug traces with keys "foo" or "bar"
 module Debug.Trace.EnvTracer (
     etraceSectionLn
+  , etraceSectionLnM
   , etraceLn
   , etraceLnM
   ) where
@@ -31,20 +32,29 @@ shouldTrace traceKey =
     Just setting -> traceKey `elem` splitOn "," setting
 
 -- | Output a trace title to separate different traces.
-etraceSectionLn :: String -> -- ^ Key that assigns this trace to a "category" and will be checked against the global trace settings.
-                   String -> -- ^ Title of the trace section.
-                   b -> b    -- ^ Normal arguments to trace.
+etraceSectionLn :: String -- ^ Key that assigns this trace to a "category" and will be checked against the global trace settings.
+                -> String -- ^ Title of the trace section.
+                -> b      -- ^ Normal arguments to trace.
+                -> b    
 etraceSectionLn traceKey title = 
   let fmt = "=== " ++ title ++ " " ++ replicate (80 - 5 - length title) '=' ++ "\n" in
   if shouldTrace traceKey
   then T.trace fmt
   else id
 
+-- | Output a trace title to separate different traces inside an Applicative/Monad f.
+etraceSectionLnM :: Applicative f 
+                 => String        -- ^ Key that assigns this trace to a "category" and will be checked against the global trace settings.
+                 -> String        -- ^ Title of the trace section.
+                 -> f ()
+etraceSectionLnM traceKey title = etraceSectionLn traceKey title $ pure ()
+
 -- | Do a conditional debug trace.
-etraceLn :: String -> -- ^ Key that assigns this trace to a "category" and will be checked against the global trace settings.
-            String -> -- ^ Label for the trace output.
-            String -> -- ^ The string to be traced.
-            b -> b    -- ^ Normal arguments to trace.
+etraceLn :: String -- ^ Key that assigns this trace to a "category" and will be checked against the global trace settings.
+         -> String -- ^ Label for the trace output.
+         -> String -- ^ The string to be traced.
+         -> b      -- ^ Normal arguments to trace.
+         -> b    
 etraceLn traceKey label s =
   let fmt = label ++ ": " ++ s ++ "\n" in
   if shouldTrace traceKey
@@ -52,14 +62,10 @@ etraceLn traceKey label s =
   else id
 
 -- | Do a conditional debug trace inside an Applicative/Monad f.
-etraceLnM :: Applicative f =>
-             String -> -- ^ Key that assigns this trace to a "category" and will be checked against the global trace settings.
-             String -> -- ^ Label for the trace output.
-             String -> -- ^ The string to be traced.
-             f ()
-etraceLnM traceKey label s = do
-  let fmt = label ++ ": " ++ s ++ "\n"
-  if shouldTrace traceKey
-    then T.traceM fmt
-    else pure ()
+etraceLnM :: Applicative f
+          => String        -- ^ Key that assigns this trace to a "category" and will be checked against the global trace settings.
+          -> String        -- ^ Label for the trace output.
+          -> String        -- ^ The string to be traced.
+          -> f ()
+etraceLnM traceKey label s = etraceLn traceKey label s $ pure ()
   
