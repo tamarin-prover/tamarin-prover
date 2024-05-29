@@ -55,6 +55,8 @@ library
       , time
       , transformers
       , exceptions
+      , graphviz
+      , text
 
     hs-source-dirs: src
 

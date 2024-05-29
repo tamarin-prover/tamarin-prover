@@ -6,11 +6,10 @@
 --
 -- Portability : GHC only
 --
--- s implements generating abbreviations for a given graph representation.
--- hlsearch
---  abbreviation are computed from all LNTerm's in the graph and the method is based on cleandot.py 
+-- This implements generating abbreviations for a given graph representation.
+-- The abbreviations are computed from all LNTerm's in the graph and the method is based on cleandot.py 
 -- All terms in the graph are weighted based on their multiplicity and length, highest weighted terms are abbreviated first.
---  abbreviation itself is based on the string representation of a term. 
+-- The abbreviation itself is based on the string representation of a term. 
 -- E.g. Function(a,b,c) => FU1
 module Theory.Constraint.System.Graph.Abbreviation (
     Abbreviations
@@ -134,8 +133,7 @@ abbreviateTerm options allNames prefixMap t =
 -- Abbreviations are always LNTerm variables with a differentiating number suffix.
 computeAbbreviations :: GraphRepr -> AbbreviationOptions -> Abbreviations 
 computeAbbreviations repr options = 
-  let allTermOccs = getAllTermOccs repr
-      allWeightedTerms = M.mapWithKey judgeTerm allTermOccs
+  let allWeightedTerms = M.mapWithKey judgeTerm allTermOccs
       toAbbreviate = filterWeights $ M.toList allWeightedTerms
       abbrevs = abbreviateTerms toAbbreviate
       recursiveAbbrevs = makeRecursive abbrevs
@@ -143,9 +141,9 @@ computeAbbreviations repr options =
     recursiveAbbrevs
   where
     -- | Collect all terms in our graph along with their number of occurrences
-    getAllTermOccs :: GraphRepr -> M.Map LNTerm Int
-    getAllTermOccs (clusters, nodes, _) = 
-      let terms = concatMap getNodeTerms nodes ++ concatMap (\c -> concatMap getNodeTerms $ get cNodes c) clusters in
+    allTermOccs :: M.Map LNTerm Int
+    allTermOccs = 
+      let terms = concatMap getNodeTerms (get grNodes repr) ++ concatMap (\c -> concatMap getNodeTerms $ get cNodes c) (get grClusters repr) in
       M.fromListWith (+) $ map (\t -> (t,1)) terms
 
     -- | Collect all terms in a single graph node. 

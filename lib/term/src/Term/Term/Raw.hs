@@ -238,15 +238,16 @@ instance Sized a => Sized (Term a) where
 -- Subterm Handling
 ----------------------------------------------------------------------
 
+-- | Check if a term is a subterm of another.
 isSubterm :: Eq a => Term a -> Term a -> Bool
-isSubterm x y = (x == y) || go x y
-  where
-    go t (FAPP _ ts) = any (isSubterm t) ts
-    go _ _ = False
+isSubterm t1 t2 = (t1 == t2) || isProperSubterm t1 t2
 
+-- | Check if a term is a proper subterm (i.e. subterm but not equal) of another.
 isProperSubterm :: Eq a => Term a -> Term a -> Bool
-isProperSubterm x y = (x /= y) && isSubterm x y
+isProperSubterm t (viewTerm -> FApp _ ts) = any (isSubterm t) ts
+isProperSubterm _ _ = False
 
+-- | Replace all subterms of a term top-down according to the supplied replacement function.
 replaceSubterm :: (Term a -> Term a) -> Term a -> Term a
 replaceSubterm f originalTerm =
   let newTerm = f originalTerm  in
@@ -254,6 +255,7 @@ replaceSubterm f originalTerm =
     (Lit _) -> newTerm
     FApp s ts -> termViewToTerm (FApp s (map (replaceSubterm f) ts))
 
+-- | Replace all proper subterms of a term top-down according to the supplied replacement function.
 replaceProperSubterm :: (Term a -> Term a) -> Term a -> Term a
 replaceProperSubterm f (viewTerm -> FApp s ts) = termViewToTerm (FApp s (map (replaceSubterm f) ts))
 replaceProperSubterm _ t = t

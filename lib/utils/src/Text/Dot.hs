@@ -49,15 +49,24 @@ module Text.Dot
         , mrecord
         , mrecord'
         , mrecord_
+
+          -- * Html labels.
+        , htmlLabel
+        , module Data.GraphViz.Attributes.HTML
+        , module Data.GraphViz.Attributes.Colors
         ) where
 
 import Data.Char           (isSpace)
 import Data.List           (intersperse)
-import Control.Monad       (liftM, ap)
-import Control.Monad.State (State, evalState, runState)
-import           Extension.Data.Label
--- import Control.Applicative (Applicative(..))
+import qualified Data.Text.Lazy as T
+import Control.Monad       (liftM)
+import Control.Monad.State (State, runState)
+import Extension.Data.Label
+import Data.GraphViz.Printing (renderDot, unqtDot)
+import Data.GraphViz.Attributes.HTML
+import Data.GraphViz.Attributes.Colors
 
+-- | Identifier for a node in a dot file.
 data NodeId = NodeId String
             | UserNodeId Int
 
@@ -67,31 +76,37 @@ instance Show NodeId where
         | i < 0     = "u_" ++ show (negate i)
         | otherwise = "u" ++ show i
 
-data GraphElement = GraphAttribute String String
-                  | GraphNode NodeId        [(String,String)]
-                  | GraphEdge NodeId NodeId [(String,String)]
-                  | Scope           [GraphElement]
-                  | SubGraph (Maybe NodeId) [GraphElement]
+-- | The types of graph elements present in a dot file.
+data GraphElement = GraphAttribute String String              -- ^ Global attributes for nodes/edges.
+                  | GraphNode NodeId        [(String,String)] -- ^ A node with attributes.
+                  | GraphEdge NodeId NodeId [(String,String)] -- ^ An edge between two nodes with attributes.
+                  | Scope           [GraphElement]            -- ^ A subgraph without a name used to logically group elements together.
+                  | SubGraph (Maybe NodeId) [GraphElement]    -- ^ A subgraph with an optional name.
   deriving (Show)
 
+-- | The state of the dot generator monad.
 data DotGenState = DotGenState {
-  _dgsId :: Int,
-  _dgsElements :: [GraphElement]
+  _dgsId       :: Int,           -- ^ The current node id which is incremented for every statement that generates a node.
+  _dgsElements :: [GraphElement] -- ^ The current list of generated elements.
 }
 
 $(mkLabels [''DotGenState])
 
+-- | The monad for generating dot statements.
 type Dot = State DotGenState
-
+ 
+-- | Evaluating a dot generator expression.
 runDot :: DotGenState -> Dot a -> (a, DotGenState)
 runDot state dot = runState dot state
 
+-- | Retrieving and incrementing the node id in the state.
 nextId :: Dot Int
 nextId = do
   uq <- getM dgsId
   () <- setM dgsId (succ uq)
   return uq
   
+-- | Add elements to the dot state.
 addElements :: [GraphElement] -> Dot ()
 addElements elems = do
   modM dgsElements (++elems)
@@ -259,6 +274,7 @@ userNodeId :: Int -> NodeId
 userNodeId i = UserNodeId i
 
 
+-- | Render a single graph element in dot format.
 showGraphElement :: GraphElement -> String
 showGraphElement (GraphAttribute name val) = showAttr (name,val) ++ ";"
 showGraphElement (GraphNode nid attrs)           = show nid ++ showAttrs attrs ++ ";"
@@ -267,6 +283,7 @@ showGraphElement (Scope elems) = "{\n" ++ unlines (map showGraphElement elems) +
 showGraphElement (SubGraph Nothing elems) = "{\n" ++ unlines (map showGraphElement elems) ++ "\n}"
 showGraphElement (SubGraph (Just nid) elems) = "subgraph " ++ show nid ++ " {\n" ++ unlines (map showGraphElement elems) ++ "\n}"
 
+-- | Render attributes in dot format.
 showAttrs :: [(String, String)] -> String
 showAttrs [] = ""
 showAttrs xs = "[" ++ showAttrs' xs ++ "]"
@@ -274,11 +291,12 @@ showAttrs xs = "[" ++ showAttrs' xs ++ "]"
         -- never empty list
         showAttrs' [a]    = showAttr a
         showAttrs' (a:as) = showAttr a ++ "," ++ showAttrs' as
-        showAttrs' []     = error "showAttrs: the impossible happended"
+        showAttrs' []     = error "showAttrs: the impossible happened"
 
+-- | Render a single attribute. HTML labels are not escaped as they should contain valid graphviz HTML-like code.
 showAttr :: (String, String) -> String
 showAttr (name, val) 
-  | name == "raw_label" = "label=" ++ val
+  | name == "html_label" = "label=" ++ val
   | otherwise = name ++ "=\"" ++ concatMap escape val ++ "\""
     where
       escape '\n' = "\\l"
@@ -339,3 +357,14 @@ vcat = VCat
 -- | Concatenate a list strings interpreted as simple fields vertically.
 vcat' :: [String] -> Record a
 vcat' = vcat . map field
+
+---------------------------------------
+-- HTML labels
+---------------------------------------
+
+-- Generate an html label attribute from a graphviz 'Label'.
+htmlLabel :: Label -> (String, String)
+htmlLabel label = 
+  let rendered = T.unpack $ renderDot $ unqtDot label
+      html = "<" ++ rendered ++ ">" in
+  ("html_label", html)

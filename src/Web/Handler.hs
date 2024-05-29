@@ -897,6 +897,7 @@ getTheoryPathDR idx path = withTheory idx $ \ti -> ajaxLayout $ do
   -}
 -}
 
+-- | Read the render options from a request to render a sequent.
 getOptions :: Handler (GraphOptions, DotOptions)
 getOptions = do
   compact <- isNothing <$> lookupGetParam "uncompact"

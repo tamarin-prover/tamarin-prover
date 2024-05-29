@@ -76,7 +76,6 @@ import           System.Process
 
 import           Logic.Connectives
 import           Theory
-import           Theory.Constraint.System (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
 import           TheoryObject
 
@@ -185,9 +184,11 @@ refDotDiffPath renderUrl tidx path mirror = closedTag "img" [("class", "graph"),
           then T.unpack $ renderUrl (TheoryMirrorDiffR tidx path)
           else T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
 
+-- | Generate the dot file path for an intermediate dot output.
 getDotPath :: String -> FilePath
 getDotPath code = imageDir </> addExtension (stringSHA256 code) "dot"
 
+-- | Generate the image file path for the final output.
 getGraphPath :: OutputFormat -> String -> FilePath
 getGraphPath ext code = imageDir </> addExtension (stringSHA256 code) (show ext)
 
@@ -1267,6 +1268,7 @@ htmlThyDbgPath thy path = go path
 -}
 
 -- | Output either JSON or an image corresponding to the given theory path and return the generated file's path.
+-- Returns Nothing if there was an error during the image generation.
 imgThyPath :: ImageFormat                  -- ^ The preferred image output format. 
            -> OutputCommand                -- ^ Choice and command for rendering.
            -> FilePath                     -- ^ Tamarin's cache directory
@@ -1289,6 +1291,7 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
     thyPathSystem (TheoryProof lemma proofPath) = proofPathSystem lemma proofPath
     thyPathSystem _                             = error "Unhandled theory path. This is a bug."
 
+    -- | Get a string serialization for one case.
     casesSystem k i j = do
       let jsonLabel = "Theory: " ++ (get thyName thy) ++ " Case: " ++ show i ++ ":" ++ show j
           cases = map (getDisj . get cdCases) (getSource k thy)
@@ -1380,6 +1383,7 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
 
 
 -- | Render the image corresponding to the given theory path.
+-- Returns Nothing if there was an error during image generation.
 imgDiffThyPath :: ImageFormat
            -> FilePath               -- ^ 'dot' command
            -> FilePath               -- ^ Tamarin's cache directory

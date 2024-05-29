@@ -35,6 +35,8 @@ import           Control.Monad.Reader
 import           Control.Monad.State      (StateT, evalStateT)
 
 import qualified Text.Dot                 as D
+import Text.Dot                 (Attribute(..), Label(..), Table(..),
+                                 Row(..), Align(..), VAlign(..), Cell(..), TextItem(..))
 import           Text.PrettyPrint.Class
 
 import           Theory.Constraint.System hiding (Edge, resolveNodeConcFact, resolveNodePremFact)
@@ -45,9 +47,6 @@ import           Theory.Text.Pretty       (opAction)
 
 import           Utils.Misc
 import qualified Data.Graph               as G
-import           Data.GraphViz.Attributes.HTML
-import qualified Data.GraphViz.Attributes.Colors as GColor
-import           Data.GraphViz.Printing   (renderDot, unqtDot)
 
 -- | The style for nodes of the intruder.
 data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
@@ -56,7 +55,7 @@ data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
 -- | Options for dot generation.
 data DotOptions = DotOptions 
   { _doNodeStyle :: BoringNodeStyle -- ^ The style for nodes of the intruder.
-  , _doAbbrevColor :: GColor.Color
+  , _doAbbrevColor :: D.Color
   }
     deriving ( Eq, Ord, Show )
 
@@ -64,7 +63,7 @@ data DotOptions = DotOptions
 defaultDotOptions :: DotOptions
 defaultDotOptions = DotOptions FullBoringNodes black
   where
-    black = GColor.RGB 0 0 0
+    black = D.RGB 0 0 0
 
 $(mkLabels [''DotOptions])
 
@@ -199,8 +198,8 @@ dotNodeCompact node = do
     MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
   where
     hasOutgoingEdge graph v =
-      let (_, _, edges) = get gRepr graph
-      in or [ v == v' | SystemEdge ((v', _), _) <- edges ]
+      let repr = get gRepr graph
+      in or [ v == v' | SystemEdge ((v', _), _) <- get grEdges repr ]
     missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
     dotPremC prem = missingNode "invtrapezium" $ prettyNodePrem prem
     dotConcC conc = missingNode "trapezium" $ prettyNodeConc conc
@@ -346,8 +345,8 @@ generateLegend = do
       let sortedAbbrevs = topoSortAbbrevs $ zip [0..] $
             sortOn (Data.Ord.Down . render . Sys.prettyLNTerm . fst) $ M.elems abbrevs
           labelColor = get doAbbrevColor dotOptions
-          label = "<" ++ T.unpack (renderDot $ unqtDot $ htmlLabel sortedAbbrevs labelColor) ++ ">" 
-      D.node [("shape", "plain"), ("raw_label", label)])
+          htmlLabel = D.htmlLabel $ abbrevLabel sortedAbbrevs labelColor
+      D.node [("shape", "plain"), htmlLabel])
     -- We add invisible edges from all sink nodes of the graph to the legend node to place it somewhere in the middle of the bottom row.
     -- We only add edges from the sink nodes because edges from earlier nodes will be routed avoid later nodes (even if they are invisible) and create constraints that lead to excessive whitespace on the edges of the graph.
     let sinks = getGraphSinks graph 
@@ -358,24 +357,24 @@ generateLegend = do
       Just nid -> liftDot $ D.edge nid nLegend [("style", "invis")]) sinks
   where
     -- | Render all abbreviations as a table using graphviz' HTML notation.
-    htmlLabel sortedAbbrevs labelColor = 
+    abbrevLabel sortedAbbrevs labelColor = 
       let tableAttributes = [Border 1, CellBorder 0, CellSpacing 3, CellPadding 1] in
         Table $ HTable Nothing tableAttributes $ map (renderLine labelColor) sortedAbbrevs
 
     -- | Render an abbreviation to a table row in the legend using graphviz' HTML notation.
-    renderLine :: GColor.Color -> (AbbreviationTerm, AbbreviationExpansion) -> Row
+    renderLine :: D.Color -> (AbbreviationTerm, AbbreviationExpansion) -> Row
     renderLine labelColor (abbrevName, recursiveExpansion) = 
       let cellAttributes = [Align HLeft, VAlign HTop]
-          font txt = Text [Font [Color labelColor] txt]
+          font txt = D.Text [Font [Color labelColor] txt]
           name = LabelCell cellAttributes (font [Str $ T.pack $ render $ Sys.prettyLNTerm abbrevName])
-          eq = LabelCell cellAttributes (Text [Str $ "="])
+          eq = LabelCell cellAttributes (D.Text [Str $ "="])
           expansion = render $ Sys.prettyLNTerm recursiveExpansion
           -- The expansions can get pretty big, i.e. span multiple lines. To handle linebreaks we replace them with HTML <br> tags.
-          expansionBR = LabelCell cellAttributes (Text $ expansion `joinLinesWith` Newline [Align HLeft]) in
+          expansionBR = LabelCell cellAttributes (D.Text $ expansion `joinLinesWith` Newline [Align HLeft]) in
       Cells [name, eq, expansionBR]
     
     -- | Replace newlines in `s` with the given separator.
-    joinLinesWith :: String -> TextItem -> Text
+    joinLinesWith :: String -> TextItem -> D.Text
     joinLinesWith s sep = intersperse sep $ map (Str . T.pack) $ lines s
 
     -- | Do a topological sort of abbreviations to ensure that we print abbreviations in the order in which they are defined.
@@ -398,6 +397,10 @@ generateLegend = do
                   then Just key2
                   else Nothing) keyedElems 
       
+-- | Dot a cluster containing further nodes and edges.
+-- a.d. TODO implement
+dotCluster :: Cluster -> SeDot ()
+dotCluster cluster = return ()
 
 -- | Dot a sequent in compact form (one record per rule), if there is anything
 -- to draw.
@@ -415,12 +418,13 @@ dotGraphCompact dotOptions colorMap graph =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
     (`runReaderT` (graph, colorMap, dotOptions)) $ do
         liftDot $ setDefaultAttributes
-        let (clusters, nodes, edges) = get gRepr graph
-            (lessEdges, restEdges) = mergeLessEdges edges
+        let repr = get gRepr graph
+            (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
             abbreviate = get ((L..) goAbbreviate gOptions) graph 
-        mapM_ dotNodeCompact nodes
+        mapM_ dotNodeCompact (get grNodes repr)
         mapM_ dotEdge restEdges
         mapM_ dotLessEdge lessEdges
+        mapM_ dotCluster (get grClusters repr)
 
         when abbreviate generateLegend 
 

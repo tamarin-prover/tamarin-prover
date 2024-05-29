@@ -106,12 +106,14 @@ data JSONGraphEdge = JSONGraphEdge
   , jgeTarget :: String
   } deriving (Show)
 
+-- | Representation of a cluster of a JSON graph.
 data JSONGraphCluster = JSONGraphCluster 
   { jgcName :: String
   , jgcNodes :: [JSONGraphNode]
   , jgcEdges :: [JSONGraphEdge]
   } deriving (Show)
 
+-- | Representation of an abbreviation of a JSON graph.
 data JSONGraphAbbrev = JSONGraphAbbrev
   { jgaTerm :: JSONGraphNodeTerm
   , jgaAbbrev :: JSONGraphNodeTerm
@@ -255,7 +257,7 @@ factToJSONGraphNodeFact :: Bool -> String -> NodeId -> (Int,LNFact) -> JSONGraph
 factToJSONGraphNodeFact pretty prefix n (idx, f) =
      itemToJSONGraphNodeFact pretty (show n ++ ":" ++ prefix ++ show idx) f
 
--- | Generate JSONGraphNode from node of sequent (metadata part).
+-- | Generate JSONGraphNode from a node of an abstract graph. (metadata part)
 -- Facts and actions as are represented as metadata to keep close to the original JSON graph schema.
 nodeToJSONGraphNodeMetadata :: Bool -> (NodeId, RuleACInst) -> JSONGraphNodeMetadata
 nodeToJSONGraphNodeMetadata pretty (n, ru) = 
@@ -266,6 +268,7 @@ nodeToJSONGraphNodeMetadata pretty (n, ru) =
                                        $ zip [0..] $ L.get rConcs ru
                           }
 
+-- | Generate JSONGraphNode from a node of an abstract graph.
 graphNodeToJSONGraphNode :: Node -> RJSON JSONGraphNode
 graphNodeToJSONGraphNode node = do
   pretty <- getPretty
@@ -362,7 +365,7 @@ getRelationType src tgt graph =
   in
     relationType
 
-
+-- | Generate JSONGraphEdge from an edge of a abstract graph.
 graphEdgeToJSONGraphEdge :: Edge -> RJSON JSONGraphEdge
 graphEdgeToJSONGraphEdge (SystemEdge (src, tgt)) = do
   graph <- getGraph
@@ -387,6 +390,7 @@ graphEdgeToJSONGraphEdge (UnsolvedChain (src, tgt)) =
                   (sid, ConcIdx concIdx) = src
                   (tid, PremIdx premIdx) = tgt
 
+-- | Generate JSONGraphCluster from a cluster of an abstract graph.
 graphClusterToJSONGraphCluster :: Cluster -> RJSON JSONGraphCluster 
 graphClusterToJSONGraphCluster cluster = do
   jnodes <- mapM graphNodeToJSONGraphNode $ get cNodes cluster
@@ -397,6 +401,7 @@ graphClusterToJSONGraphCluster cluster = do
     , jgcEdges = jedges
     }
 
+-- | Generate JSONGraphAbbrev from an abbreviation of an abstract graph.
 graphAbbrevtoJSONGraphAbbrev :: (LNTerm, (LNTerm, LNTerm)) -> RJSON JSONGraphAbbrev
 graphAbbrevtoJSONGraphAbbrev (term, (abbrev, recursiveExpansion)) = do
   pretty <- getPretty
@@ -407,16 +412,16 @@ graphAbbrevtoJSONGraphAbbrev (term, (abbrev, recursiveExpansion)) = do
     }
 
 
--- | Generate JSON graph(s) data structure from sequent.
+-- | Generate JSON graph(s) data structure from an abstract graph.
 sequentToJSONGraphs :: String     -- ^ label of graph
                     -> RJSON JSONGraphs
 sequentToJSONGraphs label = do
   graph <- getGraph
-  let (clusters, nodes, edges) = get gRepr graph 
+  let repr = get gRepr graph 
       abbrevs = get gAbbreviations graph
-  jnodes <- mapM graphNodeToJSONGraphNode nodes
-  jedges <- mapM graphEdgeToJSONGraphEdge edges
-  jclusters <- mapM graphClusterToJSONGraphCluster clusters
+  jnodes <- mapM graphNodeToJSONGraphNode (L.get grNodes repr)
+  jedges <- mapM graphEdgeToJSONGraphEdge (L.get grEdges repr)
+  jclusters <- mapM graphClusterToJSONGraphCluster (L.get grClusters repr)
   jabbrevs <- mapM graphAbbrevtoJSONGraphAbbrev $ M.toList abbrevs
   return $ JSONGraphs 
     { graphs = 
@@ -432,7 +437,7 @@ sequentToJSONGraphs label = do
         ] 
     }
 
--- | Generate JSON bytestring from sequent.
+-- | Generate JSON bytestring from an abstract graph.
 sequentToJSON :: GraphOptions -> String -> System -> String
 sequentToJSON graphOptions l se =
   let graph = systemToGraph se graphOptions
@@ -452,10 +457,12 @@ sequentToJSONPretty graphOptions l se =
   in
     removePseudoUnicode $ BC.unpack $ encodePretty graphJSON
 
+-- | Generate JSON bytestring from an abstract graph and write to a file.
 writeSequentAsJSONToFile :: FilePath -> GraphOptions -> String -> System -> IO ()
 writeSequentAsJSONToFile fp graphOptions l se =
   do writeFile fp $ sequentToJSON graphOptions l se
 
+-- | Generate JSON bytestring with pretty formatting from an abstract graph and write to a file.
 writeSequentAsJSONPrettyToFile :: FilePath -> GraphOptions -> String -> System -> IO ()
 writeSequentAsJSONPrettyToFile fp graphOptions l se =
   do writeFile fp $ sequentToJSONPretty graphOptions l se

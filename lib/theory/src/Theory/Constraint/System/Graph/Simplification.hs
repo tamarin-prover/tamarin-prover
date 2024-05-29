@@ -1,5 +1,13 @@
 {-# LANGUAGE TypeOperators   #-}
 
+-- |
+-- Copyright   : (c) 2010, 2011 Simon Meier
+-- License     : GPL v3 (see LICENSE)
+--
+-- Portability : GHC only
+--
+-- System simplification functions that were originally contained in the Dot module 
+-- but which we now do on a System when generating an abstract graph.
 module Theory.Constraint.System.Graph.Simplification (
       simplifySystem
     , compressSystem

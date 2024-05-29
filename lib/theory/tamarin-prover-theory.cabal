@@ -67,7 +67,6 @@ library
       , transformers
       , uniplate
       , exceptions
-      , graphviz
 
       , tamarin-prover-utils
       , tamarin-prover-term
