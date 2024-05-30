@@ -475,6 +475,15 @@ Finally, in intermediate proof steps, there can also be dotted green arrows, whi
 
 Note that by default Tamarin does not show all rules and arrows to simplify the graphs, but this can be adjusted using the Options button on the top right of the page.
 
+Another option is whether to render abbreviations in the graph as shown in the picture below.
+When abbreviations are enabled Tamarin will construct abbreviations for terms, list them in a legend at the bottom of the image and replace the original terms in the graph.
+A maximum on 10 abbreviations are generated and terms are prioritized based on their length and how often they appear in the graph.
+Note that abbreviations can appear in other abbreviations, as for example "PK1" appears in the expanded term of "AE1" below.
+The legend is sorted so that it can be read top to bottom.
+
+![FirstExample Lemma 1 Abbreviations](../images/tamarin-tutorial-lemma-1-abbrev.png 
+ "FirstExample Lemma 1 Abbreviations"){width=100%}\
+
 Running Tamarin on the Command Line
 -----------------------------------
 
