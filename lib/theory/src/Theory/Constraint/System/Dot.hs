@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators   #-}
+{-# LANGUAGE LambdaCase   #-}
+{-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -8,259 +10,103 @@
 --
 -- Conversion of the graph part of a sequent to a Graphviz Dot file.
 module Theory.Constraint.System.Dot (
-    nonEmptyGraph
-  , nonEmptyGraphDiff
-  , dotSystemLoose
-  , dotSystemCompact
-  , compressSystem
-  , simplifySystem
+    dotSystemCompact
   , BoringNodeStyle(..)
+  , DotOptions
+  , doNodeStyle
+  , defaultDotOptions
   ) where
 
+import           Data.Ord
 import           Data.Char                (isSpace)
 import           Data.Color
-import qualified Data.DAG.Simple          as D
-import qualified Data.Foldable            as F
-import           Data.List                (find,foldl',intersect,isPrefixOf, intercalate,sort)
+import           Data.List                (find, isPrefixOf, intercalate, sortBy, intersperse)
 import qualified Data.Map                 as M
 import           Data.Maybe
-import           Data.Monoid              (Any(..))
 import qualified Data.Set                 as S
 import           Data.Ratio
-import           Safe
-
+import qualified Data.Text.Lazy           as T
 import           Extension.Data.Label
 import           Extension.Prelude
 
 import           Control.Basics
+import qualified Control.Category         as L
 import           Control.Monad.Reader
 import           Control.Monad.State      (StateT, evalStateT)
 
 import qualified Text.Dot                 as D
+import Text.Dot                 (Attribute(..), Label(..), Table(..),
+                                 Row(..), Align(..), VAlign(..), Cell(..), TextItem(..))
 import           Text.PrettyPrint.Class
 
-import           Theory.Constraint.System
+import           Theory.Constraint.System hiding (Edge, resolveNodeConcFact, resolveNodePremFact)
+import qualified Theory as Sys
+import           Theory.Constraint.System.Graph.Graph
 import           Theory.Model
 import           Theory.Text.Pretty       (opAction)
 
 import           Utils.Misc
--- | 'True' iff the dotted system will be a non-empty graph.
-nonEmptyGraph :: System -> Bool
-nonEmptyGraph sys = not $
-    M.null (get sNodes sys) && null (unsolvedActionAtoms sys) &&
-    null (unsolvedChains sys) &&
-    S.null (get sEdges sys) && S.null (get sLessAtoms sys)
+import qualified Data.Graph               as G
 
--- | 'True' iff the dotted system will be a non-empty graph.
-nonEmptyGraphDiff :: DiffSystem -> Bool
-nonEmptyGraphDiff diffSys = not $
-     case (get dsSystem diffSys) of
-          Nothing    -> True
-          (Just sys) -> M.null (get sNodes sys) && null (unsolvedActionAtoms sys) &&
-                        null (unsolvedChains sys) &&
-                        S.null (get sEdges sys) && S.null (get sLessAtoms sys)
+-- | The style for nodes of the intruder.
+data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
+    deriving( Eq, Ord, Show )
+
+-- | Options for dot generation.
+data DotOptions = DotOptions 
+  { _doNodeStyle :: BoringNodeStyle -- ^ The style for nodes of the intruder.
+  , _doAbbrevColor :: D.Color
+  }
+    deriving ( Eq, Ord, Show )
+
+-- | The default dot options.
+defaultDotOptions :: DotOptions
+defaultDotOptions = DotOptions FullBoringNodes black
+  where
+    black = D.RGB 0 0 0
+
+$(mkLabels [''DotOptions])
 
 type NodeColorMap = M.Map (RuleInfo ProtoRuleACInstInfo IntrRuleACInfo) (RGB Rational)
-type SeDot = ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
+type SeDot = ReaderT (Graph, NodeColorMap, DotOptions) (StateT DotState D.Dot)
 
--- | State to avoid multiple drawing of the same entity.
+-- | State to track the dot NodeId (different from a System NodeId) of created dot components.
 data DotState = DotState {
     _dsNodes   :: M.Map NodeId   D.NodeId
   , _dsPrems   :: M.Map NodePrem D.NodeId
   , _dsConcs   :: M.Map NodeConc D.NodeId
+  -- a.d. TODO this is unused. Check if I droppped it somewhere, else delete.
   , _dsSingles :: M.Map (NodeConc, NodePrem) D.NodeId
   }
 
 $(mkLabels [''DotState])
 
+-- | Wrap a computation that generates dot components (SeDot) in order cache that component in the DotState and be able to retrieve its NodeId.
+cacheState :: Ord k
+           => (DotState :-> M.Map k D.NodeId) -- ^ Accessor to map storing this type of actions.
+           -> k                               -- ^ Action index.
+           -> SeDot D.NodeId
+           -> SeDot ()
+cacheState stateAccessor k dot = do
+    i <- dot
+    modM stateAccessor (M.insert k i)
+
+-- | Retrieve a NodeId from a cached dot component.
+getState :: Ord k
+         => (DotState :-> M.Map k D.NodeId)
+         -> k 
+         -> String
+         -> SeDot D.NodeId
+getState stateAccessor k msg = do
+    stateMap <- getM stateAccessor
+    let mi = stateMap M.!? k
+    case mi of
+      Nothing -> error msg
+      Just i -> return i
+
 -- | Lift a 'D.Dot' action.
 liftDot :: D.Dot a -> SeDot a
 liftDot = lift . lift
-
--- | All edges in a bipartite graph that have neither start point nor endpoint
--- in common with any other edge.
-singleEdges :: (Ord a, Ord b) => [(a,b)] -> [(a,b)]
-singleEdges es =
-    singles fst es `intersect` singles snd es
-  where
-    singles proj = concatMap single . groupOn proj . sortOn proj
-    single []  = error "impossible"
-    single [x] = return x
-    single _   = mzero
-
--- | Ensure that a 'SeDot' action is only executed once by querying and
--- updating the 'DotState' accordingly.
-dotOnce :: Ord k
-        => (DotState :-> M.Map k D.NodeId) -- ^ Accessor to map storing this type of actions.
-        -> k                               -- ^ Action index.
-        -> SeDot D.NodeId                  -- ^ Action to execute only once.
-        -> SeDot D.NodeId
-dotOnce mapL k dot = do
-    i <- join $ (maybe dot return . M.lookup k) `liftM` getM mapL
-    modM mapL (M.insert k i)
-    return i
-
-dotNode :: NodeId -> SeDot D.NodeId
-dotNode v = dotOnce dsNodes v $ do
-    (se, colorMap) <- ask
-    let nodes = get sNodes se
-        dot info moreStyle facts = do
-            vId <- liftDot $ D.node $ [("label", show v ++ info),("shape","ellipse")]
-                                      ++ moreStyle
-            _ <- facts vId
-            return vId
-
-    case M.lookup v nodes of
-      Nothing -> do
-          dot "" [] (const $ return ()) -- \vId -> do
-              {-
-              premIds <- mapM dotPrem
-                           [ NodePremFact v fa
-                           | SeRequires v' fa <- S.toList $ get sRequires se
-                           , v == v' ]
-              sequence_ [ dotIntraRuleEdge premId vId | premId <- premIds ]
-              -}
-      Just ru -> do
-          let
-              color     = M.lookup (get rInfo ru) colorMap
-              nodeColor = maybe "white" rgbToHex color
-          dot (label ru) [("fillcolor", nodeColor),("style","filled")] $ \vId -> do
-              premIds <- mapM dotPrem
-                           [ (v,i) | (i,_) <- enumPrems ru ]
-              concIds <- mapM dotConc
-                           [ (v,i) | (i,_) <- enumConcs ru ]
-              sequence_ [ dotIntraRuleEdge premId vId | premId <- premIds ]
-              sequence_ [ dotIntraRuleEdge vId concId | concId <- concIds ]
-  where
-    label ru = " : " ++ render nameAndActs
-      where
-        nameAndActs =
-            ruleInfo (prettyProtoRuleName . get praciName) prettyIntrRuleACInfo (get rInfo ru) <->
-            brackets (vcat $ punctuate comma $ map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
-        isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
-
--- | An edge from a rule node to its premises or conclusions.
-dotIntraRuleEdge :: D.NodeId -> D.NodeId -> SeDot ()
-dotIntraRuleEdge from to = liftDot $ D.edge from to [("color","gray")]
-
-{-
--- | An edge from a rule node to some of its premises or conclusions.
-dotNonFixedIntraRuleEdge :: D.NodeId -> D.NodeId -> SeDot ()
-dotNonFixedIntraRuleEdge from to =
-    liftDot $ D.edge from to [("color","steelblue")]
--}
-
--- | The style of a node displaying a fact.
-factNodeStyle :: LNFact -> [(String,String)]
-factNodeStyle fa
-  | isJust (kFactView fa) = []
-  | otherwise             = [("fillcolor","gray85"),("style","filled")]
-
--- | An edge that shares no endpoints with another edge and is therefore
--- contracted.
---
--- FIXME: There may be too many edges being contracted.
-dotSingleEdge :: (NodeConc, NodePrem) -> SeDot D.NodeId
-dotSingleEdge edge@(_, to) = dotOnce dsSingles edge $ do
-    se <- asks fst
-    let fa    = nodePremFact to se
-        label = render $ prettyLNFact fa
-    liftDot $ D.node $ [("label", label),("shape", "hexagon")]
-                       ++ factNodeStyle fa
-
--- | A compressed edge.
-dotTrySingleEdge :: Eq c
-                 => ((NodeConc, NodePrem) -> c) -> c
-                 -> SeDot D.NodeId -> SeDot D.NodeId
-dotTrySingleEdge sel x dot = do
-    singles <- getM dsSingles
-    maybe dot (return . snd) $ find ((x ==) . sel . fst) $ M.toList singles
-
--- | Premises.
-dotPrem :: NodePrem -> SeDot D.NodeId
-dotPrem prem@(v, i) =
-    dotOnce dsPrems prem $ dotTrySingleEdge snd prem $ do
-        nodes <- asks (get sNodes . fst)
-        let ppPrem = show prem -- FIXME: Use better pretty printing here
-            (label, moreStyle) = fromMaybe (ppPrem, []) $ do
-                ru <- M.lookup v nodes
-                fa <- lookupPrem i ru
-                return ( render $ prettyLNFact fa
-                       , factNodeStyle fa
-                       )
-        liftDot $ D.node $ [("label", label),("shape",shape)]
-                           ++ moreStyle
-  where
-    shape = "invtrapezium"
-
--- | Conclusions.
-dotConc :: NodeConc -> SeDot D.NodeId
-dotConc =
-    dotNodeWithIndex dsConcs fst rConcs (id *** getConcIdx) "trapezium"
-  where
-    dotNodeWithIndex stateSel edgeSel ruleSel unwrap shape x0 =
-        dotOnce stateSel x0 $ dotTrySingleEdge edgeSel x0 $ do
-            let x = unwrap x0
-            nodes <- asks (get sNodes . fst)
-            let (label, moreStyle) = fromMaybe (show x, []) $ do
-                    ru <- M.lookup (fst x) nodes
-                    fa <- (`atMay` snd x) $ get ruleSel ru
-                    return ( render $ prettyLNFact fa
-                           , factNodeStyle fa
-                           )
-            liftDot $ D.node $ [("label", label),("shape",shape)]
-                               ++ moreStyle
-
-
-
--- | Convert the sequent to a 'D.Dot' action representing this sequent as a
--- graph in the GraphViz format. The style is loose in the sense that each
--- premise and conclusion gets its own node.
-dotSystemLoose :: System -> D.Dot ()
-dotSystemLoose se =
-    (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
-    (`runReaderT` (se, nodeColorMap (M.elems $ get sNodes se))) $ do
-        liftDot $ setDefaultAttributes
-        -- draw single edges with matching facts.
-        mapM_ dotSingleEdge $ singleEdges $ do
-            Edge from to <- S.toList $ get sEdges se
-            -- FIXME: ensure that conclusion and premise are equal
-            guard (nodeConcFact from se == nodePremFact to se)
-            return (from, to)
-        sequence_ $ do
-            (v, ru) <- M.toList $ get sNodes se
-            (i, _)  <- enumConcs ru
-            return (dotConc (v, i))
-        sequence_ $ do
-            (v, ru) <- M.toList $ get sNodes se
-            (i, _)  <- enumPrems ru
-            return (dotPrem (v,i))
-        -- FIXME: Also dot unsolved actions.
-        mapM_ dotNode     $ M.keys   $ get sNodes     se
-        mapM_ dotEdge     $ S.toList $ get sEdges     se
-        mapM_ dotChain    $            unsolvedChains se
-        mapM_ dotLess     $ S.toList (reasonToColor  $ get sLessAtoms    se)
-  where
-    dotEdge  (Edge src tgt)  = do
-        mayNid <- M.lookup (src,tgt) `liftM` getM dsSingles
-        maybe (dotGenEdge [] src tgt) (const $ return ()) mayNid
-
-    dotChain (src, tgt) =
-        dotGenEdge [("style","dotted"),("color","green")] src tgt
-
-    dotLess (src, tgt, color) = do
-        srcId <- dotNode src
-        tgtId <- dotNode tgt
-        liftDot $ D.edge srcId tgtId
-                [("color",color),("style","dashed")]
-             -- FIXME: Reactivate,("constraint","false")]
-            -- setting constraint to false ignores less-edges when ranking nodes.
-
-    dotGenEdge style src tgt = do
-        srcId <- dotConc src
-        tgtId <- dotPrem tgt
-        liftDot $ D.edge srcId tgtId style
-
 
 -- | Set default attributes for nodes and edges.
 setDefaultAttributes :: D.Dot ()
@@ -312,37 +158,52 @@ nodeColorMap rules =
 -- Record based dotting
 ------------------------------------------------------------------------------
 
--- | The style for nodes of the intruder.
-data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
-    deriving( Eq, Ord, Show )
-
+-- | Render an LNFact using the abbreviations given by the graph.
+renderLNFact :: Document d => LNFact -> SeDot d
+renderLNFact fact = do
+  (graph, _, _) <- ask
+  let abbreviate = get ((L..) goAbbreviate gOptions) graph
+      abbrevs = get gAbbreviations graph
+      replacedFact = applyAbbreviationsFact abbrevs fact
+  if abbreviate 
+    then return $ prettyLNFact replacedFact
+    else return $ prettyLNFact fact
 
 -- | Dot a node in record based (compact) format.
-dotNodeCompact :: BoringNodeStyle ->Bool -> NodeId -> SeDot D.NodeId
-dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
-    (se, colorMap) <- ask
-    let hasOutgoingEdge =
-            or [ v == v' | Edge (v', _) _ <- S.toList $ get sEdges se ]
-    case M.lookup v $ get sNodes se of
-      Nothing -> case filter ((v ==) . fst) (unsolvedActionAtoms se) of
-        [] -> mkSimpleNode (show v) []
-        as -> let lbl = (fsep $ punctuate comma $ map (prettyLNFact . snd) as)
-                        <-> opAction <-> text (show v)
-                  attrs | any (isKUFact . snd) as = [("color","gray")]
-                        | otherwise               = [("color","darkblue")]
-              in mkSimpleNode (render lbl) attrs
-      Just ru -> do
-          let color     = M.lookup (get rInfo ru) colorMap
-              nodeColor = maybe "white" rgbToHex color
-              attrs     = [("fillcolor", nodeColor),("style","filled")
-                            , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
-          ids <- mkNode ru attrs hasOutgoingEdge showAutosource
-          let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
-              concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
-          modM dsPrems $ M.union $ M.fromList prems
-          modM dsConcs $ M.union $ M.fromList concs
-          return $ fromJust $ lookup Nothing ids
+dotNodeCompact :: Node -> SeDot ()
+dotNodeCompact node = do
+  let v = get nNodeId node
+  (graph, colorMap, dotOptions) <- ask
+  case get nNodeType node of
+    SystemNode ru -> cacheState dsNodes v $ do
+      let outgoingEdge = hasOutgoingEdge graph v
+      let color     = M.lookup (get rInfo ru) colorMap
+          nodeColor = maybe "white" rgbToHex color
+          attrs     = [("fillcolor", nodeColor),("style","filled")
+                        , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
+      ids <- mkNode v ru attrs outgoingEdge dotOptions
+      let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
+          concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
+      modM dsPrems $ M.union $ M.fromList prems
+      modM dsConcs $ M.union $ M.fromList concs
+      return $ fromJust $ lookup Nothing ids    
+    UnsolvedActionNode facts -> cacheState dsNodes v $ do
+      lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
+      let lbl = lblPre <-> opAction <-> text (show v)
+      let attrs | any isKUFact facts = [("color","gray")]
+                | otherwise          = [("color","darkblue")]
+      mkSimpleNode (render lbl) attrs
+    LastActionAtom -> cacheState dsNodes v $ mkSimpleNode (show v) []
+    MissingNode (Left conc) -> cacheState dsConcs (v, conc) $ dotConcC (v, conc)
+    MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
   where
+    hasOutgoingEdge graph v =
+      let repr = get gRepr graph
+      in or [ v == v' | SystemEdge ((v', _), _) <- get grEdges repr ]
+    missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
+    dotPremC prem = missingNode "invtrapezium" $ prettyNodePrem prem
+    dotConcC conc = missingNode "trapezium" $ prettyNodeConc conc
+
     --True if there's a colour, and it's 'darker' than 0.5 in apparent luminosity
     --This assumes a linear colourspace, which is what graphviz seems to use
     colorUsesWhiteFont (Just (RGB r g b)) = (0.2126*r + 0.7152*g + 0.0722*b) < 0.5
@@ -351,35 +212,55 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
 
-    mkNode  :: RuleACInst -> [(String, String)] -> Bool -> Bool
-      -> ReaderT (System, NodeColorMap) (StateT DotState D.Dot)
-       [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
-    mkNode ru attrs hasOutgoingEdge showAutoLabel
+    mkNode  :: NodeId -> RuleACInst -> [(String, String)] -> Bool -> DotOptions
+      -> SeDot [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
+    mkNode v ru attrs outgoingEdge dotOptions 
       -- single node, share node-id for all premises and conclusions
-      | boringStyle == CompactBoringNodes &&
+      | get doNodeStyle dotOptions == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
-            let lbl | hasOutgoingEdge = show v ++ " : " ++ showRuleCaseName ru
+            ps <- psM
+            as <- asM
+            cs <- csM
+            let lbl | outgoingEdge = show v ++ " : " ++ showRuleCaseName ru
                     | otherwise       = concatMap snd as
             nid <- mkSimpleNode lbl []
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
       -- full record syntax
-      | otherwise =
+      | otherwise = do
+            ps <- psM
+            as <- asM
+            cs <- csM
             fmap snd $ liftDot $ (`D.record` attrs) $
-            D.vcat $ map D.hcat $ map (map (uncurry D.portField)) $
-            filter (not . null) [ps, as, cs]
+              D.vcat $ map D.hcat $ map (map (uncurry D.portField)) $
+              filter (not . null) [ps, as, cs]
       where
-        ps = renderRow [ (Just (Left i),  prettyLNFact p) | (i, p) <- enumPrems ru ]
-        as = renderRow [ (Nothing,        ruleLabel ) ]
-        cs = renderRow [ (Just (Right i), prettyLNFact c) | (i, c) <- enumConcs ru ]
+        psM = do
+          row <- mapM (\(i, p) -> do 
+            lbl <- renderLNFact p
+            return (Just (Left i), lbl)
+            ) $ enumPrems ru
+          return $ renderRow row
+        asM = do
+          ruleLabel <- ruleLabelM
+          return $ renderRow [ (Nothing, ruleLabel ) ]
+        csM = do
+          row <- mapM (\(i, c) -> do
+            lbl <- renderLNFact c
+            return (Just (Right i), lbl)
+            ) $ enumConcs ru
+          return $ renderRow row
+        
+        ruleLabelM = do
+          showAutoSource <- asks (get ((L..) goShowAutoSource gOptions) . fst3)
+          case showAutoSource of
+            True -> do
+              lbl <- mapM renderLNFact $ filter isAutoSource
+                     $ filter isNotDiffAnnotation $ get rActs ru
+              return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
+            False -> do 
+              lbl <- mapM renderLNFact $ filter isNotDiffAnnotation $ get rActs ru
+              return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
 
-        ruleLabel = case showAutoLabel of
-            True -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
-                    (brackets $ vcat $ punctuate comma $
-                    map prettyLNFact $ filter isAutoSource
-                    $ filter isNotDiffAnnotation $ get rActs ru)
-            False -> prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <>
-                    (brackets $ vcat $ punctuate comma $
-                    map prettyLNFact $ filter isNotDiffAnnotation $ get rActs ru)
 
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
 
@@ -422,212 +303,176 @@ dotNodeCompact boringStyle showAutosource v = dotOnce dsNodes v $ do
                   in  replicate (round n) ' ' ++ rest
 
 
+-- | Dot a normal edge.
+dotEdge :: Edge -> SeDot ()
+dotEdge edge = 
+  case edge of
+    SystemEdge (src, tgt) -> do
+      (graph, _, _) <- ask 
+      let check p = maybe False p (resolveNodePremFact tgt graph) ||
+                    maybe False p (resolveNodeConcFact src graph) 
+          attrs | check isProtoFact =
+                    [("style","bold"),("weight","10.0")] ++
+                    (guard (check isPersistentFact) >> [("color","gray50")])
+                | check isKFact     = [("color","orangered2")]
+                | otherwise         = [("color","gray30")]
+      dotGenEdge attrs src tgt  
+    UnsolvedChain (src, tgt) -> 
+      dotGenEdge [("style","dotted"),("color","green")] src tgt
+    LessEdge _ -> error "LessEdges are handled by dotLessEdge"
+  where
+    dotGenEdge style src tgt = do
+      srcId <- getState dsConcs src ("Source node of edge not found: " ++ show src)
+      tgtId <- getState dsPrems tgt ("Target node of edge not found: " ++ show tgt)
+      liftDot $ D.edge srcId tgtId style
+
+-- | Dot a less edge, which needs to be transformed first to contain the correct color.
+dotLessEdge :: (NodeId, NodeId, String) -> SeDot ()
+dotLessEdge (src, tgt, color) = do
+  srcId <- getState dsNodes src ("Source node of less edge not found: " ++ show src)
+  tgtId <- getState dsNodes tgt ("Target node of less edge not found: " ++ show src)
+  liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
+
+-- | Dot a legend listing all abbreviations by adding a sink node with a suitable HTML table label.
+generateLegend :: SeDot ()
+generateLegend = do
+  (graph, _, dotOptions) <- ask
+  let abbrevs = get gAbbreviations graph
+  -- Skip generating anything if no abbreviations exist.
+  unless (null abbrevs) $ do
+    nLegend <- liftDot $ D.scope (do 
+      D.attribute ("rank", "sink")
+      let sortedAbbrevs = topoSortAbbrevs $ zip [0..] $
+            sortOn (Data.Ord.Down . render . Sys.prettyLNTerm . fst) $ M.elems abbrevs
+          labelColor = get doAbbrevColor dotOptions
+          htmlLabel = D.htmlLabel $ abbrevLabel sortedAbbrevs labelColor
+      D.node [("shape", "plain"), htmlLabel])
+    -- We add invisible edges from all sink nodes of the graph to the legend node to place it somewhere in the middle of the bottom row.
+    -- We only add edges from the sink nodes because edges from earlier nodes will be routed avoid later nodes (even if they are invisible) and create constraints that lead to excessive whitespace on the edges of the graph.
+    let sinks = getGraphSinks graph 
+    dotIds <- getM dsNodes
+    mapM_ (\nsink ->
+      case M.lookup (get nNodeId nsink) dotIds of
+      Nothing -> pure ()
+      Just nid -> liftDot $ D.edge nid nLegend [("style", "invis")]) sinks
+  where
+    -- | Render all abbreviations as a table using graphviz' HTML notation.
+    abbrevLabel sortedAbbrevs labelColor = 
+      let tableAttributes = [Border 1, CellBorder 0, CellSpacing 3, CellPadding 1] in
+        Table $ HTable Nothing tableAttributes $ map (renderLine labelColor) sortedAbbrevs
+
+    -- | Render an abbreviation to a table row in the legend using graphviz' HTML notation.
+    renderLine :: D.Color -> (AbbreviationTerm, AbbreviationExpansion) -> Row
+    renderLine labelColor (abbrevName, recursiveExpansion) = 
+      let cellAttributes = [Align HLeft, VAlign HTop]
+          font txt = D.Text [Font [Color labelColor] txt]
+          name = LabelCell cellAttributes (font [Str $ T.pack $ render $ Sys.prettyLNTerm abbrevName])
+          eq = LabelCell cellAttributes (D.Text [Str $ "="])
+          expansion = render $ Sys.prettyLNTerm recursiveExpansion
+          -- The expansions can get pretty big, i.e. span multiple lines. To handle linebreaks we replace them with HTML <br> tags.
+          expansionBR = LabelCell cellAttributes (D.Text $ expansion `joinLinesWith` Newline [Align HLeft]) in
+      Cells [name, eq, expansionBR]
+    
+    -- | Replace newlines in `s` with the given separator.
+    joinLinesWith :: String -> TextItem -> D.Text
+    joinLinesWith s sep = intersperse sep $ map (Str . T.pack) $ lines s
+
+    -- | Do a topological sort of abbreviations to ensure that we print abbreviations in the order in which they are defined.
+    -- We define a partial order where for two abbreviations A & B, it holds A < B if A appears in the recursive expansion of B.
+    -- To extend the partial order to all abbreviations we do a topological sort on the graph where the nodes are abbreviations and edges are based on the partial order.
+    topoSortAbbrevs :: [(Int, (AbbreviationTerm, AbbreviationExpansion))] -> [(AbbreviationTerm, AbbreviationExpansion)]
+    topoSortAbbrevs keyedElems = 
+      let edgeList = map (\(key1, node) ->
+                            let outlist = findLegendEdges keyedElems node in
+                            (node, key1, outlist)) keyedElems
+          (graph, vf, _) = G.graphFromEdges edgeList
+          vertices = G.topSort graph in
+      map (\v -> fst3 $ vf v) vertices
+    
+    -- | We create an edge A -> B between two abbreviations A & B if A appears in the recursive expansion of B.
+    findLegendEdges :: [(Int, (AbbreviationTerm, AbbreviationExpansion))] -> (AbbreviationTerm, AbbreviationExpansion) -> [Int]
+    findLegendEdges keyedElems (abbrevName1, _) =
+      mapMaybe (\(key2, (_, recursiveExpansion2)) -> 
+                  if isProperSubterm abbrevName1 recursiveExpansion2
+                  then Just key2
+                  else Nothing) keyedElems 
+      
+-- | Dot a cluster containing further nodes and edges.
+-- a.d. TODO implement
+dotCluster :: Cluster -> SeDot ()
+dotCluster cluster = return ()
 
 -- | Dot a sequent in compact form (one record per rule), if there is anything
 -- to draw.
-dotSystemCompact :: BoringNodeStyle ->Bool -> System -> D.Dot ()
-dotSystemCompact boringStyle showAutosource se =
+dotSystemCompact :: GraphOptions -> DotOptions -> System -> D.Dot ()
+dotSystemCompact graphOptions dotOptions se = 
+    let graph = systemToGraph se graphOptions
+        -- a.d. TODO make nodeColorMap filter systemnodes from graph instead of accessing System directly.
+        colorMap = nodeColorMap (M.elems $ get sNodes se)
+        dot = dotGraphCompact dotOptions colorMap graph in
+    dot
+
+-- | Dot a graph in compact form (one record per rule).
+dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
+dotGraphCompact dotOptions colorMap graph =
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
-    (`runReaderT` (se, nodeColorMap (M.elems $ get sNodes se))) $ do
+    (`runReaderT` (graph, colorMap, dotOptions)) $ do
         liftDot $ setDefaultAttributes
-        mapM_ (dotNodeCompact boringStyle showAutosource) $ M.keys $ get sNodes       se
-        mapM_ (dotNodeCompact boringStyle showAutosource . fst) $ unsolvedActionAtoms se
-        F.mapM_ dotEdge                            $ get sEdges        se
-        F.mapM_ dotChain                           $ unsolvedChains    se
-        F.mapM_ dotLess                          (reasonToColor  $ get sLessAtoms    se)
+        let repr = get gRepr graph
+            (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
+            abbreviate = get ((L..) goAbbreviate gOptions) graph 
+        mapM_ dotNodeCompact (get grNodes repr)
+        mapM_ dotEdge restEdges
+        mapM_ dotLessEdge lessEdges
+        mapM_ dotCluster (get grClusters repr)
+
+        when abbreviate generateLegend 
+
+-- | Compute proper colors for all less-edges.
+-- Computing the colors requires all less-edges of the graph, so we cannot do it per edge.
+-- This is why we split up the edges here and use two different functions to convert them to a dot.
+mergeLessEdges :: [Edge] -> ([(NodeId, NodeId, String)], [Edge])
+mergeLessEdges edges = (merged, rest)
   where
-    missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
-    dotPremC prem = dotOnce dsPrems prem $ missingNode "invtrapezium" $ prettyNodePrem prem
-    dotConcC conc = dotOnce dsConcs conc $ missingNode "trapezium" $ prettyNodeConc conc
-    dotEdge (Edge src tgt)  = do
-        let check p = maybe False p (resolveNodePremFact tgt se) ||
-                      maybe False p (resolveNodeConcFact src se)
-            attrs | check isProtoFact =
-                      [("style","bold"),("weight","10.0")] ++
-                      (guard (check isPersistentFact) >> [("color","gray50")])
-                  | check isKFact     = [("color","orangered2")]
-                  | otherwise         = [("color","gray30")]
-        dotGenEdge attrs src tgt
+    rest = filter (not . isLessEdge) edges
+    merged = 
+      let lessEdges = mapMaybe extractLessEdge edges in
+      map getAllRToC $ eqClasses (\(x,y,_) -> (x,y)) lessEdges
 
-    dotGenEdge style src tgt = do
-        srcId <- dotConcC src
-        tgtId <- dotPremC tgt
-        liftDot $ D.edge srcId tgtId style
+    isLessEdge :: Edge -> Bool
+    isLessEdge (LessEdge _) = True
+    isLessEdge _ = False
 
-    dotChain (src, tgt) =
-        dotGenEdge [("style","dotted"),("color","green")] src tgt
+    extractLessEdge :: Edge -> Maybe Less
+    extractLessEdge (LessEdge e) = Just e
+    extractLessEdge _ = Nothing
 
-    dotLess (src, tgt, color) = do
+    getAllRToC :: [Less]-> (NodeId,NodeId,String)
+    -- SAFETY: Output of eqClasses never contains the empty list.
+    getAllRToC [] = error "empty list"
+    getAllRToC (x:xs) = 
+      (fst3 x, snd3 x,
+        -- Sort order is reversed to put the "most important reason" first.
+        allRtoColors (sortBy (comparing Data.Ord.Down) $ map thd3 (x:xs)))
 
-        srcId <- dotNodeCompact boringStyle showAutosource src
-        tgtId <- dotNodeCompact boringStyle showAutosource tgt
-        liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
-            -- FIXME: Reactivate,("constraint","false")]
-            -- setting constraint to false ignores less-edges when ranking nodes.
+    allRtoColors :: [Reason] -> String
+    allRtoColors reasons = 
+      let len = length reasons
+          per = if len >1 then ";" ++ show ((1 :: Double)/fromIntegral len) else ""
+          colors = map toColor reasons
+          scaledColors = map (++per) colors
+      in intercalate ":" scaledColors
 
-
--- | To get the color style for each less 
-reasonToColor :: S.Set (NodeId, NodeId, Reason)
-                -> S.Set (NodeId, NodeId, String)
-reasonToColor l = S.fromList ( map getAllRToC $
-                  groupOn  (\(x,y,_)->(x,y)) $ S.toList l)
-    where
-        toColor :: Reason -> String
-        toColor r = case r of
-             Adversary      -> "red"
-             Formula        -> "black"
-             Fresh          -> "blue3"
-             InjectiveFacts -> "purple"
-             NormalForm     -> "darkorange3"
-        allRtoColors :: [Reason] -> String
-        allRtoColors r = intercalate ":" (map toColor r)++per
-            where
-                len = length r
-                per = if len >1 then ";" ++ show ((1 :: Double)/fromIntegral len) else ""
-        -- to show all the reasons with their colors
-        getAllRToC :: [Less]-> (NodeId,NodeId,String)
-        getAllRToC [] = error "empty list"
-        getAllRToC (x:xs) = (fst3 x, snd3 x,
-                        allRtoColors (reverse (sort $ map thd3 (x:xs))))
-
-        -- |Or else, to show only the most important reason, we can use
-        -- |the function below, at the same time, we need remove function
-        -- |"allRtoColors"
-
-        -- getAllRToC :: [Less]-> (NodeId,NodeId,String)
-        -- getAllRToC (x:xs) = (fst3 x, snd3 x, 
-        --                 toColor $ head (sort $ map thd3 (x:xs)))
-
-
-------------------------------------------------------------------------------
--- Compressed versions of a sequent
-------------------------------------------------------------------------------
-
--- | Drop 'Less' atoms entailed by the edges of the 'System'.
-dropEntailedOrdConstraints :: System -> System
-dropEntailedOrdConstraints se =
-    modify sLessAtoms (S.filter (not . entailed)) se
-  where
-    edges               = rawEdgeRel se
-    entailed (from, to, _) = to `S.member` D.reachableSet [from] edges
-
--- | Unsound compression of the sequent that drops fully connected learns and
--- knows nodes.
-compressSystem :: System -> System
-compressSystem se0 =
-    foldl' (flip tryHideNodeId) se (frees (get sLessAtoms se, get sNodes se))
-  where
-    se = dropEntailedOrdConstraints se0
-
--- | Simplify the system up to the sent level, 
--- | for level 3, we will simplify the lesses of system by transitive reduction
--- | for level 2, we will apply the transitive reduction but keep the 
--- | formula constraint 
--- | for level 1, there's no transitive reduction applied
-simplifySystem :: Int -> System -> System
-simplifySystem i sys
-    | i==2 = transitiveReduction sys False
-    | i==3 = transitiveReduction sys True
-    | otherwise = sys
-
--- | Simplify the system by transitive reduction (constraint of formula won't  
--- | be applied if totalRed is False) but not for a system which has a graph cyclic
-transitiveReduction :: System -> Bool -> System
-transitiveReduction sys totalRed=
-    if D.cyclic oldLesses
-        then sys
-        else   modify sLessAtoms
-            ( S.intersection ( S.fromList newLesses) ) sys
-    where
-        oldLessesWithR = S.toList $ get sLessAtoms sys
-        oldLesses = rawLessRel sys
-        newLesses = if totalRed
-            then [(x,y,z)| (x,y,z)<- oldLessesWithR,
-                            (x,y) `elem` (D.transRed oldLesses) ]
-            else [(x,y,z)| (x,y,z)<- oldLessesWithR,
-                            (x,y) `elem` (D.transRed oldLesses) || z == Formula || z == Adversary ]
-
-
--- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
--- transfer node; i.e., a node annotated with a rule that is one of the
--- special intruder rules or a rule with with at most one premise and
--- at most one conclusion and both premises and conclusions have incoming
--- respectively outgoing edges.
---
--- The compression is chosen such that unly uninteresting nodes are that have
--- no open goal are suppressed.
-tryHideNodeId :: NodeId -> System -> System
-tryHideNodeId v se = fromMaybe se $ do
-    guard $  (lvarSort v == LSortNode)
-          && notOccursIn unsolvedChains
-          && notOccursIn (get sFormulas)
-    maybe hideAction hideRule (M.lookup v $ get sNodes se)
-  where
-    selectPart :: (System :-> S.Set a) -> (a -> Bool) -> [a]
-    selectPart l p = filter p $ S.toList $ get l se
-
-    notOccursIn :: HasFrees a => (System -> a) -> Bool
-    notOccursIn proj = not $ getAny $ foldFrees (Any . (v ==)) $ proj se
-
-    -- hide KU-actions deducing pairs, inverses, and simple terms
-    hideAction = do
-        guard $  not (null kuActions)
-              && all eligibleTerm kuActions
-              && all (\(i, j, _) -> not (i == j)) lNews
-              && notOccursIn (standardActionAtoms)
-              && notOccursIn (get sLastAtom)
-              && notOccursIn (get sEdges)
-
-        return $ modify sLessAtoms ( (`S.union` S.fromList lNews)
-                                   . (`S.difference` S.fromList lIns)
-                                   . (`S.difference` S.fromList lOuts)
-                                   )
-               $ modify sGoals (\m -> foldl' removeAction m kuActions)
-               $ se
-      where
-        kuActions            = [ x | x@(i,_,_) <- kuActionAtoms se, i == v ]
-        eligibleTerm (_,_,m) =
-            isPair m || isInverse m || sortOfLNTerm m == LSortPub || sortOfLNTerm m == LSortNat
-
-        removeAction m (i, fa, _) = M.delete (ActionG i fa) m
-
-        lIns  = selectPart sLessAtoms ((v ==) . snd3)
-        lOuts = selectPart sLessAtoms ((v ==) . fst3)
-        lNews = [ (i, j, r) | (i, _, _) <- lIns, (_, j, r) <- lOuts ]
-
-    -- hide a rule, if it is not "too complicated"
-    hideRule :: RuleACInst -> Maybe System
-    hideRule ru = do
-        guard $  eligibleRule
-              && ( length eIns  == length (get rPrems ru) )
-              && ( length eOuts == length (get rConcs ru) )
-              && ( all (not . selfEdge) eNews             )
-              && notOccursIn (get sLastAtom)
-              && notOccursIn (get sLessAtoms)
-              && notOccursIn (unsolvedActionAtoms)
-
-        return $ modify sEdges ( (`S.union` S.fromList eNews)
-                               . (`S.difference` S.fromList eIns)
-                               . (`S.difference` S.fromList eOuts)
-                               )
-               $ modify sNodes (M.delete v)
-               $ se
-      where
-        eIns  = selectPart sEdges ((v ==) . nodePremNode . eTgt)
-        eOuts = selectPart sEdges ((v ==) . nodeConcNode . eSrc)
-        eNews = [ Edge cIn pOut | Edge cIn _ <- eIns, Edge _ pOut <- eOuts ]
-
-        selfEdge (Edge cIn pOut) = nodeConcNode cIn == nodePremNode pOut
-
-        eligibleRule =
-             any ($ ru) [isISendRule, isIRecvRule, isCoerceRule, isFreshRule]
-          || ( null (get rActs ru) &&
-               all (\l -> length (get l ru) <= 1) [rPrems, rConcs]
-             )
+    toColor :: Reason -> String
+    toColor r = case r of
+         Adversary      -> "red"
+         Formula        -> "black"
+         Fresh          -> "blue3"
+         InjectiveFacts -> "purple"
+         NormalForm     -> "darkorange3"
 
 {-
 -- | Try to hide a 'NodeId'. This only works if it has only action and either
 -- edge or less constraints associated.
 tryHideNodeId :: NodeId -> System -> System
 -}
-

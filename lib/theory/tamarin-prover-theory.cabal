@@ -93,6 +93,10 @@ library
       Theory.Constraint.System.Dot
       Theory.Constraint.System.JSON
       Theory.Constraint.System.Guarded
+      Theory.Constraint.System.Graph.GraphRepr
+      Theory.Constraint.System.Graph.Abbreviation
+      Theory.Constraint.System.Graph.Simplification
+      Theory.Constraint.System.Graph.Graph
 
       Theory.Sapic.Term
       Theory.Sapic.Pattern

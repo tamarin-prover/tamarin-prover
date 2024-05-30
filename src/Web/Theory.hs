@@ -76,7 +76,6 @@ import           System.Process
 
 import           Logic.Connectives
 import           Theory
-import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
 import           TheoryObject
 
@@ -185,11 +184,13 @@ refDotDiffPath renderUrl tidx path mirror = closedTag "img" [("class", "graph"),
           then T.unpack $ renderUrl (TheoryMirrorDiffR tidx path)
           else T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
 
+-- | Generate the dot file path for an intermediate dot output.
 getDotPath :: String -> FilePath
 getDotPath code = imageDir </> addExtension (stringSHA256 code) "dot"
 
-getGraphPath :: String -> String -> FilePath
-getGraphPath ext code = imageDir </> addExtension (stringSHA256 code) ext
+-- | Generate the image file path for the final output.
+getGraphPath :: OutputFormat -> String -> FilePath
+getGraphPath ext code = imageDir </> addExtension (stringSHA256 code) (show ext)
 
 -- | Create a link to a given theory path.
 linkToPath :: HtmlDocument d
@@ -1268,71 +1269,57 @@ htmlThyDbgPath thy path = go path
     go _ = Nothing
 -}
 
--- | Render the image corresponding to the given theory path.
-imgThyPath :: ImageFormat
-           -> (String, FilePath)     -- ^ choice and command for rendering (dot or json)
-           -> FilePath               -- ^ Tamarin's cache directory
-           -> (System -> D.Dot ())
-           -> (String -> System -> String)
-                                     -- ^ to export contraint system to JSON
-           -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
-           -> Bool                   -- ^ True iff we want abbreviations
-           -> ClosedTheory
-           -> TheoryPath
-           -> IO FilePath
-imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraphFunct simplificationLevel abbreviate thy path = go path
+-- | Output either JSON or an image corresponding to the given theory path and return the generated file's path.
+-- Returns Nothing if there was an error during the image generation.
+imgThyPath :: ImageFormat                  -- ^ The preferred image output format. 
+           -> OutputCommand                -- ^ Choice and command for rendering.
+           -> FilePath                     -- ^ Tamarin's cache directory
+           -> (System -> D.Dot ())         -- ^ Function to render a System to Graphviz dot format.
+           -> (String -> System -> String) -- ^ Function to render a System to JSON.
+           -> ClosedTheory                 -- ^ Theory from which to extract the 'System'.
+           -> TheoryPath                   -- ^ Path of the 'System' in the theory.
+           -> IO (Maybe FilePath)          -- ^ Path to the generated file.
+imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath = 
+    case thyPathSystem thyPath of
+      Nothing -> return Nothing
+      Just (jsonLabel, system) -> do
+        let code = case ocFormat outputCommand of
+                     OutDot -> prefixedShowDot $ toDot system
+                     OutJSON -> toJSON jsonLabel system 
+        renderGraphCode code
   where
-    go (TheorySource k i j)   = case graphChoice of
-                                  "json"  -> renderGraphCode "json" (casesJsonCode k i j)
-                                  _       -> renderGraphCode "dot" (casesDotCode k i j)
-    go (TheoryProof l p)      = case graphChoice of
-                                  "json"  -> renderGraphCode "json" (proofPathJsonCode l p)
-                                  _       -> renderGraphCode "dot" (proofPathDotCode l p)
-    go _                      = error "Unhandled theory path. This is a bug."
+    thyPathSystem :: TheoryPath -> Maybe (String, System)
+    thyPathSystem (TheorySource k i j)          = casesSystem k i j
+    thyPathSystem (TheoryProof lemma proofPath) = proofPathSystem lemma proofPath
+    thyPathSystem _                             = error "Unhandled theory path. This is a bug."
 
-    -- Prefix dot code with comment mentioning all protocol rule names
+    -- | Get a string serialization for one case.
+    casesSystem k i j = do
+      let jsonLabel = "Theory: " ++ (get thyName thy) ++ " Case: " ++ show i ++ ":" ++ show j
+          cases = map (getDisj . get cdCases) (getSource k thy)
+      return (jsonLabel, snd $ cases !! (i-1) !! (j-1))
+
+    -- | Get string serialization for proof path in lemma.
+    proofPathSystem lemma proofPath = do
+      let jsonLabel = "Theory: " ++ (get thyName thy) ++ " Lemma: " ++ lemma 
+      subProof <- resolveProofPath thy lemma proofPath
+      sequent <- psInfo $ root subProof
+      return (jsonLabel, sequent)
+
+    -- | Prefix dot code with comment mentioning all protocol rule names
     prefixedShowDot dot = unlines
-        [ "// simplification: "          ++ simplificationLevel
-        , "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
+        [ "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
         , "// message deduction rules: " ++ ruleList (getIntrVariants thy)
-        , "// abbreviate: "              ++ show abbreviate
         , D.showDot dot
         ]
       where
         ruleList :: HasRuleName (Rule i) => [Rule i] -> String
         ruleList = concat . intersperse ", " . nub . map showRuleCaseName
 
-    -- Get dot code for required cases
-    casesDotCode k i j = prefixedShowDot $
-        compact $ snd $ cases !! (i-1) !! (j-1)
-      where
-        cases = map (getDisj . get cdCases) (getSource k thy)
-
-   -- Get JSON code for required cases
-    casesJsonCode k i j =
-        showJsonGraphFunct ("Theory: " ++ (get thyName thy) ++ " Case: " ++ show i ++ ":" ++ show j)
-        $ snd $ cases !! (i-1) !! (j-1)
-      where
-        cases = map (getDisj . get cdCases) (getSource k thy)
-
-    -- Get dot code for proof path in lemma
-    proofPathDotCode lemma proofPath =
-      prefixedShowDot $ fromMaybe (return ()) $ do
-        subProof <- resolveProofPath thy lemma proofPath
-        sequent <- psInfo $ root subProof
-        return $ compact sequent
-
-   -- Get JSON for proof path in lemma
-    proofPathJsonCode lemma proofPath =
-      fromMaybe ("") $ do
-        subProof <- resolveProofPath thy lemma proofPath
-        sequent <- psInfo $ root subProof
-        return $ showJsonGraphFunct ("Theory: " ++ (get thyName thy) ++ " Lemma: " ++ lemma) sequent
-
     -- Render a piece of dot or JSON code
-    renderGraphCode choice code = do
-      let graphPath = cacheDir_ </> getGraphPath choice code
-          imgPath = addExtension graphPath (show imgFormat)
+    renderGraphCode code = do
+      let graphPath = cacheDir_ </> getGraphPath (ocFormat outputCommand) code
+          imgPath = addExtension graphPath $ show imageFormat
 
           -- A busy wait loop with a maximal number of iterations
           renderedOrRendering :: Int -> IO Bool
@@ -1356,38 +1343,38 @@ imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraph
             -- create dot-file and render to image
           , do writeFile graphPath code
                -- select the correct command to generate img
-               if (choice == "json")
-                   then jsonToImg graphPath imgPath
-                   else dotToImg "dot" graphPath imgPath
+               case ocFormat outputCommand of
+                 OutDot  -> dotToImg "dot" graphPath imgPath
+                 OutJSON -> jsonToImg graphPath imgPath
             -- sometimes 'dot' fails => use 'fdp' as a backup tool
-          , if (choice == "dot")
-                then dotToImg "fdp" graphPath imgPath
-                else return False
+          , case ocFormat outputCommand of
+              OutDot -> dotToImg "fdp" graphPath imgPath
+              _      -> return False
           ]
       if imgGenerated
-        then return imgPath
+        then return $ Just imgPath
         else trace ("WARNING: failed to convert:\n  '" ++ graphPath ++ "'")
-                   (return imgPath)
+                   (return Nothing)
 
     -- render img file from json file
     jsonToImg jsonFile imgFile = do
-      (ecode,_out,err) <- readProcessWithExitCode graphCommand [imgFile, jsonFile] ""
+      (ecode,_out,err) <- readProcessWithExitCode (ocGraphCommand outputCommand) [imgFile, jsonFile] ""
       case ecode of
         ExitSuccess   -> return True
         ExitFailure i -> do
-          putStrLn $ "jsonToImg: "++graphCommand++" failed with code "
+          putStrLn $ "jsonToImg: "++ ocGraphCommand outputCommand ++" failed with code "
                       ++show i++" for file "++jsonFile++":\n"++err
           return False
 
     -- render img file from dot file
     dotToImg dotMode dotFile imgFile = do
-      (ecode,_out,err) <- readProcessWithExitCode graphCommand
-                              [ "-T"++show imgFormat, "-K"++dotMode, "-o",imgFile, dotFile]
+      (ecode,_out,err) <- readProcessWithExitCode (ocGraphCommand outputCommand)
+                              [ "-T"++show imageFormat, "-K"++dotMode, "-o",imgFile, dotFile]
                               ""
       case ecode of
         ExitSuccess   -> return True
         ExitFailure i -> do
-          putStrLn $ "dotToImg: "++graphCommand++" failed with code "
+          putStrLn $ "dotToImg: "++ ocGraphCommand outputCommand ++" failed with code "
                       ++show i++" for file "++dotFile++":\n"++err
           return False
 
@@ -1398,17 +1385,16 @@ imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraph
 
 
 -- | Render the image corresponding to the given theory path.
+-- Returns Nothing if there was an error during image generation.
 imgDiffThyPath :: ImageFormat
            -> FilePath               -- ^ 'dot' command
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
-           -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
-           -> Bool                   -- ^ True iff we want abbreviations
            -> ClosedDiffTheory
            -> DiffTheoryPath
            -> Bool
-           -> IO FilePath            -- ^ True if we want the mirror graph
-imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path mirror = go path
+           -> IO (Maybe FilePath)            -- ^ True if we want the mirror graph
+imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path mirror = go path
   where
     go (DiffTheorySource s k d i j) = renderDotCode (casesDotCode s k i j d)
     go (DiffTheoryProof s l p)      = renderDotCode (proofPathDotCode s l p)
@@ -1417,12 +1403,10 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
 
     -- Prefix dot code with comment mentioning all protocol rule names
     prefixedShowDot dot = unlines
-        [ "// simplification: "          ++ simplificationLevel
-        , "// protocol rules: "          ++ ruleList (getProtoRuleEsDiff LHS thy) -- FIXME RS: the rule names are the same on LHS and RHS, so we just pick LHS; should pass the current Side through to make this clean
+        [ "// protocol rules: "          ++ ruleList (getProtoRuleEsDiff LHS thy) -- FIXME RS: the rule names are the same on LHS and RHS, so we just pick LHS; should pass the current Side through to make this clean
         , "// message deduction rules: " ++ ruleList (getIntrVariantsDiff LHS thy) -- FIXME RS: the intruder rule names are the same on LHS and RHS; should pass the current Side through to make this clean
 --        , "// message deduction rules: " ++ ruleList ((intruderRules . get (_crcRules . diffThyCacheLeft)) thy) -- FIXME RS: again, we arbitrarily pick the LHS version of the cache, should be the same on both sides
 --intruderRules . L.get (crcRules . diffThyCacheLeft)
-        , "// abbreviate: "              ++ show abbreviate
         , D.showDot dot
         ]
       where
@@ -1492,9 +1476,9 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
           , dotToImg "fdp" dotPath imgPath
           ]
       if imgGenerated
-        then return imgPath
+        then return $ Just imgPath
         else trace ("WARNING: failed to convert:\n  '" ++ dotPath ++ "'")
-                   (return imgPath)
+                   (return Nothing)
 
     dotToImg dotMode dotFile imgFile = do
       (ecode,_out,err) <- readProcessWithExitCode dotCommand

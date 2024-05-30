@@ -19,6 +19,7 @@ import System.IO
 import System.Process
 
 import Main.Console
+import Web.Types (OutputCommand(..), OutputFormat(..))
 
 ------------------------------------------------------------------------------
 -- Retrieving the paths to required tools.
@@ -37,11 +38,11 @@ dotPath :: Arguments -> FilePath
 dotPath = fromMaybe "dot" . findArg "withDot"
 
 -- | Path to dot or json tool
-graphPath :: Arguments -> (String, FilePath)
-graphPath as =
+readOutputCommand :: Arguments -> OutputCommand
+readOutputCommand as =
   if argExists "withJson" as
-     then ("json", (fromMaybe "json" . findArg "withJson") as)
-     else ("dot", (fromMaybe "dot" . findArg "withDot") as)
+     then OutputCommand OutJSON $ (fromMaybe "json" . findArg "withJson") as
+     else OutputCommand OutDot $ (fromMaybe "dot" . findArg "withDot") as
 
 
 ------------------------------------------------------------------------------
@@ -105,7 +106,7 @@ ensureGraphCommand as = do
   hPutStrLn stderr $ "Graph rendering command: " ++ cmd
   testProcess check errMsg "Checking availablity ..." "which" [cmd] "" False False
   where
-    cmd = snd $ graphPath as
+    cmd = ocGraphCommand $ readOutputCommand as
     check _ err
       | err == ""  = Right " OK."
       | otherwise  = Left  errMsg

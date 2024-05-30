@@ -244,6 +244,9 @@ module Theory.Constraint.System (
   , prettyNonGraphSystemDiff
   , prettySource
 
+  , nonEmptyGraph
+  , nonEmptyGraphDiff
+
   ) where
 
 -- import           Debug.Trace
@@ -1912,3 +1915,20 @@ compareSystemsUpToNewVars
             compareNodes = compareNodesUpToNewVars a1 a2
 -- in case of diff systems, we remain prudent
 compareSystemsUpToNewVars s1 s2 = compare s1 s2
+
+
+-- | 'True' iff the dotted system will be a non-empty graph.
+nonEmptyGraph :: System -> Bool
+nonEmptyGraph sys = not $
+    M.null (L.get sNodes sys) && null (unsolvedActionAtoms sys) &&
+    null (unsolvedChains sys) &&
+    S.null (L.get sEdges sys) && S.null (L.get sLessAtoms sys)
+
+-- | 'True' iff the dotted system will be a non-empty graph.
+nonEmptyGraphDiff :: DiffSystem -> Bool
+nonEmptyGraphDiff diffSys = not $
+     case (L.get dsSystem diffSys) of
+          Nothing    -> True
+          (Just sys) -> M.null (L.get sNodes sys) && null (unsolvedActionAtoms sys) &&
+                        null (unsolvedChains sys) &&
+                        S.null (L.get sEdges sys) && S.null (L.get sLessAtoms sys)

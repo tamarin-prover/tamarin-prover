@@ -24,6 +24,7 @@ import Network.Wai.Handler.Warp (defaultSettings, setHost, setPort)
 import Network.Wai.Handler.Warp qualified as Warp
 import Web.Dispatch
 import Web.Settings qualified
+import Web.Types (OutputCommand(..), OutputFormat(..))
 
 import Main.Console
 import Main.Environment
@@ -85,10 +86,9 @@ run thisMode as = case findArg "workDir" as of
       version <- ensureMaudeAndGetVersion as
 
       -- process theories
-      _ <- case fst (graphPath as) of
-          "dot"  -> ensureGraphVizDot as
-          "json" -> ensureGraphCommand as
-          _      -> pure (Just "")
+      _ <- case (ocFormat $ readOutputCommand as) of
+          OutDot  -> ensureGraphVizDot as
+          OutJSON -> ensureGraphCommand as
 
       port <- readPort
       let webUrl = serverUrl port
@@ -110,7 +110,7 @@ run thisMode as = case findArg "workDir" as of
         (loadTheory thyLoadOptions)
         (closeTheory version thyLoadOptions)
 
-        (argExists "debug" as) (graphPath as) readImageFormat
+        (argExists "debug" as) (readOutputCommand as) readImageFormat
         (constructAutoProver thyLoadOptions)
         (runWarp port)
 
