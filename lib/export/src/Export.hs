@@ -1278,25 +1278,27 @@ makeAnnotations thy p = res
 -- | Pull out nots in formula
 pullnots :: LNFormula -> Either LNFormula LNFormula
 pullnots fm = 
-  let fm_partially_rewritten = pullnots' fm in
-  if notsArePulledOut fm_partially_rewritten 
-    then Right fm_partially_rewritten -- in this case, formula is fully rewritten
+  let fm_partially_rewritten = fixedpoint pullStep fm in -- nots pulled out by pullStep can enable new pull-out steps, so need to compute fixed point
+  if notsArePulledOut fm_partially_rewritten || fm_partially_rewritten == fm
+    then Right fm_partially_rewritten -- in this case, formula is either fully rewritten or didn't need any rewriting (no negations)
     else Left fm_partially_rewritten  -- Error with partially rewritten formula
   where
     notsArePulledOut (Not p) = notsArePulledOut' p -- top-level not expected
     notsArePulledOut _       =  False
 
-    notsArePulledOut' (Not _)      = False -- check that there are  no nots below top level
+    notsArePulledOut' (Not _)      = False -- check that there are no nots below top level
     notsArePulledOut' (Conn _ p q) = notsArePulledOut' p && notsArePulledOut' q
     notsArePulledOut' (Qua _ _ p ) = notsArePulledOut' p
     notsArePulledOut' _            = True
 
-    pullnots' f = if f /= pullStep f then pullnots' (pullStep f) else f
+    fixedpoint f phi = if phi /= f phi then fixedpoint f (f phi) else phi
 
     pullStep fm' = case fm' of
       Conn And (Not p) (Not q)  -> Not $ p .||. q
       Conn Or (Not p) (Not q)   -> Not $ p .&&. q
       Conn Imp p (Not q)        -> Not $ p .&&. q
+      Conn Iff (Not p) q        -> Not $ p .<=>. q
+      Conn Iff p (Not q)        -> Not $ p .<=>. q
       Conn c p q                -> Conn c (pullStep p) (pullStep q)
       Qua All x (Not p)         -> Not $ Qua Ex x p
       Qua Ex x (Not p)          -> Not $ Qua All x p
