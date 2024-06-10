@@ -1046,7 +1046,7 @@ loadLemmas lemSel tc te thy = map (ppLemma te) proverifLemmas
     thyLemmas = theoryLemmas thy
     transformWithPullnots l = case pullnots (L.get lFormula l) of
       Left fm' -> 
-        translationWarning ("Lemma " ++ L.get lName l ++ "\n" ++ render (prettyLNFormula (L.get lFormula l)) ++" cannot be rewritten s.t. it has only 1 ¬, the result is:\n" ++ render (prettyLNFormula fm') ++ "!\n\n") 
+        translationWarning ("Lemma " ++ L.get lName l ++ "\n" ++ render (prettyLNFormula (L.get lFormula l)) ++" cannot be rewritten s.t. it either has only 1 ¬ or none, the result is:\n" ++ render (prettyLNFormula fm') ++ "!\n\n") 
         $ L.set lFormula fm' l
       Right fm' -> L.set lFormula fm' l
     proverifLemmas = map transformWithPullnots $
@@ -1279,17 +1279,17 @@ makeAnnotations thy p = res
 pullnots :: LNFormula -> Either LNFormula LNFormula
 pullnots fm = 
   let fm_partially_rewritten = fixedpoint pullStep fm in -- nots pulled out by pullStep can enable new pull-out steps, so need to compute fixed point
-  if notsArePulledOut fm_partially_rewritten || fm_partially_rewritten == fm
-    then Right fm_partially_rewritten -- in this case, formula is either fully rewritten or didn't need any rewriting (no negations)
+  if onlyTopLevelNot fm_partially_rewritten
+    then Right fm_partially_rewritten -- in this case, formula is fully rewritten, i.e. has only 1 top-level not or no nots at all
     else Left fm_partially_rewritten  -- Error with partially rewritten formula
   where
-    notsArePulledOut (Not p) = notsArePulledOut' p -- top-level not expected
-    notsArePulledOut _       =  False
+    onlyTopLevelNot (Not p) = noNots p -- top-level not expected if rewriting was successful
+    onlyTopLevelNot p       = noNots p -- no top-level not may mean the rewriting has been successful and the formula has no nots at all
 
-    notsArePulledOut' (Not _)      = False -- check that there are no nots below top level
-    notsArePulledOut' (Conn _ p q) = notsArePulledOut' p && notsArePulledOut' q
-    notsArePulledOut' (Qua _ _ p ) = notsArePulledOut' p
-    notsArePulledOut' _            = True
+    noNots (Not _)      = False -- check that there are no nots below top level
+    noNots (Conn _ p q) = noNots p && noNots q
+    noNots (Qua _ _ p ) = noNots p
+    noNots _            = True
 
     fixedpoint f phi = if phi /= f phi then fixedpoint f (f phi) else phi
 
