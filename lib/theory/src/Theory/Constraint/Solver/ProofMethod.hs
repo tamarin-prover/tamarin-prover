@@ -453,9 +453,9 @@ finishedSubterms pc sys = hasReducibleOperatorsOnTop (reducibleFunSyms $ mhMaude
 -- given constraint 'System'.
 rankGoals :: ProofContext -> GoalRanking ProofContext -> [Tactic ProofContext] -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
 rankGoals ctxt ranking tacticsList = case ranking of
-    GoalNrRanking       -> \_sys -> goalNrRanking
-    OracleRanking oracleName -> oracleRanking oracleName ctxt
-    OracleSmartRanking oracleName -> oracleSmartRanking oracleName ctxt
+    GoalNrRanking       -> const goalNrRanking
+    OracleRanking oracleName -> oracleRanking (const goalNrRanking) oracleName ctxt
+    OracleSmartRanking oracleName -> oracleRanking (smartRanking ctxt False) oracleName ctxt
     UsefulGoalNrRanking ->
         \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
     SapicRanking -> sapicRanking ctxt
@@ -583,65 +583,29 @@ goalNrRanking = sortOn (fst . snd)
 
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately.
-oracleRanking :: Oracle
+oracleRanking :: (System -> [AnnotatedGoal] -> [AnnotatedGoal])
+              -> Oracle
               -> ProofContext
               -> System
               -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleRanking oracle ctxt _sys ags0
---  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
-  | otherwise =
-    unsafePerformIO $ do
-      let ags = goalNrRanking ags0
-      let inp = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip [(0::Int)..] ags))
-      outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
-      
-      let indices = catMaybes . map readMay . lines $ outp
-          ranked = catMaybes . map (atMay ags) $ indices
-          remaining = filter (`notElem` ranked) ags
-          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
-                   ++ inp
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ outp
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
-      guard $ trace logMsg True
-      -- _ <- getLine
-      -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
-      -- guard $ trace sd True
+oracleRanking preSort oracle ctxt _sys ags0 = unsafePerformIO $ do
+  let ags = preSort _sys ags0
+  let inp = unlines
+              (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                    (zip [(0::Int)..] ags))
+  outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
 
-      return (ranked ++ remaining)
-  where
-    pgoal (g,(_nr,_usefulness)) = prettyGoal g
+  let indices = catMaybes . map readMay . lines $ outp
+      ranked = catMaybes . map (atMay ags) $ indices
+      remaining = filter (`notElem` ranked) ags
+      logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+                ++ inp
+                ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                ++ outp
+                ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+  guard $ trace logMsg True
 
--- | A ranking function using an external oracle to allow user-definable
---   heuristics for each lemma separately, using the smartRanking heuristic
---   as the baseline.
-oracleSmartRanking :: Oracle
-                   -> ProofContext
-                   -> System
-                   -> [AnnotatedGoal] -> [AnnotatedGoal]
-oracleSmartRanking oracle ctxt _sys ags0
---  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
-  | otherwise =
-    unsafePerformIO $ do
-      let ags = smartRanking ctxt False _sys ags0
-      let inp = unlines
-                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                       (zip [(0::Int)..] ags))
-      outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
-      let indices = catMaybes . map readMay . lines $ outp
-          ranked = catMaybes . map (atMay ags) $ indices
-          remaining = filter (`notElem` ranked) ags
-          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
-                   ++ inp
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                   ++ outp
-                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
-      guard $ trace logMsg True
-      -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
-
-      return (ranked ++ remaining)
+  return (ranked ++ remaining)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
