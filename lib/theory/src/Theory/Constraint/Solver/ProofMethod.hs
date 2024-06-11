@@ -468,9 +468,7 @@ rankGoals ctxt ranking tacticsList = case ranking of
     where 
       chosenTactic :: [Tactic ProofContext] -> Tactic ProofContext-> Tactic ProofContext
       chosenTactic   []  t = chooseError tacticsList t
-      chosenTactic (h:q) t = case (checkName h t) of 
-        True  -> h
-        False -> chosenTactic q t 
+      chosenTactic (h:q) t = if checkName h t then h else chosenTactic q t
 
       definedHeuristic = intercalate [','] (foldl (\acc x -> (_name x):acc ) [] tacticsList)
 
@@ -590,13 +588,11 @@ oracleRanking :: (System -> [AnnotatedGoal] -> [AnnotatedGoal])
               -> [AnnotatedGoal] -> [AnnotatedGoal]
 oracleRanking preSort oracle ctxt _sys ags0 = unsafePerformIO $ do
   let ags = preSort _sys ags0
-  let inp = unlines
-              (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
-                    (zip [(0::Int)..] ags))
+  let inp = unlines $ zipWith (\i ag -> show i ++": "++ (concat . lines . render $ pgoal ag)) [(0::Int)..] ags
   outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
 
-  let indices = catMaybes . map readMay . lines $ outp
-      ranked = catMaybes . map (atMay ags) $ indices
+  let indices = mapMaybe readMay $ lines outp
+      ranked = mapMaybe (atMay ags) indices
       remaining = filter (`notElem` ranked) ags
       logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                 ++ inp
