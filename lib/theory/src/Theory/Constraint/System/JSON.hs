@@ -28,9 +28,9 @@
 -}
 
 module Theory.Constraint.System.JSON (
-    sequentToJSON,                     
+    sequentsToJSON,                     
     writeSequentAsJSONToFile,
-    sequentToJSONPretty,
+    sequentsToJSONPretty,
     writeSequentAsJSONPrettyToFile
   ) where
 import           Extension.Data.Label       as L (get)
@@ -413,9 +413,9 @@ graphAbbrevtoJSONGraphAbbrev (term, (abbrev, recursiveExpansion)) = do
 
 
 -- | Generate JSON graph(s) data structure from an abstract graph.
-sequentToJSONGraphs :: String     -- ^ label of graph
-                    -> RJSON JSONGraphs
-sequentToJSONGraphs label = do
+sequentToJSONGraph :: String     -- ^ label of graph
+                   -> RJSON JSONGraph
+sequentToJSONGraph label = do
   graph <- getGraph
   let repr = get gRepr graph 
       abbrevs = get gAbbreviations graph
@@ -423,9 +423,7 @@ sequentToJSONGraphs label = do
   jedges <- mapM graphEdgeToJSONGraphEdge (L.get grEdges repr)
   jclusters <- mapM graphClusterToJSONGraphCluster (L.get grClusters repr)
   jabbrevs <- mapM graphAbbrevtoJSONGraphAbbrev $ M.toList abbrevs
-  return $ JSONGraphs 
-    { graphs = 
-        [ JSONGraph 
+  return $ JSONGraph 
             { jgDirected = True
             , jgType  = "Tamarin prover constraint system"
             , jgLabel = label
@@ -434,14 +432,21 @@ sequentToJSONGraphs label = do
             , jgClusters = jclusters
             , jgAbbrevs = jabbrevs
             } 
-        ] 
+
+sequentsToJSONGraphs :: Bool 
+                     -> [(String, Graph)] 
+                     -> JSONGraphs
+sequentsToJSONGraphs pretty systems = 
+    let jsonGraphs = map (\(label, graph) -> (`runReader` (pretty, graph)) $ sequentToJSONGraph label) systems in
+    JSONGraphs {
+      graphs = jsonGraphs
     }
 
 -- | Generate JSON bytestring from an abstract graph.
-sequentToJSON :: GraphOptions -> String -> System -> String
-sequentToJSON graphOptions l se =
-  let graph = systemToGraph se graphOptions
-      graphJSON = (`runReader` (False, graph)) $ sequentToJSONGraphs l
+sequentsToJSON :: GraphOptions -> [(String, System)] -> String
+sequentsToJSON graphOptions systems =
+  let graphs = map (\(label, system) -> (label, systemToGraph system graphOptions)) systems
+      graphJSON = sequentsToJSONGraphs False graphs
   in
     BC.unpack $ encode graphJSON
 
@@ -450,19 +455,19 @@ sequentToJSON graphOptions l se =
 -- The function encodePretty returns Data.ByteString.Lazy.Internal.ByteString containing
 -- 8-bit bytes. However, eventually some other ByteString or String is expected by writeFile 
 -- in /src/Web/Theory.hs.
-sequentToJSONPretty :: GraphOptions -> String -> System -> String
-sequentToJSONPretty graphOptions l se =
-  let graph = systemToGraph se graphOptions 
-      graphJSON = (`runReader` (True, graph)) $ sequentToJSONGraphs l
+sequentsToJSONPretty :: GraphOptions -> [(String, System)] -> String
+sequentsToJSONPretty graphOptions systems =
+  let graphs = map (\(label, system) -> (label, systemToGraph system graphOptions)) systems
+      graphJSON = sequentsToJSONGraphs True graphs
   in
     removePseudoUnicode $ BC.unpack $ encodePretty graphJSON
 
 -- | Generate JSON bytestring from an abstract graph and write to a file.
 writeSequentAsJSONToFile :: FilePath -> GraphOptions -> String -> System -> IO ()
 writeSequentAsJSONToFile fp graphOptions l se =
-  do writeFile fp $ sequentToJSON graphOptions l se
+  do writeFile fp $ sequentsToJSON graphOptions [(l, se)]
 
 -- | Generate JSON bytestring with pretty formatting from an abstract graph and write to a file.
 writeSequentAsJSONPrettyToFile :: FilePath -> GraphOptions -> String -> System -> IO ()
 writeSequentAsJSONPrettyToFile fp graphOptions l se =
-  do writeFile fp $ sequentToJSONPretty graphOptions l se
+  do writeFile fp $ sequentsToJSONPretty graphOptions [(l, se)]
