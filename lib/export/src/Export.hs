@@ -28,14 +28,12 @@ import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
-import         Sapic.Exceptions
 
 import         RuleTranslation
 
 import         System.IO.Unsafe
 import         System.IO
 import           Control.Monad.Fresh
-import           Control.Exception
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Set as S
@@ -1046,7 +1044,12 @@ loadLemmas :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> TranslationContext
 loadLemmas lemSel tc te thy = map (ppLemma te) proverifLemmas
   where
     thyLemmas = theoryLemmas thy
-    proverifLemmas =
+    transformWithPullnots l = case pullnots (L.get lFormula l) of
+      Left fm' -> 
+        translationWarning ("Lemma " ++ L.get lName l ++ "\n" ++ render (prettyLNFormula (L.get lFormula l)) ++" cannot be rewritten s.t. it either has only 1 ¬ or none, the result is:\n" ++ render (prettyLNFormula fm') ++ "!\n\n") 
+        $ L.set lFormula fm' l
+      Right fm' -> L.set lFormula fm' l
+    proverifLemmas = map transformWithPullnots $
       filter
         ( \lem ->
             lemSel lem && case concat [ls | LemmaModule ls <- L.get lAttributes lem] of
@@ -1271,3 +1274,35 @@ makeAnnotations thy p = res
       if isNothing (List.find (== "locations-report") (theoryBuiltins thy))
         then pr
         else translateTermsReport pr
+
+-- | Pull out nots in formula
+pullnots :: LNFormula -> Either LNFormula LNFormula
+pullnots fm = 
+  let fm_partially_rewritten = fixedpoint pullStep fm in -- nots pulled out by pullStep can enable new pull-out steps, so need to compute fixed point
+  if onlyTopLevelNot fm_partially_rewritten
+    then Right fm_partially_rewritten -- in this case, formula is fully rewritten, i.e. has only 1 top-level not or no nots at all
+    else Left fm_partially_rewritten  -- Error with partially rewritten formula
+  where
+    onlyTopLevelNot (Not p) = noNots p -- top-level not expected if rewriting was successful
+    onlyTopLevelNot p       = noNots p -- no top-level not may mean the rewriting has been successful and the formula has no nots at all
+
+    noNots (Not _)      = False -- check that there are no nots below top level
+    noNots (Conn _ p q) = noNots p && noNots q
+    noNots (Qua _ _ p ) = noNots p
+    noNots _            = True
+
+    fixedpoint f phi = if phi /= f phi then fixedpoint f (f phi) else phi
+
+    pullStep fm' = case fm' of
+      Conn And (Not p) (Not q)  -> Not $ p .||. q
+      Conn Or (Not p) (Not q)   -> Not $ p .&&. q
+      Conn Imp p (Not q)        -> Not $ p .&&. q
+      Conn Iff (Not p) q        -> Not $ p .<=>. q
+      Conn Iff p (Not q)        -> Not $ p .<=>. q
+      Conn c p q                -> Conn c (pullStep p) (pullStep q)
+      Qua All x (Not p)         -> Not $ Qua Ex x p
+      Qua Ex x (Not p)          -> Not $ Qua All x p
+      Qua qua x p               -> Qua qua x $ pullStep p
+      Not (Not p)               -> p
+      Not p                     -> Not $ pullStep p
+      _                         -> fm'
