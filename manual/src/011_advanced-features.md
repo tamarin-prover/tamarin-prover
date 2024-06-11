@@ -872,3 +872,29 @@ For example, the following example program would result in the debug output belo
 
     === TITLE ======================================================================
     functionA: called functionA
+
+Outputting constraint systems when satisfying traces are found.
+-------------------------------------------------------------------
+
+It can be useful for further analysis to output the constraint system of the 
+state of the proof of a lemma when either a satisfying trace is found in an 
+"exists-trace" lemma, or when a counterexample trace is found in an
+"all-traces" lemma.
+For this you can use the command line options `--output-json` (or `--oj`) and
+`--output-dot` (or `--od`) in the non-interactive mode of tamarin. The command
+line options take a required filename and will output all those constraint
+systems into the file in the respective format.
+
+    tamarin-prover --prove --output-json=traces.json --output-dot=traces.dot examples/Tutorial.spthy
+
+For dot, the file is simply the concatenation of all 'digraph' expressions,
+which can then be rendered into individual image files using the `-O` option
+of the dot command line program.
+
+    # will output images to traces.dot.png, traces.dot.2.png, traces.dot.3.png, ...
+    dot -Tpng -O traces.dot
+
+For JSON, the standard schema already defines a single top-level object with a
+"graphs" key that holds a list of the individual graphs, which we use to output
+the constrain systems.
+
