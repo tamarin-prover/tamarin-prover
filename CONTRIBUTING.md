@@ -102,6 +102,7 @@ Regression testing for pull requests
 Before submitting a pull request, please double check that your changes do not break any of the existing proofs by running the regression test suite. To do this run the following commands in your clone of tamarin-prover:
 
 ```
+make
 rm -rf case-studies
 python3 regressionTests.py
 ```

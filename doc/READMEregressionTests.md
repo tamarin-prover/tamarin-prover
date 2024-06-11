@@ -18,6 +18,7 @@ and type:
 $ python3 regressionTests.py
 ```
 
+Note that one must run `make` before running regression tests.
 
 
 ## What does the script do?
