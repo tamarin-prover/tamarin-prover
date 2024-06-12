@@ -49,18 +49,23 @@ type AbbreviationExpansion = LNTerm
 --   , Function2(Function1(a,b),c) => Fun2, Function2(Fun1,c)
 --   ]
 type Abbreviations = M.Map LNTerm (AbbreviationTerm, AbbreviationExpansion)
+
+type Weight = Int
 -- | Options to control the abbreviation generation.
 data AbbreviationOptions = AbbreviationOptions 
-  { aoMaxAbbrevs :: Int   -- ^ The maximum number of abbreviations to generate.
-  , aoFirstIndex :: Int   -- ^ The first index to use when generating abbreviations.
-  , aoPrefixLength :: Int -- ^ The length of an abbreviation prefixes.
+  { aoAbbrevsSoftLimit   :: Int    -- ^ The soft limit of how many abbreviations to generate if the term weight is not greater or equal than 'aoAlwaysAbbrevWeight'.
+  , aoAlwaysAbbrevWeight :: Weight -- ^ Terms that have weight greater or equal to this always generate an abbreviation even if the number of abbreviations is greater than 'aoAbbrevsSoftLimit'.
+  , aoFirstIndex         :: Int    -- ^ The first index to use when generating abbreviations.
+  , aoPrefixLength       :: Int    -- ^ The length of an abbreviation prefixes.
   }
   deriving( Eq, Ord )
+
 
 -- | The default abbreviation options.
 defaultAbbreviationOptions :: AbbreviationOptions
 defaultAbbreviationOptions = AbbreviationOptions 
-  { aoMaxAbbrevs = 10
+  { aoAbbrevsSoftLimit = 10
+  , aoAlwaysAbbrevWeight = 500 -- a.d. TODO what is a good default value for this?
   , aoFirstIndex = 1
   , aoPrefixLength = 2
   }
@@ -70,14 +75,13 @@ lookupAbbreviation :: LNTerm -> Abbreviations -> Maybe AbbreviationTerm
 lookupAbbreviation t abbrevs = fst <$> M.lookup t abbrevs
 
 -- | Weigh each term based on its size and how often it appears in the graph.
-judgeTerm :: LNTerm -> Int -> Float
+judgeTerm :: LNTerm -> Int -> Weight
 judgeTerm t occs 
-  | termSize < 7 = -1.0
-  | (termSize < 20) && occs == 1 = -1.0
-  | otherwise = (fromIntegral (2 + occs) ^ (2 :: Integer)) * fromIntegral termSize
-  where
+  | termSize < 7 = -1
+  | (termSize < 20) && occs == 1 = -1
+  | otherwise = ((2 + occs) ^ (2 :: Integer)) * termSize  where
     -- | The termsize is the length of the term rendered as a string.
-    termSize :: Int
+    termSize :: Weight
     termSize = length $ render $ prettyLNTerm t
 
 -- | Find a suitable abbreviation prefix for the given term in upper-case.
@@ -177,13 +181,16 @@ computeAbbreviations repr options =
         sort $ nub names
 
     -- | For a number of weighted terms, take the first aoMaxAbbrevs terms sorted by decreasing weight.
-    filterWeights :: [(LNTerm, Float)] -> [LNTerm]
-    filterWeights weightedTerms = take (aoMaxAbbrevs options) $ mapMaybe removeNegativeWeights $ sortOn (Data.Ord.Down . snd) weightedTerms
-
-    -- | Terms with negative weights should never be abbreviated.
-    removeNegativeWeights (t, w)
-      | w < 0.0 = Nothing
-      | otherwise = Just t
+    filterWeights :: [(LNTerm, Weight)] -> [LNTerm]
+    filterWeights weightedTerms = 
+          -- Terms with nonpostitive weights should never be abbreviated.
+      let relevantWeights = filter (\(_, weight) -> weight > 0) $ sortOn (Data.Ord.Down . snd) weightedTerms
+          -- First take as many weights that surpass the aoAlwaysAbbrevWeight. The relevantWeights list is sorted so we take a prefix of the list.
+          (heavyWeights, restWeights) = span (\(_, weight) -> weight >= aoAlwaysAbbrevWeight options) relevantWeights
+          -- then, if there is space left, take any further weights until aoAbbrevsSoftLimit is reached.
+          finalWeights = heavyWeights ++ take (aoAbbrevsSoftLimit options - length heavyWeights) restWeights
+      in
+        map fst finalWeights
 
     -- | For a given list of terms, find suitable abbreviations and return a mapping from the original to the abbreviated terms. 
     -- The prefix index map is initially empty and accumulates the next possible index candidate for each prefix while we create abbreviations.
