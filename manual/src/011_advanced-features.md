@@ -359,6 +359,15 @@ of the main features of the GUI.
 
 <!-- downloading proofs, keyboard commands (a vs A vs b vs B) etc. -->
 
+### Disabling Server Access Logs
+
+Sometimes the web server access logs can be too noisy if you are trying to do print debugging while using the interactive mode.
+The logs are on by default but can be disabled with the `--no-logging` CLI argument.
+
+    tamarin-prover interactive --no-logging <Theory>
+
+This will run Tamarin in interactive mode and suppress the web server logs.
+
 Different Channel Models {#sec:channel-models}
 ------------------------
 

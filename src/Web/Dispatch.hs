@@ -85,6 +85,7 @@ staticFiles = $(Yesod.Static.embed "data")
 withWebUI :: String                          -- ^ Message to output once the sever is ready.
           -> FilePath                        -- ^ Cache directory.
           -> FilePath                        -- ^ Working directory.
+          -> Bool                            -- ^ Enable server logging.
           -> Bool                            -- ^ Load last proof state if present
           -> Bool                            -- ^ Automatically save proof state
           -> TheoryLoadOptions               -- ^ Options for loading theories
@@ -99,7 +100,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> AutoProver                      -- ^ The default autoprover.
           -> (Application -> IO b)           -- ^ Function to execute
           -> IO b
-withWebUI readyMsg cacheDir_ thDir loadState autosave thOpts thLoad thClose debug'
+withWebUI readyMsg cacheDir_ thDir enableLogging loadState autosave thOpts thLoad thClose debug'
           outputCmd' imgFormat' defaultAutoProver' f
   = do
     thy    <- getTheos
@@ -111,22 +112,30 @@ withWebUI readyMsg cacheDir_ thDir loadState autosave thOpts thLoad thClose debu
     -- Don't create parent dirs, as temp-dir should be created by OS.
     createDirectoryIfMissing False cacheDir_
     (`E.finally` shutdownThreads thrVar) $
-      f =<< toWaiApp WebUI
-        { workDir            = thDir
-        , cacheDir           = cacheDir_
-        , thyOpts            = thOpts
-        , loadThy            = thLoad
-        , closeThy           = thClose
-        , getStatic          = staticFiles
-        , theoryVar          = thyVar
-        , threadVar          = thrVar
-        , autosaveProofstate = autosave
-        , outputCmd           = outputCmd'
-        , imageFormat        = imgFormat'
-        , defaultAutoProver  = defaultAutoProver'
-        , debug              = debug'
-        }
+      f =<< app thrVar thyVar
   where
+    app thrVar thyVar =
+      let webUI = WebUI
+                  { workDir            = thDir
+                  , cacheDir           = cacheDir_
+                  , thyOpts            = thOpts
+                  , loadThy            = thLoad
+                  , closeThy           = thClose
+                  , getStatic          = staticFiles
+                  , theoryVar          = thyVar
+                  , threadVar          = thrVar
+                  , autosaveProofstate = autosave
+                  , outputCmd           = outputCmd'
+                  , imageFormat        = imgFormat'
+                  , defaultAutoProver  = defaultAutoProver'
+                  , debug              = debug'
+                  } in
+      if enableLogging
+      then toWaiApp webUI
+      else do
+        plain <- toWaiAppPlain webUI
+        return $ defaultMiddlewaresNoLogging plain
+          
     autosaveDir = thDir++"/"++autosaveSubdir
     getTheos = do
       existsAutosave <- doesDirectoryExist autosaveDir
