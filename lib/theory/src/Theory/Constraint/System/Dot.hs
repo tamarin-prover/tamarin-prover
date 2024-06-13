@@ -61,7 +61,7 @@ data DotOptions = DotOptions
 
 -- | The default dot options.
 defaultDotOptions :: DotOptions
-defaultDotOptions = DotOptions FullBoringNodes black
+defaultDotOptions = DotOptions CompactBoringNodes black
   where
     black = D.RGB 0 0 0
 

@@ -68,8 +68,9 @@ defaultGraphOptions = GraphOptions
   { _goSimplificationLevel = SL2
   , _goShowAutoSource = False
   , _goClustering = False
-  , _goAbbreviate = False
-  , _goCompress = False }
+  , _goAbbreviate = True
+  , _goCompress = True 
+  }
 
 -- | An abstract graph to derive visualiations of a 'System'.
 data Graph = Graph 
