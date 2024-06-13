@@ -833,3 +833,33 @@ With the monotonic term positions, we can additionally reason as follows: if the
   - (3) if `s⊏t`, then `i<j` is deduced
   - (5) if `¬s⊏t` and `¬s=t`, then `j<i` is deduced (as t⊏s must hold because of monotonicity)
 - for decreasing and strictly decreasing, the inverse of the increasing cases holds
+
+Convenience Functions for Print Debugging
+-------------------------------------------------------------------
+
+For debugging Haskell programs it is still convenient to use simple print debugging. 
+The standard library includes the `Debug.trace` family of functions that can even be used from a pure context to print debug output.
+Since adding too many debug prints can lead to a noisy output we implement some convenience functions on top of `Debug.trace`, which can be selectively turned on when debugging a certain section of the code.
+
+The following functions are implemented in the `Debug.Trace.EnvTracer` module.
+Functions usable in an Applicative/Monad have an "M" suffix.
+
+    etraceSectionLn :: String -> String -> b -> b    
+    etraceSectionLnM :: Applicative f => String -> String -> f ()
+    etraceLn :: String -> String -> String -> b -> b    
+    etraceLnM :: Applicative f => String -> String -> String -> f ()
+
+The first argument to all functions is a *trace key* string.
+When running Tamarin you can set the `DEBUG_TRACE` environment variable to a comma-separated list of trace keys, which will then enable the corresponding debug outputs. Any debug trace whose key is not contained in the environment variable will be suppressed.
+
+The `etraceSectionLn*` functions are used to make visual separators for debug outputs.
+The `etraceLn*` functions take a label to give context and an arbitrary string to print. 
+
+For example, the following example program would result in the debug output below if the `DEBUG_TRACE` variable contains "foo".
+
+    etraceSectionLn "foo" "TITLE" $
+    etraceLn "foo" "functionA" "called functionA" $
+    ...
+
+    === TITLE ======================================================================
+    functionA: called functionA

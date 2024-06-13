@@ -53,6 +53,7 @@ library
       , safe
       , syb
       , time
+      , split
       , transformers
       , exceptions
       , graphviz
@@ -87,6 +88,7 @@ library
         System.Timing
 
         Debug.Trace.Ignore
+        Debug.Trace.EnvTracer
 
         Utils.Misc
 
