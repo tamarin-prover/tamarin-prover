@@ -929,7 +929,7 @@ getTheoryGraphR idx path = withTheory idx ( \ti -> do
           (outputCmd yesod)
           (cacheDir yesod)
           (dotSystemCompact graphOptions dotOptions)
-          (sequentToJSONPretty graphOptions)
+          (\label system -> sequentsToJSONPretty graphOptions [(label, system)])
           (tiTheory ti) path
       case img' of
         Nothing -> notFound

@@ -1310,7 +1310,7 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
     prefixedShowDot dot = unlines
         [ "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
         , "// message deduction rules: " ++ ruleList (getIntrVariants thy)
-        , D.showDot dot
+        , D.showDot "G" dot
         ]
       where
         ruleList :: HasRuleName (Rule i) => [Rule i] -> String
@@ -1407,7 +1407,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path mirror = go path
         , "// message deduction rules: " ++ ruleList (getIntrVariantsDiff LHS thy) -- FIXME RS: the intruder rule names are the same on LHS and RHS; should pass the current Side through to make this clean
 --        , "// message deduction rules: " ++ ruleList ((intruderRules . get (_crcRules . diffThyCacheLeft)) thy) -- FIXME RS: again, we arbitrarily pick the LHS version of the cache, should be the same on both sides
 --intruderRules . L.get (crcRules . diffThyCacheLeft)
-        , D.showDot dot
+        , D.showDot "G" dot
         ]
       where
         ruleList :: HasRuleName (Rule i) => [Rule i] -> String
@@ -1421,14 +1421,14 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path mirror = go path
 
     -- Get dot code for proof path in lemma
     proofPathDotCode s lemma proofPath =
-      D.showDot $ fromMaybe (return ()) $ do
+      D.showDot "G" $ fromMaybe (return ()) $ do
         subProof <- resolveProofPathDiff thy s lemma proofPath
         sequent <- psInfo $ root subProof
         return $ compact sequent
 
     -- Get dot code for proof path in lemma
     proofPathDotCodeDiff lemma proofPath mir =
-      D.showDot $ fromMaybe (return ()) $ do
+      D.showDot "G" $ fromMaybe (return ()) $ do
         subProof <- resolveProofPathDiffLemma thy lemma proofPath
         diffSequent <- dpsInfo $ root subProof
         if mir

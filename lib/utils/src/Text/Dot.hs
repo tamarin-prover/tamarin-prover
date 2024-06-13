@@ -189,14 +189,21 @@ edgeAttributes attrs = addElements [ GraphNode (NodeId "edge") attrs]
 graphAttributes :: [(String,String)] -> Dot ()
 graphAttributes attrs = addElements [ GraphNode (NodeId "graph") attrs]
 
--- 'showDot' renders a dot graph as a 'String'.
-showDot :: Dot a -> String
-showDot dot = 
-  let initialState = DotGenState { _dgsId = 0, _dgsElements = [] } 
+-- 'showDot' renders a dot graph as a 'String' with the supplied label as the digraph id.
+showDot :: String -> Dot a -> String
+showDot label dot =
+      -- We must escape all double quote characters in the graphviz label by using a backslash. 
+      -- In the comparison we just use '"' because it is a single character.
+      -- Then for the replacement we must use three \, the first two insert a literal backslash into the string, 
+      -- the third one is used to insert a literal double quote into the string. 
+  let escapedLabel = concatMap (\c -> if c == '"' then "\\\"" else [c]) label
+      initialState = DotGenState { _dgsId = 0, _dgsElements = [] } 
       (_, finalState) = runDot initialState dot
       elems = get dgsElements finalState
   in 
-    "digraph G {\n" ++ unlines (map showGraphElement elems) ++ "\n}\n"
+    "digraph " ++ 
+    "\"" ++ escapedLabel ++ "\"" ++
+    " {\n" ++ unlines (map showGraphElement elems) ++ "\n}\n"
 
 -- | Render a record in the Dot monad. It exploits the internal counter in
 -- order to generate unique port-ids. However, they must be combined with the
