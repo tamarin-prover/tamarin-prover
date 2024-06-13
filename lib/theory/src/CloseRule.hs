@@ -216,7 +216,7 @@ derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) c
     decompose (f:l) = map ([f] ++) (decompose l)
     decompose [] = [[]]
 
-    emptyThy = Theory "checkReduction" [] [] (toSignaturePure sig) intrR [] (Option False False False False False False False False False S.empty [] 10 5) False
+    emptyThy = Theory "checkReduction" "checkReduction" [] [] (toSignaturePure sig) intrR [] (Option False False False False False False False False False S.empty [] 10 5) False
 
     --tabProof = concatMap (\_ -> [TraceFound]) provenTheory
     tabProof = concatMap checkProofStatuses provenTheory

@@ -28,14 +28,12 @@ import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
-import         Sapic.Exceptions()
 
 import         RuleTranslation
 
 import         System.IO.Unsafe
 import         System.IO
 import           Control.Monad.Fresh
-import           Control.Exception()
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Set as S
