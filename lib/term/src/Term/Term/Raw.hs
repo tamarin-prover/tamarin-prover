@@ -30,7 +30,7 @@ module Term.Term.Raw (
     , lit
     , fApp
     , fAppAC
-    , fAppACEqn
+    --, fAppACEqn
     , fAppC
     , fAppNoEq
     , fAppACfct
@@ -121,10 +121,10 @@ fAppAC acsym as  =
     (o_as0, non_o_as) = partition isOTerm as
     o_as              = [ a | FAPP _ ts <- o_as0, a <- ts ]
 
-fAppACEqn :: Ord a => ACfctSym -> [Term a] -> Term a
-fAppACEqn _     []  = error "Term.fAppACEqn: empty argument list"
-fAppACEqn _     [a] = a
-fAppACEqn acsym as  = FAPP (AC (ACfct acsym)) as
+-- fAppACEqn :: Ord a => ACfctSym -> [Term a] -> Term a
+-- fAppACEqn _     []  = error "Term.fAppACEqn: empty argument list"
+-- fAppACEqn _     [a] = a
+-- fAppACEqn acsym as  = FAPP (AC (ACfct acsym)) as
 
 -- | Smart constructor for C terms.
 fAppC :: Ord a => CSym -> [Term a] -> Term a

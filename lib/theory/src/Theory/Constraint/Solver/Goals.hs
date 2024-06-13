@@ -225,7 +225,7 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
     mayRu <- M.lookup i <$> getM sNodes
     showRuleCaseName <$> case mayRu of
         Nothing -> case fa of
-            (Fact KUFact _ [m@(viewTerm2 -> FXor ts)]) -> do
+            (Fact KUFact _ [m@(FAPP (AC o) ts)]) -> do
                    partitions <- disjunctionOfList $ twoPartitions ts
                    case partitions of
                        (_, []) -> do
@@ -234,9 +234,9 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
                             insertGoal (PremiseG (i, PremIdx 0) (kdFact m)) False
                             return ru
                        (a',  b') -> do
-                            let a = fAppAC Xor a'
-                            let b = fAppAC Xor b'
-                            let ru = Rule (IntrInfo (ConstrRule $ BC.pack "_xor")) [(kuFact a),(kuFact b)] [fa] [fa] []
+                            let a = fAppAC o a'
+                            let b = fAppAC o b'
+                            let ru = Rule (IntrInfo (ConstrRule $ nameApp o)) [(kuFact a),(kuFact b)] [fa] [fa] []
                             modM sNodes (M.insert i ru)
                             mapM_ requiresKU [a, b] *> return ru
             _                                        -> do
@@ -250,6 +250,11 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
                           void (solveFactEqs SplitNow [Equal fa act])
                       return ru
   where
+    nameApp Mult = BC.pack "_mult"
+    nameApp Union = BC.pack "_union"
+    nameApp NatPlus = BC.pack "_natplus"
+    nameApp Xor = BC.pack "_xor"
+    nameApp (ACfct (b, _)) = BC.pack "_" <> b
     -- If the fact in the action goal has annotations, then consider annotated
     -- versions of intruder rules (this allows high or low priority intruder knowledge
     -- goals to propagate to intruder knowledge of subterms)

@@ -201,7 +201,7 @@ landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
 landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map (fmap (fmap (fmap Free))) facts))
 
 derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-derivationTest sig intrR fact terms = trace ("\ntabproof : " ++ show tabProof) checkProof tabProof || checkProof tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
+derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) checkProof tabProof || checkProof tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
   where
     setD = decompose terms
 
@@ -222,12 +222,13 @@ derivationTest sig intrR fact terms = trace ("\ntabproof : " ++ show tabProof) c
 
     tabProof1 = concatMap checkProofStatuses provenTheory1
     provenTheory1 = map (proveTheory (const True) defaultProver) closedTheory1
-    closedTheory1 = trace ("\ntheory : \n" ++ tabTheory modifiedTheory1) map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
+    closedTheory1 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
     modifiedTheory1 = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0]) t) setD (repeat emptyThy)
  
     tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimit prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
     tabTheory [] = ""
 
+    -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory) 
     -- trace ("\nterms for deduction : " ++ show s1 ++ "\nfact : " ++ show fact)
 
     newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "0") [] []) (pre s) (co s) (a s) []) []]
@@ -275,7 +276,7 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
   | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
   case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
     [] -> False
-    subst -> trace ("\nsubst : " ++ show subst) searchMatcheraux (auxMatcherFilter (auxMatcher subst r inst1))
+    subst -> searchMatcheraux (auxMatcherFilter (auxMatcher subst r inst1))
     -- trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\n\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1)))
   where
     hnd = L.get sigmMaudeHandle sig
@@ -303,7 +304,7 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
     searchMatcher instSigma inst1Sigma inst2init =
       case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
         [] -> False
-        match -> trace ("\nmatch : " ++ show match) auxDeducible match
+        match -> auxDeducible match
       where
         doMatch match = runReader (solveMatchLNTerm match) hnd
 
@@ -382,9 +383,9 @@ closeIntrRule _   ir                                        = [ir]
 
 prettyChainReduction :: SignatureWithMaude -> String -> OpenRuleCache -> [[IntrRuleAC]] -> Bool -> [IntrRuleAC]
 prettyChainReduction s name o t b = unsafePerformIO $ do
-  traceM ("[Theory " ++ name ++ "] Chain reduction check begins")
+  traceM ("[Theory " ++ name ++ "] Chain reduction checks started")
   rule <- evaluate . force $ applyChainReduction s o t b
-  traceM ("[Theory " ++ name ++ "] Chain reduction check finishes")
+  traceM ("[Theory " ++ name ++ "] Chain reduction checks ended")
   return rule
 
 -- | Close a rule cache. Hower, note that the

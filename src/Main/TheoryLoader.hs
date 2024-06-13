@@ -104,7 +104,6 @@ import           GHC.Records (HasField(getField))
 import           GHC.Num (integerFromInt)
 
 import           Debug.Trace
-
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
 ------------------------------------------------------------------------------
@@ -402,40 +401,48 @@ checkCloseIntrRule sign name thy = L.set thyCache intrRulesACred thy
 
     intrRulesACred = if chainReductionBool then prettyChainReduction sign name intrRulesAC tabT chainReductionBool else applyChainReduction sign intrRulesAC tabT chainReductionBool
 
+copyLimit :: [IntrRuleAC] -> IntrRuleAC -> IntrRuleAC
+copyLimit d rule@(Rule (DestrRule _ _ _ _) _ _ _ _) = checkDiff d rule
+  where
+    checkDiff (d1:dq) r = if (getRuleName r == getRuleName d1) && (enumPrems d1 == enumPrems r) && (enumConcs d1 == enumConcs r) then d1 else checkDiff dq r
+    checkDiff [] r = r
+copyLimit _ rule = rule
+
 checkCloseIntrRuleDiff :: SignatureWithMaude -> String -> OpenDiffTheory -> OpenDiffTheory
-checkCloseIntrRuleDiff sign name diffthy = L.set diffThyCacheRight crACred diffCLthy
+checkCloseIntrRuleDiff sign name diffthy = L.set diffThyCacheRight clACred diffCLthy
 
   where
     hnd = L.get sigmMaudeHandle sign
 
     dcl = L.get diffThyDiffCacheLeft diffthy
-    dcr = L.get diffThyDiffCacheRight diffthy
+    --dcr = L.get diffThyDiffCacheRight diffthy
     cl = L.get diffThyCacheLeft diffthy
-    cr = L.get diffThyCacheRight diffthy
+    --cr = L.get diffThyCacheRight diffthy
 
     dclAC = concat $ map (closeIntrRule hnd) dcl
-    dcrAC = concat $ map (closeIntrRule hnd) dcr
+    --dcrAC = concat $ map (closeIntrRule hnd) dcr
     clAC = concat $ map (closeIntrRule hnd) cl
-    crAC = concat $ map (closeIntrRule hnd) cr
+    --crAC = concat $ map (closeIntrRule hnd) cr
 
     tabTDCL = groupBy ((==) `on` getRuleName) $ sortOn getRuleName dclAC
-    tabTDCR = groupBy ((==) `on` getRuleName) $ sortOn getRuleName dcrAC
-    tabTCL = groupBy ((==) `on` getRuleName) $ sortOn getRuleName clAC
-    tabTCR = groupBy ((==) `on` getRuleName) $ sortOn getRuleName crAC
+    --tabTDCR = groupBy ((==) `on` getRuleName) $ sortOn getRuleName dcrAC
+    --tabTCL = groupBy ((==) `on` getRuleName) $ sortOn getRuleName clAC
+    --tabTCR = groupBy ((==) `on` getRuleName) $ sortOn getRuleName crAC
 
     chainReductionBool = L.get chainReductionCheck (L.get diffThyOptions diffthy)
 
     dclACred = if chainReductionBool then prettyChainReduction sign name dclAC tabTDCL chainReductionBool else applyChainReduction sign dclAC tabTDCL chainReductionBool
     diffDCLthy = L.set diffThyDiffCacheLeft dclACred diffthy
 
-    dcrACred = if chainReductionBool then prettyChainReduction sign name dcrAC tabTDCR chainReductionBool else applyChainReduction sign dcrAC tabTDCR chainReductionBool
-    diffDCRthy = L.set diffThyDiffCacheRight dcrACred diffDCLthy
+    -- dcrACred = if chainReductionBool then prettyChainReduction sign name dcrAC tabTDCR chainReductionBool else applyChainReduction sign dcrAC tabTDCR chainReductionBool
+    -- diffDCRthy = L.set diffThyDiffCacheRight dcrACred diffDCLthy
+    diffDCRthy = L.set diffThyDiffCacheRight dclACred diffDCLthy -- diffThyDiffCacheLeft and diffThyDiffCacheRight are same Intruder Rules
 
-    clACred = if chainReductionBool then prettyChainReduction sign name clAC tabTCL chainReductionBool else applyChainReduction sign clAC tabTCL chainReductionBool
-    diffCLthy = L.set diffThyCacheLeft clACred diffDCRthy
+    clACred = map (copyLimit dclACred) clAC
+    --clACred = if chainReductionBool then prettyChainReduction sign name clAC tabTCL chainReductionBool else applyChainReduction sign clAC tabTCL chainReductionBool
+    diffCLthy = L.set diffThyCacheLeft clACred diffDCRthy -- diffThyCacheLeft and diffThyCacheRight are same Intruder Rules
 
-    crACred = if chainReductionBool then prettyChainReduction sign name crAC tabTCR chainReductionBool else applyChainReduction sign crAC tabTCR chainReductionBool
-
+    -- crACred = if chainReductionBool then prettyChainReduction sign name crAC tabTCR chainReductionBool else applyChainReduction sign crAC tabTCR chainReductionBool
 
 
 -- | Perform wellformedness and deducability checks on a theory.
