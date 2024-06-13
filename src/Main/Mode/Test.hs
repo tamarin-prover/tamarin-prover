@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP                #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -11,24 +10,24 @@ module Main.Mode.Test (
     testMode
   ) where
 
-import           System.Console.CmdArgs.Explicit as CmdArgs
-import           System.Exit
-import           Test.HUnit                      (Counts(..), runTestTT)
+import System.Console.CmdArgs.Explicit as CmdArgs
+import System.Exit
+import Test.HUnit (Counts(..), runTestTT)
 
-import           Main.Console
-import           Main.Environment
+import Main.Console
+import Main.Environment
 
-import qualified Term.UnitTests                  as Term (tests)
+import Term.UnitTests qualified as Term (tests)
 import Data.Maybe (isJust)
 
 
 -- | Self-test mode.
 testMode :: TamarinMode
 testMode = tamarinMode
-    "test"
-    ("Self-test the " ++ programName ++ " installation.")
-    setupFlags
-    run
+  "test"
+  ("Self-test the " ++ programName ++ " installation.")
+  setupFlags
+  run
   where
     setupFlags defaultMode = defaultMode
       { modeArgs       = ([], Just $ flagArg (updateArg "inFile") "FILES")
@@ -42,70 +41,72 @@ testMode = tamarinMode
 -- | Run the self-test.
 run :: TamarinMode -> Arguments -> IO ()
 run _thisMode as = do
-    putStrLn $ "Self-testing the " ++ programName ++ " installation."
-    nextTopic "Testing the availability of the required tools"
-    (successMaude, _) <- ensureMaude as
+  putStrLn $ "Self-testing the " ++ programName ++ " installation."
+  nextTopic "Testing the availability of the required tools"
+  (successMaude, _) <- ensureMaude as
+
 #ifndef NO_GUI
-    putStrLn ""
-    maybeSuccessGraphVizDot <- ensureGraphVizDot as
-    let successGraphVizDot = isJust maybeSuccessGraphVizDot
+  putStrLn ""
+  maybeSuccessGraphVizDot <- ensureGraphVizDot as
+  let successGraphVizDot = isJust maybeSuccessGraphVizDot
 #else
-    let successGraphVizDot = True
+  let successGraphVizDot = True
 #endif
-    {-- FIXME (SM): move test-suite into its own .cabal section.
-     -- I've disabled this part when I've moved to embedding all data files to
-     -- simplify packaging.
-     -- (2015-04-13)
 
-    --------------------------------------------------------------------------
-    nextTopic "Testing the parser on our examples"
-    examplePath   <- getDataFileName "examples"
-    let mkParseTest = Parser.testParseFile Nothing
-    parseTests    <- Parser.testParseDirectory mkParseTest 2 examplePath
-    successParser <- runUnitTest $ TestList parseTests
+  {-- FIXME (SM): move test-suite into its own .cabal section.
+   -- I've disabled this part when I've moved to embedding all data files to
+   -- simplify packaging.
+   -- (2015-04-13)
 
-    --------------------------------------------------------------------------
-    nextTopic "Testing the prover on some of our examples"
+  --------------------------------------------------------------------------
+  nextTopic "Testing the parser on our examples"
+  examplePath   <- getDataFileName "examples"
+  let mkParseTest = Parser.testParseFile Nothing
+  parseTests    <- Parser.testParseDirectory mkParseTest 2 examplePath
+  successParser <- runUnitTest $ TestList parseTests
 
-    let heuristic  = roundRobinHeuristic [SmartRanking False]
-        autoProver = AutoProver heuristic Nothing CutDFS
-        prover = Just ( maudePath as
-                      , replaceSorryProver $ runAutoProver autoProver
-                      )
-        mkProverTest file = do
-            fullFile <- getDataFileName file
-            return $ Parser.testParseFile prover fullFile
+  --------------------------------------------------------------------------
+  nextTopic "Testing the prover on some of our examples"
 
-    nslEx    <- mkProverTest "examples/classic/NSLPK3.spthy"
-    loopEx   <- mkProverTest "examples/loops/Minimal_Loop_Example.spthy"
-    diffieEx <- mkProverTest "examples/csf12/JKL_TS1_2008_KI.spthy"
+  let heuristic  = roundRobinHeuristic [SmartRanking False]
+      autoProver = AutoProver heuristic Nothing CutDFS
+      prover = Just ( maudePath as
+                    , replaceSorryProver $ runAutoProver autoProver
+                    )
+      mkProverTest file = do
+          fullFile <- getDataFileName file
+          pure $ Parser.testParseFile prover fullFile
 
-    successProver <- runUnitTest $ TestList [ nslEx, loopEx, diffieEx ]
-    --}
+  nslEx    <- mkProverTest "examples/classic/NSLPK3.spthy"
+  loopEx   <- mkProverTest "examples/loops/Minimal_Loop_Example.spthy"
+  diffieEx <- mkProverTest "examples/csf12/JKL_TS1_2008_KI.spthy"
 
-    --------------------------------------------------------------------------
-    nextTopic "Testing the unification infrastructure"
-    successTerm  <- runUnitTest =<< Term.tests (maudePath as)
+  successProver <- runUnitTest $ TestList [ nslEx, loopEx, diffieEx ]
+  --}
 
-    --------------------------------------------------------------------------
-    -- FIXME: Implement regression testing.
-    --
-    
-    nextTopic "TEST SUMMARY"
-    let success = and [ successMaude, successGraphVizDot
-                      , successTerm] -- , successParser, successProver ]
-    if success
-      then do putStrLn $ "All tests successful."
-              putStrLn $ "The " ++ programName ++ " should work as intended."
-              putStrLn $ "\n           :-) happy proving (-:\n"
-              exitSuccess
-      else do putStrLn $ "\nWARNING: Some tests failed."
-              putStrLn $ "The " ++ programName ++ " might NOT WORK AS INTENDED.\n"
-              exitFailure
+  --------------------------------------------------------------------------
+  nextTopic "Testing the unification infrastructure"
+  successTerm  <- runUnitTest =<< Term.tests (maudePath as)
+
+  --------------------------------------------------------------------------
+  -- FIXME: Implement regression testing.
+  --
+
+  nextTopic "TEST SUMMARY"
+  let success = successMaude && successGraphVizDot && successTerm -- , successParser, successProver ]
+  if success then do
+    putStrLn "All tests successful."
+    putStrLn $ "The " ++ programName ++ " should work as intended."
+    putStrLn "\n           :-) happy proving (-:\n"
+    exitSuccess
+  else do
+    putStrLn "\nWARNING: Some tests failed."
+    putStrLn $ "The " ++ programName ++ " might NOT WORK AS INTENDED.\n"
+    exitFailure
   where
     nextTopic msg = putStrLn $ "\n*** " ++ msg ++ " ***"
 
     runUnitTest test = do
-        Counts _ _ termErrs termFails <- runTestTT test
-        let success = termErrs == 0 && termFails == 0
-        return success
+      Counts _ _ termErrs termFails <- runTestTT test
+      let success = termErrs == 0 && termFails == 0
+      pure success

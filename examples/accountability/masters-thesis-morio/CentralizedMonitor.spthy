@@ -31,10 +31,10 @@ predicates:
 let D =
   insert <'roles', $x, 'D'>, true;
   out(pk(sk($x)));
+  in(a);
   let m_1 = <'Do', a>
-    m_2 = <'Permit', a>
+      m_2 = <'Permit', a>
   in
-    in(a);
     if IsNormal(a) then
       out(<m_1, sig(m_1, sk($x))>)
     else if IsSpecial(a) then
@@ -43,37 +43,37 @@ let D =
 let C =
   insert <'roles', $y, 'C'>, true;
   out(pk(sk($y)));
+  in($x);
+  in(<<'Permit', a>, sig_m_2>);
   let m_2 = <'Permit', a>
-    m_3 = <m_2, sig_m_2>
+      m_3 = <m_2, sig_m_2>
   in
-    in($x);
-    in(<m_2, sig_m_2>);
     lookup <'roles', $x, 'D'> as is_d in
       if verify(sig_m_2, m_2, pk(sk($x))) = true then
         if IsSpecial(a) then
           out(<m_3, sig(m_3, sk($y))>)
 
 let M =
-  let m_1 = <'Do', a>
-    m_2 = <'Permit', a>
-    m_3 = <m_2, sig_m_2>
-  in
-  ( in(<m_1, sig_m_1>);
-    if verify(sig_m_1, m_1, pk(sk($x))) = true then
-      lookup <'roles', $x, 'D'> as is_d in
-        new id;
-        event Log($x, a, id);
-        event Execute(a, id)
+  ( in(<<'Do', a>, sig_m_1>);
+    let m_1 = <'Do', a> in
+      if verify(sig_m_1, m_1, pk(sk($x))) = true then
+        lookup <'roles', $x, 'D'> as is_d in
+          new id;
+          event Log($x, a, id);
+          event Execute(a, id)
   )
   +
-  ( in(<m_3, sig_m_3>);
-    if verify(sig_m_3, m_3, pk(sk($y))) = true then
-      if verify(sig_m_2, m_2, pk(sk($x))) = true then
-        lookup <'roles', $y, 'C'> as is_c in
-          lookup <'roles', $x, 'D'> as is_d in
-            new id;
-            event Log(<$x, $y>, a, id);
-            event Execute(a, id)
+  ( in(<<<'Permit', a>, sig_m_2>, sig_m_3>);
+    let m_2 = <'Permit', a>
+        m_3 = <m_2, sig_m_2>
+    in
+      if verify(sig_m_3, m_3, pk(sk($y))) = true then
+        if verify(sig_m_2, m_2, pk(sk($x))) = true then
+          lookup <'roles', $y, 'C'> as is_c in
+            lookup <'roles', $x, 'D'> as is_d in
+              new id;
+              event Log(<$x, $y>, a, id);
+              event Execute(a, id)
   )
 
 let Adv =
@@ -83,8 +83,8 @@ let Adv =
 
 let P = (in($x); D) | (in($y); C) | (in(<$x,$y>); M) | !Adv
 
-
-!P
+process:
+  !P
 
 
 test invalidReqD:

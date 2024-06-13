@@ -1,0 +1,62 @@
+theory secrecy_asym_enc
+begin
+
+builtins: asymmetric-encryption
+
+/* We formalize the following protocol:
+
+    1. A -> B: {A,na}pk(B)
+
+*/
+
+// Public key infrastructure
+rule Register_pk:
+  [ Fr(~ltkX) ]
+  -->
+  [ !Ltk($X, ~ltkX)
+  , !Pk($X, pk(~ltkX))
+  , Out(pk(~ltkX))
+  ] 
+
+// Compromising an agent's long-term key
+rule Reveal_ltk:
+  [ !Ltk($X, ltkX) ] --[ Reveal($X) ]-> [ Out(ltkX) ]
+
+// Role A sends first message
+rule A_1_send:
+  [ Fr(~na)
+  , !Ltk($A, ltkA)
+  , !Pk($B, pkB)
+  ]
+--[ Send($A, aenc(<$A, ~na>, pkB)) 
+  , Secret(~na), Honest($A), Honest($B), Role('A')
+  ]->
+  [ St_A_1($A, ltkA, pkB, $B, ~na) 
+  , Out(aenc(<$A, ~na>, pkB))
+  ]
+
+// Role B receives first message
+rule B_1_receive:
+  [ !Ltk($B, ltkB)
+  , In(aenc(<$A, na>,pk(ltkB)))
+  ]
+--[ Recv($B, aenc(<$A, na>, pk(ltkB)))
+  , Secret(na), Honest($B), Honest($A), Role('B')
+  ]->
+  [ St_B_1($B, ltkB, $A, na)
+  ]
+
+lemma executable:
+  exists-trace
+    "Ex A B m #i #j. Send(A,m)@i & Recv(B,m) @j"
+
+lemma secret_A:
+  all-traces
+    "All n #i. Secret(n) @i & Role('A') @i ==> (not (Ex #j. K(n)@j)) | (Ex B #j. Reveal(B)@j & Honest(B)@i)"
+
+lemma secret_B:
+  all-traces
+    "All n #i. Secret(n) @i & Role('B') @i ==> (not (Ex #j. K(n)@j)) | (Ex B #j. Reveal(B)@j & Honest(B)@i)"
+
+
+end

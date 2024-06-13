@@ -1,0 +1,57 @@
+theory Naxos
+begin
+
+builtins: diffie-hellman
+
+functions: h1/1
+functions: h2/1
+
+rule Generate_DH_key_pair:
+  [ Fr(~x) ] 
+  --> 
+  [ !Pk($A,'g'^~x)
+  , Out('g'^~x)
+  , !Ltk($A,~x)
+  ]
+
+rule NaxosR:
+  let 
+      exR = h1(< ~eskR, ~lkR >)
+      hkr = 'g'^exR
+      kR  = h2(< pkI^exR, X^~lkR, X^exR, $I, $R >)
+  in
+   [
+       In(X),
+       Fr( ~eskR ),
+       Fr( ~tid ),
+       !Ltk($R, ~lkR),
+       !Pk($I, pkI)
+   ]
+   --[ SessionKey( ~tid, $R, $I, kR ) ]->
+   [
+       Out( hkr )
+   ]
+
+rule NaxosI_1:
+  let exI = h1(<~eskI, ~lkI >)
+      hkI = 'g'^exI
+  in
+   [   Fr( ~eskI ),
+       Fr( ~tid ),
+       !Ltk( $I, ~lkI ) ]
+   -->
+   [   Init_1( ~tid, $I, $R, ~lkI, ~eskI ),
+       Out( hkI ) ]
+
+rule NaxosI_2:
+  let
+      exI = h1(< ~eskI, ~lkI >)
+      kI  = h2(< Y^~lkI, pkR^exI, Y^exI, $I, $R >)
+  in
+   [   Init_1( ~tid, $I, $R, ~lkI , ~eskI),
+       !Pk( $R, pkR ),
+       In( Y ) ]
+   --[ SessionKey( ~tid, $I, $R, kI ) ]->
+  []
+
+end

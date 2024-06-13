@@ -9,9 +9,9 @@ module Main where
 
 import Main.Console          (defaultMain)
 import Main.Mode.Batch       (batchMode)
-import Main.Mode.Intruder    (intruderMode)
-import Main.Mode.Interactive (interactiveMode)
 import Main.Mode.Test        (testMode)
+import Main.Mode.Interactive (interactiveMode)
+import Main.Mode.Intruder    (intruderMode)
 
 main :: IO ()
 main = defaultMain batchMode [interactiveMode, intruderMode, testMode]

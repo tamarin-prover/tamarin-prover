@@ -1,0 +1,25 @@
+theory lemma_falsified_verified
+begin
+
+/*
+* Date: November 2021
+* Comment: Minimal example for a missing check if
+* 'SOLVED' is present with a non-empty but incomplete proof.
+*/
+
+rule A:
+   [ ]
+ --[ A('x')]->
+   [ ]
+
+lemma lemma_verified:
+  all-traces
+  "All x #i. A(x)@i ==> A(x)@i"
+
+lemma lemma_falsified:
+  all-traces
+  "All x #i. A(x)@i ==> A(x)@i"
+simplify
+SOLVED
+
+end

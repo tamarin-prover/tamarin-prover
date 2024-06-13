@@ -17,7 +17,7 @@ Dependencies
 In Ubuntu, the following should be sufficient to get things up and
 running:
 
-	sudo apt-get install python-pyparsing python-pydot
+	sudo apt-get install python3-pyparsing python3-pydot
 
 Usage
 -----
@@ -36,4 +36,6 @@ If `tamarin-prover` and `tamarin-cleandot.py` are in your executable
 paths, the following wrapper script can be used:
 
     tamarin-prover-cleandot PROTOCOL_DIRECTORY
+
+
 

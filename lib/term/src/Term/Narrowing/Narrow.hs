@@ -1,7 +1,7 @@
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
--- 
+--
 --
 -- One-step narrowing from a term.
 module Term.Narrowing.Narrow (
@@ -11,6 +11,7 @@ module Term.Narrowing.Narrow (
 import           Term.Unification
 import           Term.Positions
 
+import           Control.Monad
 import           Control.Monad.Reader
 
 import           Extension.Prelude

@@ -1,0 +1,69 @@
+theory lemma_falsified_verified begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+rule (modulo E) A:
+   [ ] --[ A( 'x' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma lemma_verified:
+  all-traces "∀ x #i. (A( x ) @ #i) ⇒ (A( x ) @ #i)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (A( x ) @ #i) ∧ ¬(A( x ) @ #i)"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma lemma_falsified:
+  all-traces "∀ x #i. (A( x ) @ #i) ⇒ (A( x ) @ #i)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (A( x ) @ #i) ∧ ¬(A( x ) @ #i)"
+*/
+simplify
+by contradiction /* from formulas */
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.9.0
+Maude version 3.2.2
+Git revision: 2023bf45660993c250f71bea8f123d870bfb3e82 (with uncommited changes), branch: pr-plainOpenGoals-fix
+Compiled at: 2023-11-21 21:42:44.712168244 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.2. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue446-1.spthy
+
+  output:          examples/regression/trace/issue446-1.spthy.tmp
+  processing time: 0.05s
+  
+  lemma_verified (all-traces): verified (2 steps)
+  lemma_falsified (all-traces): verified (2 steps)
+
+==============================================================================
+*/

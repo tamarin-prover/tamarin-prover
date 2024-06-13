@@ -9,7 +9,7 @@ module Extension.Prelude where
 
 import Data.Maybe
 --import Data.List --hiding (sortOn)
-import Data.List (groupBy,inits,nubBy,sortBy,tails,unfoldr)
+import Data.List (groupBy,inits,nubBy,sortBy,tails,unfoldr,nub)
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Ord (comparing)
@@ -95,6 +95,16 @@ nubOn proj = nubBy ((==) `on` proj)
 -- | //O(n).// Group on a projection of the data to group
 groupOn :: Eq b => (a -> b) -> [a] -> [[a]]
 groupOn proj = groupBy ((==) `on` proj)
+
+-- | For an association list collect all values with the same key in a list.
+collectBy :: (Ord k) => [(k, v)] -> [(k, [v])]
+collectBy lst =
+    let ks = nub $ map fst lst in
+    map findVals ks
+  where
+    findVals k = 
+      let vs = [v | (k', v) <- lst, k == k'] in
+      (k, vs)
 
 -- | sort on a projection of the data to sort
 sortOn :: Ord b => (a -> b) -> [a] -> [a]

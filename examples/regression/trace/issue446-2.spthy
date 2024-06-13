@@ -1,0 +1,20 @@
+theory MinValueEq
+begin
+
+/*
+* Author: Philip Lukert
+* Date: November 2021
+* Comment: minimal counterexample for issue 329
+*/
+
+rule AttackerMsg:
+    [ In(x) ]
+  --[ Value(x) ]->
+    [ ]
+
+// should fail
+lemma WrongEquality:
+"All a b #i #j. Value(a)@i & Value(b)@j ==> a=b"
+
+
+end

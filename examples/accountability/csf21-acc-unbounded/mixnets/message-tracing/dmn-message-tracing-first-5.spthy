@@ -26,6 +26,8 @@ equations:
     adec(sk(x), aenc(pk(x), r, m)) = m
   , adec_suc(sk(x), aenc(pk(x), r, m)) = true
 
+heuristic: o "./oracle-dmn-message-tracing"
+
 
 rule DistinctParty:
     [ ]

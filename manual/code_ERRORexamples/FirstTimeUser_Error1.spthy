@@ -1,0 +1,44 @@
+theory FirstTimeUser_Error1
+begin
+
+
+/* Alice&Bob specification
+
+	I knows:k
+	R knows:k
+	I -> R: senc(n,k) 
+
+This model contains WRONG RULES, that are commented out but left here for the
+purpose of demonstrating various error messages that could occur
+
+*/
+builtins: symmetric-encryption
+
+// WARNING: this rule illustrates a non-functional protocol
+rule setup:
+	[ Fr(~k), Fr(~m) ]
+	--[]->
+	[ AgSt($I,<~k,~m>) ]
+
+rule I_1: 
+	[ AgSt($I,<~k,~m>) ]
+ 	--[ Send($I,$R,~m) ]-> 
+	[ Out(senc(~m,~k)) ]
+
+rule R_1:
+	[ AgSt($R,~k), In(senc(m,~k))  ]
+	--[ Receive($R,$I,m), Secret($R,m) ]->
+	[ ]
+
+lemma nonce_secret: 
+	"All R m #i #j. Secret(R,m) @i & K(m) @j ==> F"
+
+lemma functional: exists-trace
+	"Ex I R m #i #j.
+		Send(I,R,m) @i
+		& Receive(R,I,m) @j "
+
+
+end
+
+ 

@@ -74,7 +74,40 @@ var server = {
         if(data.redirect) {
             // Server wants redirect
             loadingScreen.show(data.redirect);
-            window.location.href = data.redirect;
+            // Add the image query parameters so that the server response directly contains an image url with the correct parameters.
+            // Get image settings from cookie
+            var params = []
+            // If level == 0, do not compact and compress
+            if (parseInt($.cookie("simplification")) == 0) {
+                params = params.concat(
+                    { name: "uncompact", value: "" }
+                );
+                params = params.concat(
+                    { name: "uncompress", value: "" }
+                );
+            }
+            if ($.cookie("abbreviate") == null) {
+                params = params.concat(
+                    { name: "unabbreviate", value: "" }
+                );
+            }
+            params = params.concat(
+                { name: "simplification", value: $.cookie("simplification") }
+            );
+
+            if($.cookie("auto-sources")== null){
+                params = params.concat(
+                  { name: "no-auto-sources", value: ""}  
+                );
+            }
+
+            var redirectUrl = data.redirect;
+            // Rewrite image paths (if necessary)
+            if(params.length > 0) {
+                var query_string = $.param(params);
+                redirectUrl = redirectUrl + "?" + query_string;
+            }
+            window.location.href = redirectUrl;
         } else if(data.alert) {
             // Server requested alert box
             ui.showDialog(data.alert);
@@ -151,7 +184,7 @@ var ui = {
             $.cookie("not-init",null,{path: "/"});
         }
 
-        $.cookie("simplification", 2, { path: '/' });
+        // $.cookie("simplification", 2, { path: '/' });
         // Navigation drop-down menus
         $("ul#navigation").superfish();
 

@@ -63,10 +63,10 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
   if autoSources && containsPartialDeconstructions (cache items)
     then
         proveTheory (const True) checkProof
-      $ Theory (L.get thyName thy0) h t sig (cache items') items' (L.get thyOptions thy0)  (L.get thyIsSapic thy0)
+      $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items') items' (L.get thyOptions thy0)  (L.get thyIsSapic thy0)
     else
         proveTheory (const True) checkProof
-      $ Theory (L.get thyName thy0) h t sig (cache items) items (L.get thyOptions thy0) (L.get thyIsSapic thy0)
+      $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items) items (L.get thyOptions thy0) (L.get thyIsSapic thy0)
   where
     parameters = Sources.IntegerParameters (L.get (openChainsLimit.thyOptions) thy0) (L.get (saturationLimit.thyOptions) thy0) showSaturation
     h          = L.get thyHeuristic thy0
@@ -89,6 +89,7 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
        RestrictionItem
        (LemmaItem . fmap skeletonToIncrementalProof)
        TextItem
+       ConfigBlockItem
        PredicateItem
        MacroItem
        TranslationItem
@@ -98,6 +99,7 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     unfoldClosedRules (RestrictionItem i:is) = RestrictionItem i:unfoldClosedRules is
     unfoldClosedRules       (LemmaItem i:is) = LemmaItem i:unfoldClosedRules is
     unfoldClosedRules        (TextItem i:is) = TextItem i:unfoldClosedRules is
+    unfoldClosedRules (ConfigBlockItem i:is) = ConfigBlockItem i:unfoldClosedRules is
     unfoldClosedRules   (PredicateItem i:is) = PredicateItem i:unfoldClosedRules is
     unfoldClosedRules       (MacroItem i:is) = MacroItem i:unfoldClosedRules is
     unfoldClosedRules       (TranslationItem i:is) = TranslationItem i:unfoldClosedRules is
@@ -123,7 +125,7 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
 
     -- extract protocol rules
     rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
-    rules its = theoryRules (Theory errClose errClose errClose errClose errClose its errClose False)
+    rules its = theoryRules (Theory errClose errClose errClose errClose errClose errClose its errClose False)
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
@@ -138,6 +140,9 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
         addBreakers bs (RuleItem ru) =
             RuleItem (L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
         addBreakers _  item = item
+
+-- Applying provers
+-------------------
 
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.

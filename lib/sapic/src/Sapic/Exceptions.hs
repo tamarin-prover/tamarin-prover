@@ -23,7 +23,6 @@ import Theory.Sapic
 import Data.Label
 import qualified Data.Maybe
 import Theory.Text.Pretty
-import Sapic.Annotation  --toAnProcess
 import Theory.Sapic.Print (prettySapic)
 import qualified Theory.Text.Pretty as Pretty
 
@@ -67,14 +66,14 @@ data ExportException = UnsupportedBuiltinMS
                        | UnsupportedTypes [String]
 
 instance Show ExportException where
-    
+
     show (UnsupportedTypes incorrectFunctionUsages) = do
         let functionsString = List.intercalate ", " incorrectFunctionUsages
         (case length functionsString of
           1 -> "The function " ++ functionsString ++ ", which is declared with a user-defined type, appears in a rewrite rule. "
           _ -> "The functions " ++ functionsString ++ ", which are declared with a user-defined type, appear in a rewrite rule. ")
         ++ "However, the translation of rules only works with bitstrings at the moment."
-    show unsuppBuiltin = 
+    show unsuppBuiltin =
         "The builtins bilinear-pairing and multiset are not supported for export. However, your model uses " ++
         (case unsuppBuiltin of
             UnsupportedBuiltinBP -> "bilinear-pairing."
@@ -93,7 +92,7 @@ instance Show (SapicException an) where
     show (InvalidPosition p) = "Invalid position:" ++ prettyPosition p
     show (NotImplementedError s) = "This feature is not implemented yet. Sorry! " ++ s
     show (ImplementationError s) = "You've encountered an error in the implementation: " ++ s
-    show a@(ProcessNotWellformed e p) = "Process not well-formed: " ++ Pretty.render (text (show e) $-$ nest 2 (maybe emptyDoc prettySapic p))
+    show (ProcessNotWellformed e p) = "Process not well-formed: " ++ Pretty.render (text (show e) $-$ nest 2 (maybe emptyDoc prettySapic p))
     show ReliableTransmissionButNoProcess = "The builtin support for reliable channels currently only affects the process calculus, but you have not specified a top-level process. Please remove \"builtins: reliable-channel\" to proceed."
     show (CannotExpandPredicate facttag rstr) = "Undefined predicate "
                               ++ showFactTagArity facttag
@@ -135,7 +134,7 @@ instance Show WFerror where
                               ++ prettySapicFunType t2
                               ++ "."
     show (FunctionNotDefined sym ) = "Function not defined " ++ show sym
-        
+
 
 instance Exception WFerror
 instance (Typeable an) => Exception (SapicException an)

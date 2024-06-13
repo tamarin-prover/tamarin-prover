@@ -30,8 +30,7 @@ Specification
 *********************************************/
 
 let CA =
-    let sk = skca($ca) in
-    out(pk(sk));
+    out(pk(skca($ca)));
     // Request to register S at CA
     !(  in(<$s, $ca>);
         new skS;
@@ -39,7 +38,7 @@ let CA =
         // Dishonest CAs cannot register proofs, because they don't have them.
         insert <$ca, 'proofOfID', $s, pk(skS)>, 'yes';
         out(pk(skS));
-        out(sign(sk, <pk(skS), $s>))
+        out(sign(skca($ca), <pk(skS), $s>))
     )
 
 let LogCert =
@@ -65,14 +64,12 @@ let TestCA =
         unlock 'testCA'
 
 let TestLA =
-    let u1 = 'c1' in
-    let u2 = 's1' in
     // This is the test that the AIFom file compiles to, modulo symmetry.
     lock 'log';
-    in(<$la, u1, u2, $s, pk>);
-    lookup <$la, 'log', $s, pk, u1> as x1 in
+    in(<$la, 'c1', 's1', $s, pk>);
+    lookup <$la, 'log', $s, pk, 'c1'> as x1 in
     (
-        lookup <$la, 'log', $s, pk, u2> as x2 in
+        lookup <$la, 'log', $s, pk, 's1'> as x2 in
             event HonestLA();
             event TestLA($la, $s, pk);
             unlock 'log'
@@ -82,7 +79,7 @@ let TestLA =
             unlock 'log'
     )
     else (
-        lookup <$la, 'log', $s, pk, u2> as x2 in
+        lookup <$la, 'log', $s, pk, 's1'> as x2 in
             event DishonestLA($la);
             event TestLA($la, $s, pk);
             unlock 'log'
@@ -97,6 +94,7 @@ let Proto =
     ! in($ca); CA || in($la); LogCert || TestCA || TestLA || Terminate
 
 // General form for accountabilty processes.
+process:
 Proto
 || !( in('c', <'CAcorrupt', $ca>); // corrupt CAs
       event Corrupted($ca);

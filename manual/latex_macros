@@ -1,0 +1,66 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Fix some incompatibilities between Mathjax and Latex
+\ifxetex
+  % spacing
+  \newcommand{\nhspace}{}
+  % ampersand escaping
+  \newcommand{\autognp}{\textsf{AutoG\&P}}
+\else
+  \newcommand{\nhspace}{\!}
+  \newcommand{\autognp}{\textsf{AutoG&P}}
+\fi
+
+% amper
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Tool names
+\newcommand{\easycrypt}{\textsf{EasyCrypt}}
+\newcommand{\cryptoverif}{\textsf{CryptoVerif}}
+\newcommand{\proverif}{\textsf{ProVerif}}
+\newcommand{\scyther}{\textsf{Scyther}}
+\newcommand{\tamarin}{\textsf{Tamarin}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bilinear groups
+\newcommand{\GG}{\mathbb{G}}
+\newcommand{\FF}{\mathbb{F}}
+\newcommand{\Fq}{\mathbb{F}_q}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Adversaries, simulators
+\newcommand{\Adv}{\mathcal{A}}
+\newcommand{\Sim}{\mathcal{S}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Probability expressions
+
+\newcommand{\samp}[2]{#1 \leftarrow\!\!\!\!\!^{\$}\  #2}
+\newcommand{\call}[2]{#1 \leftarrow #2}
+\newcommand{\ProbGame}[2]{%
+Pr\left[
+\begin{array}{l|l}
+  \begin{array}{l}%
+  #1
+  \end{array}%
+&%
+  #2  
+\end{array}%
+\right]}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% public key encryption
+
+\newcommand{\dotsep}[2]{#1 . \nhspace #2}
+\newcommand{\schemeProc}[2]{\mathsf{\dotsep{#1}{#2}}}
+
+\newcommand{\pkeyGen}{\schemeProc{PKE}{keyGen}}
+\newcommand{\penc}{\schemeProc{PKE}{enc}}
+\newcommand{\pdec}{\schemeProc{PKE}{dec}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Assumptions and security definitions
+
+\newcommand{\AdvDDH}{\Adv_{\mathsf{ddh}}}
+\newcommand{\IndCpa}{\textsf{IND-CPA}}

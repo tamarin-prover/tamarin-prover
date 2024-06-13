@@ -1,0 +1,59 @@
+theory TestConfiguration begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+configuration: "--auto-sources --stop-on-trace=BFS"
+
+rule (modulo E) Testing:
+   [ Fr( x ) ] --[ Test( x ) ]-> [ F1( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+lemma test_lemma:
+  exists-trace "∃ x #i. Test( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Test( x ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.7.1
+Maude version 3.2.2
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.2.2. OK.
+ checking installation: OK.
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features//configuration/configuration.spthy
+
+  output:          examples/features//configuration/configuration.spthy.tmp
+  processing time: 0.03s
+  
+  test_lemma (exists-trace): verified (2 steps)
+
+==============================================================================
+*/
