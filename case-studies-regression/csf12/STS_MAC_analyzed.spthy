@@ -347,7 +347,7 @@ WARNING: the following wellformedness checks failed!
 Message Derivation Checks
 =========================
 
-  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
 Rule Init_2: 
 Failed to derive Variable(s): ~ltkR

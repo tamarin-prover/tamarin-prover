@@ -80,7 +80,7 @@ point of instantiation to the point of sending by either the adversary or the
 initiator.
 
 In order to understand the use of this source invariant you might try the
-follwing experiment. Comment out this source invariant and then check the
+following experiment. Comment out this source invariant and then check the
 precomputed case distinctions in the GUI. Try to complete the proof of the
 'nonce_secrecy' lemma.
 
