@@ -81,6 +81,7 @@ import           TheoryObject
 
 import           Web.Settings
 import           Web.Types
+import Theory.Constraint.System (usesOracle)
 
 ------------------------------------------------------------------------------
 -- Various other functions
@@ -540,10 +541,10 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
                              comment_ (goalRankingName ranking))
           , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
-          , autoProverLinks 'b' "bounded-" boundDesc bound
-          , autoProverLinks 'o' "oracle-"  oracleDesc    0
-          , autoProverLinks 's' "all-"     allProve      0
-          ]
+          , autoProverLinks 'b' "bounded-" boundDesc bound ] ++
+          [ autoProverLinks 'o' "oracle-"  oracleDesc    0
+          | usesOracle heuristic ] ++
+          [ autoProverLinks 's' "all-"     allProve      0 ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ tiAutoProver ti

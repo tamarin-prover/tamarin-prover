@@ -38,6 +38,7 @@ module Theory.Constraint.System (
   , Deprio(..)
   -- , Ranking(..)
   , defaultTactic
+  , usesOracle
   , mapInternalTacticRanking
   , maybeSetInternalTacticName
 
@@ -533,6 +534,14 @@ defaultHeuristic = Heuristic . defaultRankings
 defaultTactic :: Tactic ProofContext
 defaultTactic = Tactic "default" (SmartRanking False) [] []
 
+usesOracle :: Heuristic a -> Bool
+usesOracle (Heuristic rs) = all isOracleRanking rs
+  where
+    isOracleRanking :: GoalRanking a -> Bool
+    isOracleRanking (OracleRanking _ _) = True
+    isOracleRanking (OracleSmartRanking _ _) = True
+    isOracleRanking (InternalTacticRanking _ _) = True
+    isOracleRanking _ = False
 
 -- Default to "./oracle" in the current working directory.
 defaultOracle :: Oracle
