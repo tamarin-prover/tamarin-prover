@@ -752,22 +752,12 @@ data AutoProver = AutoProver
     , apDefaultTactic   :: Maybe [Tactic ProofContext]
     , apBound            :: Maybe Int
     , apCut              :: SolutionExtractor
-    , quitOnEmptyOracle  :: Bool
     }
     deriving ( Generic, NFData, Binary )
 
 selectHeuristic :: AutoProver -> ProofContext -> Heuristic ProofContext
-selectHeuristic prover ctx = setQuitOnEmpty $ fromMaybe (defaultHeuristic False)
+selectHeuristic prover ctx = fromMaybe (defaultHeuristic False)
                              (apDefaultHeuristic prover <|> L.get pcHeuristic ctx)
-  where
-    setQuitOnEmpty :: Heuristic ProofContext -> Heuristic ProofContext
-    setQuitOnEmpty (Heuristic rankings) = Heuristic (map aux rankings)
-
-    aux :: GoalRanking a -> GoalRanking a
-    aux (OracleRanking _ o) = OracleRanking (quitOnEmptyOracle prover) o
-    aux (OracleSmartRanking _ o) = OracleSmartRanking (quitOnEmptyOracle prover) o
-    aux (InternalTacticRanking _ t) = InternalTacticRanking (quitOnEmptyOracle prover) t
-    aux gr = gr
 
 selectDiffHeuristic :: AutoProver -> DiffProofContext -> Heuristic ProofContext
 selectDiffHeuristic prover ctx = fromMaybe (defaultHeuristic True)
@@ -782,7 +772,7 @@ selectDiffTactic prover ctx = fromMaybe [defaultTactic]
                                  (apDefaultTactic prover <|> L.get pcTactic (L.get dpcPCLeft ctx))
 
 runAutoProver :: AutoProver -> Prover
-runAutoProver aut@(AutoProver _ _  bound cut _) =
+runAutoProver aut@(AutoProver _ _  bound cut) =
     mapProverProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
@@ -805,7 +795,7 @@ runAutoProver aut@(AutoProver _ _  bound cut _) =
         boundProofDepth b <$> runProver p ctxt d se prf
 
 runAutoDiffProver :: AutoProver -> DiffProver
-runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
+runAutoDiffProver aut@(AutoProver _ _ bound cut) =
     mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of

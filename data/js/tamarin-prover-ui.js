@@ -194,7 +194,6 @@ var ui = {
             65  : function() { mainDisplay.applyProver('characterization'); },          // A
             98  : function() { mainDisplay.applyProver('bounded-autoprove'); },         // b
             66  : function() { mainDisplay.applyProver('bounded-characterization'); },  // B
-            111 : function() { mainDisplay.applyProver('oracle-autoprove'); },
             115 : function() { mainDisplay.applyProver('autoprove-all'); },             // s
             83  : function() { mainDisplay.applyProver('characterization-all'); },      // S
             74  : function() { proofScript.jump('next/smart', null); },  // j

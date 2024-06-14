@@ -41,7 +41,7 @@ import           Data.Label                                hiding (get)
 import qualified Data.Label                                as L
 import           Data.List                                 (intersperse,partition,groupBy,sortBy,isPrefixOf,findIndex,intercalate)
 import qualified Data.Map                                  as M
-import           Data.Maybe                                (catMaybes, fromMaybe, mapMaybe)
+import           Data.Maybe                                (catMaybes, fromMaybe)
 -- import           Data.Monoid
 import           Data.Ord                                  (comparing)
 import qualified Data.Set                                  as S
@@ -449,34 +449,28 @@ finishedSubterms pc sys = hasReducibleOperatorsOnTop (reducibleFunSyms $ mhMaude
 -- Heuristics
 ------------------------------------------------------------------------------
 
-data ProofInstruction = ApplySorry
-
-data Ranking a = Ranking
-  { ranked :: a
-  , instruction :: Maybe ProofInstruction }
-
-plainRanking :: a -> Ranking a
-plainRanking = (`Ranking` Nothing)
-
 -- | Use a 'GoalRanking' to sort a list of 'AnnotatedGoal's stemming from the
 -- given constraint 'System'.
-rankGoals :: ProofContext -> GoalRanking ProofContext -> [Tactic ProofContext] -> System -> [AnnotatedGoal] -> Ranking [AnnotatedGoal]
-rankGoals ctxt ranking tacticsList sys = case ranking of
-    GoalNrRanking       -> plainRanking . goalNrRanking
-    OracleRanking quitOnEmpty oracleName -> oracleRanking (const goalNrRanking) oracleName quitOnEmpty ctxt sys
-    OracleSmartRanking quitOnEmpty oracleName -> oracleRanking (smartRanking ctxt False) oracleName quitOnEmpty ctxt sys
-    UsefulGoalNrRanking -> plainRanking. sortOn (\(_, (nr, useless)) -> (useless, nr))
-    SapicRanking -> plainRanking . sapicRanking ctxt sys
-    SapicPKCS11Ranking -> plainRanking . sapicPKCS11Ranking ctxt sys
-    SmartRanking useLoopBreakers -> plainRanking . smartRanking ctxt useLoopBreakers sys
-    SmartDiffRanking -> plainRanking . smartDiffRanking ctxt sys
-    InjRanking useLoopBreakers -> plainRanking . injRanking ctxt useLoopBreakers sys
-    InternalTacticRanking quitOnEmpty tactic -> internalTacticRanking (chosenTactic tacticsList tactic) quitOnEmpty ctxt sys
+rankGoals :: ProofContext -> GoalRanking ProofContext -> [Tactic ProofContext] -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+rankGoals ctxt ranking tacticsList = case ranking of
+    GoalNrRanking       -> \_sys -> goalNrRanking
+    OracleRanking oracleName -> oracleRanking oracleName ctxt
+    OracleSmartRanking oracleName -> oracleSmartRanking oracleName ctxt
+    UsefulGoalNrRanking ->
+        \_sys -> sortOn (\(_, (nr, useless)) -> (useless, nr))
+    SapicRanking -> sapicRanking ctxt
+    SapicPKCS11Ranking -> sapicPKCS11Ranking ctxt
+    SmartRanking useLoopBreakers -> smartRanking ctxt useLoopBreakers
+    SmartDiffRanking -> smartDiffRanking ctxt
+    InjRanking useLoopBreakers -> injRanking ctxt useLoopBreakers
+    InternalTacticRanking tactic-> internalTacticRanking (chosenTactic tacticsList tactic) ctxt
 
     where 
       chosenTactic :: [Tactic ProofContext] -> Tactic ProofContext-> Tactic ProofContext
       chosenTactic   []  t = chooseError tacticsList t
-      chosenTactic (h:q) t = if checkName h t then h else chosenTactic q t
+      chosenTactic (h:q) t = case (checkName h t) of 
+        True  -> h
+        False -> chosenTactic q t 
 
       definedHeuristic = intercalate [','] (foldl (\acc x -> (_name x):acc ) [] tacticsList)
 
@@ -491,23 +485,17 @@ rankGoals ctxt ranking tacticsList sys = case ranking of
 -- system is solved.
 rankProofMethods :: GoalRanking ProofContext -> [Tactic ProofContext] -> ProofContext -> System
                  -> [(ProofMethod, (M.Map CaseName System, String))]
-rankProofMethods ranking tactics ctxt sys =
-  let rankedGoals = rankGoals ctxt ranking tactics sys $ openGoals sys
-      cs = contradictions ctxt sys
-  in case rankedGoals of
-    Ranking gs (Just ApplySorry)
-      | null cs && not (null gs) -> [(Sorry (Just "Oracle ranked no goals"), (M.empty, ""))]
-    Ranking gs _ -> do
-      (m, expl) <-
-              (contradiction <$> cs)
-          <|> (case L.get pcUseInduction ctxt of
-                AvoidInduction -> [(Simplify, ""), (Induction, "")]
-                UseInduction   -> [(Induction, ""), (Simplify, "")]
-              )
-          <|> (solveGoalMethod <$> gs)
-      case execProofMethod ctxt m sys of
-        Just cases -> return (m, (cases, expl))
-        Nothing    -> []
+rankProofMethods ranking tactics ctxt sys = do
+    (m, expl) <-
+            (contradiction <$> contradictions ctxt sys)
+        <|> (case L.get pcUseInduction ctxt of
+               AvoidInduction -> [(Simplify, ""), (Induction, "")]
+               UseInduction   -> [(Induction, ""), (Simplify, "")]
+            )
+        <|> (solveGoalMethod <$> (rankGoals ctxt ranking tactics sys $ openGoals sys))
+    case execProofMethod ctxt m sys of
+      Just cases -> return (m, (cases, expl))
+      Nothing    -> []
   where
     contradiction c                    = (Contradiction (Just c), "")
 
@@ -595,38 +583,72 @@ goalNrRanking = sortOn (fst . snd)
 
 -- | A ranking function using an external oracle to allow user-definable
 --   heuristics for each lemma separately.
-oracleRanking :: (System -> [AnnotatedGoal] -> [AnnotatedGoal])
-              -> Oracle
-              -> Bool
+oracleRanking :: Oracle
               -> ProofContext
               -> System
-              -> [AnnotatedGoal]
-              -> Ranking [AnnotatedGoal]
-oracleRanking preSort oracle quitOnEmpty ctxt _sys ags0 = unsafePerformIO $ do
-  let ags = preSort _sys ags0
-  let inp = unlines $ zipWith (\i ag -> show i ++": "++ (concat . lines . render $ pgoal ag)) [(0::Int)..] ags
-  outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
+              -> [AnnotatedGoal] -> [AnnotatedGoal]
+oracleRanking oracle ctxt _sys ags0
+--  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
+  | otherwise =
+    unsafePerformIO $ do
+      let ags = goalNrRanking ags0
+      let inp = unlines
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip [(0::Int)..] ags))
+      outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
+      
+      let indices = catMaybes . map readMay . lines $ outp
+          ranked = catMaybes . map (atMay ags) $ indices
+          remaining = filter (`notElem` ranked) ags
+          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+                   ++ inp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                   ++ outp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+      guard $ trace logMsg True
+      -- _ <- getLine
+      -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
+      -- guard $ trace sd True
 
-  let indices = mapMaybe readMay $ lines outp
-      ranked = mapMaybe (atMay ags) indices
-      remaining = filter (`notElem` ranked) ags
-      logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
-                ++ inp
-                ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
-                ++ outp
-                ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
-  guard $ trace logMsg True
+      return (ranked ++ remaining)
+  where
+    pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
-  return (Ranking (ranked ++ remaining)
-                  (guard (quitOnEmpty && null ranked) *> Just ApplySorry))
+-- | A ranking function using an external oracle to allow user-definable
+--   heuristics for each lemma separately, using the smartRanking heuristic
+--   as the baseline.
+oracleSmartRanking :: Oracle
+                   -> ProofContext
+                   -> System
+                   -> [AnnotatedGoal] -> [AnnotatedGoal]
+oracleSmartRanking oracle ctxt _sys ags0
+--  | AvoidInduction == (L.get pcUseInduction ctxt) = ags0
+  | otherwise =
+    unsafePerformIO $ do
+      let ags = smartRanking ctxt False _sys ags0
+      let inp = unlines
+                  (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
+                       (zip [(0::Int)..] ags))
+      outp <- readProcess (oraclePath oracle) [ L.get pcLemmaName ctxt ] inp
+      let indices = catMaybes . map readMay . lines $ outp
+          ranked = catMaybes . map (atMay ags) $ indices
+          remaining = filter (`notElem` ranked) ags
+          logMsg =    ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
+                   ++ inp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
+                   ++ outp
+                   ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+      guard $ trace logMsg True
+      -- let sd = render $ vcat $ map prettyNode $ M.toList $ L.get sNodes sys
+
+      return (ranked ++ remaining)
   where
     pgoal (g,(_nr,_usefulness)) = prettyGoal g
 
 -- | This function apply a tactic to a list of AnnotatedGoals to retrive an ordered list according
 -- | to its Prio/Deprio's functions
-itRanking :: Tactic ProofContext -> [AnnotatedGoal] -> Bool -> ProofContext -> System -> Ranking [AnnotatedGoal]
-itRanking tactic ags quitOnEmpty ctxt _sys =
-    Ranking result (guard (quitOnEmpty && null rankedPrioGoals && null rankedDeprioGoals) *> Just ApplySorry)
+itRanking :: Tactic ProofContext -> [AnnotatedGoal] -> ProofContext -> System -> [AnnotatedGoal]
+itRanking tactic ags ctxt _sys = result
     where
       -- Getting the functions from priorities
       prioToFunctions = map functionsPrio (_prios tactic)
@@ -692,18 +714,18 @@ itRanking tactic ags quitOnEmpty ctxt _sys =
 -- | A ranking function using a tactic to allow user-definable heuristics
 --   for each lemma separately, using the user chosen defaultMethod heuristic
 --   as the baseline.
-internalTacticRanking :: Tactic ProofContext -> Bool -> ProofContext -> System -> [AnnotatedGoal] -> Ranking [AnnotatedGoal]
-internalTacticRanking tactic quitOnEmpty ctxt _sys ags0 = trace logMsg res
+internalTacticRanking :: Tactic ProofContext -> ProofContext -> System -> [AnnotatedGoal] -> [AnnotatedGoal]
+internalTacticRanking tactic ctxt _sys ags0 = trace logMsg res
     where
         defaultMethod =  _presort tactic                        -- retrieve baseline heuristic 
-        ags = ranked $ rankGoals ctxt defaultMethod [tactic] _sys ags0   -- get goals accordingly
+        ags = rankGoals ctxt defaultMethod [tactic] _sys ags0   -- get goals accordingly
         pgoal (g,(_nr,_usefulness)) = prettyGoal g
         inp = unlines
                     (map (\(i,ag) -> show i ++": "++ (concat . lines . render $ pgoal ag))
                          (zip [(0::Int)..] ags))
-        res = itRanking tactic ags quitOnEmpty ctxt _sys  -- apply the tactic ranking
+        res = itRanking tactic ags ctxt _sys                    -- apply the tactic ranking
         dict = M.fromList (zip ags [(0::Int)..])
-        outp = map (fromMaybe (-1) . flip M.lookup dict) (ranked res)
+        outp = map (fromMaybe (-1)) (map (flip M.lookup dict) res)
         prettyOut = unlines (map show outp)
         logMsg = ">>>>>>>>>>>>>>>>>>>>>>>> START INPUT\n"
                      ++ inp

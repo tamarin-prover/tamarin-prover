@@ -754,15 +754,11 @@ getProverDiffAllR (name, mkProver, mkDiffProver) idx  = do
 getAutoProverR :: TheoryIdx
                -> SolutionExtractor
                -> Int                             -- autoprover bound to use
-               -> Bool                            -- Quit on empty oracle
                -> TheoryPath -> Handler RepJson
-getAutoProverR idx extractor bound quitOnEmpty =
+getAutoProverR idx extractor bound =
     getProverR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver
-      { apBound = actualBound
-      , apCut = extractor
-      , quitOnEmptyOracle = quitOnEmpty }
+    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]

@@ -560,7 +560,6 @@ constructAutoProver thyOpts =
                Nothing
                (L.get oProofBound thyOpts)
                (fromMaybe CutDFS $ L.get oStopOnTrace thyOpts)
-               False
 
 -----------------------------------------------
 -- Add Options parameters in an OpenTheory
