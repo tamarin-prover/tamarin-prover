@@ -110,29 +110,15 @@ In observational equivalence mode, lemmas can be associated to one side.
 A proof skeleton is a complete or partial proof as output by the Tamarin prover.
 It indicates the proof method used at each step, which may include multiple cases.
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_proof_skeleton,_proof_methods,goal,premise_goal,nod_var"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_proof_skeleton,_proof_methods,proof_method,goal,premise_goal,nod_var,solved,mirrored,by_method,method_skeleton,cases,premise_goal,action_goal,chain_goal,disjunction_split_goal,eq_split_goal,node_var,natural,natural_subscript"}
 ~~~~
-    proof_skeleton :=  'SOLVED' | 'by' proof_method
-                    | proof_method proof_skeleton
-                    | proof_method 'case' ident proof_skeleton
-                        ('next 'case' ident proof_skeleton)* 'qed'
-    proof_method   := 'sorry' | 'simplify' | 'solve '(' goal ')' |
-                      'contradiction' | 'induction'
-    goal           :=  fact "▶" natural_subscr node_var
-                    | fact '@' node_var
-                    | '(' node_var ',' natural ')' '~~>' '(' node_var ',' natural ')'
-                    | formula ("∥" formula)*
-                    | 'splitEqs' '(' natural ')'
-    node_var       := ['#'] ident ['.' natural]      // temporal sort prefix
-                    | ident ['.' natural] ':' 'node' // temporal sort suffix
-    natural        := digit+
-    natural_subscr := ('₀'|'₁'|'₂'|'₃'|'₄'|'₅'|'₆'|'₇'|'₈'|'₉')+
 
 Formal comments are used to make the input more readable. In contrast
 to `/*...*/` and `//...` comments, formal comments are stored and output
 again when pretty-printing a security protocol theory.
 
-    formal_comment := ident '{*' ident* '*}'
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="formal_comment"}
+~~~~
 
 For the syntax of terms, you best look at our examples. A common pitfall is to
 use an undefined function symbol. This results in an error message pointing to
@@ -148,6 +134,9 @@ symbols, there is no need to write `nullary()`. Note that the number of
 arguments of an n-ary function application must agree with the arity given in
 the function definition.
 
+TODO
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_term,tupleterm,mset_term,natterm,"}
+~~~~
     tupleterm := '<' msetterm (',' msetterm)* '>'
     msetterm  := natterm (('++' | '+') natterm)*
     natterm   := xorterm ('%+' xorterm)*
@@ -184,6 +173,8 @@ KU-facts have arity 2. Their first argument is used to track the
 exponentiation tags. See the `loops/Crypto_API_Simple.spthy` example for more
 information.
 
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_facts,_fact,fact_annotes,fact_annote"}
+~~~~
     facts := fact (',' fact)*
     fact  := ['!'] ident '(' [msetterm (',' msetterm)*] ')' [fact_annotes]
     fact_annotes := '[' fact_annote (',' fact_annote)* ']'
@@ -197,6 +188,7 @@ Section [Advanced Features](010_advanced-features.html#sec:fact-annotations).
 Formulas are trace formulas as described previously. Note that we are a bit
 more liberal with respect to guardedness. We accept a conjunction of atoms as
 guards.
+
 
     formula     := imp [('<=>' | '⇔') imp]
     imp         := disjunction [('==>' | '⇒') imp]
@@ -221,4 +213,5 @@ after the first character. Moreover, they must not be one of the
 reserved keywords `let`, `in`, or `rule`. Although identifiers beginning with
 a number are valid, they are not allowed as the names of facts (which
 must begin with an upper-case letter).
-    ident := alphaNum (alphaNum | '_')*
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="ident"}
+~~~~
