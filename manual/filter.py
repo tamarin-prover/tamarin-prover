@@ -26,10 +26,6 @@ def extractexclude(l, regexp):
     match = re.search(regexp,l)
     if match:
         res = match.group(1)
-        # print l
-        # print match.start()
-        # print match.end()
-        # print res
         newline = l[:match.start()] + l[match.end():]
         return (newline,res)
     else:
@@ -79,11 +75,10 @@ def includefilerules(filename,rules):
     """
     fp = open(filename,'r')
     res = []
-    indent = max([len(x) for x in rules])
-    print(indent);
+    indent = max([len(x) for x in rules]) + 4 + len(" ::= ") # default indent in ebnf file is 4
     for l in fp:
         for rulename in rules:
-            if (rulename + "  ::=") in l: # all rules are in a single line
+            if (" " + rulename + "  ::=") in l: # all rules are in a single line
                     head, *tail = l.split("| ")
                     res += [head ] + ["\n" + " "*indent + "| " + x for x in tail]
     fp.close()
@@ -93,10 +88,9 @@ def filtergrammar(l,filename):
     """
     Slice function; extract rule names, return array including cleaned-up l
     """
-    (l,res) = extractexclude(l, r'rule\s*=\s*"([^"]*)"')
+    (l,res) = extractexclude(l, r'rules\s*=\s*"([^"]*)"')
     if res != None:
         rules = res.split(",")
-        print(rules)
         mid = includefilerules(filename,rules)
         return [l] + mid
     return None
