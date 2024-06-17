@@ -13,7 +13,7 @@ All security protocol theory are named and delimited by `begin` and `end`.
 We explain the non-terminals of the body in the following paragraphs.
 
 
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rule="theory,_body_item"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="theory,_body_item"}
 ~~~~
 
 Here, we use the term signature more liberally to denote both the defined

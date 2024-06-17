@@ -79,7 +79,7 @@ def includefilerules(filename,rules):
     """
     fp = open(filename,'r')
     res = []
-    indent = max([len(x) for x in rules])
+    indent = max([len(x) for x in rules]) + 4 + len(" ::= ") # default indent in ebnf file is 4
     print(indent);
     for l in fp:
         for rulename in rules:
@@ -93,7 +93,7 @@ def filtergrammar(l,filename):
     """
     Slice function; extract rule names, return array including cleaned-up l
     """
-    (l,res) = extractexclude(l, r'rule\s*=\s*"([^"]*)"')
+    (l,res) = extractexclude(l, r'rules\s*=\s*"([^"]*)"')
     if res != None:
         rules = res.split(",")
         print(rules)
