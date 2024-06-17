@@ -72,29 +72,32 @@ def filterslice(l,filename):
             return [l] + mid
     return None
 
-def includefilerule(filename,rulename):
+def includefilerules(filename,rules):
     """
     Return an array representing a slice of the lines of a file. If no lower
     and upper are given, return the entire file.  Indices start from zero.
     """
     fp = open(filename,'r')
     res = []
+    indent = max([len(x) for x in rules])
+    print(indent);
     for l in fp:
-        if (rulename + "  ::=") in l: # all rules are in a single line
-                head, *tail = l.split("| ")
-                indent = head.find("::= ")
-                res += [head] + ["\n" + " "*indent + "   | " + x for x in tail]
-                break
+        for rulename in rules:
+            if (rulename + "  ::=") in l: # all rules are in a single line
+                    head, *tail = l.split("| ")
+                    res += [head ] + ["\n" + " "*indent + "| " + x for x in tail]
     fp.close()
     return res
 
 def filtergrammar(l,filename):
     """
-    Slice function; extract rule name, return array including cleaned-up l
+    Slice function; extract rule names, return array including cleaned-up l
     """
     (l,res) = extractexclude(l, r'rule\s*=\s*"([^"]*)"')
     if res != None:
-        mid = includefilerule(filename,res)
+        rules = res.split(",")
+        print(rules)
+        mid = includefilerules(filename,rules)
         return [l] + mid
     return None
 
