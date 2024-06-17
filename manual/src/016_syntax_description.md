@@ -21,12 +21,8 @@ function symbols and the equalities describing their interaction.  Note that
 our parser is stateful and remembers what functions have been defined. It will
 only parse function applications of defined functions.
 
-    signature_spec := functions | equations | built_in
-    functions      := 'functions' ':' function_sym (',' function_sym)* [',']
-    function_sym   := ident '/' arity ['[private]']
-    arity          := digit+
-    equations      := 'equations' ':' equation (',' equation)* [',']
-    equation       := (term '=' term)
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_signature_spec,function,_function_sym,function_pub,function_private,function_destructor,equations,equation"}
+~~~~
 
 Note that the equations must be convergent and have the
 Finite Variant Property (FVP), and do not allow the use
@@ -38,39 +34,20 @@ is special. It refers to the equations given in Section [Cryptographic
 Messages](004_cryptographic-messages.html#sec:equational-theories). You need to
 enable it to parse terms containing exponentiations, e.g.,  g ^ x.
 
-    built_in       := 'builtins' ':' built_ins (',' built_ins)* [',']
-    built_ins      := 'diffie-hellman'
-                    | 'hashing' | 'symmetric-encryption'
-                    | 'asymmetric-encryption' | 'signing'
-                    | 'bilinear-pairing' | 'xor'
-                    | 'multiset' | 'natural-numbers' | 'revealing-signing'
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="built_ins,built_in"}
+~~~~
 
 A global heuristic sets the default heuristic that will be used when autoproving
 lemmas in the file. The specified goal ranking can be any of those discussed in
 Section [Heuristics](010_advanced-features.html#sec:heuristics).
 
-    global_heuristic      := 'heuristic' ':' goal_ranking+
-    goal_ranking          := standard_goal_ranking | oracle_goal_ganking
-    standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
-    oracle_goal_ranking   := 'o' '"' [^'"']* '"' | 'O' '"' [^'"']* '"'
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="global_heuristic,_goal_ranking,standard_goal_ranking,oracle_goal_ranking,tactic_goal_ranking,param"}
+~~~~
 
 The tactics allow the user to write their own heuristics based on the lemmas there are trying to prove. Their use is descibed in in Section [Using a Tactic](010_advanced-features.html#sec:fact-annotations#subsec:tactic).
 
-    tactic                := 'tactic' ':' ident
-                             [presort]
-                             (prio)+ (deprio)* | (prio)* (deprio)+
-    presort               := 'presort' ':' 'standard_goal_ranking
-    prio                  := 'prio' ':' ['{'post_ranking'}']
-                                 (function)+
-    deprio                := 'deprio' ':' ['{'post_ranking'}']
-                                 (function)+
-    standard_goal_ranking := 'C' | 'I' | 'P' | 'S' | 'c' | 'i' | 'p' | 's'
-    post_ranking          := 'smallest' | 'id'                   
-    function              := and_function [ '|' and_function]*
-    and_function          := not_function [ '&' not_function]*
-    not_function          := (not)? function_name ['"' param '"']*
-    function_name         :=   'regex' | 'isFactName' | 'isInFactTerms' | 'dhreNoise'
-                             | 'defaultNoise' | 'reasonableNoncesNoise' | 'nonAbsurdGoal'
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="tactic,presort,prio,deprio,standard_goal_ranking,post_ranking,_function,and_function,not_function,function_name"}
+~~~~
 
 Multiset rewriting rules are specified as follows. The protocol corresponding
 to a security protocol theory is the set of all multiset rewriting rules
@@ -78,18 +55,8 @@ specified in the body of the theory. Rule variants can be explicitly given, as
 well as the left and right instances of a rule in diff-mode.
 (When called with `--diff`, Tamarin will parse `diff_rule` instead of `rule`).
 
-    rule        := simple_rule [variants]
-    diff_rule   := simple_rule ['left' rule 'right' rule]
-    simple_rule := 'rule' [modulo] ident [rule_attrs] ':'
-            [let_block]
-            '[' facts ']' ( '-->' | '--[' facts ']->') '[' facts ']'
-    variants    := 'variants' simple_rule (',' simple_rule)*
-    modulo      := '(' 'modulo' ('E' | 'AC') ')'
-    rule_attrs  := '[' rule_attr (',' rule_attr)* [','] ']'
-    rule_attr   := ('color=' | 'colour=') hexcolor
-    let_block   := 'let' (msg_var '=' msetterm)+ 'in'
-    msg_var     := ident ['.' natural] [':' 'msg']
-    hexcolor    := "'" ["#"] hexdigit{6} "'" | ["#"] hexdigit{6}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_rule,rule,diff_rule,simple_rule,variants,modulo,rule_attrs,rule_attr,rule_let_block,rule_let_term,msg_var,msg_var_or_nullary_fun,hexcolor"}
+~~~~
 
 Rule annotations do not influence the rule's semantics. A color is represented
 as a triplet of 8 bit hexadecimal values optionally
@@ -108,8 +75,8 @@ left-hand side separate from the free variables on the right-hand side.
 
 Macros works similarly to let-blocks, but apply globally to all rules.
 
-    macros      := 'macros' ':' macro (',' macro)*
-    macro       := ident '(' [(var) (',' var)*] ')' '=' term
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="macros,macro,macro_identifier,_non_temporal_var"}
+~~~~
 
 Configuration blocks allow the specification of certain Tamarin command line options
 in the model file itself. Options passed over the command line override options given
@@ -122,14 +89,10 @@ in a configuration block.
 Restrictions specify restrictions on the set of traces considered, i.e., they filter
 the set of traces of a protocol. The formula of a restriction is available as an
 assumption in the proofs of *all* security properties specified in this
-security protocol theory.
+security protocol theory. In observational equivalence mode, restrictions can be associated to one side.
 
-    restriction := 'restriction' ident ':' '"' formula '"'
-
-In observational equivalence mode, restrictions can be associated to one side.
-
-    restriction := 'restriction' ident [restriction_attrs] ':' '"' formula '"'
-    restriction_attrs      := '[' ('left' | 'right') ']'
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="restriction,restriction_attr"}
+~~~~
 
 Lemmas specify security properties. By default, the given formula is
 interpreted as a property that must hold for all traces of the protocol of the
