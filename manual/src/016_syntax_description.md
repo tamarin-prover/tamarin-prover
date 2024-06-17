@@ -12,9 +12,11 @@ Comments are C-style:
 All security protocol theory are named and delimited by `begin` and `end`.
 We explain the non-terminals of the body in the following paragraphs.
 
-    security_protocol_theory := 'theory' ident 'begin' body 'end'
-    body := (signature_spec | global_heuristic | tactic | rule |
-                restriction | lemma | formal_comment)*
+
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rule="theory"}
+~~~~
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rule="_body_item"}
+~~~~
 
 Here, we use the term signature more liberally to denote both the defined
 function symbols and the equalities describing their interaction.  Note that
