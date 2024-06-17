@@ -98,25 +98,20 @@ Lemmas specify security properties. By default, the given formula is
 interpreted as a property that must hold for all traces of the protocol of the
 security protocol theory. You can change this using the 'exists-trace' trace
 quantifier.
+When exporting, one may indicate which lemmas should only be included in certain output formats.
 
-    lemma := 'lemma' [modulo] ident [lemma_attrs] ':'
-             [trace_quantifier]
-             '"' formula '"'
-             proof_skeleton
-    lemma_attrs      := '[' lemma_attr (',' lemma_attr)* [','] ']'
-    lemma_attr       := 'sources' | 'reuse' | 'use_induction' |
-                             'hide_lemma=' ident | 'heuristic=' goalRanking+
-    trace_quantifier := 'all-traces' | 'exists-trace'
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_lemma,lemma,lemma_attrs,lemma_attr,trace_quantifier"}
+~~~~
 
 In observational equivalence mode, lemmas can be associated to one side.
-
-    lemma_attr      := '[' ('sources' | 'reuse' | 'use_induction' |
-                            'hide_lemma=' ident | 'heuristic=' heuristic |
-                            'left' | 'right') ']'
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="diff_lemma,diff_lemma_attrs,diff_lemma_attr"}
+~~~~
 
 A proof skeleton is a complete or partial proof as output by the Tamarin prover.
 It indicates the proof method used at each step, which may include multiple cases.
 
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_proof_skeleton,_proof_methods,goal,premise_goal,nod_var"}
+~~~~
     proof_skeleton :=  'SOLVED' | 'by' proof_method
                     | proof_method proof_skeleton
                     | proof_method 'case' ident proof_skeleton
