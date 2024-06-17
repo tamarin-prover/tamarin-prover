@@ -215,3 +215,11 @@ a number are valid, they are not allowed as the names of facts (which
 must begin with an upper-case letter).
 ~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="ident"}
 ~~~~
+
+Full syntax
+-----------
+
+The following [Treesitter](https://tree-sitter.github.io/tree-sitter/)-generated eBNF is regularly tested against the files in `examples`. It includes the aforementioned rules, and those concerning the [process calculus SAPIC+](006_protocol-specification-processes.html).
+
+~~~~ {.tamarin include="grammar/grammar.ebnf"}
+~~~~
