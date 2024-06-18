@@ -1049,17 +1049,28 @@ cutOnSolvedBFSDiff =
 -- systems.
 proveSystemDFS :: Heuristic ProofContext -> [Tactic ProofContext] -> ProofContext -> Int -> System -> Proof ()
 proveSystemDFS heuristic tactics ctxt d0 sys0 =
-    prove d0 sys0
+  S.evalState (prove d0 sys0) False
   where
-    prove !depth sys =
-        case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
-          [] | finishedSubterms ctxt sys -> node Solved M.empty
-          []                             -> node Unfinishable M.empty
-          (method, (cases, _expl)):_     -> node method cases
+    prove :: Int -> System -> S.State Bool (Proof ())
+    prove !depth sys = do
+      case rankProofMethods (useHeuristic heuristic depth) tactics ctxt sys of
+        [] | finishedSubterms ctxt sys  -> node Solved M.empty
+        []                              -> node Unfinishable M.empty
+        (method, (cases, _)):_          -> do
+          shortCircuit <- S.get
+          when  (isSorry method)
+                (S.put True)
+          node  (if shortCircuit then Sorry (Just "interrupted") else method)
+                (if shortCircuit then M.empty else cases)
       where
-
-        node method cases =
-          LNode (ProofStep method ()) (M.map (prove (succ depth)) cases)
+        node :: ProofMethod -> M.Map CaseName System -> S.State Bool (Proof ())
+        node method cases = do
+          newCases <- M.foldlWithKey (\cs cn s -> do
+              m <- cs
+              prf <- prove (succ depth) s
+              return $ M.insert cn prf m)
+            (pure M.empty) cases
+          return $ LNode (ProofStep method ()) newCases
 
 -- | @proveSystemDFS rules se@ explores all solutions of the initial
 -- constraint system using a depth-first-search strategy to resolve the

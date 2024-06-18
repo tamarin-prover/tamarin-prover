@@ -16,6 +16,7 @@ module Theory.Constraint.Solver.ProofMethod (
   -- * Proof methods
     CaseName
   , ProofMethod(..)
+  , isSorry
   , DiffProofMethod(..)
   , execProofMethod
   , execDiffProofMethod
@@ -196,6 +197,10 @@ data ProofMethod =
                                          -- the single formula constraint in
                                          -- the system.
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
+
+isSorry :: ProofMethod -> Bool
+isSorry (Sorry _) = True
+isSorry _ = False
 
 -- | Sound transformations of diff sequents.
 data DiffProofMethod =
