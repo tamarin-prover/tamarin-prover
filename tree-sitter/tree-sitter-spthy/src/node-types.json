@@ -2999,42 +2999,6 @@
     }
   },
   {
-    "type": "function_custom",
-    "named": true,
-    "fields": {
-      "function_identifier": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "ident",
-            "named": true
-          }
-        ]
-      },
-      "function_type": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "ident",
-            "named": true
-          }
-        ]
-      }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "arguments",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "function_destructor",
     "named": true,
     "fields": {
@@ -3118,6 +3082,42 @@
     }
   },
   {
+    "type": "function_typed",
+    "named": true,
+    "fields": {
+      "function_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      },
+      "function_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "functions",
     "named": true,
     "fields": {},
@@ -3125,10 +3125,6 @@
       "multiple": true,
       "required": true,
       "types": [
-        {
-          "type": "function_custom",
-          "named": true
-        },
         {
           "type": "function_destructor",
           "named": true
@@ -3139,6 +3135,10 @@
         },
         {
           "type": "function_pub",
+          "named": true
+        },
+        {
+          "type": "function_typed",
           "named": true
         }
       ]

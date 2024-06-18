@@ -218,7 +218,7 @@ module.exports = grammar({
           $.function_pub,
           $.function_private,
           $.function_destructor,
-          $.function_custom
+          $.function_typed
       ),
 
       function_pub: $ => seq(
@@ -241,7 +241,7 @@ module.exports = grammar({
           '[', 'destructor', ']'
       ),
 
-      function_custom: $ => seq(
+      function_typed: $ => seq(
           field('function_identifier', $.ident),
           '(', optional($.arguments), ')',
           ':', field('function_type', $.ident)

@@ -512,7 +512,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "function_custom"
+          "name": "function_typed"
         }
       ]
     },
@@ -615,7 +615,7 @@
         }
       ]
     },
-    "function_custom": {
+    "function_typed": {
       "type": "SEQ",
       "members": [
         {
