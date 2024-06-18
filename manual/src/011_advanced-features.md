@@ -324,13 +324,11 @@ for line in lines:
         l2.append(num)
       elif "KU( ~key" in line:
         l3.append(num)
-      else:
-        l4.append(num)
 
   else:
     exit(0)
 
-ranked = l1 + l2 + l3 + l4
+ranked = l1 + l2 + l3
 
 for i in ranked:
   print(i)
@@ -345,6 +343,14 @@ tamarin-prover --prove=uniqueness SourceOfUniqueness.spthy
 The generated proof consists of only 10 steps.
 (162 steps with 'consecutive' ranking, non-termination with 'smart' ranking).
 
+Sometimes, one makes mistakes when writing an oracle or forgets to address a
+case in which the oracle would need to rank a goal for termination. For example
+in the oracle above, it could happen that none of the three checks apply to any
+of the goals and the oracle prints nothing. To help debugging oracles, the
+interactive mode of Tamarin provides an autoprove option that stops proving
+whenever the oracle ranks no goals (it is called `o. autoprove until oracle
+returns nothing`). This way, you can easily find and inspect the cases in which
+you might need to refine your oracle.
 
 <!--Advanced Encoding
 ----------------------------
