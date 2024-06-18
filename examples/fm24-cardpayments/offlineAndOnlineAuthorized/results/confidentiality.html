@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+/* CSS */
+body {
+	font-size: .9em;
+	margin: .8em;
+	font-family: arial, sans-serif;
+}
+table {
+	border-collapse: collapse;
+}
+td, th {
+	text-align: left;
+	padding: 10px;
+}
+th {
+	background-color: #2471A3;
+	color: white;
+	font-weight: normal;
+}
+tr:nth-child(odd) {
+	background-color: #F2F2F2;
+}
+tr:hover {
+	background-color: #D6EAF8;
+}
+.summary {
+	line-height: 1.2em;
+}
+.verified {
+	font-weight: bold;
+}
+.green {
+	color: green;
+}
+.red {
+	color: red;
+}
+.x-scrollable {
+	overflow-x: auto;
+	white-space: nowrap;
+}
+.latex-code {
+	padding: .5em;
+	font-family: Consolas, "courier new";
+	background-color: #F2F2F2;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Analysis results</h2>
+
+<div class="x-scrollable">
+<table>
+<tr><th>No.</th><th>Theory</th><th>secrecy_MK</th><th>secrecy_PIN</th><th>secrecy_PAN</th></tr>
+<tr><td>1</td><td>C8_NoLocalAuth_NoCopyIAD_OnlinePIN_Low</td><td class="green">verified (6 steps)</td><td class="green">verified (3 steps)</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>2</td><td>C8_NoLocalAuth_NoCopyIAD_OnlinePIN_High</td><td class="green">verified (6 steps)</td><td class="green">verified (3 steps)</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>3</td><td>C8_NoLocalAuth_NoCopyIAD_ODCVM_Low</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>4</td><td>C8_NoLocalAuth_NoCopyIAD_ODCVM_High</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>5</td><td>C8_NoLocalAuth_NoCopyIAD_NoCVM_Low</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>6</td><td>C8_NoLocalAuth_NoCopyIAD_NoCVM_High</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>7</td><td>C8_NoLocalAuth_CopyIAD_OnlinePIN_Low</td><td class="green">verified (6 steps)</td><td class="green">verified (3 steps)</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>8</td><td>C8_NoLocalAuth_CopyIAD_OnlinePIN_High</td><td class="green">verified (6 steps)</td><td class="green">verified (3 steps)</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>9</td><td>C8_NoLocalAuth_CopyIAD_ODCVM_Low</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>10</td><td>C8_NoLocalAuth_CopyIAD_ODCVM_High</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>11</td><td>C8_NoLocalAuth_CopyIAD_NoCVM_Low</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>12</td><td>C8_NoLocalAuth_CopyIAD_NoCVM_High</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>13</td><td>C8_LocalAuth_NoCopyIAD_OnlinePIN_Low</td><td class="green">verified (6 steps)</td><td class="green">verified (3 steps)</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>14</td><td>C8_LocalAuth_NoCopyIAD_OnlinePIN_High</td><td class="green">verified (6 steps)</td><td class="green">verified (3 steps)</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>15</td><td>C8_LocalAuth_NoCopyIAD_ODCVM_Low</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>16</td><td>C8_LocalAuth_NoCopyIAD_ODCVM_High</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>17</td><td>C8_LocalAuth_NoCopyIAD_NoCVM_Low</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>18</td><td>C8_LocalAuth_NoCopyIAD_NoCVM_High</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>19</td><td>C8_LocalAuth_CopyIAD_OnlinePIN_Low</td><td class="green">verified (6 steps)</td><td class="green">verified (3 steps)</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>20</td><td>C8_LocalAuth_CopyIAD_OnlinePIN_High</td><td class="green">verified (6 steps)</td><td class="green">verified (3 steps)</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>21</td><td>C8_LocalAuth_CopyIAD_ODCVM_Low</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>22</td><td>C8_LocalAuth_CopyIAD_ODCVM_High</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>23</td><td>C8_LocalAuth_CopyIAD_NoCVM_Low</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+<tr><td>24</td><td>C8_LocalAuth_CopyIAD_NoCVM_High</td><td class="green">verified (6 steps)</td><td>-</td><td class="red">falsified - found trace (8 steps)</td></tr>
+</table>
+</div>
+
+<h2>Summary</h2>
+
+<div class="summary">
+<p><b>Protocols: </b> total 24, verified 0</p>
+</div>
+
+<h2>Latex code</h2>
+
+<div class="latex-code x-scrollable">
+<span style="color: darkgreen; font-weight: bold;">\begin</span>{tabular}{ l l l l l }<br />
+<span style="color: brown;">\hline</span><br />
+<span style="color: brown;">\bfseries</span> No. <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> Theory <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> secrecy<span style="opacity: .2; font-size: .01rem;">\</span>_MK <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> secrecy<span style="opacity: .2; font-size: .01rem;">\</span>_PIN <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> secrecy<span style="opacity: .2; font-size: .01rem;">\</span>_PAN<span style="color: brown;">\\</span><br /><span style="color: brown;">\hline</span><br />
+1 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+2 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+3 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+4 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+5 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+6 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+7 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+8 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+9 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+10 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+11 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+12 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+13 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+14 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+15 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+16 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+17 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+18 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+19 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+20 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+21 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+22 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+23 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+24 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> \na{} <span style="color: blue;">&</span> \falsified{}<span style="color: brown;">\\</span><br />
+<span style="color: brown;">\hline</span><br />
+<span style="color: darkgreen; font-weight: bold;">\end</span>{tabular}<br />
+</div>
+
+</body>
+</html>

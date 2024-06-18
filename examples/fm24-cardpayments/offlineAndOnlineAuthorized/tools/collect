@@ -1,0 +1,511 @@
+#!/usr/bin/python3
+
+import os, sys, re, platform
+from datetime import datetime
+
+FIRST_COLUMNS = ['No.', 'Theory']
+METADATA_COLUMNS = ['Rules', 'LoC', 'Time']#, 'Theory file', 'Proof file']
+
+#html
+NA_HTML = '-'
+
+#latex
+VERIFIED_TEX = '\\verified{}'
+FALSIFIED_TEX = '\\falsified{}'
+NA_TEX = '\\na{}'
+'''
+LATEX_SYNTAX = {
+	'_': '\\_',
+	' & ': '&nbsp&&nbsp',
+	'<br />': '<br/>'
+}
+'''
+LATEX_SYNTAX = {
+	'\\newcommand': '<span style="color: brown;">\\newcommand</span>',
+	'\\begin': '<span style="color: darkgreen; font-weight: bold;">\\begin</span>',
+	'\\end': '<span style="color: darkgreen; font-weight: bold;">\\end</span>',
+	#'{tabular}': '{<span style="color: darkslategray;">tabular</span>}',
+	'\\bfseries': '<span style="color: brown;">\\bfseries</span>',
+	'&': '<span style="color: blue;">&</span>',
+	'\\hline': '<span style="color: brown;">\\hline</span>',
+	'\\\\': '<span style="color: brown;">\\\\</span>',
+	'$': '<span style="color: brown;">$</span>',
+	'^': '<span style="color: brown;">^</span>',
+	'_': '<span style="opacity: .2; font-size: .01rem;">\\</span>_',
+}
+
+#regexes
+THEORY_REGEX = r'^theory (\w+) begin$'
+WARNING_REGEX = r'^\s*WARNING\: (\d+ wellformedness check failed)\!$'
+LEMMA_REGEX = r'^\s*(\w+) \((all-traces|exists-trace)\): (.+ \(\d+ steps\))$'
+RULE_HEADER_REGEX = r'^rule \(modulo E\) (\w+)\:$'
+RULE_HEADER_SPTHY_REGEX = r'^rule (\w+)\:$'
+STEPS_REGEX = r'( - found trace| - no trace found)? \(\d+ steps\)'
+TIME_REGEX = r'^real\s([\dmsh\.\,]+)$'
+GNU_TIME_REGEX = r'^.*\s([\d\:\.\,]+)elapsed.*$'
+TAMARIN_TIME_REGEX = r'^\s+processing time:\s([\d\:\.\,]+).*$'
+
+def to_timeformat(time):
+	hours = int(time / 3600)
+	time -= hours * 3600
+	mins = int(time / 60)
+	time  -= mins * 60
+	secs = time
+
+	decimals_for_secs = '0'
+	if hours + mins == 0:
+		decimals_for_secs = '2'
+
+	if mins + hours > 0:
+		if hours > 0:
+			tt = str(hours) + 'h'\
+						+ '{:02d}'.format(mins) + 'm'\
+						+ ('{0:02.'+ decimals_for_secs + 'f}').format(secs) + 's'
+		else:
+			tt = str(mins) + 'm' + ('{0:02.'+ decimals_for_secs + 'f}').format(secs) + 's'
+	else:
+		tt = ('{0:.'+ decimals_for_secs + 'f}').format(secs) + 's'
+	
+	return tt
+
+def to_secs(time):
+	t = 0.0
+	if 'h' in time:
+		t += int(time.split('h')[0]) * 3600
+		time = time.split('h')[1]
+	if 'm' in time:
+		t += int(time.split('m')[0]) * 60
+		time = time.split('m')[1]
+	t += float(time.split('s')[0])
+	return t
+
+def yes_if_empty(s):
+	if s == '':
+		return 'Yes'
+	return s
+
+def create_html_code(directories, columns, tex_add, split_theory_regex):
+	print ('Begin collecting results...')
+
+	global_results = []
+	cols = [col for col in FIRST_COLUMNS]
+
+	rules_min = 100000000
+	rules_max = -1
+	rules_sum = 0
+
+	loc_min = 100000000
+	loc_max = -1
+	loc_sum = 0
+
+	time_sum = 0.0
+	time_min = 1000000000.0
+	time_max = 0.0
+
+	proto_count = 0
+	files = []
+	for dir in directories:
+		if not dir.endswith('/'): dir += '/'
+		try:
+			if os.getcwd() == os.path.abspath(dir):
+				files += [file for file in os.listdir('./') if file.endswith('.proof')]
+			else:
+				files += [dir + file for file in os.listdir(dir) if file.endswith('.proof')]
+		except:
+			print ('[Error] Invalid directory "%s"' % dir)
+			return None
+
+	files.sort()
+	files.reverse() #reverse order...this is just a matter of taste
+
+	for proof_file in files:
+		print ('Parsing "%s"' % proof_file)
+
+		results = {}
+		results['Theory file'] = theory_file = proof_file[:-6] + '.spthy'
+		results['Proof file'] = proof_file
+
+		proto_count += 1
+		results['No.'] = str(proto_count)
+		results['Verified'] = 'Yes'
+		
+		lines = open(proof_file).readlines()
+		theory_name = None
+		for line in lines:
+			col = None
+			
+			if not theory_name:
+				m = re.match(THEORY_REGEX, line)
+				if m: (col, result) = ('Theory', m.group(1))
+			
+			if not col:
+				m = re.match(WARNING_REGEX, line)
+				if m: (col, result) = ('WARNING', m.group(1))
+			
+			if not col:
+				m = re.match(LEMMA_REGEX, line)
+				if m: (col, result) = m.group(1,3)				
+
+			if col:
+				res = results[ col ] = result.strip()
+				if col not in cols:
+					cols.append(col)
+				if (columns == 'all' or col in columns) and res.startswith('falsified'):
+					results['Verified'] = 'No'
+		
+		if 'Theory' not in results:
+			print ('[Warning] No theory name found for "%s", so it will be ignored'\
+						% proof_file)
+			continue
+
+		#rules
+		rule_names = []
+		for line in lines:
+			m = re.match(RULE_HEADER_REGEX, line)
+			if m: rule_names.append(m.group(1))
+		
+		num_rules = len(rule_names)
+		if num_rules < rules_min: rules_min = num_rules
+		if num_rules > rules_max: rules_max = num_rules			
+		rules_sum += num_rules
+		results['Rules'] = str(num_rules)
+
+		if os.path.exists(theory_file):
+			#inspect the spthy file for diff in rule names
+			for line in open(theory_file).readlines():
+				m = re.match(RULE_HEADER_SPTHY_REGEX, line)
+				if m and m.group(1) not in rule_names:
+					print ('[Warning] Rule "%s" occurs in "%s" but not in "%s"'\
+								% (m.group(1), theory_file, proof_file))
+			#lines of code
+			loc = len(open(theory_file).readlines())
+			if loc < loc_min: loc_min = loc
+			if loc > loc_max: loc_max = loc
+			loc_sum  += loc
+			results['LoC'] = str(loc)
+		else:
+			print ('[Warning] File "%s" exists but not "%s"'\
+						% (proof_file, theory_file))
+
+		#timings
+		time_display = None
+		for line in lines:
+			res = re.match(TIME_REGEX, line)
+			if res:
+				t = res.group(1)
+				t = to_secs (t)					
+				time_display = to_timeformat(t)
+				time_sum += t
+				if t < time_min: time_min = t
+				if t > time_max: time_max = t
+			else:
+				#try to parse GNU time format
+				res = re.match(GNU_TIME_REGEX, line)
+				if res:
+					t = res.group(1).replace(':', 'h')
+					i = t.rfind('h')
+					t = to_secs (t[:i]+ 'm' + t[i+1:] + 's')					
+					time_display = to_timeformat(t)
+					time_sum += t
+					if t < time_min: time_min = t
+					if t > time_max: time_max = t
+				else:
+					#try to parse Tamarin-produced time format
+					res = re.match(TAMARIN_TIME_REGEX, line)
+					if res:
+						t = res.group(1)
+						t = to_secs (t)					
+						time_display = to_timeformat(t)
+						time_sum += t
+						if t < time_min: time_min = t
+						if t > time_max: time_max = t
+
+		if time_display:
+			results['Time'] = time_display
+		
+		global_results.append(results)
+
+	#we're done collecting the data ==================================
+
+	#check that the result of lemma x matches that of lemma x_minimal
+	#this is specific to EMV
+	for results in global_results:
+		x_group = {}
+		for (col, res) in results.items():
+			key = col.replace('_minimal', '')
+			res = re.sub(STEPS_REGEX, '', res)				
+			if key not in x_group:
+				x_group[key] = set()
+			x_group[key].add(res)
+		
+		differ = [k for (k,v) in x_group.items() if len(v) > 1]
+		for col in differ:
+			proof_file = results['Proof file']
+			print ('[Warning] The results for "%s" and "%s_minimal" differ in "%s"'\
+						% (col, col, proof_file))
+	
+	#add metadata
+	cols = cols + METADATA_COLUMNS
+
+	#reset cols to the columns parameter
+	if columns != 'all': cols = columns
+
+	#HTML code ==============================================
+	html = 	'<!DOCTYPE html>\n<html>\n\n<head>\n<style>\n'\
+					+ '/* CSS */\n'\
+					+ 'body {\n'\
+					+ '	font-size: .9em;\n'\
+					+ '	margin: .8em;\n'\
+					+ '	font-family: arial, sans-serif;\n'\
+					+ '}\n'\
+					+ 'table {\n'\
+					+ '	border-collapse: collapse;\n'\
+					+ '}\n'\
+					+ 'td, th {\n'\
+					+ '	text-align: left;\n'\
+					+ '	padding: 10px;\n'\
+					+ '}\n'\
+					+ 'th {\n'\
+					+ '	background-color: #2471A3;\n'\
+					+ '	color: white;\n'\
+					+ '	font-weight: normal;\n'\
+					+ '}\n'\
+					+ 'tr:nth-child(odd) {\n'\
+					+ '	background-color: #F2F2F2;\n'\
+					+ '}\n'\
+					+ 'tr:hover {\n'\
+					+ '	background-color: #D6EAF8;\n'\
+					+ '}\n'\
+					+ '.summary {\n'\
+					+ '	line-height: 1.2em;\n'\
+					+ '}\n'\
+					+ '.verified {\n'\
+					+ '	font-weight: bold;\n'\
+					+ '}\n'\
+					+ '.green {\n'\
+					+ '	color: green;\n'\
+					+ '}\n'\
+					+ '.red {\n'\
+					+ '	color: red;\n'\
+					+ '}\n'\
+					+ '.x-scrollable {\n'\
+					+ '	overflow-x: auto;\n'\
+					+ '	white-space: nowrap;\n'\
+					+ '}\n'\
+					+ '.latex-code {\n'\
+					+ '	padding: .5em;\n'\
+					+ '	font-family: Consolas, "courier new";\n'\
+					+ '	background-color: #F2F2F2;\n}\n'\
+					+ '</style>\n</head>\n\n'
+
+	html += '<body>\n\n'
+	html += '<h2>Analysis results</h2>\n\n<div class="x-scrollable">\n<table>\n'	
+	
+	#table head
+	html += '<tr>' + ''.join(['<th>' + col + '</th>' for col in cols]) + '</tr>\n'	
+	
+	#start building latex code
+	'''
+	tex = '\\newcommand{' + FALSIFIED_TEX.replace('{}', '') + '}{falsified}<br />\n'\
+				+ '\\newcommand{' + VERIFIED_TEX.replace('{}', '') + '}{verified}<br />\n'\
+				+ '\\newcommand{' + NA_TEX.replace('{}', '') + '}{na}<br /><br />\n'\
+				+ '\\begin{tabular}{ ' + 'l '*len(cols) +'}<br />\n\\hline<br />\n'\
+				+ ' & '.join(['\\bfseries ' + col for col in cols]) + '\\\\<br />\\hline<br />\n'
+	'''
+	tex = ''
+	
+	#fill the two tables with results for cols only
+	verified_count = 0
+	additional_cols = 0
+
+	for results in global_results:
+		html_row_data = []
+		latex_row_data = []
+		
+		for col in cols:
+			html_res = NA_HTML
+			latex_res = NA_TEX
+			if col in results and not results[col].startswith('analysis incomplete'):
+				html_res = results[col]
+				latex_res = results[col]
+
+			if col == 'Theory' and split_theory_regex:
+				m = re.match(split_theory_regex, latex_res)
+				if m:
+					#latex_res	= ' & '.join([m.group(g) for g in range(1, len(m.groups()))])
+					latex_res	= ' & '.join([yes_if_empty(m.group(g)) for g in range(1, len(m.groups())+1)])
+					additional_cols = len(m.groups())
+			
+			#format html code
+			if col in ['Theory file', 'Proof file']:
+				html_res = '<td><a href="'+ html_res +'">'\
+										+ os.path.basename(html_res) + '</a></td>'
+			else:
+				'''
+				if col == 'Theory':
+					if 'Theory file' in results or 'Proof file' in results:
+						html_res += '<sup style="font-weight: normal">['
+						if 'Theory file' in results:
+							html_res += '<a href="' + results['Theory file'] + '">.spthy</a>'
+						if 'Theory file' in results and 'Proof file' in results:
+							html_res += ', '
+						if 'Proof file' in results:
+							html_res += '<a href="' + results['Proof file'] + '">.proof</a>'
+						html_res += ']</sup>'
+				'''
+				_class = ''
+				if col == 'Theory' and results['Verified'] == 'Yes':
+					_class = ' class="verified"'
+					verified_count += 1
+				elif html_res.startswith('falsified'):
+					_class = ' class="red"'
+				elif html_res.startswith('verified'):
+					_class = ' class="green"'
+				html_res = '<td' + _class + '>' + html_res + '</td>'
+
+			html_row_data.append(html_res)
+				
+			#format latex code
+			latex_res = re.sub(STEPS_REGEX, '', latex_res)
+			latex_res = latex_res.replace('verified', VERIFIED_TEX)
+			latex_res = latex_res.replace('falsified', FALSIFIED_TEX)
+			if col == 'Theory' and results['Verified'] == 'Yes' and not split_theory_regex:
+				latex_res = '\\bfseries ' + latex_res
+			#add latex annotations
+			if results['Theory'] in tex_add and col in tex_add[results['Theory']]:
+				 latex_res += tex_add[results['Theory']][col]
+
+			latex_row_data.append(latex_res)
+			
+		html += '<tr>' + ''.join(html_row_data) + '</tr>\n'
+		#tex += '&nbsp&&nbsp'.join(latex_row_data) + '\\\\<br />\n'
+		tex += ' & '.join(latex_row_data) + '\\\\<br />\n'
+
+	html += '</table>\n</div>\n\n'
+
+	theory_idx = cols.index('Theory')
+	lhead = cols[:theory_idx]
+	rhead = cols[theory_idx+1:]
+	mhead = ['Theory']
+
+	if additional_cols > 0:
+		mhead = ['Regex group(' + str(g+1) + ')' for g in range(additional_cols)]
+
+	tex = '\\begin{tabular}{ ' + 'l '*len(lhead + mhead + rhead) +'}<br />\n\\hline<br />\n'\
+				+ ' & '.join(['\\bfseries ' + col for col in lhead + mhead + rhead ])\
+				+ '\\\\<br />\\hline<br />\n'\
+				+ tex\
+				+ '\\hline<br />\n\\end{tabular}<br />\n'
+	
+	#summary ===============================================
+	html += '<h2>Summary</h2>\n\n<div class="summary">\n'\
+					+ '<p><b>Protocols: </b> '\
+					+ 'total ' + str(proto_count) + ', '\
+					+ 'verified ' + str(verified_count) + '</p>\n'
+	
+	if proto_count != 0:
+		if 'Rules' in cols:
+			ave = (0.0+rules_sum)/proto_count
+			html += '<p><b>Number of rules:</b> '\
+							+ "min " + str(rules_min) + ', '\
+							+ "ave " + str(int(ave)) + ', '\
+							+ "max " + str(rules_max) + '</p>\n'
+		
+		if 'LoC' in cols and loc_sum != 0:
+			ave = (0.0+loc_sum)/proto_count
+			html += '<p><b>Lines of code:</b> '\
+						+ "min " + str(loc_min) + ', '\
+						+ "ave " + str(int(ave)) + ', '\
+						+ "max " + str(loc_max) + '</p>\n'
+		
+		if 'Time' in cols:
+			ave = time_sum/proto_count
+			html += '<p><b>Time:</b> '\
+							+ "min " + to_timeformat(time_min) + ', '\
+							+ "ave " + to_timeformat(ave) + ', '\
+							+ "max " + to_timeformat(time_max) + ', '\
+							+ "sum " + to_timeformat(time_sum) + '</p>\n'
+	
+	#html += '<p><b>System info:</b> " + str(platform.uname()) + '</p>'
+	#html += '<p><b>Folder(s):</b> ' + ', '.join(directories) + '</p>'
+	#html += '<p><b>Report generated on:</b> '\
+	#				+ datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '</p>'					
+	html += '</div>\n\n'
+
+		
+	#latex code ========================================
+	html += '<h2>Latex code</h2>\n\n<div class="latex-code x-scrollable">\n'
+	for (plain, rich) in LATEX_SYNTAX.items():
+		tex = tex.replace(plain, rich)
+	html += tex +'</div>\n\n</body>\n</html>'
+	
+	return html
+
+def main(args):
+	#defaults
+	directories = set()
+	columns = 'all'
+	output = 'results.html'
+	tex_add = {}
+	split_theory_regex = None
+	
+	for idx in range(1, len(sys.argv)):
+		arg = sys.argv[idx]
+		
+		if arg.startswith('--columns='):
+			file = arg.split('=',1)[1]
+			try:
+				columns = []
+				for l in open(file).readlines():
+					if '#' in l: l = l.split('#',1)[0]
+					l = l.strip()
+					if l != '': columns.append(l)
+	
+				if 'Theory' not in columns:
+					print ('[Error] No "Theory" column found in "%s"' % file)
+					return
+			except Exception as e:
+				print ('[Warning] Something is wrong with the columns file "'\
+							+ file + '", so I will ignore')
+				print (e)
+				columns = 'all'
+				
+		elif arg.startswith('--output='):
+			output = arg.split('=',1)[1]
+		
+		elif arg.startswith('--tex-add='):
+			file = arg.split('=',1)[1]
+			try:
+				for line in open(file).readlines():
+					if line.strip() == '' or line.startswith('#'):
+						continue
+					(proto, lemma, add) = line.split(' ',2)
+					if proto not in tex_add:
+						tex_add[proto] = {}					
+					if lemma not in tex_add[proto]:
+						tex_add[proto][lemma] = {}
+					tex_add[proto][lemma] = add[:-1]
+			except Exception as e:
+				print ('[Warning] Something is wrong with the tex-add file "'\
+							+ file + '", so I will ignore')
+				print (e)
+				tex_add = {}
+		elif arg.startswith('--split_theory_regex'):
+			split_theory_regex = arg.split('=',1)[1]
+		else:
+			directories.add(arg)
+
+	if len(directories) == 0:
+		directories = ['./']
+
+	html = create_html_code(directories, columns, tex_add, split_theory_regex)
+	
+	if html:
+		print ('Writing output to "%s"' % output)
+		outfile = open(output, 'w')
+		outfile.write(html)
+		outfile.close()
+		print ('Done.')
+
+if __name__ == "__main__":
+	main(sys.argv[1:])
