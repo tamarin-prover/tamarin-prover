@@ -51,116 +51,121 @@ def parseTest(lines, tester):
 	except Exception:
 		return f"There was an error while parsing {tester}"
 
+
+def remove_comments(text):
+    # Remove block comments (/* ... */)
+    text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
+    # Remove line comments (// ...)
+    text = re.sub(r'//.*', '', text)
+    return text
+
 def parseFile(path):
-	"""
-	Parses a _analyzed.spthy file and returns their content in a tuple
+    """
+    Parses a _analyzed.spthy file and returns their content in a tuple
 
-	(lemmas([str]), results([bool]), steps([int]), time(float), proof)
-	Note that time is not a list but a single value.
-	If there is an error, the error message is returned as a string
-	"""
+    (lemmas([str]), results([bool]), steps([int]), time(float), proof)
+    Note that time is not a list but a single value.
+    If there is an error, the error message is returned as a string
+    """
+    ## open file ##
+    summary = ""
+    try:
+        with open(path) as f:
+            allContent = f.read()
+            allContent_no_comments = remove_comments(allContent)
+            # Strip everything before the summary part
+            allContent_no_comments = allContent_no_comments.split("summary of summaries")
+            summary = allContent_no_comments[-1]
+            proof = allContent_no_comments[0].split("------------------------------------------------------------------------------")[0]
+    except Exception:
+        return f"There was an error while reading {path}"
 
-	## open file ##
-	summary = ""
-	try:
-		with open(path) as f:
-			# strip everything before the summary part
-			allContent = f.read().split("summary of summaries")
-			summary = allContent[-1]
-			proof = allContent[0].split("------------------------------------------------------------------------------")[0]
-	except Exception:
-		return f"There was an error while reading {path}"
+    ## parse time ##
+    times = re.findall(r"processing time: (.*)s", summary)
+    if len(times) != 1:
+        return f"Parse error - time: {path}"
 
-	## parse time ##
-	times = re.findall(r"processing time: (.*)s", summary)
-	if len(times) != 1:
-		return f"Parse error - time: {path}"
-	
-	## parse equations ##
-	try:
-		splitEq = proof.split("equations:")[-1]
-		equations = parseTest(splitEq, "equations")
-		equations = equations.splitlines()
-		equations = list(filter(None, equations))
-	except Exception as ex:
-		return f"Parse error - equations: {path}"
+    ## parse equations ##
+    try:
+        splitEq = proof.split("equations:")[-1]
+        equations = parseTest(splitEq, "equations")
+        equations = equations.splitlines()
+        equations = list(filter(None, equations))
+    except Exception as ex:
+        return f"Parse error - equations: {path}"
 
-	## parse macros ##
-	try:
-		splitEq = proof.split("macros:")[-1]
-		macros = parseTest(splitEq, "macros")
-		macros = macros.splitlines()
-		macros = list(filter(None, macros))
-	except Exception as ex:
-		return f"Parse error - macros: {path}"
-	
-	## parse functions ##
-	try:
-		splitFunc = proof.split("functions:")
-		func = parseTest(splitFunc, "functions").replace(' ', '').replace('\n', '')
-		func = func.split(',')
-	except Exception as ex:
-		return f"Parse error - functions: {path}"
+    ## parse macros ##
+    try:
+        splitEq = proof.split("macros:")[-1]
+        macros = parseTest(splitEq, "macros")
+        macros = macros.splitlines()
+        macros = list(filter(None, macros))
+    except Exception as ex:
+        return f"Parse error - macros: {path}"
 
-	## parse builtins ##
-	try: 
-		splitBuilt = proof.split("builtins:")
-		builtins = parseTest(splitBuilt, "builtins").replace(' ', '').replace('\n', '')
-		builtins = builtins.split(',')
-	except Exception as ex:
-		return f"Parse error - builtins: {path}"
+    ## parse functions ##
+    try:
+        splitFunc = proof.split("functions:")
+        func = parseTest(splitFunc, "functions").replace(' ', '').replace('\n', '')
+        func = func.split(',')
+    except Exception as ex:
+        return f"Parse error - functions: {path}"
 
-	## parse config blocks ##
-	try:
-		splitConfigBlock = proof.split("configuration:")[-1]
-		configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
-		configblock = configblock.split(' ')
-	except Exception as ex:
-		return f"Parse error - config block: {path}"
-	
-	## parse rules ##
-	try:
-		getRules = proof.split("rule")
-		getRules.pop(0)
-		rules = []
-		for rule in getRules: 
-			rules.append(parseTest(rule, "rule"))
-	except Exception as ex:
-		return f"Parse error - rules: {path}"
-	
+    ## parse builtins ##
+    try:
+        splitBuilt = proof.split("builtins:")
+        builtins = parseTest(splitBuilt, "builtins").replace(' ', '').replace('\n', '')
+        builtins = builtins.split(',')
+    except Exception as ex:
+        return f"Parse error - builtins: {path}"
 
-	## parse warning ##
-	try:
-		warning = []
-		test = False
-		for line in proof.splitlines():
-			if test and line != '':
-				warning.append(line)
-			if test and line.find("*/") != -1:
-				test = False
-			if line.find("All wellformedness checks were successful.") != -1:
-				warning.append(line)
-			if line.find("WARNING: the following wellformedness checks failed!") != -1: 
-				test = True
-				warning.append(line)
-		warning = "".join([str(item) + ' ' for item in warning]).replace("/*", '').replace("*/", '')
-	except Exception as ex:
-		return f"Parse error - warnings: {path}"
-	
+    ## parse config blocks ##
+    try:
+        splitConfigBlock = proof.split("configuration:")[-1]
+        configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
+        configblock = configblock.split(' ')
+    except Exception as ex:
+        return f"Parse error - config block: {path}"
 
-	## parse lemmas ##
-	try:
-		
-		parsed = re.findall(r"(\w+) (?:\(.*\))?:(?!  ) (.*) \((\d+) steps\)\n", summary)
-		parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]  # convert types
-		parsed = list(zip(*parsed))             # transpose matrix
-		if (parsed == []): parsed = [[],[],[]]  #
-		return (parsed[0], parsed[1], parsed[2], float(times[0]), proof, equations, func, warning, rules, builtins, configblock, macros)
+    ## parse rules ##
+    try:
+        getRules = proof.split("rule")
+        getRules.pop(0)
+        rules = []
+        for rule in getRules:
+            rules.append(parseTest(rule, "rule"))
+    except Exception as ex:
+        return f"Parse error - rules: {path}"
 
-	except Exception as ex:
-		return f"Parse error - lemmas: {path}"
-	
-	
+    ## parse warning ##
+    try:
+        warning = []
+        test = False
+        for line in proof.splitlines():
+            if test and line != '':
+                warning.append(line)
+            if test and line.find("*/") != -1:
+                test = False
+            if line.find("All wellformedness checks were successful.") != -1:
+                warning.append(line)
+            if line.find("WARNING: the following wellformedness checks failed!") != -1:
+                test = True
+                warning.append(line)
+        warning = "".join([str(item) + ' ' for item in warning]).replace("/*", '').replace("*/", '')
+    except Exception as ex:
+        return f"Parse error - warnings: {path}"
+
+    ## parse lemmas ##
+    try:
+        parsed = re.findall(r"(\w+) (?:\(.*\))?:(?!  ) (.*) \((\d+) steps\)\n", summary)
+        parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]  # convert types
+        parsed = list(zip(*parsed))             # transpose matrix
+        if parsed == []:
+            parsed = [[], [], []]
+        return (parsed[0], parsed[1], parsed[2], float(times[0]), proof, equations, func, warning, rules, builtins, configblock, macros)
+
+    except Exception as ex:
+        return f"Parse error - lemmas: {path}"
 
 
 def parseFiles(pathB):
