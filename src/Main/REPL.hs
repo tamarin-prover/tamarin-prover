@@ -6,7 +6,7 @@ module Main.REPL
   , loadThy
   , getProofForLemma
   , solve
-  , systemsAt
+  , systemAt
   , showMethodsAt
   , showPaths
   , showWith
@@ -53,12 +53,12 @@ data REPLProof = REPLProof
   , rpCtxt  :: ProofContext
   , rpPaths :: PathMap }
 
-rankMethods :: ProofContext -> [System] -> [ProofMethod]
-rankMethods ctxt syss =
+rankMethods :: ProofContext -> System -> Int -> [ProofMethod]
+rankMethods ctxt sys depth =
   let heuristic = fromMaybe (defaultHeuristic False) (L.get pcHeuristic ctxt)
-      ranking = useHeuristic heuristic (length syss)
+      ranking = useHeuristic heuristic depth
       tactic = fromMaybe [defaultTactic] (L.get pcTactic ctxt)
-  in map fst $ rankProofMethods ranking tactic ctxt syss
+  in map fst $ rankProofMethods ranking tactic ctxt sys
 
 collectPaths :: ProofContext -> IncrementalProof -> PathMap
 collectPaths ctxt prf = M.fromList $ zip [0..] $ map (\p -> (p, getMethods p)) $ go prf
@@ -70,8 +70,8 @@ collectPaths ctxt prf = M.fromList $ zip [0..] $ map (\p -> (p, getMethods p)) $
 
     getMethods :: ProofPath -> [ProofMethod]
     getMethods path = fromMaybe (error "illegal path") $ do
-      (_, syss) <- prf `atPath` path
-      return $ rankMethods ctxt syss
+      sys <- prf `atPath` path >>= psInfo . root
+      return $ rankMethods ctxt sys (length path)
 
 getProofForLemma :: String -> REPL REPLProof
 getProofForLemma name = do
@@ -95,8 +95,8 @@ solve pathIdx methodIdx prf =
   in do
   (path, methods) <- maybeREPL "illegal path index" mPath
   method <- maybeREPL "illegal method index" (methods !?! methodIdx)
-  (_, syss) <- maybeREPL "illegal path" (iPrf `atPath` path)
-  iPrf' <- maybeREPL "applying method failed" $ modifyAtPath (runProver (oneStepProver method) ctxt (length syss)) syss path iPrf
+  sys <- maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root)
+  iPrf' <- maybeREPL "applying method failed" $ modifyAtPath (runProver (oneStepProver method) ctxt (length path) sys) path iPrf
   return (REPLProof iPrf' ctxt (collectPaths ctxt iPrf'))
   where
     (!?!) :: [a] -> Int -> Maybe a
@@ -106,14 +106,13 @@ solve pathIdx methodIdx prf =
       | n < 0 = Nothing
       | otherwise = t !?! (n - 1)
 
-systemsAt :: Int -> REPLProof -> REPL [System]
-systemsAt pathIdx prf =
+systemAt :: Int -> REPLProof -> REPL System
+systemAt pathIdx prf =
   let mPath = M.lookup pathIdx $ rpPaths prf
       iPrf = rpProof prf
   in do
     (path, _) <- maybeREPL "illegal path index" mPath
-    (_, syss) <- maybeREPL "illegal path" (iPrf `atPath` path)
-    return syss
+    maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root)
 
 getMethodsAt :: Int -> REPLProof -> REPL [ProofMethod]
 getMethodsAt i prf = maybe (fail "illegal index") (return . snd) (M.lookup i $ rpPaths prf)
