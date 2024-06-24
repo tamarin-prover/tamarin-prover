@@ -69,6 +69,9 @@ module Theory.Tools.Wellformedness (
   , formulaTerms
   ) where
 
+import Rule
+
+import qualified Extension.Data.Label as L
 
 import           Prelude                     hiding (id, (.))
 
@@ -84,9 +87,17 @@ import qualified Data.Set                    as S
 -- import           Data.Traversable            (traverse)
 
 import           Control.Monad.Bind
+import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
+                                                     , multisetIntruderRules, xorIntruderRules)
+
+import           Theory.Module
+
+import           TheoryObject                        (diffThyOptions, diffTheoryConfigBlock, theoryConfigBlock)
+
 
 import           Extension.Prelude
 import           Term.LTerm
+import Term.SubtermRule
 import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Pretty
@@ -1151,6 +1162,89 @@ checkIfLemmasInDiffTheory thy
 -- Theory
 ------------------------------------------------------------------------------
 
+-- -- | All equations of a theory.
+-- thyEquations :: Theory MaudeSig c r p s -> [CtxtStRule]
+-- thyEquations thy = S.toList (stRules (_thySignature thy))
+
+-- thyEquations :: Theory MaudeSig c r p s -> [CtxtStRule]
+-- thyEquations thy = S.toList $ stRules $ L.get thySignature thy
+
+
+-- -- | Checks if all equations are subterm convergent.
+-- checkEquationsSubtermConvergenceWarning :: Theory sig c r p s -> WfErrorReport
+-- checkEquationsSubtermConvergenceWarning thy =
+--   let equations = thyEquations thy
+--   in concatMap checkEquationConvergence equations
+
+-- -- | Checks if a single rule (or equation) is subterm convergent.
+-- checkEquationConvergence :: HasRuleName r => r -> WfErrorReport
+-- checkEquationConvergence rule =
+--   if isSubtermRule rule
+--   then []
+--   else [(underlineTopic "Subterm Convergence Warning",
+--          text $ "The rule " ++ showRuleCaseName rule ++ " is not subterm convergent. There is a risk of non-termination in this rule.")]
+
+
+
+-- -- | Checks if all equations are subterm convergent.
+-- checkSubtermConvergenceWarning :: OpenTranslatedTheory -> WfErrorReport
+-- checkSubtermConvergenceWarning thy =
+--   let rules = thyProtoRules thy
+--   in concatMap checkRuleConvergence rules
+
+-- -- | Checks if a single rule is subterm convergent.
+-- checkRuleConvergence :: ProtoRuleE -> WfErrorReport
+-- checkRuleConvergence rule =
+--   if isSubtermRule rule
+--   then []
+--   else [(underlineTopic "Subterm Convergence Warning",
+--          text $ "The rule " ++ showRuleCaseName rule ++ " is not subterm convergent. There is a risk of non-termination in this rule.")]
+
+-- checkRuleConvergence :: OpenTranslatedTheory -> WfErrorReport
+-- checkRuleConvergence thy = do
+--   if (all isSubtermRule  $ filter isDestrRule $ L.get thyCache thy)
+--     then []
+--     else [(underlineTopic "Subterm Convergence Warning",
+--            text $ "Some rules are not subterm convergent. There is a risk of non-termination in this rule.")]
+
+-- checkRuleConvergence :: OpenTranslatedTheory -> WfErrorReport
+-- checkRuleConvergence thy = [(underlineTopic "Subterm Convergence Warning",
+--            text $ "Some rules are not subterm convergent. There is a risk of non-termination in this rule.")]
+
+-- checkRuleConvergence :: OpenTranslatedTheory -> WfErrorReport
+-- checkRuleConvergence thy = do
+--   -- Définir les règles supplémentaires à ajouter
+--   let msig = get (sigpMaudeSig . thySignature) thy
+--       rules = subtermIntruderRules False msig ++ specialIntruderRules False
+--               ++ (if enableMSet msig then multisetIntruderRules else [])
+--               ++ (if enableXor msig then xorIntruderRules else [])
+  
+--   -- Ajouter les règles à la théorie
+--   let thyWithRulesAC = addIntrRuleACsAfterTranslate rules thy
+
+--   -- Vérifier la convergence des règles
+--   if (all isSubtermRule $ filter isDestrRule $ L.get thyCache thyWithRulesAC)
+--     then []
+--     else [(underlineTopic "Subterm Convergence Warning",
+--            text $ "Some rules are not subterm convergent. There is a risk of non-termination in this rule " ++ show thyWithRulesAC)]
+
+checkRuleConvergence :: OpenTranslatedTheory -> WfErrorReport
+checkRuleConvergence thy = do
+  let msig = get (sigpMaudeSig . thySignature) thy
+      rules = subtermIntruderRules False msig ++ specialIntruderRules False
+              ++ (if enableMSet msig then multisetIntruderRules else [])
+              ++ (if enableXor msig then xorIntruderRules else [])
+  let thyWithRulesAC = addIntrRuleACsAfterTranslate rules thy
+  let destrRules = filter isDestrRule $ L.get thyCache thyWithRulesAC
+
+  let nonConvergentRules = filter (not . isSubtermRule) destrRules
+
+  if null nonConvergentRules
+    then []
+    else [(underlineTopic "Subterm Convergence Warning",
+           text $ "Some rules are not subterm convergent. There is a risk of non-termination in the following rules:\n" ++ unlines (map showRuleCaseName nonConvergentRules))]
+
+
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
                     -> WfErrorReport
@@ -1171,7 +1265,6 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , natWellSortedReportDiff
     ]
 
-
 -- | Returns a list of errors, if there are any.
 checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
                     -> WfErrorReport
@@ -1187,5 +1280,5 @@ checkWellformedness thy sig = concatMap ($ thy)
     , lemmaAttributeReport
     , multRestrictedReport
     , natWellSortedReport
-    ]
-
+    , checkRuleConvergence
+    ] -- ++ [(underlineTopic "Gateau 1111", text $ "La théorie vaut : " ++ show thy)]

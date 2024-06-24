@@ -70,7 +70,8 @@ import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
-import           Theory.Tools.MessageDerivationChecks
+import Theory.Tools.MessageDerivationChecks
+    ( checkVariableDeducability, diffCheckVariableDeducability )
 import           Theory.Module
 
 import           TheoryObject                        (diffThyOptions, diffTheoryConfigBlock, theoryConfigBlock)
@@ -396,11 +397,11 @@ checkTranslatedTheory thyOpts sign thy = do
   variableReport <- case compare derivChecks 0 of
     EQ -> pure $ Just []
     _ -> do
-      traceM ("[Theory " ++ theoryName thy ++ "] Derivation checks started")
+      traceM ("[Theory " ++ theoryName thy ++ "] Derivation checks started") -- ++ "gagagagagagaga" ++ show thy)
       derivCheckSignature <- liftIO $ toSignatureWithMaude (get oMaudePath thyOpts) $ maudePublicSig (toSignaturePure sign)
       rep <- liftIO $ timeout (1000000 * derivChecks) $ evaluate . force $ either (\t -> checkVariableDeducability t derivCheckSignature autoSources defaultProver)
              (\t-> diffCheckVariableDeducability t derivCheckSignature autoSources defaultProver defaultDiffProver) deducThy
-      traceM ("[Theory " ++ theoryName thy ++ "] Derivation checks ended")
+      traceM ("[Theory " ++ theoryName thy ++ "] Derivation checks ended") -- ++ "bobobobobobobobobo" ++ show deducThy)
       return rep
 
   let report = transReport ++ fromMaybe derivTimeoutMsg  variableReport

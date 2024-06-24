@@ -19,13 +19,23 @@ import qualified Text.PrettyPrint.Class as Pretty
 import ClosedTheory
 import qualified Data.List as List
 
+import Control.Basics
+import Control.Category
+
+import Rule
+import Prelude hiding (id, (.))
+
+import           Prelude                             hiding (id, (.))                 
+import OpenTheory
+
+
 -----------------------------------------------
 -- DerivationChecks
 -----------------------------------------------
 
 checkVariableDeducability :: OpenTranslatedTheory -> SignatureWithMaude -> Bool -> Prover -> WfErrorReport
 checkVariableDeducability thy sig sources prover =
-    reportVars (map checkProofStatuses provenTheories) originalRules freeVars
+    (reportVars (map checkProofStatuses provenTheories) originalRules freeVars) -- ++ [(underlineTopic "Subterm Convergence Warning", text $ "Vise un peu le thycache de Thy :" ++ show thy)]
     where
         originalRules = map (applyMacroInProtoRule (theoryMacros thy)) $ theoryRules thy
         provenTheories =  map (proveTheory (const True) prover) closedTheories
@@ -36,6 +46,37 @@ checkVariableDeducability thy sig sources prover =
         newLemmas = zipWith3 (\idx freevs _-> generateSeparatedLemmas idx freevs) [0..] freeVars premises
         premises = map (map (fmap replacePrivate)) $ premsOfThyRules originalRules
         freeVars = freesInThyRules originalRules
+
+
+-- checkVariableDeducability :: OpenTranslatedTheory -> SignatureWithMaude -> Bool -> Prover -> WfErrorReport
+-- checkVariableDeducability thy sig sources prover =
+--     let reports = reportVars (map checkProofStatuses provenTheories) originalRules freeVars
+--         subtermWarnings = checkSubtermConvergence (head provenTheories)
+--     in reports ++ subtermWarnings
+--     where
+--         originalRules = map (applyMacroInProtoRule (theoryMacros thy)) $ theoryRules thy
+--         provenTheories = map (proveTheory (const True) prover) closedTheories
+--         closedTheories = map (\t -> closeTheoryWithMaude sig t sources False) modifiedTheories
+--         modifiedTheories = zipWith3 (\r l t -> (addRules [r] . addLemmas l) t) newRules newLemmas (repeat emptyPublicThy)
+--         emptyPublicThy = makeFunsPublic (toSignaturePure sig) $ deleteRulesAndLemmasFromTheory thy
+--         newRules = zipWith3 (\idx freevs prems -> generateRule freevs (premisesToOut prems) idx) [0..] freeVars premises
+--         newLemmas = zipWith3 (\idx freevs _ -> generateSeparatedLemmas idx freevs) [0..] freeVars premises
+--         premises = map (map (fmap replacePrivate)) $ premsOfThyRules originalRules
+--         freeVars = freesInThyRules originalRules
+
+--         checkSubtermConvergence :: ClosedTheory -> WfErrorReport
+--         checkSubtermConvergence ct =
+--             let destrRules = filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) ct
+--                 nonSubtermRules = filter (not . isSubtermRule) destrRules
+--             in if null nonSubtermRules
+--                then []
+--                else [(underlineTopic "Subterm Convergence Warning",
+--                       text $ "Some rules are not subterm convergent. There is a risk of non-termination in this rule : " ++ showEquations nonSubtermRules)]
+
+--         showEquations :: [IntrRuleAC] -> String
+--         showEquations [] = ""
+--         showEquations l = showRuleCaseName (head l) ++ " " ++ showEquations (tail l)
+
 
 diffCheckVariableDeducability :: OpenDiffTheory -> SignatureWithMaude -> Bool -> Prover -> DiffProver -> WfErrorReport
 diffCheckVariableDeducability thy sig sources prover diffprover =
