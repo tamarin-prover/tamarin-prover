@@ -36,6 +36,7 @@ import           Text.PrettyPrint.Class
 import           Theory.Constraint.System.Graph.GraphRepr
 import           Term.LTerm
 import           Theory                   (LNFact, rPrems, rConcs, rActs, factTerms)
+import Debug.Trace.EnvTracer (etraceSectionLn, etraceLn)
 
 -- | Type for the abbreviation itself, which is always a literal containing the string representation.
 type AbbreviationTerm = LNTerm
@@ -65,24 +66,39 @@ data AbbreviationOptions = AbbreviationOptions
 defaultAbbreviationOptions :: AbbreviationOptions
 defaultAbbreviationOptions = AbbreviationOptions 
   { aoAbbrevsSoftLimit = 10
-  , aoAlwaysAbbrevWeight = 500 -- a.d. TODO what is a good default value for this?
+  , aoAlwaysAbbrevWeight = 30 -- a.d. TODO what is a good default value for this?
   , aoFirstIndex = 1
   , aoPrefixLength = 2
   }
 
 -- | Lookup a single term in an abbreviations map and return the abbreviation name.
-lookupAbbreviation :: LNTerm -> Abbreviations -> Maybe AbbreviationTerm
-lookupAbbreviation t abbrevs = fst <$> M.lookup t abbrevs
+lookupAbbreviation :: Abbreviations -> LNTerm -> Maybe AbbreviationTerm
+lookupAbbreviation abbrevs t = fst <$> M.lookup t abbrevs
 
 -- | Weigh each term based on its size and how often it appears in the graph.
-judgeTerm :: LNTerm -> Int -> Weight
-judgeTerm t occs 
-  | termSize < 7 = -1
-  | (termSize < 20) && occs == 1 = -1
-  | otherwise = ((2 + occs) ^ (2 :: Integer)) * termSize  where
+judgeTerm :: M.Map LNTerm LNTerm -- ^ The existing set of abbreviations used to compute the screen size of the current term under consideration.
+          -> LNTerm              -- ^ The current term to consider for abbreviating.
+          -> (Int, [Int])        -- ^ The total number of occurrences and a list where each element is the number of occurrences in the existing set of abbreviations.
+          -> Weight              -- ^ The resulting weight we give to that abbreviation.
+judgeTerm abbrevs t (occs, legendOccs) 
+  | termWeight < 10 = -1
+  | relativeOccs <= 1 = -1
+  | otherwise = relativeOccs * termWeight
+  where
     -- | The termsize is the length of the term rendered as a string.
-    termSize :: Weight
-    termSize = length $ render $ prettyLNTerm t
+    termWeight :: Weight
+    termWeight = 
+      let replacedTerm = applyAbbreviationsTerm (\k -> M.lookup k abbrevs) t in
+      length $ render $ prettyLNTerm replacedTerm
+    
+    -- | A "relative" occurrence is computed by comparing the total number of occurrences
+    -- with the number of occurrences only in the legend.
+    -- If we find the only occurrence of a term only in the legend then we will never abbreviate it.
+    relativeOccs :: Int
+    relativeOccs = 
+      if occs == 1 && legendOccs == [1]
+      then 0
+      else occs
 
 -- | Find a suitable abbreviation prefix for the given term in upper-case.
 -- For a literal we take the first 2 characters and for function symbols we either special-case the name or also take the first 2 characters.
@@ -135,20 +151,48 @@ abbreviateTerm options allNames prefixMap t =
 
 -- | For a given graph representation, compute possible abbreviations that can be applied.
 -- Abbreviations are always LNTerm variables with a differentiating number suffix.
+--
+-- actually what would lead to the best abbreviations is:
+--   calculate terms + occurrences
+--   calculate weights
+--   take term X with maximum weight and make abbreviation
+--   now for each subterm of X, decrement its occurrence (this can be reasonable fast if we keep the allTermOccs and just delete X, then go through all its subterms and decrement them)
+--     this is good in a situation where 
+--   for each other term that has X as a subterm, reduce replace X by its abbreviation when calculating the term size (this can be made fast by keeping around the list of abbreviations and applying it to each expression when calculating the term size)
+--     this is good in a situation where you have a term X = F(Y) where Y has bigger weight than X and is abbreviated first. When Y is replaced by an abbreviation the weight of X drops a lot and probably does not need to be abbreviated.
+--   repeat finding the next term with maximum weight
+--   This algorithm is probably cubic in the number of terms, as finding all subterms is already quadratic and now we do this for each term.
+    
 computeAbbreviations :: GraphRepr -> AbbreviationOptions -> Abbreviations 
-computeAbbreviations repr options = 
-  let allWeightedTerms = M.mapWithKey judgeTerm allTermOccs
-      toAbbreviate = filterWeights $ M.toList allWeightedTerms
-      abbrevs = abbreviateTerms toAbbreviate
-      recursiveAbbrevs = makeRecursive abbrevs
-  in 
-    recursiveAbbrevs
+computeAbbreviations repr options = makeRecursive $ M.toList $ go allTermOccs M.empty M.empty
   where
+    go :: M.Map LNTerm (Int, [Int]) -> PrefixMap -> M.Map LNTerm LNTerm -> M.Map LNTerm LNTerm
+    go termOccs prefixMap abbrevs = 
+      let weightedTerms = M.mapWithKey (judgeTerm abbrevs) termOccs
+          candidateM = filterCandidateTerm $ M.toList weightedTerms
+      in
+        case candidateM of
+          Nothing -> abbrevs
+          Just (candidate, weight) -> 
+            -- If the candidate weight is too low and we already have enough abbreviations, return the current abbreviations.
+            if weight < aoAlwaysAbbrevWeight options && length abbrevs >= aoAbbrevsSoftLimit options
+            then abbrevs
+            else 
+              -- make an abbreviation for this term
+              let (newPrefixMap, abbrevName) = abbreviateTerm options allNames prefixMap candidate
+                  -- Delete the candidate from the list of terms and decrement the occurrences of other terms.
+                  newTermOccs = M.mapWithKey (\term (occs, legendOccs) -> (occs, countProperSubterms term candidate : legendOccs))
+                                $ M.delete candidate termOccs
+                  newAbbrevs = M.insert candidate abbrevName abbrevs
+              in
+                go newTermOccs newPrefixMap newAbbrevs
+              
+            
     -- | Collect all terms in our graph along with their number of occurrences
-    allTermOccs :: M.Map LNTerm Int
+    allTermOccs :: M.Map LNTerm (Int, [Int])
     allTermOccs = 
       let terms = concatMap getNodeTerms (get grNodes repr) ++ concatMap (\c -> concatMap getNodeTerms $ get cNodes c) (get grClusters repr) in
-      M.fromListWith (+) $ map (\t -> (t,1)) terms
+      M.map (\occs -> (occs, [])) $ M.fromListWith (+) $ map (\t -> (t,1)) terms
 
     -- | Collect all terms in a single graph node. 
     -- At the moment terms only appear in SystemNodes and UnsolvedActionNodes.
@@ -181,16 +225,10 @@ computeAbbreviations repr options =
         sort $ nub names
 
     -- | For a number of weighted terms, take the first aoMaxAbbrevs terms sorted by decreasing weight.
-    filterWeights :: [(LNTerm, Weight)] -> [LNTerm]
-    filterWeights weightedTerms = 
-          -- Terms with nonpostitive weights should never be abbreviated.
-      let relevantWeights = filter (\(_, weight) -> weight > 0) $ sortOn (Data.Ord.Down . snd) weightedTerms
-          -- First take as many weights that surpass the aoAlwaysAbbrevWeight. The relevantWeights list is sorted so we take a prefix of the list.
-          (heavyWeights, restWeights) = span (\(_, weight) -> weight >= aoAlwaysAbbrevWeight options) relevantWeights
-          -- then, if there is space left, take any further weights until aoAbbrevsSoftLimit is reached.
-          finalWeights = heavyWeights ++ take (aoAbbrevsSoftLimit options - length heavyWeights) restWeights
-      in
-        map fst finalWeights
+    filterCandidateTerm :: [(LNTerm, Weight)] -> Maybe (LNTerm, Weight)
+    filterCandidateTerm weightedTerms = 
+      let relevantWeights = sortOn (Data.Ord.Down . snd) $ filter (\(_, weight) -> weight > 0) weightedTerms in
+      listToMaybe relevantWeights
 
     -- | For a given list of terms, find suitable abbreviations and return a mapping from the original to the abbreviated terms. 
     -- The prefix index map is initially empty and accumulates the next possible index candidate for each prefix while we create abbreviations.
@@ -216,17 +254,17 @@ computeAbbreviations repr options =
         M.fromList recursiveAbbrevs
 
 -- | Go through an LNTerm and replace all possible subterms with their abbreviation top-down.
-applyAbbreviationsTerm :: Abbreviations -> LNTerm -> LNTerm
-applyAbbreviationsTerm abbrevs term = 
-  let replaceWithAbbrev t = fromMaybe t $ lookupAbbreviation t abbrevs
+applyAbbreviationsTerm :: (LNTerm -> Maybe AbbreviationTerm) -> LNTerm -> LNTerm
+applyAbbreviationsTerm lookupTerm term = 
+  let replaceWithAbbrev t = fromMaybe t $ lookupTerm t
       replacedTerm = replaceSubterm replaceWithAbbrev term
   in
     replacedTerm
 
 -- | Go through an LNFact and apply the abbreviations to all contained LNTerm's.
-applyAbbreviationsFact :: Abbreviations -> LNFact -> LNFact
-applyAbbreviationsFact abbrevs fact = 
+applyAbbreviationsFact :: (LNTerm -> Maybe AbbreviationTerm) -> LNFact -> LNFact
+applyAbbreviationsFact lookupTerm fact = 
   let terms = factTerms fact
-      replacedTerms = map (applyAbbreviationsTerm abbrevs) terms
+      replacedTerms = map (applyAbbreviationsTerm lookupTerm) terms
   in 
     fact { factTerms = replacedTerms }
