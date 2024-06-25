@@ -351,6 +351,13 @@ graphNodeToJSONGraphNode node = do
               , jgnConcs = []
               }
         }
+    CollapseNode nodes ->
+      return $ JSONGraphNode 
+        { jgnId = show nid
+        , jgnType = "collapsednode"
+        , jgnLabel = ""
+        , jgnMetadata = Nothing 
+        }
 
 
 -- | Determine the type of an edge.

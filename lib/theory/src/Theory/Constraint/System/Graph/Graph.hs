@@ -30,6 +30,8 @@ module Theory.Constraint.System.Graph.Graph (
     , resolveNodePremFact
   ) where
 
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty       as NE
 import qualified Data.Map                 as M
 import           Data.Maybe
 import qualified Data.Set                 as S
@@ -127,6 +129,58 @@ systemEdges se =
   let edges = S.toList $ get Sys.sEdges se in
   map (\(Sys.Edge src tgt) -> SystemEdge (src, tgt)) edges
 
+collapseDerivations :: GraphRepr -> GraphRepr
+collapseDerivations repr = 
+  -- make graph repr to a map of nodeid -> (node, [nodeid]), i.e. the node and its target nodes 
+  -- map over the list of keys of the map with a stateful function that changes the map
+  --   for each node, get the list of predecessor nodes
+  --                  get the list of successor nodes
+  --                  if isDerivationNode && pred > 0 && succ > 0 then
+  --                     remove node from the map
+  --                     if any successors or predecessors are also collapseNodes, remove them too
+  --                     create a new collapseNode and insert it into the map under all nodeid's that were removed
+  -- how do we transform the map into a graphrepr again?
+  --   fold over the map with an exclusion list as a state. For every collapseNode that we find we add all its nodeids to the exclusion list
+  --   if a node is already in the exclusion list we only add its edges to the representation, not the node itself
+  let adjMap = toAdjMap repr
+      newAdjMap = foldl findCollapseNode adjMap $ M.keys adjMap
+      newRepr = fromAdjMap newAdjMap
+  in
+    newRepr
+  where 
+    findCollapseNode :: GraphAdjMap -> Th.NodeId -> GraphAdjMap
+    findCollapseNode adjMap nodeId =
+      let (currentNode, currentEdges) = adjMap M.! nodeId
+          predecessors = M.keys $ M.filter (\(_, edges) -> any (\edge -> nodeId == edgeTargetId edge) edges) adjMap
+          successors = M.keys $ M.filter (\(node, _) -> any (\edge -> get nNodeId node == edgeTargetId edge) currentEdges) adjMap
+      in
+        if nodeIsAttackerDerivation currentNode 
+        && not (null predecessors)
+        && not (null successors)
+        then
+          -- remove current node
+          -- remove those successors that are collapseNodes
+          -- remove those predecessors that are collapseNodes
+          let removeSuccPredIds = filter (isCollapseNode adjMap) predecessors
+                                  ++ filter (isCollapseNode adjMap) successors
+              collapseEntries = adjMap M.! nodeId :| map (\k -> adjMap M.! k) removeSuccPredIds
+              -- create a new collapseNode out of all removed nodes
+              newCollapsedNode = collapseNodes (NE.map fst collapseEntries)
+              -- insert collapseNode
+              newAdjMap = foldr (\(node, edges) m -> 
+                                  let k = get nNodeId node in
+                                  M.insert k (newCollapsedNode, edges) m) adjMap collapseEntries
+          in
+          newAdjMap
+        else
+          adjMap
+    
+    isCollapseNode :: GraphAdjMap -> Th.NodeId -> Bool
+    isCollapseNode adjMap nodeId =
+      case get nNodeType $ fst (adjMap M.! nodeId) of
+        CollapseNode _ -> True
+        _              -> False
+
 -- | Computes a basic graph representation from a System 
 -- where nodes are 
 -- 1. the System rule instances
@@ -157,10 +211,11 @@ systemToGraph se options =
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
-      repr = basicGraphRepr
-      abbrevs = computeAbbreviations repr defaultAbbreviationOptions
+      repr1 = if (get goSimplificationLevel options >= SL3) then collapseDerivations basicGraphRepr else basicGraphRepr
+      finalRepr = repr1
+      abbrevs = computeAbbreviations finalRepr defaultAbbreviationOptions
   in
-    Graph se options repr abbrevs
+    Graph se options finalRepr abbrevs
 
 -- | Get all sink nodes of a graph, i.e. those without outgoing edges.
 getGraphSinks :: Graph -> [Node]
