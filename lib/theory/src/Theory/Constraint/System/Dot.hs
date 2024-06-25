@@ -197,6 +197,12 @@ dotNodeCompact node = do
     LastActionAtom -> cacheState dsNodes v $ mkSimpleNode (show v) []
     MissingNode (Left conc) -> cacheState dsConcs (v, conc) $ dotConcC (v, conc)
     MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
+    CollapseNode childNodes -> do
+      nid <- mkSimpleNode "" [("shape", "point")]
+      mapM_ (\childNode ->
+              let v' = get nNodeId childNode in
+              cacheState dsNodes v' $ return nid) childNodes
+    
   where
     hasOutgoingEdge graph v =
       let repr = get gRepr graph
