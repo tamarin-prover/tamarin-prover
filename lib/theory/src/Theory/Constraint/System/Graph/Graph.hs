@@ -129,19 +129,12 @@ systemEdges se =
   let edges = S.toList $ get Sys.sEdges se in
   map (\(Sys.Edge src tgt) -> SystemEdge (src, tgt)) edges
 
+-- | Transform the graph representation to insert 'CollapseNode's which collect connected attacker derivation nodes.
+-- This process is based on the cleandot python script and goes through all nodes in the graph, checks if they are an attacker node
+-- and then converts them to a 'CollapseNode'. During this process, connected 'CollapseNode's are unified, so that for each connected
+-- groups of attacker derivation nodes a single 'CollapseNode' remains in the final graph.
 collapseDerivations :: GraphRepr -> GraphRepr
 collapseDerivations repr = 
-  -- make graph repr to a map of nodeid -> (node, [nodeid]), i.e. the node and its target nodes 
-  -- map over the list of keys of the map with a stateful function that changes the map
-  --   for each node, get the list of predecessor nodes
-  --                  get the list of successor nodes
-  --                  if isDerivationNode && pred > 0 && succ > 0 then
-  --                     remove node from the map
-  --                     if any successors or predecessors are also collapseNodes, remove them too
-  --                     create a new collapseNode and insert it into the map under all nodeid's that were removed
-  -- how do we transform the map into a graphrepr again?
-  --   fold over the map with an exclusion list as a state. For every collapseNode that we find we add all its nodeids to the exclusion list
-  --   if a node is already in the exclusion list we only add its edges to the representation, not the node itself
   let adjMap = toAdjMap repr
       newAdjMap = foldl findCollapseNode adjMap $ M.keys adjMap
       newRepr = fromAdjMap newAdjMap
@@ -166,10 +159,12 @@ collapseDerivations repr =
               collapseEntries = adjMap M.! nodeId :| map (\k -> adjMap M.! k) removeSuccPredIds
               -- create a new collapseNode out of all removed nodes
               newCollapsedNode = collapseNodes (NE.map fst collapseEntries)
+              -- also collect all the edges from the nodes that we collapsed
+              unifiedEdges = concat $ NE.toList $ NE.map snd collapseEntries
               -- insert collapseNode
               newAdjMap = foldr (\(node, edges) m -> 
                                   let k = get nNodeId node in
-                                  M.insert k (newCollapsedNode, edges) m) adjMap collapseEntries
+                                  M.insert k (newCollapsedNode, unifiedEdges) m) adjMap collapseEntries
           in
           newAdjMap
         else
