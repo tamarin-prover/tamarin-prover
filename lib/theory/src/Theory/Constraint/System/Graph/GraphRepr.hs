@@ -38,6 +38,7 @@ import           Extension.Data.Label
 import qualified Theory.Constraint.System as Sys
 import qualified Theory                   as Th
 import qualified Data.Map                 as M
+import qualified Data.Set                 as S
 import Data.Maybe (mapMaybe)
 
 -- | All nodes are identified by their NodeId.
@@ -142,7 +143,8 @@ toEdgeList repr =
 
 type GraphAdjMap = M.Map Th.NodeId (Node, [Edge])
 
--- | Note that this assumes that no clusters exist.
+-- | View the graph as a map from 'NodeId' to the 'Node' information and a list of outgoing 'Edge's.
+-- Note that this assumes that no clusters exist.
 toAdjMap :: GraphRepr -> GraphAdjMap
 toAdjMap repr =
   let allNodes = get grNodes repr
@@ -157,7 +159,25 @@ toAdjMap repr =
       let srcId = get nNodeId node in
       mapMaybe (\edge -> if srcId == edgeSourceId edge then Just edge else Nothing) allEdges
 
+-- | Turn the map view of a graph back into the default representation.
+-- Due to the way 'CollapseNode's are generated, they may exist multiple times in the map. For each node that a CollapseNode contains,
+-- the CollapseNode is the value of the contained node's NodeId in the map. Therefore we use a visited set to prevent adding nodes 
+-- multiple times. 
+-- Note that this assumes the 'CollapseNode's are not nested, as it only looks into the immediate children 
+-- to fill the visited set.
 fromAdjMap :: GraphAdjMap -> GraphRepr
 fromAdjMap adjMap = 
-  let (nodes, edges) = unzip $ M.elems adjMap in
-  GraphRepr [] nodes (concat edges)
+  let (_, nodes, edges) = M.foldrWithKey visitNode (S.empty, [], []) adjMap in
+    GraphRepr [] nodes edges
+  where
+    visitNode :: Th.NodeId -> (Node, [Edge]) -> (S.Set Th.NodeId, [Node], [Edge]) -> (S.Set Th.NodeId, [Node], [Edge])
+    visitNode nodeId (node, edges) state@(visited, outputNodes, outputEdges) =
+      if get nNodeId node `S.member` visited
+      then state
+      else 
+        let nowVisited = case get nNodeType node of 
+                          CollapseNode children -> S.fromList $ map (get nNodeId) children 
+                          _ -> S.singleton nodeId
+        in
+          (S.union nowVisited visited, node : outputNodes, edges ++ outputEdges)
+  
