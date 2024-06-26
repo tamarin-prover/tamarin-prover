@@ -351,14 +351,14 @@ dotEdge edge =
     dotGenEdge style src tgt = do
       srcId <- getState dsConcs src ("Source node of edge not found: " ++ show edge)
       tgtId <- getState dsPrems tgt ("Target node of edge not found: " ++ show edge)
-      liftDot $ D.edge srcId tgtId style
+      when (srcId /= tgtId) (liftDot $ D.edge srcId tgtId style)
 
 -- | Dot a less edge, which needs to be transformed first to contain the correct color.
 dotLessEdge :: (NodeId, NodeId, String) -> SeDot ()
 dotLessEdge edge@(src, tgt, color) = do
   srcId <- getState dsNodes src ("Source node of less edge not found: " ++ show edge)
   tgtId <- getState dsNodes tgt ("Target node of less edge not found: " ++ show edge)
-  liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
+  when (srcId /= tgtId) (liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")])
 
 -- | Dot a legend listing all abbreviations by adding a sink node with a suitable HTML table label.
 generateLegend :: SeDot ()

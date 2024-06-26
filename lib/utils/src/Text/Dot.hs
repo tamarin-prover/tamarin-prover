@@ -70,6 +70,7 @@ import Data.GraphViz.Attributes.Colors
 -- | Identifier for a node in a dot file.
 data NodeId = NodeId String
             | UserNodeId Int
+  deriving (Eq)
 
 instance Show NodeId where
   show (NodeId str) = str
