@@ -71,8 +71,6 @@ module Theory.Tools.Wellformedness (
 
 import Rule
 
-import qualified Extension.Data.Label as L
-
 import           Prelude                     hiding (id, (.))
 
 import           Control.Basics
@@ -1164,6 +1162,13 @@ thyEquations thy = S.toList $ stRules (sig thy)
   where
     sig = _sigMaudeInfo . _thySignature
 
+-- | All equations of an OpenDiffTheory.
+diffThyEquations :: OpenDiffTheory -> [CtxtStRule]
+diffThyEquations thy = S.toList $ stRules (sig thy)
+  where
+    sig = _sigMaudeInfo . _diffThySignature
+
+
 -- | Checks if all equations are subterm convergent.
 checkEquationsSubtermConvergence :: OpenTranslatedTheory -> WfErrorReport
 checkEquationsSubtermConvergence thy
@@ -1173,8 +1178,21 @@ checkEquationsSubtermConvergence thy
     equations = thyEquations thy
     nonSubtermEquations = isSubtermCtxtRule equations
     topic = underlineTopic "Subterm Convergence Warning"
-    doc = text "The following equations are not subterm convergent. There is a risk of non-termination with these equations:\n"
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent, you can ignore this warning and continue. \n"
           $-$ vcat (map prettyCtxtStRule nonSubtermEquations)
+
+-- | Checks if all equations are subterm convergent in a DiffTheory.
+checkDiffEquationsSubtermConvergence :: OpenDiffTheory -> WfErrorReport
+checkDiffEquationsSubtermConvergence thy
+  | null nonSubtermEquations = []
+  | otherwise = [(topic, doc)]
+  where
+    equations = diffThyEquations thy
+    nonSubtermEquations = isSubtermCtxtRule equations
+    topic = underlineTopic "Subterm Convergence Warning"
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent, you can ignore this warning and continue. \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations)
+
 
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
@@ -1194,6 +1212,7 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
     , natWellSortedReportDiff
+    , checkDiffEquationsSubtermConvergence
     ]
 
 -- | Returns a list of errors, if there are any.
