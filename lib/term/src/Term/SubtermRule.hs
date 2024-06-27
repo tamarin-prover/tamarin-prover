@@ -110,7 +110,7 @@ isSubtermConvergentCtxtRule (CtxtStRule lhs (StRhs _ rhs))
   | isConstant rhs = True
   | otherwise      = not (null (findSubterm lhs rhs))
 
--- Checks if LNTerm is constant : fonction frees pour savoir si c'est constante et fonction render pour convertir le highlited doc en string Pretty.render, pour cocaténer deux doc : <->
+-- Checks if LNTerm is constant 
 isConstant :: LNTerm -> Bool
 isConstant term = null (frees term)
 ------------------------------------------------------------------------------
@@ -122,5 +122,3 @@ prettyCtxtStRule :: HighlightDocument d => CtxtStRule -> d
 prettyCtxtStRule r = case ctxtStRuleToRRule r of
   (lhs `RRule` rhs) -> sep [ nest 2 $ prettyLNTerm lhs
                            , operator_ "=" <-> prettyLNTerm rhs ]
-
-
