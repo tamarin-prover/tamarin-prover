@@ -352,6 +352,7 @@ data RuleAttribute = RuleColor (RGB Rational) -- Color for display
                              -- dependency to Sapic.Annotations
                              -- need to see what we need here later.
                   | IgnoreDerivChecks
+                  | Agent String
        deriving( Eq, Ord, Show, Data, Generic)
 instance NFData RuleAttribute
 instance Binary RuleAttribute

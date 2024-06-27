@@ -122,17 +122,14 @@ setDefaultAttributes = do
 nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
-      [ (get rInfo ru, case find colorAttr $ ruleAttributes ru of
-            Just (RuleColor c)     -> c
-            Just (Process   _)     -> hsvToRGB $ getColor (gIdx, mIdx)
-            Just IgnoreDerivChecks -> hsvToRGB $ getColor (gIdx, mIdx)
-            Nothing                -> hsvToRGB $ getColor (gIdx, mIdx))
+      [ (get rInfo ru, getColorForRule (filterAttributes $ ruleAttributes ru) gIdx mIdx)
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
-    groupIdx ru | isDestrRule ru                   = 0
-                | isConstrRule ru                  = 2
-                | isFreshRule ru || isISendRule ru = 3
-                | otherwise                        = 1
+    groupIdx ru 
+      | isDestrRule ru                   = 0
+      | isConstrRule ru                  = 2
+      | isFreshRule ru || isISendRule ru = 3
+      | otherwise                        = 1
 
     -- groups of rules labeled with their index in the group
     groups = [ (gIdx, [ ru | ru <- rules, gIdx == groupIdx ru])
@@ -143,16 +140,64 @@ nodeColorMap rules =
     colors = M.fromList $ lightColorGroups intruderHue (map (length . snd) groups)
     getColor idx = fromMaybe (HSV 0 1 1) $ M.lookup idx colors
 
--- Note: Currently RuleColors are the only Rule Attributes, so the second line is
--- commented out to remove the redundant pattern compiler warning. If more are added,
--- the second line can be uncommented.
+    -- Function to get color for a given rule
+    getColorForRule attrs gIdx mIdx = 
+      case find colorAttr attrs of
+        Just (RuleColor c)     -> c
+        Just (Process   _)     -> hsvToRGB $ getColor (gIdx, mIdx)
+        Just IgnoreDerivChecks -> hsvToRGB $ getColor (gIdx, mIdx)
+        _                      -> hsvToRGB $ getColor (gIdx, mIdx)
+
     colorAttr (RuleColor _)     = True
-    colorAttr (Process   _)     = False
-    colorAttr IgnoreDerivChecks = False
+    colorAttr _                 = False
+
+    -- Function to filter out Agent attributes
+    filterAttributes :: [RuleAttribute] -> [RuleAttribute]
+    filterAttributes = filter (not . isAgent)
+
+    isAgent (Agent _) = True
+    isAgent _         = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational
     intruderHue = 18 % 360
+
+-- -- | Compute a color map for nodes labelled with a proof rule info of one of
+-- -- the given rules.
+-- nodeColorMap :: [RuleACInst] -> NodeColorMap
+-- nodeColorMap rules =
+--     M.fromList $
+--       [ (get rInfo ru, case find colorAttr $ ruleAttributes ru of
+--             Just (RuleColor c)     -> c
+--             Just (Process   _)     -> hsvToRGB $ getColor (gIdx, mIdx)
+--             Just IgnoreDerivChecks -> hsvToRGB $ getColor (gIdx, mIdx)
+--             Nothing                -> hsvToRGB $ getColor (gIdx, mIdx))
+--       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
+--   where
+--     groupIdx ru | isDestrRule ru                   = 0
+--                 | isConstrRule ru                  = 2
+--                 | isFreshRule ru || isISendRule ru = 3
+--                 | otherwise                        = 1
+
+--     -- groups of rules labeled with their index in the group
+--     groups = [ (gIdx, [ ru | ru <- rules, gIdx == groupIdx ru])
+--              | gIdx <- [0..3]
+--              ]
+
+--     -- color for each member of a group
+--     colors = M.fromList $ lightColorGroups intruderHue (map (length . snd) groups)
+--     getColor idx = fromMaybe (HSV 0 1 1) $ M.lookup idx colors
+
+-- -- Note: Currently RuleColors are the only Rule Attributes, so the second line is
+-- -- commented out to remove the redundant pattern compiler warning. If more are added,
+-- -- the second line can be uncommented.
+--     colorAttr (RuleColor _)     = True
+--     colorAttr (Process   _)     = False
+--     colorAttr IgnoreDerivChecks = False
+
+--     -- The hue of the intruder rules
+--     intruderHue :: Rational
+--     intruderHue = 18 % 360
 
 ------------------------------------------------------------------------------
 -- Record based dotting
