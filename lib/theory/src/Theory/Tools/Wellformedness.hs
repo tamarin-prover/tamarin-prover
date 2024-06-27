@@ -100,7 +100,7 @@ import           TheoryObject                (diffThyOptions, prettyVarList, the
 import           Utils.Misc
 import           Term.Macro
 
-import Term.SubtermRule ( CtxtStRule, prettyCtxtStRule, isSubtermCtxtRule)
+import Term.SubtermRule ( CtxtStRule, prettyCtxtStRule, filterNonSubtermCtxtRule)
 
 
 ------------------------------------------------------------------------------
@@ -1176,7 +1176,7 @@ checkEquationsSubtermConvergence thy
   | otherwise = [(topic, doc)]
   where
     equations = thyEquations thy
-    nonSubtermEquations = isSubtermCtxtRule equations
+    nonSubtermEquations = filterNonSubtermCtxtRule equations
     topic = underlineTopic "Subterm Convergence Warning"
     doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent, you can ignore this warning and continue. \n"
           $-$ vcat (map prettyCtxtStRule nonSubtermEquations)
@@ -1188,7 +1188,7 @@ checkDiffEquationsSubtermConvergence thy
   | otherwise = [(topic, doc)]
   where
     equations = diffThyEquations thy
-    nonSubtermEquations = isSubtermCtxtRule equations
+    nonSubtermEquations = filterNonSubtermCtxtRule equations
     topic = underlineTopic "Subterm Convergence Warning"
     doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent, you can ignore this warning and continue. \n"
           $-$ vcat (map prettyCtxtStRule nonSubtermEquations)

@@ -10,13 +10,12 @@
 module Term.SubtermRule (
       StRhs(..)
     , CtxtStRule(..)
-    , isSubtermCtxtRule
+    , filterNonSubtermCtxtRule
     , isSubtermConvergentCtxtRule
     , rRuleToCtxtStRule
     , ctxtStRuleToRRule
     , findAllSubterms
     , findSubterm
-    , findSubtermPrime
 
     -- * Pretty Printing
     , prettyCtxtStRule
@@ -72,12 +71,12 @@ rRuleToCtxtStRule (lhs `RRule` rhs)
 -- | Finds all occurrences of a subterm in a term.
 findSubterm :: LNTerm -> LNTerm -> [Position]
 findSubterm lst r = findSubtermPrime lst r []
-
-findSubtermPrime :: LNTerm -> LNTerm -> Position -> [Position]
-findSubtermPrime lst r rpos | lst == r            = [reverse rpos]
-findSubtermPrime (viewTerm -> FApp _ args) r rpos =
-    concat $ zipWith (\lst i -> findSubtermPrime lst r (i:rpos)) args [0..]
-findSubtermPrime (viewTerm -> Lit _)         _ _  = []
+  where 
+      findSubtermPrime :: LNTerm -> LNTerm -> Position -> [Position]
+      findSubtermPrime lst r rpos | lst == r            = [reverse rpos]
+      findSubtermPrime (viewTerm -> FApp _ args) r rpos =
+            concat $ zipWith (\lst i -> findSubtermPrime lst r (i:rpos)) args [0..]
+      findSubtermPrime (viewTerm -> Lit _)         _ _  = []
 
 -- | Given a term l, finds all occurrences of r in l.
 -- If r does not occur in l, returns the occurrences of subterms of r.
@@ -101,8 +100,8 @@ ctxtStRuleToRRule :: CtxtStRule -> RRule LNTerm
 ctxtStRuleToRRule (CtxtStRule lhs (StRhs _ rhsterm)) = lhs `RRule` rhsterm
 
 -- | Checks if a list of CtxtStRule contains rules that are not subterm convergent.
-isSubtermCtxtRule :: [CtxtStRule] -> [CtxtStRule]
-isSubtermCtxtRule = filter (not . isSubtermConvergentCtxtRule)
+filterNonSubtermCtxtRule :: [CtxtStRule] -> [CtxtStRule]
+filterNonSubtermCtxtRule = filter (not . isSubtermConvergentCtxtRule)
 
 -- | Checks if RHS is a subterm of LHS in a specific rule.
 isSubtermConvergentCtxtRule :: CtxtStRule -> Bool
