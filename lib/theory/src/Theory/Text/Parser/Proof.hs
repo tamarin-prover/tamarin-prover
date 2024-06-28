@@ -33,7 +33,7 @@ nodePrem = parens ((,) <$> nodevar
 -- | Parse a node conclusion.
 nodeConc :: Parser NodeConc
 nodeConc = parens ((,) <$> nodevar
-                       <*> (comma *> fmap (ConcIdx .fromIntegral) natural))
+                       <*> (comma *> fmap (ConcIdx . fromIntegral) natural))
 
 -- | Parse a goal.
 goal :: Parser Goal

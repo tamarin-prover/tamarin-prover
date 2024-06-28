@@ -89,7 +89,7 @@ narrowVariant tstart maxdepth =
         minimized = filterMaximalBy fst cmp variants
         tag t xs = [ (t,a) | a <- xs]
         (explored',new) = map snd *** map snd $ partition fst minimized
-        cmp a b = runWithMaude $ compareSubstVariant tstart (varSubst.snd $ a) (varSubst.snd $ b)
+        cmp a b = runWithMaude $ compareSubstVariant tstart (varSubst . snd $ a) (varSubst . snd $ b)
 
         variantsFrom' (Variant pos0 substComposed) =
           zipWith (\i substComposed' -> Variant (pos0++[i]) substComposed')
