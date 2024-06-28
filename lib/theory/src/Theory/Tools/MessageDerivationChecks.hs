@@ -5,7 +5,6 @@ module Theory.Tools.MessageDerivationChecks (
 
 import  Theory.Model.Formula
 import  qualified Data.Label as L
-import Theory (OpenTranslatedTheory, OpenDiffTheory, getLeftProtoRule, getRightProtoRule)
 import Items.RuleItem
 import TheoryObject
 import Theory.Model
@@ -18,6 +17,15 @@ import Text.PrettyPrint.Class
 import qualified Text.PrettyPrint.Class as Pretty
 import ClosedTheory
 import qualified Data.List as List
+
+import Control.Basics
+import Control.Category
+
+import Prelude hiding (id, (.))
+
+import           Prelude                             hiding (id, (.))                 
+import OpenTheory
+
 
 -----------------------------------------------
 -- DerivationChecks

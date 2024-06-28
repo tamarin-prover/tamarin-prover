@@ -69,6 +69,7 @@ module Theory.Tools.Wellformedness (
   , formulaTerms
   ) where
 
+import Rule
 
 import           Prelude                     hiding (id, (.))
 
@@ -87,6 +88,7 @@ import           Control.Monad.Bind
 
 import           Extension.Prelude
 import           Term.LTerm
+
 import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Pretty
@@ -97,6 +99,9 @@ import           Items.OptionItem            (lemmasToProve)
 import           TheoryObject                (diffThyOptions, prettyVarList, theoryMacros, diffTheoryMacros)
 import           Utils.Misc
 import           Term.Macro
+
+import Term.SubtermRule ( CtxtStRule, prettyCtxtStRule, filterNonSubtermCtxtRule)
+
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -1151,6 +1156,44 @@ checkIfLemmasInDiffTheory thy
 -- Theory
 ------------------------------------------------------------------------------
 
+-- | All equations of an OpenTranslatedTheory.
+thyEquations :: OpenTranslatedTheory -> [CtxtStRule]
+thyEquations thy = S.toList $ stRules (sig thy)
+  where
+    sig = _sigMaudeInfo . _thySignature
+
+-- | All equations of an OpenDiffTheory.
+diffThyEquations :: OpenDiffTheory -> [CtxtStRule]
+diffThyEquations thy = S.toList $ stRules (sig thy)
+  where
+    sig = _sigMaudeInfo . _diffThySignature
+
+
+-- | Checks if all equations are subterm convergent.
+checkEquationsSubtermConvergence :: OpenTranslatedTheory -> WfErrorReport
+checkEquationsSubtermConvergence thy
+  | null nonSubtermEquations = []
+  | otherwise = [(topic, doc)]
+  where
+    equations = thyEquations thy
+    nonSubtermEquations = filterNonSubtermCtxtRule equations
+    topic = underlineTopic "Subterm Convergence Warning"
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent, you can ignore this warning and continue. \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations)
+
+-- | Checks if all equations are subterm convergent in a DiffTheory.
+checkDiffEquationsSubtermConvergence :: OpenDiffTheory -> WfErrorReport
+checkDiffEquationsSubtermConvergence thy
+  | null nonSubtermEquations = []
+  | otherwise = [(topic, doc)]
+  where
+    equations = diffThyEquations thy
+    nonSubtermEquations = filterNonSubtermCtxtRule equations
+    topic = underlineTopic "Subterm Convergence Warning"
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent, you can ignore this warning and continue. \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations)
+
+
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
                     -> WfErrorReport
@@ -1169,8 +1212,8 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
     , natWellSortedReportDiff
+    , checkDiffEquationsSubtermConvergence
     ]
-
 
 -- | Returns a list of errors, if there are any.
 checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
@@ -1187,5 +1230,5 @@ checkWellformedness thy sig = concatMap ($ thy)
     , lemmaAttributeReport
     , multRestrictedReport
     , natWellSortedReport
+    , checkEquationsSubtermConvergence
     ]
-
