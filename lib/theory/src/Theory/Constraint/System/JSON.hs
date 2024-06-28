@@ -376,7 +376,7 @@ graphEdgeToJSONGraphEdge (SystemEdge (src, tgt)) = do
                 where 
                   (sid, ConcIdx concIdx) = src
                   (tid, PremIdx premIdx) = tgt
-graphEdgeToJSONGraphEdge (LessEdge (src, tgt, reason)) =
+graphEdgeToJSONGraphEdge (LessEdge (LessAtom src tgt reason)) =
   return $ JSONGraphEdge { jgeSource = show src
                 , jgeRelation = "LessAtoms"
                 , jgeTarget = show tgt
