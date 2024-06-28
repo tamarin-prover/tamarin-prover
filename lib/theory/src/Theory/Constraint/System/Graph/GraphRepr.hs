@@ -23,6 +23,8 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , cNodes
     , cEdges
     , toEdgeList
+    , extractAgent
+    , isAgentAttribute
   ) where
 
 import           Extension.Data.Label
@@ -30,6 +32,8 @@ import qualified Theory.Constraint.System as Sys
 import qualified Theory.Model             as M
 import qualified Theory                   as Th
 import Data.Maybe (mapMaybe)
+import Data.List (find) -- Ajout de l'importation pour find
+import qualified Data.Map as Map -- Ajout de l'importation pour Map
 
 -- | All nodes are identified by their NodeId.
 -- Then we have different types of nodes depending on what data of the System they use.
@@ -41,16 +45,17 @@ data Node = Node {
 
 -- | Different types of graph nodes.
 data NodeType =
-    SystemNode M.RuleACInst                    -- ^ Nodes from rule instances
+    SystemNode Th.RuleACInst                    -- ^ Nodes from rule instances
   | UnsolvedActionNode [Th.LNFact]             -- ^ Nodes from unsolved adversary actions. 
-  | LastActionAtom                             -- ^ Nodes that are only used for inductin.
+  | LastActionAtom                             -- ^ Nodes that are only used for induction.
   | MissingNode (Either Th.ConcIdx Th.PremIdx) -- ^ Nodes referenced by edges which don't exist elsewhere.
+  | AgentNode String                           -- ^ Nodes that represent an agent.
   deriving( Eq, Ord, Show )
 
 
 -- | Different types of graph edges. 
 data Edge =
-    SystemEdge (Sys.NodeConc, Sys.NodePrem)    -- ^ Edges that transport facts from premises to conclusions between rules.
+    SystemEdge (Sys.NodeConc, Sys.NodePrem)    -- ^ Edges that transport facts from premises to conclusions entre rules.
   | LessEdge (M.NodeId, M.NodeId, Sys.Reason)  -- ^ Edges that represent a temporal-before relationship.
   | UnsolvedChain (Sys.NodeConc, Sys.NodePrem) -- ^ Edges that are part of an unsolved chain between premises and conclusions.
   deriving( Eq, Ord, Show )
@@ -73,6 +78,15 @@ data GraphRepr = GraphRepr {
 
 $(mkLabels [''GraphRepr, ''Node, ''Cluster])
 
+extractAgent :: Th.RuleACInst -> String
+extractAgent ru = case find isAgentAttribute (Th.ruleAttributes ru) of
+  Just (Th.Agent agentName) -> agentName
+  _                         -> "Unknown"
+
+isAgentAttribute :: Th.RuleAttribute -> Bool
+isAgentAttribute (Th.Agent _) = True
+isAgentAttribute _            = False
+
 -- | Conversion function to a list of edges as used by Data.Graph.
 toEdgeList :: GraphRepr -> [(Node, M.NodeId, [M.NodeId])]
 toEdgeList repr = 
@@ -92,4 +106,3 @@ toEdgeList repr =
     findEdgeTarget srcId (LessEdge (srcId', tgtId, _))             | srcId == srcId' = Just tgtId
     findEdgeTarget srcId (UnsolvedChain ((srcId', _), (tgtId, _))) | srcId == srcId' = Just tgtId
     findEdgeTarget _     _                                                           = Nothing
-      

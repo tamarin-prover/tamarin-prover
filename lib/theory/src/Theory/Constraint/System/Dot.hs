@@ -214,6 +214,59 @@ renderLNFact fact = do
     then return $ prettyLNFact replacedFact
     else return $ prettyLNFact fact
 
+dotAgentClusters :: Graph -> SeDot ()
+dotAgentClusters graph = do
+  let repr = get gRepr graph
+      nodesByAgent = groupNodesByAgent (get grNodes repr)
+  mapM_ renderAgentCluster (M.toList nodesByAgent)
+
+
+groupNodesByAgent :: [Node] -> M.Map String [Node]
+groupNodesByAgent nodes = foldr groupByAgent M.empty nodes
+  where
+    groupByAgent node acc = case getNodeAgent node of
+      Just agent -> M.insertWith (++) agent [node] acc
+      Nothing    -> acc
+
+getNodeAgent :: Node -> Maybe String
+getNodeAgent node = case get nNodeType node of
+  SystemNode ru -> Just (extractAgent ru)
+  _             -> Nothing
+
+-- renderAgentCluster :: (String, [Node]) -> SeDot ()
+-- renderAgentCluster (agent, nodes) = liftDot $ do
+--   subgraph (Just agent) $ do
+--     D.attribute ("label", agent)
+--     mapM_ (\node -> D.node [("label", getNodeName node)]) nodes
+
+-- renderAgentCluster :: (String, [Node]) -> SeDot ()
+-- renderAgentCluster (agent, nodes) = liftDot $ do
+--   let clusterName = "cluster_" ++ agent
+--   D.attribute ("subgraph", clusterName)
+--   D.attribute ("label", agent)
+--   D.attribute ("style", "filled")
+--   D.attribute ("color", "lightgrey")
+--   mapM_ (\node -> D.node [("label", getNodeName node)]) nodes
+
+renderAgentCluster :: (String, [Node]) -> SeDot ()
+renderAgentCluster (agent, nodes) = liftDot $ D.scope $ do
+  D.attribute ("label", agent)
+  D.attribute ("style", "filled")
+  D.attribute ("color", "lightgrey")
+  mapM_ (\node -> D.node [("label", getNodeName node), ("id", show $ get nNodeId node)]) nodes
+
+
+getNodeName :: Node -> String
+getNodeName node = "node" ++ show (get nNodeId node)
+
+
+-- subgraph :: Maybe String -> D.Dot a -> D.Dot a
+-- subgraph Nothing action = action
+-- subgraph (Just name) action = do
+--   D.attribute ("subgraph", "cluster_" ++ name)
+--   D.attribute ("label", name)
+--   action
+  
 -- | Dot a node in record based (compact) format.
 dotNodeCompact :: Node -> SeDot ()
 dotNodeCompact node = do
@@ -241,6 +294,9 @@ dotNodeCompact node = do
     LastActionAtom -> cacheState dsNodes v $ mkSimpleNode (show v) []
     MissingNode (Left conc) -> cacheState dsConcs (v, conc) $ dotConcC (v, conc)
     MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
+    AgentNode agentName -> cacheState dsNodes v $ do
+      let attrs = [("label", agentName), ("shape", "box"), ("style", "filled"), ("fillcolor", "lightgrey")]
+      mkSimpleNode agentName attrs
   where
     hasOutgoingEdge graph v =
       let repr = get gRepr graph
@@ -249,8 +305,8 @@ dotNodeCompact node = do
     dotPremC prem = missingNode "invtrapezium" $ prettyNodePrem prem
     dotConcC conc = missingNode "trapezium" $ prettyNodeConc conc
 
-    --True if there's a colour, and it's 'darker' than 0.5 in apparent luminosity
-    --This assumes a linear colourspace, which is what graphviz seems to use
+    -- True if there's a colour, and it's 'darker' than 0.5 in apparent luminosity
+    -- This assumes a linear colourspace, which is what graphviz semble utiliser
     colorUsesWhiteFont (Just (RGB r g b)) = (0.2126*r + 0.7152*g + 0.0722*b) < 0.5
     colorUsesWhiteFont _                  = False
 
@@ -311,7 +367,7 @@ dotNodeCompact node = do
 
         -- check if a fact is from auto-source
         isAutoSource ::  LNFact -> Bool
-        isAutoSource (Fact tag _ _) =not $ hasAutoLabel (showFactTag $ tag)
+        isAutoSource (Fact tag _ _) = not $ hasAutoLabel (showFactTag $ tag)
 
         -- check if a fact has the label of auto-source 
         hasAutoLabel :: String -> Bool
@@ -325,14 +381,14 @@ dotNodeCompact node = do
 
         renderRow annDocs =
           zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
-            -- magic factor 1.3 compensates for space gained due to
-            -- non-propertional font
+            -- magic factor 1.3 compense pour l'espace gagné grâce à
+            -- la police non proportionnelle
             renderBalanced 100 (max 30 . round . (* 1.3)) (map snd annDocs)
 
-        renderBalanced :: Double           -- ^ Total available width
-                       -> (Double -> Int)  -- ^ Convert available space to actual line-width.
-                       -> [Doc]            -- ^ Initial documents
-                       -> [String]         -- ^ Rendered documents
+        renderBalanced :: Double           -- ^ Largeur totale disponible
+                       -> (Double -> Int)  -- ^ Convertir l'espace disponible en largeur de ligne réelle.
+                       -> [Doc]            -- ^ Documents initiaux
+                       -> [String]         -- ^ Documents rendus
         renderBalanced _          _    []   = []
         renderBalanced totalWidth conv docs =
             zipWith (\w d -> widthRender (conv (ratio * w)) d) usedWidths docs
@@ -343,9 +399,10 @@ dotNodeCompact node = do
             ratio          = totalWidth / sum usedWidths
             scaleIndent line = case span isSpace line of
               (spaces, rest) ->
-                  -- spaces are not wide-enough by default => scale them up
+                  -- les espaces ne sont pas assez larges par défaut => les agrandir
                   let n = (1.5::Double) * fromIntegral (length spaces)
                   in  replicate (round n) ' ' ++ rest
+
 
 
 -- | Dot a normal edge.
@@ -470,7 +527,7 @@ dotGraphCompact dotOptions colorMap graph =
         mapM_ dotEdge restEdges
         mapM_ dotLessEdge lessEdges
         mapM_ dotCluster (get grClusters repr)
-
+        dotAgentClusters graph
         when abbreviate generateLegend 
 
 -- | Compute proper colors for all less-edges.
