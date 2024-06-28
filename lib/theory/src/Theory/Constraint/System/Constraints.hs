@@ -46,7 +46,6 @@ import           Data.Binary
 import           Data.Data
 -- import           Extension.Data.Monoid            (Monoid(..))
 
--- import           Control.Basics
 import           Control.DeepSeq
 
 import           Text.PrettyPrint.Class

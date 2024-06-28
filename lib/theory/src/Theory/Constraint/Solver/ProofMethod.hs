@@ -399,20 +399,20 @@ execDiffProofMethod ctxt method sys = -- error $ show ctxt ++ show method ++ sho
     protoRulesAC :: Side -> [RuleAC]
     protoRulesAC LHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCLeft  ctxt)
     protoRulesAC RHS = filter (\x -> getRuleNameDiff x /= "IntrRecv") $ L.get crProtocol $ L.get pcRules (L.get dpcPCRight ctxt)
-    
+
     ruleEquivalenceSystem :: String -> DiffSystem
     ruleEquivalenceSystem rule = L.set dsCurrentRule (Just rule) 
       $ L.set dsConstrRules (S.fromList constrRules) 
       $ L.set dsDestrRules (S.fromList destrRules) 
       $ L.set dsProtoRules (S.fromList protoRules) 
       $ L.set dsProofType (Just RuleEquivalence) sys
-      
+
     formula :: String -> LNFormula
     formula rulename = Qua Ex ("i", LSortNode) (Ato (Action (LIT (Var (Bound 0))) (Fact (ProtoFact Linear ("Diff" ++ rulename) 0) S.empty [])))
-    
+
     ruleEquivalenceCase :: M.Map CaseName DiffSystem -> RuleAC -> M.Map CaseName DiffSystem
     ruleEquivalenceCase m rule = M.insert ("Rule_" ++ (getRuleName rule) ++ "") (ruleEquivalenceSystem (getRuleNameDiff rule)) m
-    
+
     -- Not checking construction rules is sound, as they are 'trivial' !
     -- Note that we use the protoRulesAC, as we also want to include the ISEND rule as it is labelled with an action that might show up in restrictions.
     -- LHS or RHS is not important in this case as we only need the names of the rules.
@@ -563,31 +563,6 @@ useHeuristic (Heuristic rankings) =
     ranking depth
       | depth < 0 = error $ "useHeuristic: negative proof depth " ++ show depth
       | otherwise = rankings !! (depth `mod` n)
-
-
-{-
--- | Schedule the given local-heuristics in a round-robin fashion.
-roundRobinHeuristic :: [GoalRanking] -> Heuristic
-roundRobinHeuristic []       = error "roundRobin: empty list of rankings"
-roundRobinHeuristic rankings =
-    methods
-  where
-    n = length rankings
-
-    methods depth ctxt sys
-      | depth < 0 = error $ "roundRobin: negative proof depth " ++ show depth
-      | otherwise =
-          ( name
-          ,     ((Contradiction . Just) <$> contradictions ctxt sys)
-            <|> (case L.get pcUseInduction ctxt of
-                   AvoidInduction -> [Simplify, Induction]
-                   UseInduction   -> [Induction, Simplify]
-                )
-            <|> ((SolveGoal . fst) <$> (ranking sys $ openGoals sys))
-          )
-      where
-        (name, ranking) = rankings !! (depth `mod` n)
--}
 
 -- | Sort annotated goals according to their number.
 goalNrRanking :: [AnnotatedGoal] -> [AnnotatedGoal]

@@ -146,11 +146,11 @@ applyDiffMethodAtPath thy lemmaName proofPath prover i = do
     methods <- (map fst . rankDiffProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyDiffProverAtPath thy lemmaName proofPath
-      (oneStepDiffProver method                        `mappend`
-       replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify)) `mappend`
-       replaceDiffSorryProver (contradictionDiffProver)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
+      (   oneStepDiffProver method                                 
+       <> replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify))
+       <> replaceDiffSorryProver contradictionDiffProver
+       <> replaceDiffSorryProver (oneStepDiffProver DiffMirrored)
+       <> replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
@@ -539,7 +539,7 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
-          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , preformatted (Just "methods") (numbered' $ zipWith prettyPM [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound ] ++
           [ autoProverLinks 'o' "oracle-"  oracleDesc    0
@@ -549,13 +549,13 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ tiAutoProver ti
           oracleDesc = text "until oracle returns nothing"
-          allProve  = text $ " for all lemmas "
+          allProve  = text " for all lemmas "
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoProverAllR tidx CutDFS bound (TheoryProof lemma proofPath))
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -576,7 +576,7 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
       , linkToPath renderUrl
             (AutoProverR tidx CutDFS bound False (TheoryProof lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -586,7 +586,7 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
       , nameSuffix
       ]
 
-    prettyPM (i, (m, (_cases, expl))) =
+    prettyPM i (m, (_cases, expl)) =
       linkToPath renderUrl
         (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
         ["proof-method"] (prettyProofMethod m)
@@ -649,14 +649,14 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
-          allProve  = text $ " for all lemmas "
+          allProve  = text " for all lemmas "
 
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoProverAllDiffR tidx CutDFS bound)
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -670,7 +670,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
       , linkToPath renderUrl
             (AutoProverDiffR tidx CutDFS bound s (DiffTheoryProof s lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -738,7 +738,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         (pms, _, _) ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
-          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , preformatted (Just "methods") (numbered' $ zipWith prettyPM [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound
           , autoProverLinks 's' "all-"     allProve      0
@@ -746,7 +746,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
-          allProve  = text $ " for all lemmas "
+          allProve  = text " for all lemmas "
 
     mirrorSystem =
         if dpsMethod (root prf) == DiffMirrored
@@ -770,31 +770,29 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
       , linkToPath renderUrl
             (AutoProverAllDiffR tidx CutDFS bound)
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
               (AutoProverAllDiffR tidx CutNothing bound)
               ["characterization-all"]
               (keyword_ "for all solutions")
-      , nameSuffix
-      ]
+      , nameSuffix ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoDiffProverR tidx CutDFS bound (DiffTheoryDiffProof lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
               (AutoDiffProverR tidx CutNothing bound (DiffTheoryDiffProof lemma proofPath))
               [classPrefix ++ "characterization"]
               (keyword_ "for all solutions")
-      , nameSuffix
-      ]
+      , nameSuffix ]
 
-    prettyPM (i, (m, (_cases, expl))) =
+    prettyPM i (m, (_cases, expl)) =
       linkToPath renderUrl
         (TheoryPathDiffMR tidx (DiffTheoryDiffMethod lemma proofPath i))
         ["proof-method"] (prettyDiffProofMethod m)
@@ -863,7 +861,7 @@ htmlSourceDiff renderUrl tidx s kind d (j, th) =
                                , text " / named ", doubleQuotes (text name),
                                  if isPartial then text "(partial deconstructions)" else text "" ]
       , refDotDiffPath renderUrl tidx (DiffTheorySource s kind d j i) False
-      , withTag "p" [] $ ppPrem
+      , withTag "p" [] ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
       where
@@ -996,8 +994,7 @@ htmlThyPath :: RenderUrl      -- ^ The function for rendering Urls.
             -> TheoryInfo     -- ^ The info of the theory to render
             -> TheoryPath     -- ^ Path to render
             -> Html
-htmlThyPath renderUrl renderImgUrl info path =
-  go path
+htmlThyPath renderUrl renderImgUrl info = go
   where
     thy  = tiTheory info
     tidx = tiIndex  info
