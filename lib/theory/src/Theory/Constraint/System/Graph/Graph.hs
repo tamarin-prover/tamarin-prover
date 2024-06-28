@@ -30,6 +30,8 @@ module Theory.Constraint.System.Graph.Graph (
     , resolveNodePremFact
   ) where
 
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty       as NE
 import qualified Data.Map                 as M
 import           Data.Maybe
 import qualified Data.Set                 as S
@@ -127,6 +129,53 @@ systemEdges se =
   let edges = S.toList $ get Sys.sEdges se in
   map (\(Sys.Edge src tgt) -> SystemEdge (src, tgt)) edges
 
+-- | Transform the graph representation to insert 'CollapseNode's which collect connected attacker derivation nodes.
+-- This process is based on the cleandot python script and goes through all nodes in the graph, checks if they are an attacker node
+-- and then converts them to a 'CollapseNode'. During this process, connected 'CollapseNode's are unified, so that for each connected
+-- groups of attacker derivation nodes a single 'CollapseNode' remains in the final graph.
+collapseDerivations :: GraphRepr -> GraphRepr
+collapseDerivations repr = 
+  let adjMap = toAdjMap repr
+      newAdjMap = foldl findCollapseNode adjMap $ M.keys adjMap
+      newRepr = fromAdjMap newAdjMap
+  in
+    newRepr
+  where 
+    findCollapseNode :: GraphAdjMap -> Th.NodeId -> GraphAdjMap
+    findCollapseNode adjMap nodeId =
+      let (currentNode, currentEdges) = adjMap M.! nodeId
+          predecessors = M.keys $ M.filter (\(_, edges) -> any (\edge -> nodeId == edgeTargetId edge) edges) adjMap
+          successors = M.keys $ M.filter (\(node, _) -> any (\edge -> get nNodeId node == edgeTargetId edge) currentEdges) adjMap
+      in
+        if nodeIsAttackerDerivation currentNode 
+        && not (null predecessors)
+        && not (null successors)
+        then
+          -- remove current node
+          -- remove those successors that are collapseNodes
+          -- remove those predecessors that are collapseNodes
+          let removeSuccPredIds = filter (isCollapseNode adjMap) predecessors
+                                  ++ filter (isCollapseNode adjMap) successors
+              collapseEntries = adjMap M.! nodeId :| map (\k -> adjMap M.! k) removeSuccPredIds
+              -- create a new collapseNode out of all removed nodes
+              newCollapsedNode = collapseNodes (NE.map fst collapseEntries)
+              -- also collect all the edges from the nodes that we collapsed
+              unifiedEdges = concat $ NE.toList $ NE.map snd collapseEntries
+              -- insert collapseNode
+              newAdjMap = foldr (\(node, edges) m -> 
+                                  let k = get nNodeId node in
+                                  M.insert k (newCollapsedNode, unifiedEdges) m) adjMap collapseEntries
+          in
+          newAdjMap
+        else
+          adjMap
+    
+    isCollapseNode :: GraphAdjMap -> Th.NodeId -> Bool
+    isCollapseNode adjMap nodeId =
+      case get nNodeType $ fst (adjMap M.! nodeId) of
+        CollapseNode _ -> True
+        _              -> False
+
 -- | Computes a basic graph representation from a System 
 -- where nodes are 
 -- 1. the System rule instances
@@ -157,10 +206,11 @@ systemToGraph se options =
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
-      repr = basicGraphRepr
-      abbrevs = computeAbbreviations repr defaultAbbreviationOptions
+      repr1 = if (get goSimplificationLevel options >= SL3) then collapseDerivations basicGraphRepr else basicGraphRepr
+      finalRepr = repr1
+      abbrevs = computeAbbreviations finalRepr defaultAbbreviationOptions
   in
-    Graph se options repr abbrevs
+    Graph se options finalRepr abbrevs
 
 -- | Get all sink nodes of a graph, i.e. those without outgoing edges.
 getGraphSinks :: Graph -> [Node]

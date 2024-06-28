@@ -913,7 +913,8 @@ getOptions = do
   abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
   simpl <- lookupGetParam "simplification"
   showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
-  let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack) 
+      -- Adding the "SL" prefix so that the derived read instance can parse the simplification level.
+  let simplificationLevel = fromMaybe SL2 (readMaybe . ("SL"++) . T.unpack =<< simpl) 
       graphOptions = L.set goSimplificationLevel simplificationLevel $
                      L.set goCompress compress $
                      L.set goShowAutoSource showAutosource $
