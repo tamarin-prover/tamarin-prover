@@ -761,7 +761,7 @@ getAutoProverR idx extractor bound quitOnEmpty =
   where
     adapt autoProver = autoProver
       { apBound = actualBound
-      , apCut = extractor
+      , apCut = if quitOnEmpty then CutAfterSorry else extractor
       , quitOnEmptyOracle = quitOnEmpty }
 
     withCommas = intersperse ", "
