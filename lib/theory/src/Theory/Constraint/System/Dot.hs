@@ -164,7 +164,7 @@ renderLNFact fact = do
   (graph, _, _) <- ask
   let abbreviate = get ((L..) goAbbreviate gOptions) graph
       abbrevs = get gAbbreviations graph
-      replacedFact = applyAbbreviationsFact abbrevs fact
+      replacedFact = applyAbbreviationsFact (lookupAbbreviation abbrevs) fact
   if abbreviate 
     then return $ prettyLNFact replacedFact
     else return $ prettyLNFact fact
