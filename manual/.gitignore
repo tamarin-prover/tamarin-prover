@@ -77,3 +77,6 @@ anaconda-mode/
 
 # tag file
 tags
+
+# node_modules
+node_modules
