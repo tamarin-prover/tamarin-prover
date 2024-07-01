@@ -49,7 +49,6 @@ data NodeType =
   | UnsolvedActionNode [Th.LNFact]             -- ^ Nodes from unsolved adversary actions. 
   | LastActionAtom                             -- ^ Nodes that are only used for induction.
   | MissingNode (Either Th.ConcIdx Th.PremIdx) -- ^ Nodes referenced by edges which don't exist elsewhere.
-  | AgentNode String                           -- ^ Nodes that represent an agent.
   deriving( Eq, Ord, Show )
 
 

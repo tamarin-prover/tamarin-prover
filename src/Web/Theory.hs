@@ -1343,7 +1343,7 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
           renderedOrRendering 50,
           -- create dot-file and render to image
           do
-            trace ("Dot file content:\n" ++ code) (return ())
+            trace ("Dot file content : \n" ++ code) (return ())
             writeFile graphPath code
             -- select the correct command to generate img
             case ocFormat outputCommand of
