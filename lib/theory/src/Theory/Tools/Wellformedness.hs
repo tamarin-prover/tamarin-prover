@@ -69,6 +69,7 @@ module Theory.Tools.Wellformedness (
   , formulaTerms
   ) where
 
+import Debug.Trace (trace)
 import Rule
 
 import           Prelude                     hiding (id, (.))
@@ -1168,6 +1169,17 @@ diffThyEquations thy = S.toList $ stRules (sig thy)
   where
     sig = _sigMaudeInfo . _diffThySignature
 
+-- | Check if equations are marked as user-defined convergent in an OpenTranslatedTheory.
+isUserMarkedConvergent :: OpenTranslatedTheory -> Bool
+isUserMarkedConvergent thy = eqConvergent (sig thy)
+  where
+    sig = _sigMaudeInfo . _thySignature
+
+-- | Check if equations are marked as user-defined convergent in an OpenTranslatedTheory.
+isUserMarkedConvergentDiff :: OpenDiffTheory -> Bool
+isUserMarkedConvergentDiff thy = eqConvergent (sig thy)
+  where
+    sig = _sigMaudeInfo . _diffThySignature
 
 -- | Checks if all equations are subterm convergent.
 checkEquationsSubtermConvergence :: OpenTranslatedTheory -> WfErrorReport
@@ -1212,12 +1224,10 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
     , natWellSortedReportDiff
-    , checkDiffEquationsSubtermConvergence
-    ]
+    ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
 
 -- | Returns a list of errors, if there are any.
-checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
-                    -> WfErrorReport
+checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
 checkWellformedness thy sig = concatMap ($ thy)
     [ checkIfLemmasInTheory
     , unboundReport
@@ -1230,5 +1240,9 @@ checkWellformedness thy sig = concatMap ($ thy)
     , lemmaAttributeReport
     , multRestrictedReport
     , natWellSortedReport
-    , checkEquationsSubtermConvergence
-    ]
+    ] ++ additionalChecks
+  where
+    userMarked = isUserMarkedConvergent thy
+    additionalChecks = if not userMarked 
+                       then trace ("isUserMarkedConvergent: " ++ show userMarked) (checkEquationsSubtermConvergence thy)
+                       else []

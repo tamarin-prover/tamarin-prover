@@ -26,6 +26,8 @@ module Theory.Text.Parser (
   , liftedAddRestriction
   ) where
 
+
+import Debug.Trace (trace)
 import           Prelude                    hiding (id, (.))
 import           Data.Label
 import           Data.Maybe
@@ -51,6 +53,7 @@ import Theory.Text.Parser.Signature
 import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
+import Term.Maude.Signature
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
@@ -200,93 +203,128 @@ evalformula flags0 (FOr t1 t2) = (evalformula flags0 t1) || (evalformula flags0 
 evalformula flags0 (FAnd t1 t2) = (evalformula flags0 t1) && (evalformula flags0 t2)
 
 -- | Parse a theory.
-theory :: Maybe FilePath
-       -> Parser OpenTheory
+theory :: Maybe FilePath -> Parser OpenTheory
 theory inFile = do
+    _ <- trace "Starting theory parser" (return ())
     flags0 <- flags <$> getState
-    when ("diff" `S.member` flags0) $ modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
+    when ("diff" `S.member` flags0) $ do
+      _ <- trace "Diff flag is set" (return ())
+      modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
+    _ <- trace ("Theory identifier: " ++ thyId) (return ())
     let defThy = defaultOpenTheory ("diff" `S.member` flags0)
     block <- try (symbol "configuration" <* colon) <|> symbol "begin" <?> "configuration or begin"
+    _ <- trace ("Block type: " ++ block) (return ())
     if block == "configuration"
         then do
             fileArgs <- stringLiteral <* symbol_ "begin"
+            _ <- trace ("Configuration file arguments: " ++ fileArgs) (return ())
             addItems inFile (set thyInFile (fromMaybe "" inFile) 
               $ set thyName thyId (modify thyItems (++ [ConfigBlockItem fileArgs]) defThy)) <* symbol_ "end"
         else do
+            _ <- trace "Entering theory items block" (return ())
             addItems inFile (set thyInFile (fromMaybe "" inFile) $ set thyName thyId defThy) <* symbol_ "end"
   where
     addItems :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     addItems inFile0 thy = asum
       [ do
           thyHeuristic <- heuristic False workDir
+          _ <- trace "Parsed heuristic" (return ())
           thy' <- liftedAddHeuristic thy $ defaultOracleNames (fromMaybe "" inFile0) thyHeuristic
           addItems inFile0 thy'
       , do thy' <- liftedAddTactic thy =<< tactic False
+           _ <- trace "Parsed tactic" (return ())
            addItems inFile0 thy'
       , do thy' <- builtins thy
+           _ <- trace "Parsed builtins" (return ())
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
       , do thy' <- options thy
+           _ <- trace "Parsed options" (return ())
            addItems inFile0 thy'
       , do fs <- functions
+           _ <- trace "Parsed functions" (return ())
            msig <- sig <$> getState
            let thy' = foldl (flip addFunctionTypingInfo) thy fs in
              addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
-      , do equations
+      , do _ <- trace ("Entering equations block") (return ())
+           equations
+           _ <- trace "Exited equations block" (return ())
            msig <- sig <$> getState
+           trace ("State after equations block: " ++ show (eqConvergent msig)) (return ())
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems flags thy'
       , do thy' <- liftedAddMacros thy =<< macros
+           _ <- trace "Parsed macros" (return ())
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< restriction msgvar nodevar
+           _ <- trace "Parsed restriction" (return ())
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< legacyAxiom
+           _ <- trace "Parsed legacy axiom" (return ())
            addItems inFile0 thy'
            -- add legacy deprecation warning output
       , do test <- caseTest
+           _ <- trace "Parsed case test" (return ())
            thy' <- liftedAddCaseTest thy test
            addItems inFile0 thy'
       , do accLem <- lemmaAcc workDir
+           _ <- trace "Parsed lemmaAcc" (return ())
            let tests = mapMaybe (flip lookupCaseTest $ thy) (get aCaseIdentifiers accLem)
            thy' <- liftedAddAccLemma thy (rewriteAccLemmaOracle inFile0 $ defineCaseTests accLem tests)
            addItems inFile0 thy'
       , do lem <- lemma workDir
+           _ <- trace "Parsed lemma" (return ())
            thy' <- liftedAddLemma thy (rewriteLemmaOracle inFile0 lem)
            addItems inFile0 thy'
       , do ru <- protoRule
+           _ <- trace "Parsed proto rule" (return ())
            thy' <- liftedAddProtoRule thy ru
            -- thy'' <- foldM liftedAddRestriction thy' $
            --  map (Restriction "name") [get (preRestriction . rInfo) ru]
            addItems inFile0 thy'
       , do r <- intrRule
+           _ <- trace "Parsed intr rule" (return ())
            addItems inFile0 (addIntrRuleACs [r] thy)
       , do c <- formalComment
+           _ <- trace "Parsed formal comment" (return ())
            addItems inFile0 (addFormalComment c thy)
       , do procc <- toplevelprocess thy                          -- try parsing a process
+           _ <- trace "Parsed toplevel process" (return ())
            addItems inFile0 (addProcess procc thy)         -- add process to theoryitems and proceed parsing (recursive addItems call)
       , do thy' <- ((liftedAddProcessDef thy) =<<) (processDef thy)     -- similar to process parsing but in addition check that process with this name is only defined once (checked via liftedAddProcessDef)
+           _ <- trace "Parsed process definition" (return ())
            addItems inFile0 thy'
       , do
            lem <- equivLemma thy
+           _ <- trace "Parsed equiv lemma" (return ())
            addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
       , do
            lem <- diffEquivLemma thy
+           _ <- trace "Parsed diff equiv lemma" (return ())
            addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
       , do thy' <- preddeclaration thy
+           _ <- trace "Parsed pred declaration" (return ())
            addItems inFile0 (thy')
       , do thy'  <- export thy
+           _ <- trace "Parsed export" (return ())
            addItems inFile0 (thy')
-      , do ifdef inFile0 thy
-      , do define inFile0 thy
-      , do include inFile0 thy
-      , do return thy
+      , do _ <- trace "Entering ifdef block" (return ())
+           ifdef inFile0 thy
+      , do _ <- trace "Entering define block" (return ())
+           define inFile0 thy
+      , do _ <- trace "Entering include block" (return ())
+           include inFile0 thy
+      , do _ <- trace ("Returning thy" ++ show sig) (return ())
+           return thy
       ]
       where workDir = (takeDirectory <$> inFile0)
     define inFile0 thy = do
+       _ <- trace "Entering define" (return ())
        flag <- try (symbol "#define") *> identifier
+       _ <- trace ("Parsed flag: " ++ flag) (return ())
        modifyStateFlag (S.insert flag)
        addItems inFile0 thy
 
@@ -305,8 +343,10 @@ theory inFile = do
 
     include :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     include inFile0 thy = do
+         _ <- trace "Entering include" (return ())
          filepath <- try (symbol "#include") *> filePathParser
          st <- getState
+         _ <- trace ("Parsed filepath: " ++ filepath) (return ())
          let (thy', st') = unsafePerformIO (parseFileWState st (addItems' (Just filepath) thy) filepath)
          _ <- putState st'
          addItems inFile0 $ set (sigpMaudeSig . thySignature) (sig st') thy'
@@ -327,30 +367,35 @@ theory inFile = do
 
     ifdef :: Maybe FilePath -> OpenTheory ->  Parser OpenTheory
     ifdef inFile0 thy = do
+       _ <- trace "Entering ifdef" (return ())
        flagf <- symbol_ "#ifdef" *> flagdisjuncts
        flags0 <- flags <$> getState
+       _ <- trace ("Parsed flags: " ++ show flags0) (return ())
        if evalformula flags0 flagf
-         then do thy' <- addItems inFile0 thy
-                 asum [do symbol_ "#else"
-                          _ <- manyTill anyChar (try (symbol_ "#endif"))
-                          addItems inFile0 thy'
-                       ,do symbol_ "#endif"
-                           addItems inFile0 thy'
-                      ]
+         then do 
+           _ <- trace "Entering ifdef true block" (return ())
+           thy' <- addItems inFile0 thy
+           asum [do symbol_ "#else"
+                    _ <- manyTill anyChar (try (symbol_ "#endif"))
+                    addItems inFile0 thy'
+                 ,do symbol_ "#endif"
+                     addItems inFile0 thy'
+                ]
 
          else parseelse
          where
-           parseelse =
-             do _ <- manyTill anyChar (try (symbol_ "#"))
-                asum
-                 [do (symbol_ "else")
-                     thy' <- addItems inFile0 thy
-                     symbol_ "#endif"
-                     addItems inFile0 thy'
-                 ,do _ <- symbol_ "endif"
-                     addItems inFile0 thy
-                 , parseelse
-                 ]
+           parseelse = do
+             _ <- trace "Entering parseelse" (return ())
+             _ <- manyTill anyChar (try (symbol_ "#"))
+             asum
+               [ do (symbol_ "else")
+                    thy' <- addItems inFile0 thy
+                    symbol_ "#endif"
+                    addItems inFile0 thy'
+               , do _ <- symbol_ "endif"
+                    addItems inFile0 thy
+               , parseelse
+               ]
 
     -- check process defined only once
     -- add process to theoryitems
@@ -369,6 +414,7 @@ theory inFile = do
     liftedAddMacros thy m = case addMacros m thy of 
         Just thy' -> return thy'
         Nothing   -> fail $ "macro already defined"
+
 
 -- | Parse a diff theory.
 diffTheory :: Maybe FilePath

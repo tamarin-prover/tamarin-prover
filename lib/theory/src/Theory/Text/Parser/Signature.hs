@@ -22,6 +22,8 @@ module Theory.Text.Parser.Signature (
 )
 where
 
+import Debug.Trace (trace)
+import Term.Maude.Signature
 import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
 import           Data.Either
@@ -157,18 +159,41 @@ functions :: Parser [SapicFunSym]
 functions =
     (try (symbol "functions") <|> symbol "function") *> colon *> commaSep1 function
 
+-- equations :: Parser ()
+-- equations = do
+--     -- Check if equations are marked as convergent
+--     convergent <- option False (try $ symbol "equations" *> brackets (symbol "convergent") *> colon *> pure True)
+--     _ <- if convergent
+--          then return ()
+--          else symbol "equations" *> colon
+--     eqs <- commaSep1 equation
+--     modifyStateSig (\sig -> foldl (flip addCtxtStRule) (sig { eqConvergent = convergent }) eqs)
+--   where
+--     equation = do
+--         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
+--         case rRuleToCtxtStRule rrule of
+--           Just str -> return str
+--           Nothing  -> fail $ "Not a correct equation: " ++ show rrule
 
 equations :: Parser ()
-equations =
-      (symbol "equations" *> colon *> commaSep1 equation) Data.Functor.$> ()
-    where
-      equation = do
+equations = do
+    convergent <- option False (try $ do
+        symbol "equations"
+        brackets (symbol "convergent")
+        colon
+        return True)
+    if not convergent then symbol "equations" *> colon else return ()
+    eqs <- commaSep1 equation
+    modifyStateSig (\sig -> foldl (flip addCtxtStRule) sig eqs)
+    modifyState (\st -> st { sig = (sig st) { eqConvergent = convergent } })  -- Mise à jour explicite de l'état
+    sig <- sig <$> getState
+    return ()
+  where
+    equation = do
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         case rRuleToCtxtStRule rrule of
-          Just str ->
-              modifyStateSig (addCtxtStRule str)
-          Nothing  ->
-              fail $ "Not a correct equation: " ++ show rrule
+          Just str -> return str
+          Nothing  -> fail $ "Not a correct equation: " ++ show rrule
 
 -- | options
 options :: OpenTheory -> Parser OpenTheory
