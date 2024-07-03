@@ -33,6 +33,7 @@ module Text.Dot
         , share
         , same
         , cluster
+        , agentCluster
           -- * Record specification
         , Record       -- abstract
         , field
@@ -166,6 +167,17 @@ cluster :: Dot a -> Dot (NodeId,a)
 cluster dot = do
   uq <- getM dgsId  
   let cid = NodeId $ "cluster_" ++ show uq
+  let clusterState = DotGenState { _dgsId = succ uq, _dgsElements = [] }
+  let (a, finalState) = runDot clusterState dot
+  setM dgsId (get dgsId finalState)
+  addElements [SubGraph (Just cid) (get dgsElements finalState)]
+  return (cid, a)
+
+-- | 'agentCluster' creates a cluster for a specific agent with a list of nodes.
+agentCluster :: String -> Dot a -> Dot (NodeId, a)
+agentCluster agentName dot = do
+  uq <- nextId
+  let cid = NodeId $ "cluster_" ++ agentName ++ "_" ++ show uq
   let clusterState = DotGenState { _dgsId = succ uq, _dgsElements = [] }
   let (a, finalState) = runDot clusterState dot
   setM dgsId (get dgsId finalState)

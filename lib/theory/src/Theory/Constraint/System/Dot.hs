@@ -33,11 +33,22 @@ import           Control.Basics
 import qualified Control.Category         as L
 import           Control.Monad.Reader
 import           Control.Monad.State      (StateT, evalStateT)
-
+import Text.Dot (agentCluster)
 import qualified Text.Dot                 as D
 import Text.Dot                 (Attribute(..), Label(..), Table(..),
                                  Row(..), Align(..), VAlign(..), Cell(..), TextItem(..))
-import           Text.PrettyPrint.Class
+import Text.PrettyPrint.Class
+    ( Document((<->), vcat, fsep, text),
+      Doc,
+      Style(lineLength, mode),
+      Mode(OneLineMode),
+      punctuate,
+      comma,
+      render,
+      colon,
+      brackets,
+      renderStyle,
+      defaultStyle )
 
 import           Theory.Constraint.System hiding (Edge, resolveNodeConcFact, resolveNodePremFact)
 import qualified Theory as Sys
@@ -706,17 +717,19 @@ generateLegend = do
                   else Nothing) keyedElems 
       
 -- | Dot a cluster containing further nodes and edges.
--- a.d. TODO implement
 dotCluster :: Cluster -> SeDot ()
 dotCluster (Cluster name nodes edges) = liftDot $ do
-    D.scope $ do
+    _ <- agentCluster name $ do
         D.attribute ("label", name)
         D.attribute ("style", "solid")
         D.attribute ("color", "black")
         D.attribute ("penwidth", "2")
         D.attribute ("fillcolor", "none")
-        mapM_ (\node -> D.node [("label", getNodeName node), ("id", show (get nNodeId node))]) nodes
-
+        mapM_ (\node -> do
+            let nodeId = show (get nNodeId node)
+            D.node [("label", getNodeName node), ("id", nodeId)]
+          ) nodes
+    return ()
 
 
 -- Fonction pour créer un cluster à partir des nœuds d'un agent
