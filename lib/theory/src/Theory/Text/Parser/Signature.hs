@@ -159,34 +159,17 @@ functions :: Parser [SapicFunSym]
 functions =
     (try (symbol "functions") <|> symbol "function") *> colon *> commaSep1 function
 
--- equations :: Parser ()
--- equations = do
---     -- Check if equations are marked as convergent
---     convergent <- option False (try $ symbol "equations" *> brackets (symbol "convergent") *> colon *> pure True)
---     _ <- if convergent
---          then return ()
---          else symbol "equations" *> colon
---     eqs <- commaSep1 equation
---     modifyStateSig (\sig -> foldl (flip addCtxtStRule) (sig { eqConvergent = convergent }) eqs)
---   where
---     equation = do
---         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
---         case rRuleToCtxtStRule rrule of
---           Just str -> return str
---           Nothing  -> fail $ "Not a correct equation: " ++ show rrule
-
 equations :: Parser ()
 equations = do
     convergent <- option False (try $ do
-        symbol "equations"
-        brackets (symbol "convergent")
+        _ <- symbol "equations"
+        _ <- brackets (symbol "convergent")
         colon
         return True)
-    if not convergent then symbol "equations" *> colon else return ()
+    unless convergent $ symbol "equations" *> colon
     eqs <- commaSep1 equation
     modifyStateSig (\sig -> foldl (flip addCtxtStRule) sig eqs)
     modifyState (\st -> st { sig = (sig st) { eqConvergent = convergent } })  -- Mise à jour explicite de l'état
-    sig <- sig <$> getState
     return ()
   where
     equation = do

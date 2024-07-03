@@ -1190,8 +1190,8 @@ checkEquationsSubtermConvergence thy
     equations = thyEquations thy
     nonSubtermEquations = filterNonSubtermCtxtRule equations
     topic = underlineTopic "Subterm Convergence Warning"
-    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent, you can ignore this warning and continue. \n"
-          $-$ vcat (map prettyCtxtStRule nonSubtermEquations)
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations) $-$ text " \n For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html "
 
 -- | Checks if all equations are subterm convergent in a DiffTheory.
 checkDiffEquationsSubtermConvergence :: OpenDiffTheory -> WfErrorReport
@@ -1202,8 +1202,8 @@ checkDiffEquationsSubtermConvergence thy
     equations = diffThyEquations thy
     nonSubtermEquations = filterNonSubtermCtxtRule equations
     topic = underlineTopic "Subterm Convergence Warning"
-    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent, you can ignore this warning and continue. \n"
-          $-$ vcat (map prettyCtxtStRule nonSubtermEquations)
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations) $-$ text " \n For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html "
 
 
 -- | Returns a list of errors, if there are any.
@@ -1244,5 +1244,5 @@ checkWellformedness thy sig = concatMap ($ thy)
   where
     userMarked = isUserMarkedConvergent thy
     additionalChecks = if not userMarked 
-                       then trace ("isUserMarkedConvergent: " ++ show userMarked) (checkEquationsSubtermConvergence thy)
+                       then checkEquationsSubtermConvergence thy
                        else []
