@@ -34,6 +34,7 @@ module Text.Dot
         , same
         , cluster
         , agentCluster
+        , rawNode
           -- * Record specification
         , Record       -- abstract
         , field

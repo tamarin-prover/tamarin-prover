@@ -33,7 +33,7 @@ import           Control.Basics
 import qualified Control.Category         as L
 import           Control.Monad.Reader
 import           Control.Monad.State      (StateT, evalStateT)
-import Text.Dot (agentCluster)
+import Text.Dot (rawNode) 
 import qualified Text.Dot                 as D
 import Text.Dot                 (Attribute(..), Label(..), Table(..),
                                  Row(..), Align(..), VAlign(..), Cell(..), TextItem(..))
@@ -486,65 +486,203 @@ getNodeName node = "node" ++ show (get nNodeId node)
 --                   let n = (1.5::Double) * fromIntegral (length spaces)
 --                   in  replicate (round n) ' ' ++ rest
 
-dotNodeCompact :: Node -> SeDot ()
-dotNodeCompact node = do
+-- dotNodeCompact :: Node -> SeDot ()
+-- dotNodeCompact node = do
+--     let v = get nNodeId node
+--     (graph, colorMap, dotOptions) <- ask
+--     case get nNodeType node of
+--         SystemNode ru -> cacheState dsNodes v $ do
+--             let outgoingEdge = hasOutgoingEdge graph v
+--             let color     = M.lookup (get rInfo ru) colorMap
+--                 nodeColor = maybe "white" rgbToHex color
+--                 attrs     = [("fillcolor", nodeColor),("style","filled")
+--                               , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
+--                               , ("agent", maybe "Unknown" id (getNodeAgent node))]
+--             trace ("Drawing SystemNode: " ++ show (getNodeName node) ++ ", Attributes: " ++ show attrs) $ do
+--                 ids <- mkNode v ru attrs outgoingEdge dotOptions
+--                 let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
+--                     concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
+--                 modM dsPrems $ M.union $ M.fromList prems
+--                 modM dsConcs $ M.union $ M.fromList concs
+--                 return $ fromJust $ lookup Nothing ids    
+--         UnsolvedActionNode facts -> cacheState dsNodes v $ do
+--             lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
+--             let lbl = lblPre <-> opAction <-> text (show v)
+--             let attrs | any isKUFact facts = [("color","gray")]
+--                       | otherwise          = [("color","darkblue")]
+--             trace ("Drawing UnsolvedActionNode: " ++ show (getNodeName node) ++ ", Attributes: " ++ show attrs) $ do
+--                 mkSimpleNode (render lbl) attrs
+--         LastActionAtom -> cacheState dsNodes v $ mkSimpleNode (show v) []
+--         MissingNode (Left conc) -> cacheState dsConcs (v, conc) $ dotConcC (v, conc)
+--         MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
+--     where
+--         hasOutgoingEdge graph v =
+--             let repr = get gRepr graph
+--             in or [ v == v' | SystemEdge ((v', _), _) <- get grEdges repr ]
+--         missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
+--         dotPremC prem = missingNode "invtrapezium" $ prettyNodePrem prem
+--         dotConcC conc = missingNode "trapezium" $ prettyNodeConc conc
+
+--         -- True if there's a colour, and it's 'darker' than 0.5 in apparent luminosity
+--         -- This assumes a linear colourspace, which est ce que graphviz semble utiliser
+--         colorUsesWhiteFont (Just (RGB r g b)) = (0.2126*r + 0.7152*g + 0.0722*b) < 0.5
+--         colorUsesWhiteFont _                  = False
+
+--         mkSimpleNode lbl attrs =
+--             liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
+
+--         mkNode  :: NodeId -> RuleACInst -> [(String, String)] -> Bool -> DotOptions
+--           -> SeDot [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
+--         mkNode v ru attrs outgoingEdge dotOptions 
+--           -- single node, share node-id for all premises and conclusions
+--           | get doNodeStyle dotOptions == CompactBoringNodes &&
+--             (isIntruderRule ru || isFreshRule ru) = do
+--                 ps <- psM
+--                 as <- asM
+--                 cs <- csM
+--                 let lbl | outgoingEdge = show v ++ " : " ++ showRuleCaseName ru
+--                         | otherwise       = concatMap snd as
+--                 nid <- mkSimpleNode lbl []
+--                 return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
+--           -- full record syntax
+--           | otherwise = do
+--                 ps <- psM
+--                 as <- asM
+--                 cs <- csM
+--                 fmap snd $ liftDot $ (`D.record` attrs) $
+--                   D.vcat $ map D.hcat $ map (map (uncurry D.portField)) $
+--                   filter (not . null) [ps, as, cs]
+--           where
+--             psM = do
+--               row <- mapM (\(i, p) -> do 
+--                 lbl <- renderLNFact p
+--                 return (Just (Left i), lbl)
+--                 ) $ enumPrems ru
+--               return $ renderRow row
+--             asM = do
+--               ruleLabel <- ruleLabelM
+--               return $ renderRow [ (Nothing, ruleLabel ) ]
+--             csM = do
+--               row <- mapM (\(i, c) -> do
+--                 lbl <- renderLNFact c
+--                 return (Just (Right i), lbl)
+--                 ) $ enumConcs ru
+--               return $ renderRow row
+            
+--             ruleLabelM = do
+--               showAutoSource <- asks (get ((L..) goShowAutoSource gOptions) . fst3)
+--               case showAutoSource of
+--                 True -> do
+--                   lbl <- mapM renderLNFact $ filter isAutoSource
+--                          $ filter isNotDiffAnnotation $ get rActs ru
+--                   return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
+--                 False -> do 
+--                   lbl <- mapM renderLNFact $ filter isNotDiffAnnotation $ get rActs ru
+--                   return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
+
+
+--             isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
+
+--             -- check if a fact is from auto-source
+--             isAutoSource ::  LNFact -> Bool
+--             isAutoSource (Fact tag _ _) = not $ hasAutoLabel (showFactTag $ tag)
+
+--             -- check if a fact has the label of auto-source 
+--             hasAutoLabel :: String -> Bool
+--             hasAutoLabel f
+--                 | "AUTO_IN_TERM_" `isPrefixOf` f  = True
+--                 | "AUTO_IN_FACT_" `isPrefixOf` f  = True
+--                 | "AUTO_OUT_TERM_" `isPrefixOf` f = True
+--                 | "AUTO_OUT_FACT_" `isPrefixOf` f = True
+--                 | otherwise = False
+
+
+--             renderRow annDocs =
+--               zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
+--                 -- magic factor 1.3 compense pour l'espace gagné grâce à
+--                 -- la police non proportionnelle
+--                 renderBalanced 100 (max 30 . round . (* 1.3)) (map snd annDocs)
+
+--             renderBalanced :: Double           -- ^ Largeur totale disponible
+--                            -> (Double -> Int)  -- ^ Convertir l'espace disponible en largeur de ligne réelle.
+--                            -> [Doc]            -- ^ Documents initiaux
+--                            -> [String]         -- ^ Documents rendus
+--             renderBalanced _          _    []   = []
+--             renderBalanced totalWidth conv docs =
+--                 zipWith (\w d -> widthRender (conv (ratio * w)) d) usedWidths docs
+--               where
+--                 oneLineRender  = renderStyle (defaultStyle { mode = OneLineMode })
+--                 widthRender w  = scaleIndent . renderStyle (defaultStyle { lineLength = w })
+--                 usedWidths     = map (fromIntegral . length . oneLineRender) docs
+--                 ratio          = totalWidth / sum usedWidths
+--                 scaleIndent line = case span isSpace line of
+--                   (spaces, rest) ->
+--                       -- les espaces ne sont pas assez larges par défaut => les agrandir
+--                       let n = (1.5::Double) * fromIntegral (length spaces)
+--                       in  replicate (round n) ' ' ++ rest
+
+dotNodeCompactCluster :: Node -> SeDot (String, D.Dot ())
+dotNodeCompactCluster node = do
     let v = get nNodeId node
     (graph, colorMap, dotOptions) <- ask
+    let nodeName = getNodeName node
+    let agent = maybe "Unknown" id (getNodeAgent node)
     case get nNodeType node of
-        SystemNode ru -> cacheState dsNodes v $ do
+        SystemNode ru -> do
             let outgoingEdge = hasOutgoingEdge graph v
-            let color     = M.lookup (get rInfo ru) colorMap
+            let color = M.lookup (get rInfo ru) colorMap
                 nodeColor = maybe "white" rgbToHex color
-                attrs     = [("fillcolor", nodeColor),("style","filled")
-                              , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
-                              , ("agent", maybe "Unknown" id (getNodeAgent node))]
-            trace ("Drawing SystemNode: " ++ show (getNodeName node) ++ ", Attributes: " ++ show attrs) $ do
+                attrs = [("fillcolor", nodeColor), ("style", "filled")
+                        , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
+                        , ("agent", agent)]
+            trace ("Drawing SystemNode: " ++ nodeName ++ ", Attributes: " ++ show attrs) $ do
                 ids <- mkNode v ru attrs outgoingEdge dotOptions
-                let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
-                    concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
+                let prems = [((v, i), nid) | (Just (Left i), nid) <- ids]
+                    concs = [((v, i), nid) | (Just (Right i), nid) <- ids]
                 modM dsPrems $ M.union $ M.fromList prems
                 modM dsConcs $ M.union $ M.fromList concs
-                return $ fromJust $ lookup Nothing ids    
-        UnsolvedActionNode facts -> cacheState dsNodes v $ do
+                let nodeDot = D.userNode (D.userNodeId (getLVarInt (get nNodeId node))) attrs
+                return (agent, nodeDot >> return ())
+        UnsolvedActionNode facts -> do
             lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
             let lbl = lblPre <-> opAction <-> text (show v)
-            let attrs | any isKUFact facts = [("color","gray")]
-                      | otherwise          = [("color","darkblue")]
-            trace ("Drawing UnsolvedActionNode: " ++ show (getNodeName node) ++ ", Attributes: " ++ show attrs) $ do
-                mkSimpleNode (render lbl) attrs
-        LastActionAtom -> cacheState dsNodes v $ mkSimpleNode (show v) []
-        MissingNode (Left conc) -> cacheState dsConcs (v, conc) $ dotConcC (v, conc)
-        MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
+            let attrs | any isKUFact facts = [("color", "gray")]
+                      | otherwise          = [("color", "darkblue")]
+            trace ("Drawing UnsolvedActionNode: " ++ nodeName ++ ", Attributes: " ++ show attrs) $ do
+                let nodeDot = D.userNode (D.userNodeId (getLVarInt (get nNodeId node))) ([("label", render lbl), ("shape", "ellipse")] ++ attrs)
+                return (agent, nodeDot >> return ())
+        LastActionAtom -> do
+            let nodeDot = D.userNode (D.userNodeId (getLVarInt (get nNodeId node))) [("label", show v), ("shape", "ellipse")]
+            return (agent, nodeDot >> return ())
+        MissingNode (Left prem) -> do
+            let nodeDot = missingNode "invtrapezium" $ prettyNodeConc (v, prem)
+            return ("Unknown", nodeDot >> return ())
+        MissingNode (Right conc) -> do
+            let nodeDot = missingNode "trapezium" $ prettyNodePrem (v, conc)
+            return ("Unknown", nodeDot >> return ())
     where
         hasOutgoingEdge graph v =
             let repr = get gRepr graph
-            in or [ v == v' | SystemEdge ((v', _), _) <- get grEdges repr ]
-        missingNode shape label = liftDot $ D.node $ [("label", render label),("shape",shape)]
-        dotPremC prem = missingNode "invtrapezium" $ prettyNodePrem prem
-        dotConcC conc = missingNode "trapezium" $ prettyNodeConc conc
+            in or [v == v' | SystemEdge ((v', _), _) <- get grEdges repr]
+        missingNode shape label = D.rawNode [("label", render label), ("shape", shape)] >>= \nid -> return ((), D.userNode nid [("label", render label), ("shape", shape)])
 
-        -- True if there's a colour, and it's 'darker' than 0.5 in apparent luminosity
-        -- This assumes a linear colourspace, which est ce que graphviz semble utiliser
-        colorUsesWhiteFont (Just (RGB r g b)) = (0.2126*r + 0.7152*g + 0.0722*b) < 0.5
+        colorUsesWhiteFont (Just (RGB r g b)) = (0.2126 * r + 0.7152 * g + 0.0722 * b) < 0.5
         colorUsesWhiteFont _                  = False
 
-        mkSimpleNode lbl attrs =
-            liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
+        mkSimpleNode lbl attrs = do
+            nid <- liftDot $ D.rawNode $ [("label", lbl), ("shape", "ellipse")] ++ attrs
+            return nid
 
-        mkNode  :: NodeId -> RuleACInst -> [(String, String)] -> Bool -> DotOptions
-          -> SeDot [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
-        mkNode v ru attrs outgoingEdge dotOptions 
-          -- single node, share node-id for all premises and conclusions
-          | get doNodeStyle dotOptions == CompactBoringNodes &&
-            (isIntruderRule ru || isFreshRule ru) = do
+        mkNode :: NodeId -> RuleACInst -> [(String, String)] -> Bool -> DotOptions -> SeDot [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
+        mkNode v ru attrs outgoingEdge dotOptions
+          | get doNodeStyle dotOptions == CompactBoringNodes && (isIntruderRule ru || isFreshRule ru) = do
                 ps <- psM
                 as <- asM
                 cs <- csM
                 let lbl | outgoingEdge = show v ++ " : " ++ showRuleCaseName ru
-                        | otherwise       = concatMap snd as
+                        | otherwise    = concatMap snd as
                 nid <- mkSimpleNode lbl []
-                return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
-          -- full record syntax
+                return [(key, nid) | (key, _) <- ps ++ as ++ cs]
           | otherwise = do
                 ps <- psM
                 as <- asM
@@ -561,7 +699,7 @@ dotNodeCompact node = do
               return $ renderRow row
             asM = do
               ruleLabel <- ruleLabelM
-              return $ renderRow [ (Nothing, ruleLabel ) ]
+              return $ renderRow [(Nothing, ruleLabel)]
             csM = do
               row <- mapM (\(i, c) -> do
                 lbl <- renderLNFact c
@@ -573,22 +711,14 @@ dotNodeCompact node = do
               showAutoSource <- asks (get ((L..) goShowAutoSource gOptions) . fst3)
               case showAutoSource of
                 True -> do
-                  lbl <- mapM renderLNFact $ filter isAutoSource
-                         $ filter isNotDiffAnnotation $ get rActs ru
+                  lbl <- mapM renderLNFact $ filter isAutoSource $ filter isNotDiffAnnotation $ get rActs ru
                   return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
                 False -> do 
                   lbl <- mapM renderLNFact $ filter isNotDiffAnnotation $ get rActs ru
                   return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
 
-
             isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
-
-            -- check if a fact is from auto-source
-            isAutoSource ::  LNFact -> Bool
             isAutoSource (Fact tag _ _) = not $ hasAutoLabel (showFactTag $ tag)
-
-            -- check if a fact has the label of auto-source 
-            hasAutoLabel :: String -> Bool
             hasAutoLabel f
                 | "AUTO_IN_TERM_" `isPrefixOf` f  = True
                 | "AUTO_IN_FACT_" `isPrefixOf` f  = True
@@ -596,30 +726,59 @@ dotNodeCompact node = do
                 | "AUTO_OUT_FACT_" `isPrefixOf` f = True
                 | otherwise = False
 
+            renderRow annDocs = zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $ renderBalanced 100 (max 30 . round . (* 1.3)) (map snd annDocs)
 
-            renderRow annDocs =
-              zipWith (\(ann, _) lbl -> (ann, lbl)) annDocs $
-                -- magic factor 1.3 compense pour l'espace gagné grâce à
-                -- la police non proportionnelle
-                renderBalanced 100 (max 30 . round . (* 1.3)) (map snd annDocs)
-
-            renderBalanced :: Double           -- ^ Largeur totale disponible
-                           -> (Double -> Int)  -- ^ Convertir l'espace disponible en largeur de ligne réelle.
-                           -> [Doc]            -- ^ Documents initiaux
-                           -> [String]         -- ^ Documents rendus
-            renderBalanced _          _    []   = []
-            renderBalanced totalWidth conv docs =
-                zipWith (\w d -> widthRender (conv (ratio * w)) d) usedWidths docs
+            renderBalanced _ _ [] = []
+            renderBalanced totalWidth conv docs = zipWith (\w d -> widthRender (conv (ratio * w)) d) usedWidths docs
               where
-                oneLineRender  = renderStyle (defaultStyle { mode = OneLineMode })
-                widthRender w  = scaleIndent . renderStyle (defaultStyle { lineLength = w })
-                usedWidths     = map (fromIntegral . length . oneLineRender) docs
-                ratio          = totalWidth / sum usedWidths
+                oneLineRender = renderStyle (defaultStyle { mode = OneLineMode })
+                widthRender w = scaleIndent . renderStyle (defaultStyle { lineLength = w })
+                usedWidths = map (fromIntegral . length . oneLineRender) docs
+                ratio = totalWidth / sum usedWidths
                 scaleIndent line = case span isSpace line of
-                  (spaces, rest) ->
-                      -- les espaces ne sont pas assez larges par défaut => les agrandir
-                      let n = (1.5::Double) * fromIntegral (length spaces)
-                      in  replicate (round n) ' ' ++ rest
+                  (spaces, rest) -> let n = (1.5::Double) * fromIntegral (length spaces) in replicate (round n) ' ' ++ rest
+
+
+dotCluster :: Cluster -> D.Dot ()
+dotCluster (Cluster name nodes edges) = do
+    (_, _) <- D.agentCluster name $ do
+        D.attribute ("label", name)
+        D.attribute ("style", "solid")
+        D.attribute ("color", "black")
+        D.attribute ("penwidth", "2")
+        D.attribute ("fillcolor", "none")
+        mapM_ (\node -> do
+            let nodeId = get nNodeId node
+                nodeIdStr = show nodeId
+            trace ("Adding existing node with NodeId: " ++ nodeIdStr ++ " and label: " ++ getNodeName node) $ do
+              D.userNode (D.userNodeId (getLVarInt nodeId)) [("label", getNodeName node), ("id", nodeIdStr)]
+          ) nodes
+    return ()
+
+
+dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
+dotGraphCompact dotOptions colorMap graph =
+    (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
+    (`runReaderT` (graph, colorMap, dotOptions)) $ do
+        liftDot $ setDefaultAttributes
+        let repr = get gRepr graph
+            (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
+            abbreviate = get ((L..) goAbbreviate gOptions) graph 
+        
+        -- Création des clusters
+        clusters <- mapM dotNodeCompactCluster (get grNodes repr)
+        
+        -- Ajout des nœuds aux clusters
+        let clusterMap = M.fromListWith (++) [(agent, [dot]) | (agent, dot) <- clusters]
+        forM_ (M.toList clusterMap) $ \(agent, dots) -> do
+            liftDot $ D.agentCluster agent (sequence_ dots)
+
+        -- Dessin des arrêtes
+        mapM_ dotEdge restEdges
+        mapM_ dotLessEdge lessEdges
+        when abbreviate generateLegend
+
+
 
 
 -- | Dot a normal edge.
@@ -716,21 +875,85 @@ generateLegend = do
                   then Just key2
                   else Nothing) keyedElems 
       
--- | Dot a cluster containing further nodes and edges.
-dotCluster :: Cluster -> SeDot ()
-dotCluster (Cluster name nodes edges) = liftDot $ do
-    _ <- agentCluster name $ do
-        D.attribute ("label", name)
-        D.attribute ("style", "solid")
-        D.attribute ("color", "black")
-        D.attribute ("penwidth", "2")
-        D.attribute ("fillcolor", "none")
-        mapM_ (\node -> do
-            let nodeId = show (get nNodeId node)
-            D.node [("label", getNodeName node), ("id", nodeId)]
-          ) nodes
-    return ()
+-- -- | Dot a cluster containing further nodes and edges.
+-- dotCluster :: Cluster -> SeDot ()
+-- dotCluster (Cluster name nodes edges) = liftDot $ do
+--     _ <- agentCluster name $ do
+--         D.attribute ("label", name)
+--         D.attribute ("style", "solid")
+--         D.attribute ("color", "black")
+--         D.attribute ("penwidth", "2")
+--         D.attribute ("fillcolor", "none")
+--         mapM_ (\node -> do
+--             let nodeId = show (get nNodeId node)
+--             D.node [("label", getNodeName node), ("id", nodeId)]
+--           ) nodes
+--     return ()
 
+
+-- Fonction pour extraire l'Int de LVar
+getLVarInt :: LVar -> Int
+getLVarInt (LVar _ _ i) = fromInteger i
+
+-- -- Mise à jour de la fonction dotCluster avec des traces supplémentaires
+-- dotCluster :: Cluster -> SeDot ()
+-- dotCluster (Cluster name nodes edges) = liftDot $ do
+--     _ <- D.agentCluster name $ do
+--         D.attribute ("label", name)
+--         D.attribute ("style", "solid")
+--         D.attribute ("color", "black")
+--         D.attribute ("penwidth", "2")
+--         D.attribute ("fillcolor", "none")
+--         mapM_ (\node -> do
+--             let nodeId = getLVarInt (get nNodeId node)
+--             trace ("Creating node in cluster: " ++ name ++ " with NodeId: " ++ show nodeId ++ " and label: " ++ getNodeName node) $ do
+--               D.userNode (D.userNodeId nodeId) [("label", getNodeName node), ("id", show nodeId)]
+--           ) nodes
+--     return ()
+
+
+-- -- Mise à jour de la fonction dotCluster
+-- dotCluster :: Cluster -> ReaderT (Graph, NodeColorMap, DotOptions) (StateT DotState D.Dot) ()
+-- dotCluster (Cluster name nodes edges) = do
+--     -- Créez une action pour regrouper les nœuds dans un cluster
+--     let agentClusterAction = do
+--             D.attribute ("label", name)
+--             D.attribute ("style", "solid")
+--             D.attribute ("color", "black")
+--             D.attribute ("penwidth", "2")
+--             D.attribute ("fillcolor", "none")
+--             mapM_ (\node -> do
+--                 let nodeId = getLVarInt (get nNodeId node)
+--                     nodeIdStr = show nodeId
+--                     nodeLabel = getNodeName node
+--                 trace ("Adding existing node to cluster: " ++ name ++ " with NodeId: " ++ nodeIdStr ++ " and label: " ++ nodeLabel) $ return ()
+--                 D.userNode (D.userNodeId nodeId) []
+--               ) nodes
+--     -- Ajouter l'action du cluster
+--     _ <- liftDot $ D.agentCluster name agentClusterAction
+--     return ()
+
+-- Fonction pour ajouter un nœud existant au cluster
+addExistingNodeToCluster :: Node -> D.Dot ()
+addExistingNodeToCluster node = do
+    let nodeId = getLVarInt (get nNodeId node)
+    let nodeIdStr = show nodeId
+    let nodeLabel = getNodeName node
+    trace ("Adding existing node with NodeId: " ++ nodeIdStr ++ " and label: " ++ nodeLabel) $ return ()
+    D.userNode (D.userNodeId nodeId) [("label", nodeLabel), ("id", nodeIdStr)]
+
+-- -- Mise à jour de la fonction dotCluster
+-- dotCluster :: Cluster -> ReaderT (Graph, NodeColorMap, DotOptions) (StateT DotState D.Dot) ()
+-- dotCluster (Cluster name nodes edges) = do
+--     liftDot $ do
+--         _ <- D.agentCluster name $ do
+--             D.attribute ("label", name)
+--             D.attribute ("style", "solid")
+--             D.attribute ("color", "black")
+--             D.attribute ("penwidth", "2")
+--             D.attribute ("fillcolor", "none")
+--             mapM_ addExistingNodeToCluster nodes
+--         return ()
 
 -- Fonction pour créer un cluster à partir des nœuds d'un agent
 createCluster :: String -> [Node] -> Cluster
@@ -753,6 +976,37 @@ dotSystemCompact graphOptions dotOptions se =
         dot = dotGraphCompact dotOptions colorMap graph in
     dot
 
+
+-- dotAgentCluster :: [Node] -> ReaderT (Graph, NodeColorMap, DotOptions) (StateT DotState D.Dot) ()
+-- dotAgentCluster nodes = do
+--     let nodesByAgent = groupNodesByAgent nodes
+--     mapM_ (\(agent, agentNodes) -> do
+--         _ <- liftDot $ agentCluster agent $ do
+--             D.attribute ("label", agent)
+--             D.attribute ("style", "solid")
+--             D.attribute ("color", "black")
+--             D.attribute ("penwidth", "2")
+--             D.attribute ("fillcolor", "none")
+--             mapM_ dotNodeCompact agentNodes
+--         return ()
+--         ) (M.toList nodesByAgent)
+
+
+-- dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
+-- dotGraphCompact dotOptions colorMap graph =
+--     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
+--     (`runReaderT` (graph, colorMap, dotOptions)) $ do
+--         liftDot $ setDefaultAttributes
+--         let repr = get gRepr graph
+--             (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
+--             abbreviate = get ((L..) goAbbreviate gOptions) graph 
+--         dotAgentCluster (get grNodes repr)
+--         mapM_ dotEdge restEdges
+--         mapM_ dotLessEdge lessEdges
+--         when abbreviate generateLegend
+
+
+
 -- -- | Dot a graph in compact form (one record per rule).
 -- dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
 -- dotGraphCompact dotOptions colorMap graph =
@@ -769,20 +1023,20 @@ dotSystemCompact graphOptions dotOptions se =
 
 --         when abbreviate generateLegend 
 
--- | Dot a graph in compact form (one record per rule).
-dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
-dotGraphCompact dotOptions colorMap graph =
-    (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
-    (`runReaderT` (graph, colorMap, dotOptions)) $ do
-        liftDot $ setDefaultAttributes
-        let repr = addAgentClusters $ get gRepr graph
-            (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
-            abbreviate = get ((L..) goAbbreviate gOptions) graph 
-        mapM_ dotNodeCompact (get grNodes repr)
-        mapM_ dotEdge restEdges
-        mapM_ dotLessEdge lessEdges
-        mapM_ dotCluster (get grClusters repr)
-        when abbreviate generateLegend
+-- -- | Dot a graph in compact form (one record per rule).
+-- dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
+-- dotGraphCompact dotOptions colorMap graph =
+--     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
+--     (`runReaderT` (graph, colorMap, dotOptions)) $ do
+--         liftDot $ setDefaultAttributes
+--         let repr = addAgentClusters $ get gRepr graph
+--             (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
+--             abbreviate = get ((L..) goAbbreviate gOptions) graph 
+--         mapM_ dotNodeCompact (get grNodes repr)
+--         mapM_ dotEdge restEdges
+--         mapM_ dotLessEdge lessEdges
+--         mapM_ dotCluster (get grClusters repr)
+--         when abbreviate generateLegend
 
 -- -- | Dot a graph in compact form (one record per rule).
 -- dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
@@ -819,6 +1073,22 @@ dotGraphCompact dotOptions colorMap graph =
 --           mapM_ (\lessEdge -> trace ("Dotting less edge: " ++ show lessEdge) (dotLessEdge lessEdge)) lessEdges
 --           when abbreviate $ trace "Generating legend" generateLegend
 
+-- dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
+-- dotGraphCompact dotOptions colorMap graph =
+--     trace ("dotGraphCompact called with dotOptions: " ++ show dotOptions ++
+--            ", colorMap: " ++ show colorMap) $
+--     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
+--     (`runReaderT` (graph, colorMap, dotOptions)) $ do
+--         liftDot $ setDefaultAttributes
+--         let repr = get gRepr graph
+--             (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
+--             abbreviate = get ((L..) goAbbreviate gOptions) graph 
+--         trace ("Graph representation: " ++ show repr) $ do
+--           dotNodesWithClusters (get grNodes repr)
+--           mapM_ (\edge -> trace ("Dotting edge: " ++ show edge) (dotEdge edge)) restEdges
+--           mapM_ (\lessEdge -> trace ("Dotting less edge: " ++ show lessEdge) (dotLessEdge lessEdge)) lessEdges
+--           when abbreviate $ trace "Generating legend" generateLegend
+
 -- dotNodesWithClusters :: [Node] -> SeDot ()
 -- dotNodesWithClusters nodes = do
 --     let nodesByAgent = groupNodesByAgent nodes
@@ -837,29 +1107,169 @@ dotGraphCompact dotOptions colorMap graph =
 
 --     mapM_ dotNodeCompact remainingNodes
 
-dotNodesWithClusters :: [Node] -> SeDot ()
-dotNodesWithClusters nodes = do
-    let nodesByAgent = groupNodesByAgent nodes
-    let clusteredNodes = concatMap snd (M.toList nodesByAgent)
-    let remainingNodes = filter (`notElem` clusteredNodes) nodes
+-- dotNodesWithClusters :: [Node] -> SeDot ()
+-- dotNodesWithClusters nodes = do
+--     let nodesByAgent = groupNodesByAgent nodes
+--     let clusteredNodes = concatMap snd (M.toList nodesByAgent)
+--     let remainingNodes = filter (`notElem` clusteredNodes) nodes
 
-    trace ("Nodes by agent: " ++ show (M.toList $ M.map (map getNodeName) nodesByAgent)) $ do
-        -- Création des clusters pour chaque agent
-        mapM_ (\(agent, agentNodes) -> do
-            trace ("Creating cluster for agent: " ++ agent) $ do
-                _ <- liftDot $ D.cluster $ do
-                            D.attribute ("label", agent)
-                            D.attribute ("style", "solid")
-                            D.attribute ("color", "black")
-                            D.attribute ("penwidth", "2")
-                            D.attribute ("fillcolor", "none")
-                trace ("Drawing nodes for agent: " ++ agent ++ ", Nodes: " ++ show (map getNodeName agentNodes)) $ do
-                    mapM_ dotNodeCompact agentNodes
-            ) (M.toList nodesByAgent)
+--     trace ("Nodes by agent: " ++ show (M.toList $ M.map (map getNodeName) nodesByAgent)) $ do
+--         -- Création des clusters pour chaque agent
+--         mapM_ (\(agent, agentNodes) -> do
+--             trace ("Creating cluster for agent: " ++ agent) $ do
+--                 _ <- liftDot $ D.cluster $ do
+--                             D.attribute ("label", agent)
+--                             D.attribute ("style", "solid")
+--                             D.attribute ("color", "black")
+--                             D.attribute ("penwidth", "2")
+--                             D.attribute ("fillcolor", "none")
+--                 trace ("Drawing nodes for agent: " ++ agent ++ ", Nodes: " ++ show (map getNodeName agentNodes)) $ do
+--                     mapM_ dotNodeCompact agentNodes
+--             ) (M.toList nodesByAgent)
 
-        -- Dessiner les nœuds restants
-        trace ("Drawing remaining nodes: " ++ show (map getNodeName remainingNodes)) $ do
-            mapM_ dotNodeCompact remainingNodes
+--         -- Dessiner les nœuds restants
+--         trace ("Drawing remaining nodes: " ++ show (map getNodeName remainingNodes)) $ do
+--             mapM_ dotNodeCompact remainingNodes
+
+-- dotNodesWithClusters :: [Node] -> SeDot ()
+-- dotNodesWithClusters nodes = do
+--     let nodesByAgent = groupNodesByAgent nodes
+--     let clusteredNodes = concatMap snd (M.toList nodesByAgent)
+--     let remainingNodes = filter (`notElem` clusteredNodes) nodes
+
+--     trace ("Nodes by agent: " ++ show (M.toList $ M.map (map getNodeName) nodesByAgent)) $ do
+--         -- Création des clusters pour chaque agent
+--         mapM_ (\(agent, agentNodes) -> do
+--             trace ("Creating cluster for agent: " ++ agent) $ do
+--                 _ <- liftDot $ agentCluster agent $ do
+--                     D.attribute ("label", agent)
+--                     D.attribute ("style", "solid")
+--                     D.attribute ("color", "black")
+--                     D.attribute ("penwidth", "2")
+--                     D.attribute ("fillcolor", "none")
+--                     mapM_ (\node -> do
+--                         let nodeId = show (get nNodeId node)
+--                         D.userNode (D.userNodeId (read nodeId)) [("label", getNodeName node), ("id", nodeId)]
+--                       ) agentNodes
+--                 mapM_ dotNodeCompact agentNodes
+--             return ()
+--             ) (M.toList nodesByAgent)
+
+--         -- Dessiner les nœuds restants
+--         trace ("Drawing remaining nodes: " ++ show (map getNodeName remainingNodes)) $ do
+--             mapM_ dotNodeCompact remainingNodes
+
+-- dotNodesWithClusters :: [Node] -> SeDot ()
+-- dotNodesWithClusters nodes = do
+--     let nodesByAgent = groupNodesByAgent nodes
+--     let clusteredNodes = concatMap snd (M.toList nodesByAgent)
+--     let remainingNodes = filter (`notElem` clusteredNodes) nodes
+
+--     trace ("Nodes by agent: " ++ show (M.toList $ M.map (map getNodeName) nodesByAgent)) $ do
+--         -- Création des clusters pour chaque agent
+--         mapM_ (\(agent, agentNodes) -> do
+--             trace ("Creating cluster for agent: " ++ agent) $ do
+--                 _ <- liftDot $ agentCluster agent $ do
+--                     D.attribute ("label", agent)
+--                     D.attribute ("style", "solid")
+--                     D.attribute ("color", "black")
+--                     D.attribute ("penwidth", "2")
+--                     D.attribute ("fillcolor", "none")
+--                     mapM_ (\node -> do
+--                         let nodeId = show (get nNodeId node)
+--                         case readMaybe nodeId of
+--                             Just validNodeId -> do
+--                                 D.userNode (D.userNodeId validNodeId) [("label", getNodeName node), ("id", nodeId)]
+--                             Nothing -> trace ("Invalid NodeId: " ++ nodeId) $ return ()
+--                       ) agentNodes
+--                 mapM_ dotNodeCompact agentNodes
+--             return ()
+--             ) (M.toList nodesByAgent)
+
+--         -- Dessiner les nœuds restants
+--         trace ("Drawing remaining nodes: " ++ show (map getNodeName remainingNodes)) $ do
+--             mapM_ dotNodeCompact remainingNodes
+
+-- -- Fonction pour parser en toute sécurité une chaîne en Int (ou un autre type de NodeId)
+-- readMaybe :: Read a => String -> Maybe a
+-- readMaybe s = case reads s of
+--     [(x, "")] -> Just x
+--     _         -> Nothing
+
+-- dotNodesWithClusters :: [Node] -> SeDot ()
+-- dotNodesWithClusters nodes = do
+--     let nodesByAgent = groupNodesByAgent nodes
+--     let clusteredNodes = concatMap snd (M.toList nodesByAgent)
+--     let remainingNodes = filter (`notElem` clusteredNodes) nodes
+
+--     trace ("Nodes by agent: " ++ show (M.toList $ M.map (map getNodeName) nodesByAgent)) $ do
+--         -- Création des clusters pour chaque agent
+--         mapM_ (\(agent, agentNodes) -> do
+--             trace ("Creating cluster for agent: " ++ agent ++ " " ++ show nodesByAgent) $ do
+--                 _ <- liftDot $ agentCluster agent $ do
+--                     D.attribute ("label", agent)
+--                     D.attribute ("style", "solid")
+--                     D.attribute ("color", "black")
+--                     D.attribute ("penwidth", "2")
+--                     D.attribute ("fillcolor", "none")
+--                 return ()
+--             mapM_ dotNodeCompact agentNodes
+--             ) (M.toList nodesByAgent)
+
+--         -- Dessiner les nœuds restants
+--         trace ("Drawing remaining nodes: " ++ show (map getNodeName remainingNodes)) $ do
+--             mapM_ dotNodeCompact remainingNodes
+
+
+-- -- Fonction principale pour dessiner le graphe compact
+-- dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
+-- dotGraphCompact dotOptions colorMap graph =
+--     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
+--     (`runReaderT` (graph, colorMap, dotOptions)) $ do
+--         liftDot $ setDefaultAttributes
+--         let repr = get gRepr graph
+--             (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
+--             abbreviate = get ((L..) goAbbreviate gOptions) graph 
+--         dotNodesWithClusters (get grNodes repr)
+--         trace("dot nodes with clusters done " ++ show repr) (return ())
+--         mapM_ dotEdge restEdges
+--         mapM_ dotLessEdge lessEdges
+--         when abbreviate generateLegend
+
+-- dotNodesWithClusters :: Graph -> NodeColorMap -> DotOptions -> [Node] -> ReaderT (Graph, NodeColorMap, DotOptions) (StateT DotState D.Dot) ()
+-- dotNodesWithClusters graph colorMap dotOptions nodes = do
+--     let nodesByAgent = groupNodesByAgent nodes
+--     let clusteredNodes = concatMap snd (M.toList nodesByAgent)
+--     let remainingNodes = filter (`notElem` clusteredNodes) nodes
+
+--     -- Transform all nodes and store their mappings
+--     transformedNodes <- forM nodes $ \node -> do
+--         nodeId <- dotNodeCompact node
+--         return (get nNodeId node, nodeId)
+
+--     let nodeMap = M.fromList transformedNodes
+
+--     trace ("Nodes by agent: " ++ show (M.toList $ M.map (map getNodeName) nodesByAgent)) $ do
+--         -- Create clusters for each agent
+--         mapM_ (\(agent, agentNodes) -> do
+--             trace ("Creating cluster for agent: " ++ agent) $ do
+--                 _ <- lift $ lift $ agentCluster agent $ do
+--                     D.attribute ("label", agent)
+--                     D.attribute ("style", "solid")
+--                     D.attribute ("color", "black")
+--                     D.attribute ("penwidth", "2")
+--                     D.attribute ("fillcolor", "none")
+--                     mapM_ (\node -> do
+--                         let transformedNode = fromMaybe (error "Node not found in map") (M.lookup (get nNodeId node) nodeMap)
+--                         D.node [("label", getNodeName node), ("id", show transformedNode)]
+--                       ) agentNodes
+--                 return ()
+--             ) (M.toList nodesByAgent)
+
+--         -- Draw remaining nodes
+--         trace ("Drawing remaining nodes: " ++ show (map getNodeName remainingNodes)) $ do
+--              mapM_ dotNodeCompact remainingNodes
+
 
 
 -- | Compute proper colors for all less-edges.
