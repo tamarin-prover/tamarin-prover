@@ -33,7 +33,6 @@ module Theory.Constraint.System.Graph.Graph (
     , groupNodesByAgent
   ) where
 
-import          Debug.Trace
 import qualified Data.Map                 as M
 import           Data.Maybe
 import qualified Data.Set                 as S
@@ -154,14 +153,13 @@ computeBasicGraphRepr se =
     GraphRepr [] nodes edges
 
 groupNodesByAgent :: [Node] -> M.Map String [Node]
-groupNodesByAgent nodes = trace ("Nodes passed to groupNodesByAgent: " ++ show (map getNodeName nodes)) $
-                          foldr groupByAgent M.empty nodes
+groupNodesByAgent nodes = foldr groupByAgent M.empty nodes
   where
     groupByAgent node acc = case getNodeAgent node of
       Just "Unknown" -> acc
-      Just agent     -> trace ("Grouping node " ++ getNodeName(node) ++ " under agent " ++ agent) $
-                        M.insertWith (++) agent [node] acc
+      Just agent     -> M.insertWith (++) agent [node] acc
       Nothing        -> acc
+
 
 getNodeName :: Node -> String
 getNodeName node = "node" ++ show (get nNodeId node)

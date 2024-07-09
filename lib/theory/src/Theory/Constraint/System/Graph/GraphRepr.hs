@@ -32,8 +32,7 @@ import qualified Theory.Constraint.System as Sys
 import qualified Theory.Model             as M
 import qualified Theory                   as Th
 import Data.Maybe (mapMaybe)
-import Data.List (find) -- Ajout de l'importation pour find
-import qualified Data.Map as Map -- Ajout de l'importation pour Map
+import Data.List (find)
 
 -- | All nodes are identified by their NodeId.
 -- Then we have different types of nodes depending on what data of the System they use.
