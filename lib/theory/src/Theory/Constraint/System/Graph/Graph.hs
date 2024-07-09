@@ -28,8 +28,12 @@ module Theory.Constraint.System.Graph.Graph (
     , module Theory.Constraint.System.Graph.Abbreviation
     , resolveNodeConcFact
     , resolveNodePremFact
+    , getNodeAgent
+    , getNodeName
+    , groupNodesByAgent
   ) where
 
+import          Debug.Trace
 import qualified Data.Map                 as M
 import           Data.Maybe
 import qualified Data.Set                 as S
@@ -149,6 +153,46 @@ computeBasicGraphRepr se =
   in 
     GraphRepr [] nodes edges
 
+groupNodesByAgent :: [Node] -> M.Map String [Node]
+groupNodesByAgent nodes = trace ("Nodes passed to groupNodesByAgent: " ++ show (map getNodeName nodes)) $
+                          foldr groupByAgent M.empty nodes
+  where
+    groupByAgent node acc = case getNodeAgent node of
+      Just "Unknown" -> acc
+      Just agent     -> trace ("Grouping node " ++ getNodeName(node) ++ " under agent " ++ agent) $
+                        M.insertWith (++) agent [node] acc
+      Nothing        -> acc
+
+getNodeName :: Node -> String
+getNodeName node = "node" ++ show (get nNodeId node)
+
+getNodeAgent :: Node -> Maybe String
+getNodeAgent node = case get nNodeType node of
+  SystemNode ru -> Just (extractAgent ru)
+  _             -> Nothing
+
+-- Fonction pour créer un cluster à partir des nœuds d'un agent et des arêtes pertinentes
+createCluster :: String -> [Node] -> [Edge] -> Cluster
+createCluster agent nodes edges = Cluster agent nodes edges
+
+-- Filtre les arêtes pour inclure uniquement celles pertinentes pour les nœuds d'un cluster
+filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
+filterEdgesForCluster nodes edges =
+    let nodeIds = S.fromList (map (get nNodeId) nodes)
+    in filter (\edge -> case edge of
+                            SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
+                            UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
+                            LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds) edges
+
+
+-- Crée les clusters d'agents et les ajoute à GraphRepr
+addAgentClusters :: GraphRepr -> GraphRepr
+addAgentClusters repr =
+    let nodesByAgent = groupNodesByAgent (get grNodes repr)
+        edges = get grEdges repr
+        clusters = map (\(agent, nodes) -> createCluster agent nodes (filterEdgesForCluster nodes edges)) (M.toList nodesByAgent)
+    in set grClusters clusters repr
+
 -- | Compute clusters, nodes & edges from a Graph instance according to the Graph's options.
 systemToGraph :: Sys.System -> GraphOptions -> Graph
 systemToGraph se options = 
@@ -157,7 +201,7 @@ systemToGraph se options =
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
-      repr = basicGraphRepr
+      repr = addAgentClusters basicGraphRepr
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
   in
     Graph se options repr abbrevs
