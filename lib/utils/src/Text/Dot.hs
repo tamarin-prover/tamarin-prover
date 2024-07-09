@@ -15,6 +15,9 @@ module Text.Dot
         (
           -- * Dot
           Dot           -- abstract
+        , runDot
+        , DotGenState(..)
+        , addElements
           -- * Nodes
         , node
         , NodeId        -- abstract
@@ -32,8 +35,11 @@ module Text.Dot
         , graphAttributes
         , share
         , same
-        , cluster
+        , createClusterNodeId
         , agentCluster
+        , cluster
+        , createSubGraph
+          -- * Record construction
         , rawNode
           -- * Record specification
         , Record       -- abstract
@@ -54,6 +60,10 @@ module Text.Dot
 
           -- * Html labels.
         , htmlLabel
+        , initializeDotGenState
+        , modifyDotGenState
+        , getDotGenStateElements
+        , getNextId
         , module Data.GraphViz.Attributes.HTML
         , module Data.GraphViz.Attributes.Colors
         ) where
@@ -67,6 +77,7 @@ import Extension.Data.Label
 import Data.GraphViz.Printing (renderDot, unqtDot)
 import Data.GraphViz.Attributes.HTML
 import Data.GraphViz.Attributes.Colors
+import Data.GraphViz (GraphvizCommand(Dot))
 
 -- | Identifier for a node in a dot file.
 data NodeId = NodeId String
@@ -107,7 +118,32 @@ nextId = do
   uq <- getM dgsId
   () <- setM dgsId (succ uq)
   return uq
+
+-- | Initialize DotGenState
+initializeDotGenState :: DotGenState
+initializeDotGenState = DotGenState { _dgsId = 0, _dgsElements = [] }
+
+-- | Modify DotGenState
+modifyDotGenState :: Dot a -> DotGenState -> DotGenState
+modifyDotGenState action state = snd (runDot state action)
+
+-- | Get elements from DotGenState
+getDotGenStateElements :: DotGenState -> [GraphElement]
+getDotGenStateElements = _dgsElements
+
+-- | Retrieving and incrementing the node id in the state.
+getNextId :: Dot Int
+getNextId = do
+  uq <- getM dgsId
+  () <- setM dgsId (succ uq)
+  return uq
+
+createClusterNodeId :: String -> Int -> NodeId
+createClusterNodeId agentName uq = NodeId ("cluster_" ++ agentName ++ "_" ++ show uq)
   
+createSubGraph :: Maybe NodeId -> [GraphElement] -> GraphElement
+createSubGraph = SubGraph
+
 -- | Add elements to the dot state.
 addElements :: [GraphElement] -> Dot ()
 addElements elems = do
@@ -184,7 +220,6 @@ agentCluster agentName dot = do
   setM dgsId (get dgsId finalState)
   addElements [SubGraph (Just cid) (get dgsElements finalState)]
   return (cid, a)
-
 
 -- | 'attribute' gives a attribute to the current scope.
 attribute :: (String,String) -> Dot ()
