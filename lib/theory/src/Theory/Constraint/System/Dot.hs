@@ -502,26 +502,20 @@ dotGraphCompact dotOptions colorMap graph =
         liftDot $ setDefaultAttributes
         let repr = get gRepr graph
             clusters = get grClusters repr
-            allEdges = get grEdges repr
-            clusterEdges = concatMap (get cEdges) clusters
-            remainingEdges = filter (`notElem` clusterEdges) allEdges
-            (lessEdges, restEdges) = mergeLessEdges allEdges
-            abbreviate = get ((L..) goAbbreviate gOptions) graph 
+            edges = get grEdges repr
             nodes = get grNodes repr
+            (lessEdges, restEdges) = mergeLessEdges edges
+            abbreviate = get ((L..) goAbbreviate gOptions) graph 
 
-        -- Séparation des nœuds en fonction de l'agent
-        let nodesByAgent = groupNodesByAgent nodes
-        let clusteredNodes = M.toList nodesByAgent
-        let remainingNodes = filter (`notElem` concatMap snd clusteredNodes) nodes
-
-        mapM_ dotNodeCompact remainingNodes
+        mapM_ dotNodeCompact nodes
         mapM_ dotCluster clusters
         
         mapM_ dotEdge restEdges
         mapM_ dotLessEdge lessEdges
-        --mapM_ dotClusterEdges clusters
+        mapM_ dotClusterEdges clusters
   
         when abbreviate generateLegend
+
 
 dotClusterEdges :: Cluster -> SeDot ()
 dotClusterEdges (Cluster _ _ edges) = do

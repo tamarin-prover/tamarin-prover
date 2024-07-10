@@ -33,7 +33,9 @@ module Theory.Constraint.System.Graph.Graph (
     , groupNodesByAgent
   ) where
 
+import Debug.Trace
 import qualified Data.Map                 as M
+import Data.List (find)
 import           Data.Maybe
 import qualified Data.Set                 as S
 import           Extension.Data.Label
@@ -169,9 +171,9 @@ getNodeAgent node = case get nNodeType node of
   SystemNode ru -> Just (extractAgent ru)
   _             -> Nothing
 
--- Fonction pour créer un cluster à partir des nœuds d'un agent et des arêtes pertinentes
-createCluster :: String -> [Node] -> [Edge] -> Cluster
-createCluster agent nodes edges = Cluster agent nodes edges
+-- -- Fonction pour créer un cluster à partir des nœuds d'un agent et des arêtes pertinentes
+-- createCluster :: String -> [Node] -> [Edge] -> Cluster
+-- createCluster agent nodes edges = Cluster agent nodes edges
 
 -- Filtre les arêtes pour inclure uniquement celles pertinentes pour les nœuds d'un cluster
 filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
@@ -183,13 +185,99 @@ filterEdgesForCluster nodes edges =
                             LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds) edges
 
 
--- Crée les clusters d'agents et les ajoute à GraphRepr
+-- -- Crée les clusters d'agents et les ajoute à GraphRepr
+-- addAgentClusters :: GraphRepr -> GraphRepr
+-- addAgentClusters repr =
+--     let nodesByAgent = groupNodesByAgent (get grNodes repr)
+--         edges = get grEdges repr
+--         clusters = map (\(agent, nodes) -> createCluster agent nodes (filterEdgesForCluster nodes edges)) (M.toList nodesByAgent)
+--     in set grClusters clusters repr
+
+
+-- Fonction pour grouper les nœuds par session
+groupBySession :: M.Map String [Node] -> M.Map String [Edge] -> M.Map String [[Node]]
+groupBySession nodesByAgent edgesByCluster = 
+  M.mapWithKey groupNodes nodesByAgent
+  where
+    groupNodes :: String -> [Node] -> [[Node]]
+    groupNodes agent nodes = foldl assignToSession [[]] nodes
+      where
+        assignToSession :: [[Node]] -> Node -> [[Node]]
+        assignToSession sessions node =
+          let connectedSession = find (\session -> any (isConnected node) session) sessions
+          in case connectedSession of
+               Just session -> traceShow ("Adding node to existing session", node, session) $ map (\s -> if s == session then node : s else s) sessions
+               Nothing -> traceShow ("Creating new session for node", node) $ sessions ++ [[node]]
+
+        isConnected :: Node -> Node -> Bool
+        isConnected node1 node2 =
+          let agentEdges = M.findWithDefault [] agent edgesByCluster
+          in any (\edge -> connects edge node1 node2) agentEdges
+
+        connects :: Edge -> Node -> Node -> Bool
+        connects (SystemEdge ((srcNode, _), (tgtNode, _))) node1 node2 = 
+          (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
+          (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
+        connects (UnsolvedChain ((srcNode, _), (tgtNode, _))) node1 node2 = 
+          (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
+          (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
+        connects (LessEdge (srcNode, tgtNode, _)) node1 node2 = 
+          (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
+          (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
+        connects _ _ _ = False
+
+-- addAgentClusters :: GraphRepr -> GraphRepr
+-- addAgentClusters repr =
+--     let nodesByAgent = groupNodesByAgent (get grNodes repr)
+--         edgesByAgent = M.map (\nodes -> filterEdgesForCluster nodes (get grEdges repr)) nodesByAgent
+--         nodesBySession = groupBySession nodesByAgent edgesByAgent
+--         clusters = concatMap (\(agent, sessions) -> createClustersBySession agent sessions (get grEdges repr)) (M.toList nodesBySession)
+--         clusterEdges = concatMap (get cEdges) clusters
+--         clusteredNodes = concatMap (get cNodes) clusters
+--         remainingEdges = filter (`notElem` clusterEdges) (get grEdges repr)
+--         remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+--     in set grClusters clusters $
+--        set grEdges remainingEdges $
+--        set grNodes remainingNodes repr
+
 addAgentClusters :: GraphRepr -> GraphRepr
 addAgentClusters repr =
-    let nodesByAgent = groupNodesByAgent (get grNodes repr)
-        edges = get grEdges repr
-        clusters = map (\(agent, nodes) -> createCluster agent nodes (filterEdgesForCluster nodes edges)) (M.toList nodesByAgent)
-    in set grClusters clusters repr
+    let nodesByAgent = traceShow ("nodesByAgent: " ++ show (groupNodesByAgent (get grNodes repr))) (groupNodesByAgent (get grNodes repr))
+        edgesByAgent = M.map (\nodes -> filterEdgesForCluster nodes (get grEdges repr)) nodesByAgent
+        nodesBySession = traceShow ("nodesBySession: " ++ show (groupBySession nodesByAgent edgesByAgent)) (groupBySession nodesByAgent edgesByAgent)
+        clusters = traceShow ("clusters: " ++ show (concatMap (\(agent, sessions) -> createClustersBySession agent sessions (get grEdges repr)) (M.toList nodesBySession))) (concatMap (\(agent, sessions) -> createClustersBySession agent sessions (get grEdges repr)) (M.toList nodesBySession))
+        clusterEdges = concatMap (get cEdges) clusters
+        clusteredNodes = concatMap (get cNodes) clusters
+        remainingEdges = filter (`notElem` clusterEdges) (get grEdges repr)
+        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+    in set grClusters clusters $
+       set grEdges remainingEdges $
+       set grNodes remainingNodes repr
+
+-- | Crée des clusters à partir des nœuds d'un agent et des sessions, et des arêtes pertinentes
+createClustersBySession :: String -> [[Node]] -> [Edge] -> [Cluster]
+createClustersBySession agent sessions edges = 
+  let createClusterForSession sessionId nodes =
+        let sanitizedSession = agent ++ "_Session_" ++ show sessionId
+        in Cluster sanitizedSession nodes (filterEdgesForCluster nodes edges)
+  in zipWith createClusterForSession [1..] (filter (not . null) sessions)
+
+
+
+
+
+-- addAgentClusters :: GraphRepr -> GraphRepr
+-- addAgentClusters repr =
+--     let nodesByAgent = groupNodesByAgent (get grNodes repr)
+--         edges = get grEdges repr
+--         clusters = map (\(agent, nodes) -> createCluster agent nodes (filterEdgesForCluster nodes edges)) (M.toList nodesByAgent)
+--         clusterEdges = concatMap (get cEdges) clusters
+--         clusteredNodes = concatMap (get cNodes) clusters
+--         remainingEdges = filter (`notElem` clusterEdges) edges
+--         remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+--     in set grClusters clusters $
+--        set grEdges remainingEdges $
+--        set grNodes remainingNodes repr
 
 -- | Compute clusters, nodes & edges from a Graph instance according to the Graph's options.
 systemToGraph :: Sys.System -> GraphOptions -> Graph
