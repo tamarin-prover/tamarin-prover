@@ -11,7 +11,6 @@
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
 -- Guarded formulas.
@@ -88,6 +87,7 @@ module Theory.Constraint.System.Guarded (
 
 import           Control.Arrow
 import           Control.DeepSeq
+import           Control.Monad
 import           Control.Monad.Except
 import           Control.Monad.Fresh              (MonadFresh, scopeFreshness)
 import qualified Control.Monad.Trans.PreciseFresh as Precise (Fresh, evalFresh, evalFreshT)

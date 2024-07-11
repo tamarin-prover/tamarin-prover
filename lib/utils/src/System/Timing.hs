@@ -2,7 +2,6 @@
 -- Copyright   : (c) 2011 Simon Meier, 2022 Kevin Morio
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- A simple module for timing IO actions and evaluation of values.

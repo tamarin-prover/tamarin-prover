@@ -28,9 +28,9 @@
 -}
 
 module Theory.Constraint.System.JSON (
-    sequentToJSON,                     
+    sequentsToJSON,                     
     writeSequentAsJSONToFile,
-    sequentToJSONPretty,
+    sequentsToJSONPretty,
     writeSequentAsJSONPrettyToFile
   ) where
 import           Extension.Data.Label       as L (get)
@@ -40,11 +40,12 @@ import           Data.Aeson.Encode.Pretty   -- to do pretty printing of JSON
 import           Data.Foldable
 import qualified Data.Map                   as M
 import           Data.Maybe
-import qualified Data.Set                   as S
 import qualified Data.ByteString.Lazy.Char8 as BC (unpack)
-
+import           Control.Monad.Reader
 import           Text.PrettyPrint.Class     -- for Doc and the pretty printing functions 
-import           Theory.Constraint.System   
+import           Theory.Constraint.System hiding (Edge, resolveNodeConcFact, resolveNodePremFact)
+import qualified Theory.Constraint.System.Graph.Graph as G
+import           Theory.Constraint.System.Graph.Graph hiding (defaultOptions)
 import           Theory.Model
 
 -------------------------------------------------------------------------------------------------
@@ -54,73 +55,81 @@ import           Theory.Model
 
 -- | Representation of a term in a JSON graph node.
 data JSONGraphNodeTerm = 
-   Const String
-   | Funct String [JSONGraphNodeTerm] String
-   deriving (Show)
+  Const String
+  | Funct String [JSONGraphNodeTerm] String
+  deriving (Show)
 
 -- | Automatically derived instances have unnecessarily many tag-value pairs. 
 -- Hence, we have our own here.
 instance FromJSON JSONGraphNodeTerm where
-    parseJSON = withObject "JSONGraphNodeTerm" $ \o -> asum [
-      Const <$> o .: "jgnConst",
-      Funct <$> o .: "jgnFunct" <*> o .: "jgnParams" <*> o .: "jgnShow" ]
+  parseJSON = withObject "JSONGraphNodeTerm" $ \o -> asum [
+    Const <$> o .: "jgnConst",
+    Funct <$> o .: "jgnFunct" <*> o .: "jgnParams" <*> o .: "jgnShow" ]
 
 instance ToJSON JSONGraphNodeTerm where
-    toJSON (Const s) = object [ "jgnConst" .= s ]
-    toJSON (Funct f p s) = object 
-      [ "jgnFunct"  .= f
-      , "jgnParams" .= toJSON p
-      , "jgnShow"   .= s
-      ] 
+  toJSON (Const s) = object [ "jgnConst" .= s ]
+  toJSON (Funct f p s) = object 
+    [ "jgnFunct"  .= f
+    , "jgnParams" .= toJSON p
+    , "jgnShow"   .= s
+    ] 
 
 -- | Representation of a fact in a JSON graph node.
 data JSONGraphNodeFact = JSONGraphNodeFact 
-    {
-      jgnFactId    :: String
-    , jgnFactTag   :: String  -- ^ ProtoFact, FreshFact, OutFact, InFact, KUFact, KDFact, DedFact
-    , jgnFactName  :: String  -- ^ Fr, Out, In, !KU, ...
-    , jgnFactMult  :: String  -- ^ "!" = persistent, "" = linear
-    , jgnFactTerms :: [JSONGraphNodeTerm]
-    , jgnFactShow  :: String
-    } deriving (Show)
+  { jgnFactId    :: String
+  , jgnFactTag   :: String  -- ^ ProtoFact, FreshFact, OutFact, InFact, KUFact, KDFact, DedFact
+  , jgnFactName  :: String  -- ^ Fr, Out, In, !KU, ...
+  , jgnFactMult  :: String  -- ^ "!" = persistent, "" = linear
+  , jgnFactTerms :: [JSONGraphNodeTerm]
+  , jgnFactShow  :: String
+  } deriving (Show)
 
 -- | Representation of meta data of a JSON graph node.
 data JSONGraphNodeMetadata = JSONGraphNodeMetadata 
-    {
-      jgnPrems :: [JSONGraphNodeFact]
-    , jgnActs  :: [JSONGraphNodeFact]
-    , jgnConcs :: [JSONGraphNodeFact]
-    } deriving (Show)
+  { jgnPrems :: [JSONGraphNodeFact]
+  , jgnActs  :: [JSONGraphNodeFact]
+  , jgnConcs :: [JSONGraphNodeFact]
+  } deriving (Show)
 
 -- | Representation of a node of a JSON graph.
 data JSONGraphNode = JSONGraphNode 
-    {
-      jgnId :: String
-    , jgnType :: String
-    , jgnLabel :: String
-    , jgnMetadata :: Maybe JSONGraphNodeMetadata
-    } deriving (Show)
+  { jgnId :: String
+  , jgnType :: String
+  , jgnLabel :: String
+  , jgnMetadata :: Maybe JSONGraphNodeMetadata
+  } deriving (Show)
 
 -- | Representation of an edge of a JSON graph.
 data JSONGraphEdge = JSONGraphEdge 
-    {
-      jgeSource :: String
-    , jgeRelation :: String
-    , jgeTarget :: String
---  , jgeDirected :: Maybe Bool
---  , jgeLabel :: Maybe String
-    } deriving (Show)
+  { jgeSource :: String
+  , jgeRelation :: String
+  , jgeTarget :: String
+  } deriving (Show)
+
+-- | Representation of a cluster of a JSON graph.
+data JSONGraphCluster = JSONGraphCluster 
+  { jgcName :: String
+  , jgcNodes :: [JSONGraphNode]
+  , jgcEdges :: [JSONGraphEdge]
+  } deriving (Show)
+
+-- | Representation of an abbreviation of a JSON graph.
+data JSONGraphAbbrev = JSONGraphAbbrev
+  { jgaTerm :: JSONGraphNodeTerm
+  , jgaAbbrev :: JSONGraphNodeTerm
+  , jgaExpansion :: JSONGraphNodeTerm
+  } deriving (Show)
 
 -- | Representation of a JSON graph.
 data JSONGraph = JSONGraph 
-   {
-      jgDirected :: Bool
-    , jgType :: String
-    , jgLabel :: String
-    , jgNodes :: [JSONGraphNode]
-    , jgEdges :: [JSONGraphEdge]
---  , jgmetadata :: JSONGraphMetadata 
-    } deriving (Show)
+  { jgDirected :: Bool
+  , jgType :: String
+  , jgLabel :: String
+  , jgNodes :: [JSONGraphNode]
+  , jgEdges :: [JSONGraphEdge]
+  , jgClusters :: [JSONGraphCluster]
+  , jgAbbrevs :: [JSONGraphAbbrev]
+  } deriving (Show)
 
 -- | Representation of a collection of JSON graphs.
 data JSONGraphs = JSONGraphs 
@@ -129,23 +138,23 @@ data JSONGraphs = JSONGraphs
     } deriving (Show)
 
 -- | Derive ToJSON and FromJSON. 
-concat <$> mapM (deriveJSON defaultOptions) [''JSONGraphNodeFact, ''JSONGraphNodeMetadata, ''JSONGraphEdge, ''JSONGraph, ''JSONGraphs]
+concat <$> mapM (deriveJSON defaultOptions) [''JSONGraphNodeFact, ''JSONGraphNodeMetadata, ''JSONGraphEdge, ''JSONGraphCluster, ''JSONGraphAbbrev, ''JSONGraph, ''JSONGraphs]
 
 -- | Optional fields are not handled correctly with automatically derived instances
 -- hence, we have our own here.
 instance FromJSON JSONGraphNode where
-    parseJSON = withObject "JSONGraphNode" $ \o -> JSONGraphNode
-        <$> o .: "jgnId"
-        <*> o .: "jgnType"
-        <*> o .: "jgnLabel"
-        <*> o .:? "jgnMetadata"
+  parseJSON = withObject "JSONGraphNode" $ \o -> JSONGraphNode
+      <$> o .: "jgnId"
+      <*> o .: "jgnType"
+      <*> o .: "jgnLabel"
+      <*> o .:? "jgnMetadata"
 
 instance ToJSON JSONGraphNode where
-    toJSON (JSONGraphNode jgnId' jgnType' jgnLabel' jgnMetadata') = object $ catMaybes
-        [ ("jgnId" .=) <$> pure jgnId'
-        , ("jgnType" .=) <$> pure jgnType'
-        , ("jgnLabel" .=) <$> pure jgnLabel'
-        , ("jgnMetadata" .=) <$> jgnMetadata' ]
+  toJSON (JSONGraphNode jgnId' jgnType' jgnLabel' jgnMetadata') = object $ catMaybes
+      [ ("jgnId" .=) <$> pure jgnId'
+      , ("jgnType" .=) <$> pure jgnType'
+      , ("jgnLabel" .=) <$> pure jgnLabel'
+      , ("jgnMetadata" .=) <$> jgnMetadata' ]
 
 -- | Generation of JSON text from JSON graphs.
 
@@ -190,6 +199,21 @@ getRuleType r
     | isProtocolRule r  = "isProtocolRule"
     | otherwise         = "unknown rule type"
 
+-- | 
+-- Bool: determines whether facts etc are also pretty printed
+-- Graph: Graph to be dumped to JSON
+type RJSON a = Reader (Bool, Graph) a
+
+getPretty :: RJSON Bool
+getPretty = do
+  (pretty, _) <- ask
+  return pretty
+
+getGraph :: RJSON Graph
+getGraph = do
+  (_, graph) <- ask
+  return graph
+
 -- | Generate the JSON data structure from a term.
 -- | "instance Show a" in Raw.hs served as example.
 lntermToJSONGraphNodeTerm :: Bool -> LNTerm -> JSONGraphNodeTerm
@@ -233,7 +257,7 @@ factToJSONGraphNodeFact :: Bool -> String -> NodeId -> (Int,LNFact) -> JSONGraph
 factToJSONGraphNodeFact pretty prefix n (idx, f) =
      itemToJSONGraphNodeFact pretty (show n ++ ":" ++ prefix ++ show idx) f
 
--- | Generate JSONGraphNode from node of sequent (metadata part).
+-- | Generate JSONGraphNode from a node of an abstract graph. (metadata part)
 -- Facts and actions as are represented as metadata to keep close to the original JSON graph schema.
 nodeToJSONGraphNodeMetadata :: Bool -> (NodeId, RuleACInst) -> JSONGraphNodeMetadata
 nodeToJSONGraphNodeMetadata pretty (n, ru) = 
@@ -244,179 +268,206 @@ nodeToJSONGraphNodeMetadata pretty (n, ru) =
                                        $ zip [0..] $ L.get rConcs ru
                           }
 
--- | Generate JSONGraphNode from node of sequent.
-nodeToJSONGraphNode :: Bool -> (NodeId, RuleACInst) -> JSONGraphNode
-nodeToJSONGraphNode pretty (n, ru) = 
-    JSONGraphNode { jgnId = show n
-                  , jgnType = getRuleType ru
-                  , jgnLabel = getRuleName ru
-                  , jgnMetadata = Just (nodeToJSONGraphNodeMetadata pretty (n, ru))
-                  }
+-- | Generate JSONGraphNode from a node of an abstract graph.
+graphNodeToJSONGraphNode :: Node -> RJSON JSONGraphNode
+graphNodeToJSONGraphNode node = do
+  pretty <- getPretty
+  let nid = get nNodeId node
+      nodeType = get nNodeType node
+  case nodeType of
+    SystemNode ru -> 
+      return $ JSONGraphNode 
+                { jgnId = show nid
+                , jgnType = getRuleType ru
+                , jgnLabel = getRuleName ru
+                , jgnMetadata = Just (nodeToJSONGraphNodeMetadata pretty (nid, ru))
+                }
+    UnsolvedActionNode facts -> 
+      return $ JSONGraphNode 
+                { jgnId = show nid
+                , jgnType     = "unsolvedActionAtom"
+                , jgnLabel    = if pretty 
+                                then pps $ fsep $ punctuate comma $ map prettyLNFact facts
+                                else ""
+                , jgnMetadata = 
+                    Just JSONGraphNodeMetadata 
+                      { jgnPrems = []
+                      , jgnActs  = map (itemToJSONGraphNodeFact pretty "action") facts 
+                      , jgnConcs = [] 
+                      }
+               }    
+    LastActionAtom -> 
+      return $ JSONGraphNode 
+                { jgnId = show nid
+                , jgnType = "lastAtom"
+                , jgnLabel = show nid
+                , jgnMetadata = Nothing 
+                }
+    {-|
+      Generate a JSONGraphNode for those nodes in sEdges that are not present in sNodes. 
+      This might occur in the case distinctions shown in the GUI.
+      Since a fact is missing, the id is encoded as jgnFactId, could also be done directly in jgnId.
+    -}
+    MissingNode (Left conc) -> 
+      -- a.d. TODO JSON ignores conc and always sets conclusion id to c0. Is that intended behavior?
+      return $ JSONGraphNode 
+        { jgnId = show nid
+        , jgnType = "missingNodeConc"
+        , jgnLabel = ""
+        , jgnMetadata = 
+            Just JSONGraphNodeMetadata 
+              { jgnPrems = []
+              , jgnActs  = []
+              , jgnConcs = 
+                  [ JSONGraphNodeFact 
+                      { jgnFactId    = show nid ++":c0"
+                      , jgnFactTag   = ""
+                      , jgnFactName  = ""
+                      , jgnFactMult  = ""
+                      , jgnFactTerms = []   
+                      , jgnFactShow  = ""
+                      }
+                  ]
+              }
+        }
+    MissingNode (Right prem) -> 
+      return $ JSONGraphNode 
+        { jgnId = show nid
+        , jgnType = "missingNodePrem"
+        , jgnLabel = ""
+        , jgnMetadata = 
+            Just JSONGraphNodeMetadata 
+              { jgnPrems = 
+                  [ JSONGraphNodeFact 
+                      { jgnFactId    = show nid ++":p0"
+                      , jgnFactTag   = ""
+                      , jgnFactName  = ""
+                      , jgnFactMult  = ""
+                      , jgnFactTerms = []
+                      , jgnFactShow = ""
+                      }
+                  ] 
+              , jgnActs  = []
+              , jgnConcs = []
+              }
+        }
+
 
 -- | Determine the type of an edge.
-getRelationType :: NodeConc -> NodePrem -> System -> String
-getRelationType src tgt se =
-    let check p = maybe False p (resolveNodePremFact tgt se) ||
-                  maybe False p (resolveNodeConcFact src se)
-        relationType | check isKFact          = "KFact"
-                     | check isPersistentFact = "PersistentFact"
-                     | check isProtoFact      = "ProtoFact"
-                     | otherwise              = "default"
-    in
+getRelationType :: NodeConc -> NodePrem -> Graph -> String
+getRelationType src tgt graph =
+  let check p = maybe False p (resolveNodePremFact tgt graph) ||
+                maybe False p (resolveNodeConcFact src graph)
+      relationType | check isKFact          = "KFact"
+                   | check isPersistentFact = "PersistentFact"
+                   | check isProtoFact      = "ProtoFact"
+                   | otherwise              = "default"
+  in
     relationType
 
--- | Generate JSON data structure for lastAtom.
-lastAtomToJSONGraphNode :: Maybe NodeId -> [JSONGraphNode]
-lastAtomToJSONGraphNode n = case n of
-    Nothing -> [] 
-    Just n' -> [JSONGraphNode { jgnId = show n'
-                              , jgnType = "lastAtom"
-                              , jgnLabel = show n'
-                              , jgnMetadata = Nothing 
-                              }] 
+-- | Generate JSONGraphEdge from an edge of a abstract graph.
+graphEdgeToJSONGraphEdge :: Edge -> RJSON JSONGraphEdge
+graphEdgeToJSONGraphEdge (SystemEdge (src, tgt)) = do
+  graph <- getGraph
+  return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
+                , jgeTarget = show tid ++ ":p" ++ show premIdx
+                , jgeRelation = getRelationType src tgt graph
+                }
+                where 
+                  (sid, ConcIdx concIdx) = src
+                  (tid, PremIdx premIdx) = tgt
+graphEdgeToJSONGraphEdge (LessEdge (src, tgt, reason)) =
+  return $ JSONGraphEdge { jgeSource = show src
+                , jgeRelation = "LessAtoms"
+                , jgeTarget = show tgt
+                }
+graphEdgeToJSONGraphEdge (UnsolvedChain (src, tgt)) = 
+  return $ JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concIdx
+                , jgeTarget = show tid ++ ":p" ++ show premIdx
+                , jgeRelation = "unsolvedChain"
+                }
+                where 
+                  (sid, ConcIdx concIdx) = src
+                  (tid, PremIdx premIdx) = tgt
 
--- | Generate JSON data structure for unsolvedActionAtom.
-unsolvedActionAtomsToJSONGraphNode :: Bool -> (NodeId, LNFact) -> JSONGraphNode
-unsolvedActionAtomsToJSONGraphNode pretty (n, f) =
-    JSONGraphNode 
-      { jgnId = show n
-      , jgnType     = "unsolvedActionAtom"
-      , jgnLabel    = case pretty of
-                        True  -> pps $ prettyLNFact f
-                        False -> ""
-      , jgnMetadata = 
-          Just JSONGraphNodeMetadata 
-            { jgnPrems = []
-            , jgnActs  = [itemToJSONGraphNodeFact pretty "action" f] 
-            , jgnConcs = [] 
-            }
-     }    
+-- | Generate JSONGraphCluster from a cluster of an abstract graph.
+graphClusterToJSONGraphCluster :: Cluster -> RJSON JSONGraphCluster 
+graphClusterToJSONGraphCluster cluster = do
+  jnodes <- mapM graphNodeToJSONGraphNode $ get cNodes cluster
+  jedges <- mapM graphEdgeToJSONGraphEdge $ get cEdges cluster
+  return $ JSONGraphCluster 
+    { jgcName = get cName cluster
+    , jgcNodes = jnodes
+    , jgcEdges = jedges
+    }
 
-{-|
-  Generate a JSONGraphNode for those nodes in sEdges that are not present in sNodes. 
-  This might occur in the case distinctions shown in the GUI.
-  Since a fact is missing, the id is encoded as jgnFactId, could also be done directly in jgnId.
--}
-missingNodesToJSONGraphNodes :: System -> [Edge] -> [JSONGraphNode]
-missingNodesToJSONGraphNodes _ [] = []
-missingNodesToJSONGraphNodes se ((Edge (sid, _) (tid, _)):el) 
-    | notElem sid nodelist = 
-         (JSONGraphNode 
-            { jgnId = show sid
-            , jgnType = "missingNodeConc"
-            , jgnLabel = ""
-            , jgnMetadata = 
-                Just JSONGraphNodeMetadata 
-                  { jgnPrems = []
-                  , jgnActs  = []
-                  , jgnConcs = 
-                      [ JSONGraphNodeFact 
-                          { jgnFactId    = show sid ++":c0"
-                          , jgnFactTag   = ""
-                          , jgnFactName  = ""
-                          , jgnFactMult  = ""
-                          , jgnFactTerms = []   
-                          , jgnFactShow  = ""
-                          }
-                      ]
-                  }
-            }: missingNodesToJSONGraphNodes se el)
-    | notElem tid nodelist = 
-         (JSONGraphNode 
-            { jgnId = show tid
-            , jgnType = "missingNodePrem"
-            , jgnLabel = ""
-            , jgnMetadata = 
-                Just JSONGraphNodeMetadata 
-                  { jgnPrems = 
-                      [ JSONGraphNodeFact 
-                          { jgnFactId    = show tid ++":p0"
-                          , jgnFactTag   = ""
-                          , jgnFactName  = ""
-                          , jgnFactMult  = ""
-                          , jgnFactTerms = []
-                          , jgnFactShow = ""
-                          }
-                      ] 
-                  , jgnActs  = []
-                  , jgnConcs = []
-                  }
-            }: missingNodesToJSONGraphNodes se el)
-    | otherwise = (missingNodesToJSONGraphNodes se el)
-    where 
-      nodelist = map fst $ M.toList $ L.get sNodes se
+-- | Generate JSONGraphAbbrev from an abbreviation of an abstract graph.
+graphAbbrevtoJSONGraphAbbrev :: (LNTerm, (LNTerm, LNTerm)) -> RJSON JSONGraphAbbrev
+graphAbbrevtoJSONGraphAbbrev (term, (abbrev, recursiveExpansion)) = do
+  pretty <- getPretty
+  return JSONGraphAbbrev
+    { jgaTerm = lntermToJSONGraphNodeTerm pretty term
+    , jgaAbbrev = lntermToJSONGraphNodeTerm pretty abbrev
+    , jgaExpansion = lntermToJSONGraphNodeTerm pretty recursiveExpansion
+    }
 
--- | Generate JSON data structure for edges.
-edgeToJSONGraphEdge :: System -> Edge -> JSONGraphEdge
-edgeToJSONGraphEdge se (Edge src tgt)  =
-    JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concidx
-                  , jgeTarget = show tid ++ ":p" ++ show premidx
-                  , jgeRelation = getRelationType src tgt se
-                  }
-                  where 
-                    (sid, ConcIdx concidx) = src
-                    (tid, PremIdx premidx) = tgt
 
--- | Generate JSON data structure for lessAtoms edge.
-lessAtomsToJSONGraphEdge :: (NodeId, NodeId) -> JSONGraphEdge
-lessAtomsToJSONGraphEdge (src, tgt) =
-    JSONGraphEdge { jgeSource = show src
-                  , jgeRelation = "LessAtoms"
-                  , jgeTarget = show tgt
-                  }
+-- | Generate JSON graph(s) data structure from an abstract graph.
+sequentToJSONGraph :: String     -- ^ label of graph
+                   -> RJSON JSONGraph
+sequentToJSONGraph label = do
+  graph <- getGraph
+  let repr = get gRepr graph 
+      abbrevs = get gAbbreviations graph
+  jnodes <- mapM graphNodeToJSONGraphNode (L.get grNodes repr)
+  jedges <- mapM graphEdgeToJSONGraphEdge (L.get grEdges repr)
+  jclusters <- mapM graphClusterToJSONGraphCluster (L.get grClusters repr)
+  jabbrevs <- mapM graphAbbrevtoJSONGraphAbbrev $ M.toList abbrevs
+  return $ JSONGraph 
+            { jgDirected = True
+            , jgType  = "Tamarin prover constraint system"
+            , jgLabel = label
+            , jgNodes = jnodes
+            , jgEdges = jedges
+            , jgClusters = jclusters
+            , jgAbbrevs = jabbrevs
+            } 
 
--- | Generate JSON data structure for unsolvedChain edge.
-unsolvedchainToJSONGraphEdge :: (NodeConc, NodePrem) -> JSONGraphEdge
-unsolvedchainToJSONGraphEdge (src, tgt)  =
-    JSONGraphEdge { jgeSource = show sid ++ ":c" ++ show concidx
-                  , jgeTarget = show tid ++ ":p" ++ show premidx
-                  , jgeRelation = "unsolvedChain"
-                  }
-                  where 
-                    (sid, ConcIdx concidx) = src
-                    (tid, PremIdx premidx) = tgt
+sequentsToJSONGraphs :: Bool 
+                     -> [(String, Graph)] 
+                     -> JSONGraphs
+sequentsToJSONGraphs pretty systems = 
+    let jsonGraphs = map (\(label, graph) -> (`runReader` (pretty, graph)) $ sequentToJSONGraph label) systems in
+    JSONGraphs {
+      graphs = jsonGraphs
+    }
 
--- | Generate JSON graph(s) data structure from sequent.
-sequentToJSONGraphs :: Bool       -- ^ determines whether facts etc are also pretty printed
-                    -> String     -- ^ label of graph
-                    -> System     -- ^ sequent to dump to JSON
-                    -> JSONGraphs
-sequentToJSONGraphs pretty label se = 
-    JSONGraphs 
-      { graphs = 
-          [ JSONGraph 
-              { jgDirected = True
-              , jgType  = "Tamarin prover constraint system"
-              , jgLabel = label
-              , jgNodes = (map (nodeToJSONGraphNode pretty) $ M.toList $ L.get sNodes se)
-                          ++ (lastAtomToJSONGraphNode $ L.get sLastAtom se)
-                          ++ (map (unsolvedActionAtomsToJSONGraphNode pretty) $ unsolvedActionAtoms se)
-                          ++ (missingNodesToJSONGraphNodes se $ S.toList $ L.get sEdges se)
-              , jgEdges = (map (edgeToJSONGraphEdge se) $ S.toList $ L.get sEdges se)
-                          ++ (map lessAtomsToJSONGraphEdge $ S.toList $ getLessAtoms se)
-                          ++ (map unsolvedchainToJSONGraphEdge $ unsolvedChains se)
-              } 
-          ] 
-      }
-
--- | Generate JSON bytestring from sequent.
-sequentToJSON :: String -> System -> String
-sequentToJSON l se =
-    BC.unpack $ encode (sequentToJSONGraphs False l se)
+-- | Generate JSON bytestring from an abstract graph.
+sequentsToJSON :: GraphOptions -> [(String, System)] -> String
+sequentsToJSON graphOptions systems =
+  let graphs = map (\(label, system) -> (label, systemToGraph system graphOptions)) systems
+      graphJSON = sequentsToJSONGraphs False graphs
+  in
+    BC.unpack $ encode graphJSON
 
 -- | NOTE (dschoop): encodePretty encodes < and > as "\u003c" and "\u003e" respectively.
 -- The encoding is removed with function removePseudoUnicode since Data.Strings.Util is non-standard.
 -- The function encodePretty returns Data.ByteString.Lazy.Internal.ByteString containing
 -- 8-bit bytes. However, eventually some other ByteString or String is expected by writeFile 
 -- in /src/Web/Theory.hs.
-sequentToJSONPretty :: String -> System -> String
-sequentToJSONPretty l se =
-    removePseudoUnicode $ BC.unpack $ encodePretty $ sequentToJSONGraphs True l se
+sequentsToJSONPretty :: GraphOptions -> [(String, System)] -> String
+sequentsToJSONPretty graphOptions systems =
+  let graphs = map (\(label, system) -> (label, systemToGraph system graphOptions)) systems
+      graphJSON = sequentsToJSONGraphs True graphs
+  in
+    removePseudoUnicode $ BC.unpack $ encodePretty graphJSON
 
-writeSequentAsJSONToFile :: FilePath -> String -> System -> IO ()
-writeSequentAsJSONToFile fp l se =
-    do writeFile fp $ sequentToJSON l se
+-- | Generate JSON bytestring from an abstract graph and write to a file.
+writeSequentAsJSONToFile :: FilePath -> GraphOptions -> String -> System -> IO ()
+writeSequentAsJSONToFile fp graphOptions l se =
+  do writeFile fp $ sequentsToJSON graphOptions [(l, se)]
 
-writeSequentAsJSONPrettyToFile :: FilePath -> String -> System -> IO ()
-writeSequentAsJSONPrettyToFile fp l se =
-    do writeFile fp $ sequentToJSONPretty l se
+-- | Generate JSON bytestring with pretty formatting from an abstract graph and write to a file.
+writeSequentAsJSONPrettyToFile :: FilePath -> GraphOptions -> String -> System -> IO ()
+writeSequentAsJSONPrettyToFile fp graphOptions l se =
+  do writeFile fp $ sequentsToJSONPretty graphOptions [(l, se)]

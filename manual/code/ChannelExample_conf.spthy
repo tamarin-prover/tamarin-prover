@@ -1,0 +1,52 @@
+theory ChannelExample_conf
+begin
+
+
+/* Alice&Bob specification (sent over a confidential channel)
+
+	I: 	fresh(n)
+	I -> R: n 
+
+*/
+
+/* Channel rules */
+
+rule ChanOut_C:
+        [ Out_C($A,$B,x) ]
+      --[ ChanOut_C($A,$B,x) ]->
+        [ !Conf($B,x) ]
+
+rule ChanIn_C:
+        [ !Conf($B,x), In($A) ]
+      --[ ChanIn_C($A,$B,x) ]->
+        [ In_C($A,$B,x) ]
+
+rule ChanIn_CAdv:
+	[ In(<$A,$B,x>) ]
+        -->
+        [ In_C($A,$B,x) ]
+
+/* Protocol */
+
+rule I_1: 
+	[ Fr(~n) ]
+      --[ Send($I,~n), Secret_I(~n) ]-> 
+	[ Out_C($I,$R,~n) ]
+		
+rule R_1:
+	[ In_C($I,$R,~n)  ]
+      --[ Secret_R(~n), Authentic($I,~n) ]->
+	[ ]
+
+/* Security Properties */
+
+lemma nonce_secret_initiator: 
+	"All n #i #j. Secret_I(n) @i & K(n) @j ==> F"
+
+lemma nonce_secret_receiver: 
+	"All n #i #j. Secret_R(n) @i & K(n) @j ==> F"
+
+lemma message_authentication: 
+	"All I n #j. Authentic(I,n) @j ==> Ex #i. Send(I,n) @i &i<j"
+
+end

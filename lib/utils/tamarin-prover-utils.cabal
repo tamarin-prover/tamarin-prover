@@ -47,13 +47,17 @@ library
       , deepseq
       , dlist
       , fclabels
+      , list-t
       , mtl
       , pretty
       , safe
       , syb
       , time
+      , split
       , transformers
       , exceptions
+      , graphviz
+      , text
 
     hs-source-dirs: src
 
@@ -84,6 +88,7 @@ library
         System.Timing
 
         Debug.Trace.Ignore
+        Debug.Trace.EnvTracer
 
         Utils.Misc
 

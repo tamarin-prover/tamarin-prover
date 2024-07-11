@@ -1,6 +1,7 @@
 .hsenv
 hsenv.log
 dist
+dist-newstyle
 cabal-dev
 testbed
 case-studies/**/*.spthy

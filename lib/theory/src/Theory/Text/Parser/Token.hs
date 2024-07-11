@@ -2,7 +2,6 @@
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Tokenizing infrastructure
@@ -99,6 +98,7 @@ module Theory.Text.Parser.Token (
   , brackets
   , singleQuoted
   , doubleQuoted
+  , stringLiteral
 
   -- * List parsing
   , commaSep
@@ -313,6 +313,10 @@ commaSep1 = flip sepEndBy1 comma
 list :: Parser a -> Parser [a]
 list = brackets . commaSep
 
+-- | Parse an arbitrary string literal
+stringLiteral :: Parser String
+stringLiteral = T.stringLiteral spthy
+
 -- | A formal comment; i.e., (header, body)
 formalComment :: Parser (String, String)
 formalComment = T.lexeme spthy $ do
@@ -381,17 +385,22 @@ nodevar = asum
   , (\(n, i) -> LVar n LSortNode i) <$> indexedIdentifier ]
   <?> "timepoint variable"
 
+-- | Parse a non-empty single-quoted string
+-- | that does not contain a single-quote or newline.
+singleQuotedString :: Parser String
+singleQuotedString = singleQuoted $ many1 (noneOf "'\n")
+
 -- | Parse a literal fresh name, e.g., @~'n'@.
 freshName :: Parser String
-freshName = try (symbol "~" *> singleQuoted identifier)
+freshName = try (symbol "~" *> singleQuotedString)
 
 -- | Parse a literal public name, e.g., @'n'@.
 pubName :: Parser String
-pubName = singleQuoted identifier
+pubName = singleQuotedString
 
 -- | Parse a literal nat name, e.g. @%'n'@.
 natName :: Parser String
-natName = try (symbol "%" *> singleQuoted identifier)
+natName = try (symbol "%" *> singleQuotedString)
 
 -- | Parse a Sapic Type
 typep :: Parser SapicType

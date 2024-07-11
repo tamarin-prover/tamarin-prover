@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Pretty-printing with support for HTML markup and proper HTML escaping.

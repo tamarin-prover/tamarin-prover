@@ -28,14 +28,12 @@ import         Sapic.Annotation
 import         Sapic.States
 import         Sapic.Report
 import         Sapic.Typing
-import         Sapic.Exceptions
 
 import         RuleTranslation
 
 import         System.IO.Unsafe
 import         System.IO
 import           Control.Monad.Fresh
-import           Control.Exception
 import qualified Control.Monad.Trans.PreciseFresh as Precise
 
 import qualified Data.Set as S
@@ -93,8 +91,8 @@ translationWarning s cont = unsafePerformIO printWarning
 -- Core Proverif Export
 ------------------------------------------------------------------------------
 
-proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> [d] -> d
-proverifTemplate headers queries process macroproc ruleproc lemmas =
+proverifTemplate :: Document d => [d] -> [d] -> d -> [d] -> [d] -> [d] -> [d] -> d
+proverifTemplate headers queries process macroproc ruleproc lemmas comments =
   vcat headers
     $$ vcat queries
     $$ vcat lemmas
@@ -102,13 +100,14 @@ proverifTemplate headers queries process macroproc ruleproc lemmas =
     $$ vcat ruleproc
     $$ text "process"
     $$ nest 4 process
+    $--$ vcat (intersperse (text "") comments)
 
 prettyProVerifTheory :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> (OpenTheory, TypingEnvironment) -> IO Doc
 prettyProVerifTheory lemSel (thy, typEnv) = do
   headers <- loadHeaders tc thy typEnv
   headers2 <- checkDuplicates $ (S.toList . filterHeaders $ baseHeaders `S.union` headers `S.union` prochd `S.union` macroprochd) ++ S.toList (filterHeaders ruleHeaders)
   let hd = attribHeaders tc headers2
-  return $ proverifTemplate hd queries proc' macroproc ruleproc lemmas
+  return $ proverifTemplate hd queries proc' macroproc ruleproc lemmas comments
   where
     tc = emptyTC {predicates = theoryPredicates thy}
     (proc, prochd, hasBoundState, hasUnboundState) = loadProc tc thy
@@ -130,6 +129,7 @@ prettyProVerifTheory lemSel (thy, typEnv) = do
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
     uncurry4 f (a,b,c,d) = f a b c d
+    comments = [ text "(*" $$ text bd $$ text "*)" | (_, bd) <- theoryFormalComments thy ]
 
 -- ProVerif Headers need to be ordered, and declared only once. We order them by type, and will update a set of headers.
 data ProVerifHeader
@@ -244,12 +244,13 @@ loadQueries thy =
 -- Core Proverif Equivalence Export
 ------------------------------------------------------------------------------
 
-proverifEquivTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> d
-proverifEquivTemplate headers queries equivlemmas macroproc =
+proverifEquivTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> [d] -> d
+proverifEquivTemplate headers queries equivlemmas macroproc comments =
   vcat headers
     $$ vcat queries
     $$ vcat macroproc
     $$ vcat equivlemmas
+    $--$ vcat (intersperse (text "") comments)
 
 prettyProVerifEquivTheory :: (OpenTheory, TypingEnvironment) -> IO Doc
 prettyProVerifEquivTheory (thy, typEnv) = do
@@ -257,7 +258,7 @@ prettyProVerifEquivTheory (thy, typEnv) = do
   headers2 <- checkDuplicates . S.toList . filterHeaders $ baseHeaders `S.union` headers `S.union` equivhd `S.union` diffEquivhd `S.union` macroprochd
   let hd = attribHeaders tc headers2
   fproc <- finalproc
-  return $ proverifEquivTemplate hd queries fproc macroproc
+  return $ proverifEquivTemplate hd queries fproc macroproc comments
   where
     tc = emptyTC {predicates = theoryPredicates thy}
     (equivlemmas, equivhd, hasBoundState, hasUnboundState) = loadEquivProc tc thy
@@ -271,17 +272,19 @@ prettyProVerifEquivTheory (thy, typEnv) = do
     (macroproc, macroprochd) =
       -- if stateM is not empty, we have inlined the process calls, so we don't reoutput them
       if hasBoundState then ([text ""], S.empty) else loadMacroProc tc thy
+    comments = [ text "(*" $$ text bd $$ text "*)" | (_, bd) <- theoryFormalComments thy ]
 
 ------------------------------------------------------------------------------
 -- Core DeepSec Export
 ------------------------------------------------------------------------------
 
-deepsecTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> d
-deepsecTemplate headers macroproc requests equivlemmas =
+deepsecTemplate :: Document d => [d] -> [d] -> [d] -> [d] -> [d] -> d
+deepsecTemplate headers macroproc requests equivlemmas comments =
   vcat headers
     $$ vcat macroproc
     $$ vcat requests
     $$ vcat equivlemmas
+    $--$ vcat (intersperse (text "") comments)
 
 emptyTypeEnv :: TypingEnvironment
 emptyTypeEnv = TypingEnvironment {vars = M.empty, events = M.empty, funs = M.empty}
@@ -296,12 +299,13 @@ prettyDeepSecTheory thy = do
                 `S.union` macroprochd
                 `S.union` equivhd
             )
-  return $ deepsecTemplate hd macroproc requests equivlemmas
+  return $ deepsecTemplate hd macroproc requests equivlemmas comments
   where
     tc = emptyTC {trans = DeepSec}
     requests = loadRequests thy
     (macroproc, macroprochd) = loadMacroProc tc thy
     (equivlemmas, equivhd, _, _) = loadEquivProc tc thy
+    comments = [ text "(*" $$ text bd $$ text "*)" | (_, bd) <- theoryFormalComments thy ]
 
 -- Loader of the export functions
 ------------------------------------------------------------------------------
@@ -1040,7 +1044,12 @@ loadLemmas :: (ProtoLemma LNFormula ProofSkeleton -> Bool) -> TranslationContext
 loadLemmas lemSel tc te thy = map (ppLemma te) proverifLemmas
   where
     thyLemmas = theoryLemmas thy
-    proverifLemmas =
+    transformWithPullnots l = case pullnots (L.get lFormula l) of
+      Left fm' -> 
+        translationWarning ("Lemma " ++ L.get lName l ++ "\n" ++ render (prettyLNFormula (L.get lFormula l)) ++" cannot be rewritten s.t. it either has only 1 ¬ or none, the result is:\n" ++ render (prettyLNFormula fm') ++ "!\n\n") 
+        $ L.set lFormula fm' l
+      Right fm' -> L.set lFormula fm' l
+    proverifLemmas = map transformWithPullnots $
       filter
         ( \lem ->
             lemSel lem && case concat [ls | LemmaModule ls <- L.get lAttributes lem] of
@@ -1265,3 +1274,35 @@ makeAnnotations thy p = res
       if isNothing (List.find (== "locations-report") (theoryBuiltins thy))
         then pr
         else translateTermsReport pr
+
+-- | Pull out nots in formula
+pullnots :: LNFormula -> Either LNFormula LNFormula
+pullnots fm = 
+  let fm_partially_rewritten = fixedpoint pullStep fm in -- nots pulled out by pullStep can enable new pull-out steps, so need to compute fixed point
+  if onlyTopLevelNot fm_partially_rewritten
+    then Right fm_partially_rewritten -- in this case, formula is fully rewritten, i.e. has only 1 top-level not or no nots at all
+    else Left fm_partially_rewritten  -- Error with partially rewritten formula
+  where
+    onlyTopLevelNot (Not p) = noNots p -- top-level not expected if rewriting was successful
+    onlyTopLevelNot p       = noNots p -- no top-level not may mean the rewriting has been successful and the formula has no nots at all
+
+    noNots (Not _)      = False -- check that there are no nots below top level
+    noNots (Conn _ p q) = noNots p && noNots q
+    noNots (Qua _ _ p ) = noNots p
+    noNots _            = True
+
+    fixedpoint f phi = if phi /= f phi then fixedpoint f (f phi) else phi
+
+    pullStep fm' = case fm' of
+      Conn And (Not p) (Not q)  -> Not $ p .||. q
+      Conn Or (Not p) (Not q)   -> Not $ p .&&. q
+      Conn Imp p (Not q)        -> Not $ p .&&. q
+      Conn Iff (Not p) q        -> Not $ p .<=>. q
+      Conn Iff p (Not q)        -> Not $ p .<=>. q
+      Conn c p q                -> Conn c (pullStep p) (pullStep q)
+      Qua All x (Not p)         -> Not $ Qua Ex x p
+      Qua Ex x (Not p)          -> Not $ Qua All x p
+      Qua qua x p               -> Qua qua x $ pullStep p
+      Not (Not p)               -> p
+      Not p                     -> Not $ pullStep p
+      _                         -> fm'

@@ -10,8 +10,7 @@ author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
                     Simon Meier <simon.meier@inf.ethz.ch>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
-maintainer:         Simon Meier <simon.meier@inf.ethz.ch>,
-                    Jannik Dreier <research@jannikdreier.net>,
+maintainer:         Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
                     Cas Cremers <cremers@cispa.de>
 copyright:          Benedikt Schmidt, Simon Meier, Cas Cremers, Jannik Dreier, Ralf Sasse, 2010-2023
@@ -51,6 +50,7 @@ library
       , bytestring
       , containers
       , deepseq
+      , directory
       , dlist
       , fclabels
       , filepath
@@ -93,6 +93,10 @@ library
       Theory.Constraint.System.Dot
       Theory.Constraint.System.JSON
       Theory.Constraint.System.Guarded
+      Theory.Constraint.System.Graph.GraphRepr
+      Theory.Constraint.System.Graph.Abbreviation
+      Theory.Constraint.System.Graph.Simplification
+      Theory.Constraint.System.Graph.Graph
 
       Theory.Sapic.Term
       Theory.Sapic.Pattern

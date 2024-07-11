@@ -5,8 +5,7 @@
 -- |
 -- Copyright   : (c) 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
--- 
--- Maintainer  : Simon Meier <iridcode@gmail.com>
+--
 -- Portability : unknown
 --
 -- A monad transformer to enable other *commutative* monads to represent
@@ -18,10 +17,10 @@ module Control.Monad.Trans.Disj (
   , runDisjT
   ) where
 
--- import Control.Applicative
-import Control.Monad.List
-import Control.Monad.Reader
+import Control.Monad
 import Control.Monad.Disj.Class
+import Control.Monad.Reader
+import ListT
 
 
 ------------------------------------------------------------------------------
@@ -33,12 +32,12 @@ newtype DisjT m a = DisjT { unDisjT :: ListT m a }
   deriving (Functor, Applicative, MonadTrans )
 
 -- | Construct a 'DisjT' action.
-disjT :: m [a] -> DisjT m a
-disjT = DisjT . ListT
+disjT :: (Monad m, Foldable m) => m a -> DisjT m a
+disjT = DisjT . fromFoldable
 
 -- | Run a 'DisjT' action.
-runDisjT :: DisjT m a -> m [a]
-runDisjT = runListT . unDisjT
+runDisjT :: Monad m => DisjT m a -> m [a]
+runDisjT = toList . unDisjT
 
 
 
@@ -47,8 +46,6 @@ runDisjT = runListT . unDisjT
 ------------
 
 instance Monad m => Monad (DisjT m) where
-    {-# INLINE return #-}
-    return  = DisjT . return
     {-# INLINE (>>=) #-}
     m >>= f = DisjT $ (unDisjT . f) =<< unDisjT m
 

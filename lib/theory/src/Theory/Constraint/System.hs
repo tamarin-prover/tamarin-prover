@@ -11,7 +11,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- This is the public interface for constructing and deconstructing constraint
@@ -28,6 +27,7 @@ module Theory.Constraint.System (
 
   , Oracle(..)
   , defaultOracle
+  , defaultOracleNames
   , oraclePath
   , maybeSetOracleWorkDir
   , maybeSetOracleRelPath
@@ -38,6 +38,7 @@ module Theory.Constraint.System (
   , Deprio(..)
   -- , Ranking(..)
   , defaultTactic
+  , usesOracle
   , mapInternalTacticRanking
   , maybeSetInternalTacticName
 
@@ -244,6 +245,9 @@ module Theory.Constraint.System (
   , prettyNonGraphSystemDiff
   , prettySource
 
+  , nonEmptyGraph
+  , nonEmptyGraphDiff
+
   ) where
 
 -- import           Debug.Trace
@@ -256,9 +260,9 @@ import           GHC.Generics                         (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.List                            (foldl', partition, intersect,find,intercalate)
+import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy)
 import qualified Data.Map                             as M
-import           Data.Maybe                           (fromMaybe,mapMaybe)
+import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing)
 -- import           Data.Monoid                          (Monoid(..))
 import qualified Data.Monoid                             as Mono
 import qualified Data.Set                             as S
@@ -274,6 +278,8 @@ import           Control.Monad.Reader
 import           Data.Label                           ((:->), mkLabels)
 import qualified Extension.Data.Label                 as L
 
+import           GHC.IO                               (unsafePerformIO)
+
 import           Logic.Connectives
 import           Theory.Constraint.Solver.AnnotatedGoals
 import           Theory.Constraint.System.Constraints 
@@ -284,6 +290,7 @@ import           Theory.Tools.SubtermStore
 import           Theory.Tools.EquationStore
 import           Theory.Tools.InjectiveFactInstances
 
+import           System.Directory                     (doesFileExist)
 import           System.FilePath
 import           Text.Show.Functions()
 import           Utils.Misc 
@@ -414,8 +421,8 @@ sConjDisjEqs = eqsConj . sEqStore
 ------------------------------------------------------------------------------
 
 data Oracle = Oracle {
-    oracleWorkDir :: !FilePath
-  , oracleRelPath :: !FilePath
+    oracleWorkDir :: !(Maybe FilePath)
+  , oracleRelPath :: !(Maybe FilePath)
   }
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -501,9 +508,9 @@ data Tactic a = Tactic{
 -- order of solving in a constraint system.
 data GoalRanking a =
     GoalNrRanking
-  | OracleRanking Oracle
-  | OracleSmartRanking Oracle
-  | InternalTacticRanking (Tactic a)
+  | OracleRanking Bool Oracle
+  | OracleSmartRanking Bool Oracle
+  | InternalTacticRanking Bool (Tactic a)
   | SapicRanking
   | SapicPKCS11Ranking
   | UsefulGoalNrRanking
@@ -527,30 +534,51 @@ defaultHeuristic = Heuristic . defaultRankings
 defaultTactic :: Tactic ProofContext
 defaultTactic = Tactic "default" (SmartRanking False) [] []
 
+usesOracle :: Heuristic a -> Bool
+usesOracle (Heuristic rs) = all isOracleRanking rs
+  where
+    isOracleRanking :: GoalRanking a -> Bool
+    isOracleRanking (OracleRanking _ _) = True
+    isOracleRanking (OracleSmartRanking _ _) = True
+    isOracleRanking (InternalTacticRanking _ _) = True
+    isOracleRanking _ = False
 
 -- Default to "./oracle" in the current working directory.
 defaultOracle :: Oracle
-defaultOracle = Oracle "." "oracle"
+defaultOracle = Oracle Nothing Nothing
+
+-- | Set the oraclename to the default ./theory_filename.oracle for all oracles in a heuristic.
+defaultOracleNames :: FilePath -> [GoalRanking ProofContext] ->[GoalRanking ProofContext]
+defaultOracleNames srcThyInFileName = map (mapOracleRanking remapOracle)
+  where
+    remapOracle o@(Oracle workDir relPath) =
+      if isNothing relPath
+        then if unsafePerformIO (doesFileExist inFileOracleName)
+               then Oracle workDir (Just inFileOracleName)
+               else Oracle workDir (Just "oracle")
+        else o
+    inFileOracleName =
+      last (groupBy (\_ b -> b /= '/') $ head $ groupBy (\_ b -> b /= '.') srcThyInFileName) ++ ".oracle"
 
 maybeSetOracleWorkDir :: Maybe FilePath -> Oracle -> Oracle
-maybeSetOracleWorkDir p o = maybe o (\x -> o{ oracleWorkDir = x }) p
+maybeSetOracleWorkDir p o = o{ oracleWorkDir = p }
 
 maybeSetOracleRelPath :: Maybe FilePath -> Oracle -> Oracle
-maybeSetOracleRelPath p o = maybe o (\x -> o{ oracleRelPath = x }) p
+maybeSetOracleRelPath p o = o{ oracleRelPath = p }
 
 mapOracleRanking :: (Oracle -> Oracle) -> (GoalRanking ProofContext) -> (GoalRanking ProofContext)
-mapOracleRanking f (OracleRanking o) = OracleRanking (f o)
-mapOracleRanking f (OracleSmartRanking o) = OracleSmartRanking (f o)
+mapOracleRanking f (OracleRanking b o) = OracleRanking b (f o)
+mapOracleRanking f (OracleSmartRanking b o) = OracleSmartRanking b (f o)
 mapOracleRanking _ r = r
 
 oraclePath :: Oracle -> FilePath
-oraclePath (Oracle oracleWorkDir_ oracleRelPath_) = oracleWorkDir_ </> normalise oracleRelPath_
+oraclePath (Oracle oracleWorkDir_ oracleRelPath_) = fromMaybe "." oracleWorkDir_ </> normalise (fromMaybe "" oracleRelPath_)
 
 maybeSetInternalTacticName :: Maybe String -> Tactic ProofContext -> Tactic ProofContext
 maybeSetInternalTacticName s t = maybe t (\x -> t{ _name = x }) s
 
 mapInternalTacticRanking :: (Tactic ProofContext -> Tactic ProofContext) -> GoalRanking ProofContext -> GoalRanking ProofContext
-mapInternalTacticRanking f (InternalTacticRanking t) = InternalTacticRanking (f t)
+mapInternalTacticRanking f (InternalTacticRanking q t) = InternalTacticRanking q (f t)
 mapInternalTacticRanking _ r = r
 
 
@@ -558,15 +586,15 @@ goalRankingIdentifiers :: M.Map String (GoalRanking ProofContext)
 goalRankingIdentifiers = M.fromList
                         [ ("s", SmartRanking False)
                         , ("S", SmartRanking True)
-                        , ("o", OracleRanking defaultOracle)
-                        , ("O", OracleSmartRanking defaultOracle)
+                        , ("o", OracleRanking False defaultOracle)
+                        , ("O", OracleSmartRanking False defaultOracle)
                         , ("p", SapicRanking)
                         , ("P", SapicPKCS11Ranking)
                         , ("c", UsefulGoalNrRanking)
                         , ("C", GoalNrRanking)
                         , ("i", InjRanking False)
                         , ("I", InjRanking True)
-                        , ("{.}", InternalTacticRanking defaultTactic)
+                        , ("{.}", InternalTacticRanking False defaultTactic)
                         ]
 
 goalRankingIdentifiersNoOracle :: M.Map String (GoalRanking ProofContext)
@@ -598,11 +626,11 @@ goalRankingIdentifiersDiff :: M.Map String (GoalRanking ProofContext)
 goalRankingIdentifiersDiff  = M.fromList
                             [ ("s", SmartDiffRanking)
                             , ("S", SmartRanking True)
-                            , ("o", OracleRanking defaultOracle)
-                            , ("O", OracleSmartRanking defaultOracle)
+                            , ("o", OracleRanking False defaultOracle)
+                            , ("O", OracleSmartRanking False defaultOracle)
                             , ("c", UsefulGoalNrRanking)
                             , ("C", GoalNrRanking)
-                            , ("{.}", InternalTacticRanking defaultTactic)
+                            , ("{.}", InternalTacticRanking False defaultTactic)
                             ]
 
 goalRankingIdentifiersDiffNoOracle :: M.Map String (GoalRanking ProofContext)
@@ -650,7 +678,7 @@ listGoalRankingsDiff noOracle = M.foldMapWithKey
 
 
 filterHeuristic :: Bool -> String -> [GoalRanking ProofContext]
-filterHeuristic diff  ('{':t) = if '}' `elem` t then InternalTacticRanking (Tactic (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic diff $ tail $ dropWhile (/= '}') t) else error "A call to a tactic is supposed to end by '}' "
+filterHeuristic diff  ('{':t) = if '}' `elem` t then InternalTacticRanking False (Tactic (takeWhile (/= '}') t) (SmartRanking False) [] []):(filterHeuristic diff $ tail $ dropWhile (/= '}') t) else error "A call to a tactic is supposed to end by '}' "
 filterHeuristic False (c:t)   = (stringToGoalRanking False [c]):(filterHeuristic False t)
 filterHeuristic True  (c:t)   = (stringToGoalRankingDiff False [c]):(filterHeuristic True t)
 filterHeuristic   _   ("")    = []
@@ -660,26 +688,30 @@ goalRankingName :: GoalRanking ProofContext -> String
 goalRankingName ranking =
     "Goals sorted according to " ++ case ranking of
         GoalNrRanking                 -> "their order of creation"
-        OracleRanking oracle          -> "an oracle for ranking, located at " ++ oraclePath oracle
-        OracleSmartRanking oracle     -> "an oracle for ranking based on 'smart' heuristic, located at " ++ oraclePath oracle
+        OracleRanking _ oracle        -> "an oracle for ranking, located at " ++ printOracle oracle
+        OracleSmartRanking _ oracle   -> "an oracle for ranking based on 'smart' heuristic, located at " ++ printOracle oracle
         UsefulGoalNrRanking           -> "their usefulness and order of creation"
         SapicRanking                  -> "heuristics adapted for processes"
         SapicPKCS11Ranking            -> "heuristics adapted to a specific model of PKCS#11 expressed using SAPIC. deprecated."
         SmartRanking useLoopBreakers  -> "the 'smart' heuristic" ++ loopStatus useLoopBreakers
         SmartDiffRanking              -> "the 'smart' heuristic (for diff proofs)"
         InjRanking useLoopBreakers    -> "heuristics adapted to stateful injective protocols" ++ loopStatus useLoopBreakers
-        InternalTacticRanking tactic  -> "the tactic written in the theory file: "++ _name tactic
+        InternalTacticRanking _ tactic -> "the tactic written in the theory file: "++ _name tactic
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
+     printOracle o@(Oracle workDir relPath) =
+      if isNothing relPath 
+        then fromMaybe "" workDir </> "theory_filename.oracle"
+        else oraclePath o
 
 prettyGoalRankings :: [GoalRanking ProofContext] -> String
 prettyGoalRankings rs = unwords (map prettyGoalRanking rs)
 
 prettyGoalRanking :: GoalRanking ProofContext -> String
 prettyGoalRanking ranking = case ranking of
-    OracleRanking oracle            -> findIdentifier ranking ++ " \"" ++ oracleRelPath oracle ++ "\""
-    OracleSmartRanking oracle       -> findIdentifier ranking ++ " \"" ++ oracleRelPath oracle ++ "\""
-    InternalTacticRanking tactic    -> '{':_name tactic++"}"
+    OracleRanking _ oracle          -> findIdentifier ranking ++ " \"" ++ fromMaybe "" (oracleRelPath oracle) ++ "\""
+    OracleSmartRanking _ oracle     -> findIdentifier ranking ++ " \"" ++ fromMaybe "" (oracleRelPath oracle) ++ "\""
+    InternalTacticRanking _ tactic  -> '{':_name tactic++"}"
     _                         -> findIdentifier ranking
   where
     findIdentifier r = case find (compareRankings r . snd) combinedIdentifiers of
@@ -690,9 +722,9 @@ prettyGoalRanking ranking = case ranking of
     -- this assumes the diff rankings don't use a different character for the same goal ranking.
     combinedIdentifiers = M.toList goalRankingIdentifiers ++ M.toList goalRankingIdentifiersDiff
 
-    compareRankings (OracleRanking _) (OracleRanking _) = True
-    compareRankings (OracleSmartRanking _) (OracleSmartRanking _) = True
-    compareRankings (InternalTacticRanking _ ) (InternalTacticRanking _ ) = True
+    compareRankings (OracleRanking _ _) (OracleRanking _ _) = True
+    compareRankings (OracleSmartRanking _ _) (OracleSmartRanking _ _) = True
+    compareRankings (InternalTacticRanking _ _) (InternalTacticRanking _ _) = True
     compareRankings r1 r2 = r1 == r2
 
 
@@ -1892,3 +1924,20 @@ compareSystemsUpToNewVars
             compareNodes = compareNodesUpToNewVars a1 a2
 -- in case of diff systems, we remain prudent
 compareSystemsUpToNewVars s1 s2 = compare s1 s2
+
+
+-- | 'True' iff the dotted system will be a non-empty graph.
+nonEmptyGraph :: System -> Bool
+nonEmptyGraph sys = not $
+    M.null (L.get sNodes sys) && null (unsolvedActionAtoms sys) &&
+    null (unsolvedChains sys) &&
+    S.null (L.get sEdges sys) && S.null (L.get sLessAtoms sys)
+
+-- | 'True' iff the dotted system will be a non-empty graph.
+nonEmptyGraphDiff :: DiffSystem -> Bool
+nonEmptyGraphDiff diffSys = not $
+     case (L.get dsSystem diffSys) of
+          Nothing    -> True
+          (Just sys) -> M.null (L.get sNodes sys) && null (unsolvedActionAtoms sys) &&
+                        null (unsolvedChains sys) &&
+                        S.null (L.get sEdges sys) && S.null (L.get sLessAtoms sys)

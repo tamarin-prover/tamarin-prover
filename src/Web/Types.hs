@@ -15,7 +15,6 @@ Description :  Central data type and Yesod typeclass instances.
 Copyright   :  (c) 2011 Cedric Staub
 License     :  GPL-3
 
-Maintainer  :  Simon Meier <iridcode@gmail.com>
 Stability   :  experimental
 Portability :  non-portable
 -}
@@ -51,6 +50,8 @@ module Web.Types
   -- Image rendering
   , ImageFormat(..)
   , imageFormatMIME
+  , OutputFormat(..)
+  , OutputCommand(..)
   )
 where
 
@@ -105,9 +106,22 @@ type ThreadMap = M.Map T.Text ThreadId
 -- | The image format used for rendering graphs.
 data ImageFormat = PNG | SVG
 
+-- | The output format for serializing a graph.
+data OutputFormat = OutJSON | OutDot 
+
+-- | Describes how a constraint system should be converted to an image. 
+data OutputCommand = OutputCommand 
+  { ocFormat       :: OutputFormat 
+  , ocGraphCommand :: FilePath 
+  }
+
 instance Show ImageFormat where
     show PNG = "png"
     show SVG = "svg"
+
+instance Show OutputFormat where
+    show OutJSON = "json"
+    show OutDot  = "dot"
 
 -- | convert image format to MIME type.
 imageFormatMIME :: ImageFormat -> String
@@ -136,7 +150,7 @@ data WebUI = WebUI
     -- ^ MVar that holds the thread map
   , autosaveProofstate :: Bool
     -- ^ Automatically store theory map
-  , graphCmd           :: (String, FilePath)
+  , outputCmd           :: OutputCommand
     -- ^ The dot or json command with additional flag to indicate choice dot, json, ...
   , imageFormat        :: ImageFormat
     -- ^ The image-format used for rendering graphs
@@ -563,7 +577,7 @@ mkYesodData "WebUI" [parseRoutes|
 /thy/trace/#Int/main/*TheoryPath              TheoryPathMR            GET
 -- /thy/trace/#Int/debug/*TheoryPath             TheoryPathDR            GET
 /thy/trace/#Int/graph/*TheoryPath             TheoryGraphR            GET
-/thy/trace/#Int/autoprove/#SolutionExtractor/#Int/*TheoryPath AutoProverR             GET
+/thy/trace/#Int/autoprove/#SolutionExtractor/#Int/#Bool/*TheoryPath AutoProverR             GET
 /thy/trace/#Int/autoproveAll/#SolutionExtractor/#Int/*TheoryPath AutoProverAllR             GET
 /thy/trace/#Int/next/#String/*TheoryPath      NextTheoryPathR         GET
 /thy/trace/#Int/prev/#String/*TheoryPath      PrevTheoryPathR         GET

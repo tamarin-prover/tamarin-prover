@@ -5,8 +5,9 @@ version:            1.9.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
-author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
-                    Simon Meier <simon.meier@inf.ethz.ch>,
+author:             Benedikt Schmidt,
+                    Simon Meier,
+                    Cas Cremers <cremers@cispa.de>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
 maintainer:         Cas Cremers <cremers@cispa.de>,
@@ -103,12 +104,10 @@ flag build-tests
 ----------------------
 
 executable tamarin-prover
-    default-language: Haskell2010
+    default-language: GHC2021
 
     if flag(threaded)
-        ghc-options:   -threaded -eventlog
-
-    -- -XFlexibleInstances
+        ghc-options:   -threaded
 
     ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing -main-is Main
     ghc-prof-options:  -auto-all
@@ -186,7 +185,9 @@ executable tamarin-prover
 
       Test.ParserTests
 
-    other-extensions:
+    default-extensions:
+      DuplicateRecordFields
+      OverloadedRecordDot
       TemplateHaskell
 
 

@@ -1,0 +1,46 @@
+#!/usr/bin/python3
+
+import sys, re
+
+file_name = sys.argv[1]
+
+content = open(file_name).read()
+clean_content = ''
+i = 0
+len = len(content)
+
+try:
+	while i < len:
+		if content[i] == '/':
+			if content[i+1] == '*':			
+				count = 1
+				i += 2
+				while i < len:
+					if content[i] == '/' and content[i+1] == '*':
+						count += 1
+					elif content[i] == '*' and content[i+1] == '/':
+						count -= 1
+						if count == 0:
+							i += 2
+							break
+					i += 1
+			elif content[i+1] == '/':
+				while i < len and content[i] != '\n':
+					i += 1
+
+		clean_content += content[i]
+		i += 1
+
+	#remove all empty lines
+	clean_content = re.sub(r'\s*\n', '\n', clean_content)
+
+	#add empty line before each line that starts with a keyword
+	keywords = ['rule', 'lemma', 'restriction', 'builtins',
+							'functions', 'begin', 'equations']
+	for keyword in keywords:
+		clean_content = clean_content.replace('\n'+keyword, '\n\n' + keyword)
+
+	print (clean_content)
+
+except:
+	print (content)
