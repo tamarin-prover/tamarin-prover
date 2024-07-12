@@ -1165,7 +1165,7 @@ prettyRuleAttribute attr = case attr of
     IsSAPiCRule       -> text "issapicrule"
 
 -- | Pretty print the rule name such that it can be used as a case name
-showRuleCaseName :: (HasRuleName (Rule i)) => Rule i -> String
+showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
 showRuleCaseName =
     render . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
