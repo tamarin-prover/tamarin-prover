@@ -749,7 +749,7 @@ getRuleName ru = case ruleName ru of
                                       StandRule s -> s
 
 -- | Returns a protocol rule's name
-getRuleNameDiff :: (HasRuleName (Rule i)) => Rule i -> String
+getRuleNameDiff :: HasRuleName (Rule i) => Rule i -> String
 getRuleNameDiff ru = case ruleName ru of
                       IntrInfo i  -> "Intr" ++ case i of
                                       ConstrRule x      -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
@@ -1004,7 +1004,7 @@ applyMacroInRule mcs (Rule info ruPrems ruConcs ruActs _) = Rule info mRuPrems m
     mRuConcs   = map (applyMacroInFact mcs) ruConcs
     mRuActs    = map (applyMacroInFact mcs) ruActs
     mRuNewVars = newVariables mRuPrems (mRuConcs ++ mRuActs)
-        
+         
 
 -- Unification
 --------------

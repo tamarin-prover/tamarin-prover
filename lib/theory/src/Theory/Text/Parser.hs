@@ -156,7 +156,7 @@ liftedAddProtoRule thy ru
         rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
         thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
         thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
-        return thy''    
+        return thy''
     | otherwise = Catch.throwM TryingToAddFreshRule
             where
                 rfacts = get (preRestriction . rInfo)
