@@ -135,9 +135,8 @@ module Theory.Model.Rule (
 
   -- * Pretty-Printing
   , reservedRuleNames
+  , showDotRuleCaseName
   , showRuleCaseName
-  , showPrettyRuleCaseName
-  , prettyDotProtoRuleName
   , prettyRule
   , prettyRuleRestrGen
   , prettyRuleRestr
@@ -156,8 +155,8 @@ module Theory.Model.Rule (
   , prettyInstLoopBreakers
 
   , prettyIntruderVariants
-  
-  ,isSAPiCRule)  where
+
+  )  where
 
 import           Prelude              hiding (id, (.))
 
@@ -194,8 +193,8 @@ import           Theory.Model.Fact
 import qualified Theory.Model.Formula as F
 import           Theory.Text.Pretty
 import           Theory.Sapic
-import Data.Char (chr, isAlphaNum)
-import Debug.Trace (trace)
+import Data.Char (chr, isDigit)
+import Data.List.Split (splitOn)
 
 -- import           Debug.Trace
 
@@ -358,6 +357,7 @@ data RuleAttribute = RuleColor (RGB Rational) -- Color for display
                              -- dependency to Sapic.Annotations
                              -- need to see what we need here later.
                   | IgnoreDerivChecks
+                  | IsSAPiCRule -- tags the rule as a SAPiC rule
        deriving( Eq, Ord, Show, Data, Generic)
 instance NFData RuleAttribute
 instance Binary RuleAttribute
@@ -665,7 +665,7 @@ isPubConstrRule :: HasRuleName r => r -> Bool
 isPubConstrRule ru = case ruleName ru of
   IntrInfo PubConstrRule   -> True
   _                        -> False
-  
+
 -- | True iff the rule is a construction rule.
 isNatConstrRule :: HasRuleName r => r -> Bool
 isNatConstrRule ru = case ruleName ru of
@@ -1002,12 +1002,12 @@ addAction (Rule info prems concs acts nvs) act =
 -- | Apply macros into a rule
 applyMacroInRule :: [Macro] -> Rule i -> Rule i
 applyMacroInRule mcs (Rule info ruPrems ruConcs ruActs _) = Rule info mRuPrems mRuConcs mRuActs mRuNewVars
-  where 
+  where
     mRuPrems   = map (applyMacroInFact mcs) ruPrems
     mRuConcs   = map (applyMacroInFact mcs) ruConcs
     mRuActs    = map (applyMacroInFact mcs) ruActs
     mRuNewVars = newVariables mRuPrems (mRuConcs ++ mRuActs)
-         
+
 
 -- Unification
 --------------
@@ -1137,16 +1137,22 @@ prettyProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
     StandRule n -> prefixIfReserved n
 
-prettyDotProtoRuleName :: Document d => Bool -> ProtoRuleName -> d
-prettyDotProtoRuleName isSAPiC rn = text $ case rn of
+prettyDotProtoRuleName :: Document d => [RuleAttribute] -> ProtoRuleName -> d
+prettyDotProtoRuleName attrs rn = text $ case rn of
     FreshRule   -> "Fresh"
-    StandRule n -> case isSAPiC of
-      True -> "1"
-      False -> prefixIfReserved n
-      -- SAPiCRuleName s -> if "new" `isPrefixOf` s then chr 957 : drop 3 (takeWhile (/='#') s) else takeWhile (/='#') s
-
-formatSAPiCRuleName :: String -> String
-formatSAPiCRuleName = filter (\x -> isAlphaNum x || (x == '_' && x /= '#'))
+    StandRule n -> if IsSAPiCRule `elem` attrs 
+                     then (if "new" `isPrefixOf` n then chr 957 : drop 3 (trimSapicName n) else trimSapicName n)
+                     else prefixIfReserved n
+    where
+      trimSapicName name =
+        case splitString name of
+          Just (s, n, m) -> if all isDigit n && all isDigit m then s else name
+          Nothing -> name
+      splitString str =
+        let parts = reverse $ splitOn "_" str in
+          if length parts >= 3
+            then Just (intercalate "_" (reverse (drop 2 parts)), head (tail parts), head parts)
+            else Nothing
 
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
@@ -1159,16 +1165,17 @@ prettyRuleAttribute attr = case attr of
               g = map toLNFact
               h = map toLFormula
     IgnoreDerivChecks -> text "derivchecks"
+    IsSAPiCRule       -> text "issapicrule"
 
 -- | Pretty print the rule name such that it can be used as a case name
-showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
+showRuleCaseName :: (HasRuleName (Rule i)) => Rule i -> String
 showRuleCaseName =
     render . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
--- | Pretty print the rule name such that it can be used as a case name in a dot.
-showPrettyRuleCaseName :: HasRuleName (Rule i) => Bool -> Rule i -> String
-showPrettyRuleCaseName isSAPiC =
-    render . ruleInfo (prettyDotProtoRuleName isSAPiC) prettyIntrRuleACInfo . ruleName
+-- | Pretty print the rule name such that it can be used as a case name in a dot node
+showDotRuleCaseName :: (HasRuleName (Rule i), HasRuleAttributes (Rule i)) => Rule i -> String
+showDotRuleCaseName ru =
+    render . ruleInfo (prettyDotProtoRuleName (ruleAttributes ru)) prettyIntrRuleACInfo . ruleName $ ru
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
 prettyIntrRuleACInfo rn = text $ case rn of
@@ -1293,7 +1300,3 @@ prettyIntrVariantsSection rules =
     prettyFormalComment "section" " Finite Variants of the Intruder Rules " $--$
     nest 1 (prettyIntruderVariants rules)
 -}
-isSAPiCRule :: (HasRuleAttributes (Rule i)) => Rule i -> Bool
-isSAPiCRule ru = error ("") $ trace (show (ruleAttributes ru)) $ any (\ra -> case ra of 
-                               Process _ -> True  
-                               _ -> False) $ ruleAttributes ru

@@ -53,7 +53,7 @@ data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
     deriving( Eq, Ord, Show )
 
 -- | Options for dot generation.
-data DotOptions = DotOptions 
+data DotOptions = DotOptions
   { _doNodeStyle :: BoringNodeStyle -- ^ The style for nodes of the intruder.
   , _doAbbrevColor :: D.Color
   }
@@ -94,7 +94,7 @@ cacheState stateAccessor k dot = do
 -- | Retrieve a NodeId from a cached dot component.
 getState :: Ord k
          => (DotState :-> M.Map k D.NodeId)
-         -> k 
+         -> k
          -> String
          -> SeDot D.NodeId
 getState stateAccessor k msg = do
@@ -126,6 +126,7 @@ nodeColorMap rules =
             Just (RuleColor c)     -> c
             Just (Process   _)     -> hsvToRGB $ getColor (gIdx, mIdx)
             Just IgnoreDerivChecks -> hsvToRGB $ getColor (gIdx, mIdx)
+            Just IsSAPiCRule       -> hsvToRGB $ getColor (gIdx, mIdx)
             Nothing                -> hsvToRGB $ getColor (gIdx, mIdx))
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
@@ -149,6 +150,7 @@ nodeColorMap rules =
     colorAttr (RuleColor _)     = True
     colorAttr (Process   _)     = False
     colorAttr IgnoreDerivChecks = False
+    colorAttr IsSAPiCRule       = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational
@@ -165,7 +167,7 @@ renderLNFact fact = do
   let abbreviate = get ((L..) goAbbreviate gOptions) graph
       abbrevs = get gAbbreviations graph
       replacedFact = applyAbbreviationsFact abbrevs fact
-  if abbreviate 
+  if abbreviate
     then return $ prettyLNFact replacedFact
     else return $ prettyLNFact fact
 
@@ -186,7 +188,7 @@ dotNodeCompact node = do
           concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
       modM dsPrems $ M.union $ M.fromList prems
       modM dsConcs $ M.union $ M.fromList concs
-      return $ fromJust $ lookup Nothing ids    
+      return $ fromJust $ lookup Nothing ids
     UnsolvedActionNode facts -> cacheState dsNodes v $ do
       lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
       let lbl = lblPre <-> opAction <-> text (show v)
@@ -214,14 +216,14 @@ dotNodeCompact node = do
 
     mkNode  :: NodeId -> RuleACInst -> [(String, String)] -> Bool -> DotOptions
       -> SeDot [(Maybe (Either PremIdx ConcIdx), D.NodeId)]
-    mkNode v ru attrs outgoingEdge dotOptions 
+    mkNode v ru attrs outgoingEdge dotOptions
       -- single node, share node-id for all premises and conclusions
       | get doNodeStyle dotOptions == CompactBoringNodes &&
         (isIntruderRule ru || isFreshRule ru) = do
             ps <- psM
             as <- asM
             cs <- csM
-            let lbl | outgoingEdge = show v ++ " : " ++ showRuleCaseName ru
+            let lbl | outgoingEdge = show v ++ " : " ++ showDotRuleCaseName ru
                     | otherwise       = concatMap snd as
             nid <- mkSimpleNode lbl []
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
@@ -235,7 +237,7 @@ dotNodeCompact node = do
               filter (not . null) [ps, as, cs]
       where
         psM = do
-          row <- mapM (\(i, p) -> do 
+          row <- mapM (\(i, p) -> do
             lbl <- renderLNFact p
             return (Just (Left i), lbl)
             ) $ enumPrems ru
@@ -249,21 +251,19 @@ dotNodeCompact node = do
             return (Just (Right i), lbl)
             ) $ enumConcs ru
           return $ renderRow row
-        
+
         ruleLabelM = do
           showAutoSource <- asks (get ((L..) goShowAutoSource gOptions) . fst3)
-          case showAutoSource of
-            True -> do
-              lbl <- mapM renderLNFact $ filter isAutoSource
-                     $ filter isNotDiffAnnotation $ get rActs ru
-              return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
-            False -> do 
-              lbl <- mapM renderLNFact $ filter isNotDiffAnnotation $ get rActs ru
-              return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
+          lbl <- if showAutoSource 
+                      then mapM renderLNFact $ filter isAutoSource $ filter isNotDiffAnnotation $ get rActs ru
+                      else mapM renderLNFact $ filter isNotDiffAnnotation $ get rActs ru
+          return $ 
+            prettyNodeId v <-> colon 
+            <-> text (showDotRuleCaseName ru) 
+            <> (if null lbl then mempty else brackets (vcat $ punctuate comma lbl))
 
 
-        isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
-        -- prettyPrintNodeIDRuleName = prettyNodeId v <-> colon <-> text (showPrettyRuleCaseName ru);
+        isNotDiffAnnotation fa = fa /= Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []
         -- check if a fact is from auto-source
         isAutoSource ::  LNFact -> Bool
         isAutoSource (Fact tag _ _) =not $ hasAutoLabel (showFactTag $ tag)
@@ -305,19 +305,19 @@ dotNodeCompact node = do
 
 -- | Dot a normal edge.
 dotEdge :: Edge -> SeDot ()
-dotEdge edge = 
+dotEdge edge =
   case edge of
     SystemEdge (src, tgt) -> do
-      (graph, _, _) <- ask 
+      (graph, _, _) <- ask
       let check p = maybe False p (resolveNodePremFact tgt graph) ||
-                    maybe False p (resolveNodeConcFact src graph) 
+                    maybe False p (resolveNodeConcFact src graph)
           attrs | check isProtoFact =
                     [("style","bold"),("weight","10.0")] ++
                     (guard (check isPersistentFact) >> [("color","gray50")])
                 | check isKFact     = [("color","orangered2")]
                 | otherwise         = [("color","gray30")]
-      dotGenEdge attrs src tgt  
-    UnsolvedChain (src, tgt) -> 
+      dotGenEdge attrs src tgt
+    UnsolvedChain (src, tgt) ->
       dotGenEdge [("style","dotted"),("color","green")] src tgt
     LessEdge _ -> error "LessEdges are handled by dotLessEdge"
   where
@@ -340,7 +340,7 @@ generateLegend = do
   let abbrevs = get gAbbreviations graph
   -- Skip generating anything if no abbreviations exist.
   unless (null abbrevs) $ do
-    nLegend <- liftDot $ D.scope (do 
+    nLegend <- liftDot $ D.scope (do
       D.attribute ("rank", "sink")
       let sortedAbbrevs = topoSortAbbrevs $ zip [0..] $
             sortOn (Data.Ord.Down . render . Sys.prettyLNTerm . fst) $ M.elems abbrevs
@@ -349,7 +349,7 @@ generateLegend = do
       D.node [("shape", "plain"), htmlLabel])
     -- We add invisible edges from all sink nodes of the graph to the legend node to place it somewhere in the middle of the bottom row.
     -- We only add edges from the sink nodes because edges from earlier nodes will be routed avoid later nodes (even if they are invisible) and create constraints that lead to excessive whitespace on the edges of the graph.
-    let sinks = getGraphSinks graph 
+    let sinks = getGraphSinks graph
     dotIds <- getM dsNodes
     mapM_ (\nsink ->
       case M.lookup (get nNodeId nsink) dotIds of
@@ -357,13 +357,13 @@ generateLegend = do
       Just nid -> liftDot $ D.edge nid nLegend [("style", "invis")]) sinks
   where
     -- | Render all abbreviations as a table using graphviz' HTML notation.
-    abbrevLabel sortedAbbrevs labelColor = 
+    abbrevLabel sortedAbbrevs labelColor =
       let tableAttributes = [Border 1, CellBorder 0, CellSpacing 3, CellPadding 1] in
         Table $ HTable Nothing tableAttributes $ map (renderLine labelColor) sortedAbbrevs
 
     -- | Render an abbreviation to a table row in the legend using graphviz' HTML notation.
     renderLine :: D.Color -> (AbbreviationTerm, AbbreviationExpansion) -> Row
-    renderLine labelColor (abbrevName, recursiveExpansion) = 
+    renderLine labelColor (abbrevName, recursiveExpansion) =
       let cellAttributes = [Align HLeft, VAlign HTop]
           font txt = D.Text [Font [Color labelColor] txt]
           name = LabelCell cellAttributes (font [Str $ T.pack $ render $ Sys.prettyLNTerm abbrevName])
@@ -372,7 +372,7 @@ generateLegend = do
           -- The expansions can get pretty big, i.e. span multiple lines. To handle linebreaks we replace them with HTML <br> tags.
           expansionBR = LabelCell cellAttributes (D.Text $ expansion `joinLinesWith` Newline [Align HLeft]) in
       Cells [name, eq, expansionBR]
-    
+
     -- | Replace newlines in `s` with the given separator.
     joinLinesWith :: String -> TextItem -> D.Text
     joinLinesWith s sep = intersperse sep $ map (Str . T.pack) $ lines s
@@ -381,22 +381,22 @@ generateLegend = do
     -- We define a partial order where for two abbreviations A & B, it holds A < B if A appears in the recursive expansion of B.
     -- To extend the partial order to all abbreviations we do a topological sort on the graph where the nodes are abbreviations and edges are based on the partial order.
     topoSortAbbrevs :: [(Int, (AbbreviationTerm, AbbreviationExpansion))] -> [(AbbreviationTerm, AbbreviationExpansion)]
-    topoSortAbbrevs keyedElems = 
+    topoSortAbbrevs keyedElems =
       let edgeList = map (\(key1, node) ->
                             let outlist = findLegendEdges keyedElems node in
                             (node, key1, outlist)) keyedElems
           (graph, vf, _) = G.graphFromEdges edgeList
           vertices = G.topSort graph in
       map (\v -> fst3 $ vf v) vertices
-    
+
     -- | We create an edge A -> B between two abbreviations A & B if A appears in the recursive expansion of B.
     findLegendEdges :: [(Int, (AbbreviationTerm, AbbreviationExpansion))] -> (AbbreviationTerm, AbbreviationExpansion) -> [Int]
     findLegendEdges keyedElems (abbrevName1, _) =
-      mapMaybe (\(key2, (_, recursiveExpansion2)) -> 
+      mapMaybe (\(key2, (_, recursiveExpansion2)) ->
                   if isProperSubterm abbrevName1 recursiveExpansion2
                   then Just key2
-                  else Nothing) keyedElems 
-      
+                  else Nothing) keyedElems
+
 -- | Dot a cluster containing further nodes and edges.
 -- a.d. TODO implement
 dotCluster :: Cluster -> SeDot ()
@@ -405,7 +405,7 @@ dotCluster cluster = return ()
 -- | Dot a sequent in compact form (one record per rule), if there is anything
 -- to draw.
 dotSystemCompact :: GraphOptions -> DotOptions -> System -> D.Dot ()
-dotSystemCompact graphOptions dotOptions se = 
+dotSystemCompact graphOptions dotOptions se =
     let graph = systemToGraph se graphOptions
         -- a.d. TODO make nodeColorMap filter systemnodes from graph instead of accessing System directly.
         colorMap = nodeColorMap (M.elems $ get sNodes se)
@@ -420,13 +420,13 @@ dotGraphCompact dotOptions colorMap graph =
         liftDot $ setDefaultAttributes
         let repr = get gRepr graph
             (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
-            abbreviate = get ((L..) goAbbreviate gOptions) graph 
+            abbreviate = get ((L..) goAbbreviate gOptions) graph
         mapM_ dotNodeCompact (get grNodes repr)
         mapM_ dotEdge restEdges
         mapM_ dotLessEdge lessEdges
         mapM_ dotCluster (get grClusters repr)
 
-        when abbreviate generateLegend 
+        when abbreviate generateLegend
 
 -- | Compute proper colors for all less-edges.
 -- Computing the colors requires all less-edges of the graph, so we cannot do it per edge.
@@ -435,7 +435,7 @@ mergeLessEdges :: [Edge] -> ([(NodeId, NodeId, String)], [Edge])
 mergeLessEdges edges = (merged, rest)
   where
     rest = filter (not . isLessEdge) edges
-    merged = 
+    merged =
       let lessEdges = mapMaybe extractLessEdge edges in
       map getAllRToC $ eqClasses (\(x,y,_) -> (x,y)) lessEdges
 
@@ -450,13 +450,13 @@ mergeLessEdges edges = (merged, rest)
     getAllRToC :: [Less]-> (NodeId,NodeId,String)
     -- SAFETY: Output of eqClasses never contains the empty list.
     getAllRToC [] = error "empty list"
-    getAllRToC (x:xs) = 
+    getAllRToC (x:xs) =
       (fst3 x, snd3 x,
         -- Sort order is reversed to put the "most important reason" first.
         allRtoColors (sortBy (comparing Data.Ord.Down) $ map thd3 (x:xs)))
 
     allRtoColors :: [Reason] -> String
-    allRtoColors reasons = 
+    allRtoColors reasons =
       let len = length reasons
           per = if len >1 then ";" ++ show ((1 :: Double)/fromIntegral len) else ""
           colors = map toColor reasons

@@ -142,7 +142,7 @@ fromRuleRestriction rname f =
                 -- creates restriction with f quantified over free variables
                 -- and varnow
                 mkRestriction f' = Restriction
-                                        (restrPrefix ++ filter (/= '#') rname)
+                                        (restrPrefix ++ rname)
                                         (foldr (hinted forAll) f'' (frees f''))
                                         where
                                             f'' = Ato (Action timepoint fact) .==>. f'
@@ -154,4 +154,4 @@ fromRuleRestriction rname f =
                 getBVarTerms =  map (varTerm . Free) . L.delete varNow . freesList
                 getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
                 -- produce fact from set of terms
-                mkFact = protoFactAnn Linear (restrPrefix ++ filter (/= '#') rname) S.empty
+                mkFact = protoFactAnn Linear (restrPrefix ++ rname) S.empty

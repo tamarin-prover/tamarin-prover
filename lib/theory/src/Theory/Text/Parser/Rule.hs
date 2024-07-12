@@ -70,6 +70,7 @@ ruleAttribute = asum
     , symbol "process="  *> parseAndIgnore
     , symbol "derivchecks" *> ignore
     , symbol "no_derivcheck" *> ignore
+    , symbol "issapicrule" *> return (Just IsSAPiCRule)
     ]
   where
     parseColor = do
