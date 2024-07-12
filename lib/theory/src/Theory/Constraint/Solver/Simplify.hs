@@ -577,7 +577,7 @@ simpInjectiveFactEqMon = do
             StrictlyDecreasing -> simpSingle (StrictlyIncreasing, (j, s), (i, t))
             Constant -> ([GAto $ EqE (lTermToBTerm s) (lTermToBTerm t) | s/=t], [])  -- (1)
             StrictlyIncreasing ->
-                ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t ]  -- (2)
+                ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t]  -- (2)
               ++ [gnotAtom $ EqE (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j || alwaysBefore sys j i, notIneq s t]   -- (4)
               -- ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t]   -- (6)
                 , [(i, j) | triviallySmaller    s t, not $ alwaysBefore sys i j]   -- (3)
@@ -606,17 +606,44 @@ simpInjectiveFactEqMon = do
       getPairs [] _ = []
       getPairs ((tag, behaviours):rest) nodes = paired ++ getPairs rest nodes
         where
-          getPairTerms :: LNTerm -> [LNTerm]
-          getPairTerms (viewTerm2 -> FPair t1 t2) = t1 : getPairTerms t2
-          getPairTerms t = [t]
+          -- Flatten a (n-1)-tuple by only expanding the right-hand side of the tuple
+          -- This function errors when n is bigger than the _length_ of the tuple
+          -- E.g., shapeTerm 2 <t1, t2> = [t1, t2]
+          -- E.g., shapeTerm 2 <<t1, t2>, t3> = [<t1, t2>, t3]
+          -- Note that the above list has only 2 elements as the first tuple is not flattened
+          -- E.g., shapeTerm 3 <t1, t2> throws an error
+          -- Note that this code is identical to existing code in `InjectiveFactInstances.hs`.
+          shapeTerm :: Int -> LNTerm -> [LNTerm]
+          shapeTerm x (viewTerm2 -> FPair t1 t2) | x>1 = t1 : shapeTerm (x-1) t2
+          shapeTerm x t | x>1 = error ("shapeTerm: the term (" ++ show t ++ ") does not have enough pairs."
+            ++ "\nOccured in fact: (" ++ show tag ++") with behavior " ++ show behaviours)
+          shapeTerm x t | x==1 = [t]
+          shapeTerm _ _ = error "shapeTerm: cannot take an integer with size less than 1"
 
+          -- Given an injective fact instance and the behaviour/shape of the corresponding FactTag
+          -- (bound by the behaviours variable introduced in 'getPairs'), return a tuple that contains
+          -- its _injective identitifer_ and 
+          -- E.g., For behaviour/shape = [[=, =]]
+          -- trimmedPairTerms S(~id, <a, b>) = (~id, [(=, a), (=, b)])
+          -- E.g., For behaviour/shape = [[=]]
+          -- trimmedPairTerms S(~id, <a, b>) = (~id, [(=, <a, b>)])
+          -- E.g., For behaviour/shape = [[=, <]]
+          -- trimmedPairTerms S(~id, <<a, b>, c>) = (~id, [(=, <a, b>), (<, c)])
           trimmedPairTerms :: LNFact -> (LNTerm, [(MonotonicBehaviour, LNTerm)])
-          trimmedPairTerms (factTerms -> firstTerm:terms) = (firstTerm, concat $ zipWith zip behaviours (map getPairTerms terms))  -- zip automatically orients itself on the shorter list
+          trimmedPairTerms (factTerms -> firstTerm:terms) = (firstTerm, concat $ zipWith (\behaviour term -> zip behaviour (shapeTerm (length behaviour) term)) behaviours terms )
           trimmedPairTerms _ = error "a fact with no terms cannot be injective"
 
+          -- For each rule instance, filter its rhs for the current injective fact 'tag'
+          -- and compute the pairs via 'trimmedPairTerms'
           behaviourTerms :: M.Map NodeId [(LNTerm, [(MonotonicBehaviour, LNTerm)])]
           behaviourTerms = M.map (map trimmedPairTerms . filter (\x -> factTag x == tag) . get rPrems) nodes  --all node premises with the matching tag
 
+          -- Returns a list of pairs (i, s), (j, t) together with the behaviour b
+          -- between s and t. i and j are the time points where the fact instances
+          -- occured that contain s and t respectively.
+          -- Example: For an injective fact S with behaviour/shape [[=, <]],
+          -- S(~id, <a, b>) @ i and S(~id, <c, d>) @ j, we have
+          -- paired = [(=, (i, a), (j, c)), (<, (i, b), (j, d))]
           paired :: [(MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm))]
           paired = [(b, (i, s), (j,t)) |
             (i, l1) <- M.toList behaviourTerms,
