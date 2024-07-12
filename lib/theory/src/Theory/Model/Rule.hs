@@ -154,9 +154,7 @@ module Theory.Model.Rule (
   , prettyProtoRuleACInstInfo
   , prettyInstLoopBreakers
 
-  , prettyIntruderVariants
-
-  )  where
+  , prettyIntruderVariants)  where
 
 import           Prelude              hiding (id, (.))
 
@@ -665,7 +663,7 @@ isPubConstrRule :: HasRuleName r => r -> Bool
 isPubConstrRule ru = case ruleName ru of
   IntrInfo PubConstrRule   -> True
   _                        -> False
-
+  
 -- | True iff the rule is a construction rule.
 isNatConstrRule :: HasRuleName r => r -> Bool
 isNatConstrRule ru = case ruleName ru of
@@ -751,7 +749,7 @@ getRuleName ru = case ruleName ru of
                                       StandRule s -> s
 
 -- | Returns a protocol rule's name
-getRuleNameDiff :: (HasRuleAttributes (Rule i), HasRuleName (Rule i)) => Rule i -> String
+getRuleNameDiff :: (HasRuleName (Rule i)) => Rule i -> String
 getRuleNameDiff ru = case ruleName ru of
                       IntrInfo i  -> "Intr" ++ case i of
                                       ConstrRule x      -> "Constr" ++ (prefixIfReserved ('c' : BC.unpack x))
@@ -766,7 +764,6 @@ getRuleNameDiff ru = case ruleName ru of
                       ProtoInfo p -> "Proto" ++ case p of
                                       FreshRule   -> "FreshRule"
                                       StandRule s -> s
-
 
 -- | Returns the remaining rule applications within the deconstruction chain if possible, 0 otherwise
 getRemainingRuleApplications :: RuleACInst -> Int
@@ -1002,12 +999,12 @@ addAction (Rule info prems concs acts nvs) act =
 -- | Apply macros into a rule
 applyMacroInRule :: [Macro] -> Rule i -> Rule i
 applyMacroInRule mcs (Rule info ruPrems ruConcs ruActs _) = Rule info mRuPrems mRuConcs mRuActs mRuNewVars
-  where
+  where 
     mRuPrems   = map (applyMacroInFact mcs) ruPrems
     mRuConcs   = map (applyMacroInFact mcs) ruConcs
     mRuActs    = map (applyMacroInFact mcs) ruActs
     mRuNewVars = newVariables mRuPrems (mRuConcs ++ mRuActs)
-
+        
 
 -- Unification
 --------------
@@ -1054,7 +1051,7 @@ equalRuleUpToAnnotations (Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac2 nvs2)
   S.isSubsetOf (S.fromList ac1) (S.fromList ac2)
 
 -- | Are these two rule instances equal up to an added diff annotation in @ac2@?
-equalRuleUpToDiffAnnotation :: (HasRuleAttributes (Rule a), HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
+equalRuleUpToDiffAnnotation :: (HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
 equalRuleUpToDiffAnnotation ru1@(Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac2 nvs2) =
   rn1 == rn2 && pr1 == pr2 && co1 == co2 && nvs1 == nvs2 &&
   ac1 == filter isNotDiffAnnotation ac2
@@ -1062,7 +1059,7 @@ equalRuleUpToDiffAnnotation ru1@(Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac
     isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru1) 0, factAnnotations = S.empty, factTerms = []})
 
 -- | Are these two rule instances equal up to an added diff annotation in @ac2@ or @ac1@?
-equalRuleUpToDiffAnnotationSym :: (HasRuleAttributes (Rule a), HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
+equalRuleUpToDiffAnnotationSym :: (HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
 equalRuleUpToDiffAnnotationSym ru1 ru2 = equalRuleUpToDiffAnnotation ru1 ru2
                                       || equalRuleUpToDiffAnnotation ru2 ru1
 

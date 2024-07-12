@@ -116,7 +116,7 @@ diffRule = do
 -- contains them
 protoRule :: Parser OpenProtoRule
 protoRule = do
-    ri@(ProtoRuleEInfo (StandRule name) _ _)  <- try protoRuleInfo
+    ri@(ProtoRuleEInfo (StandRule name ) _ _)  <- try protoRuleInfo
     when (name `elem` reservedRuleNames) $
         fail $ "cannot use reserved rule name '" ++ name ++ "'"
     subst <- option emptySubst letBlock
@@ -127,8 +127,8 @@ protoRule = do
 
 -- | Parse RuleInfo
 protoRuleACInfo :: Parser ProtoRuleACInfo
-protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$> (
-                                        (symbol "rule" *> moduloAC *> identifier)))
+protoRuleACInfo = (ProtoRuleACInfo <$> (StandRule <$>
+                                        (symbol "rule" *> moduloAC *> identifier))
                                <*> ruleAttributesp)
                                <*> pure (Disj [emptySubstVFresh]) <*> pure []
                                <*  colon
