@@ -263,7 +263,8 @@ dotNodeCompact node = do
             <> (if null lbl then mempty else brackets (vcat $ punctuate comma lbl))
 
 
-        isNotDiffAnnotation fa = fa /= Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []
+        isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))
+    
         -- check if a fact is from auto-source
         isAutoSource ::  LNFact -> Bool
         isAutoSource (Fact tag _ _) =not $ hasAutoLabel (showFactTag $ tag)
