@@ -571,22 +571,22 @@ simpInjectiveFactEqMon = do
   --  :: (MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm)) -> ([LNGuarded], [(NodeId, NodeId)])
   let simpSingle (behaviour, (i, s), (j, t)) = --trace (show ("simpSingle", behaviour, i, s, j, t)) $
          case behaviour of
-                                                Unspecified -> ([], [])
-                                                Unstable -> ([], [])
-                                                Decreasing -> simpSingle (Increasing, (j, s), (i, t))
-                                                StrictlyDecreasing -> simpSingle (StrictlyIncreasing, (j, s), (i, t))
-                                                Constant -> ([GAto $ EqE (lTermToBTerm s) (lTermToBTerm t) | s/=t], [])  -- (1)
-                                                StrictlyIncreasing ->
-                                                    ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t ]  -- (2)
-                                                  ++ [gnotAtom $ EqE (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j || alwaysBefore sys j i, notIneq s t]   -- (4)
-                                                  -- ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t]   -- (6)
-                                                   , [(i, j) | triviallySmaller    s t, not $ alwaysBefore sys i j]   -- (3)
-                                                  ++ [(j, i) | triviallyNotSmaller s t, not $ alwaysBefore sys j i, ineq s t]) -- (5)
-                                                Increasing -> ([]--, [])
-                                                  --([ gdisj [--GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t),
-                                                  --          GAto $ EqE (lTermToBTerm s) (lTermToBTerm t)]
-                                                  --  | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t, s /= t]   -- (6.1)
-                                                  , snd $ simpSingle (StrictlyIncreasing, (i, s), (j, t)))
+            Unspecified -> ([], [])
+            Unstable -> ([], [])
+            Decreasing -> simpSingle (Increasing, (j, s), (i, t))
+            StrictlyDecreasing -> simpSingle (StrictlyIncreasing, (j, s), (i, t))
+            Constant -> ([GAto $ EqE (lTermToBTerm s) (lTermToBTerm t) | s/=t], [])  -- (1)
+            StrictlyIncreasing ->
+                ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t ]  -- (2)
+              ++ [gnotAtom $ EqE (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j || alwaysBefore sys j i, notIneq s t]   -- (4)
+              -- ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t]   -- (6)
+                , [(i, j) | triviallySmaller    s t, not $ alwaysBefore sys i j]   -- (3)
+              ++ [(j, i) | triviallyNotSmaller s t, not $ alwaysBefore sys j i, ineq s t]) -- (5)
+            Increasing -> ([]--, [])
+              --([ gdisj [--GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t),
+              --          GAto $ EqE (lTermToBTerm s) (lTermToBTerm t)]
+              --  | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t, s /= t]   -- (6.1)
+              , snd $ simpSingle (StrictlyIncreasing, (i, s), (j, t)))
 
   -- generate and execute changes
   let (newFormulas, newLesses) = (concat *** concat) $ unzip $ map simpSingle (getPairs inj nodes)
