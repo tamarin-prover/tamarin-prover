@@ -45,6 +45,7 @@ import           Theory.Constraint.System.Graph.GraphRepr
 import           Theory.Constraint.System.Graph.Abbreviation
 import qualified Theory                   as Th
 import Theory.Constraint.System.Graph.Simplification (simplifySystem, compressSystem)
+import Text.Dot (edge)
 
 -- | The level of graph simplification.
 data SimplificationLevel = SL0 | SL1 | SL2 | SL3
@@ -171,9 +172,10 @@ getNodeAgent node = case get nNodeType node of
   SystemNode ru -> Just (extractAgent ru)
   _             -> Nothing
 
--- -- Fonction pour créer un cluster à partir des nœuds d'un agent et des arêtes pertinentes
--- createCluster :: String -> [Node] -> [Edge] -> Cluster
--- createCluster agent nodes edges = Cluster agent nodes edges
+
+-- Fonction pour créer un cluster à partir des nœuds d'un agent et des arêtes pertinentes
+createCluster :: String -> [Node] -> [Edge] -> Cluster
+createCluster agent nodes edges = Cluster agent nodes edges
 
 -- Filtre les arêtes pour inclure uniquement celles pertinentes pour les nœuds d'un cluster
 filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
@@ -183,6 +185,56 @@ filterEdgesForCluster nodes edges =
                             SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
                             UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
                             LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds) edges
+
+-- Fonction pour trouver les composants connectés internes à un cluster
+findConnectedComponents :: [Node] -> [Edge] -> [[Node]]
+findConnectedComponents nodes edges = go nodes []
+  where
+    -- Fonction récursive pour trouver tous les nœuds connectés à partir d'un nœud donné
+    expandCluster :: Node -> S.Set Th.NodeId -> [Node] -> [Edge] -> S.Set Th.NodeId
+    expandCluster node visited nodes edges =
+      let nodeId = get nNodeId node
+          connectedNodes = [ tgt | SystemEdge ((src, _), (tgt, _)) <- edges, src == nodeId, tgt `S.notMember` visited ] ++
+                           [ src | SystemEdge ((src, _), (tgt, _)) <- edges, tgt == nodeId, src `S.notMember` visited ]
+          newVisited = S.insert nodeId visited
+          debugConnections = trace (unlines $ map (\nid -> "Connected: " ++ show nodeId ++ " -> " ++ show nid) connectedNodes) connectedNodes
+      in foldr (\nid acc -> if nid `S.member` visited then acc else expandCluster (findNodeById nid nodes) newVisited nodes edges `S.union` acc) (S.singleton nodeId) connectedNodes
+
+    findNodeById :: Th.NodeId -> [Node] -> Node
+    findNodeById nodeId nodes = head $ filter (\n -> get nNodeId n == nodeId) nodes
+
+    -- Fonction principale pour trouver tous les composants connectés
+    go :: [Node] -> [[Node]] -> [[Node]]
+    go [] components = components
+    go (n:ns) components =
+      let componentIds = S.toList $ expandCluster n S.empty (n:ns) edges
+          component = filter (\node -> get nNodeId node `elem` componentIds) (n:ns)
+          remainingNodes = filter (`notElem` component) ns
+          debugComponent = trace ("Component found: " ++ show (map (get nNodeId) component)) component
+      in go remainingNodes (debugComponent : components)
+
+-- Crée les sous-clusters d'un agent et les ajoute à GraphRepr
+addSubClustersByAgent :: GraphRepr -> GraphRepr
+addSubClustersByAgent repr =
+    let nodesByAgent = groupNodesByAgent (get grNodes repr)
+        edges = get grEdges repr
+        createSubClusters agent nodes =
+            let nodeIds = map (get nNodeId) nodes
+                clusterEdges = filter (\e -> case e of
+                                              SystemEdge ((src, _), (tgt, _)) -> src `elem` nodeIds && tgt `elem` nodeIds
+                                              _ -> False) edges
+                connectedComponents = findConnectedComponents nodes clusterEdges
+                debugConnectedComponents = trace ("Connected components for agent " ++ agent ++ ": " ++ show (map (map (get nNodeId)) connectedComponents)) connectedComponents
+            in zipWith (\i component -> createCluster (agent ++ "_Session_" ++ show i) component (filterEdgesForCluster component edges)) [1..] debugConnectedComponents
+        subClusters = concatMap (\(agent, nodes) -> createSubClusters agent nodes) (M.toList nodesByAgent)
+        debugSubClusters = trace ("Sub-clusters created: " ++ show (map (\c -> (get cName c, map (get nNodeId) (get cNodes c))) subClusters)) subClusters
+        clusterEdges = concatMap (get cEdges) debugSubClusters
+        clusteredNodes = concatMap (get cNodes) debugSubClusters
+        remainingEdges = filter (`notElem` clusterEdges) edges
+        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+    in set grClusters debugSubClusters $
+       set grEdges remainingEdges $
+       set grNodes remainingNodes repr
 
 
 -- -- Crée les clusters d'agents et les ajoute à GraphRepr
@@ -194,37 +246,37 @@ filterEdgesForCluster nodes edges =
 --     in set grClusters clusters repr
 
 
--- Fonction pour grouper les nœuds par session
-groupBySession :: M.Map String [Node] -> M.Map String [Edge] -> M.Map String [[Node]]
-groupBySession nodesByAgent edgesByCluster = 
-  M.mapWithKey groupNodes nodesByAgent
-  where
-    groupNodes :: String -> [Node] -> [[Node]]
-    groupNodes agent nodes = foldl assignToSession [[]] nodes
-      where
-        assignToSession :: [[Node]] -> Node -> [[Node]]
-        assignToSession sessions node =
-          let connectedSession = find (\session -> any (isConnected node) session) sessions
-          in case connectedSession of
-               Just session -> traceShow ("Adding node to existing session", node, session) $ map (\s -> if s == session then node : s else s) sessions
-               Nothing -> traceShow ("Creating new session for node", node) $ sessions ++ [[node]]
+-- -- Fonction pour grouper les nœuds par session
+-- groupBySession :: M.Map String [Node] -> M.Map String [Edge] -> M.Map String [[Node]]
+-- groupBySession nodesByAgent edgesByCluster = 
+--   M.mapWithKey groupNodes nodesByAgent
+--   where
+--     groupNodes :: String -> [Node] -> [[Node]]
+--     groupNodes agent nodes = foldl assignToSession [[]] nodes
+--       where
+--         assignToSession :: [[Node]] -> Node -> [[Node]]
+--         assignToSession sessions node =
+--           let connectedSession = find (\session -> any (isConnected node) session) sessions
+--           in case connectedSession of
+--                Just session -> traceShow ("Adding node to existing session", node, session) $ map (\s -> if s == session then node : s else s) sessions
+--                Nothing -> traceShow ("Creating new session for node", node) $ sessions ++ [[node]]
 
-        isConnected :: Node -> Node -> Bool
-        isConnected node1 node2 =
-          let agentEdges = M.findWithDefault [] agent edgesByCluster
-          in any (\edge -> connects edge node1 node2) agentEdges
+--         isConnected :: Node -> Node -> Bool
+--         isConnected node1 node2 =
+--           let agentEdges = M.findWithDefault [] agent edgesByCluster
+--           in any (\edge -> connects edge node1 node2) agentEdges
 
-        connects :: Edge -> Node -> Node -> Bool
-        connects (SystemEdge ((srcNode, _), (tgtNode, _))) node1 node2 = 
-          (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
-          (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
-        connects (UnsolvedChain ((srcNode, _), (tgtNode, _))) node1 node2 = 
-          (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
-          (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
-        connects (LessEdge (srcNode, tgtNode, _)) node1 node2 = 
-          (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
-          (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
-        connects _ _ _ = False
+--         connects :: Edge -> Node -> Node -> Bool
+--         connects (SystemEdge ((srcNode, _), (tgtNode, _))) node1 node2 = 
+--           (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
+--           (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
+--         connects (UnsolvedChain ((srcNode, _), (tgtNode, _))) node1 node2 = 
+--           (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
+--           (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
+--         connects (LessEdge (srcNode, tgtNode, _)) node1 node2 = 
+--           (srcNode == get nNodeId node1 && tgtNode == get nNodeId node2) || 
+--           (srcNode == get nNodeId node2 && tgtNode == get nNodeId node1)
+--         connects _ _ _ = False
 
 -- addAgentClusters :: GraphRepr -> GraphRepr
 -- addAgentClusters repr =
@@ -240,44 +292,42 @@ groupBySession nodesByAgent edgesByCluster =
 --        set grEdges remainingEdges $
 --        set grNodes remainingNodes repr
 
-addAgentClusters :: GraphRepr -> GraphRepr
-addAgentClusters repr =
-    let nodesByAgent = traceShow ("nodesByAgent: " ++ show (groupNodesByAgent (get grNodes repr))) (groupNodesByAgent (get grNodes repr))
-        edgesByAgent = M.map (\nodes -> filterEdgesForCluster nodes (get grEdges repr)) nodesByAgent
-        nodesBySession = traceShow ("nodesBySession: " ++ show (groupBySession nodesByAgent edgesByAgent)) (groupBySession nodesByAgent edgesByAgent)
-        clusters = traceShow ("clusters: " ++ show (concatMap (\(agent, sessions) -> createClustersBySession agent sessions (get grEdges repr)) (M.toList nodesBySession))) (concatMap (\(agent, sessions) -> createClustersBySession agent sessions (get grEdges repr)) (M.toList nodesBySession))
-        clusterEdges = concatMap (get cEdges) clusters
-        clusteredNodes = concatMap (get cNodes) clusters
-        remainingEdges = filter (`notElem` clusterEdges) (get grEdges repr)
-        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
-    in set grClusters clusters $
-       set grEdges remainingEdges $
-       set grNodes remainingNodes repr
-
--- | Crée des clusters à partir des nœuds d'un agent et des sessions, et des arêtes pertinentes
-createClustersBySession :: String -> [[Node]] -> [Edge] -> [Cluster]
-createClustersBySession agent sessions edges = 
-  let createClusterForSession sessionId nodes =
-        let sanitizedSession = agent ++ "_Session_" ++ show sessionId
-        in Cluster sanitizedSession nodes (filterEdgesForCluster nodes edges)
-  in zipWith createClusterForSession [1..] (filter (not . null) sessions)
-
-
-
-
-
 -- addAgentClusters :: GraphRepr -> GraphRepr
 -- addAgentClusters repr =
---     let nodesByAgent = groupNodesByAgent (get grNodes repr)
---         edges = get grEdges repr
---         clusters = map (\(agent, nodes) -> createCluster agent nodes (filterEdgesForCluster nodes edges)) (M.toList nodesByAgent)
+--     let nodesByAgent = traceShow ("nodesByAgent: " ++ show (groupNodesByAgent (get grNodes repr))) (groupNodesByAgent (get grNodes repr))
+--         edgesByAgent = M.map (\nodes -> filterEdgesForCluster nodes (get grEdges repr)) nodesByAgent
+--         nodesBySession = traceShow ("nodesBySession: " ++ show (groupBySession nodesByAgent edgesByAgent)) (groupBySession nodesByAgent edgesByAgent)
+--         clusters = traceShow ("clusters: " ++ show (concatMap (\(agent, sessions) -> createClustersBySession agent sessions (get grEdges repr)) (M.toList nodesBySession))) (concatMap (\(agent, sessions) -> createClustersBySession agent sessions (get grEdges repr)) (M.toList nodesBySession))
 --         clusterEdges = concatMap (get cEdges) clusters
 --         clusteredNodes = concatMap (get cNodes) clusters
---         remainingEdges = filter (`notElem` clusterEdges) edges
+--         remainingEdges = filter (`notElem` clusterEdges) (get grEdges repr)
 --         remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
 --     in set grClusters clusters $
 --        set grEdges remainingEdges $
 --        set grNodes remainingNodes repr
+
+-- -- | Crée des clusters à partir des nœuds d'un agent et des sessions, et des arêtes pertinentes
+-- createClustersBySession :: String -> [[Node]] -> [Edge] -> [Cluster]
+-- createClustersBySession agent sessions edges = 
+--   let createClusterForSession sessionId nodes =
+--         let sanitizedSession = agent ++ "_Session_" ++ show sessionId
+--         in Cluster sanitizedSession nodes (filterEdgesForCluster nodes edges)
+--   in zipWith createClusterForSession [1..] (filter (not . null) sessions)
+
+
+
+addAgentClusters :: GraphRepr -> GraphRepr
+addAgentClusters repr =
+    let nodesByAgent = groupNodesByAgent (get grNodes repr)
+        edges = get grEdges repr
+        clusters = map (\(agent, nodes) -> createCluster agent nodes (filterEdgesForCluster nodes edges)) (M.toList nodesByAgent)
+        clusterEdges = concatMap (get cEdges) clusters
+        clusteredNodes = concatMap (get cNodes) clusters
+        remainingEdges = filter (`notElem` clusterEdges) edges
+        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+    in set grClusters clusters $
+       set grEdges remainingEdges $
+       set grNodes remainingNodes repr
 
 -- | Compute clusters, nodes & edges from a Graph instance according to the Graph's options.
 systemToGraph :: Sys.System -> GraphOptions -> Graph
@@ -287,7 +337,7 @@ systemToGraph se options =
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
-      repr = addAgentClusters basicGraphRepr
+      repr = addSubClustersByAgent basicGraphRepr
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
   in
     Graph se options repr abbrevs

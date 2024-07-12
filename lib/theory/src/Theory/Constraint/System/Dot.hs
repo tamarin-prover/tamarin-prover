@@ -19,6 +19,7 @@ module Theory.Constraint.System.Dot (
   ) where
 
 
+import Debug.Trace (traceM)
 import           Data.Ord
 import           Data.Char                (isSpace)
 import           Data.Color
@@ -132,17 +133,23 @@ setDefaultAttributes = do
   D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
 
 
-agentCluster :: String -> SeDot a -> SeDot a
-agentCluster agentName dot = do
-  uq <- liftDot D.getNextId
-  let cid = D.createClusterNodeId agentName uq
-  env <- ask
-  currentState <- State.get
-  let clusterState = D.DotGenState { D._dgsId = succ uq, D._dgsElements = [] }
-  ((a, newState), finalDotState) <- lift . lift . lift $ runStateT (runStateT (runReaderT dot env) currentState) clusterState
-  State.put newState
-  liftDot $ D.addElements [D.createSubGraph (Just cid) (D.getDotGenStateElements finalDotState)]
-  return a
+agentCluster :: String -> SeDot a -> SeDot ()
+agentCluster agentName dot = do 
+  let cid = D.createClusterNodeId agentName
+  elems <- liftDot D.getDotGenStateElements
+  liftDot $ D.addElements [D.createSubGraph (Just cid) elems]
+
+-- agentCluster :: String -> Int -> SeDot a -> SeDot a
+-- agentCluster agentName uq dot = do
+--   traceM("Creating cluster for agent " ++ agentName ++ " with unique id " ++ show uq)
+--   let cid = D.createClusterNodeId agentName
+--   env <- ask
+--   currentState <- State.get
+--   let clusterState = D.DotGenState { D._dgsId = uq + 1000, D._dgsElements = [] }
+--   ((a, newState), finalDotState) <- lift . lift . lift $ runStateT (runStateT (runReaderT dot env) currentState) clusterState
+--   State.put newState
+--   liftDot $ D.addElements [D.createSubGraph (Just cid) (D.getDotGenStateElements finalDotState)]
+--   return a
 
 
 -- | Compute a color map for nodes labelled with a proof rule info of one of
@@ -204,7 +211,6 @@ renderLNFact fact = do
   if abbreviate 
     then return $ prettyLNFact replacedFact
     else return $ prettyLNFact fact
-
 
 -- | Dot a node in record based (compact) format.
 dotNodeCompact :: Node -> SeDot ()
@@ -494,27 +500,77 @@ dotSystemCompact graphOptions dotOptions se =
 
 --------------------------------------------------------------------
 
--- | Dot a graph in compact form (one record per rule).
-dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
-dotGraphCompact dotOptions colorMap graph =
-    (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
-    (`runReaderT` (graph, colorMap, dotOptions)) $ do
-        liftDot $ setDefaultAttributes
-        let repr = get gRepr graph
-            clusters = get grClusters repr
-            edges = get grEdges repr
-            nodes = get grNodes repr
-            (lessEdges, restEdges) = mergeLessEdges edges
-            abbreviate = get ((L..) goAbbreviate gOptions) graph 
+-- -- | Dot a graph in compact form (one record per rule).
+-- dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
+-- dotGraphCompact dotOptions colorMap graph =
+--     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
+--     (`runReaderT` (graph, colorMap, dotOptions)) $ do
+--         liftDot $ setDefaultAttributes
+--         let repr = get gRepr graph
+--             clusters = get grClusters repr
+--             edges = get grEdges repr
+--             nodes = get grNodes repr
+--             (lessEdges, restEdges) = mergeLessEdges edges
+--             abbreviate = get ((L..) goAbbreviate gOptions) graph 
 
-        mapM_ dotNodeCompact nodes
-        mapM_ dotCluster clusters
+--         mapM_ dotNodeCompact nodes
+--         mapM_ dotCluster clusters
         
-        mapM_ dotEdge restEdges
-        mapM_ dotLessEdge lessEdges
-        mapM_ dotClusterEdges clusters
+--         mapM_ dotEdge restEdges
+--         mapM_ dotLessEdge lessEdges
+--         mapM_ dotClusterEdges clusters
   
-        when abbreviate generateLegend
+--         when abbreviate generateLegend
+
+-- Fonction pour générer un graphe compact en format DOT
+dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
+dotGraphCompact dotOptions colorMap graph = 
+    (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
+        (`runReaderT` (graph, colorMap, dotOptions)) $ do
+            liftDot $ setDefaultAttributes
+
+            -- Get the graph representation details
+            let repr = get gRepr graph
+                clusters = get grClusters repr
+                edges = get grEdges repr
+                nodes = get grNodes repr
+                (lessEdges, restEdges) = mergeLessEdges edges
+                abbreviate = get ((L..) goAbbreviate gOptions) graph
+
+            -- Trace initial nodes, edges, and clusters
+            traceM ("Initial nodes: " ++ show (map (get nNodeId) nodes) ++
+                    "\nInitial edges: " ++ show (map showEdge edges) ++
+                    "\nClusters: " ++ show (map showCluster clusters)) 
+
+            -- -- Access the current state and get the value of _dgsId
+            -- dotGenState <- liftDot State.get
+            -- let uq = D._dgsId dotGenState
+            -- traceM ("Current dgsId: " ++ show (D._dgsId dotGenState))
+
+            -- Process the nodes, clusters, and edges
+            --mapM_ dotCluster clusters
+            mapM_ dotNodeCompact nodes
+            mapM_ (\cluster -> dotCluster cluster) clusters
+            mapM_ dotEdge restEdges
+            mapM_ dotLessEdge lessEdges
+            mapM_ dotClusterEdges clusters
+
+            -- Trace after processing
+            traceM ("Processed nodes: " ++ show (map (get nNodeId) nodes) ++
+                    "\nProcessed edges: " ++ show (map showEdge edges) ++
+                    "\nProcessed clusters: " ++ show (map showCluster clusters)) 
+
+            -- Generate legend if abbreviate is set
+            when abbreviate generateLegend
+  where
+    showEdge :: Edge -> String
+    showEdge (SystemEdge ((src, _), (tgt, _))) = show src ++ " -> " ++ show tgt
+    showEdge (LessEdge (src, tgt, _)) = show src ++ " -> " ++ show tgt
+    showEdge (UnsolvedChain ((src, _), (tgt, _))) = show src ++ " -> " ++ show tgt
+
+    showCluster :: Cluster -> String
+    showCluster c = get cName c ++ ": Nodes = " ++ show (map (get nNodeId) (get cNodes c)) ++ 
+                    ", Edges = " ++ show (map showEdge (get cEdges c))
 
 
 dotClusterEdges :: Cluster -> SeDot ()
@@ -523,9 +579,9 @@ dotClusterEdges (Cluster _ _ edges) = do
   mapM_ dotEdge restEdges
   mapM_ dotLessEdge lessEdges
 
--- | Dot a cluster containing further nodes and edges.
 dotCluster :: Cluster -> SeDot ()
-dotCluster (Cluster name nodes _) = 
+dotCluster (Cluster name nodes _) = do
+    -- traceM("Call dotCluster for : " ++ name ++ " with unique id " ++ show uq)
     agentCluster name $ do
         liftDot $ D.attribute ("label", name)
         liftDot $ D.attribute ("style", "solid")
@@ -533,6 +589,7 @@ dotCluster (Cluster name nodes _) =
         liftDot $ D.attribute ("penwidth", "2")
         liftDot $ D.attribute ("fillcolor", "none")
         mapM_ dotNodeCompact nodes
+        -- traceM("End dotCluster for : " ++ name ++ " with unique id " ++ show uq)
 
 
 -- | Compute proper colors for all less-edges.

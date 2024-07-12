@@ -62,11 +62,12 @@ module Text.Dot
         , initializeDotGenState
         , modifyDotGenState
         , getDotGenStateElements
-        , getNextId
+        , nextId
         , module Data.GraphViz.Attributes.HTML
         , module Data.GraphViz.Attributes.Colors
         ) where
 
+import Debug.Trace
 import Data.Char           (isSpace)
 import Data.List           (intersperse)
 import qualified Data.Text.Lazy as T
@@ -127,18 +128,11 @@ modifyDotGenState :: Dot a -> DotGenState -> DotGenState
 modifyDotGenState action state = snd (runDot state action)
 
 -- | Get elements from DotGenState
-getDotGenStateElements :: DotGenState -> [GraphElement]
-getDotGenStateElements = _dgsElements
+getDotGenStateElements :: Dot [GraphElement]
+getDotGenStateElements = getM dgsElements
 
--- | Retrieving and incrementing the node id in the state.
-getNextId :: Dot Int
-getNextId = do
-  uq <- getM dgsId
-  () <- setM dgsId (succ uq)
-  return uq
-
-createClusterNodeId :: String -> Int -> NodeId
-createClusterNodeId agentName uq = NodeId ("cluster_" ++ agentName ++ "_" ++ show uq)
+createClusterNodeId :: String -> NodeId
+createClusterNodeId agentName = NodeId ("cluster_" ++ agentName)
   
 createSubGraph :: Maybe NodeId -> [GraphElement] -> GraphElement
 createSubGraph = SubGraph
@@ -148,13 +142,22 @@ addElements :: [GraphElement] -> Dot ()
 addElements elems = do
   modM dgsElements (++elems)
 
--- | 'rawNode' takes a list of attributes, generates a new node, and gives a 'NodeId'.
-rawNode      :: [(String,String)] -> Dot NodeId
+-- -- | 'rawNode' takes a list of attributes, generates a new node, and gives a 'NodeId'.
+-- rawNode      :: [(String,String)] -> Dot NodeId
+-- rawNode attrs = do 
+--     uq <- nextId
+--     let nid = NodeId $ "n" ++ show uq
+--     addElements [ GraphNode nid attrs ]
+--     return nid
+
+rawNode :: [(String, String)] -> Dot NodeId
 rawNode attrs = do 
     uq <- nextId
     let nid = NodeId $ "n" ++ show uq
-    addElements [ GraphNode nid attrs ]
+    traceM $ "Generated node ID: " ++ show nid ++ " with attributes: " ++ show attrs
+    addElements [GraphNode nid attrs]
     return nid
+
 
 -- | 'node' takes a list of attributes, generates a new node, and gives a
 -- 'NodeId'. Multi-line labels are fixed such that they use non-breaking

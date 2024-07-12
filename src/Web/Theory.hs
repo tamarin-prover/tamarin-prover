@@ -40,7 +40,7 @@ module Web.Theory
 where
 
 
-import           Debug.Trace                  (trace)
+import           Debug.Trace                  (trace, traceM)
 
 import           Data.Char                    (toUpper)
 import           Data.List
@@ -1286,6 +1286,7 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
         let code = case ocFormat outputCommand of
                      OutDot -> prefixedShowDot $ toDot system
                      OutJSON -> toJSON jsonLabel system 
+        traceM("dot file Content : " ++ code)
         renderGraphCode code
   where
     thyPathSystem :: TheoryPath -> Maybe (String, System)
