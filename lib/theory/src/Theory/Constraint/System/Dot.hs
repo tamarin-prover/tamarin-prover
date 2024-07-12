@@ -316,7 +316,7 @@ dotEdge edge =
                     (guard (check isPersistentFact) >> [("color","gray50")])
                 | check isKFact     = [("color","orangered2")]
                 | otherwise         = [("color","gray30")]
-      dotGenEdge attrs src tgt 
+      dotGenEdge attrs src tgt  
     UnsolvedChain (src, tgt) -> 
       dotGenEdge [("style","dotted"),("color","green")] src tgt
     LessEdge _ -> error "LessEdges are handled by dotLessEdge"
@@ -349,7 +349,7 @@ generateLegend = do
       D.node [("shape", "plain"), htmlLabel])
     -- We add invisible edges from all sink nodes of the graph to the legend node to place it somewhere in the middle of the bottom row.
     -- We only add edges from the sink nodes because edges from earlier nodes will be routed avoid later nodes (even if they are invisible) and create constraints that lead to excessive whitespace on the edges of the graph.
-    let sinks = getGraphSinks graph
+    let sinks = getGraphSinks graph 
     dotIds <- getM dsNodes
     mapM_ (\nsink ->
       case M.lookup (get nNodeId nsink) dotIds of
@@ -357,7 +357,7 @@ generateLegend = do
       Just nid -> liftDot $ D.edge nid nLegend [("style", "invis")]) sinks
   where
     -- | Render all abbreviations as a table using graphviz' HTML notation.
-    abbrevLabel sortedAbbrevs labelColor =
+    abbrevLabel sortedAbbrevs labelColor = 
       let tableAttributes = [Border 1, CellBorder 0, CellSpacing 3, CellPadding 1] in
         Table $ HTable Nothing tableAttributes $ map (renderLine labelColor) sortedAbbrevs
 

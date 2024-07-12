@@ -58,7 +58,6 @@ import Data.Bits
 import qualified Data.Set as S
 import Data.Color
 import qualified Data.List              as List
-import Debug.Trace (trace)
 -- import Control.Monad.Trans.FastFresh
 
 -- | Facts that are used as actions
@@ -371,7 +370,8 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
           where
             name = case processName of
               Just s -> s
-              Nothing -> unNull (stripNonAlphanumerical (prettySapicTopLevel process))
+              Nothing -> 
+                         unNull (stripNonAlphanumerical (prettySapicTopLevel process))
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
@@ -382,4 +382,3 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
             r = map factToFact concs
             stripNonAlphanumerical = filter isAlpha
             unNull s = if null s then "p" else s
-
