@@ -370,7 +370,7 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
           where
             name = case processName of
                 Just s -> s
-                Nothing -> 
+                Nothing ->
                          unNull (stripNonAlphanumerical (prettySapicTopLevel process))
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
