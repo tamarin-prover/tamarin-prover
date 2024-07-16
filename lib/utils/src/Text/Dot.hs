@@ -68,7 +68,6 @@ module Text.Dot
         , module Data.GraphViz.Attributes.Colors
         ) where
 
-import Debug.Trace
 import Data.Char           (isSpace)
 import Data.List           (intersperse)
 import qualified Data.Text.Lazy as T
@@ -147,19 +146,11 @@ addElements :: [GraphElement] -> Dot ()
 addElements elems = do
   modM dgsElements (++elems)
 
--- -- | 'rawNode' takes a list of attributes, generates a new node, and gives a 'NodeId'.
--- rawNode      :: [(String,String)] -> Dot NodeId
--- rawNode attrs = do 
---     uq <- nextId
---     let nid = NodeId $ "n" ++ show uq
---     addElements [ GraphNode nid attrs ]
---     return nid
-
+-- | 'rawNode' takes a list of attributes, generates a new node, and gives a 'NodeId'.
 rawNode :: [(String, String)] -> Dot NodeId
 rawNode attrs = do 
     uq <- nextId
     let nid = NodeId $ "n" ++ show uq
-    traceM $ "Generated node ID: " ++ show nid ++ " with attributes: " ++ show attrs
     addElements [GraphNode nid attrs]
     return nid
 

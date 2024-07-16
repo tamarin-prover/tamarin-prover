@@ -104,3 +104,4 @@ toEdgeList repr =
     findEdgeTarget srcId (LessEdge (srcId', tgtId, _))             | srcId == srcId' = Just tgtId
     findEdgeTarget srcId (UnsolvedChain ((srcId', _), (tgtId, _))) | srcId == srcId' = Just tgtId
     findEdgeTarget _     _                                                           = Nothing
+

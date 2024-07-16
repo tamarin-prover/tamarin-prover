@@ -124,37 +124,51 @@ getState stateAccessor k msg = do
 liftDot :: D.Dot a -> SeDot a
 liftDot = lift . lift
 
--- -- | Set default attributes for nodes and edges.
--- setDefaultAttributes :: D.Dot ()
--- setDefaultAttributes = do
---   D.attribute ("nodesep","0.3")
---   D.attribute ("ranksep","0.3")
---   D.nodeAttributes [("fontsize","8"),("fontname","Helvetica"),("width","0.3"),("height","0.2")]
---   D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
+-- | Set default attributes for nodes and edges.
+setDefaultAttributes :: D.Dot ()
+setDefaultAttributes = do
+  D.attribute ("nodesep","0.3")
+  D.attribute ("ranksep","0.3")
+  D.nodeAttributes [("fontsize","8"),("fontname","Helvetica"),("width","0.3"),("height","0.2")]
+  D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
+
+
+-- | Set default attributes for nodes and edges if the graph contains clusters.
+setDefaultAttributesIfCluster :: D.Dot ()
+setDefaultAttributesIfCluster = do
+  D.attribute ("nodesep", "0.8")
+  D.attribute ("ranksep", "0.8")
+  D.attribute ("sep", "4")
+  D.attribute ("splines", "true")
+  D.attribute ("overlap", "false")
+  D.attribute ("pack", "true")
+  D.attribute ("packmode", "cluster")
+  D.attribute ("concentrate", "true")
+  D.attribute ("compound", "true")
+  D.attribute ("remincross", "true")
+  D.attribute ("mclimit", "2")
+  D.attribute ("nslimit", "10")
+  D.attribute ("nslimit1", "10")
+  D.attribute ("ordering", "out")
+  D.attribute ("rankdir", "TB")
+  D.attribute ("showboxes", "false")
+  D.attribute ("clusterrank", "local")
+  
+  D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2"), ("margin", "0.05,0.05"), ("shape", "ellipse")]
+  D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("penwidth", "1.5"), ("arrowsize", "0.5"), ("color", "black"), ("style", "solid"), ("weight", "8")]
 
 
 
+-- | This function creates a cluster for a specific agent with a list of nodes.
+-- It takes an agent name and a 'SeDot' action, then executing the given SeDot action within 
+--a temporary state, updating the current state, and adding the resulting subgraph elements to 
+--the global state.
 
-
--- agentCluster :: String -> SeDot a -> SeDot ()
--- agentCluster agentName dot = do 
---   let cid = D.createClusterNodeId agentName
---   elems <- liftDot D.getDotGenStateElements
---   liftDot $ D.addElements [D.createSubGraph (Just cid) elems]
-
--- agentCluster :: String -> Int -> SeDot a -> SeDot a
--- agentCluster agentName uq dot = do
---   traceM("Creating cluster for agent " ++ agentName ++ " with unique id " ++ show uq)
---   let cid = D.createClusterNodeId agentName
---   env <- ask
---   currentState <- State.get
---   let clusterState = D.DotGenState { D._dgsId = uq + 1000, D._dgsElements = [] }
---   ((a, newState), finalDotState) <- lift . lift . lift $ runStateT (runStateT (runReaderT dot env) currentState) clusterState
---   State.put newState
---   liftDot $ D.addElements [D.createSubGraph (Just cid) (D.getDotGenStateElements finalDotState)]
---   return a
-
-
+-- Note: To be compatible with the 'dotNodeCompact' function which returns a 'SeDot' action,
+-- we needed a function that accepts and returns a 'SeDot' action. This is why we didn't use
+-- the 'cluster' function from 'Text.Dot'. The only feasible approach was either this or 
+-- fragmenting the 'dotNodeCompact' function. Thus, we extracted what we needed and removed 
+-- the unnecessary parts.
 agentCluster :: String -> SeDot a -> SeDot ()
 agentCluster agentName dot = do
   uq <- liftDot D.nextId
@@ -166,6 +180,7 @@ agentCluster agentName dot = do
   State.put newState
   _ <- liftDot $ D.setId $ D._dgsId finalDotState
   liftDot $ D.addElements [D.createSubGraph (Just cid) (D._dgsElements finalDotState)]
+
 
 -- | Compute a color map for nodes labelled with a proof rule info of one of
 -- the given rules.
@@ -469,110 +484,6 @@ dotSystemCompact graphOptions dotOptions se =
         dot = dotGraphCompact dotOptions colorMap graph in
     dot
 
---------------------------------------------------------------
-
--- -- Fonction pour créer un cluster à partir des nœuds d'un agent et des arêtes pertinentes
--- createCluster :: String -> [Node] -> [Edge] -> Cluster
--- createCluster agent nodes edges = Cluster agent nodes edges
-
--- -- Filtre les arêtes pour inclure uniquement celles pertinentes pour les nœuds d'un cluster
--- filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
--- filterEdgesForCluster nodes edges =
---     let nodeIds = S.fromList (map (get nNodeId) nodes)
---     in filter (\edge -> case edge of
---                             SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
---                             UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
---                             LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds) edges
-
-
--- -- Crée les clusters d'agents et les ajoute à GraphRepr
--- addAgentClusters :: GraphRepr -> GraphRepr
--- addAgentClusters repr =
---     let nodesByAgent = groupNodesByAgent (get grNodes repr)
---         edges = get grEdges repr
---         clusters = map (\(agent, nodes) -> createCluster agent nodes (filterEdgesForCluster nodes edges)) (M.toList nodesByAgent)
---     in set grClusters clusters repr
-
-
--- groupNodesByAgent :: [Node] -> M.Map String [Node]
--- groupNodesByAgent nodes = trace ("Nodes passed to groupNodesByAgent: " ++ show (map getNodeName nodes)) $
---                           foldr groupByAgent M.empty nodes
---   where
---     groupByAgent node acc = case getNodeAgent node of
---       Just "Unknown" -> acc
---       Just agent     -> trace ("Grouping node " ++ getNodeName(node) ++ " under agent " ++ agent) $
---                         M.insertWith (++) agent [node] acc
---       Nothing        -> acc
-
--- getNodeAgent :: Node -> Maybe String
--- getNodeAgent node = case get nNodeType node of
---   SystemNode ru -> Just (extractAgent ru)
---   _             -> Nothing
-
--- getNodeName :: Node -> String
--- getNodeName node = "node" ++ show (get nNodeId node)
-
-
---------------------------------------------------------------------
-
--- -- | Dot a graph in compact form (one record per rule).
--- dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
--- dotGraphCompact dotOptions colorMap graph =
---     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
---     (`runReaderT` (graph, colorMap, dotOptions)) $ do
---         liftDot $ setDefaultAttributes
---         let repr = get gRepr graph
---             clusters = get grClusters repr
---             edges = get grEdges repr
---             nodes = get grNodes repr
---             (lessEdges, restEdges) = mergeLessEdges edges
---             abbreviate = get ((L..) goAbbreviate gOptions) graph 
-
---         mapM_ dotNodeCompact nodes
---         mapM_ dotCluster clusters
-        
---         mapM_ dotEdge restEdges
---         mapM_ dotLessEdge lessEdges
---         mapM_ dotClusterEdges clusters
-  
---         when abbreviate generateLegend
-
-
--- | Set default attributes for nodes and edges.
-setDefaultAttributes :: D.Dot ()
-setDefaultAttributes = do
-  D.attribute ("nodesep","0.3")
-  D.attribute ("ranksep","0.3")
-  D.nodeAttributes [("fontsize","8"),("fontname","Helvetica"),("width","0.3"),("height","0.2")]
-  D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
-
-
--- | Set default attributes for nodes and edges if the graph contains clusters.
-setDefaultAttributesIfCluster :: D.Dot ()
-setDefaultAttributesIfCluster = do
-  D.attribute ("nodesep", "0.8")
-  D.attribute ("ranksep", "0.8")
-  D.attribute ("sep", "4")
-  D.attribute ("splines", "true")
-  D.attribute ("overlap", "false")
-  D.attribute ("pack", "true")
-  D.attribute ("packmode", "cluster")
-  D.attribute ("concentrate", "true")
-  D.attribute ("compound", "true")
-  D.attribute ("remincross", "true")
-  D.attribute ("mclimit", "2")
-  D.attribute ("nslimit", "10")
-  D.attribute ("nslimit1", "10")
-  D.attribute ("ordering", "out")
-  D.attribute ("rankdir", "TB")
-  D.attribute ("showboxes", "false")
-  D.attribute ("clusterrank", "local")
-  
-  D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2"), ("margin", "0.05,0.05"), ("shape", "ellipse")]
-  D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("penwidth", "1.5"), ("arrowsize", "0.5"), ("color", "black"), ("style", "solid"), ("weight", "8")]
-
-
-
 -- Fonction pour générer un graphe compact en format DOT
 dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
 dotGraphCompact dotOptions colorMap graph = 
@@ -590,41 +501,15 @@ dotGraphCompact dotOptions colorMap graph =
             
             if null $ get grClusters repr then liftDot setDefaultAttributes else liftDot setDefaultAttributesIfCluster
 
-
-            -- Trace initial nodes, edges, and clusters
-            traceM ("Initial nodes: " ++ show (map (get nNodeId) nodes) ++
-                    "\nInitial edges: " ++ show (map showEdge edges) ++
-                    "\nClusters: " ++ show (map showCluster clusters)) 
-
-            -- -- Access the current state and get the value of _dgsId
-            -- dotGenState <- liftDot State.get
-            -- let uq = D._dgsId dotGenState
-            -- traceM ("Current dgsId: " ++ show (D._dgsId dotGenState))
-
             -- Process the nodes, clusters, and edges
-            --mapM_ dotCluster clusters
             mapM_ dotNodeCompact nodes
             mapM_ dotCluster clusters
             mapM_ dotEdge restEdges
             mapM_ dotLessEdge lessEdges
             dotClustersEdges clusters
 
-            -- Trace after processing
-            traceM ("Processed nodes: " ++ show (map (get nNodeId) nodes) ++
-                    "\nProcessed edges: " ++ show (map showEdge edges) ++
-                    "\nProcessed clusters: " ++ show (map showCluster clusters)) 
-
             -- Generate legend if abbreviate is set
             when abbreviate generateLegend
-  where
-    showEdge :: Edge -> String
-    showEdge (SystemEdge ((src, _), (tgt, _))) = show src ++ " -> " ++ show tgt
-    showEdge (LessEdge (src, tgt, _)) = show src ++ " -> " ++ show tgt
-    showEdge (UnsolvedChain ((src, _), (tgt, _))) = show src ++ " -> " ++ show tgt
-
-    showCluster :: Cluster -> String
-    showCluster c = get cName c ++ ": Nodes = " ++ show (map (get nNodeId) (get cNodes c)) ++ 
-                    ", Edges = " ++ show (map showEdge (get cEdges c))
 
 
 -- Function to dot edges from multiple clusters
@@ -636,12 +521,7 @@ dotClustersEdges clusters = do
     mapM_ dotEdge restEdges
     mapM_ dotLessEdge lessEdges
 
-  
--- dotClusterEdges :: Cluster -> SeDot ()
--- dotClusterEdges (Cluster _ _ edges) = do
---   let (lessEdges, restEdges) = mergeLessEdges edges
---   mapM_ dotEdge restEdges
---   mapM_ dotLessEdge lessEdges
+
 
 dotCluster :: Cluster -> SeDot ()
 dotCluster (Cluster name nodes _) = do
@@ -660,16 +540,6 @@ dotCluster (Cluster name nodes _) = do
         liftDot $ D.edgeAttributes [("fontsize","8"),("fontname","Helvetica"), ("weight", "8"), ("minlen", "2")]
 
         mapM_ dotNodeCompact nodes
-
--- dotCluster :: Cluster -> SeDot ()
--- dotCluster (Cluster name nodes _) = do
---     agentCluster name $ do
---         liftDot $ D.attribute ("label", name)
---         liftDot $ D.attribute ("style", "solid")
---         liftDot $ D.attribute ("color", "black")
---         liftDot $ D.attribute ("penwidth", "2")
---         liftDot $ D.attribute ("fillcolor", "none")
---         mapM_ dotNodeCompact nodes
 
 
 -- | Compute proper colors for all less-edges.

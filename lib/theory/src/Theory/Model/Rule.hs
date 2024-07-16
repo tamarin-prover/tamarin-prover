@@ -191,8 +191,6 @@ import qualified Theory.Model.Formula as F
 import           Theory.Text.Pretty
 import           Theory.Sapic
 
--- import           Debug.Trace
-
 ------------------------------------------------------------------------------
 -- General Rule
 ------------------------------------------------------------------------------
