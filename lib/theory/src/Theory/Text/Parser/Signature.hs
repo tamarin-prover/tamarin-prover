@@ -22,7 +22,6 @@ module Theory.Text.Parser.Signature (
 )
 where
 
-import Debug.Trace (trace)
 import Term.Maude.Signature
 import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
@@ -169,7 +168,7 @@ equations = do
     unless convergent $ symbol "equations" *> colon
     eqs <- commaSep1 equation
     modifyStateSig (\sig -> foldl (flip addCtxtStRule) sig eqs)
-    modifyState (\st -> st { sig = (sig st) { eqConvergent = convergent } })  -- Mise à jour explicite de l'état
+    modifyState (\st -> st { sig = (sig st) { eqConvergent = convergent } })  -- Explicit state update
     return ()
   where
     equation = do

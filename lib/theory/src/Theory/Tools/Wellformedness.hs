@@ -69,7 +69,6 @@ module Theory.Tools.Wellformedness (
   , formulaTerms
   ) where
 
-import Debug.Trace (trace)
 import Rule
 
 import           Prelude                     hiding (id, (.))
