@@ -36,9 +36,6 @@ module Utils.Misc (
   , fst3
   , snd3
   , thd3
-
-  -- * uncurry
-  , uncurry3
 ) where
 
 import Data.List
@@ -71,10 +68,6 @@ snd3 (_, x, _) = x
 -- | @thd3 (x, y, z)@ returns the third element @z@ of the triple
 thd3 :: (a, b, c) -> c
 thd3 (_, _, x) = x
-
--- | @uncurry3 f (a,b,c)@ uncurry a function which has three param
-uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-uncurry3 f (a, b, c) = f a b c
 
 -- | @noDuplicates xs@ returns @True@ if the list @xs@ contains no duplicates
 noDuplicates :: (Ord a) => [a] -> Bool
