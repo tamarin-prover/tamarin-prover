@@ -470,9 +470,3 @@ mergeLessEdges edges = (merged, rest)
          Fresh          -> "blue3"
          InjectiveFacts -> "purple"
          NormalForm     -> "darkorange3"
-
-{-
--- | Try to hide a 'NodeId'. This only works if it has only action and either
--- edge or less constraints associated.
-tryHideNodeId :: NodeId -> System -> System
--}

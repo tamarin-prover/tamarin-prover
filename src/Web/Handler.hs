@@ -436,7 +436,7 @@ modifyTheory :: TheoryInfo                                -- ^ Theory to modify
              -> Handler Value
 modifyTheory ti f fpath errResponse = do
     res <- evalInThread (liftIO $ f (tiTheory ti))
-    rep <- pure $ tiErrorsHtml ti
+    let rep = tiErrorsHtml ti
     case res of
       Left e           -> return (excResponse e)
       Right Nothing    -> return (responseToJson errResponse)
