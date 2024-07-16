@@ -54,7 +54,6 @@ import           Data.Binary
 import           Data.Data
 import           Data.Label (mkLabels)
 
--- import           Control.Basics
 import           Control.DeepSeq
 
 import           Text.PrettyPrint.Class

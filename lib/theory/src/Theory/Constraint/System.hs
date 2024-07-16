@@ -753,7 +753,7 @@ data ProofContext = ProofContext
        , _pcSources            :: [Source]
        , _pcUseInduction       :: InductionHint
        , _pcHeuristic          :: Maybe (Heuristic ProofContext)
-       , _pcTactic            :: Maybe [Tactic ProofContext]
+       , _pcTactic             :: Maybe [Tactic ProofContext]
        , _pcTraceQuantifier    :: SystemTraceQuantifier
        , _pcLemmaName          :: String
        , _pcHiddenLemmas       :: [String]
@@ -1122,7 +1122,7 @@ impliedFormulas hnd sys gf0 = res
     sysActions = do (i, fa) <- allActions sys
                     return (skolemizeTerm (varTerm i), skolemizeFact fa)
 
-    candidateSubsts subst []               = return $ subst
+    candidateSubsts subst []               = return subst
     candidateSubsts subst ((GAction a fa):as) = do
         sysAct <- sysActions
         subst' <- (`runReader` hnd) $ matchAction sysAct (applySkAction subst (a, fa))
@@ -1130,9 +1130,9 @@ impliedFormulas hnd sys gf0 = res
     candidateSubsts subst ((GEqE s' t'):as)   = do
         let s = applySkTerm subst s'
             t = applySkTerm subst t'
-            (term,pat) | frees s == [] = (s,t)
-                       | frees t == [] = (t,s)
-                       | otherwise     = error $ "impliedFormulas: impossible, "
+            (term, pat) | null $ frees s = (s,t)
+                        | null $ frees t = (t,s)
+                        | otherwise      = error $ "impliedFormulas: impossible, "
                                            ++ "equality not guarded as checked"
                                            ++"by 'Guarded.formulaToGuarded'."
         subst' <- (`runReader` hnd) $ matchTerm term pat
@@ -1675,10 +1675,6 @@ prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
   , ("unsolved goals",  prettyGoals False se)
   , ("solved goals",    prettyGoals True se)
---   , ("system",          text $ show se)
---   , ("DEBUG: Goals",    text $ show $ M.toList $ L.get sGoals se) -- prettyGoals False se)
---   , ("DEBUG: Nodes",    vcat $ map prettyNode $ M.toList $ L.get sNodes se)
---   , ("DEBUG",           text $ "dgIsNotEmpty: " ++ (show (dgIsNotEmpty se)) ++ " allFormulasAreSolved: " ++ (show (allFormulasAreSolved se)) ++ " allOpenGoalsAreSimpleFacts: " ++ (show (allOpenGoalsAreSimpleFacts se)) ++ " allOpenFactGoalsAreIndependent " ++ (show (allOpenFactGoalsAreIndependent se)) ++ " " ++ (if (dgIsNotEmpty se) && (allOpenGoalsAreSimpleFacts se) && (allOpenFactGoalsAreIndependent se) then ((show (map (checkIndependence se) $ unsolvedTrivialGoals se)) ++ " " ++ (show {-- $ map (\(premid, x) -> getAllMatchingConcs se premid x)-} $ map (\(nid, pid) -> ((nid, pid), getAllLessPreds se nid)) $ getOpenNodePrems se) ++ " ") else " not trivial ") ++ (show $ unsolvedTrivialGoals se) ++ " " ++ (show $ getOpenNodePrems se))
   ]
   where
     combine_ (header, d)  = fsep [keyword_ header <> colon, nest 2 d]

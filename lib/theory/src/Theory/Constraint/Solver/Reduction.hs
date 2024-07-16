@@ -134,7 +134,6 @@ execReduction :: Reduction a -> ProofContext -> System -> FreshState
 execReduction m ctxt se fs =
     Disj $ (`runReader` ctxt) . runDisjT . (`runFreshT` fs) $ execStateT m se
 
-
 -- Change management
 --------------------
 
@@ -530,15 +529,19 @@ markGoalAsSolved how goal =
     case goal of
       ActionG _ _     -> updateStatus
       PremiseG _ fa
-        | isKDFact fa -> modM sGoals $ M.delete goal
+        | isKDFact fa -> delete
         | otherwise   -> updateStatus
-      ChainG _ _      -> modM sGoals $ M.delete goal
+      ChainG _ _      -> delete
       SplitG _        -> updateStatus
       DisjG disj      -> modM sFormulas       (S.delete $ GDisj disj) >>
                          modM sSolvedFormulas (S.insert $ GDisj disj) >>
                          updateStatus
       SubtermG _      -> updateStatus
   where
+    delete :: Reduction ()
+    delete = modM sGoals $ M.delete goal
+
+    updateStatus :: Reduction ()
     updateStatus = do
         mayStatus <- M.lookup goal <$> getM sGoals
         verbose <- getVerbose
@@ -591,7 +594,6 @@ substFormulas       = substPart sFormulas
 substSolvedFormulas = substPart sSolvedFormulas
 substLemmas         = substPart sLemmas
 substNextGoalNr     = return ()
-
 
 -- | Apply the current substitution of the equation store to a part of the
 -- sequent. This is an internal function.
