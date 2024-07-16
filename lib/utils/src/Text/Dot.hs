@@ -62,6 +62,7 @@ module Text.Dot
         , initializeDotGenState
         , modifyDotGenState
         , getDotGenStateElements
+        , setId
         , nextId
         , module Data.GraphViz.Attributes.HTML
         , module Data.GraphViz.Attributes.Colors
@@ -77,7 +78,7 @@ import Extension.Data.Label
 import Data.GraphViz.Printing (renderDot, unqtDot)
 import Data.GraphViz.Attributes.HTML
 import Data.GraphViz.Attributes.Colors
-import Data.GraphViz (GraphvizCommand(Dot))
+import Data.GraphViz (GraphvizCommand(Dot), DotRepr (setID))
 
 -- | Identifier for a node in a dot file.
 data NodeId = NodeId String
@@ -118,6 +119,10 @@ nextId = do
   uq <- getM dgsId
   () <- setM dgsId (succ uq)
   return uq
+
+setId :: Int  -> Dot()
+setId i = do 
+  setM dgsId i
 
 -- | Initialize DotGenState
 initializeDotGenState :: DotGenState

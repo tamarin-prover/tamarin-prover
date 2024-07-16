@@ -35,7 +35,8 @@ module Theory.Constraint.System.Graph.Graph (
 
 import Debug.Trace
 import qualified Data.Map                 as M
-import Data.List (find)
+import Data.List.Split (splitOn)
+import Data.List (intercalate)
 import           Data.Maybe
 import qualified Data.Set                 as S
 import           Extension.Data.Label
@@ -337,7 +338,7 @@ systemToGraph se options =
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
-      repr = addSubClustersByAgent basicGraphRepr
+      repr = addIntelligentClusterWithName basicGraphRepr 1
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
   in
     Graph se options repr abbrevs
@@ -348,3 +349,46 @@ getGraphSinks graph =
   let repr = get gRepr graph
       edgeList = toEdgeList repr in
   map (\(node, _, _) -> node) $ filter (\(_, _, outlist) -> null outlist) edgeList
+
+
+-- Function to get the rule name from a node
+getRuleNameByNode :: Node -> Maybe String
+getRuleNameByNode node = case _nNodeType node of
+    SystemNode ru -> Just (Th.showRuleCaseName ru)
+    _             -> Nothing
+
+-- Function to extract the base name based on underscores
+extractBaseName :: String -> Int -> String
+extractBaseName name underscores = 
+    let parts = splitOn "_" name
+        baseName = intercalate "_" (take (length parts - underscores) parts)
+    in if null baseName then "Unknown" else baseName
+
+-- Function to group nodes by similar rule names
+groupBySimilarName :: [Node] -> Int -> M.Map String [Node]
+groupBySimilarName nodes underscores = 
+    foldr (\node acc -> 
+        let ruleName = fromMaybe "Unknown" (getRuleNameByNode node)
+            baseName = extractBaseName ruleName underscores
+        in if baseName == "Unknown"
+            then acc
+            else M.insertWith (++) baseName [node] acc
+    ) M.empty nodes
+
+
+-- Function to add intelligent clusters with similar rule names to GraphRepr
+addIntelligentClusterWithName :: GraphRepr -> Int -> GraphRepr
+addIntelligentClusterWithName repr underscores =
+    let nodesBySimilarName = groupBySimilarName (get grNodes repr) underscores
+        edges = get grEdges repr
+        clusters = map (\(name, nodes) -> 
+            let clusterName = trace ("Creating cluster: " ++ name) name
+            in createCluster clusterName nodes (filterEdgesForCluster nodes edges)
+            ) (M.toList nodesBySimilarName)
+        clusterEdges = concatMap (get cEdges) clusters
+        clusteredNodes = concatMap (get cNodes) clusters
+        remainingEdges = filter (`notElem` clusterEdges) edges
+        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+    in set grClusters clusters $
+       set grEdges remainingEdges $
+       set grNodes remainingNodes repr

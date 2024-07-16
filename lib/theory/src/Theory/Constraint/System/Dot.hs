@@ -124,20 +124,23 @@ getState stateAccessor k msg = do
 liftDot :: D.Dot a -> SeDot a
 liftDot = lift . lift
 
--- | Set default attributes for nodes and edges.
-setDefaultAttributes :: D.Dot ()
-setDefaultAttributes = do
-  D.attribute ("nodesep","0.3")
-  D.attribute ("ranksep","0.3")
-  D.nodeAttributes [("fontsize","8"),("fontname","Helvetica"),("width","0.3"),("height","0.2")]
-  D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
+-- -- | Set default attributes for nodes and edges.
+-- setDefaultAttributes :: D.Dot ()
+-- setDefaultAttributes = do
+--   D.attribute ("nodesep","0.3")
+--   D.attribute ("ranksep","0.3")
+--   D.nodeAttributes [("fontsize","8"),("fontname","Helvetica"),("width","0.3"),("height","0.2")]
+--   D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
 
 
-agentCluster :: String -> SeDot a -> SeDot ()
-agentCluster agentName dot = do 
-  let cid = D.createClusterNodeId agentName
-  elems <- liftDot D.getDotGenStateElements
-  liftDot $ D.addElements [D.createSubGraph (Just cid) elems]
+
+
+
+-- agentCluster :: String -> SeDot a -> SeDot ()
+-- agentCluster agentName dot = do 
+--   let cid = D.createClusterNodeId agentName
+--   elems <- liftDot D.getDotGenStateElements
+--   liftDot $ D.addElements [D.createSubGraph (Just cid) elems]
 
 -- agentCluster :: String -> Int -> SeDot a -> SeDot a
 -- agentCluster agentName uq dot = do
@@ -151,6 +154,18 @@ agentCluster agentName dot = do
 --   liftDot $ D.addElements [D.createSubGraph (Just cid) (D.getDotGenStateElements finalDotState)]
 --   return a
 
+
+agentCluster :: String -> SeDot a -> SeDot ()
+agentCluster agentName dot = do
+  uq <- liftDot D.nextId
+  let cid = D.createClusterNodeId agentName
+  env <- ask
+  currentState <- State.get
+  let clusterState = D.DotGenState { D._dgsId = uq, D._dgsElements = [] }
+  ((_, newState), finalDotState) <- lift . lift . lift $ runStateT (runStateT (runReaderT dot env) currentState) clusterState
+  State.put newState
+  _ <- liftDot $ D.setId $ D._dgsId finalDotState
+  liftDot $ D.addElements [D.createSubGraph (Just cid) (D._dgsElements finalDotState)]
 
 -- | Compute a color map for nodes labelled with a proof rule info of one of
 -- the given rules.
@@ -522,12 +537,48 @@ dotSystemCompact graphOptions dotOptions se =
   
 --         when abbreviate generateLegend
 
+
+-- | Set default attributes for nodes and edges.
+setDefaultAttributes :: D.Dot ()
+setDefaultAttributes = do
+  D.attribute ("nodesep","0.3")
+  D.attribute ("ranksep","0.3")
+  D.nodeAttributes [("fontsize","8"),("fontname","Helvetica"),("width","0.3"),("height","0.2")]
+  D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
+
+
+-- | Set default attributes for nodes and edges if the graph contains clusters.
+setDefaultAttributesIfCluster :: D.Dot ()
+setDefaultAttributesIfCluster = do
+  D.attribute ("nodesep", "0.8")
+  D.attribute ("ranksep", "0.8")
+  D.attribute ("sep", "4")
+  D.attribute ("splines", "true")
+  D.attribute ("overlap", "false")
+  D.attribute ("pack", "true")
+  D.attribute ("packmode", "cluster")
+  D.attribute ("concentrate", "true")
+  D.attribute ("compound", "true")
+  D.attribute ("remincross", "true")
+  D.attribute ("mclimit", "2")
+  D.attribute ("nslimit", "10")
+  D.attribute ("nslimit1", "10")
+  D.attribute ("ordering", "out")
+  D.attribute ("rankdir", "TB")
+  D.attribute ("showboxes", "false")
+  D.attribute ("clusterrank", "local")
+  
+  D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2"), ("margin", "0.05,0.05"), ("shape", "ellipse")]
+  D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("penwidth", "1.5"), ("arrowsize", "0.5"), ("color", "black"), ("style", "solid"), ("weight", "8")]
+
+
+
 -- Fonction pour générer un graphe compact en format DOT
 dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
 dotGraphCompact dotOptions colorMap graph = 
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
         (`runReaderT` (graph, colorMap, dotOptions)) $ do
-            liftDot $ setDefaultAttributes
+            --liftDot setDefaultAttributes 
 
             -- Get the graph representation details
             let repr = get gRepr graph
@@ -536,6 +587,9 @@ dotGraphCompact dotOptions colorMap graph =
                 nodes = get grNodes repr
                 (lessEdges, restEdges) = mergeLessEdges edges
                 abbreviate = get ((L..) goAbbreviate gOptions) graph
+            
+            if null $ get grClusters repr then liftDot setDefaultAttributes else liftDot setDefaultAttributesIfCluster
+
 
             -- Trace initial nodes, edges, and clusters
             traceM ("Initial nodes: " ++ show (map (get nNodeId) nodes) ++
@@ -550,10 +604,10 @@ dotGraphCompact dotOptions colorMap graph =
             -- Process the nodes, clusters, and edges
             --mapM_ dotCluster clusters
             mapM_ dotNodeCompact nodes
-            mapM_ (\cluster -> dotCluster cluster) clusters
+            mapM_ dotCluster clusters
             mapM_ dotEdge restEdges
             mapM_ dotLessEdge lessEdges
-            mapM_ dotClusterEdges clusters
+            dotClustersEdges clusters
 
             -- Trace after processing
             traceM ("Processed nodes: " ++ show (map (get nNodeId) nodes) ++
@@ -573,23 +627,49 @@ dotGraphCompact dotOptions colorMap graph =
                     ", Edges = " ++ show (map showEdge (get cEdges c))
 
 
-dotClusterEdges :: Cluster -> SeDot ()
-dotClusterEdges (Cluster _ _ edges) = do
-  let (lessEdges, restEdges) = mergeLessEdges edges
-  mapM_ dotEdge restEdges
-  mapM_ dotLessEdge lessEdges
+-- Function to dot edges from multiple clusters
+dotClustersEdges :: [Cluster] -> SeDot ()
+dotClustersEdges clusters = do
+    let allEdges = concatMap (get cEdges) clusters
+        uniqueEdges = S.toList . S.fromList $ allEdges
+        (lessEdges, restEdges) = mergeLessEdges uniqueEdges
+    mapM_ dotEdge restEdges
+    mapM_ dotLessEdge lessEdges
+
+  
+-- dotClusterEdges :: Cluster -> SeDot ()
+-- dotClusterEdges (Cluster _ _ edges) = do
+--   let (lessEdges, restEdges) = mergeLessEdges edges
+--   mapM_ dotEdge restEdges
+--   mapM_ dotLessEdge lessEdges
 
 dotCluster :: Cluster -> SeDot ()
 dotCluster (Cluster name nodes _) = do
-    -- traceM("Call dotCluster for : " ++ name ++ " with unique id " ++ show uq)
     agentCluster name $ do
+        liftDot $ D.attribute ("nodesep","0.6")
+        liftDot $ D.attribute ("ranksep","0.6")
         liftDot $ D.attribute ("label", name)
         liftDot $ D.attribute ("style", "solid")
         liftDot $ D.attribute ("color", "black")
         liftDot $ D.attribute ("penwidth", "2")
         liftDot $ D.attribute ("fillcolor", "none")
+        liftDot $ D.attribute ("overlap", "false") 
+        liftDot $ D.attribute ("sep", "4")
+        liftDot $ D.graphAttributes [("size", "10,10!"), ("ratio", "auto")]
+        liftDot $ D.nodeAttributes [("fontsize","8"),("fontname","Helvetica"),("width","0.3"),("height","0.2")]
+        liftDot $ D.edgeAttributes [("fontsize","8"),("fontname","Helvetica"), ("weight", "8"), ("minlen", "2")]
+
         mapM_ dotNodeCompact nodes
-        -- traceM("End dotCluster for : " ++ name ++ " with unique id " ++ show uq)
+
+-- dotCluster :: Cluster -> SeDot ()
+-- dotCluster (Cluster name nodes _) = do
+--     agentCluster name $ do
+--         liftDot $ D.attribute ("label", name)
+--         liftDot $ D.attribute ("style", "solid")
+--         liftDot $ D.attribute ("color", "black")
+--         liftDot $ D.attribute ("penwidth", "2")
+--         liftDot $ D.attribute ("fillcolor", "none")
+--         mapM_ dotNodeCompact nodes
 
 
 -- | Compute proper colors for all less-edges.
