@@ -36,9 +36,6 @@ module Utils.Misc (
   , fst3
   , snd3
   , thd3
-
-  -- * uncurry
-  , uncurry3
 ) where
 
 import Data.List
