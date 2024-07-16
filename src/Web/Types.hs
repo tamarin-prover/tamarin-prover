@@ -650,6 +650,8 @@ instance Yesod WebUI where
   -- application is always served from the root of the server.
   approot = ApprootStatic T.empty
 
+  makeSessionBackend _ = return Nothing
+
   -- | The default layout for rendering.
   defaultLayout = defaultLayout'
 
