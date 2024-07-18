@@ -132,29 +132,30 @@ setDefaultAttributes = do
   D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
 
 
--- | Set default attributes for nodes and edges if the graph contains clusters.
+-- | Set default attributes for nodes and edges if the graph contains clusters. 
+-- Some additional options have been added for better rendering
 setDefaultAttributesIfCluster :: D.Dot ()
 setDefaultAttributesIfCluster = do
-  D.attribute ("nodesep", "0.8")
-  D.attribute ("ranksep", "0.8")
-  D.attribute ("sep", "4")
-  D.attribute ("splines", "true")
-  D.attribute ("overlap", "false")
-  D.attribute ("pack", "true")
-  D.attribute ("packmode", "cluster")
-  D.attribute ("concentrate", "true")
-  D.attribute ("compound", "true")
-  D.attribute ("remincross", "true")
-  D.attribute ("mclimit", "2")
-  D.attribute ("nslimit", "10")
-  D.attribute ("nslimit1", "10")
-  D.attribute ("ordering", "out")
-  D.attribute ("rankdir", "TB")
-  D.attribute ("showboxes", "false")
-  D.attribute ("clusterrank", "local")
+  D.attribute ("nodesep", "0.8") -- Slight increase to space out the graph
+  D.attribute ("ranksep", "0.8") 
+  D.attribute ("sep", "4") 
+  D.attribute ("splines", "true") 
+  D.attribute ("overlap", "false") -- Prevent nodes from overlapping
+  D.attribute ("pack", "true") -- Enable packing of clusters to ensure they are tightly grouped.
+  D.attribute ("packmode", "cluster") -- Define packing mode specifically for clusters to organize them more efficiently.
+  D.attribute ("concentrate", "true") -- Combine parallel edges .
+  D.attribute ("compound", "true") 
+  D.attribute ("remincross", "true") -- Minimize edge crossings to improve readability.
+  D.attribute ("mclimit", "2") 
+  D.attribute ("nslimit", "10") 
+  D.attribute ("nslimit1", "10") 
+  D.attribute ("ordering", "out") 
+  D.attribute ("rankdir", "TB") -- Set the direction of ranks from top to bottom for a hierarchical layout.
+  D.attribute ("showboxes", "false") 
+  D.attribute ("clusterrank", "local") -- Rank clusters locally to ensure internal cluster organization
   
-  D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2"), ("margin", "0.05,0.05"), ("shape", "ellipse")]
-  D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("penwidth", "1.5"), ("arrowsize", "0.5"), ("color", "black"), ("style", "solid"), ("weight", "8")]
+  D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2"), ("margin", "0.05,0.05"), ("shape", "ellipse")] -- Define default attributes for nodes with specific font and size settings.
+  D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("penwidth", "1.5"), ("arrowsize", "0.5"), ("color", "black"), ("style", "solid"), ("weight", "8")] -- Define default attributes for edges with specific font, size, and style settings.
 
 
 

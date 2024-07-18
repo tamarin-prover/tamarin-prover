@@ -25,6 +25,12 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , toEdgeList
     , extractAgent
     , isAgentAttribute
+    , getNodeAgent
+    , getNodeName
+    , groupNodesByAgent
+    , addSubClustersByAgent
+    , addIntelligentClusterWithSubClusters
+    , getRuleNameByNode
   ) where
 
 import           Extension.Data.Label
@@ -33,8 +39,12 @@ import qualified Theory.Model             as M
 import qualified Theory                   as Th
 import qualified Data.Map                 as Map
 
-import Data.Maybe (mapMaybe)
 import Data.List (find)
+import qualified Data.Set                 as S
+
+import Data.List.Split (splitOn)
+import Data.List (intercalate)
+import Data.Maybe
 
 -- | All nodes are identified by their NodeId.
 -- Then we have different types of nodes depending on what data of the System they use.
@@ -78,15 +88,6 @@ data GraphRepr = GraphRepr {
 
 $(mkLabels [''GraphRepr, ''Node, ''Cluster])
 
-extractAgent :: Th.RuleACInst -> String
-extractAgent ru = case find isAgentAttribute (Th.ruleAttributes ru) of
-  Just (Th.Agent agentName) -> agentName
-  _                         -> "Unknown"
-
-isAgentAttribute :: Th.RuleAttribute -> Bool
-isAgentAttribute (Th.Agent _) = True
-isAgentAttribute _            = False
-
 -- | Conversion function to a list of edges as used by Data.Graph.
 toEdgeList :: GraphRepr -> [(Node, M.NodeId, [M.NodeId])]
 toEdgeList repr = 
@@ -107,3 +108,142 @@ toEdgeList repr =
     findEdgeTarget srcId (UnsolvedChain ((srcId', _), (tgtId, _))) | srcId == srcId' = Just tgtId
     findEdgeTarget _     _                                                           = Nothing
 
+-- Clusturing by agent name 
+
+extractAgent :: Th.RuleACInst -> String
+extractAgent ru = case find isAgentAttribute (Th.ruleAttributes ru) of
+  Just (Th.Agent agentName) -> agentName
+  _                         -> "Unknown"
+
+isAgentAttribute :: Th.RuleAttribute -> Bool
+isAgentAttribute (Th.Agent _) = True
+isAgentAttribute _            = False
+
+
+groupNodesByAgent :: [Node] -> Map.Map String [Node]
+groupNodesByAgent nodes = foldr groupByAgent Map.empty nodes
+  where
+    groupByAgent node acc = case getNodeAgent node of
+      Just "Unknown" -> acc
+      Just agent     -> Map.insertWith (++) agent [node] acc
+      Nothing        -> acc
+
+
+getNodeName :: Node -> String
+getNodeName node = "node" ++ show (get nNodeId node)
+
+getNodeAgent :: Node -> Maybe String
+getNodeAgent node = case get nNodeType node of
+  SystemNode ru -> Just (extractAgent ru)
+  _             -> Nothing
+
+
+-- Fonction pour créer un cluster à partir des nœuds d'un agent et des arêtes pertinentes
+createCluster :: String -> [Node] -> [Edge] -> Cluster
+createCluster agent nodes edges = Cluster agent nodes edges
+
+-- Filtre les arêtes pour inclure uniquement celles pertinentes pour les nœuds d'un cluster
+filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
+filterEdgesForCluster nodes edges =
+    let nodeIds = S.fromList (map (get nNodeId) nodes)
+    in filter (\edge -> case edge of
+                            SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
+                            UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
+                            LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds) edges
+
+-- Fonction pour trouver les composants connectés internes à un cluster
+findConnectedComponents :: [Node] -> [Edge] -> [[Node]]
+findConnectedComponents nodes edges = go nodes []
+  where
+    -- Fonction récursive pour trouver tous les nœuds connectés à partir d'un nœud donné
+    expandCluster :: Node -> S.Set Th.NodeId -> [Node] -> [Edge] -> S.Set Th.NodeId
+    expandCluster node visited nodes edges =
+      let nodeId = get nNodeId node
+          connectedNodes = [ tgt | SystemEdge ((src, _), (tgt, _)) <- edges, src == nodeId, tgt `S.notMember` visited ] ++
+                           [ src | SystemEdge ((src, _), (tgt, _)) <- edges, tgt == nodeId, src `S.notMember` visited ]
+          newVisited = S.insert nodeId visited
+      in foldr (\nid acc -> if nid `S.member` visited then acc else expandCluster (findNodeById nid nodes) newVisited nodes edges `S.union` acc) (S.singleton nodeId) connectedNodes
+
+    findNodeById :: Th.NodeId -> [Node] -> Node
+    findNodeById nodeId nodes = head $ filter (\n -> get nNodeId n == nodeId) nodes
+
+    -- Fonction principale pour trouver tous les composants connectés
+    go :: [Node] -> [[Node]] -> [[Node]]
+    go [] components = components
+    go (n:ns) components =
+      let componentIds = S.toList $ expandCluster n S.empty (n:ns) edges
+          component = filter (\node -> get nNodeId node `elem` componentIds) (n:ns)
+          remainingNodes = filter (`notElem` component) ns
+      in go remainingNodes (component : components)
+
+
+-- Crée les sous-clusters d'un agent et les ajoute à GraphRepr
+addSubClustersByAgent :: GraphRepr -> GraphRepr
+addSubClustersByAgent repr =
+    let nodesByAgent = groupNodesByAgent (get grNodes repr)
+        edges = get grEdges repr
+        createSubClusters agent nodes =
+            let nodeIds = map (get nNodeId) nodes
+                clustersEdges = filter (\e -> case e of
+                                              SystemEdge ((src, _), (tgt, _)) -> src `elem` nodeIds && tgt `elem` nodeIds
+                                              _ -> False) edges
+                connectedComponents = findConnectedComponents nodes clustersEdges
+            in zipWith (\i component -> createCluster (agent ++ "_Session_" ++ show i) component (filterEdgesForCluster component edges)) [1..] connectedComponents
+        subClusters = concatMap (\(agent, nodes) -> createSubClusters agent nodes) (Map.toList nodesByAgent)
+        clusterEdges = concatMap (get cEdges) subClusters
+        clusteredNodes = concatMap (get cNodes) subClusters
+        remainingEdges = filter (`notElem` clusterEdges) edges
+        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+    in set grClusters subClusters $
+       set grEdges remainingEdges $
+       set grNodes remainingNodes repr
+
+
+-- Clustering based on the name of the rules.
+
+
+-- Function to get the rule name from a node
+getRuleNameByNode :: Node -> Maybe String
+getRuleNameByNode node = case _nNodeType node of
+    SystemNode ru -> Just (Th.showRuleCaseName ru)
+    _             -> Nothing
+
+-- Function to extract the base name based on underscores
+extractBaseName :: String -> Int -> String
+extractBaseName name underscores = 
+    let parts = splitOn "_" name
+        baseName = intercalate "_" (take (length parts - underscores) parts)
+    in if null baseName then "Unknown" else baseName
+
+-- Function to group nodes by similar rule names
+groupBySimilarName :: [Node] -> Int -> Map.Map String [Node]
+groupBySimilarName nodes underscores = 
+    foldr (\node acc -> 
+        let ruleName = fromMaybe "Unknown" (getRuleNameByNode node)
+            baseName = extractBaseName ruleName underscores
+        in if baseName == "Unknown"
+            then acc
+            else Map.insertWith (++) baseName [node] acc
+    ) Map.empty nodes
+
+
+-- Function to add intelligent clusters with similar rule names to GraphRepr
+addIntelligentClusterWithSubClusters :: GraphRepr -> Int -> GraphRepr
+addIntelligentClusterWithSubClusters repr underscores =
+    let nodesBySimilarName = groupBySimilarName (get grNodes repr) underscores
+        edges = get grEdges repr
+        createSubClusters name nodes =
+            let nodeIds = map (get nNodeId) nodes
+                clustersEdges = filter (\e -> case e of
+                                              SystemEdge ((src, _), (tgt, _)) -> src `elem` nodeIds && tgt `elem` nodeIds
+                                              _ -> False) edges
+                connectedComponents = findConnectedComponents nodes clustersEdges
+            in zipWith (\i component -> createCluster (name ++ "_Session_" ++ show i) component (filterEdgesForCluster component edges)) [1..] connectedComponents
+        subClusters = concatMap (\(name, nodes) -> createSubClusters name nodes) (Map.toList nodesBySimilarName)
+        clusterEdges = concatMap (get cEdges) subClusters
+        clusteredNodes = concatMap (get cNodes) subClusters
+        remainingEdges = filter (`notElem` clusterEdges) edges
+        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+    in set grClusters subClusters $
+       set grEdges remainingEdges $
+       set grNodes remainingNodes repr
