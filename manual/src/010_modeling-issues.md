@@ -247,9 +247,9 @@ In the rule `setup`, this is the case because we used m once as a fresh value
 
 ### Subterm Convergence Warning ###
 
-The equational theory used by Tamarin must always be convergent, meaning that any sequence of rewriting steps must eventually terminate. Tamarin verifies if the theory is subterm convergent. If it is subterm convergent, it is guaranteed to be convergent. However, if it is not subterm convergent, it does not necessarily imply non-convergence; it only indicates a potential risk of non-convergence. Non-convergence of an equation can result in infinite loops or incorrect results.
+The equational theory used by Tamarin must always be convergent, meaning that any sequence of rewriting steps must eventually terminate, and have the finite variant property. Tamarin verifies if the equational theory is subterm convergent. If it is subterm convergent, it is guaranteed to be convergent an to have the finite variant property. However, if it is not subterm convergent, it does not necessarily imply non-convergence; it only indicates a potential risk of non-convergence. Non-convergence of an equation can result in infinite loops or incorrect results.
 
-An equation is subterm convergent if the right-hand side is a constant (such as true or false) or a subterm of the left-hand side. For instance, the equation `f(g(x)) = x` is subterm convergent since the right-hand side is a subterm of the left-hand side. Conversely, the equation `f(x) = g(x)` is not subterm convergent.
+An equation is subterm convergent if the right-hand side is a constant (such as `true` or `false`) or a subterm of the left-hand side. For instance, the equation `f(g(x)) = x` is subterm convergent since the right-hand side is a subterm of the left-hand side. Conversely, the equation `f(x) = g(x)` is not subterm convergent.
 
 Consider the following example from the warning:
 
@@ -263,6 +263,10 @@ Consider the following example from the warning:
    
  	For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html 
 	*/
+
+If you are sure that your equational theory is convergent and has the finite variant theory you can deactivate the warning using the annotation `convergent` as follows:
+
+	equations [convergent]: ...
 
 ### Message derivation errors
 
