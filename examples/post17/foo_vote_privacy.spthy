@@ -28,7 +28,7 @@ begin
 
 builtins: multiset
 functions: pk/1, sign/2, checksign/2, blind/2, unblind/2, open/2, commit/2
-equations: open(commit(m,r),r)=m,
+equations[convergent]: open(commit(m,r),r)=m,
            checksign( sign(m,sk),pk(sk) ) = m,
            unblind(blind(m,r),r) = m,
            unblind(sign(blind(m,r),sk),r) = sign(m,sk)

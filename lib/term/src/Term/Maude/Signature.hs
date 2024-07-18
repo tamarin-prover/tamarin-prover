@@ -212,7 +212,7 @@ prettyMaudeSigExcept sig excl = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
     , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig S.\\ excl)
     , ppNonEmptyList
-        (\ds -> P.sep ((if eqConvergent sig then P.keyword_ "equation[convergent]:" else P.keyword_ "equations:") : map (P.nest 2) ds))
+        (\ds -> P.sep ((if eqConvergent sig then P.keyword_ "equations[convergent]:" else P.keyword_ "equations:") : map (P.nest 2) ds))
         prettyCtxtStRule $ S.toList (stRules sig)
     ]
   where

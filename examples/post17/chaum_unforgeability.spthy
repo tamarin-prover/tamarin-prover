@@ -29,7 +29,7 @@ begin
 
 
 functions: pk/1, sign/2, checksign/2, blind/2, unblind/2
-equations: checksign( sign(m,k),pk(k) ) = m,
+equations[convergent]: checksign( sign(m,k),pk(k) ) = m,
            unblind( blind(m,r),r ) = m,
            unblind( sign(blind(m,r),k),r ) = sign(m,k)
 
