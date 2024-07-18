@@ -1140,6 +1140,7 @@ prettyRuleAttribute attr = case attr of
               g = map toLNFact
               h = map toLFormula
     IgnoreDerivChecks -> text "derivchecks"
+    Agent agentName -> text "agent=" <> text agentName
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String

@@ -31,6 +31,8 @@ import           Extension.Data.Label
 import qualified Theory.Constraint.System as Sys
 import qualified Theory.Model             as M
 import qualified Theory                   as Th
+import qualified Data.Map                 as Map
+
 import Data.Maybe (mapMaybe)
 import Data.List (find)
 

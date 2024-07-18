@@ -19,7 +19,6 @@ module Theory.Constraint.System.Dot (
   ) where
 
 
-import Debug.Trace (traceM)
 import           Data.Ord
 import           Data.Char                (isSpace)
 import           Data.Color
