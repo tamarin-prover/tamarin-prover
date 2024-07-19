@@ -35,11 +35,11 @@ mkdir -p $CHECKOUT/$BRANCH/tex
 doCompile
 for x in book code code_ERRORexamples code_ObsEquiv images
 do
-    cp -r $x $CHECKOUT/$BRANCH
+    cp -r manual/$x $CHECKOUT/$BRANCH
 done
-cp tex/tamarin-manual.pdf $CHECKOUT/$BRANCH/tex/tamarin-manual.pdf
+cp manual/tex/tamarin-manual.pdf $CHECKOUT/$BRANCH/tex/tamarin-manual.pdf
 # put index.html to root directory
-cp index.html $CHECKOUT/index.html
+cp manual/index.html $CHECKOUT/index.html
 
 # If there are no changes to the compiled book (e.g. this is a README update) then just bail.
 if [[ -z `git -C $CHECKOUT status --porcelain` ]]; then
