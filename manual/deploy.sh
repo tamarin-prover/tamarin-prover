@@ -13,7 +13,7 @@ TARGET_BRANCH="gh-pages"
 
 function doCompile {
     make
-    make pdf
+#    make pdf
 }
 
 if [ "$BRANCH" != "$MASTER_BRANCH" && "$BRANCH" != "$DEVELOP_BRANCH" ]; then
@@ -32,14 +32,15 @@ git -C $CHECKOUT checkout $TARGET_BRANCH || git -C $CHECKOUT checkout --orphan $
 # Replace existing contents of checkout with the results of a fresh compile.
 rm -rf $CHECKOUT/$BRANCH || exit 0
 mkdir -p $CHECKOUT/$BRANCH/tex
+cd manual
 doCompile
 for x in book code code_ERRORexamples code_ObsEquiv images
 do
-    cp -r manual/$x $CHECKOUT/$BRANCH
+    cp -r $x $CHECKOUT/$BRANCH
 done
-cp manual/tex/tamarin-manual.pdf $CHECKOUT/$BRANCH/tex/tamarin-manual.pdf
+cp tex/tamarin-manual.pdf $CHECKOUT/$BRANCH/tex/tamarin-manual.pdf
 # put index.html to root directory
-cp manual/index.html $CHECKOUT/index.html
+cp index.html $CHECKOUT/index.html
 
 # If there are no changes to the compiled book (e.g. this is a README update) then just bail.
 if [[ -z `git -C $CHECKOUT status --porcelain` ]]; then
@@ -48,7 +49,7 @@ if [[ -z `git -C $CHECKOUT status --porcelain` ]]; then
 fi
 
 # Commit the "changes", i.e. the new version. The delta will show diffs between new and old versions.
-git -C $CHECKOUT add \*
+git -C $CHECKOUT add *
 git -C $CHECKOUT commit -m "Deploy to GitHub Pages on ${BRANCH}: ${SHA}"
 
 # Get the deploy key by using Githubs's stored variables to decrypt deploy_key.enc.
