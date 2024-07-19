@@ -13,7 +13,7 @@ TARGET_BRANCH="gh-pages"
 
 function doCompile {
     make
-#    make pdf
+    make pdf
 }
 
 if [ "$BRANCH" != "$MASTER_BRANCH" && "$BRANCH" != "$DEVELOP_BRANCH" ]; then
