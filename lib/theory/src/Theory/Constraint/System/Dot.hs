@@ -519,8 +519,7 @@ dotGraphCompact dotOptions colorMap graph =
 dotClustersEdges :: [Cluster] -> SeDot ()
 dotClustersEdges clusters = do
     let allEdges = concatMap (get cEdges) clusters
-        uniqueEdges = S.toList . S.fromList $ allEdges
-        (lessEdges, restEdges) = mergeLessEdges uniqueEdges
+        (lessEdges, restEdges) = mergeLessEdges allEdges
     mapM_ dotEdge restEdges
     mapM_ dotLessEdge lessEdges
 
@@ -547,13 +546,6 @@ simpleHash s = foldl (\acc c -> acc * 31 + ord c) 7 s
 -- Function to generate a value based on the agent name
 generateValue :: String -> Double
 generateValue s = fromIntegral (simpleHash s `mod` 360) / 360.0
-
--- -- Function to generate a color based on the agent name
--- agentColor :: String -> String
--- agentColor name = printf "#%02X%02X%02X" r g b
---   where
---     h = generateValue name
---     (r, g, b) = hlsToRgb (h, 0.5, 0.6)
 
 -- Function to generate a color based on the agent name with reduced intensity
 agentColor :: String -> String

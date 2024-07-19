@@ -108,7 +108,11 @@ toEdgeList repr =
     findEdgeTarget srcId (UnsolvedChain ((srcId', _), (tgtId, _))) | srcId == srcId' = Just tgtId
     findEdgeTarget _     _                                                           = Nothing
 
+
+
+----------------------------------------------------
 -- Clusturing by agent name 
+----------------------------------------------------
 
 extractAgent :: Th.RuleACInst -> String
 extractAgent ru = case find isAgentAttribute (Th.ruleAttributes ru) of
@@ -147,9 +151,9 @@ filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
 filterEdgesForCluster nodes edges =
     let nodeIds = S.fromList (map (get nNodeId) nodes)
     in filter (\edge -> case edge of
-                            SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
-                            UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds
-                            LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds || tgtNode `S.member` nodeIds) edges
+                            SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
+                            UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
+                            LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds) edges
 
 -- Fonction pour trouver les composants connectés internes à un cluster
 findConnectedComponents :: [Node] -> [Edge] -> [[Node]]
@@ -183,11 +187,7 @@ addSubClustersByAgent repr =
     let nodesByAgent = groupNodesByAgent (get grNodes repr)
         edges = get grEdges repr
         createSubClusters agent nodes =
-            let nodeIds = map (get nNodeId) nodes
-                clustersEdges = filter (\e -> case e of
-                                              SystemEdge ((src, _), (tgt, _)) -> src `elem` nodeIds && tgt `elem` nodeIds
-                                              _ -> False) edges
-                connectedComponents = findConnectedComponents nodes clustersEdges
+            let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
             in zipWith (\i component -> createCluster (agent ++ "_Session_" ++ show i) component (filterEdgesForCluster component edges)) [1..] connectedComponents
         subClusters = concatMap (\(agent, nodes) -> createSubClusters agent nodes) (Map.toList nodesByAgent)
         clusterEdges = concatMap (get cEdges) subClusters
@@ -199,7 +199,9 @@ addSubClustersByAgent repr =
        set grNodes remainingNodes repr
 
 
+----------------------------------------------------
 -- Clustering based on the name of the rules.
+----------------------------------------------------
 
 
 -- Function to get the rule name from a node
@@ -227,17 +229,12 @@ groupBySimilarName nodes underscores =
     ) Map.empty nodes
 
 
--- Function to add intelligent clusters with similar rule names to GraphRepr
 addIntelligentClusterWithSubClusters :: GraphRepr -> Int -> GraphRepr
 addIntelligentClusterWithSubClusters repr underscores =
     let nodesBySimilarName = groupBySimilarName (get grNodes repr) underscores
         edges = get grEdges repr
         createSubClusters name nodes =
-            let nodeIds = map (get nNodeId) nodes
-                clustersEdges = filter (\e -> case e of
-                                              SystemEdge ((src, _), (tgt, _)) -> src `elem` nodeIds && tgt `elem` nodeIds
-                                              _ -> False) edges
-                connectedComponents = findConnectedComponents nodes clustersEdges
+            let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
             in zipWith (\i component -> createCluster (name ++ "_Session_" ++ show i) component (filterEdgesForCluster component edges)) [1..] connectedComponents
         subClusters = concatMap (\(name, nodes) -> createSubClusters name nodes) (Map.toList nodesBySimilarName)
         clusterEdges = concatMap (get cEdges) subClusters
