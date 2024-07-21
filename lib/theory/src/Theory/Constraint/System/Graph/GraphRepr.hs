@@ -18,7 +18,7 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , nNodeId
     , NodeType(..)
     , nodeIsAttackerDerivation
-    , collapseNodes
+    , mkCollapsedNode
     , Edge(..)
     , edgeSourceId
     , edgeTargetId
@@ -27,13 +27,8 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , cNodes
     , cEdges
     , toEdgeList
-    , GraphAdjMap
-    , toAdjMap
-    , fromAdjMap
   ) where
 
-import Data.List.NonEmpty (NonEmpty(..))
-import qualified Data.List.NonEmpty       as NE
 import           Extension.Data.Label
 import qualified Theory.Constraint.System as Sys
 import qualified Theory                   as Th
@@ -104,8 +99,8 @@ data GraphRepr = GraphRepr {
 $(mkLabels [''GraphRepr, ''Node, ''Cluster])
 
 -- | Turn a nonempty list of nodes into a single collapsed node.
-collapseNodes :: NonEmpty Node -> Node
-collapseNodes (node :| nodes) = 
+mkCollapsedNode :: Node -> [Node] ->Node
+mkCollapsedNode node nodes = 
   let nodeId = get nNodeId node
       nodeType = CollapseNode (flattenNodes (node : nodes)) 
   in
@@ -140,44 +135,3 @@ toEdgeList repr =
     findEdgeTarget srcId (LessEdge (Th.LessAtom srcId' tgtId _))   | srcId == srcId' = Just tgtId
     findEdgeTarget srcId (UnsolvedChain ((srcId', _), (tgtId, _))) | srcId == srcId' = Just tgtId
     findEdgeTarget _     _                                                           = Nothing
-
-type GraphAdjMap = M.Map Th.NodeId (Node, [Edge])
-
--- | View the graph as a map from 'NodeId' to the 'Node' information and a list of outgoing 'Edge's.
--- Note that this assumes that no clusters exist.
-toAdjMap :: GraphRepr -> GraphAdjMap
-toAdjMap repr =
-  let allNodes = get grNodes repr
-      allEdges = get grEdges repr
-      adjMap = M.fromList $ map (\node -> (get nNodeId node, (node, filterEdges allEdges node))) allNodes
-  in
-    adjMap
-  where
-    -- | For each node, find all connected nodes using allEdges and return their NodeId's.
-    filterEdges :: [Edge] -> Node -> [Edge]
-    filterEdges allEdges node = 
-      let srcId = get nNodeId node in
-      mapMaybe (\edge -> if srcId == edgeSourceId edge then Just edge else Nothing) allEdges
-
--- | Turn the map view of a graph back into the default representation.
--- Due to the way 'CollapseNode's are generated, they may exist multiple times in the map. For each node that a CollapseNode contains,
--- the CollapseNode is the value of the contained node's NodeId in the map. Therefore we use a visited set to prevent adding nodes 
--- multiple times. 
--- Note that this assumes the 'CollapseNode's are not nested, as it only looks into the immediate children 
--- to fill the visited set.
-fromAdjMap :: GraphAdjMap -> GraphRepr
-fromAdjMap adjMap = 
-  let (_, nodes, edges) = M.foldrWithKey visitNode (S.empty, [], []) adjMap in
-    GraphRepr [] nodes edges
-  where
-    visitNode :: Th.NodeId -> (Node, [Edge]) -> (S.Set Th.NodeId, [Node], [Edge]) -> (S.Set Th.NodeId, [Node], [Edge])
-    visitNode nodeId (node, edges) state@(visited, outputNodes, outputEdges) =
-      if get nNodeId node `S.member` visited
-      then state
-      else 
-        let nowVisited = case get nNodeType node of 
-                          CollapseNode children -> S.fromList $ map (get nNodeId) children 
-                          _ -> S.singleton nodeId
-        in
-          (S.union nowVisited visited, node : outputNodes, edges ++ outputEdges)
-  

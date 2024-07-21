@@ -32,6 +32,7 @@ module Theory.Constraint.System.Graph.Graph (
 
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty       as NE
+import Data.List (partition)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import qualified Data.Set                 as S
@@ -41,6 +42,7 @@ import qualified Theory.Constraint.System as Sys
 import           Theory.Constraint.System.Graph.GraphRepr
 import           Theory.Constraint.System.Graph.Abbreviation
 import qualified Theory                   as Th
+import qualified Data.Equivalence.Monad   as E
 import Theory.Constraint.System.Graph.Simplification (simplifySystem, compressSystem)
 
 -- | The level of graph simplification.
@@ -129,53 +131,52 @@ systemEdges se =
   let edges = S.toList $ get Sys.sEdges se in
   map (\(Sys.Edge src tgt) -> SystemEdge (src, tgt)) edges
 
--- | Transform the graph representation to insert 'CollapseNode's which collect connected attacker derivation nodes.
+-- | Transform the graph representation to insert 'CollapsedNode's which collect connected attacker derivation nodes.
 -- This process is based on the cleandot python script and goes through all nodes in the graph, checks if they are an attacker node
--- and then converts them to a 'CollapseNode'. During this process, connected 'CollapseNode's are unified, so that for each connected
--- groups of attacker derivation nodes a single 'CollapseNode' remains in the final graph.
+-- and then marks them to be collapsed. During this process, connected 'CollapsedNode's are unified, so that for each connected
+-- groups of attacker derivation nodes a single 'CollapsedNode' remains in the final graph.
 collapseDerivations :: GraphRepr -> GraphRepr
-collapseDerivations repr = 
-  let adjMap = toAdjMap repr
-      newAdjMap = foldl findCollapseNode adjMap $ M.keys adjMap
-      newRepr = fromAdjMap newAdjMap
-  in
-    newRepr
+collapseDerivations repr@(GraphRepr _ nodes edges) = 
+  let newNodes = E.runEquivM NE.singleton NE.append collapseNodes in
+  set grNodes newNodes repr
   where 
-    findCollapseNode :: GraphAdjMap -> Th.NodeId -> GraphAdjMap
-    findCollapseNode adjMap nodeId =
-      let (currentNode, currentEdges) = adjMap M.! nodeId
-          predecessors = M.keys $ M.filter (\(_, edges) -> any (\edge -> nodeId == edgeTargetId edge) edges) adjMap
-          successors = M.keys $ M.filter (\(node, _) -> any (\edge -> get nNodeId node == edgeTargetId edge) currentEdges) adjMap
-      in
-        if nodeIsAttackerDerivation currentNode 
-        && not (null predecessors)
-        && not (null successors)
-        then
-          -- remove current node
-          -- remove those successors that are collapseNodes
-          -- remove those predecessors that are collapseNodes
-          let removeSuccPredIds = filter (isCollapseNode adjMap) predecessors
-                                  ++ filter (isCollapseNode adjMap) successors
-              collapseEntries = adjMap M.! nodeId :| map (\k -> adjMap M.! k) removeSuccPredIds
-              -- create a new collapseNode out of all removed nodes
-              newCollapsedNode = collapseNodes (NE.map fst collapseEntries)
-              -- also collect all the edges from the nodes that we collapsed
-              unifiedEdges = concat $ NE.toList $ NE.map snd collapseEntries
-              -- insert collapseNode
-              newAdjMap = foldr (\(node, edges) m -> 
-                                  let k = get nNodeId node in
-                                  M.insert k (newCollapsedNode, unifiedEdges) m) adjMap collapseEntries
-          in
-          newAdjMap
-        else
-          adjMap
-    
-    isCollapseNode :: GraphAdjMap -> Th.NodeId -> Bool
-    isCollapseNode adjMap nodeId =
-      case get nNodeType $ fst (adjMap M.! nodeId) of
-        CollapseNode _ -> True
-        _              -> False
+    -- | This computation first partitions the set of all nodes into ones that can be collapsed and ones that 
+    -- remain unchanged in the final output. The marked nodes are then iteratively union-ed with their neighbors using
+    -- the Union-find algorithm implemented in the 'EuivM' monad. 
+    --
+    -- ==== a.d. Node: 
+    -- It seems union-find in a purely functional language is not as performant as usual but I did not notice any slowdowns.
+    collapseNodes :: E.EquivM s (NonEmpty Node) Node [Node]
+    collapseNodes = do
+      let (markedNodes, unmarkedNodes) = partition markNode nodes
+      mapM_ (unionNode markedNodes) markedNodes
+      -- Each equivalence class corresponds is a nonempty collection of nodes that should be collapsed together.
+      classes <- mapM E.desc =<< E.classes
+      let collapsedNodes = map (\cls -> case cls of
+                                        n :| [] -> n -- If it's only a single node we do not collapse it.
+                                        n :| ns -> mkCollapsedNode n ns) 
+                            classes
+      return $ collapsedNodes ++ unmarkedNodes
 
+    -- | A node is marked for collapsing if it is an attacker derivation and has both successors and predecessors.
+    markNode :: Node -> Bool
+    markNode node =
+      let nodeId = get nNodeId node 
+          hasPredecessors = not $ null $ filter (\edge -> nodeId == edgeTargetId edge) edges
+          hasSuccessors = not $ null $ filter (\edge -> nodeId == edgeSourceId edge) edges
+          shouldCollapse = nodeIsAttackerDerivation node && hasPredecessors && hasSuccessors
+      in
+        shouldCollapse
+    
+    -- | Union the equivalence classes of the input node and all of its children.
+    unionNode :: [Node] -> Node -> E.EquivM s (NonEmpty Node) Node ()
+    unionNode markedNodes node = do
+      let outgoingEdges = filter (\edge -> (get nNodeId node) == edgeSourceId edge) edges
+          childrenIds = S.fromList $ map edgeTargetId outgoingEdges
+          markedChildren = filter (\n -> (get nNodeId n) `S.member` childrenIds) markedNodes
+      E.equateAll (node : markedChildren)
+
+       
 -- | Computes a basic graph representation from a System 
 -- where nodes are 
 -- 1. the System rule instances
