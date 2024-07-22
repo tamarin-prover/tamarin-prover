@@ -20,7 +20,7 @@ theory dsscbc begin
 */
 
 functions: enc/2, dec/2, prefix/1
-equations[convergent]: dec(enc(M,k), k) = M
+equations [convergent]: dec(enc(M,k), k) = M
          , prefix(enc(<X,Y>, k)) = enc(X, k)
 
 rule setup:

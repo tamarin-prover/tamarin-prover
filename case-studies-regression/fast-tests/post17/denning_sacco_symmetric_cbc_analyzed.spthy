@@ -3,7 +3,7 @@ theory dsscbc begin
 // Function signature and definition of the equational theory E
 
 functions: dec/2, enc/2, fst/1, pair/2, prefix/1, snd/1
-equations[convergent]:
+equations [convergent]:
     dec(enc(M, k), k) = M,
     fst(<x.1, x.2>) = x.1,
     prefix(enc(<X, Y>, k)) = enc(X, k),

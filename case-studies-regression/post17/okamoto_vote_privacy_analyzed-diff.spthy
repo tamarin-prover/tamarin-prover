@@ -5,7 +5,7 @@ theory Okamoto_Vote_Privacy begin
 builtins: multiset
 functions: blind/2, checksign/2, f/4, fst/1, open/2, pair/2, pk/1,
            sign/2, snd/1, tdcommit/3, unblind/2
-equations[convergent]:
+equations [convergent]:
     checksign(sign(m, sk), pk(sk)) = m,
     f(m1, f(m, r, td, m1), td, m2) = f(m, r, td, m2),
     fst(<x.1, x.2>) = x.1,
