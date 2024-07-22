@@ -28,6 +28,7 @@ module Term.Maude.Signature (
   , noEqFunSyms
   , acUserFunSyms
   , userDefineFunSyms
+  , userDefineSTFunSyms
 
   -- * predefined maude signatures
   , dhMaudeSig
@@ -156,6 +157,9 @@ acUserFunSyms msig = S.fromList [ o | AC (ACfct o) <- S.toList (funSyms msig) ]
 
 userDefineFunSyms :: MaudeSig -> UserDefineSig
 userDefineFunSyms msig = S.map NoEqUser (noEqFunSyms msig) `S.union` S.map ACfctUser (acUserFunSyms msig)
+
+userDefineSTFunSyms :: MaudeSig -> UserDefineSig
+userDefineSTFunSyms msig = S.map NoEqUser (stFunSyms msig) `S.union` S.map ACfctUser (acUserFunSyms msig)
 
 -- | Add function symbol to given maude signature.
 addFunSym :: UserDefineSym -> MaudeSig -> MaudeSig

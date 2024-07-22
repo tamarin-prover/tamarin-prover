@@ -22389,7 +22389,9 @@ WARNING: the following wellformedness checks failed!
 Derivation Checks
 =================
 
-  Derivation checks timed out. Use --derivcheck-timeout=INT to configure timeout, 0 to deactivate.
+  Derivation checks timed out.
+  Use --derivcheck-timeout=INT to configure timeout.
+  Set to 0 to deactivate for no timeout.
 */
 
 /*

@@ -390,6 +390,7 @@ prettyChainReduction :: SignatureWithMaude -> String -> OpenRuleCache -> [[IntrR
 prettyChainReduction s name o t b = unsafePerformIO $ do
   traceM ("[Theory " ++ name ++ "] Chain reduction checks started")
   rule <- evaluate . force $ applyChainReduction s o t b
+  --traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimit rule))
   traceM ("[Theory " ++ name ++ "] Chain reduction checks ended")
   return rule
 

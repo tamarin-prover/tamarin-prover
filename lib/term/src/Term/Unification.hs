@@ -74,6 +74,7 @@ module Term.Unification (
   , noEqFunSyms
   , acUserFunSyms
   , userDefineFunSyms
+  , userDefineSTFunSyms
   , addFunSym
   , addCtxtStRule
 

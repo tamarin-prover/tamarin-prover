@@ -45,6 +45,8 @@ import           Term.Positions
 
 import           Theory.Model
 
+import Debug.Trace
+
 -- Variants of intruder deduction rules
 ----------------------------------------------------------------------
 
@@ -182,9 +184,9 @@ minimizeIntruderRules diff rules =
 
     -- We assume that the KD-Fact is the first fact, which is the case in destructionRules above
     isDoublePremiseRule (Rule _ ((Fact KDFact _ [t]):prems) concs _ _) =
-      isAntiCoerce concs prems || nullIntersect [t] concs || (frees concs == []
+       (frees concs == []
          && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
-         && isMsgVar t && any (==(kuFact t)) prems)
+         && isMsgVar t && any (==(kuFact t)) prems) || isAntiCoerce concs prems || (nullIntersect [t] concs && frees concs /= [])
     isDoublePremiseRule _                                               = False
 
     isAntiCoerce :: [LNFact] -> [LNFact] -> Bool
@@ -201,7 +203,7 @@ minimizeIntruderRules diff rules =
 subtermIntruderRules :: Bool -> MaudeSig -> [IntrRuleAC]
 subtermIntruderRules diff maudeSig =
     minimizeIntruderRules diff (concatMap  (destructionRules diff) (S.toList $ stRules maudeSig)
-     ++ constructionRules (userDefineFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
+     ++ constructionRules (userDefineSTFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@
@@ -312,7 +314,7 @@ variantsIntruder hnd minimizeVariants applyFilters ru = go [] $ reverse $ do
     case concatMap factTerms $ get rConcs ruvariant of
         [viewTerm -> FApp (AC Mult) _] ->
             fail "Rules with product conclusion are redundant"
-        _                              -> return ruvariant
+        _                              -> trace ("Variant : " ++ show ruvariant) return ruvariant
   where
     go checked [] = checked
     go checked (r:unchecked) = go checked' unchecked
