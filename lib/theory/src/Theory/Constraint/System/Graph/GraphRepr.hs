@@ -34,7 +34,6 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , getRuleNameByNode
   ) where
 
-import Debug.Trace
 import           Extension.Data.Label
 import qualified Theory.Constraint.System as Sys
 import qualified Theory.Model             as M
@@ -42,6 +41,7 @@ import qualified Theory                   as Th
 import qualified Data.Map                 as Map
 
 import qualified Data.Set                 as S
+
 import Data.Char (isDigit)
 import Data.List.Split (splitOn)
 import Data.List (find, intercalate)
@@ -143,11 +143,11 @@ getNodeAgent node = case get nNodeType node of
   _             -> Nothing
 
 
--- Fonction pour créer un cluster à partir des nœuds d'un agent et des arêtes pertinentes
+-- Function to create a cluster from an agent's nodes and relevant edges
 createCluster :: String -> [Node] -> [Edge] -> Cluster
-createCluster agent nodes edges = Cluster agent nodes edges
+createCluster = Cluster
 
--- Filtre les arêtes pour inclure uniquement celles pertinentes pour les nœuds d'un cluster
+-- Filters edges to include only those relevant for the nodes of a cluster
 filterEdgesForCluster :: [Node] -> [Edge] -> [Edge]
 filterEdgesForCluster nodes edges =
     let nodeIds = S.fromList (map (get nNodeId) nodes)
@@ -156,23 +156,23 @@ filterEdgesForCluster nodes edges =
                             UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
                             LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds) edges
 
--- Fonction pour trouver les composants connectés internes à un cluster
+-- Function to find the connected components within a cluster
 findConnectedComponents :: [Node] -> [Edge] -> [[Node]]
 findConnectedComponents nodes edges = go nodes []
   where
-    -- Fonction récursive pour trouver tous les nœuds connectés à partir d'un nœud donné
+    -- Recursive function to find all nodes connected from a given node
     expandCluster :: Node -> S.Set Th.NodeId -> [Node] -> [Edge] -> S.Set Th.NodeId
-    expandCluster node visited nodes edges =
+    expandCluster node visited allNodes allEdges =
       let nodeId = get nNodeId node
-          connectedNodes = [ tgt | SystemEdge ((src, _), (tgt, _)) <- edges, src == nodeId, tgt `S.notMember` visited ] ++
-                           [ src | SystemEdge ((src, _), (tgt, _)) <- edges, tgt == nodeId, src `S.notMember` visited ]
+          connectedNodes = [ tgt | SystemEdge ((src, _), (tgt, _)) <- allEdges, src == nodeId, tgt `S.notMember` visited ] ++
+                           [ src | SystemEdge ((src, _), (tgt, _)) <- allEdges, tgt == nodeId, src `S.notMember` visited ]
           newVisited = S.insert nodeId visited
-      in foldr (\nid acc -> if nid `S.member` visited then acc else expandCluster (findNodeById nid nodes) newVisited nodes edges `S.union` acc) (S.singleton nodeId) connectedNodes
+      in foldr (\nid acc -> if nid `S.member` visited then acc else expandCluster (findNodeById nid allNodes) newVisited allNodes allEdges `S.union` acc) (S.singleton nodeId) connectedNodes
 
     findNodeById :: Th.NodeId -> [Node] -> Node
-    findNodeById nodeId nodes = head $ filter (\n -> get nNodeId n == nodeId) nodes
+    findNodeById nodeId allNodes = head $ filter (\n -> get nNodeId n == nodeId) allNodes
 
-    -- Fonction principale pour trouver tous les composants connectés
+    -- Main function to find all connected components
     go :: [Node] -> [[Node]] -> [[Node]]
     go [] components = components
     go (n:ns) components =
@@ -182,14 +182,14 @@ findConnectedComponents nodes edges = go nodes []
       in go remainingNodes (component : components)
 
 
--- Crée les sous-clusters d'un agent et les ajoute à GraphRepr
+-- Create the sub-clusters of an agent and add them to GraphRepr
 addSubClustersByAgent :: GraphRepr -> GraphRepr
 addSubClustersByAgent repr =
     let nodesByAgent = groupNodesByAgent (get grNodes repr)
         edges = get grEdges repr
         createSubClusters agent nodes =
             let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
-            in zipWith (\i component -> createCluster (agent ++ "_Session_" ++ show i) component (filterEdgesForCluster component edges)) [1..] connectedComponents
+            in zipWith (\i component -> createCluster (agent ++ "_Session_" ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
         subClusters = concatMap (\(agent, nodes) -> createSubClusters agent nodes) (Map.toList nodesByAgent)
         clusterEdges = concatMap (get cEdges) subClusters
         clusteredNodes = concatMap (get cNodes) subClusters
@@ -200,34 +200,10 @@ addSubClustersByAgent repr =
        set grNodes remainingNodes repr
 
 
+
 ----------------------------------------------------
 -- Clustering based on the name of the rules.
 ----------------------------------------------------
-
-
--- -- Function to get the rule name from a node
--- getRuleNameByNode :: Node -> Maybe String
--- getRuleNameByNode node = case _nNodeType node of
---     SystemNode ru -> Just (Th.showRuleCaseName ru)
---     _             -> Nothing
-
--- -- Function to extract the base name based on underscores
--- extractBaseName :: String -> Int -> String
--- extractBaseName name underscores = 
---     let parts = splitOn "_" name
---         baseName = intercalate "_" (take (length parts - underscores) parts)
---     in if null baseName then "Unknown" else baseName
-
--- -- Function to group nodes by similar rule names
--- groupBySimilarName :: [Node] -> Int -> Map.Map String [Node]
--- groupBySimilarName nodes underscores = 
---     foldr (\node acc -> 
---         let ruleName = fromMaybe "Unknown" (getRuleNameByNode node)
---             baseName = extractBaseName ruleName underscores
---         in if baseName == "Unknown"
---             then acc
---             else Map.insertWith (++) baseName [node] acc
---     ) Map.empty nodes
 
 -- Function to add intelligent clusters with similar rule names to GraphRepr
 addIntelligentClusterWithSubClusters :: GraphRepr -> GraphRepr
@@ -236,7 +212,7 @@ addIntelligentClusterWithSubClusters repr =
         edges = get grEdges repr
         createSubClusters name nodes =
             let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
-            in zipWith (\i component -> createCluster (name ++ "_Session_" ++ show i) component (filterEdgesForCluster component edges)) [1..] connectedComponents
+            in zipWith (\i component -> createCluster (name ++ "_Session_" ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
         subClusters = concatMap (\(name, nodes) -> createSubClusters name nodes) (Map.toList nodesBySimilarName)
         clusterEdges = concatMap (get cEdges) subClusters
         clusteredNodes = concatMap (get cNodes) subClusters
@@ -250,13 +226,11 @@ addIntelligentClusterWithSubClusters repr =
 -- Function to get the rule name from a node
 getRuleNameByNode :: Node -> Maybe String
 getRuleNameByNode node = 
-    let result = case _nNodeType node of
-                    SystemNode ru -> case Th.ruleName ru of
-                                       Th.ProtoInfo _ -> Just (Th.showRuleCaseName ru)
-                                       _ -> Nothing
-                    _ -> Nothing
-    in trace ("getRuleNameByNode: " ++ show result) result
-
+    case _nNodeType node of
+        SystemNode ru -> case Th.ruleName ru of
+                           Th.ProtoInfo _ -> Just (Th.showRuleCaseName ru)
+                           _ -> Nothing
+        _ -> Nothing
 
 -- Function to extract the base name based on underscores
 extractBaseName :: String -> String
@@ -267,7 +241,7 @@ extractBaseName name =
         baseName = if isNumber && length parts > 1 
                    then intercalate "_" (init parts)
                    else "Unknown"
-    in trace ("extractBaseName: " ++ show baseName) baseName
+    in baseName
 
 -- Function to group nodes by similar rule names
 groupBySimilarName :: [Node] -> Map.Map String [Node]
@@ -279,4 +253,4 @@ groupBySimilarName nodes =
                         then acc
                         else Map.insertWith (++) baseName [node] acc
                 ) Map.empty nodes
-    in trace ("groupBySimilarName: " ++ show result) result
+    in result

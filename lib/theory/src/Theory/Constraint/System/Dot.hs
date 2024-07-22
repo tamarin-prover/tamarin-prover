@@ -20,7 +20,7 @@ module Theory.Constraint.System.Dot (
 
 
 import           Data.Ord
-import           Data.Char                (isSpace)
+import           Data.Char                (isSpace, ord)
 import           Data.Color
 import           Data.List                (find, isPrefixOf, intercalate, sortBy, intersperse)
 import qualified Data.Map                 as M
@@ -32,7 +32,6 @@ import           Extension.Data.Label
 import           Extension.Prelude
 
 import Text.Printf (printf)
-import Data.Char (ord)
 
 import           Control.Basics
 import qualified Control.Category         as L
@@ -524,41 +523,9 @@ dotClustersEdges clusters = do
     mapM_ dotLessEdge lessEdges
 
 
--- -- Function to convert an HLS value to RGB
--- hlsToRgb :: (Double, Double, Double) -> (Int, Int, Int)
--- hlsToRgb (h, l, s) = (floor (255 * r), floor (255 * g), floor (255 * b))
---   where
---     (r, g, b) = (hueToRgb p q (h + 1/3), hueToRgb p q h, hueToRgb p q (h - 1/3))
---     q = if l < 0.5 then l * (1 + s) else l + s - l * s
---     p = 2 * l - q
---     hueToRgb p q t
---       | t < 0     = hueToRgb p q (t + 1)
---       | t > 1     = hueToRgb p q (t - 1)
---       | t < 1/6   = p + (q - p) * 6 * t
---       | t < 1/2   = q
---       | t < 2/3   = p + (q - p) * (2/3 - t) * 6
---       | otherwise = p
-
--- -- Simple hash function to amplify differences between names
--- simpleHash :: String -> Int
--- simpleHash s = foldl (\acc c -> acc * 31 + ord c) 7 s
-
--- -- Function to generate a value based on the agent name
--- generateValue :: String -> Double
--- generateValue s = fromIntegral (simpleHash s `mod` 360) / 360.0
-
--- -- Function to generate a color based on the agent name with reduced intensity
--- agentColor :: String -> String
--- agentColor name = printf "#%02X%02X%02X%02X" r g b alpha
---   where
---     v = generateValue name
---     (r, g, b) = hsvToRGB (v, 0.5, 0.6)
---     alpha :: Int
---     alpha = floor (255 * (0.3 :: Double))
-
 -- Simple hash function to amplify differences between names
 simpleHash :: String -> Int
-simpleHash s = foldl (\acc c -> acc * 31 + ord c) 7 s
+simpleHash = foldl (\ acc c -> acc * 31 + ord c) 7
 
 -- Function to generate a value based on the agent name
 generateValue :: String -> Double
@@ -590,10 +557,7 @@ dotCluster (Cluster name nodes _) = do
         liftDot $ D.attribute ("fillcolor", color) -- Use agentColor to set the fillcolor
         liftDot $ D.attribute ("overlap", "false")
         liftDot $ D.attribute ("sep", "4")
-        -- liftDot $ D.graphAttributes [("size", "10,10!"), ("ratio", "auto")]
-        -- liftDot $ D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2")]
-        -- liftDot $ D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("weight", "8"), ("minlen", "2")]
-
+        
         mapM_ (\node -> dotNodeCompact node (Just color)) nodes
 
 -- | Compute proper colors for all less-edges.
