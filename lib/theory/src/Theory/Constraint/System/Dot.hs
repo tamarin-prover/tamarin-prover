@@ -246,18 +246,19 @@ renderLNFact fact = do
     else return $ prettyLNFact fact
 
 -- | Dot a node in record based (compact) format.
-dotNodeCompact :: Node -> SeDot ()
-dotNodeCompact node = do
+dotNodeCompact :: Node -> Maybe String -> SeDot ()
+dotNodeCompact node manualNodeColor = do
   let v = get nNodeId node
   (graph, colorMap, dotOptions) <- ask
   case get nNodeType node of
     SystemNode ru -> cacheState dsNodes v $ do
       let outgoingEdge = hasOutgoingEdge graph v
+      let agent = fromMaybe "Unknown" (getNodeAgent node)
       let color     = M.lookup (get rInfo ru) colorMap
-          nodeColor = maybe "white" rgbToHex color
+          nodeColor = fromMaybe (maybe "white" rgbToHex color) manualNodeColor
           attrs     = [("fillcolor", nodeColor),("style","filled")
                               , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
-                              , ("agent", maybe "Unknown" id (getNodeAgent node))]
+                              , ("agent",agent)]
       ids <- mkNode v ru attrs outgoingEdge dotOptions
       let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
           concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
@@ -492,7 +493,6 @@ dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
 dotGraphCompact dotOptions colorMap graph = 
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
         (`runReaderT` (graph, colorMap, dotOptions)) $ do
-            --liftDot setDefaultAttributes 
 
             -- Get the graph representation details
             let repr = get gRepr graph
@@ -505,7 +505,7 @@ dotGraphCompact dotOptions colorMap graph =
             if null $ get grClusters repr then liftDot setDefaultAttributes else liftDot setDefaultAttributesIfCluster
 
             -- Process the nodes, clusters, and edges
-            mapM_ dotNodeCompact nodes
+            mapM_ (\node -> dotNodeCompact node Nothing) nodes
             mapM_ dotCluster clusters
             mapM_ dotEdge restEdges
             mapM_ dotLessEdge lessEdges
@@ -524,20 +524,37 @@ dotClustersEdges clusters = do
     mapM_ dotLessEdge lessEdges
 
 
--- Function to convert an HLS value to RGB
-hlsToRgb :: (Double, Double, Double) -> (Int, Int, Int)
-hlsToRgb (h, l, s) = (floor (255 * r), floor (255 * g), floor (255 * b))
-  where
-    (r, g, b) = (hueToRgb p q (h + 1/3), hueToRgb p q h, hueToRgb p q (h - 1/3))
-    q = if l < 0.5 then l * (1 + s) else l + s - l * s
-    p = 2 * l - q
-    hueToRgb p q t
-      | t < 0     = hueToRgb p q (t + 1)
-      | t > 1     = hueToRgb p q (t - 1)
-      | t < 1/6   = p + (q - p) * 6 * t
-      | t < 1/2   = q
-      | t < 2/3   = p + (q - p) * (2/3 - t) * 6
-      | otherwise = p
+-- -- Function to convert an HLS value to RGB
+-- hlsToRgb :: (Double, Double, Double) -> (Int, Int, Int)
+-- hlsToRgb (h, l, s) = (floor (255 * r), floor (255 * g), floor (255 * b))
+--   where
+--     (r, g, b) = (hueToRgb p q (h + 1/3), hueToRgb p q h, hueToRgb p q (h - 1/3))
+--     q = if l < 0.5 then l * (1 + s) else l + s - l * s
+--     p = 2 * l - q
+--     hueToRgb p q t
+--       | t < 0     = hueToRgb p q (t + 1)
+--       | t > 1     = hueToRgb p q (t - 1)
+--       | t < 1/6   = p + (q - p) * 6 * t
+--       | t < 1/2   = q
+--       | t < 2/3   = p + (q - p) * (2/3 - t) * 6
+--       | otherwise = p
+
+-- -- Simple hash function to amplify differences between names
+-- simpleHash :: String -> Int
+-- simpleHash s = foldl (\acc c -> acc * 31 + ord c) 7 s
+
+-- -- Function to generate a value based on the agent name
+-- generateValue :: String -> Double
+-- generateValue s = fromIntegral (simpleHash s `mod` 360) / 360.0
+
+-- -- Function to generate a color based on the agent name with reduced intensity
+-- agentColor :: String -> String
+-- agentColor name = printf "#%02X%02X%02X%02X" r g b alpha
+--   where
+--     v = generateValue name
+--     (r, g, b) = hsvToRGB (v, 0.5, 0.6)
+--     alpha :: Int
+--     alpha = floor (255 * (0.3 :: Double))
 
 -- Simple hash function to amplify differences between names
 simpleHash :: String -> Int
@@ -547,33 +564,37 @@ simpleHash s = foldl (\acc c -> acc * 31 + ord c) 7 s
 generateValue :: String -> Double
 generateValue s = fromIntegral (simpleHash s `mod` 360) / 360.0
 
--- Function to generate a color based on the agent name with reduced intensity
+-- Function to generate a color based on the agent name with more aesthetic colors
 agentColor :: String -> String
 agentColor name = printf "#%02X%02X%02X%02X" r g b alpha
   where
     v = generateValue name
-    (r, g, b) = hlsToRgb (v, 0.5, 0.6)
+    -- Adjust saturation and value to get more pleasant colors
+    RGB rf gf bf = hsvToRGB (HSV (v * 360) 0.75 0.85) :: RGB Double  -- Higher saturation and brightness
+    r = floor (rf * 255) :: Int
+    g = floor (gf * 255) :: Int
+    b = floor (bf * 255) :: Int
     alpha :: Int
     alpha = floor (255 * (0.3 :: Double))
 
 dotCluster :: Cluster -> SeDot ()
 dotCluster (Cluster name nodes _) = do
-    let color = agentColor name
+    let color = agentColor (extractBaseName name)
     agentCluster name $ do
         liftDot $ D.attribute ("nodesep", "0.6")
         liftDot $ D.attribute ("ranksep", "0.6")
         liftDot $ D.attribute ("label", name)
         liftDot $ D.attribute ("style", "filled") -- Set style to filled to apply fillcolor
-        liftDot $ D.attribute ("color", "black")
+        liftDot $ D.attribute ("color", color)
         liftDot $ D.attribute ("penwidth", "2")
         liftDot $ D.attribute ("fillcolor", color) -- Use agentColor to set the fillcolor
         liftDot $ D.attribute ("overlap", "false")
         liftDot $ D.attribute ("sep", "4")
-        liftDot $ D.graphAttributes [("size", "10,10!"), ("ratio", "auto")]
-        liftDot $ D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2")]
-        liftDot $ D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("weight", "8"), ("minlen", "2")]
+        -- liftDot $ D.graphAttributes [("size", "10,10!"), ("ratio", "auto")]
+        -- liftDot $ D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2")]
+        -- liftDot $ D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("weight", "8"), ("minlen", "2")]
 
-        mapM_ dotNodeCompact nodes
+        mapM_ (\node -> dotNodeCompact node (Just color)) nodes
 
 -- | Compute proper colors for all less-edges.
 -- Computing the colors requires all less-edges of the graph, so we cannot do it per edge.

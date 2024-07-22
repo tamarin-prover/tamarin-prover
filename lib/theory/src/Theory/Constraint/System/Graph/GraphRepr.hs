@@ -30,20 +30,21 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , groupNodesByAgent
     , addSubClustersByAgent
     , addIntelligentClusterWithSubClusters
+    , extractBaseName
     , getRuleNameByNode
   ) where
 
+import Debug.Trace
 import           Extension.Data.Label
 import qualified Theory.Constraint.System as Sys
 import qualified Theory.Model             as M
 import qualified Theory                   as Th
 import qualified Data.Map                 as Map
 
-import Data.List (find)
 import qualified Data.Set                 as S
-
+import Data.Char (isDigit)
 import Data.List.Split (splitOn)
-import Data.List (intercalate)
+import Data.List (find, intercalate)
 import Data.Maybe
 
 -- | All nodes are identified by their NodeId.
@@ -204,34 +205,34 @@ addSubClustersByAgent repr =
 ----------------------------------------------------
 
 
--- Function to get the rule name from a node
-getRuleNameByNode :: Node -> Maybe String
-getRuleNameByNode node = case _nNodeType node of
-    SystemNode ru -> Just (Th.showRuleCaseName ru)
-    _             -> Nothing
+-- -- Function to get the rule name from a node
+-- getRuleNameByNode :: Node -> Maybe String
+-- getRuleNameByNode node = case _nNodeType node of
+--     SystemNode ru -> Just (Th.showRuleCaseName ru)
+--     _             -> Nothing
 
--- Function to extract the base name based on underscores
-extractBaseName :: String -> Int -> String
-extractBaseName name underscores = 
-    let parts = splitOn "_" name
-        baseName = intercalate "_" (take (length parts - underscores) parts)
-    in if null baseName then "Unknown" else baseName
+-- -- Function to extract the base name based on underscores
+-- extractBaseName :: String -> Int -> String
+-- extractBaseName name underscores = 
+--     let parts = splitOn "_" name
+--         baseName = intercalate "_" (take (length parts - underscores) parts)
+--     in if null baseName then "Unknown" else baseName
 
--- Function to group nodes by similar rule names
-groupBySimilarName :: [Node] -> Int -> Map.Map String [Node]
-groupBySimilarName nodes underscores = 
-    foldr (\node acc -> 
-        let ruleName = fromMaybe "Unknown" (getRuleNameByNode node)
-            baseName = extractBaseName ruleName underscores
-        in if baseName == "Unknown"
-            then acc
-            else Map.insertWith (++) baseName [node] acc
-    ) Map.empty nodes
+-- -- Function to group nodes by similar rule names
+-- groupBySimilarName :: [Node] -> Int -> Map.Map String [Node]
+-- groupBySimilarName nodes underscores = 
+--     foldr (\node acc -> 
+--         let ruleName = fromMaybe "Unknown" (getRuleNameByNode node)
+--             baseName = extractBaseName ruleName underscores
+--         in if baseName == "Unknown"
+--             then acc
+--             else Map.insertWith (++) baseName [node] acc
+--     ) Map.empty nodes
 
-
-addIntelligentClusterWithSubClusters :: GraphRepr -> Int -> GraphRepr
-addIntelligentClusterWithSubClusters repr underscores =
-    let nodesBySimilarName = groupBySimilarName (get grNodes repr) underscores
+-- Function to add intelligent clusters with similar rule names to GraphRepr
+addIntelligentClusterWithSubClusters :: GraphRepr -> GraphRepr
+addIntelligentClusterWithSubClusters repr =
+    let nodesBySimilarName = groupBySimilarName (get grNodes repr)
         edges = get grEdges repr
         createSubClusters name nodes =
             let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
@@ -244,3 +245,38 @@ addIntelligentClusterWithSubClusters repr underscores =
     in set grClusters subClusters $
        set grEdges remainingEdges $
        set grNodes remainingNodes repr
+
+
+-- Function to get the rule name from a node
+getRuleNameByNode :: Node -> Maybe String
+getRuleNameByNode node = 
+    let result = case _nNodeType node of
+                    SystemNode ru -> case Th.ruleName ru of
+                                       Th.ProtoInfo _ -> Just (Th.showRuleCaseName ru)
+                                       _ -> Nothing
+                    _ -> Nothing
+    in trace ("getRuleNameByNode: " ++ show result) result
+
+
+-- Function to extract the base name based on underscores
+extractBaseName :: String -> String
+extractBaseName name = 
+    let parts = splitOn "_" name
+        lastPart = last parts
+        isNumber = all isDigit lastPart
+        baseName = if isNumber && length parts > 1 
+                   then intercalate "_" (init parts)
+                   else "Unknown"
+    in trace ("extractBaseName: " ++ show baseName) baseName
+
+-- Function to group nodes by similar rule names
+groupBySimilarName :: [Node] -> Map.Map String [Node]
+groupBySimilarName nodes = 
+    let result = foldr (\node acc -> 
+                    let ruleName = fromMaybe "Unknown" (getRuleNameByNode node)
+                        baseName = extractBaseName ruleName
+                    in if baseName == "Unknown"
+                        then acc
+                        else Map.insertWith (++) baseName [node] acc
+                ) Map.empty nodes
+    in trace ("groupBySimilarName: " ++ show result) result
