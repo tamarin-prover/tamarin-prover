@@ -909,7 +909,8 @@ Collapsing connected attacker derivations.
 -----------------------------------------------------------------
 
 For simplification level 3 and up we collapse multiple connected attacker derivation nodes into points to reduce clutter. 
-An attacker derivation node is marked for collapsing if it is not a leaf node and is unified with all reachable nodes that are also marked for collapsing. 
+An attacker derivation node is marked for collapsing if it is not a leaf node and is unified with all reachable nodes that are also marked for collapsing and have the same weight. Weights are assigned based on the maximum number of protocol rules are between a source
+node and each node to separate the attacker nodes into layers.
 
 Note that this visualization obscures the exact dependencies between rule instances since it is only meant to give a compact overview of the general behavior of the attacker, taking a collection of terms and computing some new terms as output.
 

@@ -168,13 +168,48 @@ collapseDerivations repr@(GraphRepr _ nodes edges) =
       in
         shouldCollapse
     
-    -- | Union the equivalence classes of the input node and all of its children.
+    -- | Union the equivalence classes of the input node and all of its children that have the same weight.
     unionNode :: [Node] -> Node -> E.EquivM s (NonEmpty Node) Node ()
     unionNode markedNodes node = do
       let outgoingEdges = filter (\edge -> (get nNodeId node) == edgeSourceId edge) edges
           childrenIds = S.fromList $ map edgeTargetId outgoingEdges
           markedChildren = filter (\n -> (get nNodeId n) `S.member` childrenIds) markedNodes
-      E.equateAll (node : markedChildren)
+          childrenSameWeight = filter (\n -> M.lookup (get nNodeId n) nodeWeights == M.lookup (get nNodeId node) nodeWeights) markedChildren
+      E.equateAll (node : childrenSameWeight)
+
+    -- | We assign each node a weight that corresponds to the maximum number of protocol rules that lead
+    -- from a source node to itself. This way we partition the graph into multiple "layers" of attacker derivation 
+    -- nodes.
+    -- We find these weights by doing DFS from all source nodes, increasing the weight for each protocol rule
+    -- we cross and assigning the maximum weight to each child.
+    --
+    -- ==== a.d. Note:
+    -- The DFS implementation breaks cyclic graphs that have a loop which contains at least one protocol rule 
+    -- as the weight will increase infinitely.
+    nodeWeights :: M.Map Th.NodeId Int
+    nodeWeights = 
+      let allTargets = S.fromList $ map edgeTargetId edges
+          sources = filter (\node -> not $ get nNodeId node `S.member` allTargets) nodes
+      in
+        foldr (dfs 0) M.empty sources
+      where
+        dfs :: Int -> Node -> M.Map Th.NodeId Int -> M.Map Th.NodeId Int
+        dfs weight node visited =
+          let curId = get nNodeId node 
+              newVisited = M.insert curId weight visited
+              newWeight = if nodeIsProtocolRule node then weight + 1 else weight
+              children = 
+                let outgoingEdges = filter (\edge -> curId == edgeSourceId edge) edges
+                    childrenIds = S.fromList $ map edgeTargetId outgoingEdges in
+                    filter (\n -> (get nNodeId n) `S.member` childrenIds) nodes
+          in 
+            foldr (\child visited -> 
+                    case M.lookup (get nNodeId child) visited of
+                      Nothing -> dfs newWeight child visited
+                      Just w -> if newWeight > w 
+                                then dfs newWeight child visited
+                                else visited) 
+                  newVisited children
 
        
 -- | Computes a basic graph representation from a System 

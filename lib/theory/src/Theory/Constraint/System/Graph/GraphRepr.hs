@@ -18,6 +18,7 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , nNodeId
     , NodeType(..)
     , nodeIsAttackerDerivation
+    , nodeIsProtocolRule
     , mkCollapsedNode
     , Edge(..)
     , edgeSourceId
@@ -61,6 +62,12 @@ nodeIsAttackerDerivation (Node _ (SystemNode ru))
 nodeIsAttackerDerivation (Node _ (UnsolvedActionNode _)) = True
 nodeIsAttackerDerivation _                               = False
 
+-- | Delegating to the isProtocolRule function.
+nodeIsProtocolRule :: Node -> Bool 
+nodeIsProtocolRule (Node _ (SystemNode ru))
+  | Th.isProtocolRule ru                    = True 
+nodeIsProtocolRule _                        = False 
+
 -- | Different types of graph edges. 
 data Edge =
     SystemEdge (Sys.NodeConc, Sys.NodePrem)    -- ^ Edges that transport facts from premises to conclusions between rules.
@@ -70,14 +77,14 @@ data Edge =
 
 -- | For a given source node id and an edge, check if the edge belongs to the node and return the target node id.
 edgeSourceId :: Edge -> Th.NodeId
-edgeSourceId (SystemEdge ((srcId, _), _))    = srcId
-edgeSourceId (LessEdge (srcId, _, _))        = srcId
-edgeSourceId (UnsolvedChain ((srcId, _), _)) = srcId
+edgeSourceId (SystemEdge ((srcId, _), _))       = srcId
+edgeSourceId (LessEdge (Th.LessAtom srcId _ _)) = srcId
+edgeSourceId (UnsolvedChain ((srcId, _), _))    = srcId
 
 edgeTargetId :: Edge -> Th.NodeId
-edgeTargetId (SystemEdge (_, (tgtId, _)))    = tgtId
-edgeTargetId (LessEdge (_, tgtId, _))        = tgtId
-edgeTargetId (UnsolvedChain (_, (tgtId, _))) = tgtId
+edgeTargetId (SystemEdge (_, (tgtId, _)))       = tgtId
+edgeTargetId (LessEdge (Th.LessAtom _ tgtId _)) = tgtId
+edgeTargetId (UnsolvedChain (_, (tgtId, _)))    = tgtId
       
 
 -- | A cluster contains nodes, edges, and a name, which is the common prefix of the contained nodes.
