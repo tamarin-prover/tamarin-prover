@@ -474,11 +474,10 @@ instance Traversable BVar where
     traverse f = foldBVar (pure . Bound) (fmap Free . f)
 
 instance Applicative BVar where
-   pure  = return
+   pure  = Free
    (<*>) = ap
 
 instance Monad BVar where
-    return  = Free
     m >>= f = foldBVar Bound f m
 
 -- | Extract the name of free variable under the assumption the variable is

@@ -159,7 +159,7 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
     intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
 
     -- classifying the rules
-    rulesAC = (fmap IntrInfo                      <$> intrRulesAC) <|>
+    rulesAC = (fmap IntrInfo                      <$> intrRulesAC) ++
               ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
 
     anyOf ps = partition (\x -> any ($ x) ps)

@@ -66,8 +66,8 @@ data NodeType =
 
 -- | Different types of graph edges. 
 data Edge =
-    SystemEdge (Sys.NodeConc, Sys.NodePrem)    -- ^ Edges that transport facts from premises to conclusions entre rules.
-  | LessEdge (M.NodeId, M.NodeId, Sys.Reason)  -- ^ Edges that represent a temporal-before relationship.
+    SystemEdge (Sys.NodeConc, Sys.NodePrem)    -- ^ Edges that transport facts from premises to conclusions between rules.
+  | LessEdge Th.LessAtom                       -- ^ Edges that represent a temporal-before relationship.
   | UnsolvedChain (Sys.NodeConc, Sys.NodePrem) -- ^ Edges that are part of an unsolved chain between premises and conclusions.
   deriving( Eq, Ord, Show )
 
@@ -105,7 +105,7 @@ toEdgeList repr =
     -- | For a given source node id and an edge, check if the edge belongs to the node and return the target node id.
     findEdgeTarget :: M.NodeId -> Edge -> Maybe M.NodeId
     findEdgeTarget srcId (SystemEdge ((srcId', _), (tgtId, _)))    | srcId == srcId' = Just tgtId
-    findEdgeTarget srcId (LessEdge (srcId', tgtId, _))             | srcId == srcId' = Just tgtId
+    findEdgeTarget srcId (LessEdge (Th.LessAtom srcId' tgtId _))   | srcId == srcId' = Just tgtId
     findEdgeTarget srcId (UnsolvedChain ((srcId', _), (tgtId, _))) | srcId == srcId' = Just tgtId
     findEdgeTarget _     _                                                           = Nothing
 
@@ -154,7 +154,7 @@ filterEdgesForCluster nodes edges =
     in filter (\edge -> case edge of
                             SystemEdge ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
                             UnsolvedChain ((srcNode, _), (tgtNode, _)) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds
-                            LessEdge (srcNode, tgtNode, _) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds) edges
+                            LessEdge (Th.LessAtom srcNode tgtNode _) -> srcNode `S.member` nodeIds && tgtNode `S.member` nodeIds) edges
 
 -- Function to find the connected components within a cluster
 findConnectedComponents :: [Node] -> [Edge] -> [[Node]]

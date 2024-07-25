@@ -32,6 +32,7 @@ git -C $CHECKOUT checkout $TARGET_BRANCH || git -C $CHECKOUT checkout --orphan $
 # Replace existing contents of checkout with the results of a fresh compile.
 rm -rf $CHECKOUT/$BRANCH || exit 0
 mkdir -p $CHECKOUT/$BRANCH/tex
+cd manual
 doCompile
 for x in book code code_ERRORexamples code_ObsEquiv images
 do

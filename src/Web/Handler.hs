@@ -437,7 +437,7 @@ modifyTheory :: TheoryInfo                                -- ^ Theory to modify
              -> Handler Value
 modifyTheory ti f fpath errResponse = do
     res <- evalInThread (liftIO $ f (tiTheory ti))
-    rep <- pure $ tiErrorsHtml ti
+    let rep = tiErrorsHtml ti
     case res of
       Left e           -> return (excResponse e)
       Right Nothing    -> return (responseToJson errResponse)
@@ -755,11 +755,15 @@ getProverDiffAllR (name, mkProver, mkDiffProver) idx  = do
 getAutoProverR :: TheoryIdx
                -> SolutionExtractor
                -> Int                             -- autoprover bound to use
+               -> Bool                            -- Quit on empty oracle
                -> TheoryPath -> Handler RepJson
-getAutoProverR idx extractor bound =
+getAutoProverR idx extractor bound quitOnEmpty =
     getProverR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver
+      { apBound = actualBound
+      , apCut = if quitOnEmpty then CutAfterSorry else extractor
+      , quitOnEmptyOracle = quitOnEmpty }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]

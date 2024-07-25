@@ -40,6 +40,8 @@ module Term.Term.Raw (
     , isProperSubterm
     , replaceSubterm
     , replaceProperSubterm
+    , countSubterms
+    , countProperSubterms
 
     ) where
 
@@ -246,6 +248,13 @@ isSubterm t1 t2 = (t1 == t2) || isProperSubterm t1 t2
 isProperSubterm :: Eq a => Term a -> Term a -> Bool
 isProperSubterm t (viewTerm -> FApp _ ts) = any (isSubterm t) ts
 isProperSubterm _ _ = False
+
+countSubterms :: Eq a => Term a -> Term a -> Int
+countSubterms t1 t2 = if t1 == t2 then 1 else countProperSubterms t1 t2
+
+countProperSubterms :: Eq a => Term a -> Term a -> Int 
+countProperSubterms t (viewTerm -> FApp _ ts) = sum $ map (countSubterms t) ts
+countProperSubterms _ _ = 0
 
 -- | Replace all subterms of a term top-down according to the supplied replacement function.
 replaceSubterm :: (Term a -> Term a) -> Term a -> Term a
