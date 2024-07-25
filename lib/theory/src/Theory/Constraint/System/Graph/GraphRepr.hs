@@ -28,8 +28,8 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , getNodeRole
     , getNodeName
     , groupNodesByRole
-    , addSubClustersByRole
-    , addIntelligentClusterWithSubClusters
+    , addClusterByRole
+    , addIntelligentClusterUsingSimilarNames
     , extractBaseName
     , getRuleNameByNode
   ) where
@@ -110,6 +110,25 @@ toEdgeList repr =
     findEdgeTarget _     _                                                           = Nothing
 
 
+----------------------------------------------------
+-- Clusturing 
+----------------------------------------------------
+
+-- Function to add clusters to a GraphRepr
+addCluster :: GraphRepr -> Map.Map String [Node] -> String -> GraphRepr
+addCluster repr nodesByGroup nameSuffix =
+    let edges = get grEdges repr
+        createSubClusters name nodes =
+            let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
+            in zipWith (\i component -> createCluster (name ++ nameSuffix ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
+        subClusters = concatMap (\(name, nodes) -> createSubClusters name nodes) (Map.toList nodesByGroup)
+        clusterEdges = concatMap (get cEdges) subClusters
+        clusteredNodes = concatMap (get cNodes) subClusters
+        remainingEdges = filter (`notElem` clusterEdges) edges
+        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
+    in set grClusters subClusters $
+       set grEdges remainingEdges $
+       set grNodes remainingNodes repr
 
 ----------------------------------------------------
 -- Clusturing by role name 
@@ -181,46 +200,17 @@ findConnectedComponents nodes edges = go nodes []
       in go remainingNodes (component : components)
 
 
--- Create the sub-clusters of a role and add them to GraphRepr
-addSubClustersByRole :: GraphRepr -> GraphRepr
-addSubClustersByRole repr =
+-- Function to add sub-clusters by role
+addClusterByRole :: GraphRepr -> GraphRepr
+addClusterByRole repr =
     let nodesByRole = groupNodesByRole (get grNodes repr)
-        edges = get grEdges repr
-        createSubClusters role nodes =
-            let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
-            in zipWith (\i component -> createCluster (role ++ "_Session_" ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
-        subClusters = concatMap (\(role, nodes) -> createSubClusters role nodes) (Map.toList nodesByRole)
-        clusterEdges = concatMap (get cEdges) subClusters
-        clusteredNodes = concatMap (get cNodes) subClusters
-        remainingEdges = filter (`notElem` clusterEdges) edges
-        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
-    in set grClusters subClusters $
-       set grEdges remainingEdges $
-       set grNodes remainingNodes repr
+    in addCluster repr nodesByRole "_Session_"
 
 
 
 ----------------------------------------------------
 -- Clustering based on the name of the rules.
 ----------------------------------------------------
-
--- Function to add intelligent clusters with similar rule names to GraphRepr
-addIntelligentClusterWithSubClusters :: GraphRepr -> GraphRepr
-addIntelligentClusterWithSubClusters repr =
-    let nodesBySimilarName = groupBySimilarName (get grNodes repr)
-        edges = get grEdges repr
-        createSubClusters name nodes =
-            let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
-            in zipWith (\i component -> createCluster (name ++ "_Session_" ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
-        subClusters = concatMap (\(name, nodes) -> createSubClusters name nodes) (Map.toList nodesBySimilarName)
-        clusterEdges = concatMap (get cEdges) subClusters
-        clusteredNodes = concatMap (get cNodes) subClusters
-        remainingEdges = filter (`notElem` clusterEdges) edges
-        remainingNodes = filter (`notElem` clusteredNodes) (get grNodes repr)
-    in set grClusters subClusters $
-       set grEdges remainingEdges $
-       set grNodes remainingNodes repr
-
 
 -- Function to get the rule name from a node
 getRuleNameByNode :: Node -> Maybe String
@@ -254,3 +244,9 @@ groupBySimilarName nodes =
                         else Map.insertWith (++) baseName [node] acc
                 ) Map.empty nodes
     in result
+
+-- Function to add intelligent clusters using similar rule names
+addIntelligentClusterUsingSimilarNames :: GraphRepr -> GraphRepr
+addIntelligentClusterUsingSimilarNames repr =
+    let nodesBySimilarName = groupBySimilarName (get grNodes repr)
+    in addCluster repr nodesBySimilarName "_Session_"
