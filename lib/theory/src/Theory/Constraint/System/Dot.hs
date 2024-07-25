@@ -162,8 +162,8 @@ setDefaultAttributesIfCluster = do
 
 
 
--- | This function creates a cluster for a specific agent with a list of nodes.
--- It takes an agent name and a 'SeDot' action, then executing the given SeDot action within 
+-- | This function creates a cluster for a specific role with a list of nodes.
+-- It takes an role name and a 'SeDot' action, then executing the given SeDot action within 
 --a temporary state, updating the current state, and adding the resulting subgraph elements to 
 --the global state.
 
@@ -172,10 +172,10 @@ setDefaultAttributesIfCluster = do
 -- the 'cluster' function from 'Text.Dot'. The only feasible approach was either this or 
 -- fragmenting the 'dotNodeCompact' function. Thus, we extracted what we needed and removed 
 -- the unnecessary parts.
-agentCluster :: String -> SeDot a -> SeDot ()
-agentCluster agentName dot = do
+roleCluster :: String -> SeDot a -> SeDot ()
+roleCluster roleName dot = do
   uq <- liftDot D.nextId
-  let cid = D.createClusterNodeId agentName
+  let cid = D.createClusterNodeId roleName
   env <- ask
   currentState <- State.get
   let clusterState = D.DotGenState { D._dgsId = uq, D._dgsElements = [] }
@@ -219,12 +219,12 @@ nodeColorMap rules =
     colorAttr (RuleColor _)     = True
     colorAttr _                 = False
 
-    -- Function to filter out Agent attributes
+    -- Function to filter out role attributes
     filterAttributes :: [RuleAttribute] -> [RuleAttribute]
-    filterAttributes = filter (not . isAgent)
+    filterAttributes = filter (not . isRole)
 
-    isAgent (Agent _) = True
-    isAgent _         = False
+    isRole (Role _) = True
+    isRole _        = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational
@@ -253,7 +253,7 @@ dotNodeCompact node manualNodeColor = do
   case get nNodeType node of
     SystemNode ru -> cacheState dsNodes v $ do
       let outgoingEdge = hasOutgoingEdge graph v
-      let agent = fromMaybe "Unknown" (getNodeAgent node)
+      let role = fromMaybe "Undefined" (getNodeRole node)
 
       let rInfoVal = get rInfo ru
 
@@ -271,7 +271,7 @@ dotNodeCompact node manualNodeColor = do
           nodeColor = fromMaybe (maybe "white" rgbToHex color) (ruleColor <|> manualNodeColor)
           attrs = [("fillcolor", nodeColor), ("style", "filled")
                   , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
-                  , ("agent", agent)]
+                  , ("role", role)]
                   
       ids <- mkNode v ru attrs outgoingEdge dotOptions
       let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
@@ -502,7 +502,7 @@ dotSystemCompact graphOptions dotOptions se =
         dot = dotGraphCompact dotOptions colorMap graph in
     dot
 
--- Fonction pour générer un graphe compact en format DOT
+-- | Dot a graph in compact form (one record per rule).
 dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
 dotGraphCompact dotOptions colorMap graph = 
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
@@ -542,13 +542,13 @@ dotClustersEdges clusters = do
 simpleHash :: String -> Int
 simpleHash = foldl (\ acc c -> acc * 31 + ord c) 7
 
--- Function to generate a value based on the agent name
+-- Function to generate a value based on the role name
 generateValue :: String -> Double
 generateValue s = fromIntegral (simpleHash s `mod` 360) / 360.0
 
--- Function to generate a color based on the agent name with more aesthetic colors
-agentColor :: String -> String
-agentColor name = printf "#%02X%02X%02X%02X" r g b alpha
+-- Function to generate a color based on the role name with more aesthetic colors
+roleColor :: String -> String
+roleColor name = printf "#%02X%02X%02X%02X" r g b alpha
   where
     v = generateValue name
     -- Adjust saturation and value to get more pleasant colors
@@ -559,17 +559,19 @@ agentColor name = printf "#%02X%02X%02X%02X" r g b alpha
     alpha :: Int
     alpha = floor (255 * (0.3 :: Double))
 
+-- Function to dot clusters
 dotCluster :: Cluster -> SeDot ()
 dotCluster (Cluster name nodes _) = do
-    let color = agentColor (extractBaseName name)
-    agentCluster name $ do
+    let baseName = fromMaybe "Undefined" (extractBaseName name)
+    let color = roleColor baseName
+    roleCluster name $ do
         liftDot $ D.attribute ("nodesep", "0.6")
         liftDot $ D.attribute ("ranksep", "0.6")
         liftDot $ D.attribute ("label", name)
         liftDot $ D.attribute ("style", "filled") -- Set style to filled to apply fillcolor
         liftDot $ D.attribute ("color", color)
         liftDot $ D.attribute ("penwidth", "2")
-        liftDot $ D.attribute ("fillcolor", color) -- Use agentColor to set the fillcolor
+        liftDot $ D.attribute ("fillcolor", color) -- Use roleColor to set the fillcolor
         liftDot $ D.attribute ("overlap", "false")
         liftDot $ D.attribute ("sep", "4")
         

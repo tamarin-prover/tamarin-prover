@@ -350,7 +350,7 @@ data RuleAttribute = RuleColor (RGB Rational) -- Color for display
                              -- dependency to Sapic.Annotations
                              -- need to see what we need here later.
                   | IgnoreDerivChecks
-                  | Agent String
+                  | Role String
        deriving( Eq, Ord, Show, Data, Generic)
 instance NFData RuleAttribute
 instance Binary RuleAttribute
@@ -1140,7 +1140,7 @@ prettyRuleAttribute attr = case attr of
               g = map toLNFact
               h = map toLFormula
     IgnoreDerivChecks -> text "derivchecks"
-    Agent agentName -> text "agent=" <> text agentName
+    Role roleName -> text "role=" <> text roleName
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String

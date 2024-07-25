@@ -493,20 +493,20 @@ Thus, the complete example becomes:
 Note that the protocol description only specifies a model, but not which
 properties it might satisfy. We discuss these in the next section.
 
-### Clustering by Agent
+### Clustering by Role
 
-To enhance the clarity of the graph and identify the agents involved, nodes can be grouped by their respective agents. Clusters are purely a matter of display and do not affect the reasoning Tamarin uses to construct the proof. This is a purely aesthetic option, making the graph easier to read, which can be enabled or disabled by the user. The clusters will be displayed as colored boxes containing the relevant nodes. 
+To enhance the clarity of the graph and identify the roles involved, nodes can be grouped into clusters based on their respective roles. Clusters are purely a matter of display and do not affect Tamarin's reasoning. The goal is to make the graph easier to read, and the clustering can be enabled or disabled by the user. The clusters will be displayed as colored boxes containing the relevant nodes.
 
-The heuristic used for clustering identifies different sessions by checking if two nodes have the same agent and are connected by an edge; they will then be part of the same cluster. This method simplifies the organization of agents within the graph and ensures a clear representation of the agents and their respective nodes. The rules within a cluster will take the color of the cluster.
+The clustering splits different sessions of the same role into different clusters. For that, it uses the following heuristic: two nodes from the same role are part of the same cluster if they are connected by an edge resulting from the use of a linear fact. The rules within a cluster will take the color of the cluster.
 
-There are two methods to group by agent:
+There are two methods to group by role:
 
 #### Manual Clustering
 
-You can manually specify the agents representing one or more rules. These can be any rules. The format for manual clustering is as follows:
+On can manually specify the rule(s) representing the behavior of a role. For this, the rules are annotated with the role's name as follows:
 
 ```plaintext
-rule test[agent="Alice"]:
+rule test[role="Alice"]:
    [...]
    -->
    [...]
@@ -518,13 +518,13 @@ Look at the example below to see how this would appear in an image:
 
 #### Automatic Clustering
 
-An option called "Clustering By Agent" is available among the settings, which, when enabled, automatically sorts by agent. This option is disabled by default. It groups all rules with similar names into clusters, taking precedence over manual clustering. For example, rules named `Alice_1`, `Alice_2`, `Alice_test_1` and `Bob_1` will be automatically separated into three clusters:
+An option called "Clustering By Role" is available among the settings, which, when enabled, automatically sorts by role. This option is disabled by default. It groups all rules with similar names into clusters, taking precedence over manual clustering. For example, rules named `Alice_1`, `Alice_2`, `Alice_test_1` and `Bob_1` will be automatically separated into three clusters:
 
   - A cluster named `Alice` containing rules `Alice_1` and `Alice_2`.
   - A cluster named `Alice_test` containing the rule `Alice_test_1`.
   - A cluster named `Bob` containing the rule `Bob_1`.
 
-You can activate this option in the settings menu. If you opt to manually write the clustering, do not enable this option, as it will cluster independently of the manually written agents.
+You can activate this option in the settings menu. If you opt to manually write the clustering, do not enable this option, as it will cluster independently of the manually written roles.
 
 Look at the example below to see how this would appear in an image:
 

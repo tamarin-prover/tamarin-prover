@@ -70,7 +70,7 @@ ruleAttribute = asum
     , symbol "process="  *> parseAndIgnore
     , symbol "derivchecks" *> ignore
     , symbol "no_derivcheck" *> ignore
-    , symbol "agent=" *> (Just . Agent <$> parseAgent)
+    , symbol "role=" *> (Just . Role <$> parseRole)
     ]
   where
     parseColor = do
@@ -83,10 +83,10 @@ ruleAttribute = asum
                         _ <- manyTill anyChar (try (symbol "\""))
                         return Nothing
     ignore = return (Just IgnoreDerivChecks)
-    parseAgent = do
+    parseRole = do
         _ <- symbol "\""
-        agent <- manyTill anyChar (try (symbol "\""))
-        return agent
+        role <- manyTill anyChar (try (symbol "\""))
+        return role
 
 ruleAttributesp :: Parser [RuleAttribute]
 ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute

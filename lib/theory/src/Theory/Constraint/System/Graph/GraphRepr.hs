@@ -23,12 +23,12 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , cNodes
     , cEdges
     , toEdgeList
-    , extractAgent
-    , isAgentAttribute
-    , getNodeAgent
+    , extractRole
+    , isRoleAttribute
+    , getNodeRole
     , getNodeName
-    , groupNodesByAgent
-    , addSubClustersByAgent
+    , groupNodesByRole
+    , addSubClustersByRole
     , addIntelligentClusterWithSubClusters
     , extractBaseName
     , getRuleNameByNode
@@ -112,38 +112,37 @@ toEdgeList repr =
 
 
 ----------------------------------------------------
--- Clusturing by agent name 
+-- Clusturing by role name 
 ----------------------------------------------------
 
-extractAgent :: Th.RuleACInst -> String
-extractAgent ru = case find isAgentAttribute (Th.ruleAttributes ru) of
-  Just (Th.Agent agentName) -> agentName
-  _                         -> "Unknown"
+extractRole :: Th.RuleACInst -> Maybe String
+extractRole ru = case find isRoleAttribute (Th.ruleAttributes ru) of
+  Just (Th.Role roleName) -> Just roleName
+  _                         -> Nothing
 
-isAgentAttribute :: Th.RuleAttribute -> Bool
-isAgentAttribute (Th.Agent _) = True
-isAgentAttribute _            = False
+isRoleAttribute :: Th.RuleAttribute -> Bool
+isRoleAttribute (Th.Role _) = True
+isRoleAttribute _            = False
 
 
-groupNodesByAgent :: [Node] -> Map.Map String [Node]
-groupNodesByAgent nodes = foldr groupByAgent Map.empty nodes
+groupNodesByRole :: [Node] -> Map.Map String [Node]
+groupNodesByRole nodes = foldr groupByRole Map.empty nodes
   where
-    groupByAgent node acc = case getNodeAgent node of
-      Just "Unknown" -> acc
-      Just agent     -> Map.insertWith (++) agent [node] acc
+    groupByRole node acc = case getNodeRole node of
+      Just role     -> Map.insertWith (++) role [node] acc
       Nothing        -> acc
 
 
 getNodeName :: Node -> String
 getNodeName node = "node" ++ show (get nNodeId node)
 
-getNodeAgent :: Node -> Maybe String
-getNodeAgent node = case get nNodeType node of
-  SystemNode ru -> Just (extractAgent ru)
+getNodeRole :: Node -> Maybe String
+getNodeRole node = case get nNodeType node of
+  SystemNode ru -> extractRole ru
   _             -> Nothing
 
 
--- Function to create a cluster from an agent's nodes and relevant edges
+-- Function to create a cluster from an role's nodes and relevant edges
 createCluster :: String -> [Node] -> [Edge] -> Cluster
 createCluster = Cluster
 
@@ -182,15 +181,15 @@ findConnectedComponents nodes edges = go nodes []
       in go remainingNodes (component : components)
 
 
--- Create the sub-clusters of an agent and add them to GraphRepr
-addSubClustersByAgent :: GraphRepr -> GraphRepr
-addSubClustersByAgent repr =
-    let nodesByAgent = groupNodesByAgent (get grNodes repr)
+-- Create the sub-clusters of a role and add them to GraphRepr
+addSubClustersByRole :: GraphRepr -> GraphRepr
+addSubClustersByRole repr =
+    let nodesByRole = groupNodesByRole (get grNodes repr)
         edges = get grEdges repr
-        createSubClusters agent nodes =
+        createSubClusters role nodes =
             let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
-            in zipWith (\i component -> createCluster (agent ++ "_Session_" ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
-        subClusters = concatMap (\(agent, nodes) -> createSubClusters agent nodes) (Map.toList nodesByAgent)
+            in zipWith (\i component -> createCluster (role ++ "_Session_" ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
+        subClusters = concatMap (\(role, nodes) -> createSubClusters role nodes) (Map.toList nodesByRole)
         clusterEdges = concatMap (get cEdges) subClusters
         clusteredNodes = concatMap (get cNodes) subClusters
         remainingEdges = filter (`notElem` clusterEdges) edges
@@ -233,23 +232,24 @@ getRuleNameByNode node =
         _ -> Nothing
 
 -- Function to extract the base name based on underscores
-extractBaseName :: String -> String
+extractBaseName :: String -> Maybe String
 extractBaseName name = 
     let parts = splitOn "_" name
         lastPart = last parts
         isNumber = all isDigit lastPart
         baseName = if isNumber && length parts > 1 
-                   then intercalate "_" (init parts)
-                   else "Unknown"
+                   then Just (intercalate "_" (init parts))
+                   else Nothing
     in baseName
 
 -- Function to group nodes by similar rule names
 groupBySimilarName :: [Node] -> Map.Map String [Node]
 groupBySimilarName nodes = 
     let result = foldr (\node acc -> 
-                    let ruleName = fromMaybe "Unknown" (getRuleNameByNode node)
-                        baseName = extractBaseName ruleName
-                    in if baseName == "Unknown"
+                    let ruleName = fromMaybe "Undefined" (getRuleNameByNode node)
+                        maybeBaseName = extractBaseName ruleName
+                        baseName = fromMaybe "Undefined" maybeBaseName
+                    in if isNothing maybeBaseName
                         then acc
                         else Map.insertWith (++) baseName [node] acc
                 ) Map.empty nodes

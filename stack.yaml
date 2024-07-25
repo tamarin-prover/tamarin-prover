@@ -12,5 +12,4 @@ ghc-options:
   "$everything": -Wall
 nix:
   packages: [ zlib ]
-system-ghc: true
 

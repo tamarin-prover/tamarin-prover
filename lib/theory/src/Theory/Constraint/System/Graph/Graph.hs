@@ -159,7 +159,7 @@ systemToGraph se options =
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
       repr = if get goClustering options 
              then addIntelligentClusterWithSubClusters basicGraphRepr
-             else addSubClustersByAgent basicGraphRepr
+             else addSubClustersByRole basicGraphRepr
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
   in
     Graph se options repr abbrevs
