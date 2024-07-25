@@ -493,6 +493,43 @@ Thus, the complete example becomes:
 Note that the protocol description only specifies a model, but not which
 properties it might satisfy. We discuss these in the next section.
 
+### Clustering by Agent
+
+To enhance the clarity of the graph and identify the agents involved, nodes can be grouped by their respective agents. Clusters are purely a matter of display and do not affect the reasoning Tamarin uses to construct the proof. This is a purely aesthetic option, making the graph easier to read, which can be enabled or disabled by the user. The clusters will be displayed as colored boxes containing the relevant nodes. 
+
+The heuristic used for clustering identifies different sessions by checking if two nodes have the same agent and are connected by an edge; they will then be part of the same cluster. This method simplifies the organization of agents within the graph and ensures a clear representation of the agents and their respective nodes. The rules within a cluster will take the color of the cluster.
+
+There are two methods to group by agent:
+
+#### Manual Clustering
+
+You can manually specify the agents representing one or more rules. These can be any rules. The format for manual clustering is as follows:
+
+```plaintext
+rule test[agent="Alice"]:
+   [...]
+   -->
+   [...]
+```
+
+Look at the example below to see how this would appear in an image:
+
+![Manual Clusturing](../images/manual_clusturing.png){ width=80% }\
+
+#### Automatic Clustering
+
+An option called "Clustering By Agent" is available among the settings, which, when enabled, automatically sorts by agent. This option is disabled by default. It groups all rules with similar names into clusters, taking precedence over manual clustering. For example, rules named `Alice_1`, `Alice_2`, `Alice_test_1` and `Bob_1` will be automatically separated into three clusters:
+
+  - A cluster named `Alice` containing rules `Alice_1` and `Alice_2`.
+  - A cluster named `Alice_test` containing the rule `Alice_test_1`.
+  - A cluster named `Bob` containing the rule `Bob_1`.
+
+You can activate this option in the settings menu. If you opt to manually write the clustering, do not enable this option, as it will cluster independently of the manually written agents.
+
+Look at the example below to see how this would appear in an image:
+
+![Manual Clusturing](../images/Automatic_clusturing.png){ width=80% }\
+
 <!--
 **FIX Cas: need to do either pattern matching or explicit construct/deconstruct;
 not a big deal for naxos, but should pop up somewhere**

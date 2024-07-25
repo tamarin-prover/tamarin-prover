@@ -918,7 +918,6 @@ getOptions = do
                      L.set goAbbreviate abbreviate $
                      L.set goClustering (isJust clustering) $ 
                      defaultGraphOptions
-  traceM ("L'option de clustering vaut maintenant : " ++ show (get goClustering graphOptions) ++ show clustering)
   let dotOptions = L.set doNodeStyle nodeStyle defaultDotOptions
   return (graphOptions, dotOptions)
 

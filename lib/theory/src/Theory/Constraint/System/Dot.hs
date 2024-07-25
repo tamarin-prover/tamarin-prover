@@ -148,9 +148,9 @@ setDefaultAttributesIfCluster = do
   D.attribute ("concentrate", "true") -- Combine parallel edges .
   D.attribute ("compound", "true") 
   D.attribute ("remincross", "true") -- Minimize edge crossings to improve readability.
-  D.attribute ("mclimit", "2") 
-  D.attribute ("nslimit", "10") 
-  D.attribute ("nslimit1", "10") 
+  D.attribute ("mclimit", "10") 
+  D.attribute ("nslimit", "20") 
+  D.attribute ("nslimit1", "20") 
   D.attribute ("ordering", "out") 
   D.attribute ("rankdir", "TB") -- Set the direction of ranks from top to bottom for a hierarchical layout.
   D.attribute ("showboxes", "false") 
@@ -253,11 +253,25 @@ dotNodeCompact node manualNodeColor = do
     SystemNode ru -> cacheState dsNodes v $ do
       let outgoingEdge = hasOutgoingEdge graph v
       let agent = fromMaybe "Unknown" (getNodeAgent node)
-      let color     = M.lookup (get rInfo ru) colorMap
-          nodeColor = fromMaybe (maybe "white" rgbToHex color) manualNodeColor
-          attrs     = [("fillcolor", nodeColor),("style","filled")
-                              , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
-                              , ("agent",agent)]
+
+      let rInfoVal = get rInfo ru
+
+      let isRuleColor (RuleColor _) = True
+          isRuleColor _             = False
+
+      let ruleColor = case rInfoVal of
+                        ProtoInfo protoRule -> 
+                          case find isRuleColor (_praciAttributes protoRule) of
+                            Just (RuleColor rgb) -> Just (rgbToHex rgb)
+                            _ -> Nothing
+                        _ -> Nothing
+
+      let color = M.lookup rInfoVal colorMap
+          nodeColor = fromMaybe (maybe "white" rgbToHex color) (ruleColor <|> manualNodeColor)
+          attrs = [("fillcolor", nodeColor), ("style", "filled")
+                  , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
+                  , ("agent", agent)]
+                  
       ids <- mkNode v ru attrs outgoingEdge dotOptions
       let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
           concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
