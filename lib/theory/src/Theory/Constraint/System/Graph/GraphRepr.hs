@@ -236,12 +236,9 @@ extractBaseName name =
 groupBySimilarName :: [Node] -> Map.Map String [Node]
 groupBySimilarName nodes = 
     let result = foldr (\node acc -> 
-                    let ruleName = fromMaybe "Undefined" (getRuleNameByNode node)
-                        maybeBaseName = extractBaseName ruleName
-                        baseName = fromMaybe "Undefined" maybeBaseName
-                    in if isNothing maybeBaseName
-                        then acc
-                        else Map.insertWith (++) baseName [node] acc
+                    case getRuleNameByNode node >>= extractBaseName of
+                        Just baseName -> Map.insertWith (++) baseName [node] acc 
+                        Nothing       -> acc
                 ) Map.empty nodes
     in result
 
