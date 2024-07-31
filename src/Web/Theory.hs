@@ -175,9 +175,10 @@ applyDiffProverAtPath thy lemmaName proofPath prover =
 
 -- | Reference a dot graph for the given path.
 refDotPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> TheoryPath -> d
-refDotPath renderUrl tidx path = withTag "a" [("href", imgPath), ("target", "_blank")] $ closedTag "img" [("class", "graph"), ("src", imgPath)]
-  where imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
-
+refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath), ("onclick", jsOpenSrcInNewTab)]
+  where
+    imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
+    jsOpenSrcInNewTab = "window.open(this.src, '_blank')"
 
 -- | Reference a dot graph for the given diff path.
 refDotDiffPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> DiffTheoryPath -> Bool -> d
