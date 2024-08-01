@@ -18,7 +18,7 @@ TMP = $(subst src,tmp,$(SRC))
 
 all: $(OBJ)
 
-tmp/%.md: src/%.md ./filter.py
+tmp/%.md: src/%.md ./filter.py grammar/grammar.ebnf
 	./filter.py $< $@
 
 book/%.html: tmp/%.md $(TEMPLATE_HTML) latex_macros
@@ -47,5 +47,10 @@ simple: $(TMP) $(TEMPLATE_LATEX) latex_macros
 	  -o tex/tamarin-manual.tex $(TMP)
 	make -C tex
 
+
+grammar/grammar.ebnf: ../tree-sitter/tree-sitter-spthy/grammar.js 
+	cd grammar && npm install
+	cd grammar && node generate-ebnf.js ../../tree-sitter/tree-sitter-spthy/grammar.js > grammar.ebnf
+
 clean:
-	-rm -f book/*.html tex/*.pdf tmp/*.md
+	-rm -f book/*.html tex/*.pdf tmp/*.md grammar/grammar.ebnf
