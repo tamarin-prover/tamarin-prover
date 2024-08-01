@@ -1,5 +1,5 @@
 import subprocess, sys, re, os, argparse, logging, datetime, shutil, mmap
-import regressionParser as rp
+import regressionParser
 from tree_sitter import Language, Parser
 
 class colors:
@@ -438,101 +438,10 @@ def main():
 		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 		logging.debug(output)
 
-	## build the parser library and create the parser object
+	## test the spthy parser
 	parsingSuccessful = True
 	if settings.parser:
-		config = {
-            "max_file_bytes": 1000000,
-            "show_spthy_error": True,
-            "show_sapic_error": True,
-            "show_tactic_error": False
-        }
-		logging.warning("build spthy-library...")
-		rp.build_library(
-          'build/spthy.so',
-          [os.path.normpath('./tree-sitter-spthy')]
-        )
-		SPTHY_LANGUAGE = rp.lang_from_so("./build/spthy.so", "spthy")
-		parser = Parser()
-		parser.set_language(SPTHY_LANGUAGE)
-
-		spthy_files = []
-		sapic_files = []
-
-		for dir_path, dir_names, file_names in os.walk("./examples", topdown=True):
-			if rp.is_subdir(dir_path):
-				continue
-			for file in file_names:
-				file_path = os.path.join(dir_path, file)
-
-				if os.stat(file_path).st_size == 0 or os.stat(file_path).st_size > config["max_file_bytes"]:
-					continue
-
-				with (open(file_path) as f):
-					s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-					if not (file.endswith(".spthy") or file.endswith(".sapic")) or s.find(bytes('theory', 'utf-8')) == -1:
-						f.close()
-						continue
-					elif s.find(bytes('process:', 'utf-8')) != -1 or s.find(bytes('predicates:', 'utf-8')) != -1 or s.find(
-					bytes(';', 'utf-8')) != -1 or s.find(bytes('export', 'utf-8')) != -1 or file.endswith(".sapic"):
-						sapic_files.append(file_path)
-					else:
-						spthy_files.append(file_path)
-				f.close()
-
-		spthy_completely_parsed, spthy_data = 0, []
-		if config["show_spthy_error"]:
-			spthy_completely_parsed, spthy_data = rp.collect_errors(parser, spthy_files)
-
-		sapic_completely_parsed, sapic_data = 0, []
-		if config["show_sapic_error"]:
-			sapic_completely_parsed, sapic_data = rp.collect_errors(parser, sapic_files)
-        
-		# Total failures
-		print("""\n 
-==============================================================
-Total successes:
-==============================================================
-		""")
-		total_files = (config["show_spthy_error"] * len(spthy_files)
-																+ config["show_sapic_error"] * len(sapic_files))
-		total_parsed_files = spthy_completely_parsed + sapic_completely_parsed
-		rp.output_total_successes(total_files, total_parsed_files, total_parsed_files)
-
-		# Total Coverage
-		print("""\n
-==============================================================
-Total coverage:
-==============================================================
-		""")
-		total_errors = []
-		total_errors.extend(spthy_data)
-		total_errors.extend(sapic_data)
-		if len(total_errors) != 0:
-			parsingSuccessful = False
-
-		rp.output_coverage(total_errors)
-
-		# Coverage per feature
-		print("""\n
-==============================================================
-Coverage per feature:
-==============================================================""")
-		if config["show_spthy_error"]:
-			print("""
---------
-spthy:
---------""")
-			rp.output_total_successes(len(spthy_files), total_parsed_files, spthy_completely_parsed)
-			rp.output_coverage(spthy_data)
-
-		if config["show_sapic_error"]:
-			print("""
---------
-SAPiC:
---------""")
-			rp.output_total_successes(len(sapic_files), total_parsed_files, sapic_completely_parsed)
-			rp.output_coverage(sapic_data)
+		regressionParser.testParser(logging, parsingSuccessful,  settings.verbose)
 			
 	## repeat case-studies r times for higher confidence in time measurements ##
 	successful = True

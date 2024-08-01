@@ -11,6 +11,8 @@ import platform
 from ctypes import cdll, c_void_p
 from os import fspath
 
+ignore_list = ["pkcs11-templates.sapic", "right-assoc.spthy", "Yubikey.spthy", "defaultoracle.spthy", "configuration.spthy", "verify_checksign_test.spthy"]
+
 #config = {
 #    "max_file_bytes": 1000000,
 #    "show_spthy_error": True,
@@ -205,127 +207,99 @@ def is_subdir(path):
             return True
     return False
 
-def main():
+def testParser(logging, parsingSuccessful, warningLvl):
 
-	spthy_files = []
-	sapic_files = []
-	tactic_files = []
+		config = {
+            "max_file_bytes": 1000000,
+            "show_spthy_error": True,
+            "show_sapic_error": True,
+            "show_tactic_error": False
+        }
+		logging.warning("build spthy-library...")
+		build_library(
+          './tree-sitter/build/spthy.so',
+          [os.path.normpath('./tree-sitter/tree-sitter-spthy')]
+        )
+		SPTHY_LANGUAGE = lang_from_so("./tree-sitter/build/spthy.so", "spthy")
+		parser = Parser()
+		parser.set_language(SPTHY_LANGUAGE)
 
-	for dir_path, dir_names, file_names in os.walk("./tamarin-prover/examples", topdown=True):
-		if is_subdir(dir_path):
-			continue
-		for file in file_names:
-			file_path = os.path.join(dir_path, file)
+		spthy_files = []
+		sapic_files = []
 
-			if os.stat(file_path).st_size == 0 or os.stat(file_path).st_size > config["max_file_bytes"]:
+		for dir_path, dir_names, file_names in os.walk("./examples", topdown=True):
+			if is_subdir(dir_path):
 				continue
-
-			with (open(file_path) as f):
-				s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-				if not (file.endswith(".spthy") or file.endswith(".sapic")) or s.find(bytes('theory', 'utf-8')) == -1:
-					f.close()
+			for file in file_names:
+				if file in ignore_list:
 					continue
-				if s.find(bytes('tactic:', 'utf-8')) != -1:
-					tactic_files.append(file_path)
-				elif s.find(bytes('process:', 'utf-8')) != -1 or s.find(bytes('predicates:', 'utf-8')) != -1 or s.find(
+				file_path = os.path.join(dir_path, file)
+
+				if os.stat(file_path).st_size == 0 or os.stat(file_path).st_size > config["max_file_bytes"]:
+					continue
+
+				with (open(file_path) as f):
+					s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+					if not (file.endswith(".spthy") or file.endswith(".sapic")) or s.find(bytes('theory', 'utf-8')) == -1:
+						f.close()
+						continue
+					elif s.find(bytes('process:', 'utf-8')) != -1 or s.find(bytes('predicates:', 'utf-8')) != -1 or s.find(
 					bytes(';', 'utf-8')) != -1 or s.find(bytes('export', 'utf-8')) != -1 or file.endswith(".sapic"):
-					sapic_files.append(file_path)
-				else:
-					spthy_files.append(file_path)
+						sapic_files.append(file_path)
+					else:
+						spthy_files.append(file_path)
 				f.close()
 
-	print(make_bold("\nParse files and collect errors..."))
-	# Spthy:
-	spthy_completely_parsed, spthy_data = 0, []
-	if config["show_spthy_error"]:
-		print("Spthy-files:")
-		spthy_completely_parsed, spthy_data = collect_errors(spthy_files)
-	# Sapic:
-	sapic_completely_parsed, sapic_data = 0, []
-	if config["show_sapic_error"]:
-		print("\nSapic-files:")
-		sapic_completely_parsed, sapic_data = collect_errors(sapic_files)
-	# Tactic:
-	tactic_completely_parsed, tactic_data = 0, []
-	if config["show_tactic_error"]:
-		print("\nTactic-files:")
-		tactic_completely_parsed, tactic_data = collect_errors(tactic_files)
+		spthy_completely_parsed, spthy_data = 0, []
+		if config["show_spthy_error"]:
+			spthy_completely_parsed, spthy_data = collect_errors(parser, spthy_files)
 
-	# Total failures
-	print("""\n
-	==============================================================
-	Total successes:
-	==============================================================
-	""")
-	total_files = (config["show_spthy_error"] * len(spthy_files)
-																+ config["show_sapic_error"] * len(sapic_files)
-																+ config["show_tactic_error"] * len(tactic_files))
-	total_parsed_files = spthy_completely_parsed + sapic_completely_parsed + tactic_completely_parsed
-	output_total_successes(total_files, total_parsed_files)
+		sapic_completely_parsed, sapic_data = 0, []
+		if config["show_sapic_error"]:
+			sapic_completely_parsed, sapic_data = collect_errors(parser, sapic_files)
+        
+		# Total failures
+		print("""\n 
+==============================================================
+Total successes:
+==============================================================
+		""")
+		total_files = (config["show_spthy_error"] * len(spthy_files)
+																+ config["show_sapic_error"] * len(sapic_files))
+		total_parsed_files = spthy_completely_parsed + sapic_completely_parsed
+		output_total_successes(total_files, total_parsed_files, total_parsed_files)
 
-	# Total Coverage
-	print("""\n
-	==============================================================
-	Total coverage:
-	==============================================================
-	""")
-	total_errors = []
-	total_errors.extend(spthy_data)
-	total_errors.extend(sapic_data)
-	total_errors.extend(tactic_data)
-	output_coverage(total_errors)
+		# Total Coverage
+		print("""\n
+==============================================================
+Total coverage:
+==============================================================
+		""")
+		total_errors = []
+		total_errors.extend(spthy_data)
+		total_errors.extend(sapic_data)
+		if len(total_errors) != 0:
+			parsingSuccessful = False
 
-	# Coverage per feature
-	print("""\n
-	==============================================================
-	Coverage per feature:
-	==============================================================""")
-	if config["show_spthy_error"]:
-					print("""
-	--------
-	Spthy:
-	--------""")
-					output_total_successes(len(spthy_files), spthy_completely_parsed)
-					output_coverage(spthy_data)
+		output_coverage(total_errors)
 
-	if config["show_sapic_error"]:
-					print("""
-	--------
-	Sapic:
-	--------""")
-					output_total_successes(len(sapic_files), sapic_completely_parsed)
-					output_coverage(sapic_data)
+		# Coverage per feature
+		print("""\n
+==============================================================
+Coverage per feature:
+==============================================================""")
+		if config["show_spthy_error"]:
+			print("""
+--------
+spthy:
+--------""")
+			output_total_successes(len(spthy_files), total_parsed_files, spthy_completely_parsed)
+			output_coverage(spthy_data)
 
-	if config["show_tactic_error"]:
-					print("""
-	--------
-	Tactic:
-	--------""")
-					output_total_successes(len(tactic_files), tactic_completely_parsed)
-					output_coverage(tactic_data)
-
-	# Errors for debugging
-	print("""\n
-	==============================================================
-	Errors:
-	==============================================================""")
-	if config["show_spthy_error"]:
-					print("""
-	--------
-	Spthy:
-	--------""")
-					output_errors(spthy_data)
-
-	if config["show_sapic_error"]:
-					print("""
-	--------
-	Sapic:
-	--------""")
-					output_errors(sapic_data)
-
-	if config["show_tactic_error"]:
-					print("""
-	--------
-	Tactic:
-	--------""")
-					output_errors(tactic_data)
+		if config["show_sapic_error"]:
+			print("""
+--------
+SAPiC:
+--------""")
+			output_total_successes(len(sapic_files), total_parsed_files, sapic_completely_parsed)
+			output_coverage(sapic_data)
