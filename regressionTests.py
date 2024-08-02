@@ -1,7 +1,35 @@
-import subprocess, sys, re, os, argparse, logging, datetime, shutil, mmap
-import regressionParser
-from tree_sitter import Language, Parser
-from regressionColors import *
+import subprocess, sys, re, os, argparse, logging, datetime, shutil
+
+
+class colors:
+	""" terminal coloring """
+	PINK = '\033[95m'
+	BLUE = '\033[94m'
+	CYAN = '\033[96m'
+	GREEN = '\033[92m'
+	YELLOW = '\033[93m'
+	RED = '\033[91m'
+	ENDC = '\033[0m'
+	BOLD = '\033[1m'
+
+def color(color, text):
+	return(color + text + colors.ENDC)
+
+def getColorQuality(valueA, valueB):
+	""" fakes a gradient depending on the relative quality of valueB """
+	valueDiv = 1 if valueA == 0 else valueB/valueA
+	if valueDiv < 0.5:
+		return colors.BLUE
+	if valueDiv < 0.8:
+		return colors.CYAN
+	if valueDiv < 1.3:
+		return colors.GREEN
+	elif valueDiv < 1.8:
+		return colors.YELLOW
+	else:
+		return colors.RED
+
+
 
 def iterFolder(folder):
 	""" Yields all files in the folder that have a .spthy ending. """
@@ -375,8 +403,7 @@ def getArguments():
 			"3: show step differences for changed lemmas and changed functions, rules, equations, warning, builtins and macros\n" +
 			"4: show time differences for all lemmas\n" +
 			"5: show shell command output\n" +
-			"6: show diff output if the corresponding proofs changed\n" + 
-            "The displayed results and statistics for the parser tests become more detailed with each level."
+			"6: show diff output if the corresponding proofs changed"
 			, type=int, default=3)
 	parser.add_argument("-p", "--parser-test", help = "Run the parser tests.", action="store_true")
 
@@ -413,7 +440,35 @@ def main():
 	## test the spthy parser
 	parsingSuccessful = True
 	if settings.parser_test:
-		regressionParser.testParser(logging, parsingSuccessful, settings.verbose)
+		logging.info("running the parser tests ...")
+		tree_sitter_spthy_dir = './tree-sitter/tree-sitter-spthy'
+
+		working_dir = os.getcwd()
+
+		# change the working dir s.t. we can use tree-sitter CLI
+		os.chdir(tree_sitter_spthy_dir)
+		
+		try:
+			testResult = subprocess.run(['./regressionParser.sh'], capture_output=True, text=True)
+			tree_sitter_generate = subprocess.run(["tree-sitter", "generate"], capture_output=True, text=True)
+			outputColor = colors.GREEN + colors.BOLD
+
+			if not "success percentage: 100.00%;" in testResult.stdout:
+				parsingSuccessful = False
+				outputColor = colors.RED + colors.BOLD
+			logging.error("""\n 
+==============================================================
+Parser test results:
+==============================================================
+		""")
+			logging.error(color(colors.YELLOW + colors.BOLD, tree_sitter_generate.stdout))
+			logging.error(color(colors.RED + colors.BOLD, tree_sitter_generate.stderr))
+			logging.error(color(outputColor, testResult.stdout))
+			logging.error(color(colors.RED + colors.BOLD, testResult.stderr))
+
+		finally:
+        # revert the working dir change s.t. the rest of the script can run correctly
+			os.chdir(working_dir)
 			
 	## repeat case-studies r times for higher confidence in time measurements ##
 	successful = True
