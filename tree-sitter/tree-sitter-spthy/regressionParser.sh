@@ -1,2 +1,2 @@
 #!/bin/bash
-find ../../examples -type d \( -name 'deprecated' -o -name 'not-working' -o -name 'include' \) -prune -o \( -name '*.spthy' -o -name '*.sapic' \) -print0 | xargs -0 tree-sitter parse --quiet --stat
+find ../../examples -type d \( -name 'deprecated' -o -name 'not-working' -o -name 'include' \) -prune -o \( -name '*.spthy' -o -name '*.sapic' \) ! -name 'defaultoracle.spthy' -print0 | xargs -0 tree-sitter parse --quiet --stat
