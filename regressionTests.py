@@ -1,36 +1,7 @@
 import subprocess, sys, re, os, argparse, logging, datetime, shutil, mmap
 import regressionParser
 from tree_sitter import Language, Parser
-
-class colors:
-	""" terminal coloring """
-	PINK = '\033[95m'
-	BLUE = '\033[94m'
-	CYAN = '\033[96m'
-	GREEN = '\033[92m'
-	YELLOW = '\033[93m'
-	RED = '\033[91m'
-	ENDC = '\033[0m'
-	BOLD = '\033[1m'
-
-def color(color, text):
-	return(color + text + colors.ENDC)
-
-def getColorQuality(valueA, valueB):
-	""" fakes a gradient depending on the relative quality of valueB """
-	valueDiv = 1 if valueA == 0 else valueB/valueA
-	if valueDiv < 0.5:
-		return colors.BLUE
-	if valueDiv < 0.8:
-		return colors.CYAN
-	if valueDiv < 1.3:
-		return colors.GREEN
-	elif valueDiv < 1.8:
-		return colors.YELLOW
-	else:
-		return colors.RED
-
-
+from regressionColors import *
 
 def iterFolder(folder):
 	""" Yields all files in the folder that have a .spthy ending. """
@@ -404,9 +375,10 @@ def getArguments():
 			"3: show step differences for changed lemmas and changed functions, rules, equations, warning, builtins and macros\n" +
 			"4: show time differences for all lemmas\n" +
 			"5: show shell command output\n" +
-			"6: show diff output if the corresponding proofs changed"
+			"6: show diff output if the corresponding proofs changed\n" + 
+            "The displayed results and statistics for the parser tests become more detailed with each level."
 			, type=int, default=3)
-	parser.add_argument("-p", "--parser", help = "Run the parser regressions.", action="store_true")
+	parser.add_argument("-p", "--parser-test", help = "Run the parser tests.", action="store_true")
 
 
 	## save the settings ##
@@ -440,8 +412,8 @@ def main():
 
 	## test the spthy parser
 	parsingSuccessful = True
-	if settings.parser:
-		regressionParser.testParser(logging, parsingSuccessful,  settings.verbose)
+	if settings.parser_test:
+		regressionParser.testParser(logging, parsingSuccessful, settings.verbose)
 			
 	## repeat case-studies r times for higher confidence in time measurements ##
 	successful = True
