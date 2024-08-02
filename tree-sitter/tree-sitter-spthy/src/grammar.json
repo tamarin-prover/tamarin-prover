@@ -3382,7 +3382,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "lemma_attrs"
+              "name": "diff_lemma_attrs"
             },
             {
               "type": "BLANK"
@@ -3436,51 +3436,6 @@
               "type": "BLANK"
             }
           ]
-        }
-      ]
-    },
-    "lemma_attrs": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "["
-        },
-        {
-          "type": "SYMBOL",
-          "name": "lemma_attr"
-        },
-        {
-          "type": "REPEAT",
-          "content": {
-            "type": "SEQ",
-            "members": [
-              {
-                "type": "STRING",
-                "value": ","
-              },
-              {
-                "type": "SYMBOL",
-                "name": "lemma_attr"
-              }
-            ]
-          }
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": ","
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        },
-        {
-          "type": "STRING",
-          "value": "]"
         }
       ]
     },

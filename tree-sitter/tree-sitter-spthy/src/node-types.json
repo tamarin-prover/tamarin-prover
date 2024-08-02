@@ -4010,7 +4010,7 @@
       "required": false,
       "types": [
         {
-          "type": "lemma_attrs",
+          "type": "diff_lemma_attrs",
           "named": true
         },
         {
@@ -4057,21 +4057,6 @@
         },
         {
           "type": "language",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "lemma_attrs",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "lemma_attr",
           "named": true
         }
       ]

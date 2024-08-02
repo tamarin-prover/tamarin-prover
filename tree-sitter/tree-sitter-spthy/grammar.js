@@ -834,23 +834,23 @@ module.exports = grammar({
           'lemma',
           optional($.modulo),
           field('lemma_identifier', $.ident),
-          optional($.lemma_attrs),
+          optional($.diff_lemma_attrs),
           ':',
           optional($.trace_quantifier),
           '"', field('formula', $._formula), '"',
           optional(field('proof_skeleton', $._proof_skeleton))
       ),
 
-      lemma_attrs: $ => seq(
-          '[',
-          $.lemma_attr,
-          repeat(seq(
-              ',',
-              $.lemma_attr
-          )),
-          optional(','),
-          ']'
-      ),
+      // lemma_attrs: $ => seq(
+      //     '[',
+      //     $.lemma_attr,
+      //     repeat(seq(
+      //         ',',
+      //         $.lemma_attr
+      //     )),
+      //     optional(','),
+      //     ']'
+      // ),
 
       lemma_attr: $ => choice(
           'sources',
