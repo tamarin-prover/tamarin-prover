@@ -226,7 +226,7 @@ module.exports = grammar({
           optional ( seq (
               '[',  
                   $.function_attribute,
-                  repeat1(seq(
+                  repeat(seq(
                       ',',
                       $.function_attribute
                   )),

@@ -15,5 +15,4 @@ rule noderivcheck[no_derivcheck]:
 // In that case we can also remove the trace quantifier and the formula.
 diffLemma test[reuse]:
 
-
 end
