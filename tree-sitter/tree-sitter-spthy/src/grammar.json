@@ -500,15 +500,7 @@
       "members": [
         {
           "type": "SYMBOL",
-          "name": "function_pub"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "function_private"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "function_destructor"
+          "name": "function_untyped"
         },
         {
           "type": "SYMBOL",
@@ -516,7 +508,7 @@
         }
       ]
     },
-    "function_pub": {
+    "function_untyped": {
       "type": "SEQ",
       "members": [
         {
@@ -538,80 +530,72 @@
             "type": "SYMBOL",
             "name": "natural"
           }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "["
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "function_attribute"
+                },
+                {
+                  "type": "REPEAT1",
+                  "content": {
+                    "type": "SEQ",
+                    "members": [
+                      {
+                        "type": "STRING",
+                        "value": ","
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "function_attribute"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": ","
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
+                },
+                {
+                  "type": "STRING",
+                  "value": "]"
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
     },
-    "function_private": {
-      "type": "SEQ",
+    "function_attribute": {
+      "type": "CHOICE",
       "members": [
-        {
-          "type": "FIELD",
-          "name": "function_identifier",
-          "content": {
-            "type": "SYMBOL",
-            "name": "ident"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": "/"
-        },
-        {
-          "type": "FIELD",
-          "name": "arity",
-          "content": {
-            "type": "SYMBOL",
-            "name": "natural"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": "["
-        },
         {
           "type": "STRING",
           "value": "private"
         },
         {
           "type": "STRING",
-          "value": "]"
-        }
-      ]
-    },
-    "function_destructor": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "FIELD",
-          "name": "function_identifier",
-          "content": {
-            "type": "SYMBOL",
-            "name": "ident"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": "/"
-        },
-        {
-          "type": "FIELD",
-          "name": "arity",
-          "content": {
-            "type": "SYMBOL",
-            "name": "natural"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": "["
-        },
-        {
-          "type": "STRING",
           "value": "destructor"
-        },
-        {
-          "type": "STRING",
-          "value": "]"
         }
       ]
     },
@@ -2801,6 +2785,19 @@
       ]
     },
     "rule_attr": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "rule_attr_color"
+        },
+        {
+          "type": "STRING",
+          "value": "no_derivcheck"
+        }
+      ]
+    },
+    "rule_attr_color": {
       "type": "SEQ",
       "members": [
         {
@@ -3608,10 +3605,6 @@
             {
               "type": "STRING",
               "value": "diffLemma"
-            },
-            {
-              "type": "STRING",
-              "value": "lemma"
             }
           ]
         },
@@ -3655,47 +3648,6 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "SYMBOL",
-              "name": "trace_quantifier"
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "\""
-                },
-                {
-                  "type": "FIELD",
-                  "name": "formula",
-                  "content": {
-                    "type": "SYMBOL",
-                    "name": "_formula"
-                  }
-                },
-                {
-                  "type": "STRING",
-                  "value": "\""
-                }
-              ]
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
               "type": "FIELD",
               "name": "proof_skeleton",
               "content": {
@@ -3718,26 +3670,6 @@
           "value": "["
         },
         {
-          "type": "REPEAT",
-          "content": {
-            "type": "PREC_RIGHT",
-            "value": 0,
-            "content": {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "lemma_attr"
-                },
-                {
-                  "type": "STRING",
-                  "value": ","
-                }
-              ]
-            }
-          }
-        },
-        {
           "type": "CHOICE",
           "members": [
             {
@@ -3745,28 +3677,34 @@
               "name": "diff_lemma_attr"
             },
             {
-              "type": "BLANK"
+              "type": "SYMBOL",
+              "name": "lemma_attr"
             }
           ]
         },
         {
           "type": "REPEAT",
           "content": {
-            "type": "PREC_RIGHT",
-            "value": 0,
-            "content": {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": ","
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "lemma_attr"
-                }
-              ]
-            }
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "diff_lemma_attr"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "lemma_attr"
+                  }
+                ]
+              }
+            ]
           }
         },
         {

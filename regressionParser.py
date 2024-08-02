@@ -1,7 +1,9 @@
-import mmap, subprocess, sys, io, os, argparse, distutils, platform, logging
+import mmap, subprocess, sys, io, os, argparse, setuptools, platform, logging
 from math import floor
 from tree_sitter import Language, Parser
-from distutils.ccompiler import new_compiler
+from setuptools import setup
+from setuptools import Extension
+from setuptools.command.build_ext import build_ext
 from tempfile import TemporaryDirectory
 from ctypes import cdll, c_void_p
 from os import fspath

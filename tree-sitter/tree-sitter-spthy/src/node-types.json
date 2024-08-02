@@ -1631,76 +1631,6 @@
     "type": "diff_lemma",
     "named": true,
     "fields": {
-      "formula": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "action_constraint",
-            "named": true
-          },
-          {
-            "type": "atom",
-            "named": true
-          },
-          {
-            "type": "conjunction",
-            "named": true
-          },
-          {
-            "type": "disjunction",
-            "named": true
-          },
-          {
-            "type": "iff",
-            "named": true
-          },
-          {
-            "type": "imp",
-            "named": true
-          },
-          {
-            "type": "negation",
-            "named": true
-          },
-          {
-            "type": "nested_formula",
-            "named": true
-          },
-          {
-            "type": "pre_defined",
-            "named": true
-          },
-          {
-            "type": "predicate_ref",
-            "named": true
-          },
-          {
-            "type": "quantified_formula",
-            "named": true
-          },
-          {
-            "type": "subterm_rel",
-            "named": true
-          },
-          {
-            "type": "temp_var_eq",
-            "named": true
-          },
-          {
-            "type": "temp_var_induction",
-            "named": true
-          },
-          {
-            "type": "temp_var_order",
-            "named": true
-          },
-          {
-            "type": "term_eq",
-            "named": true
-          }
-        ]
-      },
       "lemma_identifier": {
         "multiple": false,
         "required": true,
@@ -1749,10 +1679,6 @@
         {
           "type": "modulo",
           "named": true
-        },
-        {
-          "type": "trace_quantifier",
-          "named": true
         }
       ]
     }
@@ -1768,7 +1694,7 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": false,
+      "required": true,
       "types": [
         {
           "type": "diff_lemma_attr",
@@ -2999,87 +2925,14 @@
     }
   },
   {
-    "type": "function_destructor",
+    "type": "function_attribute",
     "named": true,
-    "fields": {
-      "arity": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "natural",
-            "named": true
-          }
-        ]
-      },
-      "function_identifier": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "ident",
-            "named": true
-          }
-        ]
-      }
-    }
+    "fields": {}
   },
   {
     "type": "function_name",
     "named": true,
     "fields": {}
-  },
-  {
-    "type": "function_private",
-    "named": true,
-    "fields": {
-      "arity": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "natural",
-            "named": true
-          }
-        ]
-      },
-      "function_identifier": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "ident",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "function_pub",
-    "named": true,
-    "fields": {
-      "arity": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "natural",
-            "named": true
-          }
-        ]
-      },
-      "function_identifier": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "ident",
-            "named": true
-          }
-        ]
-      }
-    }
   },
   {
     "type": "function_typed",
@@ -3118,6 +2971,42 @@
     }
   },
   {
+    "type": "function_untyped",
+    "named": true,
+    "fields": {
+      "arity": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "natural",
+            "named": true
+          }
+        ]
+      },
+      "function_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "function_attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "functions",
     "named": true,
     "fields": {},
@@ -3126,19 +3015,11 @@
       "required": true,
       "types": [
         {
-          "type": "function_destructor",
-          "named": true
-        },
-        {
-          "type": "function_private",
-          "named": true
-        },
-        {
-          "type": "function_pub",
-          "named": true
-        },
-        {
           "type": "function_typed",
+          "named": true
+        },
+        {
+          "type": "function_untyped",
           "named": true
         }
       ]
@@ -7493,6 +7374,21 @@
     "fields": {},
     "children": {
       "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "rule_attr_color",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_attr_color",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
       "required": true,
       "types": [
         {
@@ -9458,6 +9354,10 @@
   },
   {
     "type": "next",
+    "named": false
+  },
+  {
+    "type": "no_derivcheck",
     "named": false
   },
   {

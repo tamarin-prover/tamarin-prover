@@ -215,30 +215,29 @@ module.exports = grammar({
       )),
 
       _function_sym: $ => choice(
-          $.function_pub,
-          $.function_private,
-          $.function_destructor,
+          $.function_untyped,
           $.function_typed
       ),
 
-      function_pub: $ => seq(
-          field('function_identifier', $.ident),
-          '/',
-          field('arity', $.natural)
-      ),
-
-      function_private: $ => seq(
+      function_untyped: $ => seq(
           field('function_identifier', $.ident),
           '/',
           field('arity', $.natural),
-          '[', 'private', ']'
+          optional ( seq (
+              '[',  
+                  $.function_attribute,
+                  repeat1(seq(
+                      ',',
+                      $.function_attribute
+                  )),
+                  optional(',')
+              ,']')
+          )
       ),
 
-      function_destructor: $ => seq(
-          field('function_identifier', $.ident),
-          '/',
-          field('arity', $.natural),
-          '[', 'destructor', ']'
+      function_attribute: $ => choice(
+            'private',
+            'destructor',
       ),
 
       function_typed: $ => seq(
@@ -683,7 +682,12 @@ module.exports = grammar({
           ']'
       ),
 
-      rule_attr: $ => seq(
+      rule_attr: $ => choice(
+            $.rule_attr_color,
+            'no_derivcheck'
+            ),
+            
+      rule_attr_color: $ => seq(
           choice(
               'color=',
               'colour='
@@ -867,23 +871,21 @@ module.exports = grammar({
       ),
 
       diff_lemma: $ => seq(
-          choice('diffLemma', 'lemma'),
+          choice('diffLemma'),
           optional($.modulo),
           field('lemma_identifier', $.ident),
           optional($.diff_lemma_attrs),
           ':',
-          optional($.trace_quantifier),
-          optional(seq(
-              '"', field('formula', $._formula), '"'
-          )),
           optional(field('proof_skeleton', $._proof_skeleton))
       ),
 
       diff_lemma_attrs: $ => seq(
           '[',
-          repeat(prec.right(seq($.lemma_attr, ','))),
-          optional($.diff_lemma_attr),
-          repeat(prec.right(seq(',', $.lemma_attr))),
+          choice($.diff_lemma_attr,$.lemma_attr),
+          repeat(seq(
+              ',',
+              choice($.diff_lemma_attr,$.lemma_attr)
+          )),
           optional(','),
           ']'
       ),
