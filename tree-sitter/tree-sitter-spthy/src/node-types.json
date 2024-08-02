@@ -791,6 +791,11 @@
     }
   },
   {
+    "type": "commandline",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "comp_var",
     "named": true,
     "fields": {},
@@ -8509,6 +8514,10 @@
           "named": true
         },
         {
+          "type": "commandline",
+          "named": true
+        },
+        {
           "type": "diff_equiv_lemma",
           "named": true
         },
@@ -8958,6 +8967,14 @@
     "named": false
   },
   {
+    "type": "--auto-sources",
+    "named": false
+  },
+  {
+    "type": "--stop-on-trace",
+    "named": false
+  },
+  {
     "type": ".",
     "named": false
   },
@@ -9018,6 +9035,14 @@
     "named": false
   },
   {
+    "type": "BFS",
+    "named": false
+  },
+  {
+    "type": "DFS",
+    "named": false
+  },
+  {
     "type": "E",
     "named": false
   },
@@ -9031,6 +9056,10 @@
   },
   {
     "type": "O",
+    "named": false
+  },
+  {
+    "type": "SEQDFS",
     "named": false
   },
   {
@@ -9094,6 +9123,10 @@
     "named": false
   },
   {
+    "type": "bfs",
+    "named": false
+  },
+  {
     "type": "bilinear-pairing",
     "named": false
   },
@@ -9115,6 +9148,10 @@
   },
   {
     "type": "colour=",
+    "named": false
+  },
+  {
+    "type": "configuration",
     "named": false
   },
   {
@@ -9155,6 +9192,10 @@
   },
   {
     "type": "destructor",
+    "named": false
+  },
+  {
+    "type": "dfs",
     "named": false
   },
   {
@@ -9459,6 +9500,10 @@
   },
   {
     "type": "rule-equivalence",
+    "named": false
+  },
+  {
+    "type": "seqdfs",
     "named": false
   },
   {

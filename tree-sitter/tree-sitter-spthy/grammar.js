@@ -76,10 +76,12 @@ module.exports = grammar({
 
   word: $ => $.ident,
 
+
   rules: {
       theory: $ => seq(
           'theory',
           field('theory_name', $.ident),
+          optional(seq('configuration', ':', '"', $.commandline , '"')),
           'begin',
           repeat($._body_item),
           'end',
@@ -87,6 +89,17 @@ module.exports = grammar({
               /./
           )
       ),
+
+      commandline: $ => repeat1(
+            choice('--auto-sources',
+                    seq('--stop-on-trace','=',$._search_strategy)
+            )),
+
+      _search_strategy: $ => choice(
+            'BFS','DFS','SEQDFS',
+            'bfs','dfs','seqdfs'
+      ),
+
 
       _body_item: $ => choice(
           $.preprocessor,
@@ -871,7 +884,7 @@ module.exports = grammar({
       ),
 
       diff_lemma: $ => seq(
-          choice('diffLemma'),
+          'diffLemma',
           optional($.modulo),
           field('lemma_identifier', $.ident),
           optional($.diff_lemma_attrs),

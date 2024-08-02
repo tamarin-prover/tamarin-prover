@@ -18,6 +18,39 @@
           }
         },
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "configuration"
+                },
+                {
+                  "type": "STRING",
+                  "value": ":"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\""
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "commandline"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\""
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "STRING",
           "value": "begin"
         },
@@ -38,6 +71,64 @@
             "type": "PATTERN",
             "value": "."
           }
+        }
+      ]
+    },
+    "commandline": {
+      "type": "REPEAT1",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "--auto-sources"
+          },
+          {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "--stop-on-trace"
+              },
+              {
+                "type": "STRING",
+                "value": "="
+              },
+              {
+                "type": "SYMBOL",
+                "name": "_search_strategy"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "_search_strategy": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "BFS"
+        },
+        {
+          "type": "STRING",
+          "value": "DFS"
+        },
+        {
+          "type": "STRING",
+          "value": "SEQDFS"
+        },
+        {
+          "type": "STRING",
+          "value": "bfs"
+        },
+        {
+          "type": "STRING",
+          "value": "dfs"
+        },
+        {
+          "type": "STRING",
+          "value": "seqdfs"
         }
       ]
     },
@@ -3555,13 +3646,8 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "diffLemma"
-            }
-          ]
+          "type": "STRING",
+          "value": "diffLemma"
         },
         {
           "type": "CHOICE",
