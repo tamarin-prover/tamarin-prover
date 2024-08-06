@@ -47,6 +47,7 @@ import           Theory.Text.Pretty       (opAction)
 
 import           Utils.Misc
 import qualified Data.Graph               as G
+import Theory (laSmaller, laLarger, laReason)
 
 -- | The style for nodes of the intruder.
 data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
@@ -164,7 +165,7 @@ renderLNFact fact = do
   (graph, _, _) <- ask
   let abbreviate = get ((L..) goAbbreviate gOptions) graph
       abbrevs = get gAbbreviations graph
-      replacedFact = applyAbbreviationsFact abbrevs fact
+      replacedFact = applyAbbreviationsFact (lookupAbbreviation abbrevs) fact
   if abbreviate 
     then return $ prettyLNFact replacedFact
     else return $ prettyLNFact fact
@@ -437,23 +438,23 @@ mergeLessEdges edges = (merged, rest)
     rest = filter (not . isLessEdge) edges
     merged = 
       let lessEdges = mapMaybe extractLessEdge edges in
-      map getAllRToC $ eqClasses (\(x,y,_) -> (x,y)) lessEdges
+      map getAllRToC $ eqClasses (\(LessAtom x y _) -> (x, y)) lessEdges
 
     isLessEdge :: Edge -> Bool
     isLessEdge (LessEdge _) = True
     isLessEdge _ = False
 
-    extractLessEdge :: Edge -> Maybe Less
+    extractLessEdge :: Edge -> Maybe LessAtom
     extractLessEdge (LessEdge e) = Just e
     extractLessEdge _ = Nothing
 
-    getAllRToC :: [Less]-> (NodeId,NodeId,String)
+    getAllRToC :: [LessAtom] -> (NodeId, NodeId, String)
     -- SAFETY: Output of eqClasses never contains the empty list.
     getAllRToC [] = error "empty list"
-    getAllRToC (x:xs) = 
-      (fst3 x, snd3 x,
+    getAllRToC xs@(x:_) = 
+      (get laSmaller x, get laLarger x,
         -- Sort order is reversed to put the "most important reason" first.
-        allRtoColors (sortBy (comparing Data.Ord.Down) $ map thd3 (x:xs)))
+        allRtoColors (sortBy (comparing Data.Ord.Down) $ map (get laReason) xs))
 
     allRtoColors :: [Reason] -> String
     allRtoColors reasons = 
@@ -470,9 +471,3 @@ mergeLessEdges edges = (merged, rest)
          Fresh          -> "blue3"
          InjectiveFacts -> "purple"
          NormalForm     -> "darkorange3"
-
-{-
--- | Try to hide a 'NodeId'. This only works if it has only action and either
--- edge or less constraints associated.
-tryHideNodeId :: NodeId -> System -> System
--}

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<style>
+/* CSS */
+body {
+	font-size: .9em;
+	margin: .8em;
+	font-family: arial, sans-serif;
+}
+table {
+	border-collapse: collapse;
+}
+td, th {
+	text-align: left;
+	padding: 10px;
+}
+th {
+	background-color: #2471A3;
+	color: white;
+	font-weight: normal;
+}
+tr:nth-child(odd) {
+	background-color: #F2F2F2;
+}
+tr:hover {
+	background-color: #D6EAF8;
+}
+.summary {
+	line-height: 1.2em;
+}
+.verified {
+	font-weight: bold;
+}
+.green {
+	color: green;
+}
+.red {
+	color: red;
+}
+.x-scrollable {
+	overflow-x: auto;
+	white-space: nowrap;
+}
+.latex-code {
+	padding: .5em;
+	font-family: Consolas, "courier new";
+	background-color: #F2F2F2;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Analysis results</h2>
+
+<div class="x-scrollable">
+<table>
+<tr><th>No.</th><th>Theory</th><th>executable</th><th>LoC</th><th>Time</th></tr>
+<tr><td>1</td><td class="verified">C8_NoLocalAuth_NoCopyIAD_OnlinePIN_Low</td><td class="green">verified (26 steps)</td><td>610</td><td>3h29m45s</td></tr>
+<tr><td>2</td><td class="verified">C8_NoLocalAuth_NoCopyIAD_OnlinePIN_High</td><td class="green">verified (26 steps)</td><td>610</td><td>3h26m37s</td></tr>
+<tr><td>3</td><td class="verified">C8_NoLocalAuth_NoCopyIAD_ODCVM_Low</td><td class="green">verified (25 steps)</td><td>604</td><td>2h51m12s</td></tr>
+<tr><td>4</td><td class="verified">C8_NoLocalAuth_NoCopyIAD_ODCVM_High</td><td class="green">verified (25 steps)</td><td>604</td><td>2h43m10s</td></tr>
+<tr><td>5</td><td class="verified">C8_NoLocalAuth_NoCopyIAD_NoCVM_Low</td><td class="green">verified (25 steps)</td><td>603</td><td>2h42m23s</td></tr>
+<tr><td>6</td><td>C8_NoLocalAuth_NoCopyIAD_NoCVM_High</td><td class="red">falsified - no trace found (5 steps)</td><td>561</td><td>4m08s</td></tr>
+<tr><td>7</td><td class="verified">C8_NoLocalAuth_CopyIAD_OnlinePIN_Low</td><td class="green">verified (26 steps)</td><td>628</td><td>6m35s</td></tr>
+<tr><td>8</td><td class="verified">C8_NoLocalAuth_CopyIAD_OnlinePIN_High</td><td class="green">verified (26 steps)</td><td>628</td><td>6m02s</td></tr>
+<tr><td>9</td><td class="verified">C8_NoLocalAuth_CopyIAD_ODCVM_Low</td><td class="green">verified (25 steps)</td><td>622</td><td>6m17s</td></tr>
+<tr><td>10</td><td class="verified">C8_NoLocalAuth_CopyIAD_ODCVM_High</td><td class="green">verified (25 steps)</td><td>622</td><td>5m49s</td></tr>
+<tr><td>11</td><td class="verified">C8_NoLocalAuth_CopyIAD_NoCVM_Low</td><td class="green">verified (25 steps)</td><td>621</td><td>7m13s</td></tr>
+<tr><td>12</td><td>C8_NoLocalAuth_CopyIAD_NoCVM_High</td><td class="red">falsified - no trace found (5 steps)</td><td>561</td><td>4m05s</td></tr>
+<tr><td>13</td><td class="verified">C8_LocalAuth_NoCopyIAD_OnlinePIN_Low</td><td class="green">verified (25 steps)</td><td>628</td><td>1h18m33s</td></tr>
+<tr><td>14</td><td class="verified">C8_LocalAuth_NoCopyIAD_OnlinePIN_High</td><td class="green">verified (25 steps)</td><td>628</td><td>1h16m38s</td></tr>
+<tr><td>15</td><td class="verified">C8_LocalAuth_NoCopyIAD_ODCVM_Low</td><td class="green">verified (25 steps)</td><td>622</td><td>1h17m20s</td></tr>
+<tr><td>16</td><td class="verified">C8_LocalAuth_NoCopyIAD_ODCVM_High</td><td class="green">verified (25 steps)</td><td>622</td><td>1h14m27s</td></tr>
+<tr><td>17</td><td class="verified">C8_LocalAuth_NoCopyIAD_NoCVM_Low</td><td class="green">verified (25 steps)</td><td>621</td><td>3h31m35s</td></tr>
+<tr><td>18</td><td>C8_LocalAuth_NoCopyIAD_NoCVM_High</td><td class="red">falsified - no trace found (5 steps)</td><td>561</td><td>4m03s</td></tr>
+<tr><td>19</td><td class="verified">C8_LocalAuth_CopyIAD_OnlinePIN_Low</td><td class="green">verified (25 steps)</td><td>628</td><td>7m30s</td></tr>
+<tr><td>20</td><td class="verified">C8_LocalAuth_CopyIAD_OnlinePIN_High</td><td class="green">verified (25 steps)</td><td>628</td><td>8m12s</td></tr>
+<tr><td>21</td><td class="verified">C8_LocalAuth_CopyIAD_ODCVM_Low</td><td class="green">verified (25 steps)</td><td>622</td><td>6m43s</td></tr>
+<tr><td>22</td><td class="verified">C8_LocalAuth_CopyIAD_ODCVM_High</td><td class="green">verified (25 steps)</td><td>622</td><td>6m16s</td></tr>
+<tr><td>23</td><td class="verified">C8_LocalAuth_CopyIAD_NoCVM_Low</td><td class="green">verified (25 steps)</td><td>621</td><td>8m01s</td></tr>
+<tr><td>24</td><td>C8_LocalAuth_CopyIAD_NoCVM_High</td><td class="red">falsified - no trace found (5 steps)</td><td>561</td><td>4m19s</td></tr>
+</table>
+</div>
+
+<h2>Summary</h2>
+
+<div class="summary">
+<p><b>Protocols: </b> total 24, verified 20</p>
+<p><b>Lines of code:</b> min 561, ave 609, max 628</p>
+<p><b>Time:</b> min 4m03s, ave 1h03m12s, max 3h31m35s, sum 25h16m53s</p>
+</div>
+
+<h2>Latex code</h2>
+
+<div class="latex-code x-scrollable">
+<span style="color: darkgreen; font-weight: bold;">\begin</span>{tabular}{ l l l l l }<br />
+<span style="color: brown;">\hline</span><br />
+<span style="color: brown;">\bfseries</span> No. <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> Theory <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> executable <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> LoC <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> Time<span style="color: brown;">\\</span><br /><span style="color: brown;">\hline</span><br />
+1 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 610 <span style="color: blue;">&</span> 3h29m45s<span style="color: brown;">\\</span><br />
+2 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 610 <span style="color: blue;">&</span> 3h26m37s<span style="color: brown;">\\</span><br />
+3 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 604 <span style="color: blue;">&</span> 2h51m12s<span style="color: brown;">\\</span><br />
+4 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 604 <span style="color: blue;">&</span> 2h43m10s<span style="color: brown;">\\</span><br />
+5 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 603 <span style="color: blue;">&</span> 2h42m23s<span style="color: brown;">\\</span><br />
+6 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \falsified{} <span style="color: blue;">&</span> 561 <span style="color: blue;">&</span> 4m08s<span style="color: brown;">\\</span><br />
+7 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 628 <span style="color: blue;">&</span> 6m35s<span style="color: brown;">\\</span><br />
+8 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 628 <span style="color: blue;">&</span> 6m02s<span style="color: brown;">\\</span><br />
+9 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 622 <span style="color: blue;">&</span> 6m17s<span style="color: brown;">\\</span><br />
+10 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 622 <span style="color: blue;">&</span> 5m49s<span style="color: brown;">\\</span><br />
+11 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 621 <span style="color: blue;">&</span> 7m13s<span style="color: brown;">\\</span><br />
+12 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_NoLocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \falsified{} <span style="color: blue;">&</span> 561 <span style="color: blue;">&</span> 4m05s<span style="color: brown;">\\</span><br />
+13 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 628 <span style="color: blue;">&</span> 1h18m33s<span style="color: brown;">\\</span><br />
+14 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 628 <span style="color: blue;">&</span> 1h16m38s<span style="color: brown;">\\</span><br />
+15 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 622 <span style="color: blue;">&</span> 1h17m20s<span style="color: brown;">\\</span><br />
+16 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 622 <span style="color: blue;">&</span> 1h14m27s<span style="color: brown;">\\</span><br />
+17 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 621 <span style="color: blue;">&</span> 3h31m35s<span style="color: brown;">\\</span><br />
+18 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_NoCopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \falsified{} <span style="color: blue;">&</span> 561 <span style="color: blue;">&</span> 4m03s<span style="color: brown;">\\</span><br />
+19 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 628 <span style="color: blue;">&</span> 7m30s<span style="color: brown;">\\</span><br />
+20 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_OnlinePIN<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 628 <span style="color: blue;">&</span> 8m12s<span style="color: brown;">\\</span><br />
+21 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 622 <span style="color: blue;">&</span> 6m43s<span style="color: brown;">\\</span><br />
+22 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_ODCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 622 <span style="color: blue;">&</span> 6m16s<span style="color: brown;">\\</span><br />
+23 <span style="color: blue;">&</span> <span style="color: brown;">\bfseries</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_Low <span style="color: blue;">&</span> \verified{} <span style="color: blue;">&</span> 621 <span style="color: blue;">&</span> 8m01s<span style="color: brown;">\\</span><br />
+24 <span style="color: blue;">&</span> C8<span style="opacity: .2; font-size: .01rem;">\</span>_LocalAuth<span style="opacity: .2; font-size: .01rem;">\</span>_CopyIAD<span style="opacity: .2; font-size: .01rem;">\</span>_NoCVM<span style="opacity: .2; font-size: .01rem;">\</span>_High <span style="color: blue;">&</span> \falsified{} <span style="color: blue;">&</span> 561 <span style="color: blue;">&</span> 4m19s<span style="color: brown;">\\</span><br />
+<span style="color: brown;">\hline</span><br />
+<span style="color: darkgreen; font-weight: bold;">\end</span>{tabular}<br />
+</div>
+
+</body>
+</html>

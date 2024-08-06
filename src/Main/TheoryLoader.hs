@@ -181,7 +181,7 @@ data TheoryLoadOptions = TheoryLoadOptions {
   , _oQuitOnWarning     :: Bool
   , _oAutoSources       :: Bool
   , _oVerboseMode       :: Bool
-  , _oOutputModule      :: ModuleType -- Note: This flag is only used for batch mode.
+  , _oOutputModule      :: Maybe ModuleType -- Note: This flag is only used for batch mode.
   , _oMaudePath         :: FilePath -- FIXME: Other functions defined in Environment.hs
   , _oParseOnlyMode     :: Bool
   , _oOpenChain         :: Integer
@@ -203,7 +203,7 @@ defaultTheoryLoadOptions = TheoryLoadOptions {
   , _oQuitOnWarning     = False
   , _oAutoSources       = False
   , _oVerboseMode       = False
-  , _oOutputModule      = ModuleMsr
+  , _oOutputModule      = Nothing
   , _oMaudePath         = "maude"
   , _oParseOnlyMode     = False
   , _oOpenChain         = 10
@@ -276,7 +276,7 @@ mkTheoryLoadOptions as = TheoryLoadOptions
 
     outputModule = case findArg "outModule" as of
       Just str -> case find ((str ==) . show) [minBound..] of
-        Just m -> return m
+        Just m -> return $ Just m
         _       -> throwError $ ArgumentError "output mode not supported."
       Nothing   -> return $ L.get oOutputModule defaultTheoryLoadOptions
 
@@ -306,7 +306,7 @@ stopOnTrace as = case map toLower <$> findArg "stop-on-trace" as of
 lemmaSelectorByModule :: HasLemmaAttributes l => TheoryLoadOptions -> l -> Bool
 lemmaSelectorByModule thyOpt lem = case lemmaModules of
     [] -> True -- default to true if no modules (or only empty ones) are set
-    _  -> (L.get oOutputModule thyOpt) `elem` lemmaModules
+    _  -> maybe True (`elem` lemmaModules) (L.get oOutputModule thyOpt)
     where
         lemmaModules = concat [ m | LemmaModule m <- getField @"lAttributes" lem]
 
@@ -362,12 +362,14 @@ loadTheory thyOpts input inFile = do
 -- | Process an open theory based on the specified output module.
 processOpenTheory :: MonadCatch m => TheoryLoadOptions -> OpenTheory -> m OpenTheory
 processOpenTheory thyOpts = case modType of
-  ModuleSpthy               -> return
-  ModuleSpthyTyped          -> Sapic.typeTheory
-  ModuleMsr                 -> Sapic.typeTheory >=> Sapic.translate >=> Acc.translate >=> (return . filterLemma lemmas)
-  ModuleProVerifEquivalence -> Sapic.typeTheory -- Type theory here to catch errors.
-  ModuleProVerif            -> Sapic.typeTheory -- Type theory here to catch errors.
-  ModuleDeepSec             -> Sapic.typeTheory
+  Nothing                        -> Sapic.typeTheory >=> Sapic.translate >=> Acc.translate
+  Just ModuleSpthy               -> return
+  Just ModuleSpthyTyped          -> Sapic.typeTheory
+  -- If the output module is set to MSR, we only keep the specified lemmas in the theory.
+  Just ModuleMsr                 -> Sapic.typeTheory >=> Sapic.translate >=> Acc.translate >=> (return . filterLemma lemmas)
+  Just ModuleProVerifEquivalence -> Sapic.typeTheory -- Type theory here to catch errors.
+  Just ModuleProVerif            -> Sapic.typeTheory -- Type theory here to catch errors.
+  Just ModuleDeepSec             -> Sapic.typeTheory
   where
     modType = L.get oOutputModule thyOpts
     lemmas = lemmaSelector thyOpts
@@ -539,12 +541,13 @@ translateAndCheckTheory version thyOpts sign srcThy = do
 -- | Pretty print an open theory based on the specified output module.
 prettyOpenTheoryByModule :: TheoryLoadOptions -> OpenTheory -> IO Pretty.Doc
 prettyOpenTheoryByModule thyOpts = case modType of
-  ModuleSpthy               -> return . prettyOpenTheory
-  ModuleSpthyTyped          -> return . prettyOpenTheory
-  ModuleMsr                 -> return . prettyOpenTranslatedTheory . removeTranslationItems
-  ModuleProVerifEquivalence -> Export.prettyProVerifEquivTheory   <=< Sapic.typeTheoryEnv
-  ModuleProVerif            -> Export.prettyProVerifTheory lemmas <=< Sapic.typeTheoryEnv
-  ModuleDeepSec             -> Export.prettyDeepSecTheory
+  Nothing {- Same as ModuleMsr -} -> return . prettyOpenTranslatedTheory . removeTranslationItems
+  Just ModuleSpthy                -> return . prettyOpenTheory
+  Just ModuleSpthyTyped           -> return . prettyOpenTheory
+  Just ModuleMsr                  -> return . prettyOpenTranslatedTheory . removeTranslationItems
+  Just ModuleProVerifEquivalence  -> Export.prettyProVerifEquivTheory   <=< Sapic.typeTheoryEnv
+  Just ModuleProVerif             -> Export.prettyProVerifTheory lemmas <=< Sapic.typeTheoryEnv
+  Just ModuleDeepSec              -> Export.prettyDeepSecTheory
   where
     modType = L.get oOutputModule thyOpts
     lemmas = lemmaSelector thyOpts
