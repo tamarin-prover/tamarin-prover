@@ -21,6 +21,12 @@ if [ "$BRANCH" != "$MASTER_BRANCH" && "$BRANCH" != "$DEVELOP_BRANCH" ]; then
     exit 0
 fi
 
+# Get the deploy key by using Githubs's stored variables to decrypt deploy_key.enc.
+openssl enc -nosalt -aes-256-cbc -d -in deploy_key.enc -out deploy_key -base64 -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV
+chmod 600 deploy_key
+eval `ssh-agent -s`
+ssh-add deploy_key
+
 # Clone the existing gh-pages for this repo into a temporary folder $CHECKOUT.
 CHECKOUT=`mktemp -d`
 git clone $REPO $CHECKOUT
@@ -51,12 +57,6 @@ fi
 # Commit the "changes", i.e. the new version. The delta will show diffs between new and old versions.
 git -C $CHECKOUT add \*
 git -C $CHECKOUT commit -m "Deploy to GitHub Pages on ${BRANCH}: ${SHA}"
-
-# Get the deploy key by using Githubs's stored variables to decrypt deploy_key.enc.
-openssl enc -nosalt -aes-256-cbc -d -in deploy_key.enc -out deploy_key -base64 -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV
-chmod 600 deploy_key
-eval `ssh-agent -s`
-ssh-add deploy_key
 
 # Now that we're all set up, we can push.
 git -C $CHECKOUT push $SSH_REPO $TARGET_BRANCH
