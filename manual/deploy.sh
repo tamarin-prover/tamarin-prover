@@ -2,7 +2,7 @@
 set -e # Exit with nonzero exit code if anything fails
 
 # Set up some git information.
-REPO=`git config remote.${1:-origin}.url`
+REPO="git@github.com:tamarin-prover/manual.git" #OLD for same repo: `git config remote.${1:-origin}.url`
 SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 SHA=`git rev-parse --verify HEAD`
 BRANCH=`git rev-parse --abbrev-ref HEAD`
