@@ -69,7 +69,7 @@ import           Theory.Text.Parser.Token
 import qualified Theory.Text.Pretty as Pretty
 import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
-                                                     , multisetIntruderRules, xorIntruderRules, destructionRulesAC)
+                                                     , multisetIntruderRules, xorIntruderRules, destructionRulesAC, destructionRulesNoEq)
 import           Theory.Tools.Wellformedness
 import           Theory.Tools.MessageDerivationChecks
 import           Theory.Module
@@ -678,7 +678,10 @@ addMessageDeductionRuleVariants thy0
     rules0     = subtermIntruderRules False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
-    rules = (destructionRulesAC False (acUserFunSyms msig)) >>= (\x -> return (rules0 ++ x))
+    rulesAC = traceShowId <$> (destructionRulesAC False (acUserFunSyms msig))
+    rulesNoEq = traceShowId <$> (destructionRulesNoEq False (noEqFunSyms msig))
+    rulesACNoEq = liftA2 (++) rulesAC rulesNoEq
+    rules = rulesACNoEq >>= (\x -> return (rules0 ++ x))
     thy          = rules >>= \x -> return (addIntrRuleACsAfterTranslate x thy0)
     addIntruderVariants mkRuless = thy >>= \x -> return (addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) x)
 

@@ -337,6 +337,7 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
 
           intrRmodified = map boundToOne intrR
           boundToOne rule@(Rule (DestrRule name _ subterm constant) premis concs acts nvs) | getRuleName rule == getRuleName r = Rule (DestrRule name 1 subterm constant) premis concs (acts ++ [factOnlyOnce]) nvs
+          boundToOne (Rule (DestrRule name _ subterm constant) premis concs acts nvs) = Rule (DestrRule name 1 subterm constant) premis concs acts nvs
           boundToOne rr = rr
 
           aux (fa@(Fact KUFact _ [f]):q) = (aux1 f || derivationTest sig intrRmodified fa terms) && aux q
@@ -372,7 +373,7 @@ applyChainReduction _ _ [] _ = []
 --   Should be parallelized like the variant computation for protocol rules (JD)
 closeIntrRule :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
 closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFact _ [t]):_) concs@[Fact KDFact _ [rhs]] acts nvs) =
-  if subterm then [ru] else variantsIntruder hnd id False ru
+   [ru] -- trace ("closeIntrRule : " ++ show ru)
     where
       ru = Rule (DestrRule name (if containsOnlyNoEq rhs && containsOnlyNoEq t && runMaude (unifiableLNTerms rhs t)
                               then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
@@ -390,7 +391,7 @@ prettyChainReduction :: SignatureWithMaude -> String -> OpenRuleCache -> [[IntrR
 prettyChainReduction s name o t b = unsafePerformIO $ do
   traceM ("[Theory " ++ name ++ "] Chain reduction checks started")
   rule <- evaluate . force $ applyChainReduction s o t b
-  --traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimit rule))
+  traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimit rule))
   traceM ("[Theory " ++ name ++ "] Chain reduction checks ended")
   return rule
 
