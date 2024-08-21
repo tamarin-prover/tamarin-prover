@@ -22,10 +22,12 @@ if [ "$BRANCH" != "$MASTER_BRANCH" && "$BRANCH" != "$DEVELOP_BRANCH" ]; then
 fi
 
 # Get the deploy key by using Githubs's stored variables to decrypt deploy_key.enc.
+cd manual
 openssl enc -nosalt -aes-256-cbc -d -in deploy_key.enc -out deploy_key -base64 -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV
 chmod 600 deploy_key
 eval `ssh-agent -s`
 ssh-add deploy_key
+cd ..
 
 # Clone the existing gh-pages for this repo into a temporary folder $CHECKOUT.
 CHECKOUT=`mktemp -d`
