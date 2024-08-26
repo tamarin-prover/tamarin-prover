@@ -15,6 +15,7 @@ module Text.Dot
         (
           -- * Dot
           Dot           -- abstract
+        , runDotDefault
           -- * Nodes
         , node
         , NodeId        -- abstract
@@ -69,6 +70,7 @@ import Data.GraphViz.Attributes.Colors
 -- | Identifier for a node in a dot file.
 data NodeId = NodeId String
             | UserNodeId Int
+  deriving (Eq)
 
 instance Show NodeId where
   show (NodeId str) = str
@@ -98,6 +100,9 @@ type Dot = State DotGenState
 -- | Evaluating a dot generator expression.
 runDot :: DotGenState -> Dot a -> (a, DotGenState)
 runDot state dot = runState dot state
+
+runDotDefault :: Dot a -> (a, DotGenState)
+runDotDefault dot = runDot (DotGenState { _dgsId = 0, _dgsElements = [] }) dot
 
 -- | Retrieving and incrementing the node id in the state.
 nextId :: Dot Int

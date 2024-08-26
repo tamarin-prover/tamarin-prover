@@ -17,7 +17,12 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , nNodeType
     , nNodeId
     , NodeType(..)
+    , nodeIsAttackerDerivation
+    , nodeIsProtocolRule
+    , mkCollapsedNode
     , Edge(..)
+    , edgeSourceId
+    , edgeTargetId
     , Cluster(..)
     , cName
     , cNodes
@@ -27,26 +32,41 @@ module Theory.Constraint.System.Graph.GraphRepr (
 
 import           Extension.Data.Label
 import qualified Theory.Constraint.System as Sys
-import qualified Theory.Model             as M
 import qualified Theory                   as Th
+import qualified Data.Map                 as M
+import qualified Data.Set                 as S
 import Data.Maybe (mapMaybe)
 
 -- | All nodes are identified by their NodeId.
 -- Then we have different types of nodes depending on what data of the System they use.
 data Node = Node {
-    _nNodeId    :: M.NodeId,
+    _nNodeId    :: Th.NodeId,
     _nNodeType  :: NodeType
   }
   deriving( Eq, Ord, Show )
 
 -- | Different types of graph nodes.
 data NodeType =
-    SystemNode M.RuleACInst                    -- ^ Nodes from rule instances
+    SystemNode Th.RuleACInst                   -- ^ Nodes from rule instances
   | UnsolvedActionNode [Th.LNFact]             -- ^ Nodes from unsolved adversary actions. 
   | LastActionAtom                             -- ^ Nodes that are only used for inductin.
   | MissingNode (Either Th.ConcIdx Th.PremIdx) -- ^ Nodes referenced by edges which don't exist elsewhere.
+  | CollapseNode [Node]                        -- ^ A number of nodes that have been collapsed together. The nodeId in the containing 'Node' must be the id from a node in the list.
   deriving( Eq, Ord, Show )
 
+-- | We classify those nodes resulting in an ellipsis in the dot rendering as attacker-derived.
+-- a.d. TODO those rules might have to be more specific.
+nodeIsAttackerDerivation :: Node -> Bool
+nodeIsAttackerDerivation (Node _ (SystemNode ru)) 
+  | (Th.isIntruderRule ru || Th.isFreshRule ru)          = True
+nodeIsAttackerDerivation (Node _ (UnsolvedActionNode _)) = True
+nodeIsAttackerDerivation _                               = False
+
+-- | Delegating to the isProtocolRule function.
+nodeIsProtocolRule :: Node -> Bool 
+nodeIsProtocolRule (Node _ (SystemNode ru))
+  | Th.isProtocolRule ru                    = True 
+nodeIsProtocolRule _                        = False 
 
 -- | Different types of graph edges. 
 data Edge =
@@ -54,6 +74,18 @@ data Edge =
   | LessEdge Th.LessAtom                       -- ^ Edges that represent a temporal-before relationship.
   | UnsolvedChain (Sys.NodeConc, Sys.NodePrem) -- ^ Edges that are part of an unsolved chain between premises and conclusions.
   deriving( Eq, Ord, Show )
+
+-- | For a given source node id and an edge, check if the edge belongs to the node and return the target node id.
+edgeSourceId :: Edge -> Th.NodeId
+edgeSourceId (SystemEdge ((srcId, _), _))       = srcId
+edgeSourceId (LessEdge (Th.LessAtom srcId _ _)) = srcId
+edgeSourceId (UnsolvedChain ((srcId, _), _))    = srcId
+
+edgeTargetId :: Edge -> Th.NodeId
+edgeTargetId (SystemEdge (_, (tgtId, _)))       = tgtId
+edgeTargetId (LessEdge (Th.LessAtom _ tgtId _)) = tgtId
+edgeTargetId (UnsolvedChain (_, (tgtId, _)))    = tgtId
+      
 
 -- | A cluster contains nodes, edges, and a name, which is the common prefix of the contained nodes.
 data Cluster = Cluster {
@@ -73,23 +105,40 @@ data GraphRepr = GraphRepr {
 
 $(mkLabels [''GraphRepr, ''Node, ''Cluster])
 
+-- | Turn a nonempty list of nodes into a single collapsed node.
+mkCollapsedNode :: Node -> [Node] ->Node
+mkCollapsedNode node nodes = 
+  let nodeId = get nNodeId node
+      nodeType = CollapseNode (flattenNodes (node : nodes)) 
+  in
+    Node nodeId nodeType
+  where
+    -- | Flatten a collection of 'Node's.
+    flattenNodes :: [Node] -> [Node]
+    flattenNodes nodes = concatMap flattenNode nodes
+    
+    -- | Flatten a 'Node' by pulling out all the sub-nodes of a 'CollapseNode'.
+    flattenNode :: Node -> [Node]
+    flattenNode (Node _ (CollapseNode children)) = flattenNodes children
+    flattenNode n = [n]
+
+
 -- | Conversion function to a list of edges as used by Data.Graph.
-toEdgeList :: GraphRepr -> [(Node, M.NodeId, [M.NodeId])]
+toEdgeList :: GraphRepr -> [(Node, Th.NodeId, [Th.NodeId])]
 toEdgeList repr = 
   let allNodes = get grNodes repr ++ concatMap (get cNodes) (get grClusters repr)
       allEdges = get grEdges repr ++ concatMap (get cEdges) (get grClusters repr) in
   map (\node -> (node, get nNodeId node, findSinkIndices allEdges node)) allNodes
   where
     -- | For each node, find all connected nodes using allEdges and return their NodeId's.
-    findSinkIndices :: [Edge] -> Node -> [M.NodeId]
+    findSinkIndices :: [Edge] -> Node -> [Th.NodeId]
     findSinkIndices allEdges node = 
       let srcId = get nNodeId node in
       mapMaybe (findEdgeTarget srcId) allEdges
     
     -- | For a given source node id and an edge, check if the edge belongs to the node and return the target node id.
-    findEdgeTarget :: M.NodeId -> Edge -> Maybe M.NodeId
+    findEdgeTarget :: Th.NodeId -> Edge -> Maybe Th.NodeId
     findEdgeTarget srcId (SystemEdge ((srcId', _), (tgtId, _)))    | srcId == srcId' = Just tgtId
     findEdgeTarget srcId (LessEdge (Th.LessAtom srcId' tgtId _))   | srcId == srcId' = Just tgtId
     findEdgeTarget srcId (UnsolvedChain ((srcId', _), (tgtId, _))) | srcId == srcId' = Just tgtId
     findEdgeTarget _     _                                                           = Nothing
-      

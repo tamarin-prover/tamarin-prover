@@ -32,7 +32,7 @@ import           Extension.Prelude
 import           Control.Basics
 import qualified Control.Category         as L
 import           Control.Monad.Reader
-import           Control.Monad.State      (StateT, evalStateT)
+import           Control.Monad.State      (StateT, runStateT, evalStateT)
 
 import qualified Text.Dot                 as D
 import Text.Dot                 (Attribute(..), Label(..), Table(..),
@@ -170,6 +170,27 @@ renderLNFact fact = do
     then return $ prettyLNFact replacedFact
     else return $ prettyLNFact fact
 
+-- | This function is used to run 'dotNodeCompact' on collapsed nodes.
+-- We are only interested in the generated mappings in the final 'DotState' and 
+-- want to throw away the actual generated dot datastructure as these nodes should
+-- not be visible.
+-- So we run the SeDot monad action and update the 'DotState' of the outer 
+-- SeDot monad with the mappings where we replace the D.NodeId with the one that is 
+-- passed to the function.
+evalGenCollapsedNode :: D.NodeId -> Node -> SeDot ()
+evalGenCollapsedNode nid node = do
+  r <- ask
+  let ((_, dState), _) = D.runDotDefault $
+                          (`runStateT` DotState M.empty M.empty M.empty M.empty) $
+                          (`runReaderT` r) $ 
+                          dotNodeCompact node
+      DotState nodeMap premMap concMap singlesMap = dState
+  modM dsNodes $ M.union $ M.map (const nid) nodeMap
+  modM dsPrems $ M.union $ M.map (const nid) premMap
+  modM dsConcs $ M.union $ M.map (const nid) concMap
+  modM dsSingles $ M.union $ M.map (const nid) singlesMap
+  return ()
+
 -- | Dot a node in record based (compact) format.
 dotNodeCompact :: Node -> SeDot ()
 dotNodeCompact node = do
@@ -197,6 +218,10 @@ dotNodeCompact node = do
     LastActionAtom -> cacheState dsNodes v $ mkSimpleNode (show v) []
     MissingNode (Left conc) -> cacheState dsConcs (v, conc) $ dotConcC (v, conc)
     MissingNode (Right prem) -> cacheState dsPrems (v, prem) $ dotPremC (v, prem)
+    CollapseNode childNodes -> do
+      nid <- mkSimpleNode "" [("shape", "point")]
+      mapM_ (evalGenCollapsedNode nid) childNodes
+    
   where
     hasOutgoingEdge graph v =
       let repr = get gRepr graph
@@ -210,6 +235,7 @@ dotNodeCompact node = do
     colorUsesWhiteFont (Just (RGB r g b)) = (0.2126*r + 0.7152*g + 0.0722*b) < 0.5
     colorUsesWhiteFont _                  = False
 
+    mkSimpleNode :: String -> [(String, String)] -> SeDot D.NodeId
     mkSimpleNode lbl attrs =
         liftDot $ D.node $ [("label", lbl),("shape","ellipse")] ++ attrs
 
@@ -323,16 +349,16 @@ dotEdge edge =
     LessEdge _ -> error "LessEdges are handled by dotLessEdge"
   where
     dotGenEdge style src tgt = do
-      srcId <- getState dsConcs src ("Source node of edge not found: " ++ show src)
-      tgtId <- getState dsPrems tgt ("Target node of edge not found: " ++ show tgt)
-      liftDot $ D.edge srcId tgtId style
+      srcId <- getState dsConcs src ("Source node of edge not found: " ++ show edge)
+      tgtId <- getState dsPrems tgt ("Target node of edge not found: " ++ show edge)
+      when (srcId /= tgtId) (liftDot $ D.edge srcId tgtId style)
 
 -- | Dot a less edge, which needs to be transformed first to contain the correct color.
 dotLessEdge :: (NodeId, NodeId, String) -> SeDot ()
-dotLessEdge (src, tgt, color) = do
-  srcId <- getState dsNodes src ("Source node of less edge not found: " ++ show src)
-  tgtId <- getState dsNodes tgt ("Target node of less edge not found: " ++ show src)
-  liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")]
+dotLessEdge edge@(src, tgt, color) = do
+  srcId <- getState dsNodes src ("Source node of less edge not found: " ++ show edge)
+  tgtId <- getState dsNodes tgt ("Target node of less edge not found: " ++ show edge)
+  when (srcId /= tgtId) (liftDot $ D.edge srcId tgtId [("color",color),("style","dashed")])
 
 -- | Dot a legend listing all abbreviations by adding a sink node with a suitable HTML table label.
 generateLegend :: SeDot ()

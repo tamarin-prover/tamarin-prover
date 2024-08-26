@@ -30,6 +30,9 @@ module Theory.Constraint.System.Graph.Graph (
     , resolveNodePremFact
   ) where
 
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty       as NE
+import Data.List (partition)
 import qualified Data.Map                 as M
 import           Data.Maybe
 import qualified Data.Set                 as S
@@ -39,6 +42,7 @@ import qualified Theory.Constraint.System as Sys
 import           Theory.Constraint.System.Graph.GraphRepr
 import           Theory.Constraint.System.Graph.Abbreviation
 import qualified Theory                   as Th
+import qualified Data.Equivalence.Monad   as E
 import Theory.Constraint.System.Graph.Simplification (simplifySystem, compressSystem)
 
 -- | The level of graph simplification.
@@ -127,6 +131,87 @@ systemEdges se =
   let edges = S.toList $ get Sys.sEdges se in
   map (\(Sys.Edge src tgt) -> SystemEdge (src, tgt)) edges
 
+-- | Transform the graph representation to insert 'CollapsedNode's which collect connected attacker derivation nodes.
+-- This process is based on the cleandot python script and goes through all nodes in the graph, checks if they are an attacker node
+-- and then marks them to be collapsed. During this process, connected 'CollapsedNode's are unified, so that for each connected
+-- groups of attacker derivation nodes a single 'CollapsedNode' remains in the final graph.
+collapseDerivations :: GraphRepr -> GraphRepr
+collapseDerivations repr@(GraphRepr _ nodes edges) = 
+  let newNodes = E.runEquivM NE.singleton NE.append collapseNodes in
+  set grNodes newNodes repr
+  where 
+    -- | This computation first partitions the set of all nodes into ones that can be collapsed and ones that 
+    -- remain unchanged in the final output. The marked nodes are then iteratively union-ed with their neighbors using
+    -- the Union-find algorithm implemented in the 'EuivM' monad. 
+    --
+    -- ==== a.d. Node: 
+    -- It seems union-find in a purely functional language is not as performant as usual but I did not notice any slowdowns.
+    collapseNodes :: E.EquivM s (NonEmpty Node) Node [Node]
+    collapseNodes = do
+      let (markedNodes, unmarkedNodes) = partition markNode nodes
+      mapM_ (unionNode markedNodes) markedNodes
+      -- Each equivalence class corresponds is a nonempty collection of nodes that should be collapsed together.
+      classes <- mapM E.desc =<< E.classes
+      let collapsedNodes = map (\cls -> case cls of
+                                        n :| [] -> n -- If it's only a single node we do not collapse it.
+                                        n :| ns -> mkCollapsedNode n ns) 
+                            classes
+      return $ collapsedNodes ++ unmarkedNodes
+
+    -- | A node is marked for collapsing if it is an attacker derivation and has both successors and predecessors.
+    markNode :: Node -> Bool
+    markNode node =
+      let nodeId = get nNodeId node 
+          hasPredecessors = not $ null $ filter (\edge -> nodeId == edgeTargetId edge) edges
+          hasSuccessors = not $ null $ filter (\edge -> nodeId == edgeSourceId edge) edges
+          shouldCollapse = nodeIsAttackerDerivation node && hasPredecessors && hasSuccessors
+      in
+        shouldCollapse
+    
+    -- | Union the equivalence classes of the input node and all of its children that have the same weight.
+    unionNode :: [Node] -> Node -> E.EquivM s (NonEmpty Node) Node ()
+    unionNode markedNodes node = do
+      let outgoingEdges = filter (\edge -> (get nNodeId node) == edgeSourceId edge) edges
+          childrenIds = S.fromList $ map edgeTargetId outgoingEdges
+          markedChildren = filter (\n -> (get nNodeId n) `S.member` childrenIds) markedNodes
+          childrenSameWeight = filter (\n -> M.lookup (get nNodeId n) nodeWeights == M.lookup (get nNodeId node) nodeWeights) markedChildren
+      E.equateAll (node : childrenSameWeight)
+
+    -- | We assign each node a weight that corresponds to the maximum number of protocol rules that lead
+    -- from a source node to itself. This way we partition the graph into multiple "layers" of attacker derivation 
+    -- nodes.
+    -- We find these weights by doing DFS from all source nodes, increasing the weight for each protocol rule
+    -- we cross and assigning the maximum weight to each child.
+    --
+    -- ==== a.d. Note:
+    -- The DFS implementation breaks cyclic graphs that have a loop which contains at least one protocol rule 
+    -- as the weight will increase infinitely.
+    nodeWeights :: M.Map Th.NodeId Int
+    nodeWeights = 
+      let allTargets = S.fromList $ map edgeTargetId edges
+          sources = filter (\node -> not $ get nNodeId node `S.member` allTargets) nodes
+      in
+        foldr (dfs 0) M.empty sources
+      where
+        dfs :: Int -> Node -> M.Map Th.NodeId Int -> M.Map Th.NodeId Int
+        dfs weight node visited =
+          let curId = get nNodeId node 
+              newVisited = M.insert curId weight visited
+              newWeight = if nodeIsProtocolRule node then weight + 1 else weight
+              children = 
+                let outgoingEdges = filter (\edge -> curId == edgeSourceId edge) edges
+                    childrenIds = S.fromList $ map edgeTargetId outgoingEdges in
+                    filter (\n -> (get nNodeId n) `S.member` childrenIds) nodes
+          in 
+            foldr (\child visited -> 
+                    case M.lookup (get nNodeId child) visited of
+                      Nothing -> dfs newWeight child visited
+                      Just w -> if newWeight > w 
+                                then dfs newWeight child visited
+                                else visited) 
+                  newVisited children
+
+       
 -- | Computes a basic graph representation from a System 
 -- where nodes are 
 -- 1. the System rule instances
@@ -157,10 +242,11 @@ systemToGraph se options =
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
-      repr = basicGraphRepr
-      abbrevs = computeAbbreviations repr defaultAbbreviationOptions
+      repr1 = if (get goSimplificationLevel options >= SL3) then collapseDerivations basicGraphRepr else basicGraphRepr
+      finalRepr = repr1
+      abbrevs = computeAbbreviations finalRepr defaultAbbreviationOptions
   in
-    Graph se options repr abbrevs
+    Graph se options finalRepr abbrevs
 
 -- | Get all sink nodes of a graph, i.e. those without outgoing edges.
 getGraphSinks :: Graph -> [Node]

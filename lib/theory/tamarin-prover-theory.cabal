@@ -67,6 +67,7 @@ library
       , transformers
       , uniplate
       , exceptions
+      , equivalence
 
       , tamarin-prover-utils
       , tamarin-prover-term
