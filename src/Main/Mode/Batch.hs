@@ -15,6 +15,7 @@ import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.Bifunctor (bimap)
 import Data.List
+import Data.Maybe (isJust)
 import System.Console.CmdArgs.Explicit as CmdArgs
 import System.Exit (die)
 import System.FilePath
@@ -208,14 +209,7 @@ run thisMode as
         formalComments =
           filter (/= ("", "")) . either theoryFormalComments diffTheoryFormalComments
 
-        isTranslateOnlyMode =
-          thyLoadOptions._oOutputModule `elem`
-            [ ModuleSpthy
-            , ModuleSpthyTyped
-            , ModuleProVerif
-            , ModuleProVerifEquivalence
-            , ModuleDeepSec
-            ]
+        isTranslateOnlyMode = isJust $ L.get oOutputModule thyLoadOptions
 
         handleError e@(ParserError _) = die $ show e
         handleError (WarningError report) = do

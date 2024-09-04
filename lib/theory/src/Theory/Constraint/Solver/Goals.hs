@@ -206,7 +206,7 @@ solveGoal goal = do
     markGoalAsSolved "directly" goal
     rules <- askM pcRules
     case goal of
-      ActionG i fa  -> solveAction  (nonSilentRules rules) (i, fa)
+      ActionG i fa  -> solveAction (nonSilentRules rules) (i, fa)
       PremiseG p fa ->
            solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
       ChainG c p    -> solveChain (get crDestruct  rules) (c, p)
@@ -260,7 +260,7 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
     requiresKU t = do
         j <- freshLVar "vk" LSortNode
         let faKU = kuFact t
-        insertLess j i Adversary
+        insertLess (LessAtom j i Adversary)
         void (insertAction j faKU)
 
 -- | CR-rules *DG_{2,P}* and *DG_{2,d}*: solve a premise with a direct edge
