@@ -514,7 +514,7 @@ rule test[role="Alice"]:
 
 Look at the example below to see how this would appear in an image:
 
-![Manual Clusturing](../images/manual_clusturing.png){ width=80% }\
+![Manual Clustering](../images/manual_clusturing.png){ width=80% }\
 
 #### Automatic Clustering
 
@@ -528,7 +528,7 @@ You can activate this option in the settings menu. If you opt to manually write 
 
 Look at the example below to see how this would appear in an image:
 
-![Manual Clusturing](../images/Automatic_clusturing.png){ width=80% }\
+![Automatic Clustering](../images/Automatic_clusturing.png){ width=80% }\
 
 <!--
 **FIX Cas: need to do either pattern matching or explicit construct/deconstruct;

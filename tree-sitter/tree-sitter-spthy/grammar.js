@@ -697,7 +697,8 @@ module.exports = grammar({
 
       rule_attr: $ => choice(
             $.rule_attr_color,
-            'no_derivcheck'
+            'no_derivcheck',
+            $.rule_role
             ),
             
       rule_attr_color: $ => seq(
@@ -706,6 +707,12 @@ module.exports = grammar({
               'colour='
           ),
           $.hexcolor
+      ),
+
+      rule_role: $ => seq(
+          'role',
+          '=',
+          '"', field('role_identifier', $.ident), '"'
       ),
 
       rule_let_block: $ => seq(
