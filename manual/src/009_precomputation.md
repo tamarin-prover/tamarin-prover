@@ -123,11 +123,11 @@ the raw sources.
 
 This lemma relates the point of instantiation to the point of sending by either
 the adversary or the communicating partner. In other words, it says that
-whenever the responder receives the first nonce, either the nonce was known to
-the adversary or the initiator sent the first message prior to that moment.
+whenever the responder receives the first nonce, then prior to that moment either
+the nonce was known to the adversary or the initiator had sent the first message.
 Similarly, the second part states that whenever the initiator receives the
-second message, either the adversary knew the corresponding nonce or the
-responder has sent the second message before.
+second message, then prior to that moment either the adversary knew the
+corresponding nonce or the responder had sent the second message.
 Generally, in a protocol with partial deconstructions left it is advisable to try if the problem
 can be solved by a sources lemma that considers where a term could be coming
 from.
