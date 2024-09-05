@@ -1138,7 +1138,7 @@ prettyDotProtoRuleName :: Document d => [RuleAttribute] -> ProtoRuleName -> d
 prettyDotProtoRuleName attrs rn = text $ case rn of
     FreshRule   -> "Fresh"
     StandRule n -> if IsSAPiCRule `elem` attrs 
-                     then (if "new" `isPrefixOf` n then chr 957 : drop 3 (trimSapicName n) else trimSapicName n)
+                     then (if "new" `isPrefixOf` n then chr 957 : ' ' : drop 3 (trimSapicName n) else trimSapicName n)
                      else prefixIfReserved n
     where
       trimSapicName name =
