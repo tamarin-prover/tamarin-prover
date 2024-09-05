@@ -124,10 +124,7 @@ nodeColorMap rules =
     M.fromList $
       [ (get rInfo ru, case find colorAttr $ ruleAttributes ru of
             Just (RuleColor c)     -> c
-            Just (Process   _)     -> hsvToRGB $ getColor (gIdx, mIdx)
-            Just IgnoreDerivChecks -> hsvToRGB $ getColor (gIdx, mIdx)
-            Just IsSAPiCRule       -> hsvToRGB $ getColor (gIdx, mIdx)
-            Nothing                -> hsvToRGB $ getColor (gIdx, mIdx))
+            _                      -> hsvToRGB $ getColor (gIdx, mIdx))
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
     groupIdx ru | isDestrRule ru                   = 0
@@ -148,9 +145,7 @@ nodeColorMap rules =
 -- commented out to remove the redundant pattern compiler warning. If more are added,
 -- the second line can be uncommented.
     colorAttr (RuleColor _)     = True
-    colorAttr (Process   _)     = False
-    colorAttr IgnoreDerivChecks = False
-    colorAttr IsSAPiCRule       = False
+    colorAttr _                 = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational
