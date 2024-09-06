@@ -370,6 +370,7 @@ theory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "macro already defined"
 
+
 -- | Parse a diff theory.
 diffTheory :: Maybe FilePath
        -> Parser OpenDiffTheory
