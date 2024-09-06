@@ -1062,28 +1062,30 @@ module.exports = grammar({
           '>'
       )),
 
+      // Not represented here, but taken from the code:
+      // only allow if multiset is enabled and we do not parse an equation
       mset_term: $ => prec.left('MUL_SET', seq(
-          field('left', $._term),
+          field('left', $.nat_term),
           choice('++', '+'),
-          field('right', $._term)
+          field('right', $.nat_term)
       )),
 
       nat_term: $ => prec.left('ADD', seq(
-          field('left', $._term),
+          field('left', $.xor_term),
           '%+',
-          field('right', $._term)
+          field('right', $.xor_term)
       )),
 
       xor_term: $ => prec.left('EXCLUSIVE_OR', seq(
-          field('left', $._term),
+          field('left', $.mul_term),
           choice('XOR', '⊕'),
-          field('right', $._term)
+          field('right', $.mul_term)
       )),
 
       mul_term: $ => prec.left('MULTIPLY', seq(
-          field('left', $._term),
+          field('left', $.exp_term),
           '*',
-          field('right', $._term)
+          field('right', $.exp_term)
       )),
 
       exp_term: $ => prec.right('EXPONENTIAL', seq(
@@ -1093,7 +1095,7 @@ module.exports = grammar({
       )),
 
       nested_term: $ => prec('NESTED', seq(
-          '(', $._term, ')'
+          '(', $.mset_term, ')'
       )),
 
       nullary_fun: $ => prec('NULLARY_FUN', choice(

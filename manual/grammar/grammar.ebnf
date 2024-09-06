@@ -9,7 +9,9 @@ precedences  ::=  { { 'NESTED' 'FUNCTION' 'VARIABLE' 'EXPONENTIAL' 'MULTIPLY' 'A
 word  ::=  ident
 
 rules:
-  theory  ::=  'theory' (ident: theory_name) 'begin' _body_item* 'end' /./*
+  theory  ::=  'theory' (ident: theory_name) ('configuration' ':' '"' commandline '"')? 'begin' _body_item* 'end' /./*
+  commandline  ::=  ('--auto-sources' | ('--stop-on-trace' '=' _search_strategy))+
+  _search_strategy  ::=  'BFS' | 'DFS' | 'SEQDFS' | 'bfs' | 'dfs' | 'seqdfs'
   _body_item  ::=  preprocessor | _signature_spec | global_heuristic | tactic | process | let | export | _rule | restriction | case_test | _lemma | formal_comment
   preprocessor  ::=  ifdef | define | include
   ifdef  ::=  '#ifdef' _ifdef_formula _body_item* ('#else' _body_item*)? '#endif'
@@ -24,11 +26,10 @@ rules:
   built_ins  ::=  'builtins' ':' built_in (',' built_in)* ','?
   built_in  ::=  'diffie-hellman' | 'hashing' | 'symmetric-encryption' | 'asymmetric-encryption' | 'signing' | 'bilinear-pairing' | 'xor' | 'multiset' | 'natural-numbers' | 'revealing-signing' | 'locations-report' | 'reliable-channel' | 'dest-pairing' | 'dest-signing' | 'dest-symmetric-encryption' | 'dest-asymmetric-encryption'
   functions  ::=  >('functions' ':' _function_sym (',' _function_sym)* ','?)
-  _function_sym  ::=  function_pub | function_private | function_destructor | function_custom
-  function_pub  ::=  (ident: function_identifier) '/' (natural: arity)
-  function_private  ::=  (ident: function_identifier) '/' (natural: arity) '[' 'private' ']'
-  function_destructor  ::=  (ident: function_identifier) '/' (natural: arity) '[' 'destructor' ']'
-  function_custom  ::=  (ident: function_identifier) '(' arguments? ')' ':' (ident: function_type)
+  _function_sym  ::=  function_untyped | function_typed
+  function_untyped  ::=  (ident: function_identifier) '/' (natural: arity) ('[' function_attribute (',' function_attribute)* ','? ']')?
+  function_attribute  ::=  'private' | 'destructor'
+  function_typed  ::=  (ident: function_identifier) '(' arguments? ')' ':' (ident: function_type)
   equations  ::=  >('equations' ':' equation (',' equation)* ','?)
   equation  ::=  (_term: left) '=' (_term: right)
   predicates  ::=  ('predicate' | 'predicates') ':' predicate (',' predicate)*
@@ -91,7 +92,8 @@ rules:
   variants  ::=  'variants' simple_rule (',' simple_rule)*
   modulo  ::=  '(' 'modulo' ('E' | 'AC') ')'
   rule_attrs  ::=  '[' rule_attr (',' rule_attr)* ','? ']'
-  rule_attr  ::=  ('color=' | 'colour=') hexcolor
+  rule_attr  ::=  rule_attr_color | 'no_derivcheck'
+  rule_attr_color  ::=  ('color=' | 'colour=') hexcolor
   rule_let_block  ::=  'let' rule_let_term+ 'in'
   rule_let_term  ::=  ((msg_var_or_nullary_fun | nat_var): left) '=' (_term: right)
   macros  ::=  'macros' ':' macro (',' macro)*
@@ -107,12 +109,11 @@ rules:
   restriction_attr  ::=  '[' ('left' | 'right') ']'
   case_test  ::=  'test' (ident: test_identifier) ':' '"' (_formula: formula) '"'
   _lemma  ::=  lemma | diff_lemma | accountability_lemma | equiv_lemma | diff_equiv_lemma
-  lemma  ::=  'lemma' modulo? (ident: lemma_identifier) lemma_attrs? ':' trace_quantifier? '"' (_formula: formula) '"' (_proof_skeleton: proof_skeleton)?
-  lemma_attrs  ::=  '[' lemma_attr (',' lemma_attr)* ','? ']'
+  lemma  ::=  'lemma' modulo? (ident: lemma_identifier) diff_lemma_attrs? ':' trace_quantifier? '"' (_formula: formula) '"' (_proof_skeleton: proof_skeleton)?
   lemma_attr  ::=  'sources' | 'reuse' | 'use_induction' | ('output=' '[' language (',' language)* ']') | ('hide_lemma=' ident) | ('heuristic=' (_goal_ranking+: goal_ranking))
   language  ::=  'spthy' | 'spthytyped' | 'msr' | 'proverif' | 'deepsec'
-  diff_lemma  ::=  ('diffLemma' | 'lemma') modulo? (ident: lemma_identifier) diff_lemma_attrs? ':' trace_quantifier? ('"' (_formula: formula) '"')? (_proof_skeleton: proof_skeleton)?
-  diff_lemma_attrs  ::=  '[' >(lemma_attr ',')* diff_lemma_attr? >(',' lemma_attr)* ','? ']'
+  diff_lemma  ::=  'diffLemma' modulo? (ident: lemma_identifier) diff_lemma_attrs? ':' (_proof_skeleton: proof_skeleton)?
+  diff_lemma_attrs  ::=  '[' (diff_lemma_attr | lemma_attr) (',' (diff_lemma_attr | lemma_attr))* ','? ']'
   diff_lemma_attr  ::=  'left' | 'right'
   accountability_lemma  ::=  'lemma' (ident: lemma_identifier) ':' (ident: test_identifier) (',' (ident: test_identifier))* ('account' | 'accounts') 'for' '"' (_formula: formula) '"'
   equiv_lemma  ::=  'equivLemma' ':' (_process: first) (_process: second)
@@ -136,12 +137,12 @@ rules:
   eq_split_goal  ::=  'splitEqs' '(' natural ')'
   _term  ::=  tuple_term | mset_term | nat_term | xor_term | mul_term | exp_term | nested_term | nullary_fun | binary_app | nary_app | _literal
   tuple_term  ::=  TUPLE('<' ((_term): term) (',' (_term: term))* '>')
-  mset_term  ::=  <MUL_SET((_term: left) ('++' | '+') (_term: right))
-  nat_term  ::=  <ADD((_term: left) '%+' (_term: right))
-  xor_term  ::=  <EXCLUSIVE_OR((_term: left) ('XOR' | '⊕') (_term: right))
-  mul_term  ::=  <MULTIPLY((_term: left) '*' (_term: right))
+  mset_term  ::=  <MUL_SET((nat_term: left) ('++' | '+') (nat_term: right))
+  nat_term  ::=  <ADD((xor_term: left) '%+' (xor_term: right))
+  xor_term  ::=  <EXCLUSIVE_OR((mul_term: left) ('XOR' | '⊕') (mul_term: right))
+  mul_term  ::=  <MULTIPLY((exp_term: left) '*' (exp_term: right))
   exp_term  ::=  >EXPONENTIAL((_term: base) '^' (_term: exponent))
-  nested_term  ::=  NESTED('(' _term ')')
+  nested_term  ::=  NESTED('(' mset_term ')')
   nullary_fun  ::=  NULLARY_FUN((ident: function_identifier) | ((ident: function_identifier) '(' ')'))
   binary_app  ::=  FUNCTION((ident: function_identifier) '{' (_term: argument) (',' (_term: argument))*? '}' (_term: argument))
   nary_app  ::=  FUNCTION((ident: function_identifier) '(' arguments ')')
