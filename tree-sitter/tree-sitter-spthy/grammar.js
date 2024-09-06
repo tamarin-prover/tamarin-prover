@@ -262,6 +262,7 @@ module.exports = grammar({
       // Equations:
       equations: $ => prec.right(seq(
           'equations',
+          optional(seq('[', 'convergent', ']')),
           ':',
           $.equation,
           repeat(seq(
@@ -698,6 +699,8 @@ module.exports = grammar({
       rule_attr: $ => choice(
             $.rule_attr_color,
             'no_derivcheck',
+            'issapicrule',
+            $.rule_process,
             $.rule_role
             ),
             
@@ -713,6 +716,12 @@ module.exports = grammar({
           'role',
           '=',
           '"', field('role_identifier', $.ident), '"'
+      ),
+
+      rule_process: $ => seq(
+        'process',
+        '=',
+        '"', $.ident, '"'
       ),
 
       rule_let_block: $ => seq(

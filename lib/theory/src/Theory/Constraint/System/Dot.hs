@@ -313,7 +313,7 @@ dotNodeCompact node manualNodeColor = do
             ps <- psM
             as <- asM
             cs <- csM
-            let lbl | outgoingEdge = show v ++ " : " ++ showRuleCaseName ru
+            let lbl | outgoingEdge = show v ++ " : " ++ showDotRuleCaseName ru
                     | otherwise       = concatMap snd as
             nid <- mkSimpleNode lbl []
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
@@ -344,14 +344,13 @@ dotNodeCompact node manualNodeColor = do
         
         ruleLabelM = do
           showAutoSource <- asks (get ((L..) goShowAutoSource gOptions) . fst3)
-          case showAutoSource of
-            True -> do
-              lbl <- mapM renderLNFact $ filter isAutoSource
-                     $ filter isNotDiffAnnotation $ get rActs ru
-              return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
-            False -> do 
-              lbl <- mapM renderLNFact $ filter isNotDiffAnnotation $ get rActs ru
-              return $ prettyNodeId v <-> colon <-> text (showRuleCaseName ru) <> (brackets $ vcat $ punctuate comma $ lbl)
+          lbl <- if showAutoSource 
+                      then mapM renderLNFact $ filter isAutoSource $ filter isNotDiffAnnotation $ get rActs ru
+                      else mapM renderLNFact $ filter isNotDiffAnnotation $ get rActs ru
+          return $ 
+            prettyNodeId v <-> colon 
+            <-> text (showDotRuleCaseName ru) 
+            <> (if null lbl then mempty else brackets (vcat $ punctuate comma lbl))
 
 
         isNotDiffAnnotation fa = (fa /= (Fact (ProtoFact Linear ("Diff" ++ getRuleNameDiff ru) 0) S.empty []))

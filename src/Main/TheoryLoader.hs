@@ -70,7 +70,7 @@ import           Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import           Theory.Tools.IntruderRules          (specialIntruderRules, subtermIntruderRules
                                                      , multisetIntruderRules, xorIntruderRules)
 import           Theory.Tools.Wellformedness
-import           Theory.Tools.MessageDerivationChecks
+import Theory.Tools.MessageDerivationChecks
 import           Theory.Module
 
 import           TheoryObject                        (diffThyOptions, diffTheoryConfigBlock, theoryConfigBlock)

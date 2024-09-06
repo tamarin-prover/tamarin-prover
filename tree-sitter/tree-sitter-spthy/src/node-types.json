@@ -7371,6 +7371,10 @@
           "named": true
         },
         {
+          "type": "rule_process",
+          "named": true
+        },
+        {
           "type": "rule_role",
           "named": true
         }
@@ -7522,6 +7526,21 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "rule_process",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -9179,6 +9198,10 @@
     "named": false
   },
   {
+    "type": "convergent",
+    "named": false
+  },
+  {
     "type": "deepsec",
     "named": false
   },
@@ -9324,6 +9347,10 @@
   },
   {
     "type": "isInFactTerms",
+    "named": false
+  },
+  {
+    "type": "issapicrule",
     "named": false
   },
   {

@@ -71,6 +71,7 @@ ruleAttribute = asum
     , symbol "derivchecks" *> ignore
     , symbol "no_derivcheck" *> ignore
     , symbol "role=" *> (Just . Role <$> parseRole)
+    , symbol "issapicrule" *> return (Just IsSAPiCRule)
     ]
   where
     parseColor = do
