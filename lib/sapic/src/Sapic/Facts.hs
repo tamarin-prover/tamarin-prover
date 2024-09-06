@@ -375,7 +375,8 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
-                   , Process $ toProcess process]
+                   , Process $ toProcess process
+                   , IsSAPiCRule]
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
