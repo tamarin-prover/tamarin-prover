@@ -405,6 +405,8 @@ def getArguments():
 			"5: show shell command output\n" +
 			"6: show diff output if the corresponding proofs changed"
 			, type=int, default=3)
+	parser.add_argument("-p", "--parser-test", help = "Run the parser tests.", action="store_true")
+
 
 	## save the settings ##
 	global settings
@@ -434,6 +436,39 @@ def main():
 		logging.warning("running 'stack install' ...")
 		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 		logging.debug(output)
+
+	## test the spthy parser
+	parsingSuccessful = True
+	if settings.parser_test:
+		logging.info("running the parser tests ...")
+		tree_sitter_spthy_dir = './tree-sitter/tree-sitter-spthy'
+
+		working_dir = os.getcwd()
+
+		# change the working dir s.t. we can use tree-sitter CLI
+		os.chdir(tree_sitter_spthy_dir)
+		
+		try:
+			testResult = subprocess.run(['./regressionParser.sh'], capture_output=True, text=True)
+			tree_sitter_generate = subprocess.run(["tree-sitter", "generate"], capture_output=True, text=True)
+			outputColor = colors.GREEN + colors.BOLD
+
+			if not "success percentage: 100.00%;" in testResult.stdout:
+				parsingSuccessful = False
+				outputColor = colors.RED + colors.BOLD
+			logging.error("""\n 
+==============================================================
+Parser test results:
+==============================================================
+		""")
+			logging.error(color(colors.YELLOW + colors.BOLD, tree_sitter_generate.stdout))
+			logging.error(color(colors.RED + colors.BOLD, tree_sitter_generate.stderr))
+			logging.error(color(outputColor, testResult.stdout))
+			logging.error(color(colors.RED + colors.BOLD, testResult.stderr))
+
+		finally:
+        # revert the working dir change s.t. the rest of the script can run correctly
+			os.chdir(working_dir)
 			
 	## repeat case-studies r times for higher confidence in time measurements ##
 	successful = True
@@ -454,6 +489,8 @@ def main():
 
 		## compare time and steps ##
 		successful = compare() & successful
+
+	successful = successful & parsingSuccessful
 
 	## measure time ##
 	logging.warning(f"\nTime elapsed: {str(datetime.datetime.now() - startTime).split('.')[0]}s")
