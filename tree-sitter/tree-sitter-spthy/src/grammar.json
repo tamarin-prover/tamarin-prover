@@ -2910,6 +2910,18 @@
         {
           "type": "STRING",
           "value": "no_derivcheck"
+        },
+        {
+          "type": "STRING",
+          "value": "issapicrule"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "rule_process"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "rule_role"
         }
       ]
     },
@@ -2932,6 +2944,60 @@
         {
           "type": "SYMBOL",
           "name": "hexcolor"
+        }
+      ]
+    },
+    "rule_role": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "role"
+        },
+        {
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "STRING",
+          "value": "\""
+        },
+        {
+          "type": "FIELD",
+          "name": "role_identifier",
+          "content": {
+            "type": "SYMBOL",
+            "name": "ident"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "\""
+        }
+      ]
+    },
+    "rule_process": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "process"
+        },
+        {
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "STRING",
+          "value": "\""
+        },
+        {
+          "type": "SYMBOL",
+          "name": "ident"
+        },
+        {
+          "type": "STRING",
+          "value": "\""
         }
       ]
     },

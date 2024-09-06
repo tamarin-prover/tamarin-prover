@@ -68,8 +68,10 @@ import           Theory                       (
     openDiffTheory,
     prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas, thySignature, diffThySignature, toSignatureWithMaude
   )
+
+import Debug.Trace
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
-import           Text.PrettyPrint.Html
+import Text.PrettyPrint.Html ( render, htmlDoc, renderHtmlDoc )
 import           Theory.Constraint.System.Dot
 import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON
 import           Web.Hamlet
@@ -110,7 +112,6 @@ import qualified Data.Binary                  as Bin
 import           Data.Time.LocalTime
 import           System.Directory
 
-import           Debug.Trace                  (trace)
 import Control.Monad.Except (runExceptT)
 import Main.TheoryLoader
 import Main.Console (renderDoc)
@@ -913,14 +914,17 @@ getOptions = do
   abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
   simpl <- lookupGetParam "simplification"
   showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
+  clustering <- lookupGetParam "clustering"
   let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack) 
       graphOptions = L.set goSimplificationLevel simplificationLevel $
                      L.set goCompress compress $
                      L.set goShowAutoSource showAutosource $
                      L.set goAbbreviate abbreviate $
+                     L.set goClustering (isJust clustering) $ 
                      defaultGraphOptions
-      dotOptions = L.set doNodeStyle nodeStyle defaultDotOptions
+  let dotOptions = L.set doNodeStyle nodeStyle defaultDotOptions
   return (graphOptions, dotOptions)
+
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphR :: TheoryIdx -> TheoryPath -> Handler ()

@@ -15,10 +15,12 @@ module Theory.Constraint.System.Dot (
   , DotOptions
   , doNodeStyle
   , defaultDotOptions
+  , SeDot
   ) where
 
+
 import           Data.Ord
-import           Data.Char                (isSpace)
+import           Data.Char                (isSpace, ord)
 import           Data.Color
 import           Data.List                (find, isPrefixOf, intercalate, sortBy, intersperse)
 import qualified Data.Map                 as M
@@ -29,15 +31,29 @@ import qualified Data.Text.Lazy           as T
 import           Extension.Data.Label
 import           Extension.Prelude
 
+import Text.Printf (printf)
+
 import           Control.Basics
 import qualified Control.Category         as L
 import           Control.Monad.Reader
-import           Control.Monad.State      (StateT, evalStateT)
-
+import           Control.Monad.State      (StateT, evalStateT, runStateT)
+import qualified Control.Monad.State as State
 import qualified Text.Dot                 as D
+
 import Text.Dot                 (Attribute(..), Label(..), Table(..),
                                  Row(..), Align(..), VAlign(..), Cell(..), TextItem(..))
-import           Text.PrettyPrint.Class
+import Text.PrettyPrint.Class
+    ( Document((<->), vcat, fsep, text),
+      Doc,
+      Style(lineLength, mode),
+      Mode(OneLineMode),
+      punctuate,
+      comma,
+      render,
+      colon,
+      brackets,
+      renderStyle,
+      defaultStyle )
 
 import           Theory.Constraint.System hiding (Edge, resolveNodeConcFact, resolveNodePremFact)
 import qualified Theory as Sys
@@ -48,6 +64,7 @@ import           Theory.Text.Pretty       (opAction)
 import           Utils.Misc
 import qualified Data.Graph               as G
 import Theory (laSmaller, laLarger, laReason)
+
 
 -- | The style for nodes of the intruder.
 data BoringNodeStyle = FullBoringNodes | CompactBoringNodes
@@ -118,20 +135,69 @@ setDefaultAttributes = do
   D.edgeAttributes [("fontsize","8"),("fontname","Helvetica")]
 
 
+-- | Set default attributes for nodes and edges if the graph contains clusters. 
+-- Some additional options have been added for better rendering
+setDefaultAttributesIfCluster :: D.Dot ()
+setDefaultAttributesIfCluster = do
+  D.attribute ("nodesep", "0.8") -- Slight increase to space out the graph
+  D.attribute ("ranksep", "0.8") 
+  D.attribute ("sep", "4") 
+  D.attribute ("splines", "true") 
+  D.attribute ("overlap", "false") -- Prevent nodes from overlapping
+  D.attribute ("pack", "true") -- Enable packing of clusters to ensure they are tightly grouped.
+  D.attribute ("packmode", "cluster") -- Define packing mode specifically for clusters to organize them more efficiently.
+  D.attribute ("concentrate", "true") -- Combine parallel edges .
+  D.attribute ("compound", "true") 
+  D.attribute ("remincross", "true") -- Minimize edge crossings to improve readability.
+  D.attribute ("mclimit", "10") 
+  D.attribute ("nslimit", "20") 
+  D.attribute ("nslimit1", "20") 
+  D.attribute ("ordering", "out") 
+  D.attribute ("rankdir", "TB") -- Set the direction of ranks from top to bottom for a hierarchical layout.
+  D.attribute ("showboxes", "false") 
+  D.attribute ("clusterrank", "local") -- Rank clusters locally to ensure internal cluster organization
+  
+  D.nodeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("width", "0.3"), ("height", "0.2"), ("margin", "0.05,0.05"), ("shape", "ellipse")] -- Define default attributes for nodes with specific font and size settings.
+  D.edgeAttributes [("fontsize", "8"), ("fontname", "Helvetica"), ("penwidth", "1.5"), ("arrowsize", "0.5"), ("color", "black"), ("style", "solid"), ("weight", "8")] -- Define default attributes for edges with specific font, size, and style settings.
+
+
+
+-- | This function creates a cluster for a specific role with a list of nodes.
+-- It takes an role name and a 'SeDot' action, then executing the given SeDot action within 
+--a temporary state, updating the current state, and adding the resulting subgraph elements to 
+--the global state.
+
+-- Note: To be compatible with the 'dotNodeCompact' function which returns a 'SeDot' action,
+-- we needed a function that accepts and returns a 'SeDot' action. This is why we didn't use
+-- the 'cluster' function from 'Text.Dot'. The only feasible approach was either this or 
+-- fragmenting the 'dotNodeCompact' function. Thus, we extracted what we needed and removed 
+-- the unnecessary parts.
+roleCluster :: String -> SeDot a -> SeDot ()
+roleCluster roleName dot = do
+  uq <- liftDot D.nextId
+  let cid = D.createClusterNodeId roleName
+  env <- ask
+  currentState <- State.get
+  let clusterState = D.DotGenState { D._dgsId = uq, D._dgsElements = [] }
+  ((_, newState), finalDotState) <- lift . lift . lift $ runStateT (runStateT (runReaderT dot env) currentState) clusterState
+  State.put newState
+  _ <- liftDot $ D.setId $ D._dgsId finalDotState
+  liftDot $ D.addElements [D.createSubGraph (Just cid) (D._dgsElements finalDotState)]
+
+
 -- | Compute a color map for nodes labelled with a proof rule info of one of
 -- the given rules.
 nodeColorMap :: [RuleACInst] -> NodeColorMap
 nodeColorMap rules =
     M.fromList $
-      [ (get rInfo ru, case find colorAttr $ ruleAttributes ru of
-            Just (RuleColor c)     -> c
-            _                      -> hsvToRGB $ getColor (gIdx, mIdx))
+      [ (get rInfo ru, getColorForRule (filterAttributes $ ruleAttributes ru) gIdx mIdx)
       | (gIdx, grp) <- groups, (mIdx, ru) <- zip [0..] grp ]
   where
-    groupIdx ru | isDestrRule ru                   = 0
-                | isConstrRule ru                  = 2
-                | isFreshRule ru || isISendRule ru = 3
-                | otherwise                        = 1
+    groupIdx ru 
+      | isDestrRule ru                   = 0
+      | isConstrRule ru                  = 2
+      | isFreshRule ru || isISendRule ru = 3
+      | otherwise                        = 1
 
     -- groups of rules labeled with their index in the group
     groups = [ (gIdx, [ ru | ru <- rules, gIdx == groupIdx ru])
@@ -142,11 +208,23 @@ nodeColorMap rules =
     colors = M.fromList $ lightColorGroups intruderHue (map (length . snd) groups)
     getColor idx = fromMaybe (HSV 0 1 1) $ M.lookup idx colors
 
--- Note: Currently RuleColors are the only Rule Attributes, so the second line is
--- commented out to remove the redundant pattern compiler warning. If more are added,
--- the second line can be uncommented.
+    -- Function to get color for a given rule
+    getColorForRule attrs gIdx mIdx = 
+      case find colorAttr attrs of
+        Just (RuleColor c)     -> c
+        Just (Process   _)     -> hsvToRGB $ getColor (gIdx, mIdx)
+        Just IgnoreDerivChecks -> hsvToRGB $ getColor (gIdx, mIdx)
+        _                      -> hsvToRGB $ getColor (gIdx, mIdx)
+
     colorAttr (RuleColor _)     = True
     colorAttr _                 = False
+
+    -- Function to filter out role attributes
+    filterAttributes :: [RuleAttribute] -> [RuleAttribute]
+    filterAttributes = filter (not . isRole)
+
+    isRole (Role _) = True
+    isRole _        = False
 
     -- The hue of the intruder rules
     intruderHue :: Rational
@@ -168,17 +246,33 @@ renderLNFact fact = do
     else return $ prettyLNFact fact
 
 -- | Dot a node in record based (compact) format.
-dotNodeCompact :: Node -> SeDot ()
-dotNodeCompact node = do
+dotNodeCompact :: Node -> Maybe String -> SeDot ()
+dotNodeCompact node manualNodeColor = do
   let v = get nNodeId node
   (graph, colorMap, dotOptions) <- ask
   case get nNodeType node of
     SystemNode ru -> cacheState dsNodes v $ do
       let outgoingEdge = hasOutgoingEdge graph v
-      let color     = M.lookup (get rInfo ru) colorMap
-          nodeColor = maybe "white" rgbToHex color
-          attrs     = [("fillcolor", nodeColor),("style","filled")
-                        , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")]
+      let role = fromMaybe "Undefined" (getNodeRole node)
+
+      let rInfoVal = get rInfo ru
+
+      let isRuleColor (RuleColor _) = True
+          isRuleColor _             = False
+
+      let ruleColor = case rInfoVal of
+                        ProtoInfo protoRule -> 
+                          case find isRuleColor (_praciAttributes protoRule) of
+                            Just (RuleColor rgb) -> Just (rgbToHex rgb)
+                            _ -> Nothing
+                        _ -> Nothing
+
+      let color = M.lookup rInfoVal colorMap
+          nodeColor = fromMaybe (maybe "white" rgbToHex color) (ruleColor <|> manualNodeColor)
+          attrs = [("fillcolor", nodeColor), ("style", "filled")
+                  , ("fontcolor", if colorUsesWhiteFont color then "white" else "black")
+                  , ("role", role)]
+                  
       ids <- mkNode v ru attrs outgoingEdge dotOptions
       let prems = [ ((v, i), nid) | (Just (Left i),  nid) <- ids ]
           concs = [ ((v, i), nid) | (Just (Right i), nid) <- ids ]
@@ -394,10 +488,8 @@ generateLegend = do
                   then Just key2
                   else Nothing) keyedElems 
       
--- | Dot a cluster containing further nodes and edges.
--- a.d. TODO implement
-dotCluster :: Cluster -> SeDot ()
-dotCluster cluster = return ()
+
+
 
 -- | Dot a sequent in compact form (one record per rule), if there is anything
 -- to draw.
@@ -411,19 +503,78 @@ dotSystemCompact graphOptions dotOptions se =
 
 -- | Dot a graph in compact form (one record per rule).
 dotGraphCompact :: DotOptions -> NodeColorMap -> Graph -> D.Dot ()
-dotGraphCompact dotOptions colorMap graph =
+dotGraphCompact dotOptions colorMap graph = 
     (`evalStateT` DotState M.empty M.empty M.empty M.empty) $
-    (`runReaderT` (graph, colorMap, dotOptions)) $ do
-        liftDot $ setDefaultAttributes
-        let repr = get gRepr graph
-            (lessEdges, restEdges) = mergeLessEdges (get grEdges repr)
-            abbreviate = get ((L..) goAbbreviate gOptions) graph 
-        mapM_ dotNodeCompact (get grNodes repr)
-        mapM_ dotEdge restEdges
-        mapM_ dotLessEdge lessEdges
-        mapM_ dotCluster (get grClusters repr)
+        (`runReaderT` (graph, colorMap, dotOptions)) $ do
 
-        when abbreviate generateLegend 
+            -- Get the graph representation details
+            let repr = get gRepr graph
+                clusters = get grClusters repr
+                edges = get grEdges repr
+                nodes = get grNodes repr
+                (lessEdges, restEdges) = mergeLessEdges edges
+                abbreviate = get ((L..) goAbbreviate gOptions) graph
+            
+            if null $ get grClusters repr then liftDot setDefaultAttributes else liftDot setDefaultAttributesIfCluster
+
+            -- Process the nodes, clusters, and edges
+            mapM_ (\node -> dotNodeCompact node Nothing) nodes
+            mapM_ dotCluster clusters
+            mapM_ dotEdge restEdges
+            mapM_ dotLessEdge lessEdges
+            dotClustersEdges clusters
+
+            -- Generate legend if abbreviate is set
+            when abbreviate generateLegend
+
+
+-- Function to dot edges from multiple clusters
+dotClustersEdges :: [Cluster] -> SeDot ()
+dotClustersEdges clusters = do
+    let allEdges = concatMap (get cEdges) clusters
+        (lessEdges, restEdges) = mergeLessEdges allEdges
+    mapM_ dotEdge restEdges
+    mapM_ dotLessEdge lessEdges
+
+
+-- Simple hash function to amplify differences between names
+simpleHash :: String -> Int
+simpleHash = foldl (\ acc c -> acc * 31 + ord c) 7
+
+-- Function to generate a value based on the role name
+generateValue :: String -> Double
+generateValue s = fromIntegral (simpleHash s `mod` 360) / 360.0
+
+-- Function to generate a color based on the role name with more aesthetic colors
+roleColor :: String -> String
+roleColor name = printf "#%02X%02X%02X%02X" r g b alpha
+  where
+    v = generateValue name
+    -- Adjust saturation and value to get more pleasant colors
+    RGB rf gf bf = hsvToRGB (HSV (v * 360) 0.75 0.85) :: RGB Double  -- Higher saturation and brightness
+    r = floor (rf * 255) :: Int
+    g = floor (gf * 255) :: Int
+    b = floor (bf * 255) :: Int
+    alpha :: Int
+    alpha = floor (255 * (0.3 :: Double))
+
+-- Function to dot clusters
+dotCluster :: Cluster -> SeDot ()
+dotCluster (Cluster name nodes _) = do
+    let baseName = fromMaybe "Undefined" (extractBaseName name)
+    let color = roleColor baseName
+    roleCluster name $ do
+        liftDot $ D.attribute ("nodesep", "0.6")
+        liftDot $ D.attribute ("ranksep", "0.6")
+        liftDot $ D.attribute ("label", name)
+        liftDot $ D.attribute ("style", "filled") -- Set style to filled to apply fillcolor
+        liftDot $ D.attribute ("color", color)
+        liftDot $ D.attribute ("penwidth", "2")
+        liftDot $ D.attribute ("fillcolor", color) -- Use roleColor to set the fillcolor
+        liftDot $ D.attribute ("overlap", "false")
+        liftDot $ D.attribute ("sep", "4")
+        
+        mapM_ (\node -> dotNodeCompact node (Just color)) nodes
 
 -- | Compute proper colors for all less-edges.
 -- Computing the colors requires all less-edges of the graph, so we cannot do it per edge.
