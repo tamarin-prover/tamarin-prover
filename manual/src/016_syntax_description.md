@@ -213,8 +213,6 @@ after the first character. Moreover, they must not be one of the
 reserved keywords `let`, `in`, or `rule`. Although identifiers beginning with
 a number are valid, they are not allowed as the names of facts (which
 must begin with an upper-case letter).
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="ident"}
-~~~~
 
 Full syntax
 -----------

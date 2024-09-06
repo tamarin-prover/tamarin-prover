@@ -108,7 +108,7 @@ $if(listings)$
 \usepackage{listings}
 $endif$
 $if(lhs)$
-\lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small\ttfamily}}{}
+\lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small\ttfamily,breaklines=true,breakatwhitespace=true,breakautoindent=true}}{}
 $endif$
 $if(highlighting-macros)$
 $highlighting-macros$
