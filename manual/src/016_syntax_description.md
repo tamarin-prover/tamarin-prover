@@ -135,35 +135,37 @@ symbols, there is no need to write `nullary()`. Note that the number of
 arguments of an n-ary function application must agree with the arity given in
 the function definition.
 
-TODO
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_term,tupleterm,mset_term,natterm,"}
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="tupleterm,mset_term,nat_term,xor_term,mult_term,exp_term,_term"}
 ~~~~
-    tupleterm := '<' msetterm (',' msetterm)* '>'
-    msetterm  := natterm (('++' | '+') natterm)*
-    natterm   := xorterm ('%+' xorterm)*
-    xorterm   := multterm (('XOR' | ⊕) multterm)*
-    multterm  := expterm ('*' expterm)*
-    expterm   := term    ('^' term   )*
-    term      := tupleterm             // n-ary right-associative pairing
-               | '(' msetterm ')'      // a nested term
-               | nullary_fun
-               | binary_app
-               | nary_app
-               | literal
 
+Tamarin's parser checks that functions were previously defined and are used with the correct arity.
+
+~~~~
     nullary_fun := <all-nullary-functions-defined-up-to-here>
     binary_app  := binary_fun '{' tupleterm '}' term
     binary_fun  := <all-binary-functions-defined-up-to-here>
     nary_app    := nary_fun '(' multterm* ')'
+~~~~
 
-    literal     := "'"  ident "'" // a fixed, public name
-                 | "~'" ident "'" // a fixed, fresh name
-                 | nonnode_var    // a non-temporal variable
-    nonnode_var := ['$'] ident ['.' natural]         // 'pub' sort prefix
-                 | ident ['.' natural] ':' 'pub'     // 'pub' sort suffix
-                 | ['~'] ident ['.' natural]         // 'fresh' sort prefix
-                 | ident ['.' natural] ':' 'fresh'   // 'fresh' sort suffix
-                 | msg_var                                // 'msg' sort
+External tools may instead use the following grammar and check these conditions after parsing.
+
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="nulllary_fun,binary_app,binary_fun,nary_app"}
+~~~~
+
+Literals and variables appear in many forms.
+
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="_literal,_non_temporal_var"}
+~~~~
+
+When appearing in formulas or rules, they have an identifier and a sort.
+
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="fresh_name,_non_temporal_var,pub_var,fresh_var,msg_var_or_nullary_fun,nat_var"}
+~~~~
+
+SAPIC processes also have (optional) types. Moreover, literals in pattern can signify with a `=` if they are matched or bound.
+
+~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="comp_var,_custom_type_var,custom_var"}
+~~~~
 
 Facts do not have to be defined up-front. This will probably change once we
 implement user-defined sorts. Facts prefixed with `!` are persistent facts.
