@@ -104,6 +104,7 @@ When exporting, one may indicate which lemmas should only be included in certain
 ~~~~
 
 In observational equivalence mode, lemmas can be associated to one side.
+
 ~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="diff_lemma,diff_lemma_attrs,diff_lemma_attr"}
 ~~~~
 
