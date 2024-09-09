@@ -8,6 +8,14 @@
 \usepackage[labelformat=empty]{caption}
 \usepackage{afterpage}
 
+% added for line breaks in "fenced code blocks"
+% https://github.com/jgm/pandoc/issues/4302
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\\\\{\\}, breaklines, breaknonspaceingroup, breakanywhere}
+\fvset{breaklines}
+\fvset{breaknonspaceingroup}
+\fvset{breakanywhere}
+
 \newcommand\blankpage{%
     \null
     \thispagestyle{empty}%
