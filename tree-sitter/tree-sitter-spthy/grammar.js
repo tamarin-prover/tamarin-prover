@@ -262,6 +262,7 @@ module.exports = grammar({
       // Equations:
       equations: $ => prec.right(seq(
           'equations',
+          optional(seq('[', 'convergent', ']')),
           ':',
           $.equation,
           repeat(seq(
