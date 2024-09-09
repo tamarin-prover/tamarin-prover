@@ -92,8 +92,10 @@ rules:
   variants  ::=  'variants' simple_rule (',' simple_rule)*
   modulo  ::=  '(' 'modulo' ('E' | 'AC') ')'
   rule_attrs  ::=  '[' rule_attr (',' rule_attr)* ','? ']'
-  rule_attr  ::=  rule_attr_color | 'no_derivcheck'
+  rule_attr  ::=  rule_attr_color | 'no_derivcheck' | 'issapicrule' | rule_process | rule_role
   rule_attr_color  ::=  ('color=' | 'colour=') hexcolor
+  rule_role  ::=  'role' '=' '"' (ident: role_identifier) '"'
+  rule_process  ::=  'process' '=' '"' ident '"'
   rule_let_block  ::=  'let' rule_let_term+ 'in'
   rule_let_term  ::=  ((msg_var_or_nullary_fun | nat_var): left) '=' (_term: right)
   macros  ::=  'macros' ':' macro (',' macro)*

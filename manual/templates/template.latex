@@ -8,6 +8,14 @@
 \usepackage[labelformat=empty]{caption}
 \usepackage{afterpage}
 
+% added for line breaks in "fenced code blocks"
+% https://github.com/jgm/pandoc/issues/4302
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\\\\{\\}, breaklines, breaknonspaceingroup, breakanywhere}
+\fvset{breaklines}
+\fvset{breaknonspaceingroup}
+\fvset{breakanywhere}
+
 \newcommand\blankpage{%
     \null
     \thispagestyle{empty}%
@@ -166,7 +174,7 @@ $if(listings)$
 \usepackage{listings}
 $endif$
 $if(lhs)$
-\lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small\ttfamily}}{}
+\lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small\ttfamily,breaklines=true,breakatwhitespace=true,breakautoindent=true}}{}
 $endif$
 $if(highlighting-macros)$
 $highlighting-macros$

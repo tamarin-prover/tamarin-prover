@@ -7369,6 +7369,14 @@
         {
           "type": "rule_attr_color",
           "named": true
+        },
+        {
+          "type": "rule_process",
+          "named": true
+        },
+        {
+          "type": "rule_role",
+          "named": true
         }
       ]
     }
@@ -7514,6 +7522,37 @@
           },
           {
             "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "rule_process",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_role",
+    "named": true,
+    "fields": {
+      "role_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
             "named": true
           }
         ]
@@ -9311,6 +9350,10 @@
     "named": false
   },
   {
+    "type": "issapicrule",
+    "named": false
+  },
+  {
     "type": "last",
     "named": false
   },
@@ -9496,6 +9539,10 @@
   },
   {
     "type": "right",
+    "named": false
+  },
+  {
+    "type": "role",
     "named": false
   },
   {
