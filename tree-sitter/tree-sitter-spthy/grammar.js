@@ -1042,10 +1042,10 @@ module.exports = grammar({
       _term: $ => choice(
           $.tuple_term,
           $.mset_term,
-          $.nat_term,
-          $.xor_term,
-          $.mul_term,
-          $.exp_term,
+          // $.nat_term,
+          // $.xor_term,
+          // $.mult_term,
+          // $.exp_term,
           $.nested_term,
           $.nullary_fun,
           $.binary_app,
@@ -1055,10 +1055,10 @@ module.exports = grammar({
 
       tuple_term: $ => prec('TUPLE', seq(
           '<',
-          field('term', choice($._term)),
+          field('term', choice($.mset_term)),
           repeat(seq(
               ',',
-              field('term', $._term)
+              field('term', $.mset_term)
           )),
           '>'
       )),
@@ -1078,12 +1078,12 @@ module.exports = grammar({
       )),
 
       xor_term: $ => prec.left('EXCLUSIVE_OR', seq(
-          field('left', $.mul_term),
+          field('left', $.mult_term),
           choice('XOR', '⊕'),
-          field('right', $.mul_term)
+          field('right', $.mult_term)
       )),
 
-      mul_term: $ => prec.left('MULTIPLY', seq(
+      mult_term: $ => prec.left('MULTIPLY', seq(
           field('left', $.exp_term),
           '*',
           field('right', $.exp_term)

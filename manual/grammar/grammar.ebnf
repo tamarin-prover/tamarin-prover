@@ -30,7 +30,7 @@ rules:
   function_untyped  ::=  (ident: function_identifier) '/' (natural: arity) ('[' function_attribute (',' function_attribute)* ','? ']')?
   function_attribute  ::=  'private' | 'destructor'
   function_typed  ::=  (ident: function_identifier) '(' arguments? ')' ':' (ident: function_type)
-  equations  ::=  >('equations' ':' equation (',' equation)* ','?)
+  equations  ::=  >('equations' ('[' 'convergent' ']')? ':' equation (',' equation)* ','?)
   equation  ::=  (_term: left) '=' (_term: right)
   predicates  ::=  ('predicate' | 'predicates') ':' predicate (',' predicate)*
   predicate  ::=  (predicate_def -> '') '<=>' (_formula: formula)
@@ -135,12 +135,12 @@ rules:
   chain_goal  ::=  '(' temporal_var ',' natural ')' '~~>' '(' temporal_var ',' natural ')'
   disjunction_split_goal  ::=  CHAIN_GOAL((_formula: formula) (('||' | '∥') (_formula: formula))+)
   eq_split_goal  ::=  'splitEqs' '(' natural ')'
-  _term  ::=  tuple_term | mset_term | nat_term | xor_term | mul_term | exp_term | nested_term | nullary_fun | binary_app | nary_app | _literal
-  tuple_term  ::=  TUPLE('<' ((_term): term) (',' (_term: term))* '>')
+  _term  ::=  tuple_term | mset_term | nested_term | nullary_fun | binary_app | nary_app | _literal
+  tuple_term  ::=  TUPLE('<' ((mset_term): term) (',' (mset_term: term))* '>')
   mset_term  ::=  <MUL_SET((nat_term: left) ('++' | '+') (nat_term: right))
   nat_term  ::=  <ADD((xor_term: left) '%+' (xor_term: right))
-  xor_term  ::=  <EXCLUSIVE_OR((mul_term: left) ('XOR' | '⊕') (mul_term: right))
-  mul_term  ::=  <MULTIPLY((exp_term: left) '*' (exp_term: right))
+  xor_term  ::=  <EXCLUSIVE_OR((mult_term: left) ('XOR' | '⊕') (mult_term: right))
+  mult_term  ::=  <MULTIPLY((exp_term: left) '*' (exp_term: right))
   exp_term  ::=  >EXPONENTIAL((_term: base) '^' (_term: exponent))
   nested_term  ::=  NESTED('(' mset_term ')')
   nullary_fun  ::=  NULLARY_FUN((ident: function_identifier) | ((ident: function_identifier) '(' ')'))
