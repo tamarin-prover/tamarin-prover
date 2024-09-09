@@ -181,7 +181,7 @@ rules:
   predicate_ref  ::=  FUNCTION((ident: predicate_identifier) '(' arguments? ')')
   pre_defined  ::=  NULLARY_FUN(ident)
   hexcolor  ::=  (''' @('#')? @(/[0-9a-fA-F]{1,6}/) ''') | (@('#')? @(/[0-9a-fA-F]{1,6}/))
-  ident  ::=  /[A-Za-z0-9]\w*/
+  ident  ::=  /[A-Za-z0-9][a-zA-Z0-9_*]*/
   param  ::=  /[^"]*/
   export_query  ::=  /(\\"|[^"])*/
   natural  ::=  /[0-9]+/

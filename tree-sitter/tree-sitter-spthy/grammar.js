@@ -1042,10 +1042,6 @@ module.exports = grammar({
       _term: $ => choice(
           $.tuple_term,
           $.mset_term,
-          // $.nat_term,
-          // $.xor_term,
-          // $.mult_term,
-          // $.exp_term,
           $.nested_term,
           $.nullary_fun,
           $.binary_app,
@@ -1412,7 +1408,7 @@ module.exports = grammar({
           )
       ),
 
-      ident: $ => /[A-Za-z0-9]\w*/,
+      ident: $ => /[A-Za-z0-9][a-zA-Z0-9_*]*/,
 
       param: $ => /[^"]*/,
 
