@@ -104,6 +104,7 @@ When exporting, one may indicate which lemmas should only be included in certain
 ~~~~
 
 In observational equivalence mode, lemmas can be associated to one side.
+
 ~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="diff_lemma,diff_lemma_attrs,diff_lemma_attr"}
 ~~~~
 
@@ -213,8 +214,6 @@ after the first character. Moreover, they must not be one of the
 reserved keywords `let`, `in`, or `rule`. Although identifiers beginning with
 a number are valid, they are not allowed as the names of facts (which
 must begin with an upper-case letter).
-~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="ident"}
-~~~~
 
 Full syntax
 -----------
