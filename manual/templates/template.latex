@@ -13,7 +13,7 @@
 \usepackage{fvextra}
 \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\\\\{\\}, breaklines, breaknonspaceingroup, breakanywhere}
 \fvset{breaklines}
-\fvset{breaknonspaceingroup}
+% \fvset{breaknonspaceingroup}
 \fvset{breakanywhere}
 
 \newcommand\blankpage{%
