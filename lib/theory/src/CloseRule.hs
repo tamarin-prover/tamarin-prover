@@ -277,6 +277,8 @@ builtInDestrRule = map (BC.append (BC.pack "_")) symBI
     symBI = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString, fstSymString, sndSymString]
 
 checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> [IntrRuleAC] -> Bool
+checkChainReduction _ _ (Rule (DestrRule name0 _ _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) (Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) _ 
+  | BC.pack "exxp" `BC.isSuffixOf` name0 || BC.pack "iinv" `BC.isSuffixOf` name0 || BC.pack "muult" `BC.isSuffixOf` name0 = True
 checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) allR 
   | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
   case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of

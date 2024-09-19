@@ -11,6 +11,7 @@ module Term.SubtermRule (
       StRhs(..)
     , CtxtStRule(..)
     , findSubterm
+    , findAllSubterms
     , isSubtermConvergentCtxtRule
     , rRuleToCtxtStRule
     , ctxtStRuleToRRule

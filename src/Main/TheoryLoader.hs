@@ -675,14 +675,16 @@ addMessageDeductionRuleVariants thy0
   | otherwise     = thy
   where
     msig         = get (sigpMaudeSig . thySignature) thy0
-    rules0     = subtermIntruderRules False msig ++ specialIntruderRules False
+    rules0     = reader $ \hnd -> subtermIntruderRules hnd False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
     rulesAC = traceShowId <$> (destructionRulesAC False (acUserFunSyms msig))
     rulesNoEq = traceShowId <$> (destructionRulesNoEq False (noEqFunSyms msig))
     rulesACNoEq = liftA2 (++) rulesAC rulesNoEq
-    rules = rulesACNoEq >>= (\x -> return (rules0 ++ x))
-    thy          = rules >>= \x -> return (addIntrRuleACsAfterTranslate x thy0)
+    -- rules       = rulesACNoEq >>= (\x -> return (rules0 ++ x))
+    --rules       = rulesACNoEq >>= (\x -> return (concat rules0 ++ x))
+    rules       = liftA2 (++) rules0 rulesACNoEq
+    thy         = rules >>= \x -> return (addIntrRuleACsAfterTranslate x thy0)
     addIntruderVariants mkRuless = thy >>= \x -> return (addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) x)
 
 -- FIX-ME : this function exists only for compilation of testParseFile in ParserTests.hs, it don't contain destruction rules for AC user defined function symbol
@@ -694,11 +696,12 @@ addMessageDeductionRuleVariantsWithoutMaude thy0
   | otherwise     = thy
   where
     msig         = get (sigpMaudeSig . thySignature) thy0
-    rules        = subtermIntruderRules False msig ++ specialIntruderRules False
+    rules       = specialIntruderRules False -- subtermIntruderRules hnd False msig ++ 
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
     thy          = addIntrRuleACsAfterTranslate rules thy0
     addIntruderVariants mkRuless = addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
+
 
 -- | Add the variants of the message deduction rule. Uses the cached version
 -- of the @"intruder_variants_dh.spthy"@ file for the variants of the message
@@ -711,13 +714,15 @@ addMessageDeductionRuleVariantsDiff thy0
   | otherwise     = thy >>= \x -> return (addIntrRuleLabels x)
   where
     msig         = get (sigpMaudeSig . diffThySignature) thy0
-    rules0 diff'  = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
+    rules0 diff'  = reader $ \hnd -> subtermIntruderRules hnd diff' msig ++ specialIntruderRules diff'
                     ++ (if enableMSet msig then multisetIntruderRules else [])
                     ++ (if enableXor msig then xorIntruderRules else [])
-    rules diff' = (destructionRulesAC diff' (acUserFunSyms msig)) >>= (\x -> return ((rules0 diff') ++ x))
-    bothDiffTh = (rules True) >>= \x -> return (addIntrRuleACsDiffBothDiff x thy0)
-    thy          = ((rules False) >>= (\x -> (bothDiffTh >>= (\y -> return (addIntrRuleACsDiffBoth x y)))))
+    rulesAC diff' = traceShowId <$> (destructionRulesAC diff' (acUserFunSyms msig))
+    rulesNoEq diff' = traceShowId <$> (destructionRulesNoEq diff' (noEqFunSyms msig))
+    rulesACNoEq diff' = liftA2 (++) (rulesAC diff') (rulesNoEq diff')
+    rules diff' = liftA2 (++) (rules0 diff') (rulesACNoEq diff')
+    bothDiffTh = rules True >>= \x -> return (addIntrRuleACsDiffBothDiff x thy0)
+    thy          = rules False >>= (\x -> (bothDiffTh >>= (return . addIntrRuleACsDiffBoth x)))
     addIntruderVariantsDiff mkRuless =
          thy >>= (\x -> return (addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) x)))
-
 
