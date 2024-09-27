@@ -26,7 +26,9 @@ We now want to prove the following lemma:
 
 This proof attempt will not terminate due to there being `12 partial
 deconstructions left` when looking at this example in the GUI as
-described in detail below.
+described in detail below. The number of partial deconstructions
+is also visible without GUI when using the command line
+parameter `--precompute-only`.
 
 Partial deconstructions left {#sec:openchains}
 -----------
