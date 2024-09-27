@@ -187,6 +187,7 @@ executable tamarin-prover
 
     default-extensions:
       DuplicateRecordFields
+      LambdaCase
       OverloadedRecordDot
       TemplateHaskell
 

@@ -503,7 +503,7 @@ postRootR = do
               openThy <- loadThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content) (T.unpack $ fileName fileinfo)
 
               let sig = either (get thySignature) (get diffThySignature) openThy
-              sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) sig
+              sig'   <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
 
               -- let tactic = get thyTactic openThy
               --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
