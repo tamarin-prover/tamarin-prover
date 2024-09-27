@@ -188,14 +188,14 @@ run thisMode as
       thy    <- loadTheory thyLoadOptions srcThy inFile
 
       let sig = either (._thySignature) (._diffThySignature) thy
-      sig'   <- liftIO $ toSignatureWithMaude thyLoadOptions._oMaudePath sig
+      sig'   <- liftIO $ toSignatureWithMaude thyLoadOptions.maudePath sig
 
       -- | Pretty print the theory as is without performing any checks.
-      if thyLoadOptions._oParseOnlyMode then
+      if thyLoadOptions.parseOnlyMode then
         pure $ (, Pretty.emptyDoc) $ either prettyOpenTheory prettyOpenDiffTheory thy
 
       -- | Execute precomputation steps and print the partial deconstructions
-      else if isPrecomputeOnlyMode then do
+      else if thyLoadOptions.precomputeOnlyMode then do
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
         case thy' of
           Left thy'' -> do
@@ -220,7 +220,7 @@ run thisMode as
       else do
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
         _ <- liftIO $ bitraverse outputTraces (const $ return ()) thy'
-        
+
         pure $
           either (\t -> (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
                  (\d -> (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
@@ -229,8 +229,7 @@ run thisMode as
         formalComments =
           filter (/= ("", "")) . either theoryFormalComments diffTheoryFormalComments
 
-        isPrecomputeOnlyMode = L.get oPrecomputeOnlyMode thyLoadOptions
-        isTranslateOnlyMode = isJust $ L.get oOutputModule thyLoadOptions
+        isTranslateOnlyMode = isJust thyLoadOptions.outputModule
 
         handleError e@(ParserError _) = die $ show e
         handleError (WarningError report) = do
@@ -244,34 +243,34 @@ run thisMode as
         ppWf []  = Pretty.emptyDoc
         ppWf rep = Pretty.vcat $
           Pretty.text ("WARNING: " ++ show (length rep) ++ " wellformedness check failed!")
-          : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions._oProveMode ]
+          : [ Pretty.text   "         The analysis results might be wrong!" | thyLoadOptions.proveMode ]
 
         -- | Output any found traces of the analyzed theory in dot/JSON format if the corresponing command line option is set.
-        -- The output is dumped into a single file per format. Multiple dot graphs are simply concatenated into a single file, 
+        -- The output is dumped into a single file per format. Multiple dot graphs are simply concatenated into a single file,
         -- while the JSON schema already allows for multiple graphs.
         outputTraces :: ClosedTheory -> IO ()
         outputTraces thy = do
             let graphOptions = defaultGraphOptions
-                dotOptions = defaultDotOptions 
+                dotOptions = defaultDotOptions
                 serializeDot (label, system) = D.showDot label $ dotSystemCompact graphOptions dotOptions system
                 serializeJSON = sequentsToJSONPretty graphOptions
-                labelledSystems = map (\(lemma, proof, system) -> 
+                labelledSystems = map (\(lemma, proof, system) ->
                   let label = traceOutputLabel graphOptions dotOptions lemma proof in
                   (label, system)) systemsWithMetadata
 
             case findArg "traceDot" as of
-              Nothing -> pure () 
-              Just outfile -> 
+              Nothing -> pure ()
+              Just outfile ->
                 let serialized = intercalate "\n" $ map serializeDot labelledSystems in
                 writeFile outfile serialized
-                
+
             case findArg "traceJSON" as of
               Nothing -> pure ()
               Just outfile ->
                 let serialized = serializeJSON labelledSystems in
                 writeFile outfile serialized
           where
-            -- | Collect all solved (i.e. a trace was found) systems of the theory along with their 
+            -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof and the lemma in which they appear in the given theory.
             systemsWithMetadata :: [(Lemma IncrementalProof, ProofPath, System)]
             systemsWithMetadata = do
@@ -283,18 +282,18 @@ run thisMode as
             -- path in the proof.
             proofSystems :: IncrementalProof -> [(ProofPath, System)]
             proofSystems (LNode (ProofStep Solved (Just rootSystem)) _) =  [([], rootSystem)]
-            proofSystems (LNode (ProofStep _ _) children) =  
-              [(l : ls, system) | (l, subProof) <- M.toList children 
+            proofSystems (LNode (ProofStep _ _) children) =
+              [(l : ls, system) | (l, subProof) <- M.toList children
                                 , (ls, system) <- proofSystems subProof ]
-            
+
             -- | Make a label for use in the trace output out of all relevant information for a constraint system.
             traceOutputLabel :: GraphOptions
                              -> DotOptions
-                             -> Lemma IncrementalProof 
+                             -> Lemma IncrementalProof
                              -> ProofPath
                              -> String
             traceOutputLabel graphOptions dotOptions lemma proofPath =
-              "trace_" 
+              "trace_"
               ++ L.get thyName thy                         -- Name of the theory in which the constraint system appears.
               ++ "_"
               ++ traceLabelOptions graphOptions dotOptions -- Graph options are included in a short format.
@@ -304,7 +303,7 @@ run thisMode as
 
             -- | Format the graph rendering options in a concise way.
             traceLabelOptions :: GraphOptions -> DotOptions -> String
-            traceLabelOptions graphOptions dotOptions = 
+            traceLabelOptions graphOptions dotOptions =
               let s1 = show $ L.get goSimplificationLevel graphOptions
                   s2 = if L.get goShowAutoSource graphOptions then "AS1" else "AS0"
                   s3 = if L.get goClustering graphOptions then "CL1" else "CL0"

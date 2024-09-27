@@ -5,7 +5,7 @@ theory FOO_Vote_Privacy begin
 builtins: multiset
 functions: blind/2, checksign/2, commit/2, fst/1, open/2, pair/2, pk/1,
            sign/2, snd/1, unblind/2
-equations:
+equations [convergent]:
     checksign(sign(m, sk), pk(sk)) = m,
     fst(<x.1, x.2>) = x.1,
     open(commit(m, r), r) = m,

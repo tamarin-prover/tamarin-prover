@@ -18,8 +18,8 @@ jobs:
 
       - name: Pre-install Pandoc
         run: |
-          wget https://github.com/jgm/pandoc/releases/download/2.18/pandoc-2.18-1-amd64.deb
-          sudo dpkg -i pandoc-2.18-1-amd64.deb
+          wget https://github.com/jgm/pandoc/releases/download/3.3/pandoc-3.3-1-amd64.deb
+          sudo dpkg -i pandoc-3.3-1-amd64.deb
 
       - uses: actions/checkout@v3
       - name: Compile and push to GitHub pages

@@ -40,7 +40,7 @@ module Web.Theory
 where
 
 
-import           Debug.Trace                  (trace)
+import           Debug.Trace                  (trace, traceM)
 
 import           Data.Char                    (toUpper)
 import           Data.List
@@ -175,9 +175,10 @@ applyDiffProverAtPath thy lemmaName proofPath prover =
 
 -- | Reference a dot graph for the given path.
 refDotPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> TheoryPath -> d
-refDotPath renderUrl tidx path = withTag "a" [("href", imgPath), ("target", "_blank")] $ closedTag "img" [("class", "graph"), ("src", imgPath)]
-  where imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
-
+refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath), ("onclick", jsOpenSrcInNewTab)]
+  where
+    imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
+    jsOpenSrcInNewTab = "window.open(this.src, '_blank')"
 
 -- | Reference a dot graph for the given diff path.
 refDotDiffPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> DiffTheoryPath -> Bool -> d
@@ -1336,30 +1337,32 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
               graphExists <- doesFileExist graphPath
               imgExists <- doesFileExist imgPath
               if (n > 0 && graphExists && not imgExists)
-                  then do threadDelay (10 * 1000) -- wait 10 ms
-                          renderedOrRendering (n - 1)
+                  then do
+                    threadDelay (10 * 1000) -- wait 10 ms
+                    renderedOrRendering (n - 1)
                   else return imgExists
 
       -- Ensure that the output directory exists.
       createDirectoryIfMissing True (takeDirectory graphPath)
 
       imgGenerated <- firstSuccess
-          [ -- There might be some other thread that rendered or is rendering
-            -- this dot file. We wait at most 50 iterations (0.5 sec timout)
-            -- for this other thread to render the image. Afterwards, we give
-            -- it a try by ourselves.
-            renderedOrRendering 50
-            -- create dot-file and render to image
-          , do writeFile graphPath code
-               -- select the correct command to generate img
-               case ocFormat outputCommand of
-                 OutDot  -> dotToImg "dot" graphPath imgPath
-                 OutJSON -> jsonToImg graphPath imgPath
-            -- sometimes 'dot' fails => use 'fdp' as a backup tool
-          , case ocFormat outputCommand of
-              OutDot -> dotToImg "fdp" graphPath imgPath
-              _      -> return False
-          ]
+        [ -- There might be some other thread that rendered or is rendering
+          -- this dot file. We wait at most 50 iterations (0.5 sec timout)
+          -- for this other thread to render the image. Afterwards, we give
+          -- it a try by ourselves.
+          renderedOrRendering 50,
+          -- create dot-file and render to image
+          do
+            writeFile graphPath code
+            -- select the correct command to generate img
+            case ocFormat outputCommand of
+              OutDot  -> dotToImg "dot" graphPath imgPath
+              OutJSON -> jsonToImg graphPath imgPath,
+          -- sometimes 'dot' fails => use 'fdp' as a backup tool
+          case ocFormat outputCommand of
+            OutDot -> dotToImg "fdp" graphPath imgPath
+            _      -> return False
+        ]
       if imgGenerated
         then return $ Just imgPath
         else trace ("WARNING: failed to convert:\n  '" ++ graphPath ++ "'")
@@ -1391,7 +1394,6 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
     firstSuccess (m:ms) = do
       s <- m
       if s then return True else firstSuccess ms
-
 
 -- | Render the image corresponding to the given theory path.
 -- Returns Nothing if there was an error during image generation.
