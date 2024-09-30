@@ -22,13 +22,21 @@ import Theory
    the console.
 -}
 
-thy = loadThy "examples/loops/Minimal_Loop_Example.spthy"
-steps = getProofForLemma "Start_before_Loop"
+-- | The theory to debug.
+thy = loadThy "examples/ake/dh/NAXOS_eCK.spthy"
+-- | Constraint solving steps to apply and on which lemma.
+steps = getProofForLemma "eCK_key_secrecy"
   >>= trace "--- starting constraint solving ---"
       solve 0 0  -- simplify
+  >>= solve 0 0  -- solve first applicable goal on simplified constraint system
 
-paths = showPaths thy
-methodsAt = showMethodsAt thy
+-- | Pretty-print the tree of constraint systems after having applied all steps
+--   above.
+paths = showPaths thy steps
+-- | Pretty-print the applicable proof methods at the given leaf-index. Leaf
+--   indices will be shown when running @paths@ above.
+methodsAt i = showMethodsAt thy i steps
+-- | Run the debug monad @debugM@ defined below.
 debug = showWith thy debugM debugInput
 
 {- Executing @paths steps@ in GHCI will show a visual representation of the
@@ -40,11 +48,17 @@ debug = showWith thy debugM debugInput
   find the indices required to apply more @solve@ steps in @steps@.
 -}
 
+-- | Execute the constraint solving steps defined above, and provide input to
+--   debug monad @debugM@ defined below. The returned values will be provided as
+--   arguments to @debugM@.
 debugInput = do
   prf <- steps
   let ctxt = rpCtxt prf
   let hnd = L.get pcMaudeHandle ctxt
-  return (ctxt, hnd, prf)
+  s <- systemAt 0 prf
+  return (ctxt, hnd, prf, s)
 
-debugM _ = do
-  putStrLn "debugging..."
+-- | Use the values returned above to perform debugging.
+debugM (_, _, _, s) = do
+  putStrLn "The constraint system contains the following annotated nodes"
+  mapM_ print (M.keys $ L.get sNodes s)
