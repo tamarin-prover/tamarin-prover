@@ -41,8 +41,7 @@ import Text.Dot qualified as D
 import Theory.Constraint.System.Graph.Graph
 import Theory.Constraint.System.JSON (sequentsToJSONPretty)
 
-import ClosedTheory (theoryIndexStr,diffTheoryIndexStr)
-import Debug.Trace (traceM)
+import ClosedTheory (prettyPrecomputation,prettyDiffPrecomputation)
 
 -- | Batch processing mode.
 batchMode :: TamarinMode
@@ -199,11 +198,10 @@ run thisMode as
         (report, thy') <- closeTheory versionData thyLoadOptions sig' thy
         case thy' of
           Left thy'' -> do
-            traceM (theoryIndexStr thy'')
-            return (Pretty.emptyDoc, ppWf report)
+            pure (ppWf report Pretty.$--$ prettyPrecomputation thy'', ppWf report)
           Right thy'' -> do
-            traceM (diffTheoryIndexStr thy'')
-            return (Pretty.emptyDoc, ppWf report)
+            pure (ppWf report Pretty.$--$ prettyDiffPrecomputation thy'', ppWf report)
+    
       -- | Translate and check thoery based on specified output module.
       else if isTranslateOnlyMode then do
         (report, thy') <- translateAndCheckTheory versionData thyLoadOptions sig' thy
