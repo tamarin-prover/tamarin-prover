@@ -29,6 +29,15 @@ deconstructions left` when looking at this example in the GUI as
 described in detail below. The number of partial deconstructions
 is also visible without GUI when using the command line
 parameter `--precompute-only`.
+On this example, running Tamarin using `--precompute-only` results
+in the following output:
+
+```
+Multiset rewriting rules: 9
+Raw sources: 11 cases, 12 partial deconstructions left
+Refined sources: 11 cases, 12 partial deconstructions left
+```
+
 
 Partial deconstructions left {#sec:openchains}
 -----------
