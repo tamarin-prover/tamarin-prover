@@ -13,4 +13,3 @@ ghc-options:
 nix:
   packages: [ zlib ]
 
-

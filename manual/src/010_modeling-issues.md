@@ -245,6 +245,29 @@ This indicates that the sorts of a message were inconsistently used.
 In the rule `setup`, this is the case because we used m once as a fresh value
 `~m` and another time without the `~`.
 
+### Subterm Convergence Warning ###
+
+The equational theory used by Tamarin must always be convergent, meaning that any sequence of rewriting steps must eventually terminate, and have the finite variant property. Tamarin verifies if the equational theory is subterm convergent. If it is subterm convergent, it is guaranteed to be convergent an to have the finite variant property. However, if it is not subterm convergent, it does not necessarily imply non-convergence; it only indicates a potential risk of non-convergence. Non-convergence of an equation can result in infinite loops or incorrect results.
+
+An equation is subterm convergent if the right-hand side is a constant (such as `true` or `false`) or a subterm of the left-hand side. For instance, the equation `f(g(x)) = x` is subterm convergent since the right-hand side is a subterm of the left-hand side. Conversely, the equation `f(x) = g(x)` is not subterm convergent.
+
+Consider the following example from the warning:
+
+	/*
+	Subterm Convergence Warning
+	===========================
+
+  	User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue 
+
+    unblind(sign(blind(m, r), sk), r) = sign(m, sk)
+   
+ 	For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html 
+	*/
+
+If you are sure that your equational theory is convergent and has the finite variant theory you can deactivate the warning using the annotation `convergent` as follows:
+
+	equations [convergent]: ...
+
 ### Message derivation errors
 
 It is good modelling practice to write our rules in such a way that they do not give participants any additional capabilities, and modify the equational theory for the express purpose of modifying capabilities. Using rules for this is ill-advised, as it is easy to unintentionally make a protocol not adhere to an underlying model or make the adversary weaker than intended. Because of this, Tamarin automatically checks if any rules may introduce such capabilities.

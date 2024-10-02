@@ -68,8 +68,10 @@ import           Theory                       (
     openDiffTheory,
     prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas, thySignature, diffThySignature, toSignatureWithMaude
   )
+
+import Debug.Trace
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
-import           Text.PrettyPrint.Html
+import Text.PrettyPrint.Html ( render, htmlDoc, renderHtmlDoc )
 import           Theory.Constraint.System.Dot
 import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON
 import           Web.Hamlet
@@ -110,7 +112,6 @@ import qualified Data.Binary                  as Bin
 import           Data.Time.LocalTime
 import           System.Directory
 
-import           Debug.Trace                  (trace)
 import Control.Monad.Except (runExceptT)
 import Main.TheoryLoader
 import Main.Console (renderDoc)
@@ -436,7 +437,7 @@ modifyTheory :: TheoryInfo                                -- ^ Theory to modify
              -> Handler Value
 modifyTheory ti f fpath errResponse = do
     res <- evalInThread (liftIO $ f (tiTheory ti))
-    rep <- pure $ tiErrorsHtml ti
+    let rep = tiErrorsHtml ti
     case res of
       Left e           -> return (excResponse e)
       Right Nothing    -> return (responseToJson errResponse)
@@ -502,7 +503,7 @@ postRootR = do
               openThy <- loadThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content) (T.unpack $ fileName fileinfo)
 
               let sig = either (get thySignature) (get diffThySignature) openThy
-              sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) sig
+              sig'   <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
 
               -- let tactic = get thyTactic openThy
               --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
@@ -761,7 +762,7 @@ getAutoProverR idx extractor bound quitOnEmpty =
   where
     adapt autoProver = autoProver
       { apBound = actualBound
-      , apCut = extractor
+      , apCut = if quitOnEmpty then CutAfterSorry else extractor
       , quitOnEmptyOracle = quitOnEmpty }
 
     withCommas = intersperse ", "
@@ -913,14 +914,17 @@ getOptions = do
   abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
   simpl <- lookupGetParam "simplification"
   showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
+  clustering <- lookupGetParam "clustering"
   let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack) 
       graphOptions = L.set goSimplificationLevel simplificationLevel $
                      L.set goCompress compress $
                      L.set goShowAutoSource showAutosource $
                      L.set goAbbreviate abbreviate $
+                     L.set goClustering (isJust clustering) $ 
                      defaultGraphOptions
-      dotOptions = L.set doNodeStyle nodeStyle defaultDotOptions
+  let dotOptions = L.set doNodeStyle nodeStyle defaultDotOptions
   return (graphOptions, dotOptions)
+
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphR :: TheoryIdx -> TheoryPath -> Handler ()
