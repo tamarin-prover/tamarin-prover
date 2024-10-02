@@ -18,7 +18,7 @@ import Control.Monad.Trans.Reader
 import Data.Either (fromLeft)
 import qualified Data.Label as L
 import qualified Data.Map as M
-import Main.TheoryLoader as L (closeTheory, loadTheory, defaultTheoryLoadOptions, oMaudePath, TheoryLoadError)
+import Main.TheoryLoader as L (closeTheory, loadTheory, defaultTheoryLoadOptions, maudePath, TheoryLoadError)
 import Theory
 import Data.Maybe (mapMaybe, fromMaybe)
 import Data.List (uncons)
@@ -42,7 +42,7 @@ loadThy inFile = either (error . show) id <$> errOrThy
       thy    <- fromLeft (error "diff theory") <$> loadTheory defaultTheoryLoadOptions srcThy inFile
 
       let sig = L.get thySignature thy
-      sig'   <- lift $ toSignatureWithMaude (L.get oMaudePath defaultTheoryLoadOptions) sig
+      sig'   <- lift $ toSignatureWithMaude (defaultTheoryLoadOptions.maudePath) sig
 
       fromLeft (error "diff theory") . snd <$> L.closeTheory "" defaultTheoryLoadOptions sig' (Left thy)
 
