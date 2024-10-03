@@ -164,6 +164,7 @@ data TheoryLoadOptions = TheoryLoadOptions
   , outputModule      :: Maybe ModuleType -- Note: This flag is only used for batch mode.
   , maudePath         :: FilePath -- FIXME: Other functions defined in Environment.hs
   , parseOnlyMode     :: Bool
+  , precomputeOnlyMode:: Bool
   , openChain         :: Integer
   , saturation        :: Integer
   , derivationChecks  :: Int
@@ -185,6 +186,7 @@ defaultTheoryLoadOptions = TheoryLoadOptions
   , outputModule      = Nothing
   , maudePath         = "maude"
   , parseOnlyMode     = False
+  , precomputeOnlyMode= False
   , openChain         = 10
   , saturation        = 5
   , derivationChecks  = 5
@@ -215,6 +217,7 @@ mkTheoryLoadOptions as =
     <*> outputModule
     <*> pure (maudePath as)
     <*> parseOnlyMode
+    <*> precomputeOnlyMode
     <*> openchain
     <*> saturation
     <*> deriv
@@ -263,6 +266,8 @@ mkTheoryLoadOptions as =
       Nothing  -> pure defaultTheoryLoadOptions.outputModule
 
     parseOnlyMode = pure $ argExists "parseOnly" as
+
+    precomputeOnlyMode = pure $ argExists "precomputeOnly" as
 
     chain = findArg "OpenChainsLimit" as
     chainDefault = defaultTheoryLoadOptions.openChain
@@ -594,7 +599,7 @@ addParamsOptions
   :: TheoryLoadOptions
   -> Either OpenTheory OpenDiffTheory
   -> Either OpenTheory OpenDiffTheory
-addParamsOptions opt = addVerboseOptions . addSatArg . addChainsArg . addLemmaToProve
+addParamsOptions opt = addVerboseOptions . addPrecomputationOnlyOptions . addSatArg . addChainsArg . addLemmaToProve
   where
     -- Add Open Chain Limit parameters in the Options
     _openChainsLimit = opt.openChain
@@ -612,6 +617,10 @@ addParamsOptions opt = addVerboseOptions . addSatArg . addChainsArg . addLemmaTo
     _verboseOption = opt.verboseMode
     addVerboseOptions (Left thy) = Left thy { _thyOptions = thy._thyOptions { _verboseOption }}
     addVerboseOptions (Right diffThy) = Right diffThy { _diffThyOptions = diffThy._diffThyOptions { _verboseOption }}
+    -- Add PrecomputationOnly parameter in the Options
+    _precomputationOnlyOption = opt.precomputeOnlyMode
+    addPrecomputationOnlyOptions (Left thy) = Left thy { _thyOptions = thy._thyOptions { _precomputationOnlyOption }}
+    addPrecomputationOnlyOptions (Right diffThy) = Right diffThy { _diffThyOptions = diffThy._diffThyOptions { _precomputationOnlyOption }}
 
 ------------------------------------------------------------------------------
 -- Message deduction variants cached in files
