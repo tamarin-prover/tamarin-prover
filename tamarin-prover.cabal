@@ -155,6 +155,7 @@ executable tamarin-prover
       , time
       , tls-session-manager
       , tls
+      , transformers
       , wai
       , wai-extra
       , warp
@@ -174,6 +175,8 @@ executable tamarin-prover
       -- Main
       Main.Console
       Main.Environment
+      Main.REPL
+      Main.ScratchPad
       Main.TheoryLoader
       Main.Utils
       Main.Mode.Batch
@@ -193,6 +196,7 @@ executable tamarin-prover
 
     default-extensions:
       DuplicateRecordFields
+      LambdaCase
       OverloadedRecordDot
       TemplateHaskell
 

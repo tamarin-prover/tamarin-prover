@@ -461,7 +461,7 @@ publicNamesReport' rules =
     case findClashes publicNames of
       []      -> []
       clashes -> return $ (,) (topic++notif) $ numbered' $
-          map (nest 2 .fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
+          map (nest 2 . fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
   where
     topic       = underlineTopic "Public names with mismatching capitalization" ++ "\n"
     notif       = "Identifiers are case-sensitive, "++
@@ -1126,7 +1126,7 @@ checkIfLemmasInTheory thy
             ])]
 
     where
-      lemmaArgsNames = get (lemmasToProve.thyOptions) thy
+      lemmaArgsNames = get (lemmasToProve . thyOptions) thy
       topic = underlineTopic "Check presence of the --prove/--lemma arguments in theory"
       lemmasInTheory = map _lName (theoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
@@ -1146,9 +1146,9 @@ checkIfLemmasInDiffTheory thy
             ])]
 
     where
-      lemmaArgsNames = get (lemmasToProve.diffThyOptions) thy
+      lemmaArgsNames = get (lemmasToProve . diffThyOptions) thy
       topic = underlineTopic "Check presence of the --prove/--lemma arguments in theory"
-      lemmasInTheory = map (_lName.snd) (diffTheoryLemmas thy)
+      lemmasInTheory = map (_lName . snd) (diffTheoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
 
 
