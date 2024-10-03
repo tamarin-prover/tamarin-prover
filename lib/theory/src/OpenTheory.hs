@@ -203,7 +203,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             g (nodeid, pid, tidx, term) = do
               position <- findPos v term
               ruleSys  <- nodeRuleSafe nodeid source
-              rule     <- find ((ruleName ruleSys ==).ruleName) rules
+              rule     <- find ((ruleName ruleSys ==) . ruleName) rules
               premise  <- lookupPrem pid $ L.get cprRuleAC rule
               t'       <- protoOrInFactView premise
               t        <- atMay t' tidx
