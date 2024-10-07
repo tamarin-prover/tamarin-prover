@@ -1,14 +1,14 @@
-{-# LANGUAGE PatternGuards         #-}
-module Sapic.Bindings(
-  bindings
-, bindingsAct
-, bindingsComb
-, accBindings
-, capturedVariables) where
+module Sapic.Bindings
+  ( bindings
+  , bindingsAct
+  , bindingsComb
+  , accBindings
+  , capturedVariables
+  ) where
 
 import Theory.Sapic
 import Data.List
-import qualified Data.Set as S
+import Data.Set qualified as S
 
 -- | bindings returns the variables bound precisely at this point. Guarantees that no duplicates are in the list.
 --   we need the annotations to handle patterns correctly
@@ -44,4 +44,4 @@ capturedVariablesAt (ProcessNull _) = []
 
 -- | List all variables or names captured somewhere in theprocess
 capturedVariables :: GoodAnnotation a => Process a SapicLVar -> [SapicLVar]
-capturedVariables = pfoldMap capturedVariablesAt 
+capturedVariables = pfoldMap capturedVariablesAt

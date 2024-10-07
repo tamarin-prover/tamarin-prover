@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE DoAndIfThenElse #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann and Alexander Dax
 -- License     : GPL v3 (see LICENSE)
@@ -11,97 +7,97 @@
 --
 -- Translation from Theories with Processes to multiset rewrite rules
 
-module Sapic (
-translate
-, module Sapic.Typing
-, module Sapic.Warnings
-, ) where
+module Sapic
+  ( translate
+  , module Sapic.Typing
+  , module Sapic.Warnings
+  ) where
 
-import Prelude hiding ((.),id)
-import Control.Category ( Category(id, (.)) )
 import Control.Exception hiding (catch)
 import Control.Monad.Fresh
 import Control.Monad.Catch
-import Theory
-import Theory.Sapic
-import Data.Typeable
+import Control.Monad.Trans.FastFresh ()
 import Data.Maybe
-import qualified Data.Set as S
-import Extension.Data.Label
-import Control.Monad.Trans.FastFresh   ()
-import Sapic.Exceptions
+import Data.Set qualified as S
+import Data.Typeable
+
+import Items.OptionItem (Option(..))
 import Sapic.Annotation
-import Sapic.SecretChannels
+import Sapic.Basetranslation qualified as BT
 import Sapic.Compression
-import Sapic.Report
+import Sapic.Exceptions
 import Sapic.Facts
+import Sapic.LetDestructors
 import Sapic.Locks
 import Sapic.ProcessUtils
-import Sapic.LetDestructors
-import Sapic.Typing
+import Sapic.ReliableChannelTranslation qualified as RCT
+import Sapic.Report
+import Sapic.SecretChannels
 import Sapic.States
-import qualified Sapic.Basetranslation as BT
-import qualified Sapic.ProgressTranslation as PT
-import qualified Sapic.ReliableChannelTranslation as RCT
-import Theory.Text.Parser
+import Sapic.Typing
+import Sapic.ProgressTranslation qualified as PT
 import Sapic.Warnings
+import Theory
+import Theory.Sapic
+import Theory.Text.Parser
 
 -- | Translates the process (singular) into a set of rules and adds them to the theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory -> m OpenTheory
-translate th = case theoryProcesses th of
-      []  -> if get transReliable ops then
-               throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
-             else
-               return th
-      [p] -> do
-                -- annotate
-                an_proc_pre <- translateLetDestr sigRules
-                  $ checkOps' transReport translateTermsReport
-                  $ checkOps' stateChannelOpt annotatePureStates
-                  $ annotateSecretChannels
-                  $ propagateNames
-                  $ toAnProcess p
-                an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
-                -- compute initial rules
-                (initRules,initTx) <- 
-                             checkOps transReport (reportInit an_proc)
-                        =<<  checkOps transReliable (RCT.reliableChannelInit an_proc)
-                        =<<  checkOps transProgress (PT.progressInit an_proc)
-                             (BT.baseInit an_proc)
-                -- generate protocol rules, starting from variables in initial tilde x
-                protoRule <-  gen (trans an_proc) an_proc [] initTx
-                -- apply path compression
-                eProtoRule <- pathComp $ map toRule (initRules ++ protoRule)
-                -- add these rules
-                th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
-                -- add restrictions
-                rest<- checkOps transReliable (RCT.reliableChannelRestr an_proc)
-                     =<<  checkOps transProgress (PT.progressRestr an_proc)
-                     =<<  BT.baseRestr an_proc needsInEvRes True []
-                th2 <- foldM liftedAddRestriction th1 rest
-                -- add heuristic, if not already defined by user
-                let th3 = fromMaybe th2 (addHeuristic [SapicRanking] th2)
-                -- for state optimisation: force special facts  to be injective
-                let th4 = checkOps' stateChannelOpt (setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag])) th3
-                let th5 = set thyIsSapic True th4
-                return th5
-      _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
+translate th =
+  case theoryProcesses th of
+    []  -> if ops._transReliable then
+             throwM (ReliableTransmissionButNoProcess :: SapicException AnnotatedProcess)
+           else
+             return th
+    [p] -> do
+      -- annotate
+      an_proc_pre <- translateLetDestr sigRules
+        $ checkOps' (._transReport) translateTermsReport
+        $ checkOps' (._stateChannelOpt) annotatePureStates
+        $ annotateSecretChannels
+        $ propagateNames
+        $ toAnProcess p
+      an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
+      -- compute initial rules
+      (initRules,initTx) <-
+                  checkOps (._transReport) (reportInit an_proc)
+              =<< checkOps (._transReliable) (RCT.reliableChannelInit an_proc)
+              =<< checkOps (._transProgress) (PT.progressInit an_proc)
+                  (BT.baseInit an_proc)
+      -- generate protocol rules, starting from variables in initial tilde x
+      protoRule <-  gen (trans an_proc) an_proc [] initTx
+      -- apply path compression
+      eProtoRule <- pathComp $ map toRule (initRules ++ protoRule)
+      -- add these rules
+      th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
+      -- add restrictions
+      rest <- checkOps (._transReliable) (RCT.reliableChannelRestr an_proc)
+           =<<  checkOps (._transProgress) (PT.progressRestr an_proc)
+           =<<  BT.baseRestr an_proc needsInEvRes True []
+      th2 <- foldM liftedAddRestriction th1 rest
+      -- add heuristic, if not already defined by user
+      let th3 = fromMaybe th2 (addHeuristic [SapicRanking] th2)
+      -- for state optimisation: force special facts  to be injective
+      let th4 = checkOps' (._stateChannelOpt) (setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag])) th3
+      let th5 = th4 { _thyIsSapic = True }
+      return th5
+    _   -> throw (MoreThanOneProcess :: SapicException AnnotatedProcess)
   where
-    ops = get thyOptions th
+    ops = th._thyOptions
     checkOps l x
-        | get l ops = x
-        | otherwise = return
+      | l ops = x
+      | otherwise = return
     checkOps' l x
-        | get l ops = x
-        | otherwise = id
+      | l ops = x
+      | otherwise = id
     pathComp r =
-      if get transProgress ops then return r
-      else pathCompression (get compressEvents ops) r
-    sigRules =  stRules (get (sigpMaudeSig . thySignature) th)
-    trans anP = checkOps' transProgress (PT.progressTrans anP)
-              $ checkOps' transReliable RCT.reliableChannelTrans
-              $ BT.baseTrans (get asynchronousChannels ops) needsInEvRes
+      if ops._transProgress then return r
+      else pathCompression ops._compressEvents r
+    sigRules =  stRules th._thySignature._sigMaudeInfo
+    trans anP = checkOps' (._transProgress) (PT.progressTrans anP)
+              $ checkOps' (._transReliable) RCT.reliableChannelTrans
+              $ BT.baseTrans ops._asynchronousChannels needsInEvRes
     needsInEvRes = any lemmaNeedsInEvRes (theoryLemmas th)
 
 -- | Processes through an annotated process and translates every single action
@@ -118,46 +114,41 @@ gen :: (MonadCatch m) =>
          BT.TransFAct (m BT.TranslationResultAct),
          BT.TransFComb (m BT.TranslationResultComb))
        -> LProcess (ProcessAnnotation LVar) -> ProcessPosition -> S.Set LVar -> m [AnnotatedRule (ProcessAnnotation LVar)]
-gen (trans_null, trans_action, trans_comb) anP p tildex  =
-    do
-        proc' <- processAt anP p
-        case proc' of
-            ProcessNull ann -> do
-                msrs <- catch (trans_null ann p tildex) (handler proc')
-                return $ mapToAnnotatedRule proc' msrs
-            (ProcessComb NDC _ _ _) ->
-               let  subst p_old = map_prems (substStatePos p_old p) in
-               do
-                   l <- gen trans anP ( p++[1] ) tildex
-                   r <- gen trans anP (p++[2]) tildex
-                   return $ subst (p++[1]) l ++ subst (p++[2]) r
-            (ProcessComb c ann _ _) ->
-                do
-                (msrs, tildex'1, tildex'2) <- catch (trans_comb c ann p tildex) (handler proc')
-                msrs_l <- gen trans anP (p++[1]) tildex'1
-                msrs_r <- gen trans anP (p++[2]) tildex'2
-                return  $
-                    mapToAnnotatedRule proc' msrs ++ msrs_l ++ msrs_r
-            (ProcessAction  ac ann _) ->
-                do
-                    (msrs, tildex') <- catch (trans_action ac ann p tildex) (handler proc')
-                    msr' <-  gen trans anP (p++[1]) tildex'
-                    return $ mapToAnnotatedRule proc' msrs ++ msr'
+gen (trans_null, trans_action, trans_comb) anP p tildex = do
+  proc' <- processAt anP p
+  case proc' of
+    ProcessNull ann -> do
+      msrs <- catch (trans_null ann p tildex) (handler proc')
+      return $ mapToAnnotatedRule proc' msrs
+    ProcessComb NDC _ _ _ -> do
+      let subst p_old = map_prems (substStatePos p_old p)
+      l <- gen trans anP ( p++[1] ) tildex
+      r <- gen trans anP (p++[2]) tildex
+      return $ subst (p++[1]) l ++ subst (p++[2]) r
+    ProcessComb c ann _ _ -> do
+      (msrs, tildex'1, tildex'2) <- catch (trans_comb c ann p tildex) (handler proc')
+      msrs_l <- gen trans anP (p++[1]) tildex'1
+      msrs_r <- gen trans anP (p++[2]) tildex'2
+      return $ mapToAnnotatedRule proc' msrs ++ msrs_l ++ msrs_r
+    ProcessAction ac ann _ -> do
+      (msrs, tildex') <- catch (trans_action ac ann p tildex) (handler proc')
+      msr' <-  gen trans anP (p++[1]) tildex'
+      return $ mapToAnnotatedRule proc' msrs ++ msr'
     where
-        map_prems f = map (\r -> r { prems = map f (prems r) })
-        --  Substitute every occurence of  State(p_old,v) with State(p_new,v)
-        substStatePos p_old p_new fact
-             | (State s p' vs) <- fact, p'==p_old, not $ isSemiState s = State LState p_new vs
-             | otherwise = fact
-        trans = (trans_null, trans_action, trans_comb)
-        -- convert prems, acts and concls generated for current process
-        -- into annotated rule
-        toAnnotatedRule proc (l,a,r,res) = AnnotatedRule Nothing proc (Left p) l a r res
-        mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
+      map_prems f = map (\r -> r { prems = map f (prems r) })
+      --  Substitute every occurence of  State(p_old,v) with State(p_new,v)
+      substStatePos p_old p_new fact
+        | (State s p' vs) <- fact, p'==p_old, not $ isSemiState s = State LState p_new vs
+        | otherwise = fact
+      trans = (trans_null, trans_action, trans_comb)
+      -- convert prems, acts and concls generated for current process
+      -- into annotated rule
+      toAnnotatedRule proc (l,a,r,res) = AnnotatedRule Nothing proc (Left p) l a r res
+      mapToAnnotatedRule proc l = -- distinguishes rules by  adding the index of each element to it
             snd $ foldl (\(i,l') r -> (i+1,l' ++ [toAnnotatedRule proc r i] )) (0,[]) l
-        handler:: (Typeable ann, Show ann) => LProcess ann ->  WFerror -> a
-        handler anp (WFUnbound vs) = throw $ ProcessNotWellformed (WFUnbound vs) (Just anp)
-        handler _ e = throw e
+      handler:: (Typeable ann, Show ann) => LProcess ann ->  WFerror -> a
+      handler anp (WFUnbound vs) = throw $ ProcessNotWellformed (WFUnbound vs) (Just anp)
+      handler _ e = throw e
 
 
 isPosNegFormula :: LNFormula -> (Bool, Bool)
@@ -180,7 +171,7 @@ isPosNegFormula fm = case fm of
 
 -- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is needed.
 lemmaNeedsInEvRes :: Lemma p -> Bool
-lemmaNeedsInEvRes lem = case (get lTraceQuantifier lem, isPosNegFormula $ get lFormula lem) of
+lemmaNeedsInEvRes lem = case (lem._lTraceQuantifier, isPosNegFormula lem._lFormula) of
   (AllTraces,   (_, True))     -> False -- L- for all-traces
   (ExistsTrace, (True, _))     -> False -- L+ for exists-trace
   (ExistsTrace, (False, True)) -> True  -- L- for exists-trace
