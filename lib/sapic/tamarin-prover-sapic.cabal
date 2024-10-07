@@ -1,6 +1,6 @@
 name:               tamarin-prover-sapic
 
-cabal-version:      >= 1.8
+cabal-version:      >= 1.10
 build-type:         Simple
 version:            1.9.0
 license:            GPL
@@ -30,6 +30,7 @@ source-repository head
 ----------------------
 
 library
+    default-language: GHC2021
     ghc-options:       -Wall -fwarn-tabs
 
     ghc-prof-options:  -auto-all
@@ -43,7 +44,6 @@ library
       , containers
       , deepseq
       , dlist
-      , fclabels
       , mtl
       , parallel
       , parsec
@@ -82,3 +82,6 @@ library
       , Sapic
 
     other-modules:
+
+    default-extensions:
+      OverloadedRecordDot
