@@ -185,16 +185,14 @@ privateConstructorRules rules = map createRule $ derivablePrivateConstants (priv
 
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
 minimizeIntruderRules :: MaudeHandle -> Bool -> [IntrRuleAC] -> [IntrRuleAC]
-minimizeIntruderRules hnd diff rules =
+minimizeIntruderRules hnd diff rules = 
     filter (not . isDoublePremiseRule)
       $ if diff then rules else go [] rules
   where
     go checked [] = reverse checked
-    go checked (r@(Rule _ prems concs _ _):unchecked) = go checked' unchecked
+    go checked (r:unchecked) = go checked' unchecked
       where
         checked' = if any (\r' -> equalDuplicateRuleUpToRenaming r r' `runReader` hnd)
-          --if any (\r'@(Rule _ prems' concs' _ _)
-                              -- -> (concs' == concs && prems' `subsetOf` prems) || (equalRuleUpToRenaming r r' `runReader` hnd))
                           (checked++unchecked)
                    then checked
                    else r:checked
@@ -252,14 +250,14 @@ constructionRules fSig =
 
 destructionRulesAC :: Bool -> ACfctFunSig -> WithMaude [IntrRuleAC]
 destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules hnd diff $
-    concatMap (decomposeNotSubterm diff . variantsIntruderAux hnd id True) [ (AC (ACfct f),createRule s cnstr) | f@(s,(Public,cnstr)) <- S.toList fSig, s `notElem` builtInDestrRule ]
+    concatMap (decomposeNotSubterm diff . variantsIntruderAux hnd id True diff) [ (AC (ACfct f),createRule s cnstr) | f@(s,(Public,cnstr)) <- S.toList fSig, s `notElem` builtInDestrRule ]
   where
     createRule s cnstr = Rule (DestrRule (append (pack "_") s) (-1) True True) [kdFact (varTerm (LVar "x"  LSortMsg 0)), kuFact (varTerm (LVar "x"  LSortMsg 1))] [concfact] [concfact] []
       where vars     = take 2 [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
             mAC      = fAppACfct (s,(Public,cnstr)) vars
             concfact = kdFact mAC
 
-    variantsIntruderAux hnd fun b (f,r) = (f,variantsIntruder hnd fun b r)
+    variantsIntruderAux hnd fun b d (f,r) = (f,variantsIntruder hnd fun b d r)
 
 
 -- computeBooleanDestructionRules :: IntrRuleAC -> IntrRuleAC
@@ -273,7 +271,7 @@ destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules hnd diff $
 -- computeBooleanDestructionRules r = r
 
 decomposeNotSubterm :: Bool -> (FunSym,[IntrRuleAC]) -> [IntrRuleAC]
-decomposeNotSubterm bool (f,((Rule (DestrRule _ _ _ _) ((Fact KDFact _ (lhs:_)):other_prems) [(Fact KDFact _ [tc])] _ _):rq)) = 
+decomposeNotSubterm bool (f,((Rule (DestrRule _ _ _ _) ((Fact KDFact _ (lhs:_)):other_prems) [(Fact KDFact _ [tc])] _ _):rq)) =
   case contextR of
     Just context -> destructionRules bool context ++ decomposeNotSubterm bool (f,rq)
     Nothing -> decomposeNotSubterm bool (f,rq)
@@ -285,13 +283,13 @@ decomposeNotSubterm _ (_,[]) = []
 
 
 builtInDestrRule :: [ByteString]
-builtInDestrRule = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString, pack "muult"] -- pack "muult"
+builtInDestrRule = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString]
 
 -- | @destructionRulesNoEq diff fSig@ returns the destruction rules for the given
 -- function signature @fSig@ (not AC cases)
 destructionRulesNoEq :: Bool -> NoEqFunSig -> WithMaude [IntrRuleAC]
 destructionRulesNoEq diff fSig = reader $ \hnd -> minimizeIntruderRules hnd diff $
-    concatMap (decomposeNotSubterm diff . variantsIntruderAux hnd id True) [ (NoEq f,createRule s k cnstr) | f@(s,(k,Public,cnstr)) <- S.toList fSig, s `notElem` builtInDestrRule ]
+    concatMap (decomposeNotSubterm diff . variantsIntruderAux hnd id True diff) [ (NoEq f,createRule s k cnstr) | f@(s,(k,Public,cnstr)) <- S.toList fSig, s `notElem` builtInDestrRule ]
   where
     createRule s k cnstr | k /= 0 = Rule (DestrRule (append (pack "_") s) (-1) True True) ((kdFact (varTerm (LVar "x"  LSortMsg (toInteger (k-1))))):(take (k-1) (map kuFact vars))) [concfact] [concfact] []
     -- the two boolean are set by default to True : it's computed juste after
@@ -303,7 +301,7 @@ destructionRulesNoEq diff fSig = reader $ \hnd -> minimizeIntruderRules hnd diff
             m        = fAppNoEq (s,(0,Public,cnstr)) (reverse vars)
             concfact = kdFact m
 
-    variantsIntruderAux hnd fun b (f,r) = (f,variantsIntruder hnd fun b r)
+    variantsIntruderAux hnd fun b d (f,r) = (f,variantsIntruder hnd fun b d r)
 
 -- | (not (any (`isSuffixOf`s) builtInDestrRule))
 ------------------------------------------------------------------------------
@@ -322,7 +320,7 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules hnd diff $
     , oneRule  (ConstrRule (append (pack "_") oneSymString))  kuFact return
     , multRule (ConstrRule (append (pack "_") multSymString)) kuFact return
     ] ++
-    concatMap (variantsIntruder hnd id True)
+    concatMap (variantsIntruder hnd id True diff)
       [ expRule (DestrRule (append (pack "_") expSymString) 0 True False) kdFact (const [])
       , invRule (DestrRule (append (pack "_") invSymString) 0 True False) kdFact (const [])
       ]
@@ -368,14 +366,14 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules hnd diff $
 
 -- | @variantsIntruder mh irule@ computes the deconstruction-variants
 -- of a given intruder rule @irule@
-variantsIntruder :: MaudeHandle -> ([LNSubstVFresh] -> [LNSubstVFresh]) -> Bool -> IntrRuleAC -> [IntrRuleAC]
-variantsIntruder hnd minimizeVariants applyFilters ru = go [] $ reverse $ do
+variantsIntruder :: MaudeHandle -> ([LNSubstVFresh] -> [LNSubstVFresh]) -> Bool -> Bool -> IntrRuleAC -> [IntrRuleAC]
+variantsIntruder hnd minimizeVariants applyFilters diff ru = go [] $ reverse $ do
     let ruleTerms = concatMap factTerms
                               (get rPrems ru++get rConcs ru++get rActs ru)
     fsigma <- minimizeVariants $ computeVariants (fAppList ruleTerms) `runReader` hnd
     let sigma     = freshToFree fsigma `evalFreshAvoiding` ruleTerms
         ruvariant = normRule' (apply sigma ru) `runReader` hnd
-    guard (not applyFilters || frees (get rConcs ruvariant) /= [] &&
+    guard (not applyFilters || (frees (get rConcs ruvariant) /= [] || diff == True) &&
            -- ground terms are already deducible by applying construction rules
            (not applyFilters || ruvariant /= ru) &&
            -- this is a construction rule
@@ -470,9 +468,9 @@ bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules hnd diff $
     , emapRule  (ConstrRule (append (pack "_") emapSymString))  kuFact return
     ]
     ++ -- pmult is similar to exp
-    (variantsIntruder hnd id True $ pmultRule (DestrRule (append (pack "_") pmultSymString) 0 True False) kdFact (const []))
+    (variantsIntruder hnd id True diff $ pmultRule (DestrRule (append (pack "_") pmultSymString) 0 True False) kdFact (const []))
     ++ -- emap is different
-    (bpVariantsIntruder hnd $ emapRule (DestrRule (append (pack "_") emapSymString) 0 True False) kdFact (const []))
+    (bpVariantsIntruder diff hnd $ emapRule (DestrRule (append (pack "_") emapSymString) 0 True False) kdFact (const []))
 
   where
 
@@ -495,9 +493,9 @@ bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules hnd diff $
         conc  = fAppEMap (x_var_0, x_var_1)
         concfact = kudFact conc
 
-bpVariantsIntruder :: MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
-bpVariantsIntruder hnd ru = do
-    ruvariant <- variantsIntruder hnd minimizeVariants True ru
+bpVariantsIntruder :: Bool -> MaudeHandle -> IntrRuleAC -> [IntrRuleAC]
+bpVariantsIntruder diff hnd ru = do
+    ruvariant <- variantsIntruder hnd minimizeVariants True diff ru
 
     -- For the rules "x, pmult(y,z) -> em(x,z)^y" and
     -- "pmult(y,z),x -> em(z,x)^y", we

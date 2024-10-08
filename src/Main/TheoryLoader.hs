@@ -678,16 +678,14 @@ addMessageDeductionRuleVariants thy0
     rules0     = reader $ \hnd -> subtermIntruderRules hnd False msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
-    rulesAC = traceShowId <$> (destructionRulesAC False (acUserFunSyms msig))
-    rulesNoEq = traceShowId <$> (destructionRulesNoEq False (noEqFunSyms msig))
+    rulesAC = (destructionRulesAC False (acUserFunSyms msig))
+    rulesNoEq = (destructionRulesNoEq False (noEqFunSyms msig))
     rulesACNoEq = liftA2 (++) rulesAC rulesNoEq
-    -- rules       = rulesACNoEq >>= (\x -> return (rules0 ++ x))
-    --rules       = rulesACNoEq >>= (\x -> return (concat rules0 ++ x))
     rules       = liftA2 (++) rules0 rulesACNoEq
     thy         = rules >>= \x -> return (addIntrRuleACsAfterTranslate x thy0)
     addIntruderVariants mkRuless = thy >>= \x -> return (addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) x)
 
--- FIX-ME : this function exists only for compilation of testParseFile in ParserTests.hs, it don't contain destruction rules for AC user defined function symbol
+-- FIX-ME : this function exists only for compilation of testParseFile in ParserTests.hs, it don't contain destruction rules for AC user defined function symbol nor subterm intruder rules
 addMessageDeductionRuleVariantsWithoutMaude :: OpenTranslatedTheory -> OpenTranslatedTheory
 addMessageDeductionRuleVariantsWithoutMaude thy0
   | enableBP msig = addIntruderVariants [ mkDhIntruderVariants
@@ -717,8 +715,8 @@ addMessageDeductionRuleVariantsDiff thy0
     rules0 diff'  = reader $ \hnd -> subtermIntruderRules hnd diff' msig ++ specialIntruderRules diff'
                     ++ (if enableMSet msig then multisetIntruderRules else [])
                     ++ (if enableXor msig then xorIntruderRules else [])
-    rulesAC diff' = traceShowId <$> (destructionRulesAC diff' (acUserFunSyms msig))
-    rulesNoEq diff' = traceShowId <$> (destructionRulesNoEq diff' (noEqFunSyms msig))
+    rulesAC diff' = (destructionRulesAC diff' (acUserFunSyms msig))
+    rulesNoEq diff' = (destructionRulesNoEq diff' (noEqFunSyms msig))
     rulesACNoEq diff' = liftA2 (++) (rulesAC diff') (rulesNoEq diff')
     rules diff' = liftA2 (++) (rules0 diff') (rulesACNoEq diff')
     bothDiffTh = rules True >>= \x -> return (addIntrRuleACsDiffBothDiff x thy0)

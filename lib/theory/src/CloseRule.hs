@@ -206,7 +206,7 @@ landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
 landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map (fmap (fmap (fmap Free))) facts))
 
 derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) checkProof tabProof || checkProof tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
+derivationTest sig intrR fact terms = checkProof tabProof || checkProof tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
   where
     setD = decompose terms
 
@@ -222,7 +222,7 @@ derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) c
     tabProof = concatMap checkProofStatuses provenTheory
     --provenTheory = closedTheory 
     provenTheory = map (proveTheory (const True) defaultProver) closedTheory
-    closedTheory = trace ("\ntheory : \n" ++ tabTheory modifiedTheory) map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory -- no AutoSources
+    closedTheory = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory -- no AutoSources
     modifiedTheory = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction1]) t) setD (repeat emptyThy)
 
     tabProof1 = concatMap checkProofStatuses provenTheory1
@@ -244,7 +244,7 @@ derivationTest sig intrR fact terms = trace ("\ntabProof : " ++ show tabProof) c
     a s = [protoFact Linear "Generated_0" (map (msgToFreshTerms . lvarToLnterm) (varD s)),factOnlyOnce]
     alemma s = [protoFact Linear "Generated_0" (map lvarToLnterm (varD s))]
 
-    newLemmas s = [Lemma "Derivation" AllTraces (Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])) [] (unproven ())] -- TODO : faire sans le head
+    newLemmas s = [Lemma "Derivation" AllTraces (Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])) [] (unproven ())] -- FIX-ME : the head should be a problem
     
     newRestriction0 = Restriction "OnlyOnce" (forAllFormula (factAnd "i" .&&. factAnd "j" .==>. factEq))
     factAnd x = Ato (Action (LIT (Var (Free (LVar x LSortNode 0)))) factOnlyOnce)
@@ -277,8 +277,6 @@ builtInDestrRule = map (BC.append (BC.pack "_")) symBI
     symBI = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString, fstSymString, sndSymString]
 
 checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> [IntrRuleAC] -> Bool
-checkChainReduction _ _ (Rule (DestrRule name0 _ _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) (Rule (DestrRule _ _ _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) _ 
-  | BC.pack "exxp" `BC.isSuffixOf` name0 || BC.pack "iinv" `BC.isSuffixOf` name0 || BC.pack "muult" `BC.isSuffixOf` name0 = True
 checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) allR 
   | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
   case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
@@ -385,7 +383,7 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
                               else 0) subterm constant) prems concs acts nvs
         where
            runMaude = (`runReader` hnd)
-closeIntrRule hnd ir@(Rule (DestrRule _ _ False _) _ _ _ _) = variantsIntruder hnd id False ir
+closeIntrRule _ (Rule (DestrRule _ _ False _) _ _ _ _) = error "closeIntrRule: This case should not happen, please report it on the github page" --variantsIntruder hnd id False False ir
 closeIntrRule _   ir                                        = [ir]
 
 
