@@ -54,21 +54,9 @@ import           Theory.Tools.InjectiveFactInstances
 -- | Apply CR-rules that don't result in case splitting until the constraint
 -- system does not change anymore.
 simplifySystem :: Reduction ()
-simplifySystem = do
-    isdiff <- getM sDiffSystem
-    -- Start simplification, indicating that some change happened
-    go (0 :: Int) [Changed]
-    if isdiff
-       then do
-        -- Remove equation split goals that do not exist anymore
-        removeSolvedSplitGoals
-       else do
-        -- Add all ordering constraint implied by CR-rule *N6*.
-        exploitUniqueMsgOrder
-        -- Remove equation split goals that do not exist anymore
-        removeSolvedSplitGoals
-        -- Add ordering constraint from injective facts
-        addNonInjectiveFactInstances
+simplifySystem =
+  -- Start simplification, indicating that some change happened
+  go (0 :: Int) [Changed]
   where
     go n changes0
       -- We stop as soon as all simplification steps have been run without
@@ -82,81 +70,52 @@ simplifySystem = do
           void substSystem
           -- Perform one simplification pass.
           isdiff <- getM sDiffSystem
-          -- In the diff case, we cannot enfore N4-N6.
-          if isdiff
-            then do
-              (c1,c3) <- enforceFreshAndKuNodeUniqueness
-              c4 <- enforceEdgeUniqueness
-              c5 <- solveUniqueActions
-              c6 <- reduceFormulas
-              c7 <- evalFormulaAtoms
-              c8 <- insertImpliedFormulas
-              c9 <- freshOrdering
-              c10 <- simpSubterms
-              c11 <- simpInjectiveFactEqMon
 
-              -- Report on looping behaviour if necessary
-              let changes = filter ((Changed ==) . snd) $
-                    [ ("unique fresh instances (DG4)",                    c1)
---                     , ("unique K↓-facts (N5↓)",                           c2)
-                    , ("unique K↑-facts (N5↑)",                           c3)
-                    , ("unique (linear) edges (DG2 and DG3)",             c4)
-                    , ("solve unambiguous actions (S_@)",                 c5)
-                    , ("decompose trace formula",                         c6)
-                    , ("propagate atom valuation to formula",             c7)
-                    , ("saturate under ∀-clauses (S_∀)",                  c8)
-                    , ("orderings for ~vars (S_fresh-order)",             c9)
-                    , ("simplification of SubtermStore",                  c10)
-                    , ("equations and monotonicity from injective Facts", c11)
+          -- Add all ordering constraint implied by CR-rule *N6*.
+          unless isdiff exploitUniqueMsgOrder
+          -- Remove equation split goals that do not exist anymore
+          removeSolvedSplitGoals
+          -- Add ordering constraint from injective facts
+          unless isdiff addNonInjectiveFactInstances
+
+          (c1,c2,c3) <- if isdiff
+            -- In the diff case, we cannot enfore N4-N6.
+            then enforceFreshAndKuNodeUniqueness
+            else enforceNodeUniqueness
+          c4 <- enforceEdgeUniqueness
+          c5 <- solveUniqueActions
+          c6 <- reduceFormulas
+          c7 <- evalFormulaAtoms
+          c8 <- insertImpliedFormulas
+          c9 <- freshOrdering
+          c10 <- simpSubterms
+          c11 <- simpInjectiveFactEqMon
+
+          -- Report on looping behaviour if necessary
+          let changes = filter ((Changed ==) . snd)
+                [ ("unique fresh instances (DG4)",                    c1)
+                , ("unique K↓-facts (N5↓)",                           c2)
+                , ("unique K↑-facts (N5↑)",                           c3)
+                , ("unique (linear) edges (DG2 and DG3)",             c4)
+                , ("solve unambiguous actions (S_@)",                 c5)
+                , ("decompose trace formula",                         c6)
+                , ("propagate atom valuation to formula",             c7)
+                , ("saturate under ∀-clauses (S_∀)",                  c8)
+                , ("orderings for ~vars (S_fresh-order)",             c9)
+                , ("simplification of SubtermStore",                  c10)
+                , ("equations and monotonicity from injective Facts", c11)
+                ]
+              traceIfLooping
+                | n <= 10   = id
+                | otherwise = trace $ render $ vsep
+                    [ text "Simplifier iteration" <-> int n <> colon
+                    , fsep $ text "The reduction-rules for" :
+                            (punctuate comma $ map (text . fst) changes) ++
+                            [text "were applied to the following constraint system."]
+                    , nest 2 (prettySystem se0)
                     ]
-                  traceIfLooping
-                    | n <= 10   = id
-                    | otherwise = trace $ render $ vsep
-                        [ text "Simplifier iteration" <-> int n <> colon
-                        , fsep $ text "The reduction-rules for" :
-                                (punctuate comma $ map (text . fst) changes) ++
-                                [text "were applied to the following constraint system."]
-                        , nest 2 (prettySystem se0)
-                        ]
 
-              traceIfLooping $ go (n + 1) (map snd changes)
-            else do
-              (c1,c2,c3) <- enforceNodeUniqueness
-              c4 <- enforceEdgeUniqueness
-              c5 <- solveUniqueActions
-              c6 <- reduceFormulas
-              c7 <- evalFormulaAtoms
-              c8 <- insertImpliedFormulas
-              c9 <- freshOrdering
-              c10 <- simpSubterms
-              c11 <- simpInjectiveFactEqMon
-
-              -- Report on looping behaviour if necessary
-              let changes = filter ((Changed ==) . snd) $
-                    [ ("unique fresh instances (DG4)",                    c1)
-                    , ("unique K↓-facts (N5↓)",                           c2)
-                    , ("unique K↑-facts (N5↑)",                           c3)
-                    , ("unique (linear) edges (DG2 and DG3)",             c4)
-                    , ("solve unambiguous actions (S_@)",                 c5)
-                    , ("decompose trace formula",                         c6)
-                    , ("propagate atom valuation to formula",             c7)
-                    , ("saturate under ∀-clauses (S_∀)",                  c8)
-                    , ("orderings for ~vars (S_fresh-order)",             c9)
-                    , ("simplification of SubtermStore",                  c10)
-                    , ("equations and monotonicity from injective Facts", c11)
-                    ]
-                  traceIfLooping
-                    | n <= 10   = id
-                    | otherwise = trace $ render $ vsep
-                        [ text "Simplifier iteration" <-> int n <> colon
-                        , fsep $ text "The reduction-rules for" :
-                                (punctuate comma $ map (text . fst) changes) ++
-                                [text "were applied to the following constraint system."]
-                        , nest 2 (prettySystem se0)
-                        ]
-
-              traceIfLooping $ go (n + 1) (map snd changes)
-
+          traceIfLooping $ go (n + 1) (map snd changes)
 
 -- | CR-rule *N6*: add ordering constraints between all KU-actions and
 -- KD-conclusions.
@@ -210,11 +169,12 @@ enforceNodeUniqueness =
 -- instances.
 --
 -- Returns 'Changed' if a change was done.
-enforceFreshAndKuNodeUniqueness :: Reduction (ChangeIndicator, ChangeIndicator)
+enforceFreshAndKuNodeUniqueness :: Reduction (ChangeIndicator, ChangeIndicator, ChangeIndicator)
 enforceFreshAndKuNodeUniqueness =
-    (,)
-      <$> (merge (const $ return Unchanged) freshRuleInsts)
-      <*> (merge (solveFactEqs SplitNow)    kuActions)
+    (,,)
+      <$> merge (const $ return Unchanged) freshRuleInsts
+      <*> return Unchanged  -- Unchanged is returned to match type of enforceNodeUniqueness
+      <*> merge (solveFactEqs SplitNow) kuActions
   where
     -- *DG4*
     freshRuleInsts se = do
