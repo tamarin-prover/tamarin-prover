@@ -135,6 +135,7 @@ module Theory.Model.Rule (
 
   -- * Pretty-Printing
   , reservedRuleNames
+  , showDotRuleCaseName
   , showRuleCaseName
   , prettyRule
   , prettyRuleRestrGen
@@ -190,6 +191,8 @@ import           Theory.Model.Fact
 import qualified Theory.Model.Formula as F
 import           Theory.Text.Pretty
 import           Theory.Sapic
+import Data.Char (chr, isDigit)
+import Data.List.Split (splitOn)
 
 -- import           Debug.Trace
 
@@ -352,6 +355,8 @@ data RuleAttribute = RuleColor (RGB Rational) -- Color for display
                              -- dependency to Sapic.Annotations
                              -- need to see what we need here later.
                   | IgnoreDerivChecks
+                  | IsSAPiCRule -- tags the rule as a SAPiC rule
+                  | Role String
        deriving( Eq, Ord, Show, Data, Generic)
 instance NFData RuleAttribute
 instance Binary RuleAttribute
@@ -1130,6 +1135,23 @@ prettyProtoRuleName rn = text $ case rn of
     FreshRule   -> "Fresh"
     StandRule n -> prefixIfReserved n
 
+prettyDotProtoRuleName :: Document d => [RuleAttribute] -> ProtoRuleName -> d
+prettyDotProtoRuleName attrs rn = text $ case rn of
+    FreshRule   -> "Fresh"
+    StandRule n -> if IsSAPiCRule `elem` attrs 
+                     then (if "new" `isPrefixOf` n then chr 957 : ' ' : drop 3 (trimSapicName n) else trimSapicName n)
+                     else prefixIfReserved n
+    where
+      trimSapicName name =
+        case splitString name of
+          Just (s, n, m) -> if all isDigit n && all isDigit m then s else name
+          Nothing -> name
+      splitString str =
+        let parts = reverse $ splitOn "_" str in
+          if length parts >= 3
+            then Just (intercalate "_" (reverse (drop 2 parts)), head (tail parts), head parts)
+            else Nothing
+
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
@@ -1141,11 +1163,18 @@ prettyRuleAttribute attr = case attr of
               g = map toLNFact
               h = map toLFormula
     IgnoreDerivChecks -> text "derivchecks"
+    IsSAPiCRule       -> text "issapicrule"
+    Role roleName -> text "role=" <> text roleName
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
 showRuleCaseName =
     render . ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
+
+-- | Pretty print the rule name such that it can be used as a case name in a dot node
+showDotRuleCaseName :: (HasRuleName (Rule i), HasRuleAttributes (Rule i)) => Rule i -> String
+showDotRuleCaseName ru =
+    render . ruleInfo (prettyDotProtoRuleName (ruleAttributes ru)) prettyIntrRuleACInfo . ruleName $ ru
 
 prettyIntrRuleACInfo :: Document d => IntrRuleACInfo -> d
 prettyIntrRuleACInfo rn = text $ case rn of

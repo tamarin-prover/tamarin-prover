@@ -198,6 +198,7 @@ headerTpl info = [whamlet|
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
+            <li><a id=agent-toggle href="#">Clustering by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
@@ -243,6 +244,7 @@ headerDiffTpl info = [whamlet|
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
+            <li><a id=agent-toggle href="#">Clusturing by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>

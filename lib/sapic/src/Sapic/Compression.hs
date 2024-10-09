@@ -68,6 +68,8 @@ mergeInfo (ProtoRuleEInfo (StandRule name) attr res) (ProtoRuleEInfo (StandRule 
        mergeAttr a a' =  let completeList = a ++ a' in
                             take 1 [i |  i@(RuleColor _) <- completeList]
                          ++ take 1 [i |  i@(Process   _) <- completeList]
+                         ++ take 1 [i |  i@(IsSAPiCRule) <- completeList]
+
 mergeInfo _ _ = error "FreshRule(s) passed to mergeInfo"
 
 

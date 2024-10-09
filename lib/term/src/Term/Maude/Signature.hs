@@ -20,6 +20,7 @@ module Term.Maude.Signature (
   , enableNat
   , stFunSyms
   , stRules
+  , eqConvergent
   , funSyms
   , irreducibleFunSyms
   , reducibleFunSyms
@@ -78,7 +79,6 @@ import qualified Text.PrettyPrint.Highlight as P
 -- Maude Signatures
 ----------------------------------------------------------------------
 
--- | The required information to define a @Maude functional module@.
 data MaudeSig = MaudeSig
     { enableDH           :: Bool
     , enableBP           :: Bool
@@ -88,7 +88,7 @@ data MaudeSig = MaudeSig
     , enableDiff         :: Bool
     , stFunSyms          :: S.Set NoEqSym     -- ^ function signature for subterm theory
     , stRules            :: S.Set CtxtStRule  -- ^ rewriting rules for subterm theory
-
+    , eqConvergent       :: Bool            -- ^ convergence information for equations
     , funSyms            :: FunSig            -- ^ function signature including the
                                               -- function symbols for DH, BP, and Multiset
                                               -- can be computed from enableX and stFunSyms
@@ -97,10 +97,9 @@ data MaudeSig = MaudeSig
     }
     deriving (Ord, Show, Eq, Generic, NFData, Binary)
 
--- | Smart constructor for maude signatures. Computes funSyms and irreducibleFunSyms.
 maudeSig :: MaudeSig -> MaudeSig
-maudeSig msig@MaudeSig{enableDH, enableBP, enableMSet, enableNat, enableXor, enableDiff = _, stFunSyms, stRules} =
-    msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns, reducibleFunSyms=reducible}
+maudeSig msig@MaudeSig{enableDH, enableBP, enableMSet, enableNat, enableXor, enableDiff = _, stFunSyms, stRules, eqConvergent} =
+    msig {enableDH=enableDH||enableBP, funSyms=allfuns, irreducibleFunSyms=irreduciblefuns, reducibleFunSyms=reducible, eqConvergent=eqConvergent}
   where
     allfuns = S.map NoEq stFunSyms
                 `S.union` (if enableDH || enableBP then dhFunSig   else S.empty)
@@ -116,8 +115,8 @@ maudeSig msig@MaudeSig{enableDH, enableBP, enableMSet, enableNat, enableXor, ena
 
 -- | A monoid instance to combine maude signatures.
 instance Semigroup MaudeSig where
-    MaudeSig dh1 bp1 mset1 nat1 xor1 diff1 stFunSyms1 stRules1 _ _ _ <>
-      MaudeSig dh2 bp2 mset2 nat2 xor2 diff2 stFunSyms2 stRules2 _ _ _ =
+    MaudeSig dh1 bp1 mset1 nat1 xor1 diff1 stFunSyms1 stRules1 _ _ _ _ <>
+      MaudeSig dh2 bp2 mset2 nat2 xor2 diff2 stFunSyms2 stRules2 _ _ _ _ =
           maudeSig (mempty {enableDH=dh1||dh2
                            ,enableBP=bp1||bp2
                            ,enableMSet=mset1||mset2
@@ -138,7 +137,7 @@ instance Semigroup MaudeSig where
                                          S.union st1 st2
                   
 instance Monoid MaudeSig where
-    mempty = MaudeSig False False False False False False S.empty S.empty S.empty S.empty S.empty
+    mempty = MaudeSig False False False False False False S.empty S.empty False S.empty S.empty S.empty
 
 -- | Non-AC function symbols.
 noEqFunSyms :: MaudeSig -> NoEqFunSig
@@ -213,7 +212,7 @@ prettyMaudeSigExcept sig excl = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
     , ppNonEmptyList' "functions:" ppFunSymb $ S.toList (stFunSyms sig S.\\ excl)
     , ppNonEmptyList
-        (\ds -> P.sep (P.keyword_ "equations:" : map (P.nest 2) ds))
+        (\ds -> P.sep ((if eqConvergent sig then P.keyword_ "equations [convergent]:" else P.keyword_ "equations:") : map (P.nest 2) ds))
         prettyCtxtStRule $ S.toList (stRules sig)
     ]
   where

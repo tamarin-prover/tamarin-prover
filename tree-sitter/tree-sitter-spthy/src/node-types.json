@@ -1,0 +1,9792 @@
+[
+  {
+    "type": "",
+    "named": false,
+    "fields": {
+      "predicate_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "accountability_lemma",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "lemma_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      },
+      "test_identifier": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "action_constraint",
+    "named": true,
+    "fields": {
+      "fact": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "!",
+            "named": false
+          },
+          {
+            "type": "linear_fact",
+            "named": true
+          },
+          {
+            "type": "persistent_fact",
+            "named": true
+          }
+        ]
+      },
+      "variable": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "temporal_var",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "action_fact",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "embedded_restriction",
+          "named": true
+        },
+        {
+          "type": "linear_fact",
+          "named": true
+        },
+        {
+          "type": "persistent_fact",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "action_goal",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "linear_fact",
+          "named": true
+        },
+        {
+          "type": "persistent_fact",
+          "named": true
+        },
+        {
+          "type": "temporal_var",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "and_function",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "and_function",
+          "named": true
+        },
+        {
+          "type": "not_function",
+          "named": true
+        },
+        {
+          "type": "or_function",
+          "named": true
+        },
+        {
+          "type": "std_function",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "any_var",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "arguments",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "temporal_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "atom",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "binary_app",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "function_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "binding",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "built_in",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "built_ins",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "built_in",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "by_method",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "proof_method",
+          "named": true
+        },
+        {
+          "type": "step",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "case",
+    "named": true,
+    "fields": {
+      "case_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      },
+      "proof_skeleton": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "by_method",
+            "named": true
+          },
+          {
+            "type": "cases",
+            "named": true
+          },
+          {
+            "type": "method_skeleton",
+            "named": true
+          },
+          {
+            "type": "mirrored",
+            "named": true
+          },
+          {
+            "type": "solved",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "case_test",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "test_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "cases",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "case",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "chain_goal",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "natural",
+          "named": true
+        },
+        {
+          "type": "temporal_var",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "commandline",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "comp_var",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "conclusion",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "linear_fact",
+          "named": true
+        },
+        {
+          "type": "persistent_fact",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "conditional",
+    "named": true,
+    "fields": {
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "equality_check",
+            "named": true
+          },
+          {
+            "type": "lesser_check",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          }
+        ]
+      },
+      "else": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "binding",
+            "named": true
+          },
+          {
+            "type": "conditional",
+            "named": true
+          },
+          {
+            "type": "delete_state",
+            "named": true
+          },
+          {
+            "type": "deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "event",
+            "named": true
+          },
+          {
+            "type": "inline_msr_process",
+            "named": true
+          },
+          {
+            "type": "input",
+            "named": true
+          },
+          {
+            "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "non_deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "output",
+            "named": true
+          },
+          {
+            "type": "predefined_process",
+            "named": true
+          },
+          {
+            "type": "process_let",
+            "named": true
+          },
+          {
+            "type": "read_state",
+            "named": true
+          },
+          {
+            "type": "remove_lock",
+            "named": true
+          },
+          {
+            "type": "replication",
+            "named": true
+          },
+          {
+            "type": "set_lock",
+            "named": true
+          },
+          {
+            "type": "set_state",
+            "named": true
+          }
+        ]
+      },
+      "then": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "binding",
+            "named": true
+          },
+          {
+            "type": "conditional",
+            "named": true
+          },
+          {
+            "type": "delete_state",
+            "named": true
+          },
+          {
+            "type": "deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "event",
+            "named": true
+          },
+          {
+            "type": "inline_msr_process",
+            "named": true
+          },
+          {
+            "type": "input",
+            "named": true
+          },
+          {
+            "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "non_deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "output",
+            "named": true
+          },
+          {
+            "type": "predefined_process",
+            "named": true
+          },
+          {
+            "type": "process_let",
+            "named": true
+          },
+          {
+            "type": "read_state",
+            "named": true
+          },
+          {
+            "type": "remove_lock",
+            "named": true
+          },
+          {
+            "type": "replication",
+            "named": true
+          },
+          {
+            "type": "set_lock",
+            "named": true
+          },
+          {
+            "type": "set_state",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "conjunction",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "custom_var",
+    "named": true,
+    "fields": {
+      "variable_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "define",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "delete_state",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "deprio",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "and_function",
+          "named": true
+        },
+        {
+          "type": "not_function",
+          "named": true
+        },
+        {
+          "type": "or_function",
+          "named": true
+        },
+        {
+          "type": "post_ranking",
+          "named": true
+        },
+        {
+          "type": "std_function",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "deterministic_choice",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "diff_equiv_lemma",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "diff_lemma",
+    "named": true,
+    "fields": {
+      "lemma_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      },
+      "proof_skeleton": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "by_method",
+            "named": true
+          },
+          {
+            "type": "cases",
+            "named": true
+          },
+          {
+            "type": "method_skeleton",
+            "named": true
+          },
+          {
+            "type": "mirrored",
+            "named": true
+          },
+          {
+            "type": "solved",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "diff_lemma_attrs",
+          "named": true
+        },
+        {
+          "type": "modulo",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "diff_lemma_attr",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "diff_lemma_attrs",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "diff_lemma_attr",
+          "named": true
+        },
+        {
+          "type": "lemma_attr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "diff_rule",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "rule",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "rule",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "simple_rule",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "disjunction",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "disjunction_split_goal",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "embedded_restriction",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "eq_split_goal",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "natural",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "equality_check",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "action_constraint",
+          "named": true
+        },
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "atom",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "conjunction",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "disjunction",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "iff",
+          "named": true
+        },
+        {
+          "type": "imp",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "negation",
+          "named": true
+        },
+        {
+          "type": "nested_formula",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "pre_defined",
+          "named": true
+        },
+        {
+          "type": "predicate_ref",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "quantified_formula",
+          "named": true
+        },
+        {
+          "type": "subterm_rel",
+          "named": true
+        },
+        {
+          "type": "temp_var_eq",
+          "named": true
+        },
+        {
+          "type": "temp_var_induction",
+          "named": true
+        },
+        {
+          "type": "temp_var_order",
+          "named": true
+        },
+        {
+          "type": "term_eq",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "equation",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "equations",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "equation",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "equiv_lemma",
+    "named": true,
+    "fields": {
+      "first": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "binding",
+            "named": true
+          },
+          {
+            "type": "conditional",
+            "named": true
+          },
+          {
+            "type": "delete_state",
+            "named": true
+          },
+          {
+            "type": "deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "event",
+            "named": true
+          },
+          {
+            "type": "inline_msr_process",
+            "named": true
+          },
+          {
+            "type": "input",
+            "named": true
+          },
+          {
+            "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "non_deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "output",
+            "named": true
+          },
+          {
+            "type": "predefined_process",
+            "named": true
+          },
+          {
+            "type": "process_let",
+            "named": true
+          },
+          {
+            "type": "read_state",
+            "named": true
+          },
+          {
+            "type": "remove_lock",
+            "named": true
+          },
+          {
+            "type": "replication",
+            "named": true
+          },
+          {
+            "type": "set_lock",
+            "named": true
+          },
+          {
+            "type": "set_state",
+            "named": true
+          }
+        ]
+      },
+      "second": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "binding",
+            "named": true
+          },
+          {
+            "type": "conditional",
+            "named": true
+          },
+          {
+            "type": "delete_state",
+            "named": true
+          },
+          {
+            "type": "deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "event",
+            "named": true
+          },
+          {
+            "type": "inline_msr_process",
+            "named": true
+          },
+          {
+            "type": "input",
+            "named": true
+          },
+          {
+            "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "non_deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "output",
+            "named": true
+          },
+          {
+            "type": "predefined_process",
+            "named": true
+          },
+          {
+            "type": "process_let",
+            "named": true
+          },
+          {
+            "type": "read_state",
+            "named": true
+          },
+          {
+            "type": "remove_lock",
+            "named": true
+          },
+          {
+            "type": "replication",
+            "named": true
+          },
+          {
+            "type": "set_lock",
+            "named": true
+          },
+          {
+            "type": "set_state",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "event",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "linear_fact",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "persistent_fact",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "exp_term",
+    "named": true,
+    "fields": {
+      "base": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "exponent": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "export",
+    "named": true,
+    "fields": {
+      "export_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "export_query",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "fact_annote",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "fact_annotes",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "fact_annote",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "formal_comment",
+    "named": true,
+    "fields": {
+      "comment_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "fresh_name",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "fresh_var",
+    "named": true,
+    "fields": {
+      "variable_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "natural",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "function_attribute",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "function_name",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "function_typed",
+    "named": true,
+    "fields": {
+      "function_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      },
+      "function_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "function_untyped",
+    "named": true,
+    "fields": {
+      "arity": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "natural",
+            "named": true
+          }
+        ]
+      },
+      "function_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "function_attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "functions",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "function_typed",
+          "named": true
+        },
+        {
+          "type": "function_untyped",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "global_heuristic",
+    "named": true,
+    "fields": {
+      "goal_ranking": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "oracle_goal_ranking",
+            "named": true
+          },
+          {
+            "type": "standard_goal_ranking",
+            "named": true
+          },
+          {
+            "type": "tactic_goal_ranking",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "goal",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "action_goal",
+          "named": true
+        },
+        {
+          "type": "chain_goal",
+          "named": true
+        },
+        {
+          "type": "disjunction_split_goal",
+          "named": true
+        },
+        {
+          "type": "eq_split_goal",
+          "named": true
+        },
+        {
+          "type": "premise_goal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "hexcolor",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "ifdef",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "accountability_lemma",
+          "named": true
+        },
+        {
+          "type": "built_ins",
+          "named": true
+        },
+        {
+          "type": "case_test",
+          "named": true
+        },
+        {
+          "type": "diff_equiv_lemma",
+          "named": true
+        },
+        {
+          "type": "diff_lemma",
+          "named": true
+        },
+        {
+          "type": "diff_rule",
+          "named": true
+        },
+        {
+          "type": "equations",
+          "named": true
+        },
+        {
+          "type": "equiv_lemma",
+          "named": true
+        },
+        {
+          "type": "export",
+          "named": true
+        },
+        {
+          "type": "formal_comment",
+          "named": true
+        },
+        {
+          "type": "functions",
+          "named": true
+        },
+        {
+          "type": "global_heuristic",
+          "named": true
+        },
+        {
+          "type": "ident",
+          "named": true
+        },
+        {
+          "type": "ifdef_and",
+          "named": true
+        },
+        {
+          "type": "ifdef_nested",
+          "named": true
+        },
+        {
+          "type": "ifdef_not",
+          "named": true
+        },
+        {
+          "type": "ifdef_or",
+          "named": true
+        },
+        {
+          "type": "lemma",
+          "named": true
+        },
+        {
+          "type": "let",
+          "named": true
+        },
+        {
+          "type": "macros",
+          "named": true
+        },
+        {
+          "type": "options",
+          "named": true
+        },
+        {
+          "type": "predicates",
+          "named": true
+        },
+        {
+          "type": "preprocessor",
+          "named": true
+        },
+        {
+          "type": "process",
+          "named": true
+        },
+        {
+          "type": "restriction",
+          "named": true
+        },
+        {
+          "type": "rule",
+          "named": true
+        },
+        {
+          "type": "tactic",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ifdef_and",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        },
+        {
+          "type": "ifdef_and",
+          "named": true
+        },
+        {
+          "type": "ifdef_nested",
+          "named": true
+        },
+        {
+          "type": "ifdef_not",
+          "named": true
+        },
+        {
+          "type": "ifdef_or",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ifdef_nested",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        },
+        {
+          "type": "ifdef_and",
+          "named": true
+        },
+        {
+          "type": "ifdef_nested",
+          "named": true
+        },
+        {
+          "type": "ifdef_not",
+          "named": true
+        },
+        {
+          "type": "ifdef_or",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ifdef_not",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        },
+        {
+          "type": "ifdef_and",
+          "named": true
+        },
+        {
+          "type": "ifdef_nested",
+          "named": true
+        },
+        {
+          "type": "ifdef_not",
+          "named": true
+        },
+        {
+          "type": "ifdef_or",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "ifdef_or",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        },
+        {
+          "type": "ifdef_and",
+          "named": true
+        },
+        {
+          "type": "ifdef_nested",
+          "named": true
+        },
+        {
+          "type": "ifdef_not",
+          "named": true
+        },
+        {
+          "type": "ifdef_or",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "iff",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "imp",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "include",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "path",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "inline_msr_process",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "action_fact",
+          "named": true
+        },
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conclusion",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "premise",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "input",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "language",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "lemma",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "lemma_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      },
+      "proof_skeleton": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "by_method",
+            "named": true
+          },
+          {
+            "type": "cases",
+            "named": true
+          },
+          {
+            "type": "method_skeleton",
+            "named": true
+          },
+          {
+            "type": "mirrored",
+            "named": true
+          },
+          {
+            "type": "solved",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "diff_lemma_attrs",
+          "named": true
+        },
+        {
+          "type": "modulo",
+          "named": true
+        },
+        {
+          "type": "trace_quantifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "lemma_attr",
+    "named": true,
+    "fields": {
+      "goal_ranking": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "oracle_goal_ranking",
+            "named": true
+          },
+          {
+            "type": "standard_goal_ranking",
+            "named": true
+          },
+          {
+            "type": "tactic_goal_ranking",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        },
+        {
+          "type": "language",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "lesser_check",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "let",
+    "named": true,
+    "fields": {
+      "let_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "linear_fact",
+    "named": true,
+    "fields": {
+      "fact_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        },
+        {
+          "type": "fact_annotes",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "location_process",
+    "named": true,
+    "fields": {
+      "location_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "macro",
+    "named": true,
+    "fields": {
+      "macro_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      },
+      "term": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "macros",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "macro",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "method_skeleton",
+    "named": true,
+    "fields": {
+      "proof_skeleton": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "by_method",
+            "named": true
+          },
+          {
+            "type": "cases",
+            "named": true
+          },
+          {
+            "type": "method_skeleton",
+            "named": true
+          },
+          {
+            "type": "mirrored",
+            "named": true
+          },
+          {
+            "type": "solved",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "proof_method",
+          "named": true
+        },
+        {
+          "type": "step",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "modulo",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "mset_term",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "msg_var_or_nullary_fun",
+    "named": true,
+    "fields": {
+      "variable_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "natural",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "mul_term",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "nary_app",
+    "named": true,
+    "fields": {
+      "function_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "nat_term",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "nat_var",
+    "named": true,
+    "fields": {
+      "variable_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "natural",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "natural_subscript",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "negation",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "nested_formula",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "action_constraint",
+          "named": true
+        },
+        {
+          "type": "atom",
+          "named": true
+        },
+        {
+          "type": "conjunction",
+          "named": true
+        },
+        {
+          "type": "disjunction",
+          "named": true
+        },
+        {
+          "type": "iff",
+          "named": true
+        },
+        {
+          "type": "imp",
+          "named": true
+        },
+        {
+          "type": "negation",
+          "named": true
+        },
+        {
+          "type": "nested_formula",
+          "named": true
+        },
+        {
+          "type": "pre_defined",
+          "named": true
+        },
+        {
+          "type": "predicate_ref",
+          "named": true
+        },
+        {
+          "type": "quantified_formula",
+          "named": true
+        },
+        {
+          "type": "subterm_rel",
+          "named": true
+        },
+        {
+          "type": "temp_var_eq",
+          "named": true
+        },
+        {
+          "type": "temp_var_induction",
+          "named": true
+        },
+        {
+          "type": "temp_var_order",
+          "named": true
+        },
+        {
+          "type": "term_eq",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "nested_term",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "non_deterministic_choice",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "not_function",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "and_function",
+          "named": true
+        },
+        {
+          "type": "not_function",
+          "named": true
+        },
+        {
+          "type": "or_function",
+          "named": true
+        },
+        {
+          "type": "std_function",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "nullary_fun",
+    "named": true,
+    "fields": {
+      "function_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "option",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "options",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "option",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "or_function",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "and_function",
+          "named": true
+        },
+        {
+          "type": "not_function",
+          "named": true
+        },
+        {
+          "type": "or_function",
+          "named": true
+        },
+        {
+          "type": "std_function",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "oracle_goal_ranking",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "param",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "output",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "persistent_fact",
+    "named": true,
+    "fields": {
+      "fact_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        },
+        {
+          "type": "fact_annotes",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "post_ranking",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "pre_defined",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "predefined_process",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "predicate",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "predicate_ref",
+    "named": true,
+    "fields": {
+      "predicate_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "predicates",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "predicate",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "premise",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "linear_fact",
+          "named": true
+        },
+        {
+          "type": "persistent_fact",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "premise_goal",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "linear_fact",
+          "named": true
+        },
+        {
+          "type": "natural_subscript",
+          "named": true
+        },
+        {
+          "type": "persistent_fact",
+          "named": true
+        },
+        {
+          "type": "temporal_var",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "preprocessor",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "define",
+          "named": true
+        },
+        {
+          "type": "ifdef",
+          "named": true
+        },
+        {
+          "type": "include",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "presort",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "standard_goal_ranking",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "prio",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "and_function",
+          "named": true
+        },
+        {
+          "type": "not_function",
+          "named": true
+        },
+        {
+          "type": "or_function",
+          "named": true
+        },
+        {
+          "type": "post_ranking",
+          "named": true
+        },
+        {
+          "type": "std_function",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "process",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "process_let",
+    "named": true,
+    "fields": {
+      "else": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "binding",
+            "named": true
+          },
+          {
+            "type": "conditional",
+            "named": true
+          },
+          {
+            "type": "delete_state",
+            "named": true
+          },
+          {
+            "type": "deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "event",
+            "named": true
+          },
+          {
+            "type": "inline_msr_process",
+            "named": true
+          },
+          {
+            "type": "input",
+            "named": true
+          },
+          {
+            "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "non_deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "output",
+            "named": true
+          },
+          {
+            "type": "predefined_process",
+            "named": true
+          },
+          {
+            "type": "process_let",
+            "named": true
+          },
+          {
+            "type": "read_state",
+            "named": true
+          },
+          {
+            "type": "remove_lock",
+            "named": true
+          },
+          {
+            "type": "replication",
+            "named": true
+          },
+          {
+            "type": "set_lock",
+            "named": true
+          },
+          {
+            "type": "set_state",
+            "named": true
+          }
+        ]
+      },
+      "in": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "binding",
+            "named": true
+          },
+          {
+            "type": "conditional",
+            "named": true
+          },
+          {
+            "type": "delete_state",
+            "named": true
+          },
+          {
+            "type": "deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "event",
+            "named": true
+          },
+          {
+            "type": "inline_msr_process",
+            "named": true
+          },
+          {
+            "type": "input",
+            "named": true
+          },
+          {
+            "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "non_deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "output",
+            "named": true
+          },
+          {
+            "type": "predefined_process",
+            "named": true
+          },
+          {
+            "type": "process_let",
+            "named": true
+          },
+          {
+            "type": "read_state",
+            "named": true
+          },
+          {
+            "type": "remove_lock",
+            "named": true
+          },
+          {
+            "type": "replication",
+            "named": true
+          },
+          {
+            "type": "set_lock",
+            "named": true
+          },
+          {
+            "type": "set_state",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "term_eq",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "proof_method",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "goal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "pub_name",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "pub_var",
+    "named": true,
+    "fields": {
+      "variable_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "natural",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "quantified_formula",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "variable": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "temporal_var",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "read_state",
+    "named": true,
+    "fields": {
+      "else": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "binding",
+            "named": true
+          },
+          {
+            "type": "conditional",
+            "named": true
+          },
+          {
+            "type": "delete_state",
+            "named": true
+          },
+          {
+            "type": "deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "event",
+            "named": true
+          },
+          {
+            "type": "inline_msr_process",
+            "named": true
+          },
+          {
+            "type": "input",
+            "named": true
+          },
+          {
+            "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "non_deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "output",
+            "named": true
+          },
+          {
+            "type": "predefined_process",
+            "named": true
+          },
+          {
+            "type": "process_let",
+            "named": true
+          },
+          {
+            "type": "read_state",
+            "named": true
+          },
+          {
+            "type": "remove_lock",
+            "named": true
+          },
+          {
+            "type": "replication",
+            "named": true
+          },
+          {
+            "type": "set_lock",
+            "named": true
+          },
+          {
+            "type": "set_state",
+            "named": true
+          }
+        ]
+      },
+      "from": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "in": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "binding",
+            "named": true
+          },
+          {
+            "type": "conditional",
+            "named": true
+          },
+          {
+            "type": "delete_state",
+            "named": true
+          },
+          {
+            "type": "deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "event",
+            "named": true
+          },
+          {
+            "type": "inline_msr_process",
+            "named": true
+          },
+          {
+            "type": "input",
+            "named": true
+          },
+          {
+            "type": "location_process",
+            "named": true
+          },
+          {
+            "type": "non_deterministic_choice",
+            "named": true
+          },
+          {
+            "type": "null",
+            "named": true
+          },
+          {
+            "type": "output",
+            "named": true
+          },
+          {
+            "type": "predefined_process",
+            "named": true
+          },
+          {
+            "type": "process_let",
+            "named": true
+          },
+          {
+            "type": "read_state",
+            "named": true
+          },
+          {
+            "type": "remove_lock",
+            "named": true
+          },
+          {
+            "type": "replication",
+            "named": true
+          },
+          {
+            "type": "set_lock",
+            "named": true
+          },
+          {
+            "type": "set_state",
+            "named": true
+          }
+        ]
+      },
+      "to": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "temporal_var",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "remove_lock",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "replication",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "restriction",
+    "named": true,
+    "fields": {
+      "formula": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "action_constraint",
+            "named": true
+          },
+          {
+            "type": "atom",
+            "named": true
+          },
+          {
+            "type": "conjunction",
+            "named": true
+          },
+          {
+            "type": "disjunction",
+            "named": true
+          },
+          {
+            "type": "iff",
+            "named": true
+          },
+          {
+            "type": "imp",
+            "named": true
+          },
+          {
+            "type": "negation",
+            "named": true
+          },
+          {
+            "type": "nested_formula",
+            "named": true
+          },
+          {
+            "type": "pre_defined",
+            "named": true
+          },
+          {
+            "type": "predicate_ref",
+            "named": true
+          },
+          {
+            "type": "quantified_formula",
+            "named": true
+          },
+          {
+            "type": "subterm_rel",
+            "named": true
+          },
+          {
+            "type": "temp_var_eq",
+            "named": true
+          },
+          {
+            "type": "temp_var_induction",
+            "named": true
+          },
+          {
+            "type": "temp_var_order",
+            "named": true
+          },
+          {
+            "type": "term_eq",
+            "named": true
+          }
+        ]
+      },
+      "restriction_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "restriction_attr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "restriction_attr",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "rule",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "simple_rule",
+          "named": true
+        },
+        {
+          "type": "variants",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_attr",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "rule_attr_color",
+          "named": true
+        },
+        {
+          "type": "rule_process",
+          "named": true
+        },
+        {
+          "type": "rule_role",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_attr_color",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "hexcolor",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_attrs",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "rule_attr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_let_block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "rule_let_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_let_term",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "rule_process",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "rule_role",
+    "named": true,
+    "fields": {
+      "role_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "set_lock",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "any_var",
+          "named": true
+        },
+        {
+          "type": "binary_app",
+          "named": true
+        },
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "comp_var",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "custom_var",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "exp_term",
+          "named": true
+        },
+        {
+          "type": "fresh_name",
+          "named": true
+        },
+        {
+          "type": "fresh_var",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "mset_term",
+          "named": true
+        },
+        {
+          "type": "msg_var_or_nullary_fun",
+          "named": true
+        },
+        {
+          "type": "mul_term",
+          "named": true
+        },
+        {
+          "type": "nary_app",
+          "named": true
+        },
+        {
+          "type": "nat_term",
+          "named": true
+        },
+        {
+          "type": "nat_var",
+          "named": true
+        },
+        {
+          "type": "nested_term",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "nullary_fun",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "pub_name",
+          "named": true
+        },
+        {
+          "type": "pub_var",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        },
+        {
+          "type": "tuple_term",
+          "named": true
+        },
+        {
+          "type": "xor_term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "set_state",
+    "named": true,
+    "fields": {
+      "from": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "to": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "binding",
+          "named": true
+        },
+        {
+          "type": "conditional",
+          "named": true
+        },
+        {
+          "type": "delete_state",
+          "named": true
+        },
+        {
+          "type": "deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "event",
+          "named": true
+        },
+        {
+          "type": "inline_msr_process",
+          "named": true
+        },
+        {
+          "type": "input",
+          "named": true
+        },
+        {
+          "type": "location_process",
+          "named": true
+        },
+        {
+          "type": "non_deterministic_choice",
+          "named": true
+        },
+        {
+          "type": "null",
+          "named": true
+        },
+        {
+          "type": "output",
+          "named": true
+        },
+        {
+          "type": "predefined_process",
+          "named": true
+        },
+        {
+          "type": "process_let",
+          "named": true
+        },
+        {
+          "type": "read_state",
+          "named": true
+        },
+        {
+          "type": "remove_lock",
+          "named": true
+        },
+        {
+          "type": "replication",
+          "named": true
+        },
+        {
+          "type": "set_lock",
+          "named": true
+        },
+        {
+          "type": "set_state",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "simple_rule",
+    "named": true,
+    "fields": {
+      "rule_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "action_fact",
+          "named": true
+        },
+        {
+          "type": "conclusion",
+          "named": true
+        },
+        {
+          "type": "modulo",
+          "named": true
+        },
+        {
+          "type": "premise",
+          "named": true
+        },
+        {
+          "type": "rule_attrs",
+          "named": true
+        },
+        {
+          "type": "rule_let_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "std_function",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "function_name",
+          "named": true
+        },
+        {
+          "type": "param",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "step",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "proof_method",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "subterm_rel",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "tactic",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "deprio",
+          "named": true
+        },
+        {
+          "type": "ident",
+          "named": true
+        },
+        {
+          "type": "presort",
+          "named": true
+        },
+        {
+          "type": "prio",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tactic_goal_ranking",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "ident",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "temp_var_eq",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "temporal_var",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "temporal_var",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "temp_var_induction",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "temporal_var",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "temp_var_order",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "temporal_var",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "temporal_var",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "temporal_var",
+    "named": true,
+    "fields": {
+      "variable_identifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "natural",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "term_eq",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "theory",
+    "named": true,
+    "fields": {
+      "theory_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ident",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "accountability_lemma",
+          "named": true
+        },
+        {
+          "type": "built_ins",
+          "named": true
+        },
+        {
+          "type": "case_test",
+          "named": true
+        },
+        {
+          "type": "commandline",
+          "named": true
+        },
+        {
+          "type": "diff_equiv_lemma",
+          "named": true
+        },
+        {
+          "type": "diff_lemma",
+          "named": true
+        },
+        {
+          "type": "diff_rule",
+          "named": true
+        },
+        {
+          "type": "equations",
+          "named": true
+        },
+        {
+          "type": "equiv_lemma",
+          "named": true
+        },
+        {
+          "type": "export",
+          "named": true
+        },
+        {
+          "type": "formal_comment",
+          "named": true
+        },
+        {
+          "type": "functions",
+          "named": true
+        },
+        {
+          "type": "global_heuristic",
+          "named": true
+        },
+        {
+          "type": "lemma",
+          "named": true
+        },
+        {
+          "type": "let",
+          "named": true
+        },
+        {
+          "type": "macros",
+          "named": true
+        },
+        {
+          "type": "options",
+          "named": true
+        },
+        {
+          "type": "predicates",
+          "named": true
+        },
+        {
+          "type": "preprocessor",
+          "named": true
+        },
+        {
+          "type": "process",
+          "named": true
+        },
+        {
+          "type": "restriction",
+          "named": true
+        },
+        {
+          "type": "rule",
+          "named": true
+        },
+        {
+          "type": "tactic",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "trace_quantifier",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "tuple_term",
+    "named": true,
+    "fields": {
+      "term": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "variants",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "simple_rule",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "xor_term",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "any_var",
+            "named": true
+          },
+          {
+            "type": "binary_app",
+            "named": true
+          },
+          {
+            "type": "comp_var",
+            "named": true
+          },
+          {
+            "type": "custom_var",
+            "named": true
+          },
+          {
+            "type": "exp_term",
+            "named": true
+          },
+          {
+            "type": "fresh_name",
+            "named": true
+          },
+          {
+            "type": "fresh_var",
+            "named": true
+          },
+          {
+            "type": "mset_term",
+            "named": true
+          },
+          {
+            "type": "msg_var_or_nullary_fun",
+            "named": true
+          },
+          {
+            "type": "mul_term",
+            "named": true
+          },
+          {
+            "type": "nary_app",
+            "named": true
+          },
+          {
+            "type": "nat_term",
+            "named": true
+          },
+          {
+            "type": "nat_var",
+            "named": true
+          },
+          {
+            "type": "nested_term",
+            "named": true
+          },
+          {
+            "type": "nullary_fun",
+            "named": true
+          },
+          {
+            "type": "pub_name",
+            "named": true
+          },
+          {
+            "type": "pub_var",
+            "named": true
+          },
+          {
+            "type": "tuple_term",
+            "named": true
+          },
+          {
+            "type": "xor_term",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "!",
+    "named": false
+  },
+  {
+    "type": "\"",
+    "named": false
+  },
+  {
+    "type": "#",
+    "named": false
+  },
+  {
+    "type": "#define",
+    "named": false
+  },
+  {
+    "type": "#else",
+    "named": false
+  },
+  {
+    "type": "#endif",
+    "named": false
+  },
+  {
+    "type": "#ifdef",
+    "named": false
+  },
+  {
+    "type": "#include",
+    "named": false
+  },
+  {
+    "type": "$",
+    "named": false
+  },
+  {
+    "type": "%",
+    "named": false
+  },
+  {
+    "type": "%+",
+    "named": false
+  },
+  {
+    "type": "&",
+    "named": false
+  },
+  {
+    "type": "'",
+    "named": false
+  },
+  {
+    "type": "(",
+    "named": false
+  },
+  {
+    "type": "(<)",
+    "named": false
+  },
+  {
+    "type": ")",
+    "named": false
+  },
+  {
+    "type": "*",
+    "named": false
+  },
+  {
+    "type": "+",
+    "named": false
+  },
+  {
+    "type": "++",
+    "named": false
+  },
+  {
+    "type": ",",
+    "named": false
+  },
+  {
+    "type": "-",
+    "named": false
+  },
+  {
+    "type": "-->",
+    "named": false
+  },
+  {
+    "type": "--[",
+    "named": false
+  },
+  {
+    "type": "--auto-sources",
+    "named": false
+  },
+  {
+    "type": "--stop-on-trace",
+    "named": false
+  },
+  {
+    "type": ".",
+    "named": false
+  },
+  {
+    "type": "/",
+    "named": false
+  },
+  {
+    "type": ":",
+    "named": false
+  },
+  {
+    "type": ";",
+    "named": false
+  },
+  {
+    "type": "<",
+    "named": false
+  },
+  {
+    "type": "<<",
+    "named": false
+  },
+  {
+    "type": "<=>",
+    "named": false
+  },
+  {
+    "type": "=",
+    "named": false
+  },
+  {
+    "type": "==>",
+    "named": false
+  },
+  {
+    "type": ">",
+    "named": false
+  },
+  {
+    "type": "@",
+    "named": false
+  },
+  {
+    "type": "AC",
+    "named": false
+  },
+  {
+    "type": "ANY",
+    "named": false
+  },
+  {
+    "type": "ATTACK",
+    "named": false
+  },
+  {
+    "type": "All",
+    "named": false
+  },
+  {
+    "type": "BFS",
+    "named": false
+  },
+  {
+    "type": "DFS",
+    "named": false
+  },
+  {
+    "type": "E",
+    "named": false
+  },
+  {
+    "type": "Ex",
+    "named": false
+  },
+  {
+    "type": "F",
+    "named": false
+  },
+  {
+    "type": "O",
+    "named": false
+  },
+  {
+    "type": "SEQDFS",
+    "named": false
+  },
+  {
+    "type": "T",
+    "named": false
+  },
+  {
+    "type": "XOR",
+    "named": false
+  },
+  {
+    "type": "[",
+    "named": false
+  },
+  {
+    "type": "]",
+    "named": false
+  },
+  {
+    "type": "]->",
+    "named": false
+  },
+  {
+    "type": "^",
+    "named": false
+  },
+  {
+    "type": "_restrict",
+    "named": false
+  },
+  {
+    "type": "account",
+    "named": false
+  },
+  {
+    "type": "accounts",
+    "named": false
+  },
+  {
+    "type": "all-traces",
+    "named": false
+  },
+  {
+    "type": "as",
+    "named": false
+  },
+  {
+    "type": "asymmetric-encryption",
+    "named": false
+  },
+  {
+    "type": "axiom",
+    "named": false
+  },
+  {
+    "type": "backward-search",
+    "named": false
+  },
+  {
+    "type": "begin",
+    "named": false
+  },
+  {
+    "type": "bfs",
+    "named": false
+  },
+  {
+    "type": "bilinear-pairing",
+    "named": false
+  },
+  {
+    "type": "builtins",
+    "named": false
+  },
+  {
+    "type": "by",
+    "named": false
+  },
+  {
+    "type": "case",
+    "named": false
+  },
+  {
+    "type": "color=",
+    "named": false
+  },
+  {
+    "type": "colour=",
+    "named": false
+  },
+  {
+    "type": "configuration",
+    "named": false
+  },
+  {
+    "type": "contradiction",
+    "named": false
+  },
+  {
+    "type": "convergent",
+    "named": false
+  },
+  {
+    "type": "deepsec",
+    "named": false
+  },
+  {
+    "type": "defaultNoise",
+    "named": false
+  },
+  {
+    "type": "delete",
+    "named": false
+  },
+  {
+    "type": "deprio",
+    "named": false
+  },
+  {
+    "type": "dest-asymmetric-encryption",
+    "named": false
+  },
+  {
+    "type": "dest-pairing",
+    "named": false
+  },
+  {
+    "type": "dest-signing",
+    "named": false
+  },
+  {
+    "type": "dest-symmetric-encryption",
+    "named": false
+  },
+  {
+    "type": "destructor",
+    "named": false
+  },
+  {
+    "type": "dfs",
+    "named": false
+  },
+  {
+    "type": "dhreNoise",
+    "named": false
+  },
+  {
+    "type": "diffEquivLemma",
+    "named": false
+  },
+  {
+    "type": "diffLemma",
+    "named": false
+  },
+  {
+    "type": "diffie-hellman",
+    "named": false
+  },
+  {
+    "type": "else",
+    "named": false
+  },
+  {
+    "type": "end",
+    "named": false
+  },
+  {
+    "type": "equations",
+    "named": false
+  },
+  {
+    "type": "equivLemma",
+    "named": false
+  },
+  {
+    "type": "event",
+    "named": false
+  },
+  {
+    "type": "exists-trace",
+    "named": false
+  },
+  {
+    "type": "export",
+    "named": false
+  },
+  {
+    "type": "export_query",
+    "named": true
+  },
+  {
+    "type": "for",
+    "named": false
+  },
+  {
+    "type": "fresh",
+    "named": false
+  },
+  {
+    "type": "functions",
+    "named": false
+  },
+  {
+    "type": "hashing",
+    "named": false
+  },
+  {
+    "type": "heuristic",
+    "named": false
+  },
+  {
+    "type": "heuristic=",
+    "named": false
+  },
+  {
+    "type": "hide_lemma=",
+    "named": false
+  },
+  {
+    "type": "id",
+    "named": false
+  },
+  {
+    "type": "ident",
+    "named": true
+  },
+  {
+    "type": "if",
+    "named": false
+  },
+  {
+    "type": "in",
+    "named": false
+  },
+  {
+    "type": "induction",
+    "named": false
+  },
+  {
+    "type": "insert",
+    "named": false
+  },
+  {
+    "type": "isFactName",
+    "named": false
+  },
+  {
+    "type": "isInFactTerms",
+    "named": false
+  },
+  {
+    "type": "issapicrule",
+    "named": false
+  },
+  {
+    "type": "last",
+    "named": false
+  },
+  {
+    "type": "left",
+    "named": false
+  },
+  {
+    "type": "lemma",
+    "named": false
+  },
+  {
+    "type": "let",
+    "named": false
+  },
+  {
+    "type": "locations-report",
+    "named": false
+  },
+  {
+    "type": "lock",
+    "named": false
+  },
+  {
+    "type": "lookup",
+    "named": false
+  },
+  {
+    "type": "macros",
+    "named": false
+  },
+  {
+    "type": "mirrored",
+    "named": true
+  },
+  {
+    "type": "modulo",
+    "named": false
+  },
+  {
+    "type": "msg",
+    "named": false
+  },
+  {
+    "type": "msr",
+    "named": false
+  },
+  {
+    "type": "multi_comment",
+    "named": true
+  },
+  {
+    "type": "multiset",
+    "named": false
+  },
+  {
+    "type": "nat",
+    "named": false
+  },
+  {
+    "type": "natural",
+    "named": true
+  },
+  {
+    "type": "natural-numbers",
+    "named": false
+  },
+  {
+    "type": "new",
+    "named": false
+  },
+  {
+    "type": "next",
+    "named": false
+  },
+  {
+    "type": "no_derivcheck",
+    "named": false
+  },
+  {
+    "type": "no_precomp",
+    "named": false
+  },
+  {
+    "type": "node",
+    "named": false
+  },
+  {
+    "type": "nonAbsurdGoal",
+    "named": false
+  },
+  {
+    "type": "not",
+    "named": false
+  },
+  {
+    "type": "null",
+    "named": true
+  },
+  {
+    "type": "o",
+    "named": false
+  },
+  {
+    "type": "options",
+    "named": false
+  },
+  {
+    "type": "out",
+    "named": false
+  },
+  {
+    "type": "output=",
+    "named": false
+  },
+  {
+    "type": "param",
+    "named": true
+  },
+  {
+    "type": "path",
+    "named": true
+  },
+  {
+    "type": "predicate",
+    "named": false
+  },
+  {
+    "type": "predicates",
+    "named": false
+  },
+  {
+    "type": "presort",
+    "named": false
+  },
+  {
+    "type": "prio",
+    "named": false
+  },
+  {
+    "type": "private",
+    "named": false
+  },
+  {
+    "type": "process",
+    "named": false
+  },
+  {
+    "type": "proverif",
+    "named": false
+  },
+  {
+    "type": "pub",
+    "named": false
+  },
+  {
+    "type": "qed",
+    "named": false
+  },
+  {
+    "type": "reasonableNoncesNoise",
+    "named": false
+  },
+  {
+    "type": "regex",
+    "named": false
+  },
+  {
+    "type": "reliable-channel",
+    "named": false
+  },
+  {
+    "type": "restriction",
+    "named": false
+  },
+  {
+    "type": "reuse",
+    "named": false
+  },
+  {
+    "type": "revealing-signing",
+    "named": false
+  },
+  {
+    "type": "right",
+    "named": false
+  },
+  {
+    "type": "role",
+    "named": false
+  },
+  {
+    "type": "rule",
+    "named": false
+  },
+  {
+    "type": "rule-equivalence",
+    "named": false
+  },
+  {
+    "type": "seqdfs",
+    "named": false
+  },
+  {
+    "type": "signing",
+    "named": false
+  },
+  {
+    "type": "simplify",
+    "named": false
+  },
+  {
+    "type": "single_comment",
+    "named": true
+  },
+  {
+    "type": "smallest",
+    "named": false
+  },
+  {
+    "type": "solve",
+    "named": false
+  },
+  {
+    "type": "solved",
+    "named": true
+  },
+  {
+    "type": "sorry",
+    "named": false
+  },
+  {
+    "type": "sources",
+    "named": false
+  },
+  {
+    "type": "splitEqs",
+    "named": false
+  },
+  {
+    "type": "spthy",
+    "named": false
+  },
+  {
+    "type": "spthytyped",
+    "named": false
+  },
+  {
+    "type": "standard_goal_ranking",
+    "named": true
+  },
+  {
+    "type": "step",
+    "named": false
+  },
+  {
+    "type": "symmetric-encryption",
+    "named": false
+  },
+  {
+    "type": "tactic",
+    "named": false
+  },
+  {
+    "type": "temporal",
+    "named": false
+  },
+  {
+    "type": "test",
+    "named": false
+  },
+  {
+    "type": "then",
+    "named": false
+  },
+  {
+    "type": "theory",
+    "named": false
+  },
+  {
+    "type": "translation-allow-pattern-lookups",
+    "named": false
+  },
+  {
+    "type": "translation-asynchronous-channels",
+    "named": false
+  },
+  {
+    "type": "translation-compress-events",
+    "named": false
+  },
+  {
+    "type": "translation-progress",
+    "named": false
+  },
+  {
+    "type": "translation-state-optimisation",
+    "named": false
+  },
+  {
+    "type": "unlock",
+    "named": false
+  },
+  {
+    "type": "use_induction",
+    "named": false
+  },
+  {
+    "type": "variants",
+    "named": false
+  },
+  {
+    "type": "xor",
+    "named": false
+  },
+  {
+    "type": "{",
+    "named": false
+  },
+  {
+    "type": "|",
+    "named": false
+  },
+  {
+    "type": "||",
+    "named": false
+  },
+  {
+    "type": "}",
+    "named": false
+  },
+  {
+    "type": "~",
+    "named": false
+  },
+  {
+    "type": "~'",
+    "named": false
+  },
+  {
+    "type": "~~>",
+    "named": false
+  },
+  {
+    "type": "¬",
+    "named": false
+  },
+  {
+    "type": "₀",
+    "named": false
+  },
+  {
+    "type": "₁",
+    "named": false
+  },
+  {
+    "type": "₂",
+    "named": false
+  },
+  {
+    "type": "₃",
+    "named": false
+  },
+  {
+    "type": "₄",
+    "named": false
+  },
+  {
+    "type": "₅",
+    "named": false
+  },
+  {
+    "type": "₆",
+    "named": false
+  },
+  {
+    "type": "₇",
+    "named": false
+  },
+  {
+    "type": "₈",
+    "named": false
+  },
+  {
+    "type": "₉",
+    "named": false
+  },
+  {
+    "type": "⇒",
+    "named": false
+  },
+  {
+    "type": "⇔",
+    "named": false
+  },
+  {
+    "type": "∀",
+    "named": false
+  },
+  {
+    "type": "∃",
+    "named": false
+  },
+  {
+    "type": "∥",
+    "named": false
+  },
+  {
+    "type": "∧",
+    "named": false
+  },
+  {
+    "type": "∨",
+    "named": false
+  },
+  {
+    "type": "⊏",
+    "named": false
+  },
+  {
+    "type": "⊕",
+    "named": false
+  },
+  {
+    "type": "⊤",
+    "named": false
+  },
+  {
+    "type": "⊥",
+    "named": false
+  },
+  {
+    "type": "▶",
+    "named": false
+  }
+]

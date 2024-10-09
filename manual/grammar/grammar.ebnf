@@ -1,0 +1,191 @@
+extras  ::=  { multi_comment single_comment /\s|\\\r?\n|\u00A0/ }
+
+conflicts  ::=  { { pub_var } { fresh_var } { msg_var_or_nullary_fun } { temporal_var } { nat_var } { pub_var fresh_var msg_var_or_nullary_fun temporal_var nat_var } { pub_var fresh_var msg_var_or_nullary_fun nat_var } { accountability_lemma diff_lemma } { lemma diff_lemma } { nary_app predicate_ref } { nullary_fun nary_app msg_var_or_nullary_fun } }
+
+externals  ::=  { multi_comment single_comment }
+
+precedences  ::=  { { 'NESTED' 'FUNCTION' 'VARIABLE' 'EXPONENTIAL' 'MULTIPLY' 'ADD' 'MUL_SET' 'TUPLE' 'NULLARY_FUN' 'ATOM' 'LOGICAL_NOT' 'EXCLUSIVE_OR' 'LOGICAL_AND' 'LOGICAL_OR' 'LOGICAL_IMPLICATION' 'LOGICAL_IFF' 'CHAIN_GOAL' } { 'NON_DIFF' 'DIFF' } { 'REPLICATION' 'EVENT' 'CHOICE' 'PROCESS_LET' 'LOOKUP' 'CONDITIONAL' } }
+
+word  ::=  ident
+
+rules:
+  theory  ::=  'theory' (ident: theory_name) ('configuration' ':' '"' commandline '"')? 'begin' _body_item* 'end' /./*
+  commandline  ::=  ('--auto-sources' | ('--stop-on-trace' '=' _search_strategy))+
+  _search_strategy  ::=  'BFS' | 'DFS' | 'SEQDFS' | 'bfs' | 'dfs' | 'seqdfs'
+  _body_item  ::=  preprocessor | _signature_spec | global_heuristic | tactic | process | let | export | _rule | restriction | case_test | _lemma | formal_comment
+  preprocessor  ::=  ifdef | define | include
+  ifdef  ::=  '#ifdef' _ifdef_formula _body_item* ('#else' _body_item*)? '#endif'
+  define  ::=  '#define' ident
+  include  ::=  '#include' '"' (param -> path) '"'
+  _ifdef_formula  ::=  ifdef_nested | ifdef_or | ifdef_and | ifdef_not | ident
+  ifdef_nested  ::=  NESTED('(' _ifdef_formula ')')
+  ifdef_or  ::=  <LOGICAL_OR(_ifdef_formula '|' _ifdef_formula)
+  ifdef_and  ::=  <LOGICAL_AND(_ifdef_formula '&' _ifdef_formula)
+  ifdef_not  ::=  LOGICAL_NOT('not' _ifdef_formula)
+  _signature_spec  ::=  built_ins | functions | equations | predicates | macros | options
+  built_ins  ::=  'builtins' ':' built_in (',' built_in)* ','?
+  built_in  ::=  'diffie-hellman' | 'hashing' | 'symmetric-encryption' | 'asymmetric-encryption' | 'signing' | 'bilinear-pairing' | 'xor' | 'multiset' | 'natural-numbers' | 'revealing-signing' | 'locations-report' | 'reliable-channel' | 'dest-pairing' | 'dest-signing' | 'dest-symmetric-encryption' | 'dest-asymmetric-encryption'
+  functions  ::=  >('functions' ':' _function_sym (',' _function_sym)* ','?)
+  _function_sym  ::=  function_untyped | function_typed
+  function_untyped  ::=  (ident: function_identifier) '/' (natural: arity) ('[' function_attribute (',' function_attribute)* ','? ']')?
+  function_attribute  ::=  'private' | 'destructor'
+  function_typed  ::=  (ident: function_identifier) '(' arguments? ')' ':' (ident: function_type)
+  equations  ::=  >('equations' ('[' 'convergent' ']')? ':' equation (',' equation)* ','?)
+  equation  ::=  (_term: left) '=' (_term: right)
+  predicates  ::=  ('predicate' | 'predicates') ':' predicate (',' predicate)*
+  predicate  ::=  (predicate_def -> '') '<=>' (_formula: formula)
+  predicate_def  ::=  (ident: predicate_identifier) '(' arguments? ')'
+  options  ::=  'options' ':' option (',' option)* ','?
+  option  ::=  'translation-state-optimisation' | 'translation-progress' | 'translation-asynchronous-channels' | 'translation-compress-events' | 'translation-allow-pattern-lookups'
+  global_heuristic  ::=  'heuristic' ':' (_goal_ranking+: goal_ranking)
+  _goal_ranking  ::=  standard_goal_ranking | oracle_goal_ranking | tactic_goal_ranking
+  standard_goal_ranking  ::=  /[CISPcisp][CISPcisp]?[CISPcisp]?[CISPcisp]?/
+  oracle_goal_ranking  ::=  ('O' | 'o') ('"' param '"')?
+  tactic_goal_ranking  ::=  '{' ident '}'
+  tactic  ::=  'tactic' ':' ident presort? ((prio+ deprio*) | (prio* deprio+))
+  presort  ::=  'presort' ':' standard_goal_ranking
+  prio  ::=  'prio' ':' ('{' post_ranking '}')? _function+
+  deprio  ::=  'deprio' ':' ('{' post_ranking '}')? _function+
+  post_ranking  ::=  'smallest' | 'id'
+  _function  ::=  or_function | and_function | not_function | std_function
+  or_function  ::=  <LOGICAL_OR(_function '|' _function)
+  and_function  ::=  <LOGICAL_AND(_function '&' _function)
+  not_function  ::=  LOGICAL_NOT('not' _function)
+  std_function  ::=  function_name ('"' param '"')*
+  function_name  ::=  'regex' | 'isFactName' | 'isInFactTerms' | 'dhreNoise' | 'defaultNoise' | 'reasonableNoncesNoise' | 'nonAbsurdGoal'
+  process  ::=  'process' ':' _process
+  _process  ::=  _elementary_process | _extended_process | _stateful_process | inline_msr_process | _nested_process | location_process | predefined_process
+  _elementary_process  ::=  binding | output | input | conditional | process_let | deterministic_choice | non_deterministic_choice | null
+  _extended_process  ::=  event | replication
+  _stateful_process  ::=  set_state | delete_state | read_state | set_lock | remove_lock
+  location_process  ::=  '(' _process ')' '@' ((_literal | tuple_term): location_identifier)
+  inline_msr_process  ::=  >(premise ('-->' | action_fact) conclusion (';' _process)?)
+  _nested_process  ::=  '(' _process ')'
+  predefined_process  ::=  <-1(_term)
+  binding  ::=  >('new' _literal (';' _process)?)
+  output  ::=  >(('out' '(' _term ',' _term ')' (';' _process)?) | ('out' '(' _term ')' (';' _process)?))
+  input  ::=  >(('in' '(' _term ',' _term ')' (';' _process)?) | ('in' '(' _term ')' (';' _process)?))
+  conditional  ::=  >CONDITIONAL('if' (_condition: condition) 'then' (_process: then) ('else' (_process: else))?)
+  process_let  ::=  >PROCESS_LET('let' term_eq+ 'in' (_process: in) ('else' (_process: else))?)
+  deterministic_choice  ::=  <CHOICE(_process ('|' | '||') _process)
+  non_deterministic_choice  ::=  <CHOICE(_process ('+') _process)
+  null  ::=  '0'
+  event  ::=  >EVENT('event' _fact (';' _process)?)
+  replication  ::=  >REPLICATION('!' _process (';' _process)?)
+  set_state  ::=  >('insert' (_term: from) ',' (_term: to) (';' _process)?)
+  delete_state  ::=  >('delete' _term (';' _process)?)
+  read_state  ::=  >LOOKUP('lookup' (_term: from) 'as' (_lvar: to) 'in' (_process: in) ('else' (_process: else))? (';' _process)?)
+  set_lock  ::=  >('lock' _term (';' _process)?)
+  remove_lock  ::=  >('unlock' _term (';' _process)?)
+  _condition  ::=  equality_check | lesser_check | predicate_ref
+  equality_check  ::=  (_term | _formula) @(1('=')) (_term | _formula)
+  lesser_check  ::=  _term ('(<)' | '<<') _term
+  let  ::=  'let' (_term: let_identifier) '=' _process
+  export  ::=  'export' (ident: export_identifier) ':' '"' export_query '"'
+  _rule  ::=  rule | diff_rule
+  rule  ::=  simple_rule variants?
+  diff_rule  ::=  simple_rule 'left' (rule: left) 'right' (rule: right)
+  simple_rule  ::=  'rule' modulo? (ident: rule_identifier) rule_attrs? ':' rule_let_block? premise ('-->' | action_fact) conclusion
+  premise  ::=  '[' _facts? ']'
+  action_fact  ::=  '--[' _facts_restrictions? ']->'
+  conclusion  ::=  '[' _facts? ']'
+  variants  ::=  'variants' simple_rule (',' simple_rule)*
+  modulo  ::=  '(' 'modulo' ('E' | 'AC') ')'
+  rule_attrs  ::=  '[' rule_attr (',' rule_attr)* ','? ']'
+  rule_attr  ::=  rule_attr_color | 'no_derivcheck' | 'issapicrule' | rule_process | rule_role
+  rule_attr_color  ::=  ('color=' | 'colour=') hexcolor
+  rule_role  ::=  'role' '=' '"' (ident: role_identifier) '"'
+  rule_process  ::=  'process' '=' '"' ident '"'
+  rule_let_block  ::=  'let' rule_let_term+ 'in'
+  rule_let_term  ::=  ((msg_var_or_nullary_fun | nat_var): left) '=' (_term: right)
+  macros  ::=  'macros' ':' macro (',' macro)*
+  macro  ::=  (ident: macro_identifier) '(' (_non_temporal_var (',' _non_temporal_var)*)? ')' '=' (_term: term)
+  embedded_restriction  ::=  '_restrict' '(' (_formula: formula) ')'
+  _facts_restrictions  ::=  <((_fact | embedded_restriction) (',' (_fact | embedded_restriction))*)
+  _facts  ::=  <(_fact (',' _fact)*)
+  _fact  ::=  (fact -> linear_fact) | ('!' (fact -> persistent_fact))
+  fact  ::=  <((ident: fact_identifier) '(' arguments? ')' fact_annotes?)
+  fact_annotes  ::=  '[' fact_annote (',' fact_annote)* ']'
+  fact_annote  ::=  '+' | '-' | 'no_precomp'
+  restriction  ::=  ('restriction' | 'axiom') (ident: restriction_identifier) restriction_attr? ':' '"' (_formula: formula) '"'
+  restriction_attr  ::=  '[' ('left' | 'right') ']'
+  case_test  ::=  'test' (ident: test_identifier) ':' '"' (_formula: formula) '"'
+  _lemma  ::=  lemma | diff_lemma | accountability_lemma | equiv_lemma | diff_equiv_lemma
+  lemma  ::=  'lemma' modulo? (ident: lemma_identifier) diff_lemma_attrs? ':' trace_quantifier? '"' (_formula: formula) '"' (_proof_skeleton: proof_skeleton)?
+  lemma_attr  ::=  'sources' | 'reuse' | 'use_induction' | ('output=' '[' language (',' language)* ']') | ('hide_lemma=' ident) | ('heuristic=' (_goal_ranking+: goal_ranking))
+  language  ::=  'spthy' | 'spthytyped' | 'msr' | 'proverif' | 'deepsec'
+  diff_lemma  ::=  'diffLemma' modulo? (ident: lemma_identifier) diff_lemma_attrs? ':' (_proof_skeleton: proof_skeleton)?
+  diff_lemma_attrs  ::=  '[' (diff_lemma_attr | lemma_attr) (',' (diff_lemma_attr | lemma_attr))* ','? ']'
+  diff_lemma_attr  ::=  'left' | 'right'
+  accountability_lemma  ::=  'lemma' (ident: lemma_identifier) ':' (ident: test_identifier) (',' (ident: test_identifier))* ('account' | 'accounts') 'for' '"' (_formula: formula) '"'
+  equiv_lemma  ::=  'equivLemma' ':' (_process: first) (_process: second)
+  diff_equiv_lemma  ::=  'diffEquivLemma' ':' _process
+  trace_quantifier  ::=  'all-traces' | 'exists-trace'
+  _proof_skeleton  ::=  solved | mirrored | by_method | method_skeleton | cases
+  solved  ::=  'SOLVED'
+  mirrored  ::=  'MIRRORED'
+  by_method  ::=  'by' _proof_methods
+  method_skeleton  ::=  _proof_methods (_proof_skeleton: proof_skeleton)
+  cases  ::=  case ('next' case)* 'qed'
+  case  ::=  'case' (ident: case_identifier) (_proof_skeleton: proof_skeleton)
+  _proof_methods  ::=  >(proof_method | step+)
+  proof_method  ::=  'sorry' | 'simplify' | ('solve' '(' goal ')') | 'contradiction' | 'induction' | 'rule-equivalence' | 'backward-search' | 'ATTACK'
+  step  ::=  'step' '(' proof_method ')'
+  goal  ::=  premise_goal | action_goal | chain_goal | disjunction_split_goal | eq_split_goal
+  premise_goal  ::=  _fact '▶' natural_subscript temporal_var
+  action_goal  ::=  _fact '@' temporal_var
+  chain_goal  ::=  '(' temporal_var ',' natural ')' '~~>' '(' temporal_var ',' natural ')'
+  disjunction_split_goal  ::=  CHAIN_GOAL((_formula: formula) (('||' | '∥') (_formula: formula))+)
+  eq_split_goal  ::=  'splitEqs' '(' natural ')'
+  _term  ::=  tuple_term | mset_term | nested_term | nullary_fun | binary_app | nary_app | _literal
+  tuple_term  ::=  TUPLE('<' ((mset_term): term) (',' (mset_term: term))* '>')
+  mset_term  ::=  <MUL_SET((nat_term: left) ('++' | '+') (nat_term: right))
+  nat_term  ::=  <ADD((xor_term: left) '%+' (xor_term: right))
+  xor_term  ::=  <EXCLUSIVE_OR((mult_term: left) ('XOR' | '⊕') (mult_term: right))
+  mult_term  ::=  <MULTIPLY((exp_term: left) '*' (exp_term: right))
+  exp_term  ::=  >EXPONENTIAL((_term: base) '^' (_term: exponent))
+  nested_term  ::=  NESTED('(' mset_term ')')
+  nullary_fun  ::=  NULLARY_FUN((ident: function_identifier) | ((ident: function_identifier) '(' ')'))
+  binary_app  ::=  FUNCTION((ident: function_identifier) '{' (_term: argument) (',' (_term: argument))*? '}' (_term: argument))
+  nary_app  ::=  FUNCTION((ident: function_identifier) '(' arguments ')')
+  arguments  ::=  ((_term | temporal_var): argument) (',' (_term: argument))*
+  _literal  ::=  pub_name | fresh_name | _non_temporal_var | comp_var | _custom_type_var
+  _non_temporal_var  ::=  pub_var | fresh_var | msg_var_or_nullary_fun | nat_var
+  pub_var  ::=  VARIABLE(('$' (ident: variable_identifier) ('.' natural)?) | ((ident: variable_identifier) ('.' natural)? ':' 'pub'))
+  fresh_var  ::=  VARIABLE(('~' (ident: variable_identifier) ('.' natural)?) | ((ident: variable_identifier) ('.' natural)? ':' 'fresh'))
+  msg_var_or_nullary_fun  ::=  VARIABLE((ident: variable_identifier) ('.' natural)? (':' 'msg')?)
+  temporal_var  ::=  ('#' (ident: variable_identifier) ('.' natural)?) | ((ident: variable_identifier) ('.' natural)? ':' 'node')
+  nat_var  ::=  ('%' (ident: variable_identifier) ('.' natural)? (':' 'nat')?) | ((ident: variable_identifier) ('.' natural)? ':' 'nat')
+  comp_var  ::=  '=' _literal
+  _custom_type_var  ::=  custom_var | any_var
+  custom_var  ::=  -1(_literal ':' (ident: variable_type))
+  any_var  ::=  -1(_literal ':' 'ANY')
+  temporal_var_optional_prefix  ::=  NULLARY_FUN(('#'? (ident: variable_identifier) ('.' natural)?) | ((ident: variable_identifier) ('.' natural)? ':' 'temporal'))
+  pub_name  ::=  ''' /[^\n']+/ '''
+  fresh_name  ::=  '~'' /[^\n']+/ '''
+  _formula  ::=  iff | imp | disjunction | conjunction | negation | nested_formula | _temporal_variable_operation | action_constraint | term_eq | subterm_rel | quantified_formula | atom | predicate_ref | pre_defined
+  iff  ::=  <LOGICAL_IFF((_formula: left) ('<=>' | '⇔') (_formula: right))
+  imp  ::=  <LOGICAL_IMPLICATION((_formula: left) (@(1('==>')) | '⇒') (_formula: right))
+  disjunction  ::=  <LOGICAL_OR((_formula: left) ('|' | '∨') (_formula: right))
+  conjunction  ::=  <LOGICAL_AND((_formula: left) ('&' | '∧') (_formula: right))
+  negation  ::=  LOGICAL_NOT(('not' | '¬') (_formula: formula))
+  nested_formula  ::=  ATOM('(' _formula ')')
+  _temporal_variable_operation  ::=  temp_var_induction | temp_var_order | temp_var_eq
+  temp_var_induction  ::=  ATOM('last' '(' temporal_var ')')
+  temp_var_order  ::=  ATOM(((temporal_var_optional_prefix -> temporal_var): left) '<' ((temporal_var_optional_prefix -> temporal_var): right))
+  temp_var_eq  ::=  ATOM(((temporal_var_optional_prefix -> temporal_var): left) '=' ((temporal_var_optional_prefix -> temporal_var): right))
+  action_constraint  ::=  ATOM((_fact: fact) '@' ((temporal_var_optional_prefix -> temporal_var): variable))
+  term_eq  ::=  ATOM((_term: left) '=' (_term: right))
+  subterm_rel  ::=  ATOM((_term: left) ('<<' | '⊏') (_term: right))
+  quantified_formula  ::=  ATOM(('Ex' | '∃' | 'All' | '∀') (_lvar+: variable) '.' (_formula: formula))
+  atom  ::=  ATOM('⊥' | 'F' | '⊤' | 'T')
+  _lvar  ::=  temporal_var | _non_temporal_var
+  predicate_ref  ::=  FUNCTION((ident: predicate_identifier) '(' arguments? ')')
+  pre_defined  ::=  NULLARY_FUN(ident)
+  hexcolor  ::=  (''' @('#')? @(/[0-9a-fA-F]{1,6}/) ''') | (@('#')? @(/[0-9a-fA-F]{1,6}/))
+  ident  ::=  /[A-Za-z0-9][a-zA-Z0-9_*]*/
+  param  ::=  /[^"]*/
+  export_query  ::=  /(\\"|[^"])*/
+  natural  ::=  /[0-9]+/
+  natural_subscript  ::=  ('₀' | '₁' | '₂' | '₃' | '₄' | '₅' | '₆' | '₇' | '₈' | '₉')+
+  formal_comment  ::=  (ident: comment_identifier) @('{*' /[^*]*\*+([^}*][^*]*\*+)*/ '}')

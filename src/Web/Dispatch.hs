@@ -51,7 +51,7 @@ import           Data.Time.LocalTime
 import           System.Directory
 import           System.FilePath
 import Control.Monad.Except (ExceptT, runExceptT)
-import Main.TheoryLoader (TheoryLoadError (ParserError, WarningError), TheoryLoadOptions, oMaudePath)
+import Main.TheoryLoader (TheoryLoadError (ParserError, WarningError), TheoryLoadOptions(..))
 import Theory.Tools.Wellformedness
 import qualified Data.Label as L
 import Main.Console (renderDoc)
@@ -89,7 +89,7 @@ withWebUI :: String                          -- ^ Message to output once the sev
           -> Bool                            -- ^ Load last proof state if present
           -> Bool                            -- ^ Automatically save proof state
           -> TheoryLoadOptions               -- ^ Options for loading theories
-          -> (String -> FilePath -> ExceptT TheoryLoadError IO (Either OpenTheory OpenDiffTheory))  
+          -> (String -> FilePath -> ExceptT TheoryLoadError IO (Either OpenTheory OpenDiffTheory))
           -- ^ Theory loader (from string).
           -> (SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> ExceptT TheoryLoadError IO (WfErrorReport, Either ClosedTheory ClosedDiffTheory))
           -- ^ Theory closer.
@@ -151,7 +151,7 @@ withWebUI readyMsg cacheDir_ thDir enableLogging loadState autosave thOpts thLoa
                      _            -> return Nothing
          return $ M.fromList $ catMaybes thys
 
-       else loadTheories thOpts readyMsg thDir thLoad thClose defaultAutoProver' 
+       else loadTheories thOpts readyMsg thDir thLoad thClose defaultAutoProver'
 
     shutdownThreads thrVar = do
       m <- modifyMVar thrVar $ \m -> return (M.empty, m)
@@ -180,7 +180,7 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
       result <- runExceptT $ do
         openThy <- thLoad srcThy path
         let sig = either (L.get thySignature) (L.get diffThySignature) openThy
-        sig' <- liftIO $ toSignatureWithMaude (L.get oMaudePath thOpts) sig
+        sig' <- liftIO $ toSignatureWithMaude thOpts.maudePath sig
         thClose sig' openThy
 
       case result of
@@ -192,14 +192,14 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
           die "quit-on-warning mode selected - aborting on wellformedness errors."
         Right (report, thy) -> do
           time <- getZonedTime
-          wfErrors <- case report of 
-                  [] -> pure $ "" 
+          wfErrors <- case report of
+                  [] -> pure $ ""
                   _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
           unless (null report) $ putStrLn $ renderDoc $ ppInteractive report path
           return $ Just
              ( idx
              , either (\t -> Trace $ TheoryInfo idx t time Nothing True (Local path) autoProver wfErrors)
-                      (\t -> Diff $ DiffTheoryInfo idx t time Nothing True (Local path) autoProver wfErrors) thy 
+                      (\t -> Diff $ DiffTheoryInfo idx t time Nothing True (Local path) autoProver wfErrors) thy
              )
       where
         reportFailure error inFile = Pretty.vcat [ Pretty.text $ replicate 78 '-'

@@ -21,6 +21,7 @@ import Theory.Model.Fact
 data Option = Option
         {
           _verboseOption     :: Bool
+        , _precomputationOnlyOption     :: Bool
         , _transAllowPatternMatchinginLookup   :: Bool
         , _transProgress            :: Bool
         , _transReliable            :: Bool

@@ -436,7 +436,7 @@ steps based on a heuristic. Here we have two constraints to resolve:
 `Client_1( S, k )` and `KU( k )`, both of which are premises for the rules in 
 the unfinished current constraint system.
 
-Note that that the proof methods in the GUI are sorted according to the same 
+Note that the proof methods in the GUI are sorted according to the same 
 heuristic as is used by the `autoprove` command. Any proof found by always 
 selecting the first proof method will be identical to the one constructed by 
 the `autoprove` command. However, because the general problem is

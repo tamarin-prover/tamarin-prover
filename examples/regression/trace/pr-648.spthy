@@ -1,0 +1,18 @@
+theory pr648
+begin
+
+// https://github.com/tamarin-prover/tamarin-prover/pull/648
+// Quoting Janniks comments from there
+
+// the grammar does not permit a list of function attributes, e.g., declaring
+// a function [private, destructor], but this is permitted by Tamarin.
+functions: f/1[private, destructor]
+
+// I think this lacks theno_derivcheckattribute
+rule noderivcheck[no_derivcheck]:
+    [] --> []
+
+// In that case we can also remove the trace quantifier and the formula.
+diffLemma test[reuse]:
+
+end

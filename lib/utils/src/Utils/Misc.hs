@@ -71,7 +71,7 @@ thd3 (_, _, x) = x
 
 -- | @noDuplicates xs@ returns @True@ if the list @xs@ contains no duplicates
 noDuplicates :: (Ord a) => [a] -> Bool
-noDuplicates xs = all ((==1).length) . group . sort $ xs
+noDuplicates = all ((==1) . length) . group . sort
 
 -- | @getEnvMaybe k@ returns @Just v@ if @k=v@ is in the environment and @Nothing@ otherwise
 getEnvMaybe :: String -> Maybe String

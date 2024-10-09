@@ -2,7 +2,7 @@
 set -e # Exit with nonzero exit code if anything fails
 
 # Set up some git information.
-REPO=`git config remote.${1:-origin}.url`
+REPO="git@github.com:tamarin-prover/manual.git" #OLD for same repo: `git config remote.${1:-origin}.url`
 SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 SHA=`git rev-parse --verify HEAD`
 BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -20,6 +20,14 @@ if [ "$BRANCH" != "$MASTER_BRANCH" && "$BRANCH" != "$DEVELOP_BRANCH" ]; then
     echo "Please use this script on branch '$MASTER_BRANCH' or '$DEVELOP_BRANCH' only. You seem to be on '$BRANCH'."
     exit 0
 fi
+
+# Get the deploy key by using Githubs's stored variables to decrypt deploy_key.enc.
+cd manual
+openssl enc -nosalt -aes-256-cbc -d -in deploy_key.enc -out deploy_key -base64 -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV
+chmod 600 deploy_key
+eval `ssh-agent -s`
+ssh-add deploy_key
+cd ..
 
 # Clone the existing gh-pages for this repo into a temporary folder $CHECKOUT.
 CHECKOUT=`mktemp -d`
@@ -51,12 +59,6 @@ fi
 # Commit the "changes", i.e. the new version. The delta will show diffs between new and old versions.
 git -C $CHECKOUT add \*
 git -C $CHECKOUT commit -m "Deploy to GitHub Pages on ${BRANCH}: ${SHA}"
-
-# Get the deploy key by using Githubs's stored variables to decrypt deploy_key.enc.
-openssl enc -nosalt -aes-256-cbc -d -in deploy_key.enc -out deploy_key -base64 -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV
-chmod 600 deploy_key
-eval `ssh-agent -s`
-ssh-add deploy_key
 
 # Now that we're all set up, we can push.
 git -C $CHECKOUT push $SSH_REPO $TARGET_BRANCH

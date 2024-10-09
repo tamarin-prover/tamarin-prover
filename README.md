@@ -57,6 +57,12 @@ Spthy code editors
 The project contains support for spthy syntax highlighting and support
 in the [etc](/etc/) directory. This includes support for [Sublime Text](/etc/SUBLIME_TEXT.md), [VIM](/etc/spthy.vim) and [Notepad++](/etc/notepad_plus_plus_spthy.xml).
 
+External tools
+------------------
+
+External tools may use the [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammar
+in the [tree-sitter/](/tree-sitter/) directory.
+
 
 Example Protocol Models
 -----------------------
