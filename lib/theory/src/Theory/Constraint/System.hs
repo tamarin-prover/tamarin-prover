@@ -125,6 +125,7 @@ module Theory.Constraint.System (
 
   -- ** Construction
   , emptySystem
+  , isInitialSystem
   , emptyDiffSystem
 
   , SystemTraceQuantifier(..)
@@ -822,6 +823,11 @@ emptySystem d isdiff = System
     M.empty S.empty S.empty Nothing emptySubtermStore emptyEqStore
     S.empty S.empty S.empty
     M.empty 0 d isdiff
+
+-- TODO: I do not like the second conjunct; this should be done cleaner
+isInitialSystem :: System -> Bool
+isInitialSystem sys = null (L.get sSolvedFormulas sys) && not (S.member bot (L.get sFormulas sys))
+  where bot = GDisj (Disj [])
 
 -- | The empty diff constraint system.
 emptyDiffSystem :: DiffSystem
