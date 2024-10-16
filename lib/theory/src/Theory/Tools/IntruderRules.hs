@@ -187,7 +187,7 @@ privateConstructorRules rules = map createRule $ derivablePrivateConstants (priv
 minimizeIntruderRules :: MaudeHandle -> Bool -> [IntrRuleAC] -> [IntrRuleAC]
 minimizeIntruderRules hnd diff rules = 
     filter (not . isDoublePremiseRule)
-      $ if diff then rules else go [] rules
+      $ go [] rules
   where
     go checked [] = reverse checked
     go checked (r:unchecked) = go checked' unchecked
