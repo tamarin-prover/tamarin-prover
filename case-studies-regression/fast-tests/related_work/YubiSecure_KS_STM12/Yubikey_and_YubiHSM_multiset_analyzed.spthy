@@ -1264,9 +1264,9 @@ Failed to derive Variable(s): N
 /*
 Generated from:
 Tamarin version 1.9.0
-Maude version 3.2.1
-Git revision: 55828cc94e8fd2506948a8324714350e405b4d92 (with uncommited changes), branch: HEAD
-Compiled at: 2023-11-17 17:48:21.524079663 UTC
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
@@ -1278,7 +1278,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 5.49s
+  processing time: 5.22s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

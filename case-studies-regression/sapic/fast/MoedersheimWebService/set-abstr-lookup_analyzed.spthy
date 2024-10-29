@@ -83,21 +83,21 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1( ), Fr( pki.1 ) ] --> [ !Semistate_111( pki.1 ) ]
 
   /*
-  rule (modulo AC) p_1_[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1( ), Fr( pki ) ] --> [ !Semistate_111( pki ) ]
   */
 
 rule (modulo E) innewuser_0_111111[color=#408051,
-                                   process="in(<'new', user.1>);"]:
+                                   process="in(<'new', user.1>);", issapicrule]:
    [ State_111111( pki.1 ), In( <'new', user.1> ), Fr( ~sk.1 ), Fr( lock ) ]
   --[
   Lock_0( '0', lock, <'SERVER', user.1> ),
@@ -107,7 +107,7 @@ rule (modulo E) innewuser_0_111111[color=#408051,
 
   /*
   rule (modulo AC) innewuser_0_111111[color=#408051,
-                                      process="in(<'new', user.1>);"]:
+                                      process="in(<'new', user.1>);", issapicrule]:
      [ State_111111( pki ), In( <'new', user> ), Fr( ~sk ), Fr( lock ) ]
     --[
     Lock_0( '0', lock, <'SERVER', user> ),
@@ -117,63 +117,65 @@ rule (modulo E) innewuser_0_111111[color=#408051,
   */
 
 rule (modulo E) eventHonestKeysk_0_111111111[color=#408051,
-                                             process="event HonestKey( ~sk.1 );"]:
+                                             process="event HonestKey( ~sk.1 );", issapicrule]:
    [ State_111111111( lock, ~sk.1, pki.1, user.1 ) ]
   --[ HonestKey( ~sk.1 ) ]->
    [ State_1111111111( lock, ~sk.1, pki.1, user.1 ) ]
 
   /*
   rule (modulo AC) eventHonestKeysk_0_111111111[color=#408051,
-                                                process="event HonestKey( ~sk.1 );"]:
+                                                process="event HonestKey( ~sk.1 );", issapicrule]:
      [ State_111111111( lock, ~sk, pki, user ) ]
     --[ HonestKey( ~sk ) ]->
      [ State_1111111111( lock, ~sk, pki, user ) ]
   */
 
 rule (modulo E) insertSERVERpkiuserpksk_0_1111111111[color=#408051,
-                                                     process="insert <'SERVER', pki.1, user.1>,pk(~sk.1);"]:
+                                                     process="insert <'SERVER', pki.1, user.1>,pk(~sk.1);",
+                                                     issapicrule]:
    [ State_1111111111( lock, ~sk.1, pki.1, user.1 ) ]
   --[ Insert( <'SERVER', pki.1, user.1>, pk(~sk.1) ) ]->
    [ State_11111111111( lock, ~sk.1, pki.1, user.1 ) ]
 
   /*
   rule (modulo AC) insertSERVERpkiuserpksk_0_1111111111[color=#408051,
-                                                        process="insert <'SERVER', pki.1, user.1>,pk(~sk.1);"]:
+                                                        process="insert <'SERVER', pki.1, user.1>,pk(~sk.1);",
+                                                        issapicrule]:
      [ State_1111111111( lock, ~sk, pki, user ) ]
     --[ Insert( <'SERVER', pki, user>, pk(~sk) ) ]->
      [ State_11111111111( lock, ~sk, pki, user ) ]
   */
 
 rule (modulo E) insertUSERusersk_0_11111111111[color=#408051,
-                                               process="insert <'USER', user.1>,~sk.1;"]:
+                                               process="insert <'USER', user.1>,~sk.1;", issapicrule]:
    [ State_11111111111( lock, ~sk.1, pki.1, user.1 ) ]
   --[ Insert( <'USER', user.1>, ~sk.1 ) ]->
    [ State_111111111111( lock, ~sk.1, pki.1, user.1 ) ]
 
   /*
   rule (modulo AC) insertUSERusersk_0_11111111111[color=#408051,
-                                                  process="insert <'USER', user.1>,~sk.1;"]:
+                                                  process="insert <'USER', user.1>,~sk.1;", issapicrule]:
      [ State_11111111111( lock, ~sk, pki, user ) ]
     --[ Insert( <'USER', user>, ~sk ) ]->
      [ State_111111111111( lock, ~sk, pki, user ) ]
   */
 
 rule (modulo E) eventHonestKeysk_0_111111111111[color=#408051,
-                                                process="event HonestKey( ~sk.1 );"]:
+                                                process="event HonestKey( ~sk.1 );", issapicrule]:
    [ State_111111111111( lock, ~sk.1, pki.1, user.1 ) ]
   --[ HonestKey( ~sk.1 ) ]->
    [ State_1111111111111( lock, ~sk.1, pki.1, user.1 ) ]
 
   /*
   rule (modulo AC) eventHonestKeysk_0_111111111111[color=#408051,
-                                                   process="event HonestKey( ~sk.1 );"]:
+                                                   process="event HonestKey( ~sk.1 );", issapicrule]:
      [ State_111111111111( lock, ~sk, pki, user ) ]
     --[ HonestKey( ~sk ) ]->
      [ State_1111111111111( lock, ~sk, pki, user ) ]
   */
 
 rule (modulo E) unlockSERVERuser_0_1111111111111[color=#408051,
-                                                 process="unlock <'SERVER', user.1>;"]:
+                                                 process="unlock <'SERVER', user.1>;", issapicrule]:
    [ State_1111111111111( lock, ~sk.1, pki.1, user.1 ) ]
   --[
   Unlock_0( '0', lock, <'SERVER', user.1> ),
@@ -183,7 +185,7 @@ rule (modulo E) unlockSERVERuser_0_1111111111111[color=#408051,
 
   /*
   rule (modulo AC) unlockSERVERuser_0_1111111111111[color=#408051,
-                                                    process="unlock <'SERVER', user.1>;"]:
+                                                    process="unlock <'SERVER', user.1>;", issapicrule]:
      [ State_1111111111111( lock, ~sk, pki, user ) ]
     --[
     Unlock_0( '0', lock, <'SERVER', user> ),
@@ -193,7 +195,7 @@ rule (modulo E) unlockSERVERuser_0_1111111111111[color=#408051,
   */
 
 rule (modulo E) inrenewuserpknsk_0_111112[color=#408051,
-                                          process="in(<'renew', user.2, pk(nsk.1)>);"]:
+                                          process="in(<'renew', user.2, pk(nsk.1)>);", issapicrule]:
    [
    State_111112( pki.1 ), In( <'renew', user.2, pk(nsk.1)> ),
    In( sign(<'renew', user.2, pk(nsk.1)>, sk.2) ), Fr( lock.1 )
@@ -206,7 +208,7 @@ rule (modulo E) inrenewuserpknsk_0_111112[color=#408051,
 
   /*
   rule (modulo AC) inrenewuserpknsk_0_111112[color=#408051,
-                                             process="in(<'renew', user.2, pk(nsk.1)>);"]:
+                                             process="in(<'renew', user.2, pk(nsk.1)>);", issapicrule]:
      [
      State_111112( pki ), In( <'renew', user, pk(nsk)> ),
      In( sign(<'renew', user, pk(nsk)>, sk) ), Fr( lock )
@@ -219,63 +221,68 @@ rule (modulo E) inrenewuserpknsk_0_111112[color=#408051,
   */
 
 rule (modulo E) lookupSERVERpkiuseraspksk_0_111112111[color=#408051,
-                                                      process="lookup <'SERVER', pki.1, user.2> as pksk.1"]:
+                                                      process="lookup <'SERVER', pki.1, user.2> as pksk.1",
+                                                      issapicrule]:
    [ State_111112111( lock.1, nsk.1, pki.1, sk.2, user.2 ) ]
   --[ IsIn( <'SERVER', pki.1, user.2>, pksk.1 ) ]->
    [ State_1111121111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
 
   /*
   rule (modulo AC) lookupSERVERpkiuseraspksk_0_111112111[color=#408051,
-                                                         process="lookup <'SERVER', pki.1, user.2> as pksk.1"]:
+                                                         process="lookup <'SERVER', pki.1, user.2> as pksk.1",
+                                                         issapicrule]:
      [ State_111112111( lock, nsk, pki, sk, user ) ]
     --[ IsIn( <'SERVER', pki, user>, pksk ) ]->
      [ State_1111121111( lock, nsk, pki, pksk, sk, user ) ]
   */
 
 rule (modulo E) ifpkskpksk_0_1111121111[color=#408051,
-                                        process="if pksk.1=pk(sk.2)"]:
+                                        process="if pksk.1=pk(sk.2)", issapicrule]:
    [ State_1111121111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
   --[ Pred_Eq( pksk.1, pk(sk.2) ) ]->
    [ State_11111211111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
 
   /*
   rule (modulo AC) ifpkskpksk_0_1111121111[color=#408051,
-                                           process="if pksk.1=pk(sk.2)"]:
+                                           process="if pksk.1=pk(sk.2)", issapicrule]:
      [ State_1111121111( lock, nsk, pki, pksk, sk, user ) ]
     --[ Pred_Eq( pksk, pk(sk) ) ]->
      [ State_11111211111( lock, nsk, pki, pksk, sk, user ) ]
   */
 
 rule (modulo E) deleteSERVERpkiuser_0_11111211111[color=#408051,
-                                                  process="delete <'SERVER', pki.1, user.2>;"]:
+                                                  process="delete <'SERVER', pki.1, user.2>;", issapicrule]:
    [ State_11111211111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
   --[ Delete( <'SERVER', pki.1, user.2> ) ]->
    [ State_111112111111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
 
   /*
   rule (modulo AC) deleteSERVERpkiuser_0_11111211111[color=#408051,
-                                                     process="delete <'SERVER', pki.1, user.2>;"]:
+                                                     process="delete <'SERVER', pki.1, user.2>;",
+                                                     issapicrule]:
      [ State_11111211111( lock, nsk, pki, pksk, sk, user ) ]
     --[ Delete( <'SERVER', pki, user> ) ]->
      [ State_111112111111( lock, nsk, pki, pksk, sk, user ) ]
   */
 
 rule (modulo E) insertSERVERpkiuserpknsk_0_111112111111[color=#408051,
-                                                        process="insert <'SERVER', pki.1, user.2>,pk(nsk.1);"]:
+                                                        process="insert <'SERVER', pki.1, user.2>,pk(nsk.1);",
+                                                        issapicrule]:
    [ State_111112111111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
   --[ Insert( <'SERVER', pki.1, user.2>, pk(nsk.1) ) ]->
    [ State_1111121111111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
 
   /*
   rule (modulo AC) insertSERVERpkiuserpknsk_0_111112111111[color=#408051,
-                                                           process="insert <'SERVER', pki.1, user.2>,pk(nsk.1);"]:
+                                                           process="insert <'SERVER', pki.1, user.2>,pk(nsk.1);",
+                                                           issapicrule]:
      [ State_111112111111( lock, nsk, pki, pksk, sk, user ) ]
     --[ Insert( <'SERVER', pki, user>, pk(nsk) ) ]->
      [ State_1111121111111( lock, nsk, pki, pksk, sk, user ) ]
   */
 
 rule (modulo E) unlockSERVERuser_0_1111121111111[color=#408051,
-                                                 process="unlock <'SERVER', user.2>;"]:
+                                                 process="unlock <'SERVER', user.2>;", issapicrule]:
    [ State_1111121111111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
   --[
   Unlock_1( '1', lock.1, <'SERVER', user.2> ),
@@ -287,7 +294,7 @@ rule (modulo E) unlockSERVERuser_0_1111121111111[color=#408051,
 
   /*
   rule (modulo AC) unlockSERVERuser_0_1111121111111[color=#408051,
-                                                    process="unlock <'SERVER', user.2>;"]:
+                                                    process="unlock <'SERVER', user.2>;", issapicrule]:
      [ State_1111121111111( lock, nsk, pki, pksk, sk, user ) ]
     --[
     Unlock_1( '1', lock, <'SERVER', user> ),
@@ -297,58 +304,62 @@ rule (modulo E) unlockSERVERuser_0_1111121111111[color=#408051,
   */
 
 rule (modulo E) ifpkskpksk_1_1111121111[color=#408051,
-                                        process="if pksk.1=pk(sk.2)"]:
+                                        process="if pksk.1=pk(sk.2)", issapicrule]:
    [ State_1111121111( lock.1, nsk.1, pki.1, pksk.1, sk.2, user.2 ) ]
   --[ Pred_Not_Eq( pksk.1, pk(sk.2) ) ]->
    [ ]
 
   /*
   rule (modulo AC) ifpkskpksk_1_1111121111[color=#408051,
-                                           process="if pksk.1=pk(sk.2)"]:
+                                           process="if pksk.1=pk(sk.2)", issapicrule]:
      [ State_1111121111( lock, nsk, pki, pksk, sk, user ) ]
     --[ Pred_Not_Eq( pksk, pk(sk) ) ]->
      [ ]
   */
 
 rule (modulo E) lookupSERVERpkiuseraspksk_1_111112111[color=#408051,
-                                                      process="lookup <'SERVER', pki.1, user.2> as pksk.1"]:
+                                                      process="lookup <'SERVER', pki.1, user.2> as pksk.1",
+                                                      issapicrule]:
    [ State_111112111( lock.1, nsk.1, pki.1, sk.2, user.2 ) ]
   --[ IsNotSet( <'SERVER', pki.1, user.2> ) ]->
    [ ]
 
   /*
   rule (modulo AC) lookupSERVERpkiuseraspksk_1_111112111[color=#408051,
-                                                         process="lookup <'SERVER', pki.1, user.2> as pksk.1"]:
+                                                         process="lookup <'SERVER', pki.1, user.2> as pksk.1",
+                                                         issapicrule]:
      [ State_111112111( lock, nsk, pki, sk, user ) ]
     --[ IsNotSet( <'SERVER', pki, user> ) ]->
      [ ]
   */
 
-rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111( pki.1 ) ]
   -->
    [ State_111111( pki.1 ), State_111112( pki.1 ), State_1112( pki.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_111( pki ) ]
     -->
      [ State_111111( pki ), State_111112( pki ), State_1112( pki ) ]
   */
 
-rule (modulo E) newuser_0_1112[color=#ffffff, process="new user.3;"]:
+rule (modulo E) newuser_0_1112[color=#ffffff, process="new user.3;",
+                               issapicrule]:
    [ State_1112( pki.1 ), Fr( user.3 ) ]
   -->
    [ !Semistate_1112111( pki.1, user.3 ), Out( user.3 ) ]
 
   /*
-  rule (modulo AC) newuser_0_1112[color=#ffffff, process="new user.3;"]:
+  rule (modulo AC) newuser_0_1112[color=#ffffff, process="new user.3;",
+                                  issapicrule]:
      [ State_1112( pki ), Fr( user ) ]
     -->
      [ !Semistate_1112111( pki, user ), Out( user ) ]
   */
 
-rule (modulo E) p_1_111211[color=#ffffff, process="!"]:
+rule (modulo E) p_1_111211[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1112111( pki.1, user.3 ), Fr( ~nsk.2 ), Fr( lock.2 ) ]
   --[
   Lock_2( '2', lock.2, <'USER', user.3> ),
@@ -357,7 +368,7 @@ rule (modulo E) p_1_111211[color=#ffffff, process="!"]:
    [ State_1112111111( pki.1, ~nsk.2, lock.2, user.3 ) ]
 
   /*
-  rule (modulo AC) p_1_111211[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_111211[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1112111( pki, user ), Fr( ~nsk ), Fr( lock ) ]
     --[
     Lock_2( '2', lock, <'USER', user> ), Lock( '2', lock, <'USER', user> )
@@ -366,63 +377,63 @@ rule (modulo E) p_1_111211[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) lookupUSERuserassk_0_1112111111[color=#408041,
-                                                process="lookup <'USER', user.3> as ~sk.3"]:
+                                                process="lookup <'USER', user.3> as ~sk.3", issapicrule]:
    [ State_1112111111( pki.1, ~nsk.2, lock.2, user.3 ) ]
   --[ IsIn( <'USER', user.3>, ~sk.3 ) ]->
    [ State_11121111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
 
   /*
   rule (modulo AC) lookupUSERuserassk_0_1112111111[color=#408041,
-                                                   process="lookup <'USER', user.3> as ~sk.3"]:
+                                                   process="lookup <'USER', user.3> as ~sk.3", issapicrule]:
      [ State_1112111111( pki, ~nsk, lock, user ) ]
     --[ IsIn( <'USER', user>, ~sk ) ]->
      [ State_11121111111( pki, ~nsk, lock, ~sk, user ) ]
   */
 
 rule (modulo E) eventHonestKeynsk_0_11121111111[color=#408041,
-                                                process="event HonestKey( ~nsk.2 );"]:
+                                                process="event HonestKey( ~nsk.2 );", issapicrule]:
    [ State_11121111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
   --[ HonestKey( ~nsk.2 ) ]->
    [ State_111211111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
 
   /*
   rule (modulo AC) eventHonestKeynsk_0_11121111111[color=#408041,
-                                                   process="event HonestKey( ~nsk.2 );"]:
+                                                   process="event HonestKey( ~nsk.2 );", issapicrule]:
      [ State_11121111111( pki, ~nsk, lock, ~sk, user ) ]
     --[ HonestKey( ~nsk ) ]->
      [ State_111211111111( pki, ~nsk, lock, ~sk, user ) ]
   */
 
 rule (modulo E) deleteUSERuser_0_111211111111[color=#408041,
-                                              process="delete <'USER', user.3>;"]:
+                                              process="delete <'USER', user.3>;", issapicrule]:
    [ State_111211111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
   --[ Delete( <'USER', user.3> ) ]->
    [ State_1112111111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
 
   /*
   rule (modulo AC) deleteUSERuser_0_111211111111[color=#408041,
-                                                 process="delete <'USER', user.3>;"]:
+                                                 process="delete <'USER', user.3>;", issapicrule]:
      [ State_111211111111( pki, ~nsk, lock, ~sk, user ) ]
     --[ Delete( <'USER', user> ) ]->
      [ State_1112111111111( pki, ~nsk, lock, ~sk, user ) ]
   */
 
 rule (modulo E) insertUSERusernsk_0_1112111111111[color=#408041,
-                                                  process="insert <'USER', user.3>,~nsk.2;"]:
+                                                  process="insert <'USER', user.3>,~nsk.2;", issapicrule]:
    [ State_1112111111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
   --[ Insert( <'USER', user.3>, ~nsk.2 ) ]->
    [ State_11121111111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
 
   /*
   rule (modulo AC) insertUSERusernsk_0_1112111111111[color=#408041,
-                                                     process="insert <'USER', user.3>,~nsk.2;"]:
+                                                     process="insert <'USER', user.3>,~nsk.2;", issapicrule]:
      [ State_1112111111111( pki, ~nsk, lock, ~sk, user ) ]
     --[ Insert( <'USER', user>, ~nsk ) ]->
      [ State_11121111111111( pki, ~nsk, lock, ~sk, user ) ]
   */
 
 rule (modulo E) unlockUSERuser_0_11121111111111[color=#408041,
-                                                process="unlock <'USER', user.3>;"]:
+                                                process="unlock <'USER', user.3>;", issapicrule]:
    [ State_11121111111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
   --[
   Unlock_2( '2', lock.2, <'USER', user.3> ),
@@ -435,7 +446,7 @@ rule (modulo E) unlockUSERuser_0_11121111111111[color=#408041,
 
   /*
   rule (modulo AC) unlockUSERuser_0_11121111111111[color=#408041,
-                                                   process="unlock <'USER', user.3>;"]:
+                                                   process="unlock <'USER', user.3>;", issapicrule]:
      [ State_11121111111111( pki, ~nsk, lock, ~sk, user ) ]
     --[
     Unlock_2( '2', lock, <'USER', user> ),
@@ -448,7 +459,8 @@ rule (modulo E) unlockUSERuser_0_11121111111111[color=#408041,
   */
 
 rule (modulo E) outsignrenewuserpknsksk_0_1112111111111111[color=#408041,
-                                                           process="out(sign(<'renew', user.3, pk(~nsk.2)>, ~sk.3));"]:
+                                                           process="out(sign(<'renew', user.3, pk(~nsk.2)>, ~sk.3));",
+                                                           issapicrule]:
    [ State_1112111111111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ) ]
   -->
    [
@@ -458,7 +470,8 @@ rule (modulo E) outsignrenewuserpknsksk_0_1112111111111111[color=#408041,
 
   /*
   rule (modulo AC) outsignrenewuserpknsksk_0_1112111111111111[color=#408041,
-                                                              process="out(sign(<'renew', user.3, pk(~nsk.2)>, ~sk.3));"]:
+                                                              process="out(sign(<'renew', user.3, pk(~nsk.2)>, ~sk.3));",
+                                                              issapicrule]:
      [ State_1112111111111111( pki, ~nsk, lock, ~sk, user ) ]
     -->
      [
@@ -469,7 +482,8 @@ rule (modulo E) outsignrenewuserpknsksk_0_1112111111111111[color=#408041,
 
 rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_11121111111111111[color=#408041,
                                                                          process="in(sign(<'confirm', sign(<'renew', =user.3, pk(=~nsk.2)>, =~sk.3)>,
-     =pki.1));"]:
+     =pki.1));",
+                                                                         issapicrule]:
    [
    State_11121111111111111( pki.1, ~nsk.2, lock.2, ~sk.3, user.3 ),
    In( sign(<'confirm', sign(<'renew', user.3, pk(~nsk.2)>, ~sk.3)>, pki.1)
@@ -481,7 +495,8 @@ rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_11121111111111111[color=#
   /*
   rule (modulo AC) insignconfirmsignrenewuserpknskskpki_0_11121111111111111[color=#408041,
                                                                             process="in(sign(<'confirm', sign(<'renew', =user.3, pk(=~nsk.2)>, =~sk.3)>,
-     =pki.1));"]:
+     =pki.1));",
+                                                                            issapicrule]:
      [
      State_11121111111111111( pki, ~nsk, lock, ~sk, user ),
      In( sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki) )
@@ -491,14 +506,14 @@ rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_11121111111111111[color=#
   */
 
 rule (modulo E) lookupUSERuserassk_1_1112111111[color=#408041,
-                                                process="lookup <'USER', user.3> as ~sk.3"]:
+                                                process="lookup <'USER', user.3> as ~sk.3", issapicrule]:
    [ State_1112111111( pki.1, ~nsk.2, lock.2, user.3 ) ]
   --[ IsNotSet( <'USER', user.3> ) ]->
    [ ]
 
   /*
   rule (modulo AC) lookupUSERuserassk_1_1112111111[color=#408041,
-                                                   process="lookup <'USER', user.3> as ~sk.3"]:
+                                                   process="lookup <'USER', user.3> as ~sk.3", issapicrule]:
      [ State_1112111111( pki, ~nsk, lock, user ) ]
     --[ IsNotSet( <'USER', user> ) ]->
      [ ]
@@ -601,17 +616,14 @@ Failed to derive Variable(s): ~sk.3
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -619,7 +631,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 1.69s
+  processing time: 2.10s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

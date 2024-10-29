@@ -183,114 +183,119 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="+"]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="+"]:
+rule (modulo E) Init[color=#ffffff, process="+", issapicrule]:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
    [ State_( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_11[color=#ffffff, process="event A( );"]:
+rule (modulo E) eventA_0_11[color=#ffffff, process="event A( );",
+                            issapicrule]:
    [ State_( ~prog_ ) ]
   --[ ProgressTo_111( ~prog_ ), A( ) ]->
    [ State_111( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_111[color=#ffffff, process="0"]:
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule]:
    [ State_111( ~prog_ ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_12[color=#ffffff, process="!"]:
+rule (modulo E) p_0_12[color=#ffffff, process="!", issapicrule]:
    [ State_( ~prog_ ) ] --> [ !Semistate_121( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+rule (modulo E) p_1_12[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_121( ~prog_ ) ] --> [ State_121( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_121[color=#ffffff, process="event B( );"]:
+rule (modulo E) eventB_0_121[color=#ffffff, process="event B( );",
+                             issapicrule]:
    [ State_121( ~prog_ ) ]
   --[ ProgressTo_1211( ~prog_ ), B( ) ]->
    [ State_1211( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1211[color=#ffffff, process="0"]:
+rule (modulo E) p_0_1211[color=#ffffff, process="0", issapicrule]:
    [ State_1211( ~prog_ ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_21[color=#ffffff, process="!"]:
+rule (modulo E) p_0_21[color=#ffffff, process="!", issapicrule]:
    [ State_( ~prog_ ) ] --> [ !Semistate_211( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_21[color=#ffffff, process="!"]:
+rule (modulo E) p_1_21[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_211( ~prog_ ) ] --> [ State_211( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventC_0_211[color=#ffffff, process="event C( );"]:
+rule (modulo E) eventC_0_211[color=#ffffff, process="event C( );",
+                             issapicrule]:
    [ State_211( ~prog_ ) ]
   --[ ProgressTo_2111( ~prog_ ), C( ) ]->
    [ State_2111( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2111[color=#ffffff, process="0"]:
+rule (modulo E) p_0_2111[color=#ffffff, process="0", issapicrule]:
    [ State_2111( ~prog_ ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_22[color=#ffffff, process="!"]:
+rule (modulo E) p_0_22[color=#ffffff, process="!", issapicrule]:
    [ State_( ~prog_ ) ] --> [ !Semistate_221( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_22[color=#ffffff, process="!"]:
+rule (modulo E) p_1_22[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_221( ~prog_ ) ] --> [ State_221( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventD_0_2211[color=#ffffff, process="event D( );"]:
+rule (modulo E) eventD_0_2211[color=#ffffff, process="event D( );",
+                              issapicrule]:
    [ State_221( ~prog_ ) ]
   --[ ProgressTo_22111( ~prog_ ), D( ) ]->
    [ State_22111( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_22111[color=#ffffff, process="0"]:
+rule (modulo E) p_0_22111[color=#ffffff, process="0", issapicrule]:
    [ State_22111( ~prog_ ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2212[color=#ffffff, process="!"]:
+rule (modulo E) p_0_2212[color=#ffffff, process="!", issapicrule]:
    [ State_221( ~prog_ ) ] --> [ !Semistate_22121( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_2212[color=#ffffff, process="!"]:
+rule (modulo E) p_1_2212[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_22121( ~prog_ ) ] --> [ State_22121( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventE_0_22121[color=#ffffff, process="event E( );"]:
+rule (modulo E) eventE_0_22121[color=#ffffff, process="event E( );",
+                               issapicrule]:
    [ State_22121( ~prog_ ) ]
   --[ ProgressTo_221211( ~prog_ ), E( ) ]->
    [ State_221211( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_221211[color=#ffffff, process="0"]:
+rule (modulo E) p_0_221211[color=#ffffff, process="0", issapicrule]:
    [ State_221211( ~prog_ ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -382,17 +387,14 @@ Failed to derive Variable(s): ~prog_
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -400,7 +402,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-5.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-5.spthy.tmp
-  processing time: 0.20s
+  processing time: 0.29s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

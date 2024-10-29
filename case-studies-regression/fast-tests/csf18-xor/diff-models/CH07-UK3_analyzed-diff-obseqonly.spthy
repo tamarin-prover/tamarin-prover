@@ -275,9 +275,9 @@ Failed to derive Variable(s): hash
 /*
 Generated from:
 Tamarin version 1.9.0
-Maude version 3.2.2
-Git revision: 0194f3b61d6d8b8c1d70bbad8fe0a7143cac0fb3, branch: feature/export-wellformedness
-Compiled at: 2023-10-25 08:40:09.47146758 UTC
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
@@ -289,7 +289,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 248.08s
+  processing time: 110.32s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

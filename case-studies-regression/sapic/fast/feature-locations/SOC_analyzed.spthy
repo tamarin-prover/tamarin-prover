@@ -145,13 +145,15 @@ restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
   // safety formula
 
-rule (modulo E) ReportRule[color=#ffffff, process="new init.1;"]:
+rule (modulo E) ReportRule[color=#ffffff, process="new init.1;",
+                           issapicrule]:
    [ In( <x, loc> ) ]
   --[ Restr_ReportRule_1( fst(loc) ) ]->
    [ Out( rep(x, loc) ) ]
 
   /*
-  rule (modulo AC) ReportRule[color=#ffffff, process="new init.1;"]:
+  rule (modulo AC) ReportRule[color=#ffffff, process="new init.1;",
+                              issapicrule]:
      [ In( <x, loc> ) ] --[ Restr_ReportRule_1( z ) ]-> [ Out( rep(x, loc) ) ]
     variants (modulo AC)
     1. loc   = loc.4
@@ -161,25 +163,25 @@ rule (modulo E) ReportRule[color=#ffffff, process="new init.1;"]:
        z     = x.4
   */
 
-rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111( init.1 ), In( pkV.1 ) ]
   -->
    [ !Semistate_111111( init.1, pkV.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_111( init ), In( pkV ) ]
     -->
      [ !Semistate_111111( init, pkV ) ]
   */
 
-rule (modulo E) p_1_11111[color=#408065, process="!"]:
+rule (modulo E) p_1_11111[color=#408065, process="!", issapicrule]:
    [ !Semistate_111111( init.1, pkV.1 ), Fr( shared_k.1 ) ]
   --[ SessionP( pkV.1, shared_k.1 ) ]->
    [ State_11111111( init.1, pkV.1, shared_k.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11111[color=#408065, process="!"]:
+  rule (modulo AC) p_1_11111[color=#408065, process="!", issapicrule]:
      [ !Semistate_111111( init, pkV ), Fr( shared_k ) ]
     --[ SessionP( pkV, shared_k ) ]->
      [ State_11111111( init, pkV, shared_k ) ]
@@ -188,7 +190,8 @@ rule (modulo E) p_1_11111[color=#408065, process="!"]:
 rule (modulo E) eventPoutputaencsharedkpkVrepaencsharedkpkVlocpkV_0_11111111[color=#408065,
                                                                              process="event Poutput( <aenc(shared_k.1, pkV.1), 
           rep(aenc(shared_k.1, pkV.1), <'loc', pkV.1>)>
-);"]:
+);",
+                                                                             issapicrule]:
    [ State_11111111( init.1, pkV.1, shared_k.1 ) ]
   --[
   Poutput( <aenc(shared_k.1, pkV.1), 
@@ -206,7 +209,8 @@ rule (modulo E) eventPoutputaencsharedkpkVrepaencsharedkpkVlocpkV_0_11111111[col
   rule (modulo AC) eventPoutputaencsharedkpkVrepaencsharedkpkVlocpkV_0_11111111[color=#408065,
                                                                                 process="event Poutput( <aenc(shared_k.1, pkV.1), 
           rep(aenc(shared_k.1, pkV.1), <'loc', pkV.1>)>
-);"]:
+);",
+                                                                                issapicrule]:
      [ State_11111111( init, pkV, shared_k ) ]
     --[
     Poutput( <aenc(shared_k, pkV), rep(aenc(shared_k, pkV), <'loc', pkV>)> )
@@ -218,20 +222,21 @@ rule (modulo E) eventPoutputaencsharedkpkVrepaencsharedkpkVlocpkV_0_11111111[col
   */
 
 rule (modulo E) newstoreP_0_1111111111[color=#408065,
-                                       process="new storeP.1;"]:
+                                       process="new storeP.1;", issapicrule]:
    [ State_1111111111( init.1, pkV.1, shared_k.1 ), Fr( storeP.1 ) ]
   --[ Insert( storeP.1, init.1 ) ]->
    [ !Semistate_1111111111111( init.1, pkV.1, shared_k.1, storeP.1 ) ]
 
   /*
   rule (modulo AC) newstoreP_0_1111111111[color=#408065,
-                                          process="new storeP.1;"]:
+                                          process="new storeP.1;", issapicrule]:
      [ State_1111111111( init, pkV, shared_k ), Fr( storeP ) ]
     --[ Insert( storeP, init ) ]->
      [ !Semistate_1111111111111( init, pkV, shared_k, storeP ) ]
   */
 
-rule (modulo E) p_1_111111111111[color=#408065, process="!"]:
+rule (modulo E) p_1_111111111111[color=#408065, process="!",
+                                 issapicrule]:
    [
    !Semistate_1111111111111( init.1, pkV.1, shared_k.1, storeP.1 ),
    Fr( lock )
@@ -240,14 +245,15 @@ rule (modulo E) p_1_111111111111[color=#408065, process="!"]:
    [ State_11111111111111( lock, init.1, pkV.1, shared_k.1, storeP.1 ) ]
 
   /*
-  rule (modulo AC) p_1_111111111111[color=#408065, process="!"]:
+  rule (modulo AC) p_1_111111111111[color=#408065, process="!",
+                                    issapicrule]:
      [ !Semistate_1111111111111( init, pkV, shared_k, storeP ), Fr( lock ) ]
     --[ Lock_0( '0', lock, storeP ), Lock( '0', lock, storeP ) ]->
      [ State_11111111111111( lock, init, pkV, shared_k, storeP ) ]
   */
 
 rule (modulo E) lookupstorePasoldi_0_11111111111111[color=#408065,
-                                                    process="lookup storeP.1 as old_i.1"]:
+                                                    process="lookup storeP.1 as old_i.1", issapicrule]:
    [
    State_11111111111111( lock, init.1, pkV.1, shared_k.1, storeP.1 ),
    In( cypher.1 )
@@ -261,7 +267,7 @@ rule (modulo E) lookupstorePasoldi_0_11111111111111[color=#408065,
 
   /*
   rule (modulo AC) lookupstorePasoldi_0_11111111111111[color=#408065,
-                                                       process="lookup storeP.1 as old_i.1"]:
+                                                       process="lookup storeP.1 as old_i.1", issapicrule]:
      [ State_11111111111111( lock, init, pkV, shared_k, storeP ), In( cypher )
      ]
     --[ IsIn( storeP, old_i ) ]->
@@ -285,7 +291,8 @@ rule (modulo E) lookupstorePasoldi_0_11111111111111[color=#408065,
   */
 
 rule (modulo E) letipinputsdeccyphersharedk_1_1111111111111111[color=#ffffff,
-                                                               process="let <ip.1, 'input'>=sdec(cypher.1, shared_k.1)"]:
+                                                               process="let <ip.1, 'input'>=sdec(cypher.1, shared_k.1)",
+                                                               issapicrule]:
    [
    Let_11111111111111111( <ip.1, 'input'>, lock, cypher.1, init.1, old_i.1,
                           pkV.1, shared_k.1, storeP.1
@@ -300,7 +307,8 @@ rule (modulo E) letipinputsdeccyphersharedk_1_1111111111111111[color=#ffffff,
 
   /*
   rule (modulo AC) letipinputsdeccyphersharedk_1_1111111111111111[color=#ffffff,
-                                                                  process="let <ip.1, 'input'>=sdec(cypher.1, shared_k.1)"]:
+                                                                  process="let <ip.1, 'input'>=sdec(cypher.1, shared_k.1)",
+                                                                  issapicrule]:
      [
      Let_11111111111111111( <ip, 'input'>, lock, cypher, init, old_i, pkV,
                             shared_k, storeP
@@ -315,7 +323,8 @@ rule (modulo E) letipinputsdeccyphersharedk_1_1111111111111111[color=#ffffff,
   */
 
 rule (modulo E) eventPoutputsencprogipoldioutputsharedk_0_11111111111111111[color=#408065,
-                                                                            process="event Poutput( senc(<prog(ip.1, old_i.1), 'output'>, shared_k.1) );"]:
+                                                                            process="event Poutput( senc(<prog(ip.1, old_i.1), 'output'>, shared_k.1) );",
+                                                                            issapicrule]:
    [
    State_11111111111111111( lock, cypher.1, init.1, ip.1, old_i.1, pkV.1,
                             shared_k.1, storeP.1
@@ -331,7 +340,8 @@ rule (modulo E) eventPoutputsencprogipoldioutputsharedk_0_11111111111111111[colo
 
   /*
   rule (modulo AC) eventPoutputsencprogipoldioutputsharedk_0_11111111111111111[color=#408065,
-                                                                               process="event Poutput( senc(<prog(ip.1, old_i.1), 'output'>, shared_k.1) );"]:
+                                                                               process="event Poutput( senc(<prog(ip.1, old_i.1), 'output'>, shared_k.1) );",
+                                                                               issapicrule]:
      [
      State_11111111111111111( lock, cypher, init, ip, old_i, pkV, shared_k,
                               storeP
@@ -347,7 +357,8 @@ rule (modulo E) eventPoutputsencprogipoldioutputsharedk_0_11111111111111111[colo
   */
 
 rule (modulo E) insertstorePipoldi_0_1111111111111111111[color=#408065,
-                                                         process="insert storeP.1,<ip.1, old_i.1>;"]:
+                                                         process="insert storeP.1,<ip.1, old_i.1>;",
+                                                         issapicrule]:
    [
    State_1111111111111111111( lock, cypher.1, init.1, ip.1, old_i.1, pkV.1,
                               shared_k.1, storeP.1
@@ -362,7 +373,8 @@ rule (modulo E) insertstorePipoldi_0_1111111111111111111[color=#408065,
 
   /*
   rule (modulo AC) insertstorePipoldi_0_1111111111111111111[color=#408065,
-                                                            process="insert storeP.1,<ip.1, old_i.1>;"]:
+                                                            process="insert storeP.1,<ip.1, old_i.1>;",
+                                                            issapicrule]:
      [
      State_1111111111111111111( lock, cypher, init, ip, old_i, pkV, shared_k,
                                 storeP
@@ -377,7 +389,7 @@ rule (modulo E) insertstorePipoldi_0_1111111111111111111[color=#408065,
   */
 
 rule (modulo E) unlockstoreP_0_11111111111111111111[color=#408065,
-                                                    process="unlock storeP.1;"]:
+                                                    process="unlock storeP.1;", issapicrule]:
    [
    State_11111111111111111111( lock, cypher.1, init.1, ip.1, old_i.1, pkV.1,
                                shared_k.1, storeP.1
@@ -388,7 +400,7 @@ rule (modulo E) unlockstoreP_0_11111111111111111111[color=#408065,
 
   /*
   rule (modulo AC) unlockstoreP_0_11111111111111111111[color=#408065,
-                                                       process="unlock storeP.1;"]:
+                                                       process="unlock storeP.1;", issapicrule]:
      [
      State_11111111111111111111( lock, cypher, init, ip, old_i, pkV, shared_k,
                                  storeP
@@ -399,59 +411,60 @@ rule (modulo E) unlockstoreP_0_11111111111111111111[color=#408065,
   */
 
 rule (modulo E) lookupstorePasoldi_1_11111111111111[color=#408065,
-                                                    process="lookup storeP.1 as old_i.1"]:
+                                                    process="lookup storeP.1 as old_i.1", issapicrule]:
    [ State_11111111111111( lock, init.1, pkV.1, shared_k.1, storeP.1 ) ]
   --[ IsNotSet( storeP.1 ) ]->
    [ ]
 
   /*
   rule (modulo AC) lookupstorePasoldi_1_11111111111111[color=#408065,
-                                                       process="lookup storeP.1 as old_i.1"]:
+                                                       process="lookup storeP.1 as old_i.1", issapicrule]:
      [ State_11111111111111( lock, init, pkV, shared_k, storeP ) ]
     --[ IsNotSet( storeP ) ]->
      [ ]
   */
 
-rule (modulo E) Init[color=#ffffff, process="new init.1;"]:
+rule (modulo E) Init[color=#ffffff, process="new init.1;", issapicrule]:
    [ Fr( init.1 ) ]
   --[ Init( ) ]->
    [ !Semistate_121( init.1 ), !Semistate_111( init.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new init.1;"]:
+  rule (modulo AC) Init[color=#ffffff, process="new init.1;", issapicrule]:
      [ Fr( init ) ]
     --[ Init( ) ]->
      [ !Semistate_121( init ), !Semistate_111( init ) ]
   */
 
-rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+rule (modulo E) p_1_12[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_121( init.1 ), Fr( skV.1 ) ]
   --[ HonestP( pk(skV.1) ) ]->
    [ State_1211111( init.1, skV.1 ), Out( pk(skV.1) ) ]
 
   /*
-  rule (modulo AC) p_1_12[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_12[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_121( init ), Fr( skV ) ]
     --[ HonestP( pk(skV) ) ]->
      [ State_1211111( init, skV ), Out( pk(skV) ) ]
   */
 
 rule (modulo E) incyphersigned_0_1211111[color=#408050,
-                                         process="in(<cypher.2, signed.2>);"]:
+                                         process="in(<cypher.2, signed.2>);", issapicrule]:
    [ State_1211111( init.1, skV.1 ), In( <cypher.2, signed.2> ) ]
   -->
    [ State_12111111( init.1, skV.1, cypher.2, signed.2 ) ]
 
   /*
   rule (modulo AC) incyphersigned_0_1211111[color=#408050,
-                                            process="in(<cypher.2, signed.2>);"]:
+                                            process="in(<cypher.2, signed.2>);", issapicrule]:
      [ State_1211111( init, skV ), In( <cypher, signed> ) ]
     -->
      [ State_12111111( init, skV, cypher, signed ) ]
   */
 
 rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_0_12111111[color=#408050,
-                                                                          process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, <'loc', pk(skV.1)>)"]:
+                                                                          process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, <'loc', pk(skV.1)>)",
+                                                                          issapicrule]:
    [ State_12111111( init.1, skV.1, cypher.2, signed.2 ) ]
   --[
   Pred_Eq( aenc(adec(cypher.2, skV.1), pk(skV.1)),
@@ -462,7 +475,8 @@ rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_0_12111111[color=
 
   /*
   rule (modulo AC) ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_0_12111111[color=#408050,
-                                                                             process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, <'loc', pk(skV.1)>)"]:
+                                                                             process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, <'loc', pk(skV.1)>)",
+                                                                             issapicrule]:
      [ State_12111111( init, skV, cypher, signed ) ]
     --[ Pred_Eq( aenc(z, pk(skV)), z.1 ) ]->
      [ State_121111111( init, skV, cypher, signed ) ]
@@ -501,14 +515,16 @@ rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_0_12111111[color=
   */
 
 rule (modulo E) eventVoutputaencadeccypherskVpkskVsigned_0_121111111[color=#408050,
-                                                                     process="event Voutput( <aenc(adec(cypher.2, skV.1), pk(skV.1)), signed.2> );"]:
+                                                                     process="event Voutput( <aenc(adec(cypher.2, skV.1), pk(skV.1)), signed.2> );",
+                                                                     issapicrule]:
    [ State_121111111( init.1, skV.1, cypher.2, signed.2 ) ]
   --[ Voutput( <aenc(adec(cypher.2, skV.1), pk(skV.1)), signed.2> ) ]->
    [ State_1211111111( init.1, skV.1, cypher.2, signed.2 ) ]
 
   /*
   rule (modulo AC) eventVoutputaencadeccypherskVpkskVsigned_0_121111111[color=#408050,
-                                                                        process="event Voutput( <aenc(adec(cypher.2, skV.1), pk(skV.1)), signed.2> );"]:
+                                                                        process="event Voutput( <aenc(adec(cypher.2, skV.1), pk(skV.1)), signed.2> );",
+                                                                        issapicrule]:
      [ State_121111111( init, skV, cypher, signed ) ]
     --[ Voutput( <aenc(z, pk(skV)), signed> ) ]->
      [ State_1211111111( init, skV, cypher, signed ) ]
@@ -525,14 +541,16 @@ rule (modulo E) eventVoutputaencadeccypherskVpkskVsigned_0_121111111[color=#4080
   */
 
 rule (modulo E) eventSessionVpkskVadeccypherskV_0_1211111111[color=#408050,
-                                                             process="event SessionV( pk(skV.1), adec(cypher.2, skV.1) );"]:
+                                                             process="event SessionV( pk(skV.1), adec(cypher.2, skV.1) );",
+                                                             issapicrule]:
    [ State_1211111111( init.1, skV.1, cypher.2, signed.2 ), Fr( storeV.1 ) ]
   --[ SessionV( pk(skV.1), adec(cypher.2, skV.1) ) ]->
    [ State_121111111111( init.1, skV.1, storeV.1, cypher.2, signed.2 ) ]
 
   /*
   rule (modulo AC) eventSessionVpkskVadeccypherskV_0_1211111111[color=#408050,
-                                                                process="event SessionV( pk(skV.1), adec(cypher.2, skV.1) );"]:
+                                                                process="event SessionV( pk(skV.1), adec(cypher.2, skV.1) );",
+                                                                issapicrule]:
      [ State_1211111111( init, skV, cypher, signed ), Fr( storeV ) ]
     --[ SessionV( pk(skV), z ) ]->
      [ State_121111111111( init, skV, storeV, cypher, signed ) ]
@@ -549,7 +567,7 @@ rule (modulo E) eventSessionVpkskVadeccypherskV_0_1211111111[color=#408050,
   */
 
 rule (modulo E) insertstoreVinit_0_121111111111[color=#408050,
-                                                process="insert storeV.1,init.1;"]:
+                                                process="insert storeV.1,init.1;", issapicrule]:
    [ State_121111111111( init.1, skV.1, storeV.1, cypher.2, signed.2 ) ]
   --[ Insert( storeV.1, init.1 ) ]->
    [
@@ -558,13 +576,14 @@ rule (modulo E) insertstoreVinit_0_121111111111[color=#408050,
 
   /*
   rule (modulo AC) insertstoreVinit_0_121111111111[color=#408050,
-                                                   process="insert storeV.1,init.1;"]:
+                                                   process="insert storeV.1,init.1;", issapicrule]:
      [ State_121111111111( init, skV, storeV, cypher, signed ) ]
     --[ Insert( storeV, init ) ]->
      [ !Semistate_12111111111111( init, skV, storeV, cypher, signed ) ]
   */
 
-rule (modulo E) p_1_1211111111111[color=#408050, process="!"]:
+rule (modulo E) p_1_1211111111111[color=#408050, process="!",
+                                  issapicrule]:
    [
    !Semistate_12111111111111( init.1, skV.1, storeV.1, cypher.2, signed.2 ),
    Fr( lock.1 )
@@ -577,7 +596,8 @@ rule (modulo E) p_1_1211111111111[color=#408050, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_1211111111111[color=#408050, process="!"]:
+  rule (modulo AC) p_1_1211111111111[color=#408050, process="!",
+                                     issapicrule]:
      [
      !Semistate_12111111111111( init, skV, storeV, cypher, signed ),
      Fr( lock )
@@ -587,7 +607,7 @@ rule (modulo E) p_1_1211111111111[color=#408050, process="!"]:
   */
 
 rule (modulo E) lookupstoreVasoldi_0_121111111111111[color=#408050,
-                                                     process="lookup storeV.1 as old_i.2"]:
+                                                     process="lookup storeV.1 as old_i.2", issapicrule]:
    [
    State_121111111111111( init.1, lock.1, skV.1, storeV.1, cypher.2,
                           signed.2
@@ -603,7 +623,7 @@ rule (modulo E) lookupstoreVasoldi_0_121111111111111[color=#408050,
 
   /*
   rule (modulo AC) lookupstoreVasoldi_0_121111111111111[color=#408050,
-                                                        process="lookup storeV.1 as old_i.2"]:
+                                                        process="lookup storeV.1 as old_i.2", issapicrule]:
      [
      State_121111111111111( init, lock, skV, storeV, cypher, signed ),
      Fr( ip )
@@ -617,7 +637,8 @@ rule (modulo E) lookupstoreVasoldi_0_121111111111111[color=#408050,
   */
 
 rule (modulo E) eventInputsencipadeccypherskV_0_12111111111111111[color=#408050,
-                                                                  process="event Input( senc(ip.2, adec(cypher.2, skV.1)) );"]:
+                                                                  process="event Input( senc(ip.2, adec(cypher.2, skV.1)) );",
+                                                                  issapicrule]:
    [
    State_12111111111111111( init.1, lock.1, skV.1, storeV.1, cypher.2, ip.2,
                             old_i.2, signed.2
@@ -633,7 +654,8 @@ rule (modulo E) eventInputsencipadeccypherskV_0_12111111111111111[color=#408050,
 
   /*
   rule (modulo AC) eventInputsencipadeccypherskV_0_12111111111111111[color=#408050,
-                                                                     process="event Input( senc(ip.2, adec(cypher.2, skV.1)) );"]:
+                                                                     process="event Input( senc(ip.2, adec(cypher.2, skV.1)) );",
+                                                                     issapicrule]:
      [
      State_12111111111111111( init, lock, skV, storeV, cypher, ip, old_i,
                               signed
@@ -659,7 +681,7 @@ rule (modulo E) eventInputsencipadeccypherskV_0_12111111111111111[color=#408050,
   */
 
 rule (modulo E) incypher_0_1211111111111111111[color=#408050,
-                                               process="in(cypher2.1);"]:
+                                               process="in(cypher2.1);", issapicrule]:
    [
    State_1211111111111111111( init.1, lock.1, skV.1, storeV.1, cypher.2,
                               ip.2, old_i.2, signed.2
@@ -676,7 +698,7 @@ rule (modulo E) incypher_0_1211111111111111111[color=#408050,
 
   /*
   rule (modulo AC) incypher_0_1211111111111111111[color=#408050,
-                                                  process="in(cypher2.1);"]:
+                                                  process="in(cypher2.1);", issapicrule]:
      [
      State_1211111111111111111( init, lock, skV, storeV, cypher, ip, old_i,
                                 signed
@@ -720,7 +742,8 @@ rule (modulo E) incypher_0_1211111111111111111[color=#408050,
   */
 
 rule (modulo E) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=#ffffff,
-                                                                          process="let <pr.1, 'output'>=sdec(cypher2.1, adec(cypher.2, skV.1))"]:
+                                                                          process="let <pr.1, 'output'>=sdec(cypher2.1, adec(cypher.2, skV.1))",
+                                                                          issapicrule]:
    [
    Let_121111111111111111111( <pr.1, 'output'>, cypher2.1, init.1, lock.1,
                               skV.1, storeV.1, cypher.2, ip.2, old_i.2, signed.2
@@ -735,7 +758,8 @@ rule (modulo E) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=
 
   /*
   rule (modulo AC) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=#ffffff,
-                                                                             process="let <pr.1, 'output'>=sdec(cypher2.1, adec(cypher.2, skV.1))"]:
+                                                                             process="let <pr.1, 'output'>=sdec(cypher2.1, adec(cypher.2, skV.1))",
+                                                                             issapicrule]:
      [
      Let_121111111111111111111( <pr, 'output'>, cypher2, init, lock, skV,
                                 storeV, cypher, ip, old_i, signed
@@ -750,7 +774,7 @@ rule (modulo E) letproutputsdeccypheradeccypherskV_1_12111111111111111111[color=
   */
 
 rule (modulo E) ifprprogipoldi_0_121111111111111111111[color=#408050,
-                                                       process="if pr.1=prog(ip.2, old_i.2)"]:
+                                                       process="if pr.1=prog(ip.2, old_i.2)", issapicrule]:
    [
    State_121111111111111111111( cypher2.1, init.1, lock.1, pr.1, skV.1,
                                 storeV.1, cypher.2, ip.2, old_i.2, signed.2
@@ -765,7 +789,7 @@ rule (modulo E) ifprprogipoldi_0_121111111111111111111[color=#408050,
 
   /*
   rule (modulo AC) ifprprogipoldi_0_121111111111111111111[color=#408050,
-                                                          process="if pr.1=prog(ip.2, old_i.2)"]:
+                                                          process="if pr.1=prog(ip.2, old_i.2)", issapicrule]:
      [
      State_121111111111111111111( cypher2, init, lock, pr, skV, storeV,
                                   cypher, ip, old_i, signed
@@ -782,7 +806,8 @@ rule (modulo E) ifprprogipoldi_0_121111111111111111111[color=#408050,
 rule (modulo E) eventVoutputsencprogipoldioutputadeccypherskV_0_1211111111111111111111[color=#408050,
                                                                                        process="event Voutput( senc(<prog(ip.2, old_i.2), 'output'>,
               adec(cypher.2, skV.1))
-);"]:
+);",
+                                                                                       issapicrule]:
    [
    State_1211111111111111111111( cypher2.1, init.1, lock.1, pr.1, skV.1,
                                  storeV.1, cypher.2, ip.2, old_i.2, signed.2
@@ -801,7 +826,8 @@ rule (modulo E) eventVoutputsencprogipoldioutputadeccypherskV_0_1211111111111111
   rule (modulo AC) eventVoutputsencprogipoldioutputadeccypherskV_0_1211111111111111111111[color=#408050,
                                                                                           process="event Voutput( senc(<prog(ip.2, old_i.2), 'output'>,
               adec(cypher.2, skV.1))
-);"]:
+);",
+                                                                                          issapicrule]:
      [
      State_1211111111111111111111( cypher2, init, lock, pr, skV, storeV,
                                    cypher, ip, old_i, signed
@@ -826,7 +852,8 @@ rule (modulo E) eventVoutputsencprogipoldioutputadeccypherskV_0_1211111111111111
   */
 
 rule (modulo E) insertstoreVipoldi_0_12111111111111111111111[color=#408050,
-                                                             process="insert storeV.1,<ip.2, old_i.2>;"]:
+                                                             process="insert storeV.1,<ip.2, old_i.2>;",
+                                                             issapicrule]:
    [
    State_12111111111111111111111( cypher2.1, init.1, lock.1, pr.1, skV.1,
                                   storeV.1, cypher.2, ip.2, old_i.2, signed.2
@@ -841,7 +868,8 @@ rule (modulo E) insertstoreVipoldi_0_12111111111111111111111[color=#408050,
 
   /*
   rule (modulo AC) insertstoreVipoldi_0_12111111111111111111111[color=#408050,
-                                                                process="insert storeV.1,<ip.2, old_i.2>;"]:
+                                                                process="insert storeV.1,<ip.2, old_i.2>;",
+                                                                issapicrule]:
      [
      State_12111111111111111111111( cypher2, init, lock, pr, skV, storeV,
                                     cypher, ip, old_i, signed
@@ -856,7 +884,7 @@ rule (modulo E) insertstoreVipoldi_0_12111111111111111111111[color=#408050,
   */
 
 rule (modulo E) unlockstoreV_0_121111111111111111111111[color=#408050,
-                                                        process="unlock storeV.1;"]:
+                                                        process="unlock storeV.1;", issapicrule]:
    [
    State_121111111111111111111111( cypher2.1, init.1, lock.1, pr.1, skV.1,
                                    storeV.1, cypher.2, ip.2, old_i.2, signed.2
@@ -868,7 +896,7 @@ rule (modulo E) unlockstoreV_0_121111111111111111111111[color=#408050,
 
   /*
   rule (modulo AC) unlockstoreV_0_121111111111111111111111[color=#408050,
-                                                           process="unlock storeV.1;"]:
+                                                           process="unlock storeV.1;", issapicrule]:
      [
      State_121111111111111111111111( cypher2, init, lock, pr, skV, storeV,
                                      cypher, ip, old_i, signed
@@ -879,7 +907,7 @@ rule (modulo E) unlockstoreV_0_121111111111111111111111[color=#408050,
   */
 
 rule (modulo E) ifprprogipoldi_1_121111111111111111111[color=#408050,
-                                                       process="if pr.1=prog(ip.2, old_i.2)"]:
+                                                       process="if pr.1=prog(ip.2, old_i.2)", issapicrule]:
    [
    State_121111111111111111111( cypher2.1, init.1, lock.1, pr.1, skV.1,
                                 storeV.1, cypher.2, ip.2, old_i.2, signed.2
@@ -890,7 +918,7 @@ rule (modulo E) ifprprogipoldi_1_121111111111111111111[color=#408050,
 
   /*
   rule (modulo AC) ifprprogipoldi_1_121111111111111111111[color=#408050,
-                                                          process="if pr.1=prog(ip.2, old_i.2)"]:
+                                                          process="if pr.1=prog(ip.2, old_i.2)", issapicrule]:
      [
      State_121111111111111111111( cypher2, init, lock, pr, skV, storeV,
                                   cypher, ip, old_i, signed
@@ -901,7 +929,7 @@ rule (modulo E) ifprprogipoldi_1_121111111111111111111[color=#408050,
   */
 
 rule (modulo E) lookupstoreVasoldi_1_121111111111111[color=#408050,
-                                                     process="lookup storeV.1 as old_i.2"]:
+                                                     process="lookup storeV.1 as old_i.2", issapicrule]:
    [
    State_121111111111111( init.1, lock.1, skV.1, storeV.1, cypher.2,
                           signed.2
@@ -912,14 +940,15 @@ rule (modulo E) lookupstoreVasoldi_1_121111111111111[color=#408050,
 
   /*
   rule (modulo AC) lookupstoreVasoldi_1_121111111111111[color=#408050,
-                                                        process="lookup storeV.1 as old_i.2"]:
+                                                        process="lookup storeV.1 as old_i.2", issapicrule]:
      [ State_121111111111111( init, lock, skV, storeV, cypher, signed ) ]
     --[ IsNotSet( storeV ) ]->
      [ ]
   */
 
 rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_1_12111111[color=#408050,
-                                                                          process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, <'loc', pk(skV.1)>)"]:
+                                                                          process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, <'loc', pk(skV.1)>)",
+                                                                          issapicrule]:
    [ State_12111111( init.1, skV.1, cypher.2, signed.2 ) ]
   --[
   Pred_Not_Eq( aenc(adec(cypher.2, skV.1), pk(skV.1)),
@@ -930,7 +959,8 @@ rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_1_12111111[color=
 
   /*
   rule (modulo AC) ifaencadeccypherskVpkskVcheckrepsignedlocpkskV_1_12111111[color=#408050,
-                                                                             process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, <'loc', pk(skV.1)>)"]:
+                                                                             process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, <'loc', pk(skV.1)>)",
+                                                                             issapicrule]:
      [ State_12111111( init, skV, cypher, signed ) ]
     --[ Pred_Not_Eq( aenc(z, pk(skV)), z.1 ) ]->
      [ ]
@@ -1042,17 +1072,14 @@ Failed to derive Variable(s): old_i.2
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -1060,7 +1087,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 4.24s
+  processing time: 5.29s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

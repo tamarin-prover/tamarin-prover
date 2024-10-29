@@ -9402,71 +9402,78 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="!"]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="!", issapicrule]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_[color=#ffffff, process="!"]:
+rule (modulo E) p_0_[color=#ffffff, process="!", issapicrule]:
    [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ Fr( ~prog_1 ), !Semistate_1( ) ]
   --[ ProgressFrom_1( ~prog_1 ) ]->
    [ State_1( ~prog_1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_1[color=#ffffff, process="new a.1;"]:
+rule (modulo E) newa_0_1[color=#ffffff, process="new a.1;", issapicrule]:
    [ State_1( ~prog_1 ), Fr( a.1 ) ] --> [ State_11( ~prog_1, a.1 ) ]
 
   /*
-  rule (modulo AC) newa_0_1[color=#ffffff, process="new a.1;"]:
+  rule (modulo AC) newa_0_1[color=#ffffff, process="new a.1;",
+                            issapicrule]:
      [ State_1( ~prog_1 ), Fr( a ) ] --> [ State_11( ~prog_1, a ) ]
   */
 
-rule (modulo E) newb_0_11[color=#ffffff, process="new b.1;"]:
+rule (modulo E) newb_0_11[color=#ffffff, process="new b.1;",
+                          issapicrule]:
    [ State_11( ~prog_1, a.1 ), Fr( b.1 ) ]
   -->
    [ State_111( ~prog_1, a.1, b.1 ) ]
 
   /*
-  rule (modulo AC) newb_0_11[color=#ffffff, process="new b.1;"]:
+  rule (modulo AC) newb_0_11[color=#ffffff, process="new b.1;",
+                             issapicrule]:
      [ State_11( ~prog_1, a ), Fr( b ) ] --> [ State_111( ~prog_1, a, b ) ]
   */
 
-rule (modulo E) newkSign_0_111[color=#ffffff, process="new kSign.1;"]:
+rule (modulo E) newkSign_0_111[color=#ffffff, process="new kSign.1;",
+                               issapicrule]:
    [ State_111( ~prog_1, a.1, b.1 ), Fr( kSign.1 ) ]
   -->
    [ State_1111( ~prog_1, a.1, b.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) newkSign_0_111[color=#ffffff, process="new kSign.1;"]:
+  rule (modulo AC) newkSign_0_111[color=#ffffff, process="new kSign.1;",
+                                  issapicrule]:
      [ State_111( ~prog_1, a, b ), Fr( kSign ) ]
     -->
      [ State_1111( ~prog_1, a, b, kSign ) ]
   */
 
-rule (modulo E) newkEnc_0_1111[color=#ffffff, process="new kEnc.1;"]:
+rule (modulo E) newkEnc_0_1111[color=#ffffff, process="new kEnc.1;",
+                               issapicrule]:
    [ State_1111( ~prog_1, a.1, b.1, kSign.1 ), Fr( kEnc.1 ) ]
   -->
    [ State_11111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) newkEnc_0_1111[color=#ffffff, process="new kEnc.1;"]:
+  rule (modulo AC) newkEnc_0_1111[color=#ffffff, process="new kEnc.1;",
+                                  issapicrule]:
      [ State_1111( ~prog_1, a, b, kSign ), Fr( kEnc ) ]
     -->
      [ State_11111( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_0_11111[color=#ffffff, process="|"]:
+rule (modulo E) p_0_11111[color=#ffffff, process="|", issapicrule]:
    [ State_11111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
   -->
    [
@@ -9475,7 +9482,7 @@ rule (modulo E) p_0_11111[color=#ffffff, process="|"]:
    ]
 
   /*
-  rule (modulo AC) p_0_11111[color=#ffffff, process="|"]:
+  rule (modulo AC) p_0_11111[color=#ffffff, process="|", issapicrule]:
      [ State_11111( ~prog_1, a, b, kEnc, kSign ) ]
     -->
      [
@@ -9484,31 +9491,31 @@ rule (modulo E) p_0_11111[color=#ffffff, process="|"]:
      ]
   */
 
-rule (modulo E) A_0_111111[color=#ffffff, process="A()"]:
+rule (modulo E) A_0_111111[color=#ffffff, process="A()", issapicrule]:
    [ State_111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
   --[ ProgressTo_1111111( ~prog_1 ) ]->
    [ State_1111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) A_0_111111[color=#ffffff, process="A()"]:
+  rule (modulo AC) A_0_111111[color=#ffffff, process="A()", issapicrule]:
      [ State_111111( ~prog_1, a, b, kEnc, kSign ) ]
     --[ ProgressTo_1111111( ~prog_1 ) ]->
      [ State_1111111( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_0_1111111[color=#40804a, process="!"]:
+rule (modulo E) p_0_1111111[color=#40804a, process="!", issapicrule]:
    [ State_1111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
   -->
    [ !Semistate_11111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111111[color=#40804a, process="!"]:
+  rule (modulo AC) p_0_1111111[color=#40804a, process="!", issapicrule]:
      [ State_1111111( ~prog_1, a, b, kEnc, kSign ) ]
     -->
      [ !Semistate_11111111( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_1_1111111[color=#40804a, process="!"]:
+rule (modulo E) p_1_1111111[color=#40804a, process="!", issapicrule]:
    [
    Fr( ~prog_11111111 ),
    !Semistate_11111111( ~prog_1, a.1, b.1, kEnc.1, kSign.1 )
@@ -9517,7 +9524,7 @@ rule (modulo E) p_1_1111111[color=#40804a, process="!"]:
    [ State_11111111( ~prog_1, ~prog_11111111, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111111[color=#40804a, process="!"]:
+  rule (modulo AC) p_1_1111111[color=#40804a, process="!", issapicrule]:
      [ Fr( ~prog_11111111 ), !Semistate_11111111( ~prog_1, a, b, kEnc, kSign )
      ]
     --[ ProgressFrom_11111111( ~prog_11111111 ) ]->
@@ -9525,7 +9532,7 @@ rule (modulo E) p_1_1111111[color=#40804a, process="!"]:
   */
 
 rule (modulo E) lockab_0_11111111[color=#40804a,
-                                  process="lock <a.1, b.1>;"]:
+                                  process="lock <a.1, b.1>;", issapicrule]:
    [
    State_11111111( ~prog_1, ~prog_11111111, a.1, b.1, kEnc.1, kSign.1 ),
    Fr( lock )
@@ -9541,7 +9548,7 @@ rule (modulo E) lockab_0_11111111[color=#40804a,
 
   /*
   rule (modulo AC) lockab_0_11111111[color=#40804a,
-                                     process="lock <a.1, b.1>;"]:
+                                     process="lock <a.1, b.1>;", issapicrule]:
      [
      State_11111111( ~prog_1, ~prog_11111111, a, b, kEnc, kSign ), Fr( lock )
      ]
@@ -9553,7 +9560,7 @@ rule (modulo E) lockab_0_11111111[color=#40804a,
   */
 
 rule (modulo E) incseq_0_111111111[color=#40804a,
-                                   process="in('c',seq.1);"]:
+                                   process="in('c',seq.1);", issapicrule]:
    [
    Fr( ~prog_1111111111 ),
    State_111111111( ~prog_1, ~prog_11111111, lock, a.1, b.1, kEnc.1, kSign.1
@@ -9571,7 +9578,7 @@ rule (modulo E) incseq_0_111111111[color=#40804a,
 
   /*
   rule (modulo AC) incseq_0_111111111[color=#40804a,
-                                      process="in('c',seq.1);"]:
+                                      process="in('c',seq.1);", issapicrule]:
      [
      Fr( ~prog_1111111111 ),
      State_111111111( ~prog_1, ~prog_11111111, lock, a, b, kEnc, kSign ),
@@ -9587,7 +9594,7 @@ rule (modulo E) incseq_0_111111111[color=#40804a,
   */
 
 rule (modulo E) eventSeqSentabseq_0_1111111111[color=#40804a,
-                                               process="event Seq_Sent( a.1, b.1, seq.1 );"]:
+                                               process="event Seq_Sent( a.1, b.1, seq.1 );", issapicrule]:
    [
    State_1111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1,
                      b.1, kEnc.1, kSign.1, seq.1
@@ -9602,7 +9609,7 @@ rule (modulo E) eventSeqSentabseq_0_1111111111[color=#40804a,
 
   /*
   rule (modulo AC) eventSeqSentabseq_0_1111111111[color=#40804a,
-                                                  process="event Seq_Sent( a.1, b.1, seq.1 );"]:
+                                                  process="event Seq_Sent( a.1, b.1, seq.1 );", issapicrule]:
      [
      State_1111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a, b,
                        kEnc, kSign, seq
@@ -9616,7 +9623,8 @@ rule (modulo E) eventSeqSentabseq_0_1111111111[color=#40804a,
      ]
   */
 
-rule (modulo E) newm_0_11111111111[color=#40804a, process="new m.1;"]:
+rule (modulo E) newm_0_11111111111[color=#40804a, process="new m.1;",
+                                   issapicrule]:
    [
    State_11111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1,
                       b.1, kEnc.1, kSign.1, seq.1
@@ -9631,7 +9639,8 @@ rule (modulo E) newm_0_11111111111[color=#40804a, process="new m.1;"]:
    ]
 
   /*
-  rule (modulo AC) newm_0_11111111111[color=#40804a, process="new m.1;"]:
+  rule (modulo AC) newm_0_11111111111[color=#40804a, process="new m.1;",
+                                      issapicrule]:
      [
      State_11111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a, b,
                         kEnc, kSign, seq
@@ -9647,7 +9656,7 @@ rule (modulo E) newm_0_11111111111[color=#40804a, process="new m.1;"]:
   */
 
 rule (modulo E) eventSentabm_0_111111111111[color=#40804a,
-                                            process="event Sent( a.1, b.1, m.1 );"]:
+                                            process="event Sent( a.1, b.1, m.1 );", issapicrule]:
    [
    State_111111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a.1,
                        b.1, kEnc.1, kSign.1, m.1, seq.1
@@ -9662,7 +9671,7 @@ rule (modulo E) eventSentabm_0_111111111111[color=#40804a,
 
   /*
   rule (modulo AC) eventSentabm_0_111111111111[color=#40804a,
-                                               process="event Sent( a.1, b.1, m.1 );"]:
+                                               process="event Sent( a.1, b.1, m.1 );", issapicrule]:
      [
      State_111111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a,
                          b, kEnc, kSign, m, seq
@@ -9681,7 +9690,8 @@ rule (modulo E) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color
  senc(<seq.1, m.1, $pad, mac(<$MH, $SH, seq.1, m.1, $pad>, kSign.1)
       >,
       kEnc.1)
->);"]:
+>);",
+                                                                           issapicrule]:
    [
    MID_Sender( ~mid_1111111111111 ),
    State_1111111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock,
@@ -9713,7 +9723,8 @@ rule (modulo E) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color
  senc(<seq.1, m.1, $pad, mac(<$MH, $SH, seq.1, m.1, $pad>, kSign.1)
       >,
       kEnc.1)
->);"]:
+>);",
+                                                                              issapicrule]:
      [
      MID_Sender( ~mid_1111111111111 ),
      State_1111111111111( ~prog_1, ~prog_11111111, ~prog_1111111111, lock, a,
@@ -9737,7 +9748,7 @@ rule (modulo E) outrMHSHsencseqmpadmacMHSHseqmpadkSignkEnc_0_1111111111111[color
   */
 
 rule (modulo E) unlockab_0_11111111111111[color=#40804a,
-                                          process="unlock <a.1, b.1>;"]:
+                                          process="unlock <a.1, b.1>;", issapicrule]:
    [
    State_11111111111111( $MH, $SH, $pad, ~prog_1, ~prog_11111111,
                          ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, m.1, seq.1
@@ -9755,7 +9766,7 @@ rule (modulo E) unlockab_0_11111111111111[color=#40804a,
 
   /*
   rule (modulo AC) unlockab_0_11111111111111[color=#40804a,
-                                             process="unlock <a.1, b.1>;"]:
+                                             process="unlock <a.1, b.1>;", issapicrule]:
      [
      State_11111111111111( $MH, $SH, $pad, ~prog_1, ~prog_11111111,
                            ~prog_1111111111, lock, a, b, kEnc, kSign, m, seq
@@ -9772,7 +9783,8 @@ rule (modulo E) unlockab_0_11111111111111[color=#40804a,
      ]
   */
 
-rule (modulo E) p_0_111111111111111[color=#40804a, process="0"]:
+rule (modulo E) p_0_111111111111111[color=#40804a, process="0",
+                                    issapicrule]:
    [
    State_111111111111111( $MH, $SH, $pad, ~prog_1, ~prog_11111111,
                           ~prog_1111111111, lock, a.1, b.1, kEnc.1, kSign.1, m.1, seq.1
@@ -9782,7 +9794,8 @@ rule (modulo E) p_0_111111111111111[color=#40804a, process="0"]:
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111111111111[color=#40804a, process="0"]:
+  rule (modulo AC) p_0_111111111111111[color=#40804a, process="0",
+                                       issapicrule]:
      [
      State_111111111111111( $MH, $SH, $pad, ~prog_1, ~prog_11111111,
                             ~prog_1111111111, lock, a, b, kEnc, kSign, m, seq
@@ -9792,39 +9805,39 @@ rule (modulo E) p_0_111111111111111[color=#40804a, process="0"]:
      [ ]
   */
 
-rule (modulo E) p_0_1111112[color=#ffffff, process="0"]:
+rule (modulo E) p_0_1111112[color=#ffffff, process="0", issapicrule]:
    [ State_1111112( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1111112[color=#ffffff, process="0"]:
+  rule (modulo AC) p_0_1111112[color=#ffffff, process="0", issapicrule]:
      [ State_1111112( ~prog_1, a, b, kEnc, kSign ) ] --> [ ]
   */
 
-rule (modulo E) B_0_111112[color=#ffffff, process="B()"]:
+rule (modulo E) B_0_111112[color=#ffffff, process="B()", issapicrule]:
    [ State_111112( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
   --[ ProgressTo_1111121( ~prog_1 ) ]->
    [ State_1111121( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) B_0_111112[color=#ffffff, process="B()"]:
+  rule (modulo AC) B_0_111112[color=#ffffff, process="B()", issapicrule]:
      [ State_111112( ~prog_1, a, b, kEnc, kSign ) ]
     --[ ProgressTo_1111121( ~prog_1 ) ]->
      [ State_1111121( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_0_1111121[color=#40804a, process="!"]:
+rule (modulo E) p_0_1111121[color=#40804a, process="!", issapicrule]:
    [ State_1111121( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
   -->
    [ !Semistate_11111211( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111121[color=#40804a, process="!"]:
+  rule (modulo AC) p_0_1111121[color=#40804a, process="!", issapicrule]:
      [ State_1111121( ~prog_1, a, b, kEnc, kSign ) ]
     -->
      [ !Semistate_11111211( ~prog_1, a, b, kEnc, kSign ) ]
   */
 
-rule (modulo E) p_1_1111121[color=#40804a, process="!"]:
+rule (modulo E) p_1_1111121[color=#40804a, process="!", issapicrule]:
    [
    Fr( ~prog_11111211 ),
    !Semistate_11111211( ~prog_1, a.1, b.1, kEnc.1, kSign.1 )
@@ -9833,7 +9846,7 @@ rule (modulo E) p_1_1111121[color=#40804a, process="!"]:
    [ State_11111211( ~prog_1, ~prog_11111211, a.1, b.1, kEnc.1, kSign.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111121[color=#40804a, process="!"]:
+  rule (modulo AC) p_1_1111121[color=#40804a, process="!", issapicrule]:
      [ Fr( ~prog_11111211 ), !Semistate_11111211( ~prog_1, a, b, kEnc, kSign )
      ]
     --[ ProgressFrom_11111211( ~prog_11111211 ) ]->
@@ -9841,7 +9854,7 @@ rule (modulo E) p_1_1111121[color=#40804a, process="!"]:
   */
 
 rule (modulo E) lockba_0_11111211[color=#40804a,
-                                  process="lock <b.1, a.1>;"]:
+                                  process="lock <b.1, a.1>;", issapicrule]:
    [
    State_11111211( ~prog_1, ~prog_11111211, a.1, b.1, kEnc.1, kSign.1 ),
    Fr( lock.1 )
@@ -9858,7 +9871,7 @@ rule (modulo E) lockba_0_11111211[color=#40804a,
 
   /*
   rule (modulo AC) lockba_0_11111211[color=#40804a,
-                                     process="lock <b.1, a.1>;"]:
+                                     process="lock <b.1, a.1>;", issapicrule]:
      [
      State_11111211( ~prog_1, ~prog_11111211, a, b, kEnc, kSign ), Fr( lock )
      ]
@@ -9870,7 +9883,8 @@ rule (modulo E) lockba_0_11111211[color=#40804a,
   */
 
 rule (modulo E) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#40804a,
-                                                       process="in('r',<MH.1, SH.1, senc(<seq.2, m.2, pad.1, xmac.1>, =kEnc.1)>);"]:
+                                                       process="in('r',<MH.1, SH.1, senc(<seq.2, m.2, pad.1, xmac.1>, =kEnc.1)>);",
+                                                       issapicrule]:
    [
    Fr( ~prog_1111121111 ),
    State_111112111( ~prog_1, ~prog_11111211, a.1, b.1, kEnc.1, kSign.1,
@@ -9893,7 +9907,8 @@ rule (modulo E) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#40804a,
 
   /*
   rule (modulo AC) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#40804a,
-                                                          process="in('r',<MH.1, SH.1, senc(<seq.2, m.2, pad.1, xmac.1>, =kEnc.1)>);"]:
+                                                          process="in('r',<MH.1, SH.1, senc(<seq.2, m.2, pad.1, xmac.1>, =kEnc.1)>);",
+                                                          issapicrule]:
      [
      Fr( ~prog_1111121111 ),
      State_111112111( ~prog_1, ~prog_11111211, a, b, kEnc, kSign, lock ),
@@ -9912,7 +9927,8 @@ rule (modulo E) inrMHSHsencseqmpadxmackEnc_0_111112111[color=#40804a,
   */
 
 rule (modulo E) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#40804a,
-                                                       process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)"]:
+                                                       process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)",
+                                                       issapicrule]:
    [
    State_1111121111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1,
                      a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -9927,7 +9943,8 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#40804a,
 
   /*
   rule (modulo AC) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#40804a,
-                                                          process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)"]:
+                                                          process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)",
+                                                          issapicrule]:
      [
      State_1111121111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
                        b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -9942,7 +9959,8 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_0_1111121111[color=#40804a,
   */
 
 rule (modulo E) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#40804a,
-                                                       process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)"]:
+                                                       process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)",
+                                                       issapicrule]:
    [
    State_1111121111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1,
                      a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -9960,7 +9978,8 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#40804a,
 
   /*
   rule (modulo AC) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#40804a,
-                                                          process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)"]:
+                                                          process="if xmac.1=mac(<MH.1, SH.1, seq.2, m.2, pad.1>, kSign.1)",
+                                                          issapicrule]:
      [
      State_1111121111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
                        b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -9978,7 +9997,7 @@ rule (modulo E) ifxmacmacMHSHseqmpadkSign_1_1111121111[color=#40804a,
   */
 
 rule (modulo E) eventSeqRecvabseq_0_11111211111[color=#40804a,
-                                                process="event Seq_Recv( a.1, b.1, seq.2 );"]:
+                                                process="event Seq_Recv( a.1, b.1, seq.2 );", issapicrule]:
    [
    State_11111211111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1,
                       a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -9993,7 +10012,7 @@ rule (modulo E) eventSeqRecvabseq_0_11111211111[color=#40804a,
 
   /*
   rule (modulo AC) eventSeqRecvabseq_0_11111211111[color=#40804a,
-                                                   process="event Seq_Recv( a.1, b.1, seq.2 );"]:
+                                                   process="event Seq_Recv( a.1, b.1, seq.2 );", issapicrule]:
      [
      State_11111211111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
                         b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -10008,7 +10027,7 @@ rule (modulo E) eventSeqRecvabseq_0_11111211111[color=#40804a,
   */
 
 rule (modulo E) eventRecvabm_0_111112111111[color=#40804a,
-                                            process="event Recv( a.1, b.1, m.2 );"]:
+                                            process="event Recv( a.1, b.1, m.2 );", issapicrule]:
    [
    State_111112111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1,
                        SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -10023,7 +10042,7 @@ rule (modulo E) eventRecvabm_0_111112111111[color=#40804a,
 
   /*
   rule (modulo AC) eventRecvabm_0_111112111111[color=#40804a,
-                                               process="event Recv( a.1, b.1, m.2 );"]:
+                                               process="event Recv( a.1, b.1, m.2 );", issapicrule]:
      [
      State_111112111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
                          b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -10038,7 +10057,7 @@ rule (modulo E) eventRecvabm_0_111112111111[color=#40804a,
   */
 
 rule (modulo E) unlockba_0_1111121111111[color=#40804a,
-                                         process="unlock <b.1, a.1>;"]:
+                                         process="unlock <b.1, a.1>;", issapicrule]:
    [
    State_1111121111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1,
                         SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -10056,7 +10075,7 @@ rule (modulo E) unlockba_0_1111121111111[color=#40804a,
 
   /*
   rule (modulo AC) unlockba_0_1111121111111[color=#40804a,
-                                            process="unlock <b.1, a.1>;"]:
+                                            process="unlock <b.1, a.1>;", issapicrule]:
      [
      State_1111121111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH,
                           a, b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -10073,7 +10092,8 @@ rule (modulo E) unlockba_0_1111121111111[color=#40804a,
      ]
   */
 
-rule (modulo E) p_0_11111211111111[color=#40804a, process="0"]:
+rule (modulo E) p_0_11111211111111[color=#40804a, process="0",
+                                   issapicrule]:
    [
    State_11111211111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1,
                          SH.1, a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -10083,7 +10103,8 @@ rule (modulo E) p_0_11111211111111[color=#40804a, process="0"]:
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111211111111[color=#40804a, process="0"]:
+  rule (modulo AC) p_0_11111211111111[color=#40804a, process="0",
+                                      issapicrule]:
      [
      State_11111211111111( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH,
                            a, b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -10093,7 +10114,7 @@ rule (modulo E) p_0_11111211111111[color=#40804a, process="0"]:
      [ ]
   */
 
-rule (modulo E) p_0_11111211112[color=#40804a, process="0"]:
+rule (modulo E) p_0_11111211112[color=#40804a, process="0", issapicrule]:
    [
    State_11111211112( ~prog_1, ~prog_11111211, ~prog_1111121111, MH.1, SH.1,
                       a.1, b.1, kEnc.1, kSign.1, lock.1, pad.1, xmac.1, m.2, seq.2
@@ -10103,7 +10124,8 @@ rule (modulo E) p_0_11111211112[color=#40804a, process="0"]:
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111211112[color=#40804a, process="0"]:
+  rule (modulo AC) p_0_11111211112[color=#40804a, process="0",
+                                   issapicrule]:
      [
      State_11111211112( ~prog_1, ~prog_11111211, ~prog_1111121111, MH, SH, a,
                         b, kEnc, kSign, lock, pad, xmac, m, seq
@@ -10113,11 +10135,11 @@ rule (modulo E) p_0_11111211112[color=#40804a, process="0"]:
      [ ]
   */
 
-rule (modulo E) p_0_1111122[color=#ffffff, process="0"]:
+rule (modulo E) p_0_1111122[color=#ffffff, process="0", issapicrule]:
    [ State_1111122( ~prog_1, a.1, b.1, kEnc.1, kSign.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1111122[color=#ffffff, process="0"]:
+  rule (modulo AC) p_0_1111122[color=#ffffff, process="0", issapicrule]:
      [ State_1111122( ~prog_1, a, b, kEnc, kSign ) ] --> [ ]
   */
 
@@ -10317,17 +10339,14 @@ Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -10335,7 +10354,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 107.77s
+  processing time: 118.62s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

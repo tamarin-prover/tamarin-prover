@@ -139,76 +139,84 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="event Start( );"]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="event Start( );",
+                              issapicrule]:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="event Start( );"]:
+rule (modulo E) Init[color=#ffffff, process="event Start( );",
+                     issapicrule]:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
    [ State_( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventStart_0_[color=#ffffff, process="event Start( );"]:
+rule (modulo E) eventStart_0_[color=#ffffff, process="event Start( );",
+                              issapicrule]:
    [ State_( ~prog_ ) ] --[ Start( ) ]-> [ State_1( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1[color=#ffffff, process="|"]:
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule]:
    [ State_1( ~prog_ ) ]
   --[ ProgressTo_12( ~prog_ ) ]->
    [ State_11( ~prog_ ), State_12( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outrHelp_0_111[color=#ffffff,
-                               process="out('r','Help');"]:
+rule (modulo E) outrHelp_0_111[color=#ffffff, process="out('r','Help');",
+                               issapicrule]:
    [ MID_Sender( ~mid_111 ), State_11( ~prog_ ) ]
   --[ ProgressTo_1111( ~prog_ ), Send( ~mid_111, 'Help' ) ]->
    [ Out( 'Help' ), State_1111( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1111[color=#ffffff, process="0"]:
+rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule]:
    [ State_1111( ~prog_ ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) incm_0_112[color=#ffffff, process="in('c',m.1);"]:
+rule (modulo E) incm_0_112[color=#ffffff, process="in('c',m.1);",
+                           issapicrule]:
    [ State_11( ~prog_ ), In( <'c', m.1> ) ]
   --[ ChannelIn( <'c', m.1> ) ]->
    [ State_1121( ~prog_, m.1 ) ]
 
   /*
-  rule (modulo AC) incm_0_112[color=#ffffff, process="in('c',m.1);"]:
+  rule (modulo AC) incm_0_112[color=#ffffff, process="in('c',m.1);",
+                              issapicrule]:
      [ State_11( ~prog_ ), In( <'c', m> ) ]
     --[ ChannelIn( <'c', m> ) ]->
      [ State_1121( ~prog_, m ) ]
   */
 
-rule (modulo E) eventB_0_1121[color=#ffffff, process="event B( );"]:
+rule (modulo E) eventB_0_1121[color=#ffffff, process="event B( );",
+                              issapicrule]:
    [ State_1121( ~prog_, m.1 ) ]
   --[ ProgressTo_11211( ~prog_ ), B( ) ]->
    [ State_11211( ~prog_, m.1 ) ]
 
   /*
-  rule (modulo AC) eventB_0_1121[color=#ffffff, process="event B( );"]:
+  rule (modulo AC) eventB_0_1121[color=#ffffff, process="event B( );",
+                                 issapicrule]:
      [ State_1121( ~prog_, m ) ]
     --[ ProgressTo_11211( ~prog_ ), B( ) ]->
      [ State_11211( ~prog_, m ) ]
   */
 
-rule (modulo E) p_0_11211[color=#ffffff, process="0"]:
+rule (modulo E) p_0_11211[color=#ffffff, process="0", issapicrule]:
    [ State_11211( ~prog_, m.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11211[color=#ffffff, process="0"]:
+  rule (modulo AC) p_0_11211[color=#ffffff, process="0", issapicrule]:
      [ State_11211( ~prog_, m ) ] --> [ ]
   */
 
-rule (modulo E) inrHelp_0_12[color=#ffffff, process="in('r','Help');"]:
+rule (modulo E) inrHelp_0_12[color=#ffffff, process="in('r','Help');",
+                             issapicrule]:
    [
    Fr( ~prog_121 ), State_12( ~prog_ ), In( 'Help' ),
    MID_Receiver( ~mid_12 )
@@ -218,14 +226,15 @@ rule (modulo E) inrHelp_0_12[color=#ffffff, process="in('r','Help');"]:
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_121[color=#ffffff, process="event A( );"]:
+rule (modulo E) eventA_0_121[color=#ffffff, process="event A( );",
+                             issapicrule]:
    [ State_121( ~prog_, ~prog_121 ) ]
   --[ ProgressTo_1211( ~prog_121 ), A( ) ]->
    [ State_1211( ~prog_, ~prog_121 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1211[color=#ffffff, process="0"]:
+rule (modulo E) p_0_1211[color=#ffffff, process="0", issapicrule]:
    [ State_1211( ~prog_, ~prog_121 ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
@@ -303,17 +312,14 @@ Failed to derive Variable(s): ~prog_, ~prog_121
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -321,7 +327,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini9.spthy
 
   output:          examples/sapic/fast/feature-progress/mini9.spthy.tmp
-  processing time: 0.19s
+  processing time: 0.26s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -1437,232 +1437,240 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) locks_0_111111211[color=#408041, process="lock s.1;"]:
+rule (modulo E) locks_0_111111211[color=#408041, process="lock s.1;",
+                                  issapicrule]:
    [ State_111111211( s.1, sk.1 ), Fr( lock ), In( req.1 ) ]
   --[ Lock_0( '0', lock, s.1 ), Lock( '0', lock, s.1 ) ]->
    [ State_11111121111( lock, req.1, s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) locks_0_111111211[color=#408041, process="lock s.1;"]:
+  rule (modulo AC) locks_0_111111211[color=#408041, process="lock s.1;",
+                                     issapicrule]:
      [ State_111111211( s, sk ), Fr( lock ), In( req ) ]
     --[ Lock_0( '0', lock, s ), Lock( '0', lock, s ) ]->
      [ State_11111121111( lock, req, s, sk ) ]
   */
 
 rule (modulo E) lookupFstatussasstatus_0_11111121111[color=#408041,
-                                                     process="lookup <'F_status', s.1> as status.1"]:
+                                                     process="lookup <'F_status', s.1> as status.1",
+                                                     issapicrule]:
    [ State_11111121111( lock, req.1, s.1, sk.1 ) ]
   --[ IsIn( <'F_status', s.1>, status.1 ) ]->
    [ State_111111211111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) lookupFstatussasstatus_0_11111121111[color=#408041,
-                                                        process="lookup <'F_status', s.1> as status.1"]:
+                                                        process="lookup <'F_status', s.1> as status.1",
+                                                        issapicrule]:
      [ State_11111121111( lock, req, s, sk ) ]
     --[ IsIn( <'F_status', s>, status ) ]->
      [ State_111111211111( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) ifstatusinit_0_111111211111[color=#408041,
-                                            process="if status.1='init'"]:
+                                            process="if status.1='init'", issapicrule]:
    [ State_111111211111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Eq( status.1, 'init' ) ]->
    [ State_1111112111111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifstatusinit_0_111111211111[color=#408041,
-                                               process="if status.1='init'"]:
+                                               process="if status.1='init'", issapicrule]:
      [ State_111111211111( lock, req, s, sk, status ) ]
     --[ Pred_Eq( status, 'init' ) ]->
      [ State_1111112111111( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) ifreqleft_0_1111112111111[color=#408041,
-                                          process="if req.1='left'"]:
+                                          process="if req.1='left'", issapicrule]:
    [ State_1111112111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Eq( req.1, 'left' ) ]->
    [ State_11111121111111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifreqleft_0_1111112111111[color=#408041,
-                                             process="if req.1='left'"]:
+                                             process="if req.1='left'", issapicrule]:
      [ State_1111112111111( lock, req, s, sk, status ) ]
     --[ Pred_Eq( req, 'left' ) ]->
      [ State_11111121111111( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) eventInitDevices_0_11111121111111[color=#408041,
-                                                  process="event InitDevice( s.1 );"]:
+                                                  process="event InitDevice( s.1 );", issapicrule]:
    [ State_11111121111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ InitDevice( s.1 ) ]->
    [ State_111111211111111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) eventInitDevices_0_11111121111111[color=#408041,
-                                                     process="event InitDevice( s.1 );"]:
+                                                     process="event InitDevice( s.1 );", issapicrule]:
      [ State_11111121111111( lock, req, s, sk, status ) ]
     --[ InitDevice( s ) ]->
      [ State_111111211111111( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) insertFstatussreq_0_111111211111111[color=#408041,
-                                                    process="insert <'F_status', s.1>,req.1;"]:
+                                                    process="insert <'F_status', s.1>,req.1;", issapicrule]:
    [ State_111111211111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Insert( <'F_status', s.1>, req.1 ) ]->
    [ State_1111112111111111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) insertFstatussreq_0_111111211111111[color=#408041,
-                                                       process="insert <'F_status', s.1>,req.1;"]:
+                                                       process="insert <'F_status', s.1>,req.1;",
+                                                       issapicrule]:
      [ State_111111211111111( lock, req, s, sk, status ) ]
     --[ Insert( <'F_status', s>, req ) ]->
      [ State_1111112111111111( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) unlocks_0_1111112111111111[color=#408041,
-                                           process="unlock s.1;"]:
+                                           process="unlock s.1;", issapicrule]:
    [ State_1111112111111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Unlock_0( '0', lock, s.1 ), Unlock( '0', lock, s.1 ) ]->
    [ ]
 
   /*
   rule (modulo AC) unlocks_0_1111112111111111[color=#408041,
-                                              process="unlock s.1;"]:
+                                              process="unlock s.1;", issapicrule]:
      [ State_1111112111111111( lock, req, s, sk, status ) ]
     --[ Unlock_0( '0', lock, s ), Unlock( '0', lock, s ) ]->
      [ ]
   */
 
 rule (modulo E) ifreqleft_1_1111112111111[color=#408041,
-                                          process="if req.1='left'"]:
+                                          process="if req.1='left'", issapicrule]:
    [ State_1111112111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Not_Eq( req.1, 'left' ) ]->
    [ State_11111121111112( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifreqleft_1_1111112111111[color=#408041,
-                                             process="if req.1='left'"]:
+                                             process="if req.1='left'", issapicrule]:
      [ State_1111112111111( lock, req, s, sk, status ) ]
     --[ Pred_Not_Eq( req, 'left' ) ]->
      [ State_11111121111112( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) ifreqright_0_11111121111112[color=#408041,
-                                            process="if req.1='right'"]:
+                                            process="if req.1='right'", issapicrule]:
    [ State_11111121111112( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Eq( req.1, 'right' ) ]->
    [ State_111111211111121( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifreqright_0_11111121111112[color=#408041,
-                                               process="if req.1='right'"]:
+                                               process="if req.1='right'", issapicrule]:
      [ State_11111121111112( lock, req, s, sk, status ) ]
     --[ Pred_Eq( req, 'right' ) ]->
      [ State_111111211111121( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) eventInitDevices_0_111111211111121[color=#408041,
-                                                   process="event InitDevice( s.1 );"]:
+                                                   process="event InitDevice( s.1 );", issapicrule]:
    [ State_111111211111121( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ InitDevice( s.1 ) ]->
    [ State_1111112111111211( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) eventInitDevices_0_111111211111121[color=#408041,
-                                                      process="event InitDevice( s.1 );"]:
+                                                      process="event InitDevice( s.1 );", issapicrule]:
      [ State_111111211111121( lock, req, s, sk, status ) ]
     --[ InitDevice( s ) ]->
      [ State_1111112111111211( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) insertFstatussreq_0_1111112111111211[color=#408041,
-                                                     process="insert <'F_status', s.1>,req.1;"]:
+                                                     process="insert <'F_status', s.1>,req.1;", issapicrule]:
    [ State_1111112111111211( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Insert( <'F_status', s.1>, req.1 ) ]->
    [ State_11111121111112111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) insertFstatussreq_0_1111112111111211[color=#408041,
-                                                        process="insert <'F_status', s.1>,req.1;"]:
+                                                        process="insert <'F_status', s.1>,req.1;",
+                                                        issapicrule]:
      [ State_1111112111111211( lock, req, s, sk, status ) ]
     --[ Insert( <'F_status', s>, req ) ]->
      [ State_11111121111112111( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) unlocks_0_11111121111112111[color=#408041,
-                                            process="unlock s.1;"]:
+                                            process="unlock s.1;", issapicrule]:
    [ State_11111121111112111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Unlock_0( '0', lock, s.1 ), Unlock( '0', lock, s.1 ) ]->
    [ ]
 
   /*
   rule (modulo AC) unlocks_0_11111121111112111[color=#408041,
-                                               process="unlock s.1;"]:
+                                               process="unlock s.1;", issapicrule]:
      [ State_11111121111112111( lock, req, s, sk, status ) ]
     --[ Unlock_0( '0', lock, s ), Unlock( '0', lock, s ) ]->
      [ ]
   */
 
 rule (modulo E) ifreqright_1_11111121111112[color=#408041,
-                                            process="if req.1='right'"]:
+                                            process="if req.1='right'", issapicrule]:
    [ State_11111121111112( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Not_Eq( req.1, 'right' ) ]->
    [ ]
 
   /*
   rule (modulo AC) ifreqright_1_11111121111112[color=#408041,
-                                               process="if req.1='right'"]:
+                                               process="if req.1='right'", issapicrule]:
      [ State_11111121111112( lock, req, s, sk, status ) ]
     --[ Pred_Not_Eq( req, 'right' ) ]->
      [ ]
   */
 
 rule (modulo E) ifstatusinit_1_111111211111[color=#408041,
-                                            process="if status.1='init'"]:
+                                            process="if status.1='init'", issapicrule]:
    [ State_111111211111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Not_Eq( status.1, 'init' ) ]->
    [ ]
 
   /*
   rule (modulo AC) ifstatusinit_1_111111211111[color=#408041,
-                                               process="if status.1='init'"]:
+                                               process="if status.1='init'", issapicrule]:
      [ State_111111211111( lock, req, s, sk, status ) ]
     --[ Pred_Not_Eq( status, 'init' ) ]->
      [ ]
   */
 
 rule (modulo E) lookupFstatussasstatus_1_11111121111[color=#408041,
-                                                     process="lookup <'F_status', s.1> as status.1"]:
+                                                     process="lookup <'F_status', s.1> as status.1",
+                                                     issapicrule]:
    [ State_11111121111( lock, req.1, s.1, sk.1 ) ]
   --[ IsNotSet( <'F_status', s.1> ) ]->
    [ ]
 
   /*
   rule (modulo AC) lookupFstatussasstatus_1_11111121111[color=#408041,
-                                                        process="lookup <'F_status', s.1> as status.1"]:
+                                                        process="lookup <'F_status', s.1> as status.1",
+                                                        issapicrule]:
      [ State_11111121111( lock, req, s, sk ) ]
     --[ IsNotSet( <'F_status', s> ) ]->
      [ ]
   */
 
-rule (modulo E) p_1_1111112[color=#408041, process="!"]:
+rule (modulo E) p_1_1111112[color=#408041, process="!", issapicrule]:
    [ !Semistate_11111121( s.1, sk.1 ) ]
   -->
    [ !Semistate_1111112121( s.1, sk.1 ), State_111111211( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111112[color=#408041, process="!"]:
+  rule (modulo AC) p_1_1111112[color=#408041, process="!", issapicrule]:
      [ !Semistate_11111121( s, sk ) ]
     -->
      [ !Semistate_1111112121( s, sk ), State_111111211( s, sk ) ]
   */
 
-rule (modulo E) p_1_111111212[color=#408041, process="!"]:
+rule (modulo E) p_1_111111212[color=#408041, process="!", issapicrule]:
    [
    !Semistate_1111112121( s.1, sk.1 ), Fr( lock.1 ),
    In( aenc(<x.1, y.1>, pk(sk.1)) )
@@ -1671,7 +1679,7 @@ rule (modulo E) p_1_111111212[color=#408041, process="!"]:
    [ State_111111212111( lock.1, s.1, sk.1, x.1, y.1 ) ]
 
   /*
-  rule (modulo AC) p_1_111111212[color=#408041, process="!"]:
+  rule (modulo AC) p_1_111111212[color=#408041, process="!", issapicrule]:
      [ !Semistate_1111112121( s, sk ), Fr( lock ), In( aenc(<x, y>, pk(sk)) )
      ]
     --[ Lock_1( '1', lock, s ), Lock( '1', lock, s ) ]->
@@ -1679,35 +1687,37 @@ rule (modulo E) p_1_111111212[color=#408041, process="!"]:
   */
 
 rule (modulo E) lookupFstatussasstatus_0_111111212111[color=#408041,
-                                                      process="lookup <'F_status', s.1> as status.2"]:
+                                                      process="lookup <'F_status', s.1> as status.2",
+                                                      issapicrule]:
    [ State_111111212111( lock.1, s.1, sk.1, x.1, y.1 ) ]
   --[ IsIn( <'F_status', s.1>, status.2 ) ]->
    [ State_1111112121111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) lookupFstatussasstatus_0_111111212111[color=#408041,
-                                                         process="lookup <'F_status', s.1> as status.2"]:
+                                                         process="lookup <'F_status', s.1> as status.2",
+                                                         issapicrule]:
      [ State_111111212111( lock, s, sk, x, y ) ]
     --[ IsIn( <'F_status', s>, status ) ]->
      [ State_1111112121111( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) ifstatusleft_0_1111112121111[color=#408041,
-                                             process="if status.2='left'"]:
+                                             process="if status.2='left'", issapicrule]:
    [ State_1111112121111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Pred_Eq( status.2, 'left' ) ]->
    [ State_11111121211111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) ifstatusleft_0_1111112121111[color=#408041,
-                                                process="if status.2='left'"]:
+                                                process="if status.2='left'", issapicrule]:
      [ State_1111112121111( lock, s, sk, x, y, status ) ]
     --[ Pred_Eq( status, 'left' ) ]->
      [ State_11111121211111( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) eventAccessx_0_11111121211111[color=#408041,
-                                              process="event Access( x.1 );"]:
+                                              process="event Access( x.1 );", issapicrule]:
    [ State_11111121211111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Access( x.1 ) ]->
    [
@@ -1717,56 +1727,56 @@ rule (modulo E) eventAccessx_0_11111121211111[color=#408041,
 
   /*
   rule (modulo AC) eventAccessx_0_11111121211111[color=#408041,
-                                                 process="event Access( x.1 );"]:
+                                                 process="event Access( x.1 );", issapicrule]:
      [ State_11111121211111( lock, s, sk, x, y, status ) ]
     --[ Access( x ) ]->
      [ State_1111112121111111( lock, s, sk, x, y, status ), Out( x ) ]
   */
 
 rule (modulo E) unlocks_0_1111112121111111[color=#408041,
-                                           process="unlock s.1;"]:
+                                           process="unlock s.1;", issapicrule]:
    [ State_1111112121111111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Unlock_1( '1', lock.1, s.1 ), Unlock( '1', lock.1, s.1 ) ]->
    [ ]
 
   /*
   rule (modulo AC) unlocks_0_1111112121111111[color=#408041,
-                                              process="unlock s.1;"]:
+                                              process="unlock s.1;", issapicrule]:
      [ State_1111112121111111( lock, s, sk, x, y, status ) ]
     --[ Unlock_1( '1', lock, s ), Unlock( '1', lock, s ) ]->
      [ ]
   */
 
 rule (modulo E) ifstatusleft_1_1111112121111[color=#408041,
-                                             process="if status.2='left'"]:
+                                             process="if status.2='left'", issapicrule]:
    [ State_1111112121111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Pred_Not_Eq( status.2, 'left' ) ]->
    [ State_11111121211112( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) ifstatusleft_1_1111112121111[color=#408041,
-                                                process="if status.2='left'"]:
+                                                process="if status.2='left'", issapicrule]:
      [ State_1111112121111( lock, s, sk, x, y, status ) ]
     --[ Pred_Not_Eq( status, 'left' ) ]->
      [ State_11111121211112( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) ifstatusright_0_11111121211112[color=#408041,
-                                               process="if status.2='right'"]:
+                                               process="if status.2='right'", issapicrule]:
    [ State_11111121211112( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Pred_Eq( status.2, 'right' ) ]->
    [ State_111111212111121( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) ifstatusright_0_11111121211112[color=#408041,
-                                                  process="if status.2='right'"]:
+                                                  process="if status.2='right'", issapicrule]:
      [ State_11111121211112( lock, s, sk, x, y, status ) ]
     --[ Pred_Eq( status, 'right' ) ]->
      [ State_111111212111121( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) eventAccessy_0_111111212111121[color=#408041,
-                                               process="event Access( y.1 );"]:
+                                               process="event Access( y.1 );", issapicrule]:
    [ State_111111212111121( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Access( y.1 ) ]->
    [
@@ -1776,69 +1786,71 @@ rule (modulo E) eventAccessy_0_111111212111121[color=#408041,
 
   /*
   rule (modulo AC) eventAccessy_0_111111212111121[color=#408041,
-                                                  process="event Access( y.1 );"]:
+                                                  process="event Access( y.1 );", issapicrule]:
      [ State_111111212111121( lock, s, sk, x, y, status ) ]
     --[ Access( y ) ]->
      [ State_11111121211112111( lock, s, sk, x, y, status ), Out( y ) ]
   */
 
 rule (modulo E) unlocks_0_11111121211112111[color=#408041,
-                                            process="unlock s.1;"]:
+                                            process="unlock s.1;", issapicrule]:
    [ State_11111121211112111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Unlock_1( '1', lock.1, s.1 ), Unlock( '1', lock.1, s.1 ) ]->
    [ ]
 
   /*
   rule (modulo AC) unlocks_0_11111121211112111[color=#408041,
-                                               process="unlock s.1;"]:
+                                               process="unlock s.1;", issapicrule]:
      [ State_11111121211112111( lock, s, sk, x, y, status ) ]
     --[ Unlock_1( '1', lock, s ), Unlock( '1', lock, s ) ]->
      [ ]
   */
 
 rule (modulo E) ifstatusright_1_11111121211112[color=#408041,
-                                               process="if status.2='right'"]:
+                                               process="if status.2='right'", issapicrule]:
    [ State_11111121211112( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Pred_Not_Eq( status.2, 'right' ) ]->
    [ State_111111212111122( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) ifstatusright_1_11111121211112[color=#408041,
-                                                  process="if status.2='right'"]:
+                                                  process="if status.2='right'", issapicrule]:
      [ State_11111121211112( lock, s, sk, x, y, status ) ]
     --[ Pred_Not_Eq( status, 'right' ) ]->
      [ State_111111212111122( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) unlocks_0_111111212111122[color=#408041,
-                                          process="unlock s.1;"]:
+                                          process="unlock s.1;", issapicrule]:
    [ State_111111212111122( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Unlock_1( '1', lock.1, s.1 ), Unlock( '1', lock.1, s.1 ) ]->
    [ ]
 
   /*
   rule (modulo AC) unlocks_0_111111212111122[color=#408041,
-                                             process="unlock s.1;"]:
+                                             process="unlock s.1;", issapicrule]:
      [ State_111111212111122( lock, s, sk, x, y, status ) ]
     --[ Unlock_1( '1', lock, s ), Unlock( '1', lock, s ) ]->
      [ ]
   */
 
 rule (modulo E) lookupFstatussasstatus_1_111111212111[color=#408041,
-                                                      process="lookup <'F_status', s.1> as status.2"]:
+                                                      process="lookup <'F_status', s.1> as status.2",
+                                                      issapicrule]:
    [ State_111111212111( lock.1, s.1, sk.1, x.1, y.1 ) ]
   --[ IsNotSet( <'F_status', s.1> ) ]->
    [ ]
 
   /*
   rule (modulo AC) lookupFstatussasstatus_1_111111212111[color=#408041,
-                                                         process="lookup <'F_status', s.1> as status.2"]:
+                                                         process="lookup <'F_status', s.1> as status.2",
+                                                         issapicrule]:
      [ State_111111212111( lock, s, sk, x, y ) ]
     --[ IsNotSet( <'F_status', s> ) ]->
      [ ]
   */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1( ), Fr( sk.1 ), Fr( s.1 ) ]
   --[ Insert( <'F_status', s.1>, 'init' ) ]->
    [
@@ -1847,20 +1859,20 @@ rule (modulo E) p_1_[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1( ), Fr( sk ), Fr( s ) ]
     --[ Insert( <'F_status', s>, 'init' ) ]->
      [ !Semistate_111121( s, sk ), !Semistate_11111121( s, sk ), Out( pk(sk) )
      ]
   */
 
-rule (modulo E) p_1_11112[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11112[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111121( s.1, sk.1 ), Fr( lm.1 ), Fr( rm.1 ) ]
   --[ Exclusive( lm.1, rm.1 ) ]->
    [ Out( aenc(<lm.1, rm.1>, pk(sk.1)) ) ]
 
   /*
-  rule (modulo AC) p_1_11112[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11112[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_111121( s, sk ), Fr( lm ), Fr( rm ) ]
     --[ Exclusive( lm, rm ) ]->
      [ Out( aenc(<lm, rm>, pk(sk)) ) ]
@@ -1940,17 +1952,14 @@ Failed to derive Variable(s): status.2
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -1958,7 +1967,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 5.08s
+  processing time: 6.33s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
