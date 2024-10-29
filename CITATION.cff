@@ -19,6 +19,7 @@ authors:
     family-names: Dreier
     email: jannik.dreier@loria.fr
     affiliation: 'Université de Lorraine, CNRS, Inria, LORIA'
+    orcid: 'https://orcid.org/0000-0002-1026-3360'
   - given-names: Simon
     family-names: Meier
     email: iridcode@gmail.com
@@ -50,7 +51,7 @@ abstract: >-
   unbounded verification (proving) in the symbolic model.
   Security protocols are specified as multiset rewriting
   systems and analyzed with respect to temporal first-order
-  properties. 
+  properties.
 keywords:
   - Tamarin Prover
   - Verification
