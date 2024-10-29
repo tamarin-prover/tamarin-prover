@@ -215,7 +215,7 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     [ expRule  (ConstrRule (append (pack "_") expSymString))  kuFact return
     , invRule  (ConstrRule (append (pack "_") invSymString))  kuFact return
     -- The constructors for one and mult are only necessary in diff mode.
-    -- They are never applied in trace mode as all corresponding goals are solved directly,
+    -- They are never applied in trace mode as all corresponding constraints are solved directly,
     -- but they  will show up in the message theory, which is reassuring for users.
     , dhNeutralRule   (ConstrRule (append (pack "_") dhNeutralSymString))   kuFact return
     , oneRule  (ConstrRule (append (pack "_") oneSymString))  kuFact return

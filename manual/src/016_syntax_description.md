@@ -38,7 +38,7 @@ enable it to parse terms containing exponentiations, e.g.,  g ^ x.
 ~~~~
 
 A global heuristic sets the default heuristic that will be used when autoproving
-lemmas in the file. The specified goal ranking can be any of those discussed in
+lemmas in the file. The specified proof method ranking can be any of those discussed in
 Section [Heuristics](010_advanced-features.html#sec:heuristics).
 
 ~~~~ {.tamarin grammar="grammar/grammar.ebnf" rules="global_heuristic,_goal_ranking,standard_goal_ranking,oracle_goal_ranking,tactic_goal_ranking,param"}
@@ -184,7 +184,7 @@ information.
     fact_annote  := '+' | '-' | 'no_precomp'
 
 Fact annotations can be used to adjust the priority of corresponding
-goals in the heuristics, or influence the precomputation step performed by
+proof methods in the heuristics, or influence the precomputation step performed by
 Tamarin, as described in
 Section [Advanced Features](010_advanced-features.html#sec:fact-annotations).
 

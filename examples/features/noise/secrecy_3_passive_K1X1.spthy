@@ -51,7 +51,7 @@ prio:
 //default case
     not regex "^!KU\("
     regex "^(?<!'g'\^)\~[a-zA-Z.0-9]*$" & defaultNoise "(?<!'g'\^)\~[a-zA-Z.0-9]*" "\(Reveal[a-zA-Z]+\( *'g'^(~[a-zA-Z0-9.]+) *\) *@ *#reveal" "^(~[a-zA-Z0-9.]+)"
-    nonAbsurdGoal "curve"
+    nonAbsurdConstraint "curve"
 
 tactic: reveal_psk
 presort: s
@@ -84,7 +84,7 @@ prio:
 //default case
     not regex "^!KU\("
     regex "^(?<!'g'\^)\~[a-zA-Z.0-9]*$" & defaultNoise "(?<!'g'\^)\~[a-zA-Z.0-9]*" "\(Reveal[a-zA-Z]+\( *'g'^(~[a-zA-Z0-9.]+) *\) *@ *#reveal" "^(~[a-zA-Z0-9.]+)"
-    nonAbsurdGoal "curve"
+    nonAbsurdConstraint "curve"
 
 
 /* Handshake initialisation with initial

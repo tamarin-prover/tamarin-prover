@@ -57,7 +57,7 @@ module.exports = grammar({
           'LOGICAL_OR',
           'LOGICAL_IMPLICATION',
           'LOGICAL_IFF',
-          'CHAIN_GOAL',
+          'CHAIN_CONSTRAINT',
       ],
       // Diff
       [
@@ -325,23 +325,23 @@ module.exports = grammar({
       global_heuristic: $ => seq(
           'heuristic',
           ':',
-          field('goal_ranking', repeat1($._goal_ranking))
+          field('proof_method_ranking', repeat1($._proof_method_ranking))
       ),
 
-      _goal_ranking: $ => choice(
-          $.standard_goal_ranking,
-          $.oracle_goal_ranking,
-          $.tactic_goal_ranking
+      _proof_method_ranking: $ => choice(
+          $.standard_proof_method_ranking,
+          $.oracle_proof_method_ranking,
+          $.tactic_proof_method_ranking
       ),
 
-      standard_goal_ranking: $ => /[CISPcisp][CISPcisp]?[CISPcisp]?[CISPcisp]?/,
+      standard_proof_method_ranking: $ => /[CISPcisp][CISPcisp]?[CISPcisp]?[CISPcisp]?/,
 
-      oracle_goal_ranking: $ => seq(
+      oracle_proof_method_ranking: $ => seq(
           choice('O', 'o'),
           optional(seq('"', $.param, '"'))
       ),
 
-      tactic_goal_ranking: $ => seq(
+      tactic_proof_method_ranking: $ => seq(
           '{', $.ident, '}' // in this case ident has to be a tactic name
       ),
 
@@ -367,7 +367,7 @@ module.exports = grammar({
 
       presort: $ => seq(
           'presort', ':',
-          $.standard_goal_ranking
+          $.standard_proof_method_ranking
       ),
 
       prio: $ => seq(
@@ -423,7 +423,7 @@ module.exports = grammar({
           'dhreNoise',
           'defaultNoise',
           'reasonableNoncesNoise',
-          'nonAbsurdGoal'
+          'nonAbsurdConstraint'
       ),
 
 
@@ -887,7 +887,7 @@ module.exports = grammar({
           'use_induction',
           seq('output=', '[', $.language, repeat(seq(',', $.language)), ']'),
           seq('hide_lemma=', $.ident),
-          seq('heuristic=', field('goal_ranking', repeat1($._goal_ranking)))
+          seq('heuristic=', field('proof_method_ranking', repeat1($._proof_method_ranking)))
       ),
 
       language: $ => choice(
@@ -997,7 +997,7 @@ module.exports = grammar({
           'sorry',
           'simplify',
           seq(
-              'solve', '(', $.goal, ')'
+              'solve', '(', $.constraint, ')'
           ),
           'contradiction',
           'induction',
@@ -1010,34 +1010,34 @@ module.exports = grammar({
         'step', '(', $.proof_method, ')'
       ),
 
-      goal: $ => choice(
-          $.premise_goal,
-          $.action_goal,
-          $.chain_goal,
-          $.disjunction_split_goal,
-          $.eq_split_goal
+      constraint: $ => choice(
+          $.premise_constraint,
+          $.action_constraint,
+          $.chain_constraint,
+          $.disjunction_split_constraint,
+          $.eq_split_constraint
       ),
 
-      premise_goal: $ => seq(
+      premise_constraint: $ => seq(
           $._fact,
           '▶',
           $.natural_subscript,
           $.temporal_var
       ),
 
-      action_goal: $ => seq(
+      action_constraint: $ => seq(
           $._fact,
           '@',
           $.temporal_var
       ),
 
-      chain_goal: $ => seq(
+      chain_constraint: $ => seq(
           '(', $.temporal_var, ',', $.natural, ')',
           '~~>',
           '(', $.temporal_var, ',', $.natural, ')'
       ),
 
-      disjunction_split_goal: $ => prec('CHAIN_GOAL', seq(
+      disjunction_split_constraint: $ => prec('CHAIN_CONSTRAINT', seq(
           field('formula', $._formula),
           repeat1(seq(
               choice('||', '∥'),
@@ -1045,7 +1045,7 @@ module.exports = grammar({
           ))
       )),
 
-      eq_split_goal: $ => seq(
+      eq_split_constraint: $ => seq(
           'splitEqs',
           '(', $.natural, ')'
       ),

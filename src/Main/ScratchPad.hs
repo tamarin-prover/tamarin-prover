@@ -28,7 +28,7 @@ thy = loadThy "examples/ake/dh/NAXOS_eCK.spthy"
 steps = getProofForLemma "eCK_key_secrecy"
   >>= trace "--- starting constraint solving ---"
       solve 0 0  -- simplify
-  >>= solve 0 0  -- solve first applicable goal on simplified constraint system
+  >>= solve 0 0  -- solve first applicable constraint on simplified constraint system
 
 -- | Pretty-print the tree of constraint systems after having applied all steps
 --   above.
