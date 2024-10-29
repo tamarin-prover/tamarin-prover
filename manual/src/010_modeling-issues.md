@@ -284,7 +284,7 @@ we get the error message
 	Message Derivation Checks
 	=========================
 
-	The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+	The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
 	Rule R_1:
 	Failed to derive Variable(s): ~k, m

@@ -120,7 +120,7 @@ reportVars :: [[ProofStatus]] -> [OpenProtoRule] -> [[LVar]] -> WfErrorReport
 reportVars analysisresults rules vars = case rulesAndVars of
     []     -> []
     errors -> [(underlineTopic "Message Derivation Checks",
-        text $ "The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
+        text $ "The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
         ++ errors)]
     where
         rulesAndVars :: String
@@ -138,7 +138,7 @@ reportDiffVars :: [[ProofStatus]] -> [DiffProtoRule] -> [[LVar]] -> WfErrorRepor
 reportDiffVars analysisresults rules vars = case rulesAndVars of
     []     -> []
     errors -> [(underlineTopic "Message Derivation Checks",
-        text $ "The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
+        text $ "The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
         ++ errors)]
     where
         rulesAndVars :: String
