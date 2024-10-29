@@ -194,7 +194,7 @@ defaultTheoryLoadOptions = TheoryLoadOptions
 
 toParserFlags :: TheoryLoadOptions -> [String]
 toParserFlags thyOpts = concat
-  [ [ "diff" |  thyOpts.diffMode ]
+  [ [ "diff" | thyOpts.diffMode ]
   , thyOpts.defines
   , [ "quit-on-warning" | thyOpts.quitOnWarning ] ]
 
@@ -410,17 +410,19 @@ checkTranslatedTheory thyOpts sign thy = do
       traceM ("[Theory " ++ theoryName thy ++ "] Derivation checks ended")
       pure rep
 
-  let report = transReport ++ fromMaybe derivTimeoutMsg  variableReport
+  let report = transReport ++ fromMaybe [derivTimeoutMsg] variableReport
 
   pure (report, deducThy)
   where
     autoSources = thyOpts.autoSources
     derivChecks = thyOpts.derivationChecks
-    derivTimeoutMsg = [(underlineTopic "Derivation Checks"
-                      , Pretty.vcat [
-                          Pretty.text "Derivation checks timed out."
-                        , Pretty.text "Use --derivcheck-timeout=INT to configure timeout."
-                        , Pretty.text "Set to 0 to deactivate for no timeout." ])]
+    derivTimeoutMsg =
+      ( underlineTopic "Derivation Checks"
+      , Pretty.vcat [
+        Pretty.text "Derivation checks timed out."
+        , Pretty.text "Use --derivcheck-timeout=INT to configure timeout."
+        , Pretty.text "Set to 0 to deactivate for no timeout." ]
+      )
 
     defaultProver = replaceSorryProver $ runAutoProver $ constructAutoProver defaultTheoryLoadOptions
     defaultDiffProver = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver defaultTheoryLoadOptions
@@ -431,8 +433,8 @@ checkTranslatedTheory thyOpts sign thy = do
       , reducibleFunSyms = makepublicsym (reducibleFunSyms s._sigMaudeInfo)
       }
     makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name,(int, Public, construct)))
-    makepublicsym  = Data.Set.map $ \case
-      NoEq (name, (int, _, constr)) -> NoEq (name,(int, Public, constr))
+    makepublicsym = Data.Set.map $ \case
+      NoEq (name, (int, _, constr)) -> NoEq (name, (int, Public, constr))
       x -> x
 
     theoryName = either (._thyName) (._diffThyName)
@@ -465,10 +467,15 @@ withVersionAndReport version thyOpts report thy = do
                       , prettyWfErrorReport rep ]
 
 -- | Close a translated theory.
-closeTranslatedTheory :: MonadError TheoryLoadError m => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTranslatedTheory OpenDiffTheory -> m (Either ClosedTheory ClosedDiffTheory)
+closeTranslatedTheory
+  :: MonadError TheoryLoadError m
+  => TheoryLoadOptions
+  -> SignatureWithMaude
+  -> Either OpenTranslatedTheory OpenDiffTheory
+  -> m (Either ClosedTheory ClosedDiffTheory)
 closeTranslatedTheory thyOpts sign srcThy = do
-  diffLemThy <- withDiffTheory (pure . addDefaultDiffLemma) srcThy
   let
+    diffLemThy = withDiffTheory addDefaultDiffLemma srcThy
     closedThy = bimap (\t -> closeTheoryWithMaude     sign t autoSources True)
                       (\t -> closeDiffTheoryWithMaude sign t autoSources)
                       diffLemThy
@@ -498,7 +505,7 @@ closeTranslatedTheory thyOpts sign srcThy = do
     diffProver | thyOpts.proveMode = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver thyOpts
                | otherwise         = mempty
 
-    withDiffTheory = bitraverse pure
+    withDiffTheory = bimap id
 
     theoryName = either (._thyName) (._diffThyName)
 
@@ -531,7 +538,7 @@ closeTheory version loadedThyOpts sign srcThy = do
 
     -- Set the oraclename to theory_filename.oracle (if none was supplied).
     thyHeurDefOracle opts =
-      opts { heuristic = (\(Heuristic grl) -> Just $ Heuristic $ defaultOracleNames srcThyInFileName grl) =<< loadedHeuristic }
+      opts { heuristic = (\(Heuristic grl) -> Heuristic $ defaultOracleNames srcThyInFileName grl) <$> loadedHeuristic }
 
     -- Read and process the arguments from the theory's config block.
     srcThyConfigBlockArgs = argsConfigString $ either theoryConfigBlock diffTheoryConfigBlock srcThy
