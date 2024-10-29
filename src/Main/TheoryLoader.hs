@@ -105,7 +105,7 @@ theoryLoadFlags =
 
   ,  flagOpt (prettyGoalRanking $ head $ defaultRankings False)
       ["heuristic"] (updateArg "heuristic") ("(" ++ intercalate "|" (keys goalRankingIdentifiers) ++ ")+")
-      ("Sequence of goal rankings to use (default '" ++ prettyGoalRanking (head $ defaultRankings False) ++ "')")
+      ("Sequence of proof method rankings to use (default '" ++ prettyGoalRanking (head $ defaultRankings False) ++ "')")
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partial-evaluation")
       "SUMMARY|VERBOSE"

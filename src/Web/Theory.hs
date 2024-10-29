@@ -1070,7 +1070,7 @@ htmlThyPath renderUrl renderImgUrl info = go
               <td>
                 <span class="keys">J/K
               <td>
-                Jump to the next/previous open goal within the currently
+                Jump to the next/previous open constraint within the currently
                 \ focused lemma, or to the next/previous lemma if there are no
                 \ more #
                 <tt>sorry
@@ -1211,7 +1211,7 @@ htmlDiffThyPath renderUrl info path =
               <td>
                 <span class="keys">J/K
               <td>
-                Jump to the next/previous open goal within the currently
+                Jump to the next/previous open constraint within the currently
                 \ focused lemma, or to the next/previous lemma if there are no
                 \ more #
                 <tt>sorry

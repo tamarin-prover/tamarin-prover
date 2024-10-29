@@ -548,7 +548,7 @@ markGoalAsSolved how goal =
         case mayStatus of
           Just status -> if (verbose) then trace (msg status) $
               modM sGoals $ M.insert goal $ set gsSolved True status else modM sGoals $ M.insert goal $ set gsSolved True status
-          Nothing     -> trace ("markGoalAsSolved: inexistent goal " ++ show goal) $ return ()
+          Nothing     -> trace ("markGoalAsSolved: inexistent constraint " ++ show goal) $ return ()
 
     msg status = render $ nest 2 $ fsep $
         [ text ("solved goal nr. "++ show (get gsNr status))
