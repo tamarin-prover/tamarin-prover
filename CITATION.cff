@@ -1,0 +1,60 @@
+cff-version: 1.2.0
+title: Tamarin Prover
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: David
+    family-names: Basin
+    orcid: 'https://orcid.org/0000-0003-2952-939X'
+    affiliation: ETH Zurich
+    email: basin@inf.ethz.ch
+  - given-names: Cas
+    family-names: Cremers
+    email: cas.cremers@cispa.de
+    affiliation: CISPA Helmholtz Center for Information Security
+    orcid: 'https://orcid.org/0000-0003-0322-2293'
+  - given-names: Jannik
+    family-names: Dreier
+    email: jannik.dreier@loria.fr
+    affiliation: 'Université de Lorraine, CNRS, Inria, LORIA'
+  - given-names: Simon
+    family-names: Meier
+    email: iridcode@gmail.com
+  - affiliation: ETH Zurich
+    given-names: Ralf
+    family-names: Sasse
+    email: ralf.sasse@inf.ethz.ch
+    orcid: 'https://orcid.org/0000-0002-5632-6099'
+  - given-names: Benedikt
+    family-names: Schmidt
+    affiliation: Google
+    email: beschmi@gmail.com
+identifiers:
+  - type: url
+    value: 'https://tamarin-prover.com/'
+    description: The main homepage of the Tamarin Prover software
+  - type: doi
+    value: 10.5281/zenodo.13971810
+    description: Zenodo Software DOI
+  - type: url
+    value: 'https://github.com/tamarin-prover/tamarin-prover'
+    description: Software repository URL
+repository-code: 'https://github.com/tamarin-prover/tamarin-prover'
+url: 'https://tamarin-prover.com/'
+repository-artifact: 'https://github.com/tamarin-prover/tamarin-prover/releases'
+abstract: >-
+  The Tamarin prover is a security protocol verification
+  tool that supports both falsification (attack finding) and
+  unbounded verification (proving) in the symbolic model.
+  Security protocols are specified as multiset rewriting
+  systems and analyzed with respect to temporal first-order
+  properties. 
+keywords:
+  - Tamarin Prover
+  - Verification
+  - Cryptography
+  - Symbolic Model
+  - Automated Analysis
+  - Security Protocols
