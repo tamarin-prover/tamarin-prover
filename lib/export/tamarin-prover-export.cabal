@@ -1,7 +1,7 @@
 cabal-version: 3.0
 name:          tamarin-prover-export
 build-type:    Simple
-version:       1.9.0
+version:       1.10.0
 license:       GPL-3.0-only
 license-file:  LICENSE
 category:      Theorem Provers
