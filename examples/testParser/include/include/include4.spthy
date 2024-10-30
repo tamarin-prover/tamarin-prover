@@ -1,2 +1,0 @@
-rule test:
- [In(<x,y>)]--[Equal(f1(x),f2(y)), Test()]->[]

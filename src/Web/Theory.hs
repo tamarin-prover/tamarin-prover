@@ -9,7 +9,6 @@ Description :  Pretty-printing security protocol theories into HTML code.
 Copyright   :  (c) 2011, 2012 Simon Meier & Cedric Staub
 License     :  GPL-3
 
-Maintainer  :  Simon Meier <iridcode@gmail.com>
 Stability   :  experimental
 Portability :  non-portable
 -}
@@ -41,7 +40,7 @@ module Web.Theory
 where
 
 
-import           Debug.Trace                  (trace)
+import           Debug.Trace                  (trace, traceM)
 
 import           Data.Char                    (toUpper)
 import           Data.List
@@ -77,12 +76,12 @@ import           System.Process
 
 import           Logic.Connectives
 import           Theory
-import           Theory.Constraint.System.Dot (nonEmptyGraph,nonEmptyGraphDiff)
 import           Theory.Text.Pretty
 import           TheoryObject
 
 import           Web.Settings
 import           Web.Types
+import Theory.Constraint.System (usesOracle)
 
 ------------------------------------------------------------------------------
 -- Various other functions
@@ -147,11 +146,11 @@ applyDiffMethodAtPath thy lemmaName proofPath prover i = do
     methods <- (map fst . rankDiffProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyDiffProverAtPath thy lemmaName proofPath
-      (oneStepDiffProver method                        `mappend`
-       replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify)) `mappend`
-       replaceDiffSorryProver (contradictionDiffProver)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
+      (   oneStepDiffProver method                                 
+       <> replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify))
+       <> replaceDiffSorryProver contradictionDiffProver
+       <> replaceDiffSorryProver (oneStepDiffProver DiffMirrored)
+       <> replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
@@ -176,21 +175,26 @@ applyDiffProverAtPath thy lemmaName proofPath prover =
 
 -- | Reference a dot graph for the given path.
 refDotPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> TheoryPath -> d
-refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath)]
-  where imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
+refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath), ("onclick", jsOpenSrcInNewTab)]
+  where
+    imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
+    jsOpenSrcInNewTab = "window.open(this.src, '_blank')"
 
 -- | Reference a dot graph for the given diff path.
 refDotDiffPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> DiffTheoryPath -> Bool -> d
-refDotDiffPath renderUrl tidx path mirror = closedTag "img" [("class", "graph"), ("src", imgPath)]
-    where imgPath = if mirror
-          then T.unpack $ renderUrl (TheoryMirrorDiffR tidx path)
-          else T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
+refDotDiffPath renderUrl tidx path mirror = withTag "a" [("href", imgPath), ("target", "_blank")] $ closedTag "img" [("class", "graph"), ("src", imgPath)]
+  where
+    imgPath = if mirror
+              then T.unpack $ renderUrl (TheoryMirrorDiffR tidx path)
+              else T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
 
+-- | Generate the dot file path for an intermediate dot output.
 getDotPath :: String -> FilePath
 getDotPath code = imageDir </> addExtension (stringSHA256 code) "dot"
 
-getGraphPath :: String -> String -> FilePath
-getGraphPath ext code = imageDir </> addExtension (stringSHA256 code) ext
+-- | Generate the image file path for the final output.
+getGraphPath :: OutputFormat -> String -> FilePath
+getGraphPath ext code = imageDir </> addExtension (stringSHA256 code) (show ext)
 
 -- | Create a link to a given theory path.
 linkToPath :: HtmlDocument d
@@ -507,6 +511,7 @@ sequentSnippet se path = refDotPath path $-$ preformatted Nothing (prettySystem 
 -- open-goals, and the new cases.
 subProofSnippet :: HtmlDocument d
                 => RenderUrl
+                -> RenderUrl                 -- ^ URL renderer that includes GET parameters for the image.
                 -> TheoryIdx                 -- ^ The theory index.
                 -> TheoryInfo                -- ^ The theory info of this index.
                 -> String                    -- ^ The lemma.
@@ -514,7 +519,7 @@ subProofSnippet :: HtmlDocument d
                 -> ProofContext              -- ^ The proof context.
                 -> IncrementalProof          -- ^ The sub-proof.
                 -> d
-subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
+subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
     case psInfo $ root prf of
       Nothing -> text $ "no annotated constraint system / " ++ nCases ++ " sub-case(s)"
       Just se -> vcat $
@@ -523,7 +528,7 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         [ text ""
         , withTag "h3" [] (text "Constraint system")
         ] ++
-        [ refDotPath renderUrl tidx (TheoryProof lemma proofPath)
+        [ refDotPath renderImgUrl tidx (TheoryProof lemma proofPath)
         | nonEmptyGraph se ]
         ++
         [ preformatted (Just "sequent") (prettyNonGraphSystem se)
@@ -537,21 +542,23 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
-          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , preformatted (Just "methods") (numbered' $ zipWith prettyPM [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
-          , autoProverLinks 'b' "bounded-" boundDesc bound
-          , autoProverLinks 's' "all-"     allProve      0
-          ]
+          , autoProverLinks 'b' "bounded-" boundDesc bound ] ++
+          [ autoProverLinks 'o' "oracle-"  oracleDesc    0
+          | usesOracle heuristic ] ++
+          [ autoProverLinks 's' "all-"     allProve      0 ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ tiAutoProver ti
-          allProve  = text $ " for all lemmas "
+          oracleDesc = text "until oracle returns nothing"
+          allProve  = text " for all lemmas "
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoProverAllR tidx CutDFS bound (TheoryProof lemma proofPath))
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -560,22 +567,29 @@ subProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
               (keyword_ "for all solutions")
       , nameSuffix
       ]
+    autoProverLinks key "oracle-" nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverR tidx CutDFS bound True (TheoryProof lemma proofPath))
+            ["oracle-autoprove"]
+            (keyword_ "autoprove")
+      , nameSuffix ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
-            (AutoProverR tidx CutDFS bound (TheoryProof lemma proofPath))
+            (AutoProverR tidx CutDFS bound False (TheoryProof lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
-              (AutoProverR tidx CutNothing bound (TheoryProof lemma proofPath))
+              (AutoProverR tidx CutNothing bound False (TheoryProof lemma proofPath))
               [classPrefix ++ "characterization"]
               (keyword_ "for all solutions")
       , nameSuffix
       ]
 
-    prettyPM (i, (m, (_cases, expl))) =
+    prettyPM i (m, (_cases, expl)) =
       linkToPath renderUrl
         (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
         ["proof-method"] (prettyProofMethod m)
@@ -638,14 +652,14 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
-          allProve  = text $ " for all lemmas "
+          allProve  = text " for all lemmas "
 
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoProverAllDiffR tidx CutDFS bound)
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -659,7 +673,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
       , linkToPath renderUrl
             (AutoProverDiffR tidx CutDFS bound s (DiffTheoryProof s lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -727,7 +741,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         (pms, _, _) ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
-          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , preformatted (Just "methods") (numbered' $ zipWith prettyPM [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound
           , autoProverLinks 's' "all-"     allProve      0
@@ -735,7 +749,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
-          allProve  = text $ " for all lemmas "
+          allProve  = text " for all lemmas "
 
     mirrorSystem =
         if dpsMethod (root prf) == DiffMirrored
@@ -759,31 +773,29 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
       , linkToPath renderUrl
             (AutoProverAllDiffR tidx CutDFS bound)
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
               (AutoProverAllDiffR tidx CutNothing bound)
               ["characterization-all"]
               (keyword_ "for all solutions")
-      , nameSuffix
-      ]
+      , nameSuffix ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoDiffProverR tidx CutDFS bound (DiffTheoryDiffProof lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
               (AutoDiffProverR tidx CutNothing bound (DiffTheoryDiffProof lemma proofPath))
               [classPrefix ++ "characterization"]
               (keyword_ "for all solutions")
-      , nameSuffix
-      ]
+      , nameSuffix ]
 
-    prettyPM (i, (m, (_cases, expl))) =
+    prettyPM i (m, (_cases, expl)) =
       linkToPath renderUrl
         (TheoryPathDiffMR tidx (DiffTheoryDiffMethod lemma proofPath i))
         ["proof-method"] (prettyDiffProofMethod m)
@@ -852,7 +864,7 @@ htmlSourceDiff renderUrl tidx s kind d (j, th) =
                                , text " / named ", doubleQuotes (text name),
                                  if isPartial then text "(partial deconstructions)" else text "" ]
       , refDotDiffPath renderUrl tidx (DiffTheorySource s kind d j i) False
-      , withTag "p" [] $ ppPrem
+      , withTag "p" [] ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
       where
@@ -877,7 +889,7 @@ rulesSnippet thy = vcat
                                 else ppWithHeader "Macros" $ 
         (prettyMacros $ theoryMacros thy)
     , ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showInjFact) injFacts
+        (if null injFacts then text "None" else fsepList (text . showInjFact) injFacts)
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
@@ -943,7 +955,7 @@ rulesDiffSnippetSide s isdiff thy = vcat
                                      else ppWithHeader "Macros" $
         (prettyMacros $ diffTheoryMacros thy)
     ,ppWithHeader "Fact Symbols with Injective Instances" $
-        fsepList (text . showInjFact) injFacts
+        (if null injFacts then text "None" else fsepList (text . showInjFact) injFacts)
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null(diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
@@ -980,12 +992,12 @@ messageDiffSnippet s isdiff thy = vcat
         (vcat (intersperse (text "") $ t))
 
 -- | Render the item in the given theory given by the supplied path.
-htmlThyPath :: RenderUrl    -- ^ The function for rendering Urls.
-            -> TheoryInfo   -- ^ The info of the theory to render
-            -> TheoryPath   -- ^ Path to render
-            ->  Html
-htmlThyPath renderUrl info path =
-  go path
+htmlThyPath :: RenderUrl      -- ^ The function for rendering Urls.
+            -> RenderUrl      -- ^ URL renderer that includes GET parameters for the image.
+            -> TheoryInfo     -- ^ The info of the theory to render
+            -> TheoryPath     -- ^ Path to render
+            -> Html
+htmlThyPath renderUrl renderImgUrl info = go
   where
     thy  = tiTheory info
     tidx = tiIndex  info
@@ -1006,7 +1018,7 @@ htmlThyPath renderUrl info path =
     go (TheoryProof l p)       = pp $
         fromMaybe (text "No such lemma or proof path.") $ do
            lemma <- lookupLemma l thy
-           subProofSnippet renderUrl tidx info l p (getProofContext lemma thy)
+           subProofSnippet renderUrl renderImgUrl tidx info l p (getProofContext lemma thy)
              <$> resolveProofPath thy l p
 
     go (TheoryLemma _)         = pp $ text "Implement lemma pretty printing!"
@@ -1058,7 +1070,7 @@ htmlThyPath renderUrl info path =
               <td>
                 <span class="keys">J/K
               <td>
-                Jump to the next/previous open goal within the currently
+                Jump to the next/previous open constraint within the currently
                 \ focused lemma, or to the next/previous lemma if there are no
                 \ more #
                 <tt>sorry
@@ -1199,7 +1211,7 @@ htmlDiffThyPath renderUrl info path =
               <td>
                 <span class="keys">J/K
               <td>
-                Jump to the next/previous open goal within the currently
+                Jump to the next/previous open constraint within the currently
                 \ focused lemma, or to the next/previous lemma if there are no
                 \ more #
                 <tt>sorry
@@ -1267,71 +1279,57 @@ htmlThyDbgPath thy path = go path
     go _ = Nothing
 -}
 
--- | Render the image corresponding to the given theory path.
-imgThyPath :: ImageFormat
-           -> (String, FilePath)     -- ^ choice and command for rendering (dot or json)
-           -> FilePath               -- ^ Tamarin's cache directory
-           -> (System -> D.Dot ())
-           -> (String -> System -> String)
-                                     -- ^ to export contraint system to JSON
-           -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
-           -> Bool                   -- ^ True iff we want abbreviations
-           -> ClosedTheory
-           -> TheoryPath
-           -> IO FilePath
-imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraphFunct simplificationLevel abbreviate thy path = go path
+-- | Output either JSON or an image corresponding to the given theory path and return the generated file's path.
+-- Returns Nothing if there was an error during the image generation.
+imgThyPath :: ImageFormat                  -- ^ The preferred image output format. 
+           -> OutputCommand                -- ^ Choice and command for rendering.
+           -> FilePath                     -- ^ Tamarin's cache directory
+           -> (System -> D.Dot ())         -- ^ Function to render a System to Graphviz dot format.
+           -> (String -> System -> String) -- ^ Function to render a System to JSON.
+           -> ClosedTheory                 -- ^ Theory from which to extract the 'System'.
+           -> TheoryPath                   -- ^ Path of the 'System' in the theory.
+           -> IO (Maybe FilePath)          -- ^ Path to the generated file.
+imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath = 
+    case thyPathSystem thyPath of
+      Nothing -> return Nothing
+      Just (jsonLabel, system) -> do
+        let code = case ocFormat outputCommand of
+                     OutDot -> prefixedShowDot $ toDot system
+                     OutJSON -> toJSON jsonLabel system 
+        renderGraphCode code
   where
-    go (TheorySource k i j)   = case graphChoice of
-                                  "json"  -> renderGraphCode "json" (casesJsonCode k i j)
-                                  _       -> renderGraphCode "dot" (casesDotCode k i j)
-    go (TheoryProof l p)      = case graphChoice of
-                                  "json"  -> renderGraphCode "json" (proofPathJsonCode l p)
-                                  _       -> renderGraphCode "dot" (proofPathDotCode l p)
-    go _                      = error "Unhandled theory path. This is a bug."
+    thyPathSystem :: TheoryPath -> Maybe (String, System)
+    thyPathSystem (TheorySource k i j)          = casesSystem k i j
+    thyPathSystem (TheoryProof lemma proofPath) = proofPathSystem lemma proofPath
+    thyPathSystem _                             = error "Unhandled theory path. This is a bug."
 
-    -- Prefix dot code with comment mentioning all protocol rule names
+    -- | Get a string serialization for one case.
+    casesSystem k i j = do
+      let jsonLabel = "Theory: " ++ (get thyName thy) ++ " Case: " ++ show i ++ ":" ++ show j
+          cases = map (getDisj . get cdCases) (getSource k thy)
+      return (jsonLabel, snd $ cases !! (i-1) !! (j-1))
+
+    -- | Get string serialization for proof path in lemma.
+    proofPathSystem lemma proofPath = do
+      let jsonLabel = "Theory: " ++ (get thyName thy) ++ " Lemma: " ++ lemma 
+      subProof <- resolveProofPath thy lemma proofPath
+      sequent <- psInfo $ root subProof
+      return (jsonLabel, sequent)
+
+    -- | Prefix dot code with comment mentioning all protocol rule names
     prefixedShowDot dot = unlines
-        [ "// simplification: "          ++ simplificationLevel
-        , "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
+        [ "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
         , "// message deduction rules: " ++ ruleList (getIntrVariants thy)
-        , "// abbreviate: "              ++ show abbreviate
-        , D.showDot dot
+        , D.showDot "G" dot
         ]
       where
         ruleList :: HasRuleName (Rule i) => [Rule i] -> String
         ruleList = concat . intersperse ", " . nub . map showRuleCaseName
 
-    -- Get dot code for required cases
-    casesDotCode k i j = prefixedShowDot $
-        compact $ snd $ cases !! (i-1) !! (j-1)
-      where
-        cases = map (getDisj . get cdCases) (getSource k thy)
-
-   -- Get JSON code for required cases
-    casesJsonCode k i j =
-        showJsonGraphFunct ("Theory: " ++ (get thyName thy) ++ " Case: " ++ show i ++ ":" ++ show j)
-        $ snd $ cases !! (i-1) !! (j-1)
-      where
-        cases = map (getDisj . get cdCases) (getSource k thy)
-
-    -- Get dot code for proof path in lemma
-    proofPathDotCode lemma proofPath =
-      prefixedShowDot $ fromMaybe (return ()) $ do
-        subProof <- resolveProofPath thy lemma proofPath
-        sequent <- psInfo $ root subProof
-        return $ compact sequent
-
-   -- Get JSON for proof path in lemma
-    proofPathJsonCode lemma proofPath =
-      fromMaybe ("") $ do
-        subProof <- resolveProofPath thy lemma proofPath
-        sequent <- psInfo $ root subProof
-        return $ showJsonGraphFunct ("Theory: " ++ (get thyName thy) ++ " Lemma: " ++ lemma) sequent
-
     -- Render a piece of dot or JSON code
-    renderGraphCode choice code = do
-      let graphPath = cacheDir_ </> getGraphPath choice code
-          imgPath = addExtension graphPath (show imgFormat)
+    renderGraphCode code = do
+      let graphPath = cacheDir_ </> getGraphPath (ocFormat outputCommand) code
+          imgPath = addExtension graphPath $ show imageFormat
 
           -- A busy wait loop with a maximal number of iterations
           renderedOrRendering :: Int -> IO Bool
@@ -1339,54 +1337,56 @@ imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraph
               graphExists <- doesFileExist graphPath
               imgExists <- doesFileExist imgPath
               if (n > 0 && graphExists && not imgExists)
-                  then do threadDelay (10 * 1000) -- wait 10 ms
-                          renderedOrRendering (n - 1)
+                  then do
+                    threadDelay (10 * 1000) -- wait 10 ms
+                    renderedOrRendering (n - 1)
                   else return imgExists
 
       -- Ensure that the output directory exists.
       createDirectoryIfMissing True (takeDirectory graphPath)
 
       imgGenerated <- firstSuccess
-          [ -- There might be some other thread that rendered or is rendering
-            -- this dot file. We wait at most 50 iterations (0.5 sec timout)
-            -- for this other thread to render the image. Afterwards, we give
-            -- it a try by ourselves.
-            renderedOrRendering 50
-            -- create dot-file and render to image
-          , do writeFile graphPath code
-               -- select the correct command to generate img
-               if (choice == "json")
-                   then jsonToImg graphPath imgPath
-                   else dotToImg "dot" graphPath imgPath
-            -- sometimes 'dot' fails => use 'fdp' as a backup tool
-          , if (choice == "dot")
-                then dotToImg "fdp" graphPath imgPath
-                else return False
-          ]
+        [ -- There might be some other thread that rendered or is rendering
+          -- this dot file. We wait at most 50 iterations (0.5 sec timout)
+          -- for this other thread to render the image. Afterwards, we give
+          -- it a try by ourselves.
+          renderedOrRendering 50,
+          -- create dot-file and render to image
+          do
+            writeFile graphPath code
+            -- select the correct command to generate img
+            case ocFormat outputCommand of
+              OutDot  -> dotToImg "dot" graphPath imgPath
+              OutJSON -> jsonToImg graphPath imgPath,
+          -- sometimes 'dot' fails => use 'fdp' as a backup tool
+          case ocFormat outputCommand of
+            OutDot -> dotToImg "fdp" graphPath imgPath
+            _      -> return False
+        ]
       if imgGenerated
-        then return imgPath
+        then return $ Just imgPath
         else trace ("WARNING: failed to convert:\n  '" ++ graphPath ++ "'")
-                   (return imgPath)
+                   (return Nothing)
 
     -- render img file from json file
     jsonToImg jsonFile imgFile = do
-      (ecode,_out,err) <- readProcessWithExitCode graphCommand [imgFile, jsonFile] ""
+      (ecode,_out,err) <- readProcessWithExitCode (ocGraphCommand outputCommand) [imgFile, jsonFile] ""
       case ecode of
         ExitSuccess   -> return True
         ExitFailure i -> do
-          putStrLn $ "jsonToImg: "++graphCommand++" failed with code "
+          putStrLn $ "jsonToImg: "++ ocGraphCommand outputCommand ++" failed with code "
                       ++show i++" for file "++jsonFile++":\n"++err
           return False
 
     -- render img file from dot file
     dotToImg dotMode dotFile imgFile = do
-      (ecode,_out,err) <- readProcessWithExitCode graphCommand
-                              [ "-T"++show imgFormat, "-K"++dotMode, "-o",imgFile, dotFile]
+      (ecode,_out,err) <- readProcessWithExitCode (ocGraphCommand outputCommand)
+                              [ "-T"++show imageFormat, "-K"++dotMode, "-o",imgFile, dotFile]
                               ""
       case ecode of
         ExitSuccess   -> return True
         ExitFailure i -> do
-          putStrLn $ "dotToImg: "++graphCommand++" failed with code "
+          putStrLn $ "dotToImg: "++ ocGraphCommand outputCommand ++" failed with code "
                       ++show i++" for file "++dotFile++":\n"++err
           return False
 
@@ -1395,19 +1395,17 @@ imgThyPath imgFormat (graphChoice, graphCommand) cacheDir_ compact showJsonGraph
       s <- m
       if s then return True else firstSuccess ms
 
-
 -- | Render the image corresponding to the given theory path.
+-- Returns Nothing if there was an error during image generation.
 imgDiffThyPath :: ImageFormat
            -> FilePath               -- ^ 'dot' command
            -> FilePath               -- ^ Tamarin's cache directory
            -> (System -> D.Dot ())
-           -> String                 -- ^ Simplification level of graph (string representation of integer >= 0)
-           -> Bool                   -- ^ True iff we want abbreviations
            -> ClosedDiffTheory
            -> DiffTheoryPath
            -> Bool
-           -> IO FilePath            -- ^ True if we want the mirror graph
-imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbreviate thy path mirror = go path
+           -> IO (Maybe FilePath)            -- ^ True if we want the mirror graph
+imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path mirror = go path
   where
     go (DiffTheorySource s k d i j) = renderDotCode (casesDotCode s k i j d)
     go (DiffTheoryProof s l p)      = renderDotCode (proofPathDotCode s l p)
@@ -1416,13 +1414,11 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
 
     -- Prefix dot code with comment mentioning all protocol rule names
     prefixedShowDot dot = unlines
-        [ "// simplification: "          ++ simplificationLevel
-        , "// protocol rules: "          ++ ruleList (getProtoRuleEsDiff LHS thy) -- FIXME RS: the rule names are the same on LHS and RHS, so we just pick LHS; should pass the current Side through to make this clean
+        [ "// protocol rules: "          ++ ruleList (getProtoRuleEsDiff LHS thy) -- FIXME RS: the rule names are the same on LHS and RHS, so we just pick LHS; should pass the current Side through to make this clean
         , "// message deduction rules: " ++ ruleList (getIntrVariantsDiff LHS thy) -- FIXME RS: the intruder rule names are the same on LHS and RHS; should pass the current Side through to make this clean
 --        , "// message deduction rules: " ++ ruleList ((intruderRules . get (_crcRules . diffThyCacheLeft)) thy) -- FIXME RS: again, we arbitrarily pick the LHS version of the cache, should be the same on both sides
 --intruderRules . L.get (crcRules . diffThyCacheLeft)
-        , "// abbreviate: "              ++ show abbreviate
-        , D.showDot dot
+        , D.showDot "G" dot
         ]
       where
         ruleList :: HasRuleName (Rule i) => [Rule i] -> String
@@ -1436,14 +1432,14 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
 
     -- Get dot code for proof path in lemma
     proofPathDotCode s lemma proofPath =
-      D.showDot $ fromMaybe (return ()) $ do
+      D.showDot "G" $ fromMaybe (return ()) $ do
         subProof <- resolveProofPathDiff thy s lemma proofPath
         sequent <- psInfo $ root subProof
         return $ compact sequent
 
     -- Get dot code for proof path in lemma
     proofPathDotCodeDiff lemma proofPath mir =
-      D.showDot $ fromMaybe (return ()) $ do
+      D.showDot "G" $ fromMaybe (return ()) $ do
         subProof <- resolveProofPathDiffLemma thy lemma proofPath
         diffSequent <- dpsInfo $ root subProof
         if mir
@@ -1491,9 +1487,9 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact simplificationLevel abbrev
           , dotToImg "fdp" dotPath imgPath
           ]
       if imgGenerated
-        then return imgPath
+        then return $ Just imgPath
         else trace ("WARNING: failed to convert:\n  '" ++ dotPath ++ "'")
-                   (return imgPath)
+                   (return Nothing)
 
     dotToImg dotMode dotFile imgFile = do
       (ecode,_out,err) <- readProcessWithExitCode dotCommand
@@ -1606,9 +1602,9 @@ nextThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextThyPath thy = go
   where
     go TheoryHelp                       = TheoryMessage
-    go TheoryMessage                    = TheoryTactic
-    go TheoryTactic                     = TheoryRules
-    go TheoryRules                      = TheorySource RawSource 0 0
+    go TheoryMessage                    = TheoryRules
+    go TheoryRules                      = TheoryTactic
+    go TheoryTactic                     = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)     = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource _ _) = fromMaybe TheoryHelp firstLemma
     go (TheoryLemma lemma)              = TheoryProof lemma []
@@ -1699,9 +1695,9 @@ prevThyPath thy = go
   where
     go TheoryHelp                        = TheoryHelp
     go TheoryMessage                     = TheoryHelp
-    go TheoryTactic                      = TheoryMessage
-    go TheoryRules                       = TheoryTactic
-    go (TheorySource RawSource _ _)      = TheoryRules
+    go TheoryRules                       = TheoryMessage
+    go TheoryTactic                      = TheoryRules
+    go (TheorySource RawSource _ _)      = TheoryTactic
     go (TheorySource RefinedSource _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)
       | Just prevLemma <- getPrevLemma l = TheoryProof prevLemma (lastPath prevLemma)
@@ -1814,9 +1810,9 @@ nextSmartThyPath :: ClosedTheory -> TheoryPath -> TheoryPath
 nextSmartThyPath thy = go
   where
     go TheoryHelp                         = TheoryMessage
-    go TheoryMessage                      = TheoryTactic
-    go TheoryTactic                       = TheoryRules
-    go TheoryRules                        = TheorySource RawSource 0 0
+    go TheoryMessage                      = TheoryRules
+    go TheoryRules                        = TheoryTactic
+    go TheoryTactic                       = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)       = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource   _ _) = fromMaybe TheoryHelp firstLemma
     go (TheoryLemma lemma)                = TheoryProof lemma []
@@ -1913,9 +1909,9 @@ prevSmartThyPath thy = go
   where
     go TheoryHelp                          = TheoryHelp
     go TheoryMessage                       = TheoryHelp
-    go TheoryTactic                        = TheoryMessage
-    go TheoryRules                         = TheoryTactic
-    go (TheorySource RawSource _ _)        = TheoryRules
+    go TheoryRules                         = TheoryMessage
+    go TheoryTactic                        = TheoryRules
+    go (TheorySource RawSource _ _)        = TheoryTactic
     go (TheorySource RefinedSource   _ _)  = TheorySource RawSource 0 0
     go (TheoryLemma l)
       | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)

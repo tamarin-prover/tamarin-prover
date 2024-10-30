@@ -7,7 +7,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Term Algebra and related notions.
 module Term.Term.Raw (
@@ -35,6 +34,14 @@ module Term.Term.Raw (
     , fAppNoEq
     , fAppList
     , unsafefApp
+
+    -- * Subterm functions
+    , isSubterm
+    , isProperSubterm
+    , replaceSubterm
+    , replaceProperSubterm
+    , countSubterms
+    , countProperSubterms
 
     ) where
 
@@ -228,3 +235,36 @@ foldTerm fLIT fFAPP t = go t
 instance Sized a => Sized (Term a) where
     size = foldTerm size (const $ \xs -> sum xs + 1)
 
+
+----------------------------------------------------------------------
+-- Subterm Handling
+----------------------------------------------------------------------
+
+-- | Check if a term is a subterm of another.
+isSubterm :: Eq a => Term a -> Term a -> Bool
+isSubterm t1 t2 = (t1 == t2) || isProperSubterm t1 t2
+
+-- | Check if a term is a proper subterm (i.e. subterm but not equal) of another.
+isProperSubterm :: Eq a => Term a -> Term a -> Bool
+isProperSubterm t (viewTerm -> FApp _ ts) = any (isSubterm t) ts
+isProperSubterm _ _ = False
+
+countSubterms :: Eq a => Term a -> Term a -> Int
+countSubterms t1 t2 = if t1 == t2 then 1 else countProperSubterms t1 t2
+
+countProperSubterms :: Eq a => Term a -> Term a -> Int 
+countProperSubterms t (viewTerm -> FApp _ ts) = sum $ map (countSubterms t) ts
+countProperSubterms _ _ = 0
+
+-- | Replace all subterms of a term top-down according to the supplied replacement function.
+replaceSubterm :: (Term a -> Term a) -> Term a -> Term a
+replaceSubterm f originalTerm =
+  let newTerm = f originalTerm  in
+  case viewTerm newTerm of
+    (Lit _) -> newTerm
+    FApp s ts -> termViewToTerm (FApp s (map (replaceSubterm f) ts))
+
+-- | Replace all proper subterms of a term top-down according to the supplied replacement function.
+replaceProperSubterm :: (Term a -> Term a) -> Term a -> Term a
+replaceProperSubterm f (viewTerm -> FApp s ts) = termViewToTerm (FApp s (map (replaceSubterm f) ts))
+replaceProperSubterm _ t = t

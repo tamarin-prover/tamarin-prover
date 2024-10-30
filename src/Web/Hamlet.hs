@@ -198,6 +198,7 @@ headerTpl info = [whamlet|
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
+            <li><a id=agent-toggle href="#">Clustering by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
@@ -243,6 +244,7 @@ headerDiffTpl info = [whamlet|
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
+            <li><a id=agent-toggle href="#">Clusturing by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
@@ -286,12 +288,13 @@ proofStateDiffTpl renderUrl ti = do
 
 -- | Framing/UI-layout template (based on JavaScript/JQuery)
 overviewTpl :: RenderUrl
+            -> RenderUrl -- ^ URL renderer that includes GET parameters for the image.
             -> TheoryInfo -- ^ Theory information
             -> TheoryPath -- ^ Theory path to load into main
             -> IO Widget
-overviewTpl renderUrl info path = do
+overviewTpl renderUrl renderImgUrl info path = do
   proofState <- proofStateTpl renderUrl info
-  mainView <- pathTpl renderUrl info path
+  mainView <- pathTpl renderUrl renderImgUrl info path
   return [whamlet|
     $newline never
     <div .ui-layout-north>
@@ -343,13 +346,14 @@ overviewDiffTpl renderUrl info path = do
   
 -- | Theory path, displayed when loading main screen for first time.
 pathTpl :: RenderUrl
-        -> TheoryInfo   -- ^ The theory
-        -> TheoryPath   -- ^ Path to display on load
+        -> RenderUrl      -- ^ URL renderer that includes GET parameters for the image.
+        -> TheoryInfo     -- ^ The theory
+        -> TheoryPath     -- ^ Path to display on load
         -> IO Widget
-pathTpl renderUrl info path =
+pathTpl renderUrl renderImgUrl info path =
     return $ [whamlet|
                 $newline never
-                #{htmlThyPath renderUrl info path} |]
+                #{htmlThyPath renderUrl renderImgUrl info path} |]
 
 -- | Theory path, displayed when loading main screen for first time.
 pathDiffTpl :: RenderUrl
@@ -382,10 +386,7 @@ introTpl = [whamlet|
         \ <a href="https://beschmi.net">Benedikt Schmidt</a><br>
         Tamarin is a collaborative effort: see the <a href="http://tamarin-prover.github.io/manual/index.html">manual</a> for a more extensive overview of its development and additional contributors.
       <p>
-        <span class="tamarin">Tamarin</span> was developed at the
-        \ <a href="http://www.infsec.ethz.ch">Information Security Institute</a>,
-        \ <a href="https://www.ethz.ch">ETH Zurich</a>.
-        \ This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
+        This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
         \ you are welcome to redistribute it according to its
         \ <a href="/static/LICENSE" type="text/plain">LICENSE.</a>
       <p>

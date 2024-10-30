@@ -7,7 +7,7 @@ PDF book.
 
 The source files can be found in the `src` directory.
 
-[![Build Status](https://travis-ci.org/tamarin-prover/manual.svg?branch=master)](https://travis-ci.org/tamarin-prover/manual) Travis monitors the master branch of this repository. Commits to master trigger a new Travis build, which will commit the updated manual to the gh-pages branch of this repository. This is served by Github Pages at https://tamarin-prover.github.io/manual.
+[![Build Status](https://travis-ci.org/tamarin-prover/manual.svg?branch=master)](https://travis-ci.org/tamarin-prover/manual) Travis monitors the master branch of this repository. Commits to master trigger a new Travis build, which will commit the updated manual to the gh-pages branch of this repository. This is served by Github Pages at https://tamarin-prover.com/manual.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ The build process additionally depends on the `make` toolchain.
 There are two main branches: `/master` and `/develop`. The intent is that they are 
 synchronised with Tamarin's corresponding [source code](https://github.com/tamarin-prover/tamarin-prover) branches.
 
-To suggest improvements/extensions for the [current manual](https://tamarin-prover.github.io/manual), 
+To suggest improvements/extensions for the [current manual](https://tamarin-prover.com/manual), 
 create a pull request for the `/master` branch.
 
 To add documentation for new features that have been accepted into the `/develop` 

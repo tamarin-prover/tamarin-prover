@@ -3,7 +3,6 @@
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Parsing Proofs
@@ -34,7 +33,7 @@ nodePrem = parens ((,) <$> nodevar
 -- | Parse a node conclusion.
 nodeConc :: Parser NodeConc
 nodeConc = parens ((,) <$> nodevar
-                       <*> (comma *> fmap (ConcIdx .fromIntegral) natural))
+                       <*> (comma *> fmap (ConcIdx . fromIntegral) natural))
 
 -- | Parse a goal.
 goal :: Parser Goal

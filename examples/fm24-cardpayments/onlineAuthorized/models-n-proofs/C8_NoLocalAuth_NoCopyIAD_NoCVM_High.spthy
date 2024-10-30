@@ -1,0 +1,561 @@
+theory C8_NoLocalAuth_NoCopyIAD_NoCVM_High
+
+begin
+
+builtins:   signing,
+            hashing,
+            asymmetric-encryption,
+            xor,
+            symmetric-encryption,
+            diffie-hellman
+
+functions:  f/2,
+            MAC/2, MAC_arpc/2,
+            p8/1,
+            g/0,
+            KDF_SKc/1,
+            KDF_SKi/1
+
+rule Terminal_Issuer_Network:
+    [ Send(S, R, channelID, msg) ]-->[ Recv(S, R, channelID, msg) ]
+
+rule Generate_Amount_Low:
+    [ ]--[ Once(<$amount, 'Amount'>) ]->[ !Value($amount, 'Low') ]
+
+rule Generate_Amount_High:
+    [ ]--[ Once(<$amount, 'Amount'>) ]->[ !Value($amount, 'High') ]
+
+rule Generate_ATC:
+    [ Fr(~ATC) ]-->[ !ATC(~ATC), Out(~ATC) ]
+
+rule Create_CA:
+    let pubkCA = pk(~privkCA)
+        cont = <'01', $CA, pubkCA, $CA>
+        cert = <cont, sign{cont}~privkCA>
+    in
+    [ Fr(~privkCA) ]
+  --[ Wellformedness(),
+      Once($CA),
+      Role($CA, 'CA') ]->
+    [ !LtkCA($CA, ~privkCA),
+      !CertCA($CA, cert),
+      Out(pubkCA)
+    ]
+
+rule Create_Issuer:
+    let pubkIssuer = pk(~privkIssuer)
+        cont = <'02', $Issuer, pubkIssuer, $CA>
+        cert = <cont, sign{cont}~privkCA>
+    in
+    [ Fr(~privkIssuer),
+      !LtkCA($CA, ~privkCA) ]
+  --[ Once($Issuer),
+      Role($Issuer, 'Issuer') ]->
+    [ !LtkIssuer($Issuer, ~privkIssuer),
+      !CertIssuer($Issuer, cert),
+      !IssuingCA($Issuer, $CA),
+      Out(pubkIssuer)
+    ]
+
+rule Compromise_CA:
+    [ !LtkCA($CA, ~privkCA) ]
+  --[ Compromise($CA) ]->
+    [ Out(~privkCA)]
+
+rule Compromise_Issuer:
+    [ !LtkIssuer($Issuer, ~privkIssuer) ]
+  --[ Compromise($Issuer) ]->
+    [ Out(<$Issuer, ~privkIssuer>) ]
+
+rule Compromise_Issuer_Card_ShK:
+    [ !IssuingIssuer(~PAN, $Issuer),
+      !Shk(~PAN, ~MK) ]
+  --[ Compromise($Issuer), Compromise(~PAN) ]->
+    [ Out(~MK) ]
+
+rule Compromise_Card_ECC:
+    [ !ECCPrivKeyCard(~PAN, ~dC) ]
+  --[ Compromise(~PAN) ]->
+    [ Out(<~PAN, ~dC>) ]
+
+rule Compromise_Terminal_ECC:
+    [ Terminal_May_Compromise($Terminal, ~dT) ]
+  --[ Compromise($Terminal) ]->
+    [ Out(~dT) ]
+
+rule Set_PIN:
+    [ Fr(~PIN),
+      Set_PIN(~PAN, CVM, $CA, $Issuer) ]
+  --[ NEq(CVM, 'NoCVM'),
+      SecretPIN(~PIN),
+      Honest($CA), Honest($Issuer), Honest(~PAN) ]->
+    [ !PIN(~PAN, ~PIN),
+      !Entered_PIN(~PAN, ~PIN),
+      !Entered_PIN(~PAN, 'WrongPIN')
+    ]
+
+rule Create_Card_C8:
+    let AIP = <Data1, Data2>
+    in
+    [ Fr(~PAN),
+      Fr(~expDate),
+      Fr(~MK),
+      !LtkIssuer($Issuer, ~privkIssuer),
+      !CertIssuer($Issuer, certIssuer),
+      !IssuingCA($Issuer, $CA),
+      In(AIP)
+    ]
+  --[ Role(~PAN, 'Card'),
+      SecretPAN(~PAN),
+      SecretMK(~MK),
+      Honest($CA), Honest($Issuer), Honest(~PAN) ]->
+    [ !AIP(~PAN, AIP),
+      !AID(~PAN, 'C8'),
+      !Shk(~PAN, ~MK),
+      !IssuingIssuer(~PAN, $Issuer),
+      Set_Records_C8(~PAN, ~expDate, $CA, certIssuer),
+      Set_PIN(~PAN, 'OnlinePIN', $CA, $Issuer) ]
+
+rule Set_Records_C8:
+    let SDA_Hash = h(<~PAN, ~expDate, AIP>)
+        QC = g ^ ~dC
+        signedECCPKCard = <<'14', SDA_Hash, QC>, sign{<'14', SDA_Hash, QC>}~privkIssuer>
+        protectedRecords = <~PAN, ~expDate, signedECCPKCard>
+    in
+    [ Set_Records_C8(~PAN, ~expDate, $CA, certIssuer),
+      !AIP(~PAN, AIP),
+      !AID(~PAN, 'C8'),
+      !IssuingIssuer(~PAN, $Issuer),
+      !LtkIssuer($Issuer, ~privkIssuer),
+      Fr(~dC) ]
+  --[
+      SecretECCPrivkCard(~dC),
+      Honest($CA), Honest($Issuer), Honest(~PAN) ]->
+    [ Out(QC),
+      !ECCPrivKeyCard(~PAN, ~dC),
+      !Protected_Records(~PAN, protectedRecords),
+      !Unprotected_Records(~PAN, <$CA, certIssuer>),
+      !SDA_Hash(~PAN, SDA_Hash) ]
+
+rule Terminal_Sends_GPO_C8:
+    let QT = g ^ ~dT
+    in
+    [ Fr(~dT) ]
+  --[ OneTerminal(),
+      Role($Terminal, 'Terminal') ]->
+    [ Out(<'GET_PROCESSING_OPTIONS', QT>),
+      Terminal_Sent_GPO_C8($Terminal, ~dT),
+      Terminal_May_Compromise($Terminal, ~dT) ]
+
+rule Card_Responds_To_GPO_C8:
+    let z = (QT ^ ~r) ^ dC
+        SKc = KDF_SKc(z)
+        SKi = KDF_SKi(z)
+        blindedQC = (g ^ ~r) ^ dC
+    in
+    [ In(<'GET_PROCESSING_OPTIONS', QT>),
+      !AIP(~PAN, AIP),
+      !AID(~PAN, 'C8'),
+      !ATC(ATC),
+      Fr(~r),
+      !ECCPrivKeyCard(~PAN, dC) ]
+  --[ OneCard(),
+      Once(<~PAN, ATC, 'Card'>) ]->
+    [ Out(< AIP, 'AFL', blindedQC, senc{'CMC', ~r}SKc >),
+      Card_Responded_To_GPO_C8(~PAN, ATC, SKc, SKi) ]
+
+rule Terminal_Receives_GPO_Respondse_C8:
+    let z = blindedQC ^ dT
+        SKc = KDF_SKc(z)
+        SKi = KDF_SKi(z)
+    in
+    [ In(< AIP, 'AFL', blindedQC, senc{'CMC', r}SKc >),
+      Terminal_Sent_GPO_C8($Terminal, dT) ]
+  --[ ]->
+    [ Terminal_Received_GPO_Resonondse_C8($Terminal, AIP, blindedQC, dT, r, SKc, SKi) ]
+
+rule Terminal_Sends_RRP_C8:
+    let TRRE = ~UN
+    in
+    [ Terminal_Received_GPO_Resonondse_C8($Terminal, AIP, blindedQC, dT, r, SKc, SKi),
+      Fr(~UN) ]
+  --[ FastPhaseStarts(TRRE) ]->
+    [ Out(<'EXCHANGE_RELAY_RESISTANCE_DATA', TRRE>),
+      Terminal_Sent_ERRD_C8($Terminal, AIP, blindedQC, dT, r, SKc, SKi, ~UN) ]
+
+rule Card_Responds_To_RRP_C8:
+    [ Card_Responded_To_GPO_C8(~PAN, ATC, SKc, SKi),
+      In(<'EXCHANGE_RELAY_RESISTANCE_DATA', TRRE>),
+      Fr(~DRRE) ]
+  --[ FastPhaseAction(~PAN) ]->
+    [ Card_Responded_To_ERRD_C8(~PAN, ATC, SKc, SKi, TRRE, ~DRRE),
+      Out(<~DRRE, 'Timing_Data'>) ]
+
+rule Terminal_Sends_ReadRecord_C8:
+    let TRRE = UN
+    in
+    [ Terminal_Sent_ERRD_C8($Terminal, AIP, blindedQC, dT, r, SKc, SKi, UN),
+      In(<DRRE, 'Timing_Data'>) ]
+  --[ FastPhaseEnds(DRRE) ]->
+    [ Out(<'READ_RECORD', 'AFL'>),
+      Terminal_Sent_ReadRecord_C8($Terminal, AIP, blindedQC, dT, r, SKc, SKi, UN, DRRE) ]
+
+rule Card_Responds_To_ReadRecord_C8:
+    [ Card_Responded_To_ERRD_C8(~PAN, ATC, SKc, SKi, TRRE, DRRE),
+      !AIP(~PAN, AIP),
+      !Protected_Records(~PAN, protectedRecords),
+      !Unprotected_Records(~PAN, unprotectedRecords),
+      In(<'READ_RECORD', 'AFL'>) ]
+  -->
+    [ Out(< senc{protectedRecords}SKc, unprotectedRecords >),
+      Card_Ready_For_Cryptogram_C8(~PAN, ATC, SKc, SKi, TRRE, DRRE) ]
+
+rule Terminal_Receives_Records_LocalAuth_C8:
+    let AIP = <'LocalAuth', AIP_Data2>
+        SDA_Hash =  h(<~PAN, expDate, AIP>)
+        protectedRecords = <~PAN, expDate, <<'14', SDA_Hash, QC>, sign4>>
+        unprotectedRecords = <$CA, <'02', $Issuer, pubkIssuer, $CA>, sign2>
+    in
+    [ Terminal_Sent_ReadRecord_C8($Terminal, AIP, QC ^ r, dT, r, SKc, SKi, UN, DRRE),
+      In(< senc{protectedRecords}SKc, unprotectedRecords >),
+      !IssuingCA($Issuer, $CA),
+      !CertCA($CA, <<'01', $CA, pubkCA, $CA>, sign1>) ]
+  --[
+      Eq( verify(sign1, <'01', $CA, pubkCA, $CA>, pubkCA), true),
+      Eq( verify(sign2, <'02', $Issuer, pubkIssuer, $CA>, pubkCA), true),
+      Eq( verify(sign4, <'14', SDA_Hash, QC>, pubkIssuer), true)
+    ]->
+    [ Terminal_Ready_For_Cryptogram_C8($Terminal, ~PAN, $Issuer, $CA,
+        AIP, pubkIssuer, UN, SKc, SKi, expDate, DRRE) ]
+
+rule Terminal_Receives_Records_NoLocalAuth_C8:
+    let AIP = <'NoLocalAuth', AIP_Data2>
+        protectedRecords = <~PAN, expDate, <<'14', SDA_Hash, QC>, sign4>>
+        unprotectedRecords = <$CA, <'02', $Issuer, pubkIssuer, $CA>, sign2>
+    in
+    [ Terminal_Sent_ReadRecord_C8($Terminal, AIP, blindedQC, dT, r, SKc, SKi, UN, DRRE),
+      In(< senc{protectedRecords}SKc, unprotectedRecords >),
+      !IssuingCA($Issuer, $CA),
+      !CertCA($CA, <<'01', $CA, pubkCA, $CA>, sign1>) ]
+  -->
+    [ Terminal_Ready_For_Cryptogram_C8($Terminal, ~PAN, $Issuer, $CA,
+        AIP, pubkIssuer, UN, SKc, SKi, expDate, DRRE) ]
+
+rule Terminal_Sends_GenerateAC_C8:
+    let CVMR = CVM
+        TRMD = CVM
+        country = 'Switzerland'
+        TVR = 'TVR'
+        currency = 'CHF'
+        date = 'YYMMDD'
+        type = 'Purchase'
+        CDOL1 = <$amount, country, TVR, currency, date, type, UN, CVMR, TRMD>
+        X = CDOL1
+    in
+    [ Terminal_Ready_For_Cryptogram_C8($Terminal, ~PAN, $Issuer, $CA,
+        AIP, pubkIssuer, UN, SKc, SKi, expDate, DRRE),
+      !Value($amount, value),
+      In(< acType, CVM >) ]
+  --[ ValidCVM(CVM) ]->
+    [ Out(< 'GENERATE_AC', acType, CDOL1 >),
+      Terminal_Sent_GenerateAC_C8($Terminal, ~PAN, $Issuer, $CA,
+        X, AIP, pubkIssuer, acType, CVM, SKc, SKi, expDate, DRRE) ]
+
+rule Card_Responds_To_GenerateAC_CopyIAD_C8:
+    let AIP = <AIP_Data1, 'CopyIAD'>
+        CDOL1 = <amount, country, TVR, currecy, date, type, TRRE, CVMR, TRMD>
+        CVM = TRMD
+        X = CDOL1
+        SDA_Hash = h(<~PAN, expDate, AIP>)
+        IAD = 'IAD'
+        IAD_MAC = MAC(SKi, <'0000', X, TRRE, DRRE, CID, ATC, CVM, IAD, SDA_Hash>)
+        AC = MAC(f(~MK, ATC), <X, AIP, ATC, IAD_MAC>)
+        EDA_MAC = MAC(SKi, <'0000', AC, IAD_MAC>)
+        IAD_terminal = <IAD, IAD_MAC>
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, 'C8'>
+        protectedRecords = <~PAN, expDate, Cert>
+    in
+    [ Card_Ready_For_Cryptogram_C8(~PAN, ATC, SKc, SKi, TRRE, DRRE),
+      !AIP(~PAN, AIP),
+      !Shk(~PAN, ~MK),
+      !IssuingIssuer(~PAN, $Issuer),
+      !Protected_Records(~PAN, protectedRecords),
+      !SDA_Hash(~PAN, SDA_Hash),
+      In(< 'GENERATE_AC', CID, CDOL1 >)
+    ]
+  --[ SupportedCVM(~PAN, CVM),
+      Running(~PAN, 'Terminal', <'Card', 'Terminal', transaction>),
+      Running(~PAN, $Issuer, <'Card', 'Issuer', transaction>) ]->
+    [ Out(< CID, ATC, CVM, AC, IAD, EDA_MAC >) ]
+
+rule Card_Responds_To_GenerateAC_NoCopyIAD_C8:
+    let AIP = <AIP_Data1, 'NoCopyIAD'>
+        CDOL1 = <amount, country, TVR, currecy, date, type, TRRE, CVMR, TRMD>
+        CVM = TRMD
+        X = CDOL1
+        SDA_Hash = h(<~PAN, expDate, AIP>)
+        IAD = 'IAD'
+        IAD_MAC = MAC(SKi, <'0000', X, TRRE, DRRE, CID, ATC, CVM, IAD, SDA_Hash>)
+        AC = MAC(f(~MK, ATC), <X, AIP, ATC, '0000'>)
+        EDA_MAC = MAC(SKi, <'0000', AC, IAD_MAC>)
+        IAD_terminal = IAD
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, 'C8'>
+        protectedRecords = <~PAN, expDate, Cert>
+    in
+    [ Card_Ready_For_Cryptogram_C8(~PAN, ATC, SKc, SKi, TRRE, DRRE),
+      !AIP(~PAN, AIP),
+      !Shk(~PAN, ~MK),
+      !IssuingIssuer(~PAN, $Issuer),
+      !Protected_Records(~PAN, protectedRecords),
+      !SDA_Hash(~PAN, SDA_Hash),
+      In(< 'GENERATE_AC', CID, CDOL1 >)
+    ]
+  --[ SupportedCVM(~PAN, CVM),
+      Running(~PAN, 'Terminal', <'Card', 'Terminal', transaction>),
+      Running(~PAN, $Issuer, <'Card', 'Issuer', transaction>) ]->
+    [ Out(< CID, ATC, CVM, AC, IAD, EDA_MAC >) ]
+
+rule Terminal_Receives_AC_CopyIAD_C8:
+    let AIP = <AIP_Data1, 'CopyIAD'>
+        CDOL1 = <$amount, 'Switzerland', 'TVR', 'CHF', 'YYMMDD', 'Purchase', UN, CVMR, TRMD>
+        X = CDOL1
+        SDA_Hash = h(<~PAN, expDate, AIP>)
+        IAD_MAC = MAC(SKi, <'0000', X, UN, DRRE, CID, ATC, CVM, IAD, SDA_Hash>)
+        IAD_terminal = <IAD, IAD_MAC>
+        EDA_MAC = MAC(SKi, <'0000', AC, IAD_MAC>)
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, 'C8'>
+    in
+    [ Terminal_Sent_GenerateAC_C8($Terminal, ~PAN, $Issuer, $CA,
+        X, AIP, pubkIssuer, acType, CVM2, SKc, SKi, expDate, DRRE),
+      In(< CID, ATC, CVM, AC, IAD, EDA_MAC >),
+      Fr(~channelID),
+      !Value($amount, value) ]
+  --[ CompatibleCVM(CVM, CVM2),
+      Running($Terminal, $Issuer, <'Terminal', 'Issuer', transaction>) ]->
+    [ Terminal_Ready_For_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, CVM, CID, transaction, ~channelID, value, DRRE) ]
+
+rule Terminal_Receives_AC_NoCopyIAD_C8:
+    let AIP = <AIP_Data1, 'NoCopyIAD'>
+        CDOL1 = <$amount, 'Switzerland', 'TVR', 'CHF', 'YYMMDD', 'Purchase', UN, CVMR, TRMD>
+        X = CDOL1
+        SDA_Hash = h(<~PAN, expDate, AIP>)
+        IAD_MAC = MAC(SKi, <'0000', X, UN, DRRE, CID, ATC, CVM, IAD, SDA_Hash>)
+        IAD_terminal = IAD
+        EDA_MAC = MAC(SKi, <'0000', AC, IAD_MAC>)
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, 'C8'>
+    in
+    [ Terminal_Sent_GenerateAC_C8($Terminal, ~PAN, $Issuer, $CA,
+        X, AIP, pubkIssuer, acType, CVM2, SKc, SKi, expDate, DRRE),
+      In(< CID, ATC, CVM, AC, IAD, EDA_MAC >),
+      Fr(~channelID),
+      !Value($amount, value) ]
+  --[ CompatibleCVM(CVM, CVM2),
+      Running($Terminal, $Issuer, <'Terminal', 'Issuer', transaction>) ]->
+    [ Terminal_Ready_For_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, CVM, CID, transaction, ~channelID, value, DRRE) ]
+
+rule Terminal_Processes_CVM_NoCVM_C8:
+    [ Terminal_Ready_For_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, 'NoCVM', CID, transaction, ~channelID, 'Low', DRRE) ]
+  -->
+    [ Terminal_Processed_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, 'NoCVM', CID, transaction, ~channelID, 'Low', 'Null', DRRE) ]
+
+rule Terminal_Processes_CVM_OnlinePIN_C8:
+    let CID = 'ARQC'
+        CVM = 'OnlinePIN'
+        encPIN = aenc{PIN}pubkIssuer
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, 'C8'>
+    in
+    [ Terminal_Ready_For_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, CVM, CID, transaction, ~channelID, value, DRRE),
+      !Entered_PIN(~PAN, PIN)]
+  -->
+    [ Terminal_Processed_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, CVM, CID, transaction, ~channelID, value, encPIN, DRRE) ]
+
+rule Terminal_Processes_CVM_ODCVM_C8:
+    [ Terminal_Ready_For_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, 'ODCVM', CID, transaction, ~channelID, value, DRRE) ]
+  -->
+    [ Terminal_Processed_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, 'ODCVM', CID, transaction, ~channelID, value, 'Null', DRRE) ]
+
+rule Terminal_Requests_Online_Authz_C8:
+    [ Terminal_Processed_CVM_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, CVM, CID, transaction, ~channelID, value, encPIN, DRRE) ]
+  -->
+    [ Terminal_Requested_Online_Authz_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, CVM, CID, transaction, ~channelID, value, DRRE),
+      Send($Terminal, $Issuer, <~channelID, '1'>, <transaction, encPIN>) ]
+
+rule Terminal_Commits_ARQC_C8:
+    let CVM = 'NoCVM'
+        value = 'High'
+        AIP_Data1 = 'NoLocalAuth'
+        AIP_Data2 = 'NoCopyIAD'
+        AIP = <AIP_Data1, AIP_Data2>
+        X = <$amount, 'Switzerland', 'TVR', 'CHF', 'YYMMDD', 'Purchase', UN, CVMR, TRMD>
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, 'C8'>
+    in
+    [ Terminal_Requested_Online_Authz_C8($Terminal, $Issuer, $CA,
+        X, AIP, pubkIssuer, CVM, 'ARQC', transaction, ~channelID, value, DRRE),
+      Recv($Issuer, $Terminal, <~channelID, '2'>, <'ARC', ARPC>) ]
+  --[ TerminalAccepts(transaction),
+      CheckRelayResistance(~PAN, UN, DRRE),
+      Commit('Terminal', ~PAN, <'Card', 'Terminal', transaction>),
+      Commit($Terminal, $Issuer, <'Issuer', 'Terminal', transaction>),
+      Honest($CA), Honest($Issuer), Honest($Terminal), Honest(~PAN) ]->
+    [ ]
+
+rule Issuer_Receives_CopyIAD_AC:
+    let IAD_terminal = <IAD, IAD_MAC>
+        AIP = <AIP_Data1, 'CopyIAD'>
+        AC = MAC(f(~MK, ATC), <X, AIP, ATC, IAD_MAC>)
+        ARPC = MAC_arpc(f(~MK, ATC), AC XOR p8('ARC'))
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, AID>
+    in
+    [ Recv($Terminal, $Issuer, <channelID, '1'>,
+        <transaction, encPIN>),
+      !Shk(~PAN, ~MK),
+      !IssuingIssuer(~PAN, $Issuer) ]
+  --[ Once(<~PAN, ATC, 'Issuer'>) ]->
+    [ Issuer_Checked_AC($Issuer, $Terminal, transaction, encPIN, channelID, ARPC) ]
+
+rule Issuer_Receives_NoCopyIAD_AC:
+    let AC = MAC(f(~MK, ATC), <X, AIP, ATC, '0000'>)
+        ARPC = MAC_arpc(f(~MK, ATC), AC XOR p8('ARC'))
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD, AID>
+    in
+    [ Recv($Terminal, $Issuer, <channelID, '1'>,
+        <transaction, encPIN>),
+      !Shk(~PAN, ~MK),
+      !IssuingIssuer(~PAN, $Issuer) ]
+  --[ Once(<~PAN, ATC, 'Issuer'>),
+      NEq(snd(AIP), 'CopyIAD') ]->
+    [ Issuer_Checked_AC($Issuer, $Terminal, transaction, encPIN, channelID, ARPC) ]
+
+rule Issuer_Receives_AC_CopyIAD_Failed:
+    let IAD_terminal = <IAD, IAD_MAC>
+        AIP = <futherData, 'CopyIAD'>
+        correctAC = MAC(f(~MK, ATC), <X, AIP, ATC, IAD_MAC>)
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, AID>
+    in
+    [ Recv($Terminal, $Issuer, <channelID, '1'>,
+        <transaction, encPIN>),
+      !Shk(~PAN, ~MK) ]
+  --[ NEq(correctAC, AC),
+      IssuerDeclines(transaction) ]->
+    [ ]
+
+rule Issuer_Receives_AC_NoCopyIAD_Failed:
+    let correctAC = MAC(f(~MK, ATC), <X, AIP, ATC, '0000'>)
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD, AID>
+    in
+    [ Recv($Terminal, $Issuer, <channelID, '1'>,
+        <transaction, encPIN>),
+      !Shk(~PAN, ~MK) ]
+  --[ NEq(correctAC, AC),
+      IssuerDeclines(transaction),
+      NEq(snd(AIP), 'CopyIAD') ]->
+    [ ]
+
+rule Issuer_Processes_CVM_NotOnlinePIN:
+    let transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, AID>
+    in
+    [ Issuer_Checked_AC($Issuer, $Terminal, transaction, 'Null', channelID, ARPC) ]
+  --[ NEq(CVM, 'OnlinePIN'),
+      Running($Issuer, $Terminal, <'Issuer', 'Terminal', transaction>) ]->
+    [ Issuer_Commits($Issuer, $Terminal, transaction, channelID, ARPC) ]
+
+rule Issuer_Processes_CVM_OnlinePIN:
+    let encPIN = aenc{PIN}pk(~privkIssuer)
+        transaction = <~PAN, AIP, 'OnlinePIN', X, ATC, AC, IAD_terminal, AID>
+    in
+    [ Issuer_Checked_AC($Issuer, $Terminal, transaction, encPIN, channelID, ARPC),
+      !LtkIssuer($Issuer, ~privkIssuer),
+      !PIN(~PAN, PIN) ]
+  --[ Running($Issuer, $Terminal, <'Issuer', 'Terminal', transaction>) ]->
+    [ Issuer_Commits($Issuer, $Terminal, transaction, channelID, ARPC) ]
+
+rule Issuer_Commits:
+    let CDOL1 = <amount, country, TVR, currency, date, type, UN, CVMR, TRMD>
+        X = CDOL1
+        AID2 = 'C8'
+        AIP_Data1 = 'NoLocalAuth'
+        AIP_Data2 = 'NoCopyIAD'
+        AIP = <AIP_Data1, AIP_Data2>
+        value = 'High'
+        transaction = <~PAN, AIP, CVM, X, ATC, AC, IAD_terminal, AID>
+    in
+    [ Issuer_Commits($Issuer, $Terminal, transaction, channelID, ARPC),
+      !Value(amount, value),
+      !AID(~PAN, AID2),
+      !IssuingCA($Issuer, $CA) ]
+  --[ Commit($Issuer, ~PAN, <'Card', 'Issuer', transaction>),
+      Commit($Issuer, $Terminal, <'Terminal', 'Issuer', transaction>),
+      Honest($CA), Honest($Issuer), Honest($Terminal), Honest(~PAN) ]->
+    [ Send($Issuer, $Terminal, <channelID, '2'>, <'ARC', ARPC>) ]
+
+restriction equal:
+  "All a b #i. Eq(a, b)@i ==> a = b"
+
+restriction not_equal:
+  "All a #i. NEq(a, a)@i ==> F"
+
+restriction once:
+  "All a #i #j. Once(a)@i & Once(a)@j ==> #i = #j"
+
+restriction unique_role:
+  "All A r1 r2 #i #j. Role(A, r1)@i & Role(A, r2)@j ==> r1 = r2"
+
+restriction valid_CVM:
+  "All CVM #i.
+    ValidCVM(CVM)@i ==> CVM = 'NoCVM' | CVM = 'OnlinePIN' | CVM = 'ODCVM'"
+
+restriction supported_CVM:
+  "All PAN #i #j.
+    SupportedCVM(PAN, 'OnlinePIN')@i & SupportedCVM(PAN, 'ODCVM')@j ==> F"
+
+restriction compatible_CVM:
+  "All CVM1 CVM2 #i.
+    CompatibleCVM(CVM1, CVM2)@i ==> CVM1 = 'NoCVM' | CVM1 = CVM2"
+
+lemma executable:
+  exists-trace
+  "Ex Issuer PAN t #i #j #k #l.
+    i < j &
+    Running(PAN, 'Terminal', <'Card', 'Terminal', t>)@i &
+    Commit('Terminal', PAN, <'Card', 'Terminal', t>)@j &
+    k < l &
+    Running(PAN, Issuer, <'Card', 'Issuer', t>)@k &
+    Commit(Issuer, PAN, <'Card', 'Issuer', t>)@l &
+    (All #a #b. OneCard()@a & OneCard()@b ==> #a = #b) &
+    (All #a #b. OneTerminal()@a & OneTerminal()@b ==> #a = #b) &
+    (All A B r #a #b. Role(A, r)@a & Role(B, r)@b ==> A = B) &
+    not (Ex A #a. Compromise(A)@a)"
+
+lemma wellformedness_test:
+  exists-trace
+  "Ex #i. Wellformedness()@i"
+
+lemma secrecy_MK:
+  "All MK #i.
+    SecretMK(MK)@i
+   ==>
+    not (Ex #j. !KU(MK)@j) | Ex A #k. Honest(A)@i & Compromise(A)@k"
+
+lemma secrecy_privkCard:
+  "All privkCard #i.
+    SecretECCPrivkCard(privkCard)@i
+   ==>
+    not (Ex #j. !KU(privkCard)@j) | Ex A #k. Honest(A)@i & Compromise(A)@k"
+
+lemma secrecy_PAN:
+  "All PAN #i.
+    SecretPAN(PAN)@i
+   ==>
+    not (Ex #j. !KU(PAN)@j) | Ex A #k. Honest(A)@i & Compromise(A)@k"
+end
+

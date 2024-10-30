@@ -4,7 +4,6 @@
 -- Copyright   : (c) 2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Computate the loop-breakers in the premise-conclusion graph of a set of

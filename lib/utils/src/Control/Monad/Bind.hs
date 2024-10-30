@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2010, 2011 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Shallow monad transformer for dealing with bindings.
@@ -129,8 +128,9 @@ insertBinding k = modify . M.insert k
 {-# INLINE importBinding #-}
 importBinding :: (MonadBind k v m, MonadFresh m, Ord k) 
                => (String -> Integer -> v) 
-               -> k 
-               -> String -> m v
+               -> k
+               -> String
+               -> m v
 importBinding mkR k n = do
     rOpt <- lookupBinding k
     case rOpt of

@@ -31,23 +31,25 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new c.1;"]:
+rule (modulo E) Init[color=#ffffff, process="new c.1;", issapicrule]:
    [ Fr( c.1 ), Fr( a.1 ) ]
   --[ Init( ) ]->
    [ Message( c.1, a.1 ), Semistate_1111( a.1, c.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new c.1;"]:
+  rule (modulo AC) Init[color=#ffffff, process="new c.1;", issapicrule]:
      [ Fr( c ), Fr( a ) ]
     --[ Init( ) ]->
      [ Message( c, a ), Semistate_1111( a, c ) ]
   */
 
-rule (modulo E) outca_1_111[color=#408051, process="out(c.1,a.1);"]:
+rule (modulo E) outca_1_111[color=#408051, process="out(c.1,a.1);",
+                            issapicrule]:
    [ Semistate_1111( a.1, c.1 ), Ack( c.1, a.1 ) ] --[ Reached( ) ]-> [ ]
 
   /*
-  rule (modulo AC) outca_1_111[color=#408051, process="out(c.1,a.1);"]:
+  rule (modulo AC) outca_1_111[color=#408051, process="out(c.1,a.1);",
+                               issapicrule]:
      [ Semistate_1111( a, c ), Ack( c, a ) ] --[ Reached( ) ]-> [ ]
   */
 
@@ -66,17 +68,14 @@ Facts occur in the left-hand-side but not in any right-hand-side
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -84,7 +83,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels2.spthy
 
   output:          examples/sapic/fast/basic/channels2.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.08s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -6,7 +6,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 -- Portability : GHC only
 --
 module Theory.Tools.IntruderRules (
@@ -17,6 +16,7 @@ module Theory.Tools.IntruderRules (
   , multisetIntruderRules
   , mkDUnionRule
   , specialIntruderRules
+  , natIntruderRules
   , variantsIntruder
 
   -- ** Classifiers
@@ -64,9 +64,6 @@ rule coerce:
 rule pub:
    [ ] --[ KU( $x ) ]-> [ KU( $x ) ]
    
-rule nat:
-   [ ] --[ KU( x:nat ) ]-> [ KU( x:nat ) ]
-
 rule gen_fresh:
    [ Fr( ~x ) ] --[ KU( ~x ) ]-> [ KU( ~x ) ]
 
@@ -86,7 +83,6 @@ specialIntruderRules :: Bool -> [IntrRuleAC]
 specialIntruderRules diff =
     [ kuRule CoerceRule      [kdFact x_var]                 (x_var)         [] 
     , kuRule PubConstrRule   []                             (x_pub_var)     [(x_pub_var)]
-    , kuRule NatConstrRule   []                             (x_nat_var)     [(x_nat_var)]
     , kuRule FreshConstrRule [freshFact x_fresh_var] (x_fresh_var)          []
     , Rule ISendRule [kuFact x_var]  [inFact x_var] [kLogFact x_var]        []
     , Rule IRecvRule [outFact x_var] [kdFact x_var] []                      []
@@ -99,9 +95,30 @@ specialIntruderRules diff =
 
     x_var       = varTerm (LVar "x"  LSortMsg   0)
     x_pub_var   = varTerm (LVar "x"  LSortPub   0)
-    x_nat_var   = varTerm (LVar "x"  LSortNat   0)
     x_fresh_var = varTerm (LVar "x"  LSortFresh 0)
 
+
+------------------------------------------------------------------------------
+-- Natural numbers
+------------------------------------------------------------------------------
+
+{-
+When using the natural-numbers plugin, the following rule is included.
+
+rule nat:
+   [ ] --[ KU( x:nat ) ]-> [ KU( x:nat ) ]
+
+-}
+
+-- | @natIntruderRules@ returns the natural numbers constructor
+natIntruderRules :: [IntrRuleAC]
+natIntruderRules =
+    [ kuRule NatConstrRule [] (x_nat_var) [(x_nat_var)]
+    ]
+  where
+    kuRule name prems t nvs = Rule name prems [kuFact t] [kuFact t] nvs
+
+    x_nat_var   = varTerm (LVar "x"  LSortNat   0)
 
 ------------------------------------------------------------------------------
 -- Subterm Intruder theory
@@ -216,7 +233,7 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff $
     [ expRule  (ConstrRule (append (pack "_") expSymString))  kuFact return
     , invRule  (ConstrRule (append (pack "_") invSymString))  kuFact return
     -- The constructors for one and mult are only necessary in diff mode.
-    -- They are never applied in trace mode as all corresponding goals are solved directly,
+    -- They are never applied in trace mode as all corresponding constraints are solved directly,
     -- but they  will show up in the message theory, which is reassuring for users.
     , dhNeutralRule   (ConstrRule (append (pack "_") dhNeutralSymString))   kuFact return
     , oneRule  (ConstrRule (append (pack "_") oneSymString))  kuFact return

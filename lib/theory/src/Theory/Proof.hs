@@ -9,7 +9,6 @@
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Types to represent proofs.
@@ -28,6 +27,7 @@ module Theory.Proof (
   , ProofPath
   , atPath
   , atPathDiff
+  , modifyAtPath
   , insertPaths
   , insertPathsDiff
 
@@ -745,7 +745,7 @@ contradictionDiffProver = DiffProver $ \ctxt d sys prf ->
 -- Automatic Prover's
 ------------------------------------------------------------------------------
 
-data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing
+data SolutionExtractor = CutDFS | CutBFS | CutSingleThreadDFS | CutNothing | CutAfterSorry
     deriving( Eq, Ord, Show, Read, Generic, NFData, Binary )
 
 data AutoProver = AutoProver
@@ -753,12 +753,22 @@ data AutoProver = AutoProver
     , apDefaultTactic   :: Maybe [Tactic ProofContext]
     , apBound            :: Maybe Int
     , apCut              :: SolutionExtractor
+    , quitOnEmptyOracle  :: Bool
     }
     deriving ( Generic, NFData, Binary )
 
 selectHeuristic :: AutoProver -> ProofContext -> Heuristic ProofContext
-selectHeuristic prover ctx = fromMaybe (defaultHeuristic False)
+selectHeuristic prover ctx = setQuitOnEmpty $ fromMaybe (defaultHeuristic False)
                              (apDefaultHeuristic prover <|> L.get pcHeuristic ctx)
+  where
+    setQuitOnEmpty :: Heuristic ProofContext -> Heuristic ProofContext
+    setQuitOnEmpty (Heuristic rankings) = Heuristic (map aux rankings)
+
+    aux :: GoalRanking a -> GoalRanking a
+    aux (OracleRanking _ o) = OracleRanking (quitOnEmptyOracle prover) o
+    aux (OracleSmartRanking _ o) = OracleSmartRanking (quitOnEmptyOracle prover) o
+    aux (InternalTacticRanking _ t) = InternalTacticRanking (quitOnEmptyOracle prover) t
+    aux gr = gr
 
 selectDiffHeuristic :: AutoProver -> DiffProofContext -> Heuristic ProofContext
 selectDiffHeuristic prover ctx = fromMaybe (defaultHeuristic True)
@@ -773,7 +783,7 @@ selectDiffTactic prover ctx = fromMaybe [defaultTactic]
                                  (apDefaultTactic prover <|> L.get pcTactic (L.get dpcPCLeft ctx))
 
 runAutoProver :: AutoProver -> Prover
-runAutoProver aut@(AutoProver _ _  bound cut) =
+runAutoProver aut@(AutoProver _ _  bound cut _) =
     mapProverProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
@@ -781,6 +791,7 @@ runAutoProver aut@(AutoProver _ _  bound cut) =
       CutBFS             -> cutOnSolvedBFS
       CutSingleThreadDFS -> cutOnSolvedSingleThreadDFS
       CutNothing         -> id
+      CutAfterSorry      -> cutAfterFirstSorry
 
     -- | The standard automatic prover that ignores the existing proof and
     -- tries to find one by itself.
@@ -796,13 +807,14 @@ runAutoProver aut@(AutoProver _ _  bound cut) =
         boundProofDepth b <$> runProver p ctxt d se prf
 
 runAutoDiffProver :: AutoProver -> DiffProver
-runAutoDiffProver aut@(AutoProver _ _ bound cut) =
+runAutoDiffProver aut@(AutoProver _ _ bound cut _) =
     mapDiffProverDiffProof cutSolved $ maybe id boundProver bound autoProver
   where
     cutSolved = case cut of
       CutDFS             -> cutOnSolvedDFSDiff
       CutBFS             -> cutOnSolvedBFSDiff
       CutSingleThreadDFS -> cutOnSolvedSingleThreadDFSDiff
+      CutAfterSorry      -> cutAfterFirstSorryDiff
       CutNothing         -> id
 
     -- | The standard automatic prover that ignores the existing proof and
@@ -1030,6 +1042,33 @@ cutOnSolvedBFSDiff =
     checkLevel l prf@(LNode step cs)
       | isNothing (dpsInfo step) = return prf
       | otherwise                = LNode step <$> traverse (checkLevel (l-1)) cs
+
+cutAfterFirstSorry :: Proof (Maybe a) -> Proof (Maybe a)
+cutAfterFirstSorry = snd . go False
+  where
+    go :: Bool -> Proof (Maybe a) -> (Bool, Proof (Maybe a))
+    go _      n@(LNode (ProofStep (Sorry _) _) _)         = (True, n)
+    go abort  n@(LNode (ProofStep Solved _) _)            = (abort, n)
+    go abort  n@(LNode (ProofStep Unfinishable _) _)      = (abort, n)
+    go abort  n@(LNode (ProofStep (Contradiction _) _) _) = (abort, n)
+    go True     (LNode (ProofStep _ ann) _)               = (True, LNode (ProofStep (Sorry Nothing) ann) M.empty)
+    go False    (LNode r cs) =
+      let (abort, cs') = M.mapAccum go False cs
+      in (abort, LNode r cs')
+
+
+cutAfterFirstSorryDiff :: DiffProof (Maybe a) -> DiffProof (Maybe a)
+cutAfterFirstSorryDiff = snd . go False
+  where
+    go :: Bool -> DiffProof (Maybe a) -> (Bool, DiffProof (Maybe a))
+    go _      n@(LNode (DiffProofStep (DiffSorry _) _) _)     = (True, n)
+    go abort  n@(LNode (DiffProofStep DiffMirrored _) _)      = (abort, n)
+    go abort  n@(LNode (DiffProofStep DiffUnfinishable _) _)  = (abort, n)
+    go abort  n@(LNode (DiffProofStep DiffAttack _) _)        = (abort, n)
+    go True     (LNode (DiffProofStep _ ann) _)               = (True, LNode (DiffProofStep (DiffSorry Nothing) ann) M.empty)
+    go False    (LNode r cs) =
+      let (abort, cs') = M.mapAccum go False cs
+      in (abort, LNode r cs')
 
 -- | @proveSystemDFS rules se@ explores all solutions of the initial
 -- constraint system using a depth-first-search strategy to resolve the

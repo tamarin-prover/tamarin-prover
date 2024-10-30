@@ -1,0 +1,66 @@
+theory DefaultOracle begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: o "defaultoracle.oracle" s o "defaultoracle.oracle" p o "defaultoracle.oracle"
+
+rule (modulo E) Rule:
+   [ ] --[ A( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma Test1 [heuristic=s o "defaultoracle.oracle" i o "defaultoracle.oracle" o "defaultoracle.oracle"]:
+  exists-trace "∃ #i. A( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (A( ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+lemma Test2:
+  exists-trace "∃ #i #j. (A( ) @ #i) ∧ (A( ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j. (A( ) @ #i) ∧ (A( ) @ #j)"
+*/
+simplify
+SOLVED // trace found
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: defaultoracle.spthy
+
+  output:          defaultoracle.spthy.tmp
+  processing time: 0.06s
+  
+  Test1 (exists-trace): verified (2 steps)
+  Test2 (exists-trace): verified (2 steps)
+
+==============================================================================
+*/

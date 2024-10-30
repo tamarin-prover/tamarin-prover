@@ -5,7 +5,6 @@
 -- Copyright   : (c) 2010-2012 Simon Meier & Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Wellformedness checks for intruder variants, protocol rules, and
@@ -70,6 +69,7 @@ module Theory.Tools.Wellformedness (
   , formulaTerms
   ) where
 
+import Rule
 
 import           Prelude                     hiding (id, (.))
 
@@ -88,6 +88,7 @@ import           Control.Monad.Bind
 
 import           Extension.Prelude
 import           Term.LTerm
+
 import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Pretty
@@ -98,6 +99,9 @@ import           Items.OptionItem            (lemmasToProve)
 import           TheoryObject                (diffThyOptions, prettyVarList, theoryMacros, diffTheoryMacros)
 import           Utils.Misc
 import           Term.Macro
+
+import Term.SubtermRule ( CtxtStRule, prettyCtxtStRule, filterNonSubtermCtxtRule)
+
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -457,7 +461,7 @@ publicNamesReport' rules =
     case findClashes publicNames of
       []      -> []
       clashes -> return $ (,) (topic++notif) $ numbered' $
-          map (nest 2 .fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
+          map (nest 2 . fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
   where
     topic       = underlineTopic "Public names with mismatching capitalization" ++ "\n"
     notif       = "Identifiers are case-sensitive, "++
@@ -1122,7 +1126,7 @@ checkIfLemmasInTheory thy
             ])]
 
     where
-      lemmaArgsNames = get (lemmasToProve.thyOptions) thy
+      lemmaArgsNames = get (lemmasToProve . thyOptions) thy
       topic = underlineTopic "Check presence of the --prove/--lemma arguments in theory"
       lemmasInTheory = map _lName (theoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
@@ -1142,15 +1146,64 @@ checkIfLemmasInDiffTheory thy
             ])]
 
     where
-      lemmaArgsNames = get (lemmasToProve.diffThyOptions) thy
+      lemmaArgsNames = get (lemmasToProve . diffThyOptions) thy
       topic = underlineTopic "Check presence of the --prove/--lemma arguments in theory"
-      lemmasInTheory = map (_lName.snd) (diffTheoryLemmas thy)
+      lemmasInTheory = map (_lName . snd) (diffTheoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
 
 
 ------------------------------------------------------------------------------
 -- Theory
 ------------------------------------------------------------------------------
+
+-- | All equations of an OpenTranslatedTheory.
+thyEquations :: OpenTranslatedTheory -> [CtxtStRule]
+thyEquations thy = S.toList $ stRules (sig thy)
+  where
+    sig = _sigMaudeInfo . _thySignature
+
+-- | All equations of an OpenDiffTheory.
+diffThyEquations :: OpenDiffTheory -> [CtxtStRule]
+diffThyEquations thy = S.toList $ stRules (sig thy)
+  where
+    sig = _sigMaudeInfo . _diffThySignature
+
+-- | Check if equations are marked as user-defined convergent in an OpenTranslatedTheory.
+isUserMarkedConvergent :: OpenTranslatedTheory -> Bool
+isUserMarkedConvergent thy = eqConvergent (sig thy)
+  where
+    sig = _sigMaudeInfo . _thySignature
+
+-- | Check if equations are marked as user-defined convergent in an OpenTranslatedTheory.
+isUserMarkedConvergentDiff :: OpenDiffTheory -> Bool
+isUserMarkedConvergentDiff thy = eqConvergent (sig thy)
+  where
+    sig = _sigMaudeInfo . _diffThySignature
+
+-- | Checks if all equations are subterm convergent.
+checkEquationsSubtermConvergence :: OpenTranslatedTheory -> WfErrorReport
+checkEquationsSubtermConvergence thy
+  | null nonSubtermEquations = []
+  | otherwise = [(topic, doc)]
+  where
+    equations = thyEquations thy
+    nonSubtermEquations = filterNonSubtermCtxtRule equations
+    topic = underlineTopic "Subterm Convergence Warning"
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations) $-$ text " \n For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html "
+
+-- | Checks if all equations are subterm convergent in a DiffTheory.
+checkDiffEquationsSubtermConvergence :: OpenDiffTheory -> WfErrorReport
+checkDiffEquationsSubtermConvergence thy
+  | null nonSubtermEquations = []
+  | otherwise = [(topic, doc)]
+  where
+    equations = diffThyEquations thy
+    nonSubtermEquations = filterNonSubtermCtxtRule equations
+    topic = underlineTopic "Subterm Convergence Warning"
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations) $-$ text " \n For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html "
+
 
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
@@ -1170,12 +1223,10 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
     , natWellSortedReportDiff
-    ]
-
+    ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
 
 -- | Returns a list of errors, if there are any.
-checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
-                    -> WfErrorReport
+checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
 checkWellformedness thy sig = concatMap ($ thy)
     [ checkIfLemmasInTheory
     , unboundReport
@@ -1188,5 +1239,9 @@ checkWellformedness thy sig = concatMap ($ thy)
     , lemmaAttributeReport
     , multRestrictedReport
     , natWellSortedReport
-    ]
-
+    ] ++ additionalChecks
+  where
+    userMarked = isUserMarkedConvergent thy
+    additionalChecks = if not userMarked 
+                       then checkEquationsSubtermConvergence thy
+                       else []

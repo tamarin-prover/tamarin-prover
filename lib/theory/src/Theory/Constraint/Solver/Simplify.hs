@@ -7,7 +7,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- This module implements all rules that do not result in case distinctions
@@ -51,9 +50,6 @@ import           Theory.Constraint.System
 import           Theory.Model
 import           Theory.Text.Pretty
 import           Theory.Tools.InjectiveFactInstances
-
-import           Utils.Misc
-
 
 -- | Apply CR-rules that don't result in case splitting until the constraint
 -- system does not change anymore.
@@ -169,8 +165,8 @@ exploitUniqueMsgOrder = do
     kdConcs   <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKDConcs)
     kuActions <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKUActions)
     -- We can add all elements where we have an intersection
-    F.mapM_ (uncurry3 insertLess) (M.map (\(x,y)->(x,y, NormalForm))  
-              $ M.intersectionWith (,) kdConcs kuActions )
+    F.mapM_ insertLess (M.map (\(x,y)-> LessAtom x y NormalForm)
+              $ M.intersectionWith (,) kdConcs kuActions)
 
 -- | CR-rules *DG4*, *N5_u*, and *N5_d*: enforcing uniqueness of *Fresh* rule
 -- instances, *KU*-actions, and *KD*-conclusions.
@@ -447,12 +443,12 @@ freshOrdering = do
   let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  -- add a fake-subterm (f,f) for each freshVar f to the graph
   let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms  -- graph that has subterms (s,t) as nodes and edges (s,t) -> (u,v) if t `el` u
   let termsContaining = [((nid,x), map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]  -- (freshNodeId, t) for all terms t that have to contain x. So also the ones transitively connected by ⊏ to x
-  let newLesses = [(i,j,Fresh) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r, i/=j]  -- new ordering constraints that can be added (or enhanced and then added)
-  let enhancedLesses = [(last rs, j, Fresh) | (i, j, _) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
+  let newLesses = [ LessAtom i j Fresh | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r, i/=j]  -- new ordering constraints that can be added (or enhanced and then added)
+  let enhancedLesses = [ LessAtom (last rs) j Fresh | (LessAtom i j _) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
   let allLesses = newLesses ++ enhancedLesses
 
   oldLesses <- gets (get sLessAtoms)
-  mapM_ (uncurry3 insertLess) allLesses
+  mapM_ insertLess allLesses
   modifiedLesses <- gets (get sLessAtoms)
   return $ if oldLesses == modifiedLesses
     then Unchanged
@@ -572,27 +568,27 @@ simpInjectiveFactEqMon = do
   --  :: (MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm)) -> ([LNGuarded], [(NodeId, NodeId)])
   let simpSingle (behaviour, (i, s), (j, t)) = --trace (show ("simpSingle", behaviour, i, s, j, t)) $
          case behaviour of
-                                                Unspecified -> ([], [])
-                                                Unstable -> ([], [])
-                                                Decreasing -> simpSingle (Increasing, (j, s), (i, t))
-                                                StrictlyDecreasing -> simpSingle (StrictlyIncreasing, (j, s), (i, t))
-                                                Constant -> ([GAto $ EqE (lTermToBTerm s) (lTermToBTerm t) | s/=t], [])  -- (1)
-                                                StrictlyIncreasing ->
-                                                    ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t, i/=j]  -- (2)
-                                                  ++ [gnotAtom $ EqE (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j || alwaysBefore sys j i, i/=j, notIneq s t]   -- (4)
-                                                  -- ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t]   -- (6)
-                                                   , [(i, j) | triviallySmaller    s t, not $ alwaysBefore sys i j]   -- (3)
-                                                  ++ [(j, i) | triviallyNotSmaller s t, not $ alwaysBefore sys j i, ineq s t]) -- (5)
-                                                Increasing -> ([]--, [])
-                                                  --([ gdisj [--GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t),
-                                                  --          GAto $ EqE (lTermToBTerm s) (lTermToBTerm t)]
-                                                  --  | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t, s /= t]   -- (6.1)
-                                                  , snd $ simpSingle (StrictlyIncreasing, (i, s), (j, t)))
+            Unspecified -> ([], [])
+            Unstable -> ([], [])
+            Decreasing -> simpSingle (Increasing, (j, s), (i, t))
+            StrictlyDecreasing -> simpSingle (StrictlyIncreasing, (j, s), (i, t))
+            Constant -> ([GAto $ EqE (lTermToBTerm s) (lTermToBTerm t) | s/=t], [])  -- (1)
+            StrictlyIncreasing ->
+                ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t, i/=j]  -- (2)
+              ++ [gnotAtom $ EqE (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j || alwaysBefore sys j i, i/=j, notIneq s t]   -- (4)
+              -- ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t]   -- (6)
+                , [(i, j) | triviallySmaller    s t, not $ alwaysBefore sys i j]   -- (3)
+              ++ [(j, i) | triviallyNotSmaller s t, not $ alwaysBefore sys j i, ineq s t]) -- (5)
+            Increasing -> ([]--, [])
+              --([ gdisj [--GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t),
+              --          GAto $ EqE (lTermToBTerm s) (lTermToBTerm t)]
+              --  | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t, s /= t]   -- (6.1)
+              , snd $ simpSingle (StrictlyIncreasing, (i, s), (j, t)))
 
   -- generate and execute changes
   let (newFormulas, newLesses) = (concat *** concat) $ unzip $ map simpSingle (getPairs inj nodes)
   mapM_ insertFormula newFormulas
-  mapM_ (\(x, y) -> insertLess x y InjectiveFacts) -- $ trace (show ("newLesses", newLesses))
+  mapM_ (\(x, y) -> insertLess (LessAtom x y InjectiveFacts)) -- $ trace (show ("newLesses", newLesses))
                               newLesses
 
   -- check if anything changed
@@ -607,17 +603,44 @@ simpInjectiveFactEqMon = do
       getPairs [] _ = []
       getPairs ((tag, behaviours):rest) nodes = paired ++ getPairs rest nodes
         where
-          getPairTerms :: LNTerm -> [LNTerm]
-          getPairTerms (viewTerm2 -> FPair t1 t2) = t1 : getPairTerms t2
-          getPairTerms t = [t]
+          -- Flatten a (n-1)-tuple by only expanding the right-hand side of the tuple
+          -- This function errors when n is bigger than the _length_ of the tuple
+          -- E.g., shapeTerm 2 <t1, t2> = [t1, t2]
+          -- E.g., shapeTerm 2 <<t1, t2>, t3> = [<t1, t2>, t3]
+          -- Note that the above list has only 2 elements as the first tuple is not flattened
+          -- E.g., shapeTerm 3 <t1, t2> throws an error
+          -- Note that this code is identical to existing code in `InjectiveFactInstances.hs`.
+          shapeTerm :: Int -> LNTerm -> [LNTerm]
+          shapeTerm x (viewTerm2 -> FPair t1 t2) | x>1 = t1 : shapeTerm (x-1) t2
+          shapeTerm x t | x>1 = error ("shapeTerm: the term (" ++ show t ++ ") does not have enough pairs."
+            ++ "\nOccured in fact: (" ++ show tag ++") with behavior " ++ show behaviours)
+          shapeTerm x t | x==1 = [t]
+          shapeTerm _ _ = error "shapeTerm: cannot take an integer with size less than 1"
 
+          -- Given an injective fact instance and the behaviour/shape of the corresponding FactTag
+          -- (bound by the behaviours variable introduced in 'getPairs'), return a tuple that contains
+          -- its _injective identitifer_ and 
+          -- E.g., For behaviour/shape = [[=, =]]
+          -- trimmedPairTerms S(~id, <a, b>) = (~id, [(=, a), (=, b)])
+          -- E.g., For behaviour/shape = [[=]]
+          -- trimmedPairTerms S(~id, <a, b>) = (~id, [(=, <a, b>)])
+          -- E.g., For behaviour/shape = [[=, <]]
+          -- trimmedPairTerms S(~id, <<a, b>, c>) = (~id, [(=, <a, b>), (<, c)])
           trimmedPairTerms :: LNFact -> (LNTerm, [(MonotonicBehaviour, LNTerm)])
-          trimmedPairTerms (factTerms -> firstTerm:terms) = (firstTerm, concat $ zipWith zip behaviours (map getPairTerms terms))  -- zip automatically orients itself on the shorter list
+          trimmedPairTerms (factTerms -> firstTerm:terms) = (firstTerm, concat $ zipWith (\behaviour term -> zip behaviour (shapeTerm (length behaviour) term)) behaviours terms )
           trimmedPairTerms _ = error "a fact with no terms cannot be injective"
 
+          -- For each rule instance, filter its rhs for the current injective fact 'tag'
+          -- and compute the pairs via 'trimmedPairTerms'
           behaviourTerms :: M.Map NodeId [(LNTerm, [(MonotonicBehaviour, LNTerm)])]
           behaviourTerms = M.map (map trimmedPairTerms . filter (\x -> factTag x == tag) . get rPrems) nodes  --all node premises with the matching tag
 
+          -- Returns a list of pairs (i, s), (j, t) together with the behaviour b
+          -- between s and t. i and j are the time points where the fact instances
+          -- occured that contain s and t respectively.
+          -- Example: For an injective fact S with behaviour/shape [[=, <]],
+          -- S(~id, <a, b>) @ i and S(~id, <c, d>) @ j, we have
+          -- paired = [(=, (i, a), (j, c)), (<, (i, b), (j, d))]
           paired :: [(MonotonicBehaviour, (NodeId, LNTerm), (NodeId, LNTerm))]
           paired = [(b, (i, s), (j,t)) |
             (i, l1) <- M.toList behaviourTerms,
@@ -689,8 +712,8 @@ addNonInjectiveFactInstances :: Reduction ()
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
-  let list = map (\(x,y)-> (x,y,InjectiveFacts)) $ nonInjectiveFactInstances ctxt se
-  mapM_ (uncurry3 insertLess) list
+  let list = map (\(x,y)-> LessAtom x y InjectiveFacts) $ nonInjectiveFactInstances ctxt se
+  mapM_ insertLess list
 
 
 

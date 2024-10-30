@@ -1,12 +1,13 @@
 cabal-version:      >= 1.10
 build-type:         Simple
 name:               tamarin-prover
-version:            1.8.0
+version:            1.10.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
-author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
-                    Simon Meier <simon.meier@inf.ethz.ch>,
+author:             Benedikt Schmidt,
+                    Simon Meier,
+                    Cas Cremers <cremers@cispa.de>,
                     Jannik Dreier <research@jannikdreier.net>,
                     Ralf Sasse <ralf.sasse@gmail.com>
 maintainer:         Cas Cremers <cremers@cispa.de>,
@@ -103,12 +104,10 @@ flag build-tests
 ----------------------
 
 executable tamarin-prover
-    default-language: Haskell2010
+    default-language: GHC2021
 
     if flag(threaded)
-        ghc-options:   -threaded -eventlog
-
-    -- -XFlexibleInstances
+        ghc-options:   -threaded
 
     ghc-options:       -Wall -fwarn-tabs -rtsopts -feager-blackholing -main-is Main
     ghc-prof-options:  -auto-all
@@ -152,16 +151,17 @@ executable tamarin-prover
       , text
       , threads
       , time
+      , transformers
       , wai
       , warp
       , yesod-core
       , yesod-static
-      , tamarin-prover-utils  == 1.8.0
-      , tamarin-prover-term   == 1.8.0
-      , tamarin-prover-theory == 1.8.0
-      , tamarin-prover-sapic == 1.8.0
-      , tamarin-prover-export == 1.8.0
-      , tamarin-prover-accountability == 1.8.0
+      , tamarin-prover-utils  == 1.10.0
+      , tamarin-prover-term   == 1.10.0
+      , tamarin-prover-theory == 1.10.0
+      , tamarin-prover-sapic == 1.10.0
+      , tamarin-prover-export == 1.10.0
+      , tamarin-prover-accountability == 1.10.0
 
     other-modules:
       Paths_tamarin_prover
@@ -169,6 +169,8 @@ executable tamarin-prover
       -- Main
       Main.Console
       Main.Environment
+      Main.REPL
+      Main.ScratchPad
       Main.TheoryLoader
       Main.Utils
       Main.Mode.Batch
@@ -186,7 +188,10 @@ executable tamarin-prover
 
       Test.ParserTests
 
-    other-extensions:
+    default-extensions:
+      DuplicateRecordFields
+      LambdaCase
+      OverloadedRecordDot
       TemplateHaskell
 
 

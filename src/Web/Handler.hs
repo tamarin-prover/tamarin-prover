@@ -4,7 +4,6 @@ Description :  Application-specific handler functions.
 Copyright   :  (c) 2011 Cedric Staub, 2012 Benedikt Schmidt
 License     :  GPL-3
 
-Maintainer  :  Cedric Staub <cstaub@ethz.ch>
 Stability   :  experimental
 Portability :  non-portable
 -}
@@ -69,8 +68,10 @@ import           Theory                       (
     openDiffTheory,
     prettyClosedDiffTheory, prettyOpenDiffTheory, getLemmas, lName, lDiffName, getDiffLemmas, getEitherLemmas, thySignature, diffThySignature, toSignatureWithMaude
   )
+
+import Debug.Trace
 import           Theory.Proof (AutoProver(..), SolutionExtractor(..), Prover, DiffProver)
-import           Text.PrettyPrint.Html
+import Text.PrettyPrint.Html ( render, htmlDoc, renderHtmlDoc )
 import           Theory.Constraint.System.Dot
 import           Theory.Constraint.System.JSON  -- for export of constraint system to JSON
 import           Web.Hamlet
@@ -83,7 +84,7 @@ import           Yesod.Core
 
 import           Control.Monad.Trans.Resource (runResourceT)
 
-import           Data.Label
+import           Data.Label                   as L
 import           Data.Maybe
 import           Data.String                  (fromString)
 import           Data.List                    (intersperse)
@@ -111,11 +112,13 @@ import qualified Data.Binary                  as Bin
 import           Data.Time.LocalTime
 import           System.Directory
 
-import           Debug.Trace                  (trace)
 import Control.Monad.Except (runExceptT)
 import Main.TheoryLoader
 import Main.Console (renderDoc)
 import Theory.Tools.Wellformedness (prettyWfErrorReport)
+import           Text.Read                    (readMaybe)
+import           Theory.Constraint.System.Graph.Graph
+import           Theory.Constraint.System.Dot (BoringNodeStyle, dotSystemCompact, doNodeStyle)
 
 -- Quasi-quotation syntax changed from GHC 6 to 7,
 -- so we need this switch in order to support both
@@ -434,7 +437,7 @@ modifyTheory :: TheoryInfo                                -- ^ Theory to modify
              -> Handler Value
 modifyTheory ti f fpath errResponse = do
     res <- evalInThread (liftIO $ f (tiTheory ti))
-    rep <- pure $ tiErrorsHtml ti
+    let rep = tiErrorsHtml ti
     case res of
       Left e           -> return (excResponse e)
       Right Nothing    -> return (responseToJson errResponse)
@@ -500,7 +503,7 @@ postRootR = do
               openThy <- loadThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content) (T.unpack $ fileName fileinfo)
 
               let sig = either (get thySignature) (get diffThySignature) openThy
-              sig'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) sig
+              sig'   <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
 
               -- let tactic = get thyTactic openThy
               --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
@@ -529,8 +532,11 @@ postRootR = do
 getOverviewR :: TheoryIdx -> TheoryPath -> Handler Html
 getOverviewR idx path = withTheory idx ( \ti -> do
   renderF <- getUrlRender
+  renderParamsF <- getUrlRenderParams
   defaultLayout $ do
-    overview <- liftIO $ overviewTpl renderF ti path
+    getParams <- reqGetParams <$> getRequest
+    let renderParamsF' route = renderParamsF route getParams
+    overview <- liftIO $ overviewTpl renderF renderParamsF' ti path
     setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
     overview )
 
@@ -616,7 +622,7 @@ getTheoryPathMR idx path = do
     --
     go renderUrl _ ti = do
       let title = T.pack $ titleThyPath (tiTheory ti) path
-      let html = htmlThyPath renderUrl ti path
+      let html = htmlThyPath renderUrl renderUrl ti path
       return $ responseToJson (JsonHtml title $ toContent html)
 
 -- | Show a given path within a diff theory (main view).
@@ -749,11 +755,15 @@ getProverDiffAllR (name, mkProver, mkDiffProver) idx  = do
 getAutoProverR :: TheoryIdx
                -> SolutionExtractor
                -> Int                             -- autoprover bound to use
+               -> Bool                            -- Quit on empty oracle
                -> TheoryPath -> Handler RepJson
-getAutoProverR idx extractor bound =
+getAutoProverR idx extractor bound quitOnEmpty =
     getProverR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver
+      { apBound = actualBound
+      , apCut = if quitOnEmpty then CutAfterSorry else extractor
+      , quitOnEmptyOracle = quitOnEmpty }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -895,32 +905,43 @@ getTheoryPathDR idx path = withTheory idx $ \ti -> ajaxLayout $ do
   -}
 -}
 
+-- | Read the render options from a request to render a sequent.
+getOptions :: Handler (GraphOptions, DotOptions)
+getOptions = do
+  compact <- isNothing <$> lookupGetParam "uncompact"
+  let nodeStyle = if compact then CompactBoringNodes else FullBoringNodes
+  compress <- isNothing <$> lookupGetParam "uncompress"
+  abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
+  simpl <- lookupGetParam "simplification"
+  showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
+  clustering <- lookupGetParam "clustering"
+  let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack) 
+      graphOptions = L.set goSimplificationLevel simplificationLevel $
+                     L.set goCompress compress $
+                     L.set goShowAutoSource showAutosource $
+                     L.set goAbbreviate abbreviate $
+                     L.set goClustering (isJust clustering) $ 
+                     defaultGraphOptions
+  let dotOptions = L.set doNodeStyle nodeStyle defaultDotOptions
+  return (graphOptions, dotOptions)
+
+
 -- | Get rendered graph for theory and given path.
 getTheoryGraphR :: TheoryIdx -> TheoryPath -> Handler ()
 getTheoryGraphR idx path = withTheory idx ( \ti -> do
       yesod <- getYesod
-      compact <- isNothing <$> lookupGetParam "uncompact"
-      compress <- isNothing <$> lookupGetParam "uncompress"
-      abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
-      simplificationLevel <- fromMaybe "2" <$> lookupGetParam "simplification"
-      showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
-      img <- liftIO $ traceExceptions "getTheoryGraphR" $
+      (graphOptions, dotOptions) <- getOptions
+      img' <- liftIO $ traceExceptions "getTheoryGraphR" $
         imgThyPath
           (imageFormat yesod)
-          (graphCmd yesod)
+          (outputCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress ( not showAutosource) ( read $ T.unpack simplificationLevel) )
-          (sequentToJSONPretty)
-          (show simplificationLevel)
-          (abbreviate)
+          (dotSystemCompact graphOptions dotOptions)
+          (\label system -> sequentsToJSONPretty graphOptions [(label, system)])
           (tiTheory ti) path
-      sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
-  where
-    graphStyle d c s l= dotStyle s d .simplifySystem l. compression c
-    dotStyle s True = dotSystemCompact CompactBoringNodes s
-    dotStyle s False = dotSystemCompact FullBoringNodes s
-    compression True = compressSystem
-    compression False = id
+      case img' of
+        Nothing -> notFound
+        Just img -> sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
@@ -930,28 +951,19 @@ getTheoryGraphDiffR idx path = getTheoryGraphDiffR' idx path False
 getTheoryGraphDiffR' :: TheoryIdx -> DiffTheoryPath -> Bool -> Handler ()
 getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
       yesod <- getYesod
-      compact <- isNothing <$> lookupGetParam "uncompact"
-      compress <- isNothing <$> lookupGetParam "uncompress"
-      abbreviate <- isNothing <$> lookupGetParam "unabbreviate"
-      simplificationLevel <- fromMaybe "2" <$> lookupGetParam "simplification"
-      showAutosource <- isNothing <$> lookupGetParam "auto-sources"
-      img <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
+      (graphOptions, dotOptions) <- getOptions
+      img' <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
         imgDiffThyPath
           (imageFormat yesod)
-          (snd $ graphCmd yesod)
+          -- a.d. TODO should diff theories support JSON output?
+          (ocGraphCommand $ outputCmd yesod)
           (cacheDir yesod)
-          (graphStyle compact compress showAutosource (read $ T.unpack simplificationLevel))
-          (show simplificationLevel)
-          (abbreviate)
+          (dotSystemCompact graphOptions dotOptions)
           (dtiTheory ti) path
           (mirror)
-      sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
-  where
-    graphStyle d c s l= dotStyle s d .simplifySystem l. compression c
-    dotStyle s True = dotSystemCompact CompactBoringNodes s
-    dotStyle s False = dotSystemCompact FullBoringNodes s
-    compression True = compressSystem
-    compression False = id
+      case img' of
+        Nothing -> notFound
+        Just img -> sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
 
 -- | Get rendered mirror graph for theory and given path.
 getTheoryMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()

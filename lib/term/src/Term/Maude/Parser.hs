@@ -4,7 +4,6 @@
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Pretty printing and parsing of Maude terms and replies.
 module Term.Maude.Parser (
@@ -163,22 +162,39 @@ ppMaude t = case viewTerm t of
 ppTheory :: MaudeSig -> ByteString
 ppTheory msig = BC.unlines $
     [ "fmod MSG is"
-    , "  protecting NAT ."
-    , "  sort Pub Fresh Msg Node TamNat TOP ."
-    , "  subsort Pub < Msg ."
-    , "  subsort Fresh < Msg ."
-    , "  subsort TamNat < Msg ."
-    , "  subsort Msg < TOP ."
+    , "  protecting NAT ." ]
+    ++
+    (if enableNat msig
+      then
+        [ "  sort Pub Fresh Msg Node TamNat TOP ." ]
+      else
+        [ "  sort Pub Fresh Msg Node TOP ." ]
+    )
+    ++
+    [ "  subsort Pub < Msg ."
+    , "  subsort Fresh < Msg ." ]
+    ++
+    (if enableNat msig
+      then
+        ["  subsort TamNat < Msg ."]
+      else [])
+    ++
+    [  "  subsort Msg < TOP ."
     , "  subsort Node < TOP ."
     -- constants
     , "  op f : Nat -> Fresh ."
     , "  op p : Nat -> Pub ."
     , "  op c : Nat -> Msg ."
-    , "  op n : Nat -> Node ."
-    , "  op t : Nat -> TamNat ."
+    , "  op n : Nat -> Node ." ]
+    ++
+    (if enableNat msig
+      then
+        ["  op t : Nat -> TamNat ."]
+      else [])
+    ++
     -- used for encoding FApp List [t1,..,tk]
     -- list(cons(t1,cons(t2,..,cons(tk,nil)..)))
-    , "  op list : TOP -> TOP ."
+    [ "  op list : TOP -> TOP ."
     , "  op cons : TOP TOP -> TOP ."
     , "  op nil  : -> TOP ." ]
     ++

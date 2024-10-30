@@ -45,7 +45,7 @@ clean:	tamarin-clean
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.8.0
+VERSION=1.10.0
 
 ###############################################################################
 ## Case Studies
@@ -128,6 +128,19 @@ case-studies$(SUBDIR)%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)regression/trace
 	# Use -N3, as the fourth core is used by the OS and the console
 	$(TAMARIN) $< --prove --stop-on-trace=seqdfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	# We only produce the target after the run, otherwise aborted
+	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# individual case studies, special case with default oracle
+case-studies$(SUBDIR)%_analyzed-deforacle.spthy: examples/%.spthy $(TAMARIN)
+	mkdir -p case-studies$(SUBDIR)regression/trace
+	# Use -N3, as the fourth core is used by the OS and the console
+	cd examples/regression/trace && $(TAMARIN) defaultoracle.spthy --prove +RTS -N3 -RTS -odefaultoracle.spthy.tmp >defaultoracle.spthy.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -367,7 +380,7 @@ ake-bp-case-studies:	$(AKE_BP_CS_TARGETS)
 ## Features
 ###########
 
-FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//multiset/NumberSubtermTests.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy features//macros/MacroExample.spthy features//macros/MacroGlobalVarNSPK3.spthy features//macros/MacroWithRestrictionCRxor.spthy
+FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//multiset/NumberSubtermTests.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy features//configuration/configuration.spthy features//macros/MacroExample.spthy features//macros/MacroGlobalVarNSPK3.spthy features//macros/MacroWithRestrictionCRxor.spthy
 
 FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR),$(FEATURES_CASE_STUDIES)))
 
@@ -395,8 +408,23 @@ AUTO_SOURCES_CS_TARGETS=$(subst .spthy,_analyzed-auto-sources.spthy,$(addprefix 
 auto-sources-case-studies:	$(AUTO_SOURCES_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)features/auto-sources/spore/*.spthy
 
+## Accountability
+################
+
+ACCOUNTABILITY_CASE_STUDIES=ct.spthy whodunit.spthy ocsps-msr.spthy ocsps-msr-untrusted.spthy
+
+ACCOUNTABILITY_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)accountability/csf21-acc-unbounded/previous/,$(ACCOUNTABILITY_CASE_STUDIES)))
+
+# case studies
+accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
+	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)accountability/csf21-acc-unbounded/previous/*.spthy
+
 ## Regression (old issues)
 ##########################
+
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy
+FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
+
 
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
 
@@ -405,9 +433,11 @@ REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBD
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
 SEQDFS_TARGETS=$(subst .spthy,_analyzed-seqdfs.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(SEQDFS_CASE_STUDIES)))
 
+DEFAULTORACLE_CASE_STUDIES=defaultoracle.spthy
+DEFAULTORACLE_CASE_TARGETS=$(subst .spthy,_analyzed-deforacle.spthy, $(addprefix case-studies$(SUBDIR)regression/trace/,$(DEFAULTORACLE_CASE_STUDIES)))
 
 # case studies
-regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS)
+regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)regression/trace/*.spthy
 
 
@@ -456,7 +486,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS)
+CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS)
 
 case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies$(SUBDIR)
@@ -465,7 +495,7 @@ case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 ## Fast case studies
 ####################
 
-FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS)
+FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS)
 
 fast-case-studies: case-studies$(SUBDIR)system.info $(FAST_CS_TARGETS)
 	mkdir -p case-studies$(SUBDIR)

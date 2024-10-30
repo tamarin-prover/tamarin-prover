@@ -7,7 +7,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Terms with variables and constants.
 
@@ -90,7 +89,6 @@ instance Applicative (Lit c) where
 
 -- | Monad instance in the variable
 instance Monad (Lit c) where
-    return         = Var
     (Var x)  >>= f = f x
     (Con n)  >>= _ = Con n
 

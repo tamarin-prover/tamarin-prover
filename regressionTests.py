@@ -42,7 +42,7 @@ def iterFolder(folder):
 
 ## functions for cutting and parsing part of the proof ##
 def parseTest(lines, tester):
-	keywords = ["rule", "lemma", "/*", "*/", "restriction", "section", "text", "equations", "builtins", "functions", "end", "heuristic", "predicate", "options", "process", "macros"]
+	keywords = ["rule", "lemma", "/*", "*/", "restriction", "section", "text", "equations", "builtins", "configuration", "functions", "end", "heuristic", "predicate", "options", "process", "macros"]
 	try:
 		for key in keywords:
 			if(tester != key):
@@ -109,6 +109,14 @@ def parseFile(path):
 		builtins = builtins.split(',')
 	except Exception as ex:
 		return f"Parse error - builtins: {path}"
+
+	## parse config blocks ##
+	try:
+		splitConfigBlock = proof.split("configuration:")[-1]
+		configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
+		configblock = configblock.split(' ')
+	except Exception as ex:
+		return f"Parse error - config block: {path}"
 	
 	## parse rules ##
 	try:
@@ -147,7 +155,7 @@ def parseFile(path):
 		parsed = [(lemmas, res=="verified", int(steps)) for (lemmas, res, steps) in parsed]  # convert types
 		parsed = list(zip(*parsed))             # transpose matrix
 		if (parsed == []): parsed = [[],[],[]]  #
-		return (parsed[0], parsed[1], parsed[2], float(times[0]), proof, equations, func, warning, rules, builtins, macros)
+		return (parsed[0], parsed[1], parsed[2], float(times[0]), proof, equations, func, warning, rules, builtins, configblock, macros)
 
 	except Exception as ex:
 		return f"Parse error - lemmas: {path}"
@@ -171,14 +179,14 @@ def parseFiles(pathB):
 	parsedA = parseFile(pathA)
 	if type(parsedA) == str:
 		return parsedA
-	(lemmasA, resA, stepsA, timeA, proofA, equationsA, funcA, warningA, rulesA, builtinsA, macrosA) = parsedA
-	(lemmasB, resB, stepsB, timeB, proofB, equationsB, funcB, warningB, rulesB, builtinsB, macrosB) = parsedB
+	(lemmasA, resA, stepsA, timeA, proofA, equationsA, funcA, warningA, rulesA, builtinsA, configblockA, macrosA) = parsedA
+	(lemmasB, resB, stepsB, timeB, proofB, equationsB, funcB, warningB, rulesB, builtinsB, configblockB, macrosB) = parsedB
 
 	## check compatibility ##
 	if lemmasA != lemmasB:
 		return f"The lemmas for {pathA} cannot be compared, they are different."
 
-	return (lemmasA, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB, macrosA, macrosB)
+	return (lemmasA, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB, configblockA, configblockB, macrosA, macrosB)
 
 
 
@@ -202,7 +210,7 @@ def compare():
 			logging.error(color(colors.RED + colors.BOLD, parsed))
 			majorDifferences = True
 			continue
-		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB, macrosA, macrosB) = parsed
+		(lemmas, resA, resB, stepsA, stepsB, timeA, timeB, proofA, proofB, equationsA, equationsB, funcA, funcB, warningA, warningB, rulesA, rulesB, builtinsA, builtinsB, configblockA, configblockB, macrosA, macrosB) = parsed
 
 		## proofs differ ##
 		if proofA != proofB:
@@ -292,6 +300,29 @@ def compare():
 						logging.error(color(colors.RED + colors.BOLD, f"One or multiple builtins do not match!"))
 				majorDifferences = True
 
+			## configblocks differ ##
+			if configblockA != configblockB:
+				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
+				if len(configblockA) != len(configblockB):
+					if len(list(filter(lambda item: item != "", configblockA))) == len(list(filter(lambda item: item != "", configblockB))):
+						if settings.verbose >= 6:
+							logging.error(color(colors.RED + colors.BOLD, f"The number of whitespaces in the config block lines are not equal!"))
+						else:
+							logging.error(color(colors.RED + colors.BOLD, f"Config blocks mismatch!"))
+					else:
+						if settings.verbose >= 6:
+							logging.error(color(colors.RED + colors.BOLD, f"The number of options in the config blocks are not equal!"))
+						else:
+							logging.error(color(colors.RED + colors.BOLD, f"Config blocks mismatch!"))
+				else:
+					if settings.verbose >= 6:
+						for i in range(len(configblockA)):
+							if configblockA[i] != configblockB[i]:
+								logging.error(color(colors.RED + colors.BOLD, f"The config block changed from {configblockA[i]} to {configblockB[i]}"))
+					else:
+						logging.error(color(colors.RED + colors.BOLD, f"Config blocks options mismatch!"))
+				majorDifferences = True
+
 
 		## results differ ##
 		if resA != resB:
@@ -346,6 +377,7 @@ def compare():
 		logging.warning("The rules did not change")
 		logging.warning("The functions did not change")
 		logging.warning("The builtins did not change")
+		logging.warning("The config blocks did not change")
 		logging.warning("The equations did not change")
 		logging.warning("The macros did not change")
 		logging.warning("The warnings did not change")
@@ -373,6 +405,8 @@ def getArguments():
 			"5: show shell command output\n" +
 			"6: show diff output if the corresponding proofs changed"
 			, type=int, default=3)
+	parser.add_argument("-p", "--parser-test", help = "Run the parser tests.", action="store_true")
+
 
 	## save the settings ##
 	global settings
@@ -402,6 +436,39 @@ def main():
 		logging.warning("running 'stack install' ...")
 		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 		logging.debug(output)
+
+	## test the spthy parser
+	parsingSuccessful = True
+	if settings.parser_test:
+		logging.info("running the parser tests ...")
+		tree_sitter_spthy_dir = './tree-sitter/tree-sitter-spthy'
+
+		working_dir = os.getcwd()
+
+		# change the working dir s.t. we can use tree-sitter CLI
+		os.chdir(tree_sitter_spthy_dir)
+		
+		try:
+			testResult = subprocess.run(['./regressionParser.sh'], capture_output=True, text=True)
+			tree_sitter_generate = subprocess.run(["tree-sitter", "generate"], capture_output=True, text=True)
+			outputColor = colors.GREEN + colors.BOLD
+
+			if not "success percentage: 100.00%;" in testResult.stdout:
+				parsingSuccessful = False
+				outputColor = colors.RED + colors.BOLD
+			logging.error("""\n 
+==============================================================
+Parser test results:
+==============================================================
+		""")
+			logging.error(color(colors.YELLOW + colors.BOLD, tree_sitter_generate.stdout))
+			logging.error(color(colors.RED + colors.BOLD, tree_sitter_generate.stderr))
+			logging.error(color(outputColor, testResult.stdout))
+			logging.error(color(colors.RED + colors.BOLD, testResult.stderr))
+
+		finally:
+        # revert the working dir change s.t. the rest of the script can run correctly
+			os.chdir(working_dir)
 			
 	## repeat case-studies r times for higher confidence in time measurements ##
 	successful = True
@@ -422,6 +489,8 @@ def main():
 
 		## compare time and steps ##
 		successful = compare() & successful
+
+	successful = successful & parsingSuccessful
 
 	## measure time ##
 	logging.warning(f"\nTime elapsed: {str(datetime.datetime.now() - startTime).split('.')[0]}s")

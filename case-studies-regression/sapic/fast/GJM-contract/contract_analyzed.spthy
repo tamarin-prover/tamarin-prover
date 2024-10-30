@@ -268,46 +268,49 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1( ), Fr( skT.1 ) ]
   -->
    [ !Semistate_1111( skT.1 ), Out( pk(skT.1) ) ]
 
   /*
-  rule (modulo AC) p_1_[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1( ), Fr( skT ) ]
     -->
      [ !Semistate_1111( skT ), Out( pk(skT) ) ]
   */
 
 rule (modulo E) inabortctpkpkysig_0_111111[color=#408047,
-                                           process="in(<'abort', ct.1, pk1.1, pk2.1, ysig.1>);"]:
+                                           process="in(<'abort', ct.1, pk1.1, pk2.1, ysig.1>);", issapicrule]:
    [ State_111111( skT.1 ), In( <'abort', ct.1, pk1.1, pk2.1, ysig.1> ) ]
   -->
    [ State_1111111( ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
 
   /*
   rule (modulo AC) inabortctpkpkysig_0_111111[color=#408047,
-                                              process="in(<'abort', ct.1, pk1.1, pk2.1, ysig.1>);"]:
+                                              process="in(<'abort', ct.1, pk1.1, pk2.1, ysig.1>);",
+                                              issapicrule]:
      [ State_111111( skT ), In( <'abort', ct, pk1, pk2, ysig> ) ]
     -->
      [ State_1111111( ct, pk1, pk2, skT, ysig ) ]
   */
 
 rule (modulo E) ifcheckgetmsgysigpkctpkpk_0_1111111[color=#408047,
-                                                    process="if check_getmsg(ysig.1, pk1.1)=<ct.1, pk1.1, pk2.1>"]:
+                                                    process="if check_getmsg(ysig.1, pk1.1)=<ct.1, pk1.1, pk2.1>",
+                                                    issapicrule]:
    [ State_1111111( ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
   --[ Pred_Eq( check_getmsg(ysig.1, pk1.1), <ct.1, pk1.1, pk2.1> ) ]->
    [ State_11111111( ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
 
   /*
   rule (modulo AC) ifcheckgetmsgysigpkctpkpk_0_1111111[color=#408047,
-                                                       process="if check_getmsg(ysig.1, pk1.1)=<ct.1, pk1.1, pk2.1>"]:
+                                                       process="if check_getmsg(ysig.1, pk1.1)=<ct.1, pk1.1, pk2.1>",
+                                                       issapicrule]:
      [ State_1111111( ct, pk1, pk2, skT, ysig ) ]
     --[ Pred_Eq( z, <ct, pk1, pk2> ) ]->
      [ State_11111111( ct, pk1, pk2, skT, ysig ) ]
@@ -321,111 +324,115 @@ rule (modulo E) ifcheckgetmsgysigpkctpkpk_0_1111111[color=#408047,
        z     = x.11
   */
 
-rule (modulo E) lockct_0_11111111[color=#408047, process="lock ct.1;"]:
+rule (modulo E) lockct_0_11111111[color=#408047, process="lock ct.1;",
+                                  issapicrule]:
    [ State_11111111( ct.1, pk1.1, pk2.1, skT.1, ysig.1 ), Fr( lock ) ]
   --[ Lock_0( '0', lock, ct.1 ), Lock( '0', lock, ct.1 ) ]->
    [ State_111111111( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
 
   /*
-  rule (modulo AC) lockct_0_11111111[color=#408047, process="lock ct.1;"]:
+  rule (modulo AC) lockct_0_11111111[color=#408047, process="lock ct.1;",
+                                     issapicrule]:
      [ State_11111111( ct, pk1, pk2, skT, ysig ), Fr( lock ) ]
     --[ Lock_0( '0', lock, ct ), Lock( '0', lock, ct ) ]->
      [ State_111111111( lock, ct, pk1, pk2, skT, ysig ) ]
   */
 
 rule (modulo E) lookupctasstate_0_111111111[color=#408047,
-                                            process="lookup ct.1 as state.1"]:
+                                            process="lookup ct.1 as state.1", issapicrule]:
    [ State_111111111( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
   --[ IsIn( ct.1, state.1 ) ]->
    [ State_1111111111( lock, ct.1, pk1.1, pk2.1, skT.1, state.1, ysig.1 ) ]
 
   /*
   rule (modulo AC) lookupctasstate_0_111111111[color=#408047,
-                                               process="lookup ct.1 as state.1"]:
+                                               process="lookup ct.1 as state.1", issapicrule]:
      [ State_111111111( lock, ct, pk1, pk2, skT, ysig ) ]
     --[ IsIn( ct, state ) ]->
      [ State_1111111111( lock, ct, pk1, pk2, skT, state, ysig ) ]
   */
 
 rule (modulo E) unlockct_0_1111111111[color=#408047,
-                                      process="unlock ct.1;"]:
+                                      process="unlock ct.1;", issapicrule]:
    [ State_1111111111( lock, ct.1, pk1.1, pk2.1, skT.1, state.1, ysig.1 ) ]
   --[ Unlock_0( '0', lock, ct.1 ), Unlock( '0', lock, ct.1 ) ]->
    [ ]
 
   /*
   rule (modulo AC) unlockct_0_1111111111[color=#408047,
-                                         process="unlock ct.1;"]:
+                                         process="unlock ct.1;", issapicrule]:
      [ State_1111111111( lock, ct, pk1, pk2, skT, state, ysig ) ]
     --[ Unlock_0( '0', lock, ct ), Unlock( '0', lock, ct ) ]->
      [ ]
   */
 
 rule (modulo E) lookupctasstate_1_111111111[color=#408047,
-                                            process="lookup ct.1 as state.1"]:
+                                            process="lookup ct.1 as state.1", issapicrule]:
    [ State_111111111( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
   --[ IsNotSet( ct.1 ) ]->
    [ State_1111111112( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
 
   /*
   rule (modulo AC) lookupctasstate_1_111111111[color=#408047,
-                                               process="lookup ct.1 as state.1"]:
+                                               process="lookup ct.1 as state.1", issapicrule]:
      [ State_111111111( lock, ct, pk1, pk2, skT, ysig ) ]
     --[ IsNotSet( ct ) ]->
      [ State_1111111112( lock, ct, pk1, pk2, skT, ysig ) ]
   */
 
 rule (modulo E) insertctaborted_0_1111111112[color=#408047,
-                                             process="insert ct.1,'aborted';"]:
+                                             process="insert ct.1,'aborted';", issapicrule]:
    [ State_1111111112( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
   --[ Insert( ct.1, 'aborted' ) ]->
    [ State_11111111121( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
 
   /*
   rule (modulo AC) insertctaborted_0_1111111112[color=#408047,
-                                                process="insert ct.1,'aborted';"]:
+                                                process="insert ct.1,'aborted';", issapicrule]:
      [ State_1111111112( lock, ct, pk1, pk2, skT, ysig ) ]
     --[ Insert( ct, 'aborted' ) ]->
      [ State_11111111121( lock, ct, pk1, pk2, skT, ysig ) ]
   */
 
 rule (modulo E) eventAbortct_0_11111111121[color=#408047,
-                                           process="event Abort1( ct.1 );"]:
+                                           process="event Abort1( ct.1 );", issapicrule]:
    [ State_11111111121( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
   --[ Abort1( ct.1 ) ]->
    [ State_111111111211( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
 
   /*
   rule (modulo AC) eventAbortct_0_11111111121[color=#408047,
-                                              process="event Abort1( ct.1 );"]:
+                                              process="event Abort1( ct.1 );", issapicrule]:
      [ State_11111111121( lock, ct, pk1, pk2, skT, ysig ) ]
     --[ Abort1( ct ) ]->
      [ State_111111111211( lock, ct, pk1, pk2, skT, ysig ) ]
   */
 
 rule (modulo E) unlockct_0_111111111211[color=#408047,
-                                        process="unlock ct.1;"]:
+                                        process="unlock ct.1;", issapicrule]:
    [ State_111111111211( lock, ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
   --[ Unlock_0( '0', lock, ct.1 ), Unlock( '0', lock, ct.1 ) ]->
    [ Out( sign(<<ct.1, pk1.1, pk2.1>, ysig.1>, skT.1) ) ]
 
   /*
   rule (modulo AC) unlockct_0_111111111211[color=#408047,
-                                           process="unlock ct.1;"]:
+                                           process="unlock ct.1;", issapicrule]:
      [ State_111111111211( lock, ct, pk1, pk2, skT, ysig ) ]
     --[ Unlock_0( '0', lock, ct ), Unlock( '0', lock, ct ) ]->
      [ Out( sign(<<ct, pk1, pk2>, ysig>, skT) ) ]
   */
 
 rule (modulo E) ifcheckgetmsgysigpkctpkpk_1_1111111[color=#408047,
-                                                    process="if check_getmsg(ysig.1, pk1.1)=<ct.1, pk1.1, pk2.1>"]:
+                                                    process="if check_getmsg(ysig.1, pk1.1)=<ct.1, pk1.1, pk2.1>",
+                                                    issapicrule]:
    [ State_1111111( ct.1, pk1.1, pk2.1, skT.1, ysig.1 ) ]
   --[ Pred_Not_Eq( check_getmsg(ysig.1, pk1.1), <ct.1, pk1.1, pk2.1> ) ]->
    [ ]
 
   /*
   rule (modulo AC) ifcheckgetmsgysigpkctpkpk_1_1111111[color=#408047,
-                                                       process="if check_getmsg(ysig.1, pk1.1)=<ct.1, pk1.1, pk2.1>"]:
+                                                       process="if check_getmsg(ysig.1, pk1.1)=<ct.1, pk1.1, pk2.1>",
+                                                       issapicrule]:
      [ State_1111111( ct, pk1, pk2, skT, ysig ) ]
     --[ Pred_Not_Eq( z, <ct, pk1, pk2> ) ]->
      [ ]
@@ -439,20 +446,21 @@ rule (modulo E) ifcheckgetmsgysigpkctpkpk_1_1111111[color=#408047,
        z     = x.11
   */
 
-rule (modulo E) p_1_111[color=#ffffff, process="!"]:
+rule (modulo E) p_1_111[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1111( skT.1 ) ]
   -->
    [ !Semistate_111121( skT.1 ), State_111111( skT.1 ) ]
 
   /*
-  rule (modulo AC) p_1_111[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_111[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1111( skT ) ]
     -->
      [ !Semistate_111121( skT ), State_111111( skT ) ]
   */
 
 rule (modulo E) inresolvectpkpkypcsysig_0_11112111[color=#40804d,
-                                                   process="in(<'resolve2', ct.2, pk1.2, pk2.2, ypcs1.1, ysig2.1>);"]:
+                                                   process="in(<'resolve2', ct.2, pk1.2, pk2.2, ypcs1.1, ysig2.1>);",
+                                                   issapicrule]:
    [
    State_11112111( skT.1 ),
    In( <'resolve2', ct.2, pk1.2, pk2.2, ypcs1.1, ysig2.1> )
@@ -462,21 +470,24 @@ rule (modulo E) inresolvectpkpkypcsysig_0_11112111[color=#40804d,
 
   /*
   rule (modulo AC) inresolvectpkpkypcsysig_0_11112111[color=#40804d,
-                                                      process="in(<'resolve2', ct.2, pk1.2, pk2.2, ypcs1.1, ysig2.1>);"]:
+                                                      process="in(<'resolve2', ct.2, pk1.2, pk2.2, ypcs1.1, ysig2.1>);",
+                                                      issapicrule]:
      [ State_11112111( skT ), In( <'resolve2', ct, pk1, pk2, ypcs1, ysig2> ) ]
     -->
      [ State_111121111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) ifcheckgetmsgysigpkct_0_111121111[color=#40804d,
-                                                  process="if check_getmsg(ysig2.1, pk2.2)=ct.2"]:
+                                                  process="if check_getmsg(ysig2.1, pk2.2)=ct.2",
+                                                  issapicrule]:
    [ State_111121111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
   --[ Pred_Eq( check_getmsg(ysig2.1, pk2.2), ct.2 ) ]->
    [ State_1111211111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
 
   /*
   rule (modulo AC) ifcheckgetmsgysigpkct_0_111121111[color=#40804d,
-                                                     process="if check_getmsg(ysig2.1, pk2.2)=ct.2"]:
+                                                     process="if check_getmsg(ysig2.1, pk2.2)=ct.2",
+                                                     issapicrule]:
      [ State_111121111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Pred_Eq( z, ct ) ]->
      [ State_1111211111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
@@ -491,14 +502,16 @@ rule (modulo E) ifcheckgetmsgysigpkct_0_111121111[color=#40804d,
   */
 
 rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_1111211111[color=#40804d,
-                                                                process="if check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2)=ct.2"]:
+                                                                process="if check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2)=ct.2",
+                                                                issapicrule]:
    [ State_1111211111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
   --[ Pred_Eq( check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2), ct.2 ) ]->
    [ State_11112111111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
 
   /*
   rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_0_1111211111[color=#40804d,
-                                                                   process="if check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2)=ct.2"]:
+                                                                   process="if check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2)=ct.2",
+                                                                   issapicrule]:
      [ State_1111211111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Pred_Eq( z, ct ) ]->
      [ State_11112111111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
@@ -520,14 +533,16 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_1111211111[color=#40804d,
   */
 
 rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_11112111111[color=#40804d,
-                                                            process="if checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1)=true"]:
+                                                            process="if checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1)=true",
+                                                            issapicrule]:
    [ State_11112111111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
   --[ Pred_Eq( checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1), true ) ]->
    [ State_111121111111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
 
   /*
   rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_0_11112111111[color=#40804d,
-                                                               process="if checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1)=true"]:
+                                                               process="if checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1)=true",
+                                                               issapicrule]:
      [ State_11112111111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Pred_Eq( z, true ) ]->
      [ State_111121111111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
@@ -555,7 +570,7 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_11112111111[color=#40804d,
   */
 
 rule (modulo E) lockct_0_111121111111[color=#40804d,
-                                      process="lock ct.2;"]:
+                                      process="lock ct.2;", issapicrule]:
    [
    State_111121111111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ),
    Fr( lock.1 )
@@ -568,14 +583,14 @@ rule (modulo E) lockct_0_111121111111[color=#40804d,
 
   /*
   rule (modulo AC) lockct_0_111121111111[color=#40804d,
-                                         process="lock ct.2;"]:
+                                         process="lock ct.2;", issapicrule]:
      [ State_111121111111( skT, ypcs1, ysig2, ct, pk1, pk2 ), Fr( lock ) ]
     --[ Lock_1( '1', lock, ct ), Lock( '1', lock, ct ) ]->
      [ State_1111211111111( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) lookupctasstatus_0_1111211111111[color=#40804d,
-                                                 process="lookup ct.2 as status.1"]:
+                                                 process="lookup ct.2 as status.1", issapicrule]:
    [
    State_1111211111111( lock.1, skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2
    )
@@ -589,14 +604,14 @@ rule (modulo E) lookupctasstatus_0_1111211111111[color=#40804d,
 
   /*
   rule (modulo AC) lookupctasstatus_0_1111211111111[color=#40804d,
-                                                    process="lookup ct.2 as status.1"]:
+                                                    process="lookup ct.2 as status.1", issapicrule]:
      [ State_1111211111111( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ IsIn( ct, status ) ]->
      [ State_11112111111111( lock, skT, status, ypcs1, ysig2, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) unlockct_0_11112111111111[color=#40804d,
-                                          process="unlock ct.2;"]:
+                                          process="unlock ct.2;", issapicrule]:
    [
    State_11112111111111( lock.1, skT.1, status.1, ypcs1.1, ysig2.1, ct.2,
                          pk1.2, pk2.2
@@ -607,14 +622,14 @@ rule (modulo E) unlockct_0_11112111111111[color=#40804d,
 
   /*
   rule (modulo AC) unlockct_0_11112111111111[color=#40804d,
-                                             process="unlock ct.2;"]:
+                                             process="unlock ct.2;", issapicrule]:
      [ State_11112111111111( lock, skT, status, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Unlock_1( '1', lock, ct ), Unlock( '1', lock, ct ) ]->
      [ ]
   */
 
 rule (modulo E) lookupctasstatus_1_1111211111111[color=#40804d,
-                                                 process="lookup ct.2 as status.1"]:
+                                                 process="lookup ct.2 as status.1", issapicrule]:
    [
    State_1111211111111( lock.1, skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2
    )
@@ -627,14 +642,14 @@ rule (modulo E) lookupctasstatus_1_1111211111111[color=#40804d,
 
   /*
   rule (modulo AC) lookupctasstatus_1_1111211111111[color=#40804d,
-                                                    process="lookup ct.2 as status.1"]:
+                                                    process="lookup ct.2 as status.1", issapicrule]:
      [ State_1111211111111( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ IsNotSet( ct ) ]->
      [ State_11112111111112( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) insertctresolved_0_11112111111112[color=#40804d,
-                                                  process="insert ct.2,'resolved2';"]:
+                                                  process="insert ct.2,'resolved2';", issapicrule]:
    [
    State_11112111111112( lock.1, skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2
    )
@@ -648,14 +663,14 @@ rule (modulo E) insertctresolved_0_11112111111112[color=#40804d,
 
   /*
   rule (modulo AC) insertctresolved_0_11112111111112[color=#40804d,
-                                                     process="insert ct.2,'resolved2';"]:
+                                                     process="insert ct.2,'resolved2';", issapicrule]:
      [ State_11112111111112( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Insert( ct, 'resolved2' ) ]->
      [ State_111121111111121( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) eventResolvect_0_111121111111121[color=#40804d,
-                                                 process="event Resolve2( ct.2 );"]:
+                                                 process="event Resolve2( ct.2 );", issapicrule]:
    [
    State_111121111111121( lock.1, skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2,
                           pk2.2
@@ -670,14 +685,14 @@ rule (modulo E) eventResolvect_0_111121111111121[color=#40804d,
 
   /*
   rule (modulo AC) eventResolvect_0_111121111111121[color=#40804d,
-                                                    process="event Resolve2( ct.2 );"]:
+                                                    process="event Resolve2( ct.2 );", issapicrule]:
      [ State_111121111111121( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Resolve2( ct ) ]->
      [ State_1111211111111211( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) unlockct_0_1111211111111211[color=#40804d,
-                                            process="unlock ct.2;"]:
+                                            process="unlock ct.2;", issapicrule]:
    [
    State_1111211111111211( lock.1, skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2,
                            pk2.2
@@ -688,7 +703,7 @@ rule (modulo E) unlockct_0_1111211111111211[color=#40804d,
 
   /*
   rule (modulo AC) unlockct_0_1111211111111211[color=#40804d,
-                                               process="unlock ct.2;"]:
+                                               process="unlock ct.2;", issapicrule]:
      [ State_1111211111111211( lock, skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Unlock_1( '1', lock, ct ), Unlock( '1', lock, ct ) ]->
      [ Out( sign(<z, ysig2>, skT) ) ]
@@ -703,7 +718,8 @@ rule (modulo E) unlockct_0_1111211111111211[color=#40804d,
   */
 
 rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_11112111111[color=#40804d,
-                                                            process="if checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1)=true"]:
+                                                            process="if checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1)=true",
+                                                            issapicrule]:
    [ State_11112111111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
   --[ Pred_Not_Eq( checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1), true )
   ]->
@@ -711,7 +727,8 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_11112111111[color=#40804d,
 
   /*
   rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_1_11112111111[color=#40804d,
-                                                               process="if checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1)=true"]:
+                                                               process="if checkpcs(ct.2, pk1.2, pk2.2, pk(skT.1), ypcs1.1)=true",
+                                                               issapicrule]:
      [ State_11112111111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Pred_Not_Eq( z, true ) ]->
      [ ]
@@ -739,7 +756,8 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_11112111111[color=#40804d,
   */
 
 rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_1111211111[color=#40804d,
-                                                                process="if check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2)=ct.2"]:
+                                                                process="if check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2)=ct.2",
+                                                                issapicrule]:
    [ State_1111211111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
   --[ Pred_Not_Eq( check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2), ct.2 )
   ]->
@@ -747,7 +765,8 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_1111211111[color=#40804d,
 
   /*
   rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_1_1111211111[color=#40804d,
-                                                                   process="if check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2)=ct.2"]:
+                                                                   process="if check_getmsg(convertpcs(skT.1, ypcs1.1), pk1.2)=ct.2",
+                                                                   issapicrule]:
      [ State_1111211111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Pred_Not_Eq( z, ct ) ]->
      [ ]
@@ -769,14 +788,16 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_1111211111[color=#40804d,
   */
 
 rule (modulo E) ifcheckgetmsgysigpkct_1_111121111[color=#40804d,
-                                                  process="if check_getmsg(ysig2.1, pk2.2)=ct.2"]:
+                                                  process="if check_getmsg(ysig2.1, pk2.2)=ct.2",
+                                                  issapicrule]:
    [ State_111121111( skT.1, ypcs1.1, ysig2.1, ct.2, pk1.2, pk2.2 ) ]
   --[ Pred_Not_Eq( check_getmsg(ysig2.1, pk2.2), ct.2 ) ]->
    [ ]
 
   /*
   rule (modulo AC) ifcheckgetmsgysigpkct_1_111121111[color=#40804d,
-                                                     process="if check_getmsg(ysig2.1, pk2.2)=ct.2"]:
+                                                     process="if check_getmsg(ysig2.1, pk2.2)=ct.2",
+                                                     issapicrule]:
      [ State_111121111( skT, ypcs1, ysig2, ct, pk1, pk2 ) ]
     --[ Pred_Not_Eq( z, ct ) ]->
      [ ]
@@ -790,20 +811,21 @@ rule (modulo E) ifcheckgetmsgysigpkct_1_111121111[color=#40804d,
        z     = x.10
   */
 
-rule (modulo E) p_1_11112[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11112[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111121( skT.1 ) ]
   -->
    [ !Semistate_11112121( skT.1 ), State_11112111( skT.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11112[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11112[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_111121( skT ) ]
     -->
      [ !Semistate_11112121( skT ), State_11112111( skT ) ]
   */
 
 rule (modulo E) inresolvectpkpkysigypcs_0_1111212111[color=#40804d,
-                                                     process="in(<'resolve1', ct.3, pk1.3, pk2.3, ysig1.1, ypcs2.1>);"]:
+                                                     process="in(<'resolve1', ct.3, pk1.3, pk2.3, ysig1.1, ypcs2.1>);",
+                                                     issapicrule]:
    [
    State_1111212111( skT.1 ),
    In( <'resolve1', ct.3, pk1.3, pk2.3, ysig1.1, ypcs2.1> )
@@ -813,7 +835,8 @@ rule (modulo E) inresolvectpkpkysigypcs_0_1111212111[color=#40804d,
 
   /*
   rule (modulo AC) inresolvectpkpkysigypcs_0_1111212111[color=#40804d,
-                                                        process="in(<'resolve1', ct.3, pk1.3, pk2.3, ysig1.1, ypcs2.1>);"]:
+                                                        process="in(<'resolve1', ct.3, pk1.3, pk2.3, ysig1.1, ypcs2.1>);",
+                                                        issapicrule]:
      [ State_1111212111( skT ), In( <'resolve1', ct, pk1, pk2, ysig1, ypcs2> )
      ]
     -->
@@ -821,14 +844,16 @@ rule (modulo E) inresolvectpkpkysigypcs_0_1111212111[color=#40804d,
   */
 
 rule (modulo E) ifcheckgetmsgysigpkct_0_11112121111[color=#40804d,
-                                                    process="if check_getmsg(ysig1.1, pk1.3)=ct.3"]:
+                                                    process="if check_getmsg(ysig1.1, pk1.3)=ct.3",
+                                                    issapicrule]:
    [ State_11112121111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
   --[ Pred_Eq( check_getmsg(ysig1.1, pk1.3), ct.3 ) ]->
    [ State_111121211111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
 
   /*
   rule (modulo AC) ifcheckgetmsgysigpkct_0_11112121111[color=#40804d,
-                                                       process="if check_getmsg(ysig1.1, pk1.3)=ct.3"]:
+                                                       process="if check_getmsg(ysig1.1, pk1.3)=ct.3",
+                                                       issapicrule]:
      [ State_11112121111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
     --[ Pred_Eq( z, ct ) ]->
      [ State_111121211111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
@@ -843,14 +868,16 @@ rule (modulo E) ifcheckgetmsgysigpkct_0_11112121111[color=#40804d,
   */
 
 rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_111121211111[color=#40804d,
-                                                                  process="if check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3)=ct.3"]:
+                                                                  process="if check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3)=ct.3",
+                                                                  issapicrule]:
    [ State_111121211111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
   --[ Pred_Eq( check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3), ct.3 ) ]->
    [ State_1111212111111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
 
   /*
   rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_0_111121211111[color=#40804d,
-                                                                     process="if check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3)=ct.3"]:
+                                                                     process="if check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3)=ct.3",
+                                                                     issapicrule]:
      [ State_111121211111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
     --[ Pred_Eq( z, ct ) ]->
      [ State_1111212111111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
@@ -872,14 +899,16 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_0_111121211111[color=#40804d,
   */
 
 rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_1111212111111[color=#40804d,
-                                                              process="if checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1)=true"]:
+                                                              process="if checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1)=true",
+                                                              issapicrule]:
    [ State_1111212111111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
   --[ Pred_Eq( checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1), true ) ]->
    [ State_11112121111111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
 
   /*
   rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_0_1111212111111[color=#40804d,
-                                                                 process="if checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1)=true"]:
+                                                                 process="if checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1)=true",
+                                                                 issapicrule]:
      [ State_1111212111111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
     --[ Pred_Eq( z, true ) ]->
      [ State_11112121111111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
@@ -907,7 +936,7 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_0_1111212111111[color=#40804d,
   */
 
 rule (modulo E) lockct_0_11112121111111[color=#40804d,
-                                        process="lock ct.3;"]:
+                                        process="lock ct.3;", issapicrule]:
    [
    State_11112121111111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ),
    Fr( lock.2 )
@@ -921,14 +950,14 @@ rule (modulo E) lockct_0_11112121111111[color=#40804d,
 
   /*
   rule (modulo AC) lockct_0_11112121111111[color=#40804d,
-                                           process="lock ct.3;"]:
+                                           process="lock ct.3;", issapicrule]:
      [ State_11112121111111( skT, ypcs2, ysig1, ct, pk1, pk2 ), Fr( lock ) ]
     --[ Lock_2( '2', lock, ct ), Lock( '2', lock, ct ) ]->
      [ State_111121211111111( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) lookupctasstatus_0_111121211111111[color=#40804d,
-                                                   process="lookup ct.3 as status.2"]:
+                                                   process="lookup ct.3 as status.2", issapicrule]:
    [
    State_111121211111111( skT.1, ypcs2.1, ysig1.1, lock.2, ct.3, pk1.3,
                           pk2.3
@@ -943,7 +972,7 @@ rule (modulo E) lookupctasstatus_0_111121211111111[color=#40804d,
 
   /*
   rule (modulo AC) lookupctasstatus_0_111121211111111[color=#40804d,
-                                                      process="lookup ct.3 as status.2"]:
+                                                      process="lookup ct.3 as status.2", issapicrule]:
      [ State_111121211111111( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
     --[ IsIn( ct, status ) ]->
      [ State_1111212111111111( skT, ypcs2, ysig1, lock, status, ct, pk1, pk2 )
@@ -951,7 +980,7 @@ rule (modulo E) lookupctasstatus_0_111121211111111[color=#40804d,
   */
 
 rule (modulo E) unlockct_0_1111212111111111[color=#40804d,
-                                            process="unlock ct.3;"]:
+                                            process="unlock ct.3;", issapicrule]:
    [
    State_1111212111111111( skT.1, ypcs2.1, ysig1.1, lock.2, status.2, ct.3,
                            pk1.3, pk2.3
@@ -962,7 +991,7 @@ rule (modulo E) unlockct_0_1111212111111111[color=#40804d,
 
   /*
   rule (modulo AC) unlockct_0_1111212111111111[color=#40804d,
-                                               process="unlock ct.3;"]:
+                                               process="unlock ct.3;", issapicrule]:
      [ State_1111212111111111( skT, ypcs2, ysig1, lock, status, ct, pk1, pk2 )
      ]
     --[ Unlock_2( '2', lock, ct ), Unlock( '2', lock, ct ) ]->
@@ -970,7 +999,7 @@ rule (modulo E) unlockct_0_1111212111111111[color=#40804d,
   */
 
 rule (modulo E) lookupctasstatus_1_111121211111111[color=#40804d,
-                                                   process="lookup ct.3 as status.2"]:
+                                                   process="lookup ct.3 as status.2", issapicrule]:
    [
    State_111121211111111( skT.1, ypcs2.1, ysig1.1, lock.2, ct.3, pk1.3,
                           pk2.3
@@ -985,14 +1014,14 @@ rule (modulo E) lookupctasstatus_1_111121211111111[color=#40804d,
 
   /*
   rule (modulo AC) lookupctasstatus_1_111121211111111[color=#40804d,
-                                                      process="lookup ct.3 as status.2"]:
+                                                      process="lookup ct.3 as status.2", issapicrule]:
      [ State_111121211111111( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
     --[ IsNotSet( ct ) ]->
      [ State_1111212111111112( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) insertctresolved_0_1111212111111112[color=#40804d,
-                                                    process="insert ct.3,'resolved1';"]:
+                                                    process="insert ct.3,'resolved1';", issapicrule]:
    [
    State_1111212111111112( skT.1, ypcs2.1, ysig1.1, lock.2, ct.3, pk1.3,
                            pk2.3
@@ -1007,14 +1036,14 @@ rule (modulo E) insertctresolved_0_1111212111111112[color=#40804d,
 
   /*
   rule (modulo AC) insertctresolved_0_1111212111111112[color=#40804d,
-                                                       process="insert ct.3,'resolved1';"]:
+                                                       process="insert ct.3,'resolved1';", issapicrule]:
      [ State_1111212111111112( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
     --[ Insert( ct, 'resolved1' ) ]->
      [ State_11112121111111121( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) eventResolvect_0_11112121111111121[color=#40804d,
-                                                   process="event Resolve1( ct.3 );"]:
+                                                   process="event Resolve1( ct.3 );", issapicrule]:
    [
    State_11112121111111121( skT.1, ypcs2.1, ysig1.1, lock.2, ct.3, pk1.3,
                             pk2.3
@@ -1029,14 +1058,14 @@ rule (modulo E) eventResolvect_0_11112121111111121[color=#40804d,
 
   /*
   rule (modulo AC) eventResolvect_0_11112121111111121[color=#40804d,
-                                                      process="event Resolve1( ct.3 );"]:
+                                                      process="event Resolve1( ct.3 );", issapicrule]:
      [ State_11112121111111121( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
     --[ Resolve1( ct ) ]->
      [ State_111121211111111211( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
   */
 
 rule (modulo E) unlockct_0_111121211111111211[color=#40804d,
-                                              process="unlock ct.3;"]:
+                                              process="unlock ct.3;", issapicrule]:
    [
    State_111121211111111211( skT.1, ypcs2.1, ysig1.1, lock.2, ct.3, pk1.3,
                              pk2.3
@@ -1047,7 +1076,7 @@ rule (modulo E) unlockct_0_111121211111111211[color=#40804d,
 
   /*
   rule (modulo AC) unlockct_0_111121211111111211[color=#40804d,
-                                                 process="unlock ct.3;"]:
+                                                 process="unlock ct.3;", issapicrule]:
      [ State_111121211111111211( skT, ypcs2, ysig1, lock, ct, pk1, pk2 ) ]
     --[ Unlock_2( '2', lock, ct ), Unlock( '2', lock, ct ) ]->
      [ Out( sign(<ysig1, z>, skT) ) ]
@@ -1062,7 +1091,8 @@ rule (modulo E) unlockct_0_111121211111111211[color=#40804d,
   */
 
 rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_1111212111111[color=#40804d,
-                                                              process="if checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1)=true"]:
+                                                              process="if checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1)=true",
+                                                              issapicrule]:
    [ State_1111212111111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
   --[ Pred_Not_Eq( checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1), true )
   ]->
@@ -1070,7 +1100,8 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_1111212111111[color=#40804d,
 
   /*
   rule (modulo AC) ifcheckpcsctpkpkpkskTypcstrue_1_1111212111111[color=#40804d,
-                                                                 process="if checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1)=true"]:
+                                                                 process="if checkpcs(ct.3, pk2.3, pk1.3, pk(skT.1), ypcs2.1)=true",
+                                                                 issapicrule]:
      [ State_1111212111111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
     --[ Pred_Not_Eq( z, true ) ]->
      [ ]
@@ -1098,7 +1129,8 @@ rule (modulo E) ifcheckpcsctpkpkpkskTypcstrue_1_1111212111111[color=#40804d,
   */
 
 rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_111121211111[color=#40804d,
-                                                                  process="if check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3)=ct.3"]:
+                                                                  process="if check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3)=ct.3",
+                                                                  issapicrule]:
    [ State_111121211111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
   --[ Pred_Not_Eq( check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3), ct.3 )
   ]->
@@ -1106,7 +1138,8 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_111121211111[color=#40804d,
 
   /*
   rule (modulo AC) ifcheckgetmsgconvertpcsskTypcspkct_1_111121211111[color=#40804d,
-                                                                     process="if check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3)=ct.3"]:
+                                                                     process="if check_getmsg(convertpcs(skT.1, ypcs2.1), pk2.3)=ct.3",
+                                                                     issapicrule]:
      [ State_111121211111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
     --[ Pred_Not_Eq( z, ct ) ]->
      [ ]
@@ -1128,14 +1161,16 @@ rule (modulo E) ifcheckgetmsgconvertpcsskTypcspkct_1_111121211111[color=#40804d,
   */
 
 rule (modulo E) ifcheckgetmsgysigpkct_1_11112121111[color=#40804d,
-                                                    process="if check_getmsg(ysig1.1, pk1.3)=ct.3"]:
+                                                    process="if check_getmsg(ysig1.1, pk1.3)=ct.3",
+                                                    issapicrule]:
    [ State_11112121111( skT.1, ypcs2.1, ysig1.1, ct.3, pk1.3, pk2.3 ) ]
   --[ Pred_Not_Eq( check_getmsg(ysig1.1, pk1.3), ct.3 ) ]->
    [ ]
 
   /*
   rule (modulo AC) ifcheckgetmsgysigpkct_1_11112121111[color=#40804d,
-                                                       process="if check_getmsg(ysig1.1, pk1.3)=ct.3"]:
+                                                       process="if check_getmsg(ysig1.1, pk1.3)=ct.3",
+                                                       issapicrule]:
      [ State_11112121111( skT, ypcs2, ysig1, ct, pk1, pk2 ) ]
     --[ Pred_Not_Eq( z, ct ) ]->
      [ ]
@@ -1149,20 +1184,20 @@ rule (modulo E) ifcheckgetmsgysigpkct_1_11112121111[color=#40804d,
        z     = x.11
   */
 
-rule (modulo E) p_1_1111212[color=#ffffff, process="!"]:
+rule (modulo E) p_1_1111212[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_11112121( skT.1 ) ]
   -->
    [ !Semistate_1111212121( skT.1 ), State_1111212111( skT.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111212[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_1111212[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_11112121( skT ) ]
     -->
      [ !Semistate_1111212121( skT ), State_1111212111( skT ) ]
   */
 
 rule (modulo E) insigned_0_111121212111[color=#40806d,
-                                        process="in(signed.1);"]:
+                                        process="in(signed.1);", issapicrule]:
    [ State_111121212111( skT.1 ), In( signed.1 ) ]
   -->
    [
@@ -1171,7 +1206,7 @@ rule (modulo E) insigned_0_111121212111[color=#40806d,
 
   /*
   rule (modulo AC) insigned_0_111121212111[color=#40806d,
-                                           process="in(signed.1);"]:
+                                           process="in(signed.1);", issapicrule]:
      [ State_111121212111( skT ), In( signed ) ]
     -->
      [ Let_11112121211111( z, signed, skT ) ]
@@ -1188,7 +1223,8 @@ rule (modulo E) insigned_0_111121212111[color=#40806d,
   */
 
 rule (modulo E) letctpkskpksignedcheckgetmsgsignedpkskT_1_1111212121111[color=#ffffff,
-                                                                        process="let <<ct.4, pk(sk1.1), pk2.4>, signed2.1>=check_getmsg(signed.1, pk(skT.1))"]:
+                                                                        process="let <<ct.4, pk(sk1.1), pk2.4>, signed2.1>=check_getmsg(signed.1, pk(skT.1))",
+                                                                        issapicrule]:
    [
    Let_11112121211111( <<ct.4, pk(sk1.1), pk2.4>, signed2.1>, signed.1,
                        skT.1
@@ -1200,14 +1236,16 @@ rule (modulo E) letctpkskpksignedcheckgetmsgsignedpkskT_1_1111212121111[color=#f
 
   /*
   rule (modulo AC) letctpkskpksignedcheckgetmsgsignedpkskT_1_1111212121111[color=#ffffff,
-                                                                           process="let <<ct.4, pk(sk1.1), pk2.4>, signed2.1>=check_getmsg(signed.1, pk(skT.1))"]:
+                                                                           process="let <<ct.4, pk(sk1.1), pk2.4>, signed2.1>=check_getmsg(signed.1, pk(skT.1))",
+                                                                           issapicrule]:
      [ Let_11112121211111( <<ct, pk(sk1), pk2>, signed2>, signed, skT ) ]
     -->
      [ State_11112121211111( signed, signed2, sk1, skT, ct, pk2 ) ]
   */
 
 rule (modulo E) ifctpkskpkcheckgetmsgsignedpksk_0_11112121211111[color=#40806d,
-                                                                 process="if <ct.4, pk(sk1.1), pk2.4>=check_getmsg(signed2.1, pk(sk1.1))"]:
+                                                                 process="if <ct.4, pk(sk1.1), pk2.4>=check_getmsg(signed2.1, pk(sk1.1))",
+                                                                 issapicrule]:
    [ State_11112121211111( signed.1, signed2.1, sk1.1, skT.1, ct.4, pk2.4 )
    ]
   --[
@@ -1218,7 +1256,8 @@ rule (modulo E) ifctpkskpkcheckgetmsgsignedpksk_0_11112121211111[color=#40806d,
 
   /*
   rule (modulo AC) ifctpkskpkcheckgetmsgsignedpksk_0_11112121211111[color=#40806d,
-                                                                    process="if <ct.4, pk(sk1.1), pk2.4>=check_getmsg(signed2.1, pk(sk1.1))"]:
+                                                                    process="if <ct.4, pk(sk1.1), pk2.4>=check_getmsg(signed2.1, pk(sk1.1))",
+                                                                    issapicrule]:
      [ State_11112121211111( signed, signed2, sk1, skT, ct, pk2 ) ]
     --[ Pred_Eq( <ct, pk(sk1), pk2>, z ) ]->
      [ State_111121212111111( signed, signed2, sk1, skT, ct, pk2 ) ]
@@ -1235,7 +1274,7 @@ rule (modulo E) ifctpkskpkcheckgetmsgsignedpksk_0_11112121211111[color=#40806d,
   */
 
 rule (modulo E) eventAbortCertct_0_111121212111111[color=#40806d,
-                                                   process="event AbortCert( ct.4 );"]:
+                                                   process="event AbortCert( ct.4 );", issapicrule]:
    [ State_111121212111111( signed.1, signed2.1, sk1.1, skT.1, ct.4, pk2.4 )
    ]
   --[ AbortCert( ct.4 ) ]->
@@ -1243,14 +1282,15 @@ rule (modulo E) eventAbortCertct_0_111121212111111[color=#40806d,
 
   /*
   rule (modulo AC) eventAbortCertct_0_111121212111111[color=#40806d,
-                                                      process="event AbortCert( ct.4 );"]:
+                                                      process="event AbortCert( ct.4 );", issapicrule]:
      [ State_111121212111111( signed, signed2, sk1, skT, ct, pk2 ) ]
     --[ AbortCert( ct ) ]->
      [ ]
   */
 
 rule (modulo E) ifctpkskpkcheckgetmsgsignedpksk_1_11112121211111[color=#40806d,
-                                                                 process="if <ct.4, pk(sk1.1), pk2.4>=check_getmsg(signed2.1, pk(sk1.1))"]:
+                                                                 process="if <ct.4, pk(sk1.1), pk2.4>=check_getmsg(signed2.1, pk(sk1.1))",
+                                                                 issapicrule]:
    [ State_11112121211111( signed.1, signed2.1, sk1.1, skT.1, ct.4, pk2.4 )
    ]
   --[
@@ -1261,7 +1301,8 @@ rule (modulo E) ifctpkskpkcheckgetmsgsignedpksk_1_11112121211111[color=#40806d,
 
   /*
   rule (modulo AC) ifctpkskpkcheckgetmsgsignedpksk_1_11112121211111[color=#40806d,
-                                                                    process="if <ct.4, pk(sk1.1), pk2.4>=check_getmsg(signed2.1, pk(sk1.1))"]:
+                                                                    process="if <ct.4, pk(sk1.1), pk2.4>=check_getmsg(signed2.1, pk(sk1.1))",
+                                                                    issapicrule]:
      [ State_11112121211111( signed, signed2, sk1, skT, ct, pk2 ) ]
     --[ Pred_Not_Eq( <ct, pk(sk1), pk2>, z ) ]->
      [ ]
@@ -1277,19 +1318,19 @@ rule (modulo E) ifctpkskpkcheckgetmsgsignedpksk_1_11112121211111[color=#40806d,
        z     = x.12
   */
 
-rule (modulo E) p_1_111121212[color=#ffffff, process="!"]:
+rule (modulo E) p_1_111121212[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1111212121( skT.1 ) ]
   -->
    [ !Semistate_111121212121( skT.1 ), State_111121212111( skT.1 ) ]
 
   /*
-  rule (modulo AC) p_1_111121212[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_111121212[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1111212121( skT ) ]
     -->
      [ !Semistate_111121212121( skT ), State_111121212111( skT ) ]
   */
 
-rule (modulo E) p_1_11112121212[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11112121212[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111121212121( skT.1 ), In( <xsig.1, pk1.4, pk2.5> ) ]
   -->
    [
@@ -1299,7 +1340,8 @@ rule (modulo E) p_1_11112121212[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_11112121212[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11112121212[color=#ffffff, process="!",
+                                   issapicrule]:
      [ !Semistate_111121212121( skT ), In( <xsig, pk1, pk2> ) ]
     -->
      [ Let_111121212121111( z, skT, xsig, pk1, pk2 ) ]
@@ -1314,7 +1356,8 @@ rule (modulo E) p_1_11112121212[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) letxsigxsigcheckgetmsgxsigpkskT_1_11112121212111[color=#ffffff,
-                                                                 process="let <xsig1.1, xsig2.1>=check_getmsg(xsig.1, pk(skT.1))"]:
+                                                                 process="let <xsig1.1, xsig2.1>=check_getmsg(xsig.1, pk(skT.1))",
+                                                                 issapicrule]:
    [ Let_111121212121111( <xsig1.1, xsig2.1>, skT.1, xsig.1, pk1.4, pk2.5 )
    ]
   -->
@@ -1323,14 +1366,16 @@ rule (modulo E) letxsigxsigcheckgetmsgxsigpkskT_1_11112121212111[color=#ffffff,
 
   /*
   rule (modulo AC) letxsigxsigcheckgetmsgxsigpkskT_1_11112121212111[color=#ffffff,
-                                                                    process="let <xsig1.1, xsig2.1>=check_getmsg(xsig.1, pk(skT.1))"]:
+                                                                    process="let <xsig1.1, xsig2.1>=check_getmsg(xsig.1, pk(skT.1))",
+                                                                    issapicrule]:
      [ Let_111121212121111( <xsig1, xsig2>, skT, xsig, pk1, pk2 ) ]
     -->
      [ State_111121212121111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
   */
 
 rule (modulo E) ifverifyxsigpkcheckgetmsgxsigpktrue_0_111121212121111[color=#408072,
-                                                                      process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true"]:
+                                                                      process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true",
+                                                                      issapicrule]:
    [ State_111121212121111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
    ]
   --[ Pred_Eq( verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4)), true )
@@ -1340,7 +1385,8 @@ rule (modulo E) ifverifyxsigpkcheckgetmsgxsigpktrue_0_111121212121111[color=#408
 
   /*
   rule (modulo AC) ifverifyxsigpkcheckgetmsgxsigpktrue_0_111121212121111[color=#408072,
-                                                                         process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true"]:
+                                                                         process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true",
+                                                                         issapicrule]:
      [ State_111121212121111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
     --[ Pred_Eq( z, true ) ]->
      [ State_1111212121211111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
@@ -1359,7 +1405,8 @@ rule (modulo E) ifverifyxsigpkcheckgetmsgxsigpktrue_0_111121212121111[color=#408
   */
 
 rule (modulo E) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111[color=#408072,
-                                                                        process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)"]:
+                                                                        process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)",
+                                                                        issapicrule]:
    [ State_1111212121211111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
    ]
   --[ Pred_Eq( check_getmsg(xsig1.1, pk1.4), check_getmsg(xsig2.1, pk2.5) )
@@ -1370,7 +1417,8 @@ rule (modulo E) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111[color=#4
 
   /*
   rule (modulo AC) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111[color=#408072,
-                                                                           process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)"]:
+                                                                           process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)",
+                                                                           issapicrule]:
      [ State_1111212121211111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
     --[ Pred_Eq( z, z.1 ) ]->
      [ State_11112121212111111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
@@ -1405,7 +1453,8 @@ rule (modulo E) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_0_1111212121211111[color=#4
   */
 
 rule (modulo E) eventResolveCertcheckgetmsgxsigpk_0_11112121212111111[color=#408072,
-                                                                      process="event ResolveCert( check_getmsg(xsig1.1, pk1.4) );"]:
+                                                                      process="event ResolveCert( check_getmsg(xsig1.1, pk1.4) );",
+                                                                      issapicrule]:
    [
    State_11112121212111111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
    ]
@@ -1414,7 +1463,8 @@ rule (modulo E) eventResolveCertcheckgetmsgxsigpk_0_11112121212111111[color=#408
 
   /*
   rule (modulo AC) eventResolveCertcheckgetmsgxsigpk_0_11112121212111111[color=#408072,
-                                                                         process="event ResolveCert( check_getmsg(xsig1.1, pk1.4) );"]:
+                                                                         process="event ResolveCert( check_getmsg(xsig1.1, pk1.4) );",
+                                                                         issapicrule]:
      [ State_11112121212111111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
     --[ ResolveCert( z ) ]->
      [ ]
@@ -1429,7 +1479,8 @@ rule (modulo E) eventResolveCertcheckgetmsgxsigpk_0_11112121212111111[color=#408
   */
 
 rule (modulo E) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_1_1111212121211111[color=#408072,
-                                                                        process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)"]:
+                                                                        process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)",
+                                                                        issapicrule]:
    [ State_1111212121211111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
    ]
   --[
@@ -1439,7 +1490,8 @@ rule (modulo E) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_1_1111212121211111[color=#4
 
   /*
   rule (modulo AC) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_1_1111212121211111[color=#408072,
-                                                                           process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)"]:
+                                                                           process="if check_getmsg(xsig1.1, pk1.4)=check_getmsg(xsig2.1, pk2.5)",
+                                                                           issapicrule]:
      [ State_1111212121211111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
     --[ Pred_Not_Eq( z, z.1 ) ]->
      [ ]
@@ -1474,7 +1526,8 @@ rule (modulo E) ifcheckgetmsgxsigpkcheckgetmsgxsigpk_1_1111212121211111[color=#4
   */
 
 rule (modulo E) ifverifyxsigpkcheckgetmsgxsigpktrue_1_111121212121111[color=#408072,
-                                                                      process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true"]:
+                                                                      process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true",
+                                                                      issapicrule]:
    [ State_111121212121111( skT.1, xsig.1, xsig1.1, xsig2.1, pk1.4, pk2.5 )
    ]
   --[
@@ -1484,7 +1537,8 @@ rule (modulo E) ifverifyxsigpkcheckgetmsgxsigpktrue_1_111121212121111[color=#408
 
   /*
   rule (modulo AC) ifverifyxsigpkcheckgetmsgxsigpktrue_1_111121212121111[color=#408072,
-                                                                         process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true"]:
+                                                                         process="if verify(xsig1.1, pk1.4, check_getmsg(xsig1.1, pk1.4))=true",
+                                                                         issapicrule]:
      [ State_111121212121111( skT, xsig, xsig1, xsig2, pk1, pk2 ) ]
     --[ Pred_Not_Eq( z, true ) ]->
      [ ]
@@ -1578,37 +1632,24 @@ restriction locking_2:
 /*
 WARNING: the following wellformedness checks failed!
 
-Message Derivation Checks
-=========================
+Derivation Checks
+=================
 
-  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule lookupctasstate_0_111111111: 
-Failed to derive Variable(s): state.1
-
-Rule lookupctasstatus_0_1111211111111: 
-Failed to derive Variable(s): status.1
-
-Rule lookupctasstatus_0_111121211111111: 
-Failed to derive Variable(s): status.2
-
-Rule letctpkskpksignedcheckgetmsgsignedpkskT_1_1111212121111: 
-Failed to derive Variable(s): sk1.1
+  Derivation checks timed out.
+  Use --derivcheck-timeout=INT to configure timeout.
+  Set to 0 to deactivate for no timeout.
 */
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -1616,7 +1657,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/GJM-contract/contract.spthy
 
   output:          examples/sapic/fast/GJM-contract/contract.spthy.tmp
-  processing time: 8.94s
+  processing time: 9.25s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

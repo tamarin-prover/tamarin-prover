@@ -3,7 +3,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- AC unification based on maude and free unification.
 module Term.Unification (
@@ -61,7 +60,7 @@ module Term.Unification (
   , pairDestMaudeSig
   , symEncDestMaudeSig
   , asymEncDestMaudeSig
-  , signatureDestMaudeSig  
+  , signatureDestMaudeSig
   , locationReportMaudeSig
   , revealSignatureMaudeSig
   , hashMaudeSig
@@ -80,7 +79,7 @@ module Term.Unification (
   , module Term.Rewriting.Definitions
 ) where
 
--- import           Control.Applicative
+import           Control.Monad
 import           Control.Monad.RWS
 import           Control.Monad.Except
 import           Control.Monad.State
@@ -202,7 +201,7 @@ solveMatchLTerm sortOf matchProblem =
       Just ms -> reader $ matchTerms ms
   where
     trace' res = trace
-      (unlines $ ["matchLTerm: "++ show matchProblem, "result = "++  show res])
+      (unlines ["matchLTerm: "++ show matchProblem, "result = "++  show res])
       res
 
     matchTerms ms hnd =

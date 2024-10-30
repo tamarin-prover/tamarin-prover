@@ -106,7 +106,7 @@ getProofContext l thy = ProofContext
     (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
     (L.get lName l)
     ([ h | HideLemma h <- L.get lAttributes l])
-    ( L.get (verboseOption.thyOptions)         thy)
+    ( L.get (verboseOption . thyOptions)         thy)
     False
     (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
     (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . thyCache) thy)
@@ -151,7 +151,7 @@ getProofContextDiff s l thy = case s of
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
-            ( L.get (verboseOption.diffThyOptions)         thy)
+            ( L.get (verboseOption . diffThyOptions)         thy)
             False
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
@@ -168,7 +168,7 @@ getProofContextDiff s l thy = case s of
             (toSystemTraceQuantifier $ L.get lTraceQuantifier l)
             (L.get lName l)
             ([ h | HideLemma h <- L.get lAttributes l])
-            ( L.get (verboseOption.diffThyOptions)         thy)
+            ( L.get (verboseOption . diffThyOptions)         thy)
             False
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
@@ -227,7 +227,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
-            ( L.get (verboseOption.diffThyOptions)         thy)
+            ( L.get (verboseOption . diffThyOptions)         thy)
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheLeft) thy)
@@ -244,7 +244,7 @@ getDiffProofContext l thy = DiffProofContext (proofContext LHS) (proofContext RH
             ExistsNoTrace
             ( L.get lDiffName l )
             ([ h | HideLemma h <- L.get lDiffAttributes l])
-            ( L.get (verboseOption.diffThyOptions)         thy)
+            ( L.get (verboseOption . diffThyOptions)         thy)
             True
             (all isSubtermRule  $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
             (any isConstantRule $ filter isDestrRule $ intruderRules $ L.get (crcRules . diffThyCacheRight) thy)
@@ -401,6 +401,7 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
     mergedRules = mergeOpenProtoRules $ map (mapTheoryItem openProtoRule id) items
     thy' :: Theory SignatureWithMaude ClosedRuleCache OpenProtoRule IncrementalProof ()
     thy' = Theory {_thyName=(L.get thyName thy)
+            ,_thyInFile=(L.get thyInFile thy)
             ,_thyHeuristic=(L.get thyHeuristic thy)
             ,_thyTactic=(L.get thyTactic thy)
             ,_thySignature=(L.get thySignature thy)
@@ -440,6 +441,7 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
        map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) id id) items
     thy' :: DiffTheory SignatureWithMaude ClosedRuleCache DiffProtoRule OpenProtoRule IncrementalDiffProof IncrementalProof
     thy' = DiffTheory {_diffThyName=(L.get diffThyName thy)
+            ,_diffThyInFile=(L.get diffThyInFile thy)
             ,_diffThyHeuristic=(L.get diffThyHeuristic thy)
             ,_diffThyTactic=(L.get diffThyTactic thy)
             ,_diffThySignature=(L.get diffThySignature thy)
@@ -539,3 +541,65 @@ prettyClosedDiffSummary thy =
 
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
     diffProofStepSummary = diffProofStepStatus &&& const (Sum (1::Integer))
+
+
+-- | Render the results of the precomputations, for --precompute-only
+prettyPrecomputation ::  Document d => ClosedTheory -> d
+prettyPrecomputation thy = foldr1 ($-$)
+    [ 
+      ruleLink
+    , reqCasesLink "Raw sources:" RawSource
+    , reqCasesLink "Refined sources:" RefinedSource
+    ]
+  where
+    rules          = getClassifiedRules thy
+    rulesInfo      = text $ show $ length $ L.get crProtocol rules
+    casesInfo kind = nCases <> comma <-> text chainInfo
+      where
+        cases   = getSource kind thy
+        nChains = sum $ map (sum . unsolvedChainConstraints) cases
+        nCases  = text $ show (length cases) ++ " " ++ "cases"
+        chainInfo | nChains == 0 = "deconstructions complete"
+                  | otherwise    = show nChains ++ " partial deconstructions left"
+
+    overview n p   = n <-> p
+    ruleLinkMsg         = text $ "Multiset rewriting rules" ++
+                          (if null(theoryRestrictions thy) then "" else " and restrictions") ++ ":"
+    ruleLink            = overview ruleLinkMsg rulesInfo
+    reqCasesLink name k = overview (text name) (casesInfo k)
+
+
+-- | Render the results of the precomputations, for --precompute-only (diff mode)
+prettyDiffPrecomputation :: Document d => ClosedDiffTheory -> d
+prettyDiffPrecomputation thy = foldr1 ($-$)
+    [
+      ruleLink LHS False
+    , ruleLink RHS False
+    , ruleLink LHS True
+    , ruleLink RHS True
+    , reqCasesLink LHS "LHS: Raw sources:"            RawSource False
+    , reqCasesLink RHS "RHS: Raw sources:"            RawSource False
+    , reqCasesLink LHS "LHS: Raw sources [Diff]:"     RawSource True
+    , reqCasesLink RHS "RHS: Raw sources [Diff]:"     RawSource True
+    , reqCasesLink LHS "LHS: Refined sources:"        RefinedSource   False
+    , reqCasesLink RHS "RHS: Refined sources:"        RefinedSource   False
+    , reqCasesLink LHS "LHS: Refined sources [Diff]:" RefinedSource   True
+    , reqCasesLink RHS "RHS: Refined sources [Diff]:" RefinedSource   True
+    ]
+  where
+    rules s isdiff     = getDiffClassifiedRules s isdiff thy
+    rulesInfo s isdiff = text $ show $ length $ L.get crProtocol (rules s isdiff)
+    casesInfo s kind isdiff = nCases <> comma <-> text chainInfo
+      where
+        cases   = getDiffSource s isdiff kind thy
+        nChains = sum $ map (sum . unsolvedChainConstraints) cases
+        nCases  = text $ show (length cases) ++ " " ++ "cases"
+        chainInfo | nChains == 0 = "deconstructions complete"
+                  | otherwise    = show nChains ++ " partial deconstructions left"
+
+    overview n p   = n <-> p
+    ruleLink s isdiff    = overview (ruleLinkMsg s isdiff) (rulesInfo s isdiff)
+    ruleLinkMsg s isdiff = text $ show s ++ ": Multiset rewriting rules" ++
+                           (if null(diffTheorySideRestrictions s thy) then "" else " and restrictions") ++ (if isdiff then " [Diff]" else "") ++ ":"
+
+    reqCasesLink s name k isdiff = overview (text name) (casesInfo s k isdiff)

@@ -400,103 +400,107 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new ~k.1;"]:
+rule (modulo E) Init[color=#ffffff, process="new ~k.1;", issapicrule]:
    [ Fr( ~k.1 ), Fr( ~id.1 ) ]
   --[ Init( ) ]->
    [ !Semistate_111( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new ~k.1;"]:
+  rule (modulo AC) Init[color=#ffffff, process="new ~k.1;", issapicrule]:
      [ Fr( ~k ), Fr( ~id ) ] --[ Init( ) ]-> [ !Semistate_111( ~id, ~k ) ]
   */
 
-rule (modulo E) newr_0_11111[color=#40805f, process="new ~r1.1;"]:
+rule (modulo E) newr_0_11111[color=#40805f, process="new ~r1.1;",
+                             issapicrule]:
    [ State_11111( ~id.1, ~k.1 ), Fr( ~r1.1 ) ]
   --[ Challenge( ~r1.1, 'Reader' ) ]->
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), Out( ~r1.1 ) ]
 
   /*
-  rule (modulo AC) newr_0_11111[color=#40805f, process="new ~r1.1;"]:
+  rule (modulo AC) newr_0_11111[color=#40805f, process="new ~r1.1;",
+                                issapicrule]:
      [ State_11111( ~id, ~k ), Fr( ~r1 ) ]
     --[ Challenge( ~r1, 'Reader' ) ]->
      [ State_11111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
   */
 
 rule (modulo E) inxoredhash_0_11111111[color=#40805f,
-                                       process="in(xoredhash.1);"]:
+                                       process="in(xoredhash.1);", issapicrule]:
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), In( xoredhash.1 ) ]
   -->
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
   rule (modulo AC) inxoredhash_0_11111111[color=#40805f,
-                                          process="in(xoredhash.1);"]:
+                                          process="in(xoredhash.1);", issapicrule]:
      [ State_11111111( ~id, ~k, ~r1 ), In( xoredhash ) ]
     -->
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
 rule (modulo E) ifxoredhashidhrk_0_111111111[color=#40805f,
-                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
+                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))", issapicrule]:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
   rule (modulo AC) ifxoredhashidhrk_0_111111111[color=#40805f,
-                                                process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
+                                                process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))",
+                                                issapicrule]:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
      [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
 rule (modulo E) eventAlivekTag_0_1111111111[color=#40805f,
-                                            process="event Alive( ~k.1, 'Tag' );"]:
+                                            process="event Alive( ~k.1, 'Tag' );", issapicrule]:
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Alive( ~k.1, 'Tag' ) ]->
    [ ]
 
   /*
   rule (modulo AC) eventAlivekTag_0_1111111111[color=#40805f,
-                                               process="event Alive( ~k.1, 'Tag' );"]:
+                                               process="event Alive( ~k.1, 'Tag' );", issapicrule]:
      [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Alive( ~k, 'Tag' ) ]->
      [ ]
   */
 
 rule (modulo E) ifxoredhashidhrk_1_111111111[color=#40805f,
-                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
+                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))", issapicrule]:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Not_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
    [ ]
 
   /*
   rule (modulo AC) ifxoredhashidhrk_1_111111111[color=#40805f,
-                                                process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))"]:
+                                                process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))",
+                                                issapicrule]:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Not_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
      [ ]
   */
 
-rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111( ~id.1, ~k.1 ) ]
   -->
    [ !Semistate_11121( ~id.1, ~k.1 ), State_11111( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_111( ~id, ~k ) ]
     -->
      [ !Semistate_11121( ~id, ~k ), State_11111( ~id, ~k ) ]
   */
 
-rule (modulo E) p_1_1112[color=#ffffff, process="!"]:
+rule (modulo E) p_1_1112[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_11121( ~id.1, ~k.1 ), In( r1.2 ), Fr( ~r2.1 ) ]
   --[ Response( ~k.1, 'Tag' ) ]->
    [ Out( <(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))> ) ]
 
   /*
-  rule (modulo AC) p_1_1112[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_1112[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_11121( ~id, ~k ), In( r1 ), Fr( ~r2 ) ]
     --[ Response( ~k, 'Tag' ) ]->
      [ Out( <z, (~r2⊕h(<r1, ~k>))> ) ]
@@ -526,17 +530,14 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -544,7 +545,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 0.70s
+  processing time: 0.80s
   
   recentalive_tag (all-traces): verified (100 steps)
   executable (exists-trace): verified (16 steps)

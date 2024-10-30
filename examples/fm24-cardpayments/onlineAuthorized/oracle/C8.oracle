@@ -1,0 +1,103 @@
+#!/usr/bin/python3
+
+import sys
+
+MAX_RANK = 40
+l = [[] for i in range (0, MAX_RANK) ]
+lemma = sys.argv[1]
+
+for line in sys.stdin.readlines():
+  (num, goal) = line.split(": ",1)
+    
+  if lemma == "executable":
+    if goal.startswith("Running"): l[1].append(num)
+    elif goal.startswith("Commit"): l[1].append(num)
+    elif goal.startswith("Recv("): l[1].append(num)
+    elif goal.startswith("Terminal_Requested_Online_Authz_C8"): l[1].append(num)
+    elif goal.startswith("Issuer_Commits("): l[1].append(num)
+    elif goal.startswith("!Shk( ~PAN,"): l[2].append(num)
+    elif goal.startswith("!KU( MAC("): l[1].append(num)
+    elif goal.startswith("!KU( senc("): l[1].append(num)
+    elif goal.startswith("!KU( sign("): l[1].append(num)
+    elif goal.startswith("!IssuingBank( ~PAN, $Bank"): l[2].append(num)
+    elif goal.startswith("!AIP( ~PAN, AIP"): l[2].append(num)
+    elif goal.startswith("Recv( $Terminal, $Bank,"): l[3].append(num)
+    elif goal.startswith("!KU( MAC(f(~MK, ATC),"): l[4].append(num)
+    #elif goal.startswith("!KU( sign(<'02', $Bank,"): l[3].append(num)
+    #elif goal.startswith("!KU( sign(<'04', ~PAN.1,"): l[4].append(num)
+    elif goal.startswith("!KU( ~"): l[7].append(num)
+    else: l[9].append(num)
+  
+  elif lemma.startswith("auth_to_issuer"):
+    if goal.startswith("!KU( ~privk"): l[0].append(num)
+    elif goal.startswith("!KU( ~d"): l[1].append(num)
+    #elif goal.startswith("!KU( sign("): l[2].append(num)
+    elif goal.startswith("!Value("): l[1].append(num)
+    elif goal.startswith("Recv( $Terminal, $Bank,"): l[3].append(num)
+    elif goal.startswith("!KU( MAC("): l[4].append(num)
+    elif goal.startswith("!KU( senc("): l[4].append(num)
+    else: l[9].append(num)
+
+  elif lemma.startswith("relay_resistance"):
+    if goal.startswith("!KU( ~UN"): l[1].append(num)
+    elif goal.startswith("!KU( ~DRRE"): l[1].append(num)
+    elif goal.startswith("Recv"): l[3].append(num)
+    elif goal.startswith("!KU( MAC("): l[4].append(num)
+    elif goal.startswith("!KU( senc("): l[4].append(num)
+    else: l[20]
+
+  elif lemma.startswith("auth_to_terminal"):
+    if goal.startswith("!KU( ~privk"): l[0].append(num)
+    elif goal.startswith("!KU( ~d"): l[1].append(num)
+    elif "(#i2 < #i)" in goal: l[1].append(num)
+    elif "Running" in goal and "Commit" in goal: l[2].append(num)
+    elif goal.startswith("Terminal_"): l[2].append(num)
+    elif goal.startswith("Recv( "): l[3].append(num)
+    elif goal.startswith("Commit"): l[4].append(num)
+    elif goal.startswith("!KU( senc(<'CMC'"): l[4].append(num)
+    elif goal.startswith("!KU( senc("): l[5].append(num)
+    elif goal.startswith("!KU( sign("): l[6].append(num)    
+    elif goal.startswith("!KU( MAC(KDF_SKi(g^"): l[7].append(num)
+    elif goal.startswith("!KU( MAC(f(~MK"): l[7].append(num)
+    elif goal.startswith("!KU( g^(~dC*~dT*~r)"): l[9].append(num)
+    elif goal.startswith("!KU( g^(~dC*~dT*r)"): l[9].append(num)
+    elif goal.startswith("!KU( KDF_SKi(g^(~dC*~dT*~r)"): l[9].append(num)
+    elif goal.startswith("!KU( KDF_SKi(g^(~dC*~dT*r)"): l[9].append(num)
+    elif goal.startswith("!KU( f(~MK, ATC)"): l[10].append(num)
+    elif goal.startswith("!KU( h("): l[11].append(num)
+    elif goal.startswith("!KU( ~UN"): l[11].append(num)
+    elif goal.startswith("!KU( ~r"): l[12].append(num)
+    elif goal.startswith("!KU( g^") and "inv((x*~r" in goal: l[13].append(num)
+    elif goal.startswith("!KU( g^(~dC*~dT*inv(x))"): l[14].append(num)
+    elif goal.startswith("!KU( g^(~dC*~dT") and "inv" in goal: l[15].append(num)
+    elif goal.startswith("!KU( g^(~d") and "inv" in goal: l[16].append(num)
+    elif goal.startswith("!KU( g^") and "inv" in goal: l[17].append(num)
+    elif "inv" in goal and "~dC*~dT" in goal: l[18].append(num)
+    elif "inv(~d" in goal: l[19].append(num)
+    elif "inv((~d" in goal: l[20].append(num)
+    elif "inv" in goal and "~d" in goal: l[21].append(num)
+    elif "inv" in goal: l[22].append(num)
+    elif goal.startswith("!KU( KDF_SKi(z"): l[31].append(num)
+    elif goal.startswith("!KU( KDF_SKi"): l[23].append(num)
+    elif goal.startswith("!KU( g^(~d"): l[24].append(num)
+    elif goal.startswith("!KU( ~PAN"): l[38].append(num)
+    elif goal.startswith("!KU( ~x"): l[25].append(num)
+    elif goal.startswith("!KU( MAC(z"): l[32].append(num)
+    elif goal.startswith("!KU( MAC(KDF_SKi(z"): l[32].append(num)
+    elif goal.startswith("!KU( MAC("): l[26].append(num)
+    elif goal.startswith("splitEqs("): l[30].append(num)
+    elif goal.startswith("!KU( g^"): l[39].append(num)
+    else: l[25].append(num)
+
+  elif lemma.startswith("issuer_accepts"):
+    if goal.startswith("TerminalAccepts"): l[0].append(num)
+    elif goal.startswith("Recv"): l[0].append(num)
+    elif goal.startswith("BankDeclines"): l[0].append(num)
+    else: l[20]
+    
+  else:
+    exit(0)
+
+for rank in l:
+  for num in rank:
+    print (num)

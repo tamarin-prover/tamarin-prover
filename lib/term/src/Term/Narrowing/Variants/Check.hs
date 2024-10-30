@@ -2,7 +2,6 @@
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Benedikt Schmidt <beschmi@gmail.com>
 --
 -- Completeness and minimality checking for the variants of a term.
 module Term.Narrowing.Variants.Check (

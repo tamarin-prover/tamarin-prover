@@ -3,7 +3,6 @@
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Parsing Rules
@@ -70,6 +69,9 @@ ruleAttribute = asum
     , symbol "color="  *> (Just . RuleColor <$> parseColor)
     , symbol "process="  *> parseAndIgnore
     , symbol "derivchecks" *> ignore
+    , symbol "no_derivcheck" *> ignore
+    , symbol "role=" *> (Just . Role <$> parseRole)
+    , symbol "issapicrule" *> return (Just IsSAPiCRule)
     ]
   where
     parseColor = do
@@ -82,6 +84,10 @@ ruleAttribute = asum
                         _ <- manyTill anyChar (try (symbol "\""))
                         return Nothing
     ignore = return (Just IgnoreDerivChecks)
+    parseRole = do
+        _ <- symbol "\""
+        role <- manyTill anyChar (try (symbol "\""))
+        return role
 
 ruleAttributesp :: Parser [RuleAttribute]
 ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute

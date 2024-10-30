@@ -1,0 +1,57 @@
+theory MinValueEq begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+rule (modulo E) AttackerMsg:
+   [ In( x ) ] --[ Value( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma WrongEquality:
+  all-traces
+  "∀ a b #i #j. ((Value( a ) @ #i) ∧ (Value( b ) @ #j)) ⇒ (a = b)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ a b #i #j. (Value( a ) @ #i) ∧ (Value( b ) @ #j) ∧ ¬(a = b)"
+*/
+simplify
+SOLVED // trace found
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue446-2.spthy
+
+  output:          examples/regression/trace/issue446-2.spthy.tmp
+  processing time: 0.05s
+  
+  WrongEquality (all-traces): falsified - found trace (2 steps)
+
+==============================================================================
+*/

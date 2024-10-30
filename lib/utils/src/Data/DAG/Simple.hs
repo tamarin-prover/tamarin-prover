@@ -4,7 +4,6 @@
 -- Copyright   : (c) 2010,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 -- 
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 --
 -- Simple  vertice list based representation of DAGs and some common operations on it.
 module Data.DAG.Simple (

@@ -5,7 +5,6 @@
 -- Copyright   : (c) 2011,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : GHC only
 --
 -- Big-step proofs computing possible sources of a fact.
@@ -29,6 +28,7 @@ module Theory.Constraint.Solver.Sources (
   , IntegerParameters(..)
   , paramOpenChainsLimit
   , paramSaturationLimit
+  , showSaturationSteps
 
   ) where
 
@@ -71,10 +71,11 @@ import qualified Data.Binary  as B
 
 
 -- | Parameters
-data IntegerParameters = IntegerParameters 
+data IntegerParameters = IntegerParameters
     {
       _paramOpenChainsLimit :: Integer
     , _paramSaturationLimit :: Integer
+    , _showSaturationSteps  :: Bool
     } deriving( Eq, Ord, Show, G.Generic, NFData, B.Binary )
 $(mkLabels [''IntegerParameters])
 
@@ -103,8 +104,7 @@ initialSource ctxt restrictions goal =
   where
     polish ((name, se), _) = ([name], se)
     se0   = insertLemmas restrictions $ emptySystem RawSource $ get pcDiffContext ctxt
-    cases = fmap polish $
-        runReduction instantiate ctxt se0 (avoid (goal, se0))
+    cases = polish <$> runReduction instantiate ctxt se0 (avoid (goal, se0))
     instantiate = do
         insertGoal goal False
         solveGoal goal
@@ -152,7 +152,7 @@ solveAllSafeGoals ths' openChainsLimit =
       case goal of
         ChainG _ _    -> if (chainsLeft > 0)
                             then True
-                            else trace ("[Open Chains] Too many chain goals, stopping precomputation. Open Chains limits (can be changed with -c=): "++ show openChainsLimit) False
+                            else trace ("[Open Chains] Too many chain constraints, stopping precomputation. Open Chains limits (can be changed with -c=): "++ show openChainsLimit) False
         ActionG _ fa  -> not (isKUFact fa)
         -- we do not solve KD goals for Xor facts as insertAction inserts
         -- these goals directly. This prevents loops in the precomputations
@@ -322,9 +322,7 @@ solveWithSourceAndReturn :: ProofContext
                          -> [Source]
                          -> Goal
                          -> Maybe (Reduction [String], Maybe Source)
-solveWithSourceAndReturn hnd ths goal = do
-    -- goal <- toBigStepGoal goal0
-    asum [ applySource hnd th goal | th <- ths ]
+solveWithSourceAndReturn hnd ths goal = asum [ applySource hnd th goal | th <- ths ]
 
 -- | Try to solve a premise goal or 'KU' action using the first precomputed
 -- source with a matching premise.
@@ -332,27 +330,24 @@ solveWithSource :: ProofContext
                 -> [Source]
                 -> Goal
                 -> Maybe (Reduction [String])
-solveWithSource hnd ths goal =
-    case (solveWithSourceAndReturn hnd ths goal) of
-         Nothing     -> Nothing
-         Just (x, _) -> Just x
-
+solveWithSource hnd ths goal = fst <$> solveWithSourceAndReturn hnd ths goal
 
 -- | Apply a precomputed source theorem to a required fact.
 applySource :: ProofContext
                -> Source     -- ^ Source theorem.
                -> Goal       -- ^ Required goal
                -> Maybe (Reduction [String], Maybe Source)
-applySource ctxt th0 goal = case matchToGoal ctxt th0 goal of
-    Just th -> Just ((do
-        markGoalAsSolved "precomputed" goal
-        (names, sysTh0) <- disjunctionOfList $ getDisj $ get cdCases th
-        sysTh <- (`evalBindT` keepVarBindings) . someInst $ sysTh0
-        conjoinSystem sysTh
-        return names), Just th0)
-    Nothing -> Nothing
+applySource ctxt th0 goal = (\th -> (_applySource th, Just th0)) <$> matchToGoal ctxt th0 goal
   where
     keepVarBindings = M.fromList (map (\v -> (v, v)) (frees goal))
+
+    _applySource :: Source -> Reduction [String]
+    _applySource th = do
+      markGoalAsSolved "precomputed" goal
+      (names, sysTh0) <- disjunctionOfList $ getDisj $ get cdCases th
+      sysTh <- evalBindT (someInst sysTh0) keepVarBindings
+      conjoinSystem sysTh
+      return names
 
 -- | Saturate the sources with respect to each other such that no
 -- additional splitting is introduced; i.e., only rules with a single or no
@@ -360,20 +355,33 @@ applySource ctxt th0 goal = case matchToGoal ctxt th0 goal of
 saturateSources
     :: IntegerParameters -> ProofContext -> [Source] -> [Source]
 saturateSources parameters ctxt thsInit  =
-    (go thsInit 1)
+    go thsInit 1
   where
     go :: [Source] -> Integer -> [Source]
-    go ths n =
-        if (any or (changes `using` parList rdeepseq)) && (n <= get paramSaturationLimit parameters)
-          then trace("[Saturating Sources] Step " ++ show n ++ "/" ++ show (get paramSaturationLimit parameters)) $ go ths' (n + 1)
-          else if (n > get paramSaturationLimit parameters)
-            then trace ("[Saturating Sources] Saturation aborted, more than " ++ (show (get paramSaturationLimit parameters)) ++ " iterations. (Limit can be change with -s=)") ths'
-            else trace("[Saturating Sources] Step " ++ show n ++ "/" ++ show (get paramSaturationLimit parameters)) ths'
+    go ths n
+      | any or (changes `using` parList rdeepseq) && (n <= get paramSaturationLimit parameters) =
+          if get showSaturationSteps parameters then
+            trace ("[Saturating Sources] Step " ++ show n ++ " (Max " ++ show (get paramSaturationLimit parameters) ++ ")")
+             $ go ths' (n + 1)
+          else 
+             go ths' (n + 1)
+      | n > get paramSaturationLimit parameters =
+          if get showSaturationSteps parameters then
+            trace ("[Saturating Sources] Saturation aborted, more than " ++ show (get paramSaturationLimit parameters) ++
+                 " iterations. (Limit can be change with -s=)") ths'
+          else
+            ths'
+      | otherwise =
+          if get showSaturationSteps parameters then
+            trace "[Saturating Sources] Done" ths'
+          else ths'
       where
-        (changes, ths') = unzip $ map (refineSource ctxt solver) ths
-        goodTh th  = length (getDisj (get cdCases th)) <= 1
-        solver     = do names <- solveAllSafeGoals (filter goodTh ths) (get paramOpenChainsLimit parameters) 
-                        return (not $ null names, names)
+          (changes, ths') = unzip $ map (refineSource ctxt solver) ths
+          goodTh th = length (getDisj (get cdCases th)) <= 1
+          solver
+            = do names <- solveAllSafeGoals
+                            (filter goodTh ths) (get paramOpenChainsLimit parameters)
+                 return (not $ null names, names)
 
 -- | Precompute a saturated set of case distinctions.
 precomputeSources
@@ -448,7 +456,7 @@ refineWithSourceAsms
     -> [Source]       -- ^ Original, raw sources.
     -> [Source]       -- ^ Manipulated, refined sources.
 refineWithSourceAsms _ [] _ cases0 =
-    fmap ((modify cdCases . fmap . second) (set sSourceKind RefinedSource)) $ cases0
+    (modify cdCases . fmap . second) (set sSourceKind RefinedSource) <$> cases0
 refineWithSourceAsms parameters assumptions ctxt cases0 =
     fmap (modifySystems removeFormulas) $
     saturateSources parameters ctxt $

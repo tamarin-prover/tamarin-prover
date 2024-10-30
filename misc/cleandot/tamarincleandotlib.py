@@ -619,7 +619,7 @@ def parseLabel( strng ):
             s = "       as: %s\n" % (tokens)
             appendLog(s)
 
-    except ParseException, err:
+    except ParseException as err:
         s = str(err.line) + "\n"
         s +=  " "*(err.column-1) + "^" + "\n"
         s += str(err) + "\n"
@@ -717,9 +717,11 @@ def recordToList(s,start=0):
             (fl2,i) = recordToList(s,i+1)
             fl.append(["<recordflip>"] + fl2)
             if i >= len(s):
-                raise ValueError, "Cannot parse record node (missing closing parenthesis? ) [%s]" % s
+                raise ValueError("Cannot parse record node (missing closing parenthesis? ) [%s]" % s)
+
             if s[i] != "}":
-                raise ValueError, "Cannot parse record node (missing closing parenthesis? ) [%s]" % s
+                raise ValueError("Cannot parse record node (missing closing parenthesis? ) [%s]" % s)
+
             i += 1
             start = i
         elif s[i] == "|":
@@ -972,7 +974,7 @@ def clear_node(G,N):
     """
     Remove node N and its connected edges from the graph
     """
-    print "Clearing node ", N.get_name()
+    print ("Clearing node ", N.get_name())
     for OE in incomingEdges(G,N):
         del_edge(G,OE.get_source(),OE.get_destination())
     for OE in outgoingEdges(G,N):
@@ -1039,7 +1041,7 @@ def leavePortAddress(t,coord=None):
         return ""
     i = t.find(">")
     if i < 0:
-        raise ValueError, "Could not find port name end marker in [%s]" % (t)
+        raise (ValueError, "Could not find port name end marker in [%s]" % (t))
     return t[:i+1]
 
 
@@ -1130,7 +1132,7 @@ def recordToSimpleHTML(N):
 
     newlabel = "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD>x</TD></TR><TR><TD>y</TD></TR></TABLE>>"
     N.set_label(newlabel)
-    print "Set [", newlabel, "] for node ",N.get_name()
+    print ("Set [", newlabel, "] for node ",N.get_name())
     N.set_shape("plaintext")
 
 
@@ -1768,7 +1770,7 @@ def joinSimilar(G,subsumetest=True):
         appendLog("Parsing some labels\n")
         label = joinLabels(labels)
         if len(label) > 0:
-            print "Setting label for ", N1.get_name()
+            print ("Setting label for ", N1.get_name())
             N1.set_label(label)
             N1.set_shape("box")
 
@@ -1788,7 +1790,7 @@ def joinSimilar(G,subsumetest=True):
                         if containsOutgoingEdges(G,N1,N2):
                             # N1 can be subsumed by N2
                             label = joinLabels([N2.get_label(),N1.get_label()])
-                            print "Setting label for ", N2.get_name()
+                            print ("Setting label for ", N2.get_name())
                             N2.set_label(label)
                             N2.set("shape",'box')
                             if N1 not in toremove:
@@ -1884,8 +1886,8 @@ def colorRules(G):
         if color != None:
             nodecolor = "#" + multiplex(color,2)
             N.set_fillcolor(nodecolor)
-            print "Attempted to set some color!"
-            print nodecolor
+            print ("Attempted to set some color!")
+            print (nodecolor)
     return G
 
 
@@ -2017,10 +2019,10 @@ def main():
         if DEBUGMODE:
             import traceback
 
-            print "Unexpected error:", sys.exc_info()[0]
+            print ("Unexpected error:", sys.exc_info()[0])
             report = traceback.format_exc()
             appendLog(report)
-            print report
+            print (report)
 
         # Something went wrong, fall back to default rendering method.
         execDot(sys.argv[1:])
@@ -2101,9 +2103,9 @@ def experiment(L):
             
         mfactor += step
 
-    print "Best we can do:"
-    print "mfactor", bestf
-    print "delta", bestd
+    print ("Best we can do:")
+    print (mfactor, bestf)
+    print("delta", bestd)
 
 if __name__ == '__main__':
     # L = [ ("A","B"), \

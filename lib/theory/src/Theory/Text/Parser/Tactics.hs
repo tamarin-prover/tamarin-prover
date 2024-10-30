@@ -3,7 +3,6 @@
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
 -- License     : GPL v3 (see LICENSE)
 --
--- Maintainer  : Simon Meier <iridcode@gmail.com>
 -- Portability : portable
 --
 -- Parsing Tactics
@@ -43,7 +42,7 @@ tacticName = do
     return tName
 
 goalRankingPresort :: Bool -> Parser (GoalRanking ProofContext)
-goalRankingPresort diff = regularRanking <?> "goal ranking"
+goalRankingPresort diff = regularRanking <?> "proof method ranking"
    where
        regularRanking = toGoalRanking <$> many1 letter <* skipMany (char ' ')
 
@@ -123,7 +122,7 @@ tacticFunctions = M.fromList
                       , ("dhreNoise", dhreNoise)
                       , ("defaultNoise", defaultNoise)
                       , ("reasonableNoncesNoise",reasonableNoncesNoise)
-                      , ("nonAbsurdGoal", nonAbsurdGoal)
+                      , ("nonAbsurdConstraint", nonAbsurdConstraint)
                       ]
   where
     regex' :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
@@ -134,8 +133,8 @@ tacticFunctions = M.fromList
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
             pg = concat . lines . render $ pgoal agoal
 
-    nonAbsurdGoal :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
-    nonAbsurdGoal param (goal,_,sys) = hasSafeNonces && isSubset
+    nonAbsurdConstraint :: [String] -> (AnnotatedGoal, ProofContext,  System) -> Bool
+    nonAbsurdConstraint param (goal,_,sys) = hasSafeNonces && isSubset
         where
             pgoal (g,(_nr,_usefulness)) = prettyGoal g
             pg = concat . lines . render $ pgoal goal
@@ -229,10 +228,10 @@ nameToFunction (s,param) = case M.lookup s tacticFunctions of
   where
     tacticFunctionName :: String -> String
     tacticFunctionName funct = case funct of
-            "regex"                 -> "match between the pretty goal and the given regex"
+            "regex"                 -> "match between the pretty printed proof method and the given regex"
             "isFactName"            -> "match against the fact name"
             "isInFactTerms"         -> "match against the fact terms"
-            "nonAbsurdGoal"         -> "match non absurd goals (vacarme oracle)"
+            "nonAbsurdConstraint"   -> "match non absurd constraints (vacarme oracle)"
             "dhreNoise"             -> "match diffie-hellman (vacarme oracle)"
             "defaultNoise"          -> "match default facts (vacarme oracle)"
             "reasonableNoncesNoise" -> "match reasonable noncesNoise (vacarme oracle)"

@@ -88,7 +88,7 @@ detailed error messages.
   	Possible reasons:
 	1. Fact names are case-sensitive, different capitalizations are considered as different facts, i.e., Fact() is different from FAct(). Check the capitalization of your fact names.
 	2. Same fact is used with different arities, i.e., Fact('A','B') is different from Fact('A'). Check the arguments of your facts.
-	
+
 
   	Fact `agst':
 
@@ -123,7 +123,7 @@ we get the error message
 	Unbound variables
 	=================
 
-	rule `R_1' has unbound variables: 
+	rule `R_1' has unbound variables:
 		~n
 	*/
 
@@ -151,7 +151,7 @@ This causes the following warning:
 	=============
 
 	lemma `functional' uses terms of the wrong form: `Free m', `Free m'
-	
+
 	The only allowed terms are public names and bound node and message
 	variables. If you encounter free message variables, then you might
 	have forgotten a #-prefix. Sort prefixes can only be dropped where
@@ -180,8 +180,8 @@ We get the following warning:
 	Inexistant lemma actions
 	========================
 
-	lemma `nonce_secret' references action 
-		fact "Secr" (arity 2, Linear) 
+	lemma `nonce_secret' references action
+		fact "Secr" (arity 2, Linear)
 	but no rule has such an action.
 	*/
 
@@ -227,7 +227,7 @@ we get the error message
 	Unbound variables
 	=================
 
-	rule `setup' has unbound variables: 
+	rule `setup' has unbound variables:
 		m
 
 	Variable with mismatching sorts or capitalization
@@ -237,13 +237,36 @@ we get the error message
 	1. Identifiers are case sensitive, i.e.,'x' and 'X' are considered to be different.
 	2. The same holds for sorts:, i.e., '$x', 'x', and '~x' are considered to be different.
 
-	rule `setup': 
+	rule `setup':
 		1. ~m, m
 	*/
 
 This indicates that the sorts of a message were inconsistently used.
 In the rule `setup`, this is the case because we used m once as a fresh value
 `~m` and another time without the `~`.
+
+### Subterm Convergence Warning ###
+
+The equational theory used by Tamarin must always be convergent, meaning that any sequence of rewriting steps must eventually terminate, and have the finite variant property. Tamarin verifies if the equational theory is subterm convergent. If it is subterm convergent, it is guaranteed to be convergent an to have the finite variant property. However, if it is not subterm convergent, it does not necessarily imply non-convergence; it only indicates a potential risk of non-convergence. Non-convergence of an equation can result in infinite loops or incorrect results.
+
+An equation is subterm convergent if the right-hand side is a constant (such as `true` or `false`) or a subterm of the left-hand side. For instance, the equation `f(g(x)) = x` is subterm convergent since the right-hand side is a subterm of the left-hand side. Conversely, the equation `f(x) = g(x)` is not subterm convergent.
+
+Consider the following example from the warning:
+
+	/*
+	Subterm Convergence Warning
+	===========================
+
+  	User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue 
+
+    unblind(sign(blind(m, r), sk), r) = sign(m, sk)
+   
+ 	For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html 
+	*/
+
+If you are sure that your equational theory is convergent and has the finite variant theory you can deactivate the warning using the annotation `convergent` as follows:
+
+	equations [convergent]: ...
 
 ### Message derivation errors
 
@@ -261,15 +284,15 @@ we get the error message
 	Message Derivation Checks
 	=========================
 
-	The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+	The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
-	Rule R_1: 
+	Rule R_1:
 	Failed to derive Variable(s): ~k, m
     */
 
 This warning indicates that in the rule `R_1`, we introduce additional capabilities, namely, the derivation of both `~k` and `m`.
 
-If this is intentional, the rule can be annotated with `[derivchecks]`, which will make Tamarin ignore that rule during derivation checks. The behaviour of these derivation checks can be further modified with the `--derivcheck-timeout` flag. By default, it is set to a value of `5` seconds. Setting it to `0` disables the timeout, setting it to `-1` disables derivation checks entirely.
+If this is intentional, the rule can be annotated with `[no_derivcheck]`, which will make Tamarin ignore that rule during derivation checks. The behaviour of these derivation checks can be further modified with the `--derivcheck-timeout` (or `-d`) flag. By default, it is set to a value of `5` seconds. Setting it to `0` disables derivation checks.
 
 ### What to do when Tamarin does not terminate ###
 Tamarin may fail to terminate when it automatically constructs proofs.

@@ -33,16 +33,16 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1( ), Fr( s.1 ) ] --[ Secret( s.1 ) ]-> [ Out( s.1 ) ]
 
   /*
-  rule (modulo AC) p_1_[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1( ), Fr( s ) ] --[ Secret( s ) ]-> [ Out( s ) ]
   */
 
@@ -54,17 +54,14 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -72,7 +69,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.06s
   
   onlyOneSecret (exists-trace): verified (4 steps)
 

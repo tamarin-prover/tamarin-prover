@@ -436,7 +436,7 @@ steps based on a heuristic. Here we have two constraints to resolve:
 `Client_1( S, k )` and `KU( k )`, both of which are premises for the rules in 
 the unfinished current constraint system.
 
-Note that that the proof methods in the GUI are sorted according to the same 
+Note that the proof methods in the GUI are sorted according to the same 
 heuristic as is used by the `autoprove` command. Any proof found by always 
 selecting the first proof method will be identical to the one constructed by 
 the `autoprove` command. However, because the general problem is
@@ -474,6 +474,15 @@ For example, a black and blue dashed arrow indicates that there are two constrai
 Finally, in intermediate proof steps, there can also be dotted green arrows, which are used during Tamarin's proof search to represent incomplete adversary deduction steps.
 
 Note that by default Tamarin does not show all rules and arrows to simplify the graphs, but this can be adjusted using the Options button on the top right of the page.
+
+Another option is whether to render abbreviations in the graph as shown in the picture below.
+When abbreviations are enabled Tamarin will construct abbreviations for terms, list them in a legend at the bottom of the image and replace the original terms in the graph.
+A maximum on 10 abbreviations are generated and terms are prioritized based on their length and how often they appear in the graph.
+Note that abbreviations can appear in other abbreviations, as for example "PK1" appears in the expanded term of "AE1" below.
+The legend is sorted so that it can be read top to bottom.
+
+![FirstExample Lemma 1 Abbreviations](../images/tamarin-tutorial-lemma-1-abbrev.png 
+ "FirstExample Lemma 1 Abbreviations"){width=100%}\
 
 Running Tamarin on the Command Line
 -----------------------------------
