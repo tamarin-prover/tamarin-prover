@@ -1,15 +1,15 @@
 name:               tamarin-prover-accountability
 
-cabal-version:      >= 1.8
+cabal-version:      >= 1.10
 build-type:         Simple
 version:            1.11.0
 license:            GPL
 license-file:       LICENSE
 category:           Theorem Provers
-author:             Robert Künnemann <robert@kunnemann.de>, 
+author:             Robert Künnemann <robert@kunnemann.de>,
                     Kevin Morio <kevin.morio@cispa.de>,
                     Yavor Ivanov <yavor.ivanov@cispa.de>
-                    
+
 maintainer:         Robert Künnemann <robert@kunnemann.de>
 copyright:          (c) 2019-2021 Robert Künnemann, Kevin Morio & Yavor Ivanov
 
@@ -32,6 +32,7 @@ source-repository head
 ----------------------
 
 library
+    default-language: GHC2021
     ghc-options:       -Wall -fwarn-tabs
 
     ghc-prof-options:  -auto-all
@@ -45,7 +46,6 @@ library
       , containers
       , deepseq
       , dlist
-      , fclabels
       , mtl
       , parallel
       , parsec
@@ -68,3 +68,6 @@ library
       , Accountability.Generation
 
     other-modules:
+
+    default-extensions:
+      OverloadedRecordDot
