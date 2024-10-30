@@ -133,6 +133,8 @@ executable tamarin-prover
       , cmdargs
       , conduit
       , containers
+      , crypto-token
+      , data-default-class
       , deepseq
       , directory
       , exceptions
@@ -151,9 +153,13 @@ executable tamarin-prover
       , text
       , threads
       , time
+      , tls-session-manager
+      , tls
       , transformers
       , wai
+      , wai-extra
       , warp
+      , warp-tls
       , yesod-core
       , yesod-static
       , tamarin-prover-utils  == 1.11.0

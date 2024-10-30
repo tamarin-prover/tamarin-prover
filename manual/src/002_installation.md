@@ -97,6 +97,27 @@ running even if the network drops your connection as you can later
 reconnect to it. Otherwise, any network failure may require you to
 restart Tamarin and start over on the proof.
 
+Using HTTPS
+-----------
+
+As Tamarin ususally runs locally, its interface is normally available via HTTP. If you want to use HTTPS (e.g.,
+when running it on a distant server), you can run Tamarin using
+
+```
+tamarin-prover interactive --tls-key=path/to/privatekey.pem --tls-cert=path/to/certificate.pem
+```
+
+This requires a private key and a certificate. For generating a certificate/key pair, the [`warp-tls` documentation](https://www.stackage.org/package/warp-tls) provides a simple way using OpenSSL.
+
+On top of HTTPS, it is possible to use
+[Basic Authentication](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#basic_authentication_scheme)
+to require a username and password as follows:
+
+```
+tamarin-prover interactive --tls-key=path/to/privatekey.pem --tls-cert=path/to/certificate.pem --auth-username="username" --auth-password="password"
+```
+
+
 Tamarin Code Editors
 --------------------
 
