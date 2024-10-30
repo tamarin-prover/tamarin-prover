@@ -1,3 +1,42 @@
+* 1.10.0
+  - Tree-sitter grammar for spthy added, integrated into regression
+
+  - Better debug tracing and GHCI debugging
+
+  - Manual integrated into the repo to keep in sync; many manual improvements
+
+  - Adding warnings for non-subterm convergent theories to allow user to spot this
+
+  - Added --precompute-only option
+  
+  - Improved graphs using clusters to represent roles and sessions
+  
+  - Removed auto-generated aes file
+  
+  - Removed nat constructor if natural-numbers built-in is not used
+
+  - Public, fresh, and nat names can now be arbitrary single quoted strings (but may not include additional single quotes and newlines inside)
+  
+  - Removed term 'goal' from Tamarin's interfaces and manual, replaced by "proof method" or "constraint"
+  
+  - Click on graphs opens image in new tab
+  
+  - Added new interactive prover that stops when oracle returns nothing
+  
+  - Added option to output traces in batch mode
+
+  - Derivability checks presentation improvements
+
+  - Added option --no-logging to suppress yesod server logs
+
+  - Numerous bug fixes, some refactoring and code cleanup
+
+  - Added many examples from different published papers
+
+  - Allow Maude up to 3.5 (default 3.4)
+
+  - Using stack LTS resolver 22.39 and GHC 9.6.6 now [stack update, stack upgrade may be needed]
+
 * 1.8.0
   - Support for natural numbers and subterm reasoning
 
