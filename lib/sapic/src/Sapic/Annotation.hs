@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -13,39 +7,29 @@
 --
 -- Before translation, a process is annotated. This defines these
 -- annotations.
-module Sapic.Annotation (
-    ProcessAnnotation(..)
-    , AnnotatedProcess
-    , annLock
-    , annSecretChannel
-    , annDestructorEquation
-    , annUnlock
-    , toAnProcess
-    , toProcess
-    , AnVar (..)
-    , AnProcess (..)
-    , unAnProcess
-    , getProcessNames
-    , setProcessNames
-    ,annElse) where
-import           Data.Data
--- import Data.List
--- import Data.Foldable
--- import Control.Exception
--- import Control.Monad.Fresh
--- import Control.Monad.Catch
--- import Sapic.Exceptions
--- import Theory
-import Theory.Sapic
-import           GHC.Generics                     (Generic)
-import           Data.Binary
--- import Theory.Model.Rule
--- import Data.Typeable
--- import qualified Data.Set                   as S
--- import Control.Monad.Trans.FastFresh
--- import Control.Monad.Trans.FastFresh
+module Sapic.Annotation
+  ( ProcessAnnotation(..)
+  , AnnotatedProcess
+  , annLock
+  , annSecretChannel
+  , annDestructorEquation
+  , annUnlock
+  , toAnProcess
+  , toProcess
+  , AnVar (..)
+  , AnProcess (..)
+  , unAnProcess
+  , getProcessNames
+  , setProcessNames
+  , annElse
+  ) where
+
+import Data.Binary
+import Data.Data
+import GHC.Generics (Generic)
 import Term.LTerm
 import Term.Substitution
+import Theory.Sapic
 
 -- | Variables used to annotate locks. Encapsulated in newtype because of
 -- Semigroup instance below
@@ -58,8 +42,8 @@ instance Semigroup (AnVar v) where  -- override annotations if necessary
 
 -- | Annotations used in the translation
 -- Reuses ProcessParsedAnnotation
-data ProcessAnnotation v = ProcessAnnotation {
-    parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes
+data ProcessAnnotation v = ProcessAnnotation
+  { parsingAnn    :: ProcessParsedAnnotation -- annotations recovered during parsing, includes
                                              -- processes identifiers recovered from "let P = "  bindings
   , lock          :: Maybe (AnVar v)   -- Fresh variables annotating locking action and unlocking actions.
   , unlock        :: Maybe (AnVar v)   -- Matching actions should have the same variables.

@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternGuards #-}
 -- |
 -- Copyright   : (c) 2019 Charlie Jacomme <charlie.jacomme@lsv.fr>
 -- License     : GPL v3 (see LICENSE)
@@ -13,18 +12,18 @@
 -- efficient translation, as the adversary can never deduce then, and thus only
 -- a silent transition is possible.
 
-module Sapic.SecretChannels (
-    annotateSecretChannels
-) where
+module Sapic.SecretChannels
+  ( annotateSecretChannels
+  ) where
 
-import           Data.Set as S
-import           Data.List as L
+import Data.Set as S
+import Data.List as L
 
-import           Sapic.Annotation
-import           Sapic.Basetranslation
+import Sapic.Annotation
+import Sapic.Basetranslation
 
-import           Theory
-import           Theory.Sapic
+import Theory
+import Theory.Sapic
 
 
 -- | Get all variables inside a term
