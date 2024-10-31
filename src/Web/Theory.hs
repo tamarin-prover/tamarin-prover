@@ -1031,26 +1031,23 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext =   go path
                 <p>
                   <ul .wrap-text>
                     <li>
-                     Modifying the lemma in the box above and clicking the submit button will attempt to modify the Lemma in the current theory.
+                     Modifying the lemma in the box above and clicking the submit button will attempt to modify the lemma in the current theory.
                      <br>&zwnj;
                     <li>
-                     Failures in parsing the Lemma or verifying its well-formedness will result in an Error, and the lemma will NOT be modified.
-                     However, your changes will be kept in this page until you leave this right panel.
+                     Failures in parsing the lemma or verifying its well-formedness will result in an error, and the lemma will NOT be modified.
+                     However, your changes will be kept on this page until you leave this right panel.
                      <br>&zwnj;
                     <li>
-                     Editing a Lemma will NOT modify the file it was loaded from.
+                     Editing a lemma will NOT modify the file it was loaded from, but clicking on the "append lemmas to file" button adds all modified lemmas as a comment at the end of the file on disk they were loaded from.
                      <br>&zwnj;
                     <li>
-                     Clicking on the "append lemmas to file" button adds all modified lemmas as a comment at the end of the file they were loaded from.
+                     Clicking on the "Download" button will download the modified version of the theory (including the modified lemmas), but not modify the file on disk.
                      <br>&zwnj;
                     <li>
-                     Clicking on the Download button will download the modified version of the theory (so with the modified lemmas).
+                     Modifying a reuse lemma will invalidate all subsequent proofs.
                      <br>&zwnj;
                     <li>
-                     Modifying a Reuse Lemma will invalidate all subsequent proofs.
-                     <br>&zwnj;
-                    <li>
-                     Modifying a Sources Lemma has not yet been implemented and will result in an error.
+                     Modifying a sources lemma is not supported and will result in an error.
                   <style>
                      .wrap-text li {
                          white-space: normal;
@@ -1080,16 +1077,13 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext =   go path
                Clicking on the button above will delete the lemma from the loaded theory.
                <br>&zwnj;
               <li>
-               Deleting a Lemma will NOT modify the file it was loaded from.
+               Deleting a lemma will NOT modify the file it was loaded from, but clicking on the "Download" button will download the modified version of the theory (so without the deleted lemmas).
                <br>&zwnj;
               <li>
-               Clicking on the Download button will download the modified version of the theory (so without deleted lemmas)
+               Deleting a reuse lemma will invalidate all subsequent proofs.
                <br>&zwnj;
               <li>
-               Deleting a Reuse Lemma will invalidate all subsequent proofs
-               <br>&zwnj;
-              <li>
-               Deleting a Source Lemma has not yet been implemented and will result in an error
+               Deleting a source lemma is not supported and will result in an error.
              <style>
                  .wrap-text li {
                      white-space: normal;
@@ -1115,19 +1109,13 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext =   go path
               <p>
                 <ul .wrap-text>
                   <li>
-                   Adds the lemma in the current position in the Theory.
+                   Adds the lemma in the current position in the theory, but will throw an error if a lemma with the same name exists, the parsing fails, or the lemma isn't well-formed.
                    <br>&zwnj;
                   <li>
-                   Clicking on the "append lemmas to file" button appends all added lemmas as a comment at the end of the current theory file.
+                   Adding a lemma will NOT modify the loaded source file, but clicking on the "Append lemmas to file" button appends all added lemmas as a comment at the end of the current theory file.
                    <br>&zwnj;
                   <li>
-                   Adding a Lemma will NOT modify the loaded source file.
-                   <br>&zwnj;
-                  <li>
-                   Clicking on the Download button will download the modified version of the theory (so with the added lemmas)
-                   <br>&zwnj;
-                  <li>
-                   Will throw an error if a Lemma with the same name exists, the parsing fails, or the lemma isn't well-formed.
+                   Clicking on the "Download" button will download the modified version of the theory (including the added lemmas).
                 <style>
                     .wrap-text li {
                         white-space: normal;
