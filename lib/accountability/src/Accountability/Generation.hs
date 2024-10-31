@@ -27,7 +27,7 @@ import           Theory.Tools.Wellformedness (WfErrorReport)
 -- | Create a lemma from a formula with quantifier. Copies accLemma's name (plus suffix) and attributes.
 toLemma :: AccLemma -> TraceQuantifier -> String -> SyntacticLNFormula -> ProtoLemma SyntacticLNFormula ProofSkeleton
 toLemma accLemma quantifier suffix formula =
-        skeletonLemma (L.get aName accLemma ++ suffix) (L.get aAttributes accLemma) quantifier formula (unproven ())
+        skeletonLemma (L.get aName accLemma ++ suffix) "generation" False (L.get aAttributes accLemma) quantifier formula (unproven ())
 
 -- | Quantify the given variables
 quantifyVars :: ((String, LSort) -> LVar -> SyntacticLNFormula -> SyntacticLNFormula) -> [LVar] -> SyntacticLNFormula -> SyntacticLNFormula

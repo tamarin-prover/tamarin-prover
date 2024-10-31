@@ -19,6 +19,7 @@ module Theory.Text.Parser (
   , theory
   , diffTheory
   , parseLemma
+  , parsePlainLemma
   , parseRestriction
   , parseIntruderRules
   , liftedAddLemma
@@ -51,6 +52,7 @@ import Theory.Text.Parser.Signature
 import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
+import Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
@@ -82,6 +84,13 @@ parseOpenDiffTheoryString flags0 = parseString flags0 "<unknown source>" (diffTh
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
 parseLemma = parseString [] "<unknown source>" (lemma Nothing)
+
+-- | Parse a lemma with a given signature, for Lemma editing (signature is for when Lemma uses functions defined in builtins)
+parsePlainLemma :: MaudeSig -> String -> Either ParseError (Lemma ProofSkeleton)
+parsePlainLemma msig = parseStringWState (mkStateSig msig) "<unknown source>" (lemmaWithMsig msig Nothing)
+
+
+
 
 ------------------------------------------------------------------------------
 -- Parsing Theories
@@ -219,10 +228,9 @@ theory inFile = do
   where
     addItems :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     addItems inFile0 thy = asum
-      [ do
-          thyHeuristic <- heuristic False workDir
-          thy' <- liftedAddHeuristic thy $ defaultOracleNames (fromMaybe "" inFile0) thyHeuristic
-          addItems inFile0 thy'
+      [ do thyHeuristic <- heuristic False workDir
+           thy' <- liftedAddHeuristic thy $ defaultOracleNames (fromMaybe "" inFile0) thyHeuristic
+           addItems inFile0 thy'
       , do thy' <- liftedAddTactic thy =<< tactic False
            addItems inFile0 thy'
       , do thy' <- builtins thy
@@ -237,8 +245,6 @@ theory inFile = do
       , do equations
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
---      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
---           addItems flags thy'
       , do thy' <- liftedAddMacros thy =<< macros
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< restriction msgvar nodevar
@@ -258,8 +264,6 @@ theory inFile = do
            addItems inFile0 thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
-           -- thy'' <- foldM liftedAddRestriction thy' $
-           --  map (Restriction "name") [get (preRestriction . rInfo) ru]
            addItems inFile0 thy'
       , do r <- intrRule
            addItems inFile0 (addIntrRuleACs [r] thy)

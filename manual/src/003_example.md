@@ -264,7 +264,7 @@ If you click on the 'FirstExample' entry in the table of loaded theories, you
 should see the following:
 
 ![FirstExample Theory 
-Overview](../images/tamarin-tutorial-overview.png "FirstExample Theory 
+Overview](../images/tamarin-tutorial-overview.jpeg "FirstExample Theory 
 Overview"){width=100%}\
 
 On the left hand side, you see the theory: links to the message theory
@@ -283,7 +283,7 @@ graph visualization (see below for examples).
 
 If you click on `Message theory` on the left, you should see the following:
 
-![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.png 
+![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.jpeg
  "FirstExample Message Theory"){width=100%}\
 
 On the right side, you can now see the message theory, starting with
@@ -326,7 +326,7 @@ only used to make the tool's reasoning more efficient.
 Now click on *Multiset rewriting rules* on the left.
 
 ![FirstExample Multiset Rewriting 
-Rules](../images/tamarin-tutorial-multiset-rules.png 
+Rules](../images/tamarin-tutorial-multiset-rules.jpeg
  "FirstExample Multiset Rewriting Rules"){width=100%}\
 
 On the right side of the screen are the protocol's 
@@ -352,7 +352,7 @@ those are the ones actually used in the proof, and 'raw' is just an
 uninteresting intermediate result. -->
 
 ![FirstExample Case Distinctions 
-Rules](../images/tamarin-tutorial-case-distinctions.png 
+Rules](../images/tamarin-tutorial-case-distinctions.jpeg
  "FirstExample Case Distinctions"){width=100%}\
  
 To improve the efficiency of its internal reasoning, Tamarin precomputes case 
@@ -396,7 +396,7 @@ Now we will see how to prove lemmas in the interactive mode. For that, click on
 `sorry` (indicating that the proof has not been started) after the first 
 lemma in the left frame to obtain the following screen:
 
-![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.png 
+![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.jpeg
  "FirstExample Lemma 1"){width=100%}\
 
 Tamarin proves lemmas using constraint solving.
@@ -414,7 +414,7 @@ generates the necessary constraints to prove the lemma using induction on the
 length of the trace. Here we use the default strategy, i.e., a simplification 
 step by clicking on `1. simplify`, to obtain the following screen:
  
-![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.png 
+![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpeg
  "FirstExample Lemma 1 Step 1"){width=100%}\
 
 Tamarin has now translated the lemma into a constraint system. Since
@@ -447,7 +447,7 @@ using the autoprover, we end with the following final state, where the construct
 graph leads to a contradiction as it contains `LtkReveal( S )`:
 
 ![FirstExample Lemma 1 
-Finished](../images/tamarin-tutorial-lemma-1-finished.png 
+Finished](../images/tamarin-tutorial-lemma-1-finished.jpeg
  "FirstExample Lemma 1 Finished"){width=100%}\
  
 The lemma is now colored in green as it was successfully proven. If we had 

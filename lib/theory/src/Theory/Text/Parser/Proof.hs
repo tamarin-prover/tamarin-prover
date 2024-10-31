@@ -80,6 +80,7 @@ proofMethod = asum
   , symbol "solve"         *> (SolveGoal <$> parens goal)
   , symbol "contradiction" *> pure (Contradiction Nothing)
   , symbol "induction"     *> pure Induction
+  , symbol "INVALIDATED"   *> pure Invalidated 
   , symbol "UNFINISHABLE"  *> pure Unfinishable
   ]
 
