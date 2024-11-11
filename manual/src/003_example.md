@@ -111,7 +111,7 @@ incomparable subsorts `fresh`, `pub` and `nat` of that top sort. Timepoint
 variables of sort `temporal` are unconnected.
 
 The above rule can therefore be read as follows. First, generate
-a fresh name `~ltk` (of sort fresh), which is the new private key, and
+a fresh name `~ltk` (of sort fresh), which is the new private (long term) key, and
 non-deterministically choose a public name `A`, for the agent for whom we
 are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
 (the exclamation mark `!` denotes that the fact is persistent, i.e., it
