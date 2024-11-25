@@ -145,19 +145,19 @@ lemma slightly_weaker_invariant[reuse, use_induction]:
         "
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction
 next
   case non_empty_trace
   solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
            (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
            (LoginCounter( pid, otc2, tc2 ) @ #t2)
           ⇒
-           (last(#t2)) ∨
-           (last(#t1)) ∨
-           ((#t1 < #t2) ∧
-            (∃ #t3. (IsSmaller( tc1, tc2 ) @ #t3) ∧ ¬(last(#t3)))) ∨
-           (#t2 < #t1) ∨
-           (#t1 = #t2))  ∥
+           ((last(#t2)) ∨
+            (last(#t1)) ∨
+            ((#t1 < #t2) ∧
+             (∃ #t3. (IsSmaller( tc1, tc2 ) @ #t3) ∧ ¬(last(#t3)))) ∨
+            (#t2 < #t1) ∨
+            (#t1 = #t2)))  ∥
          (∃ #t1 #t2 a b c.
            (IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)
           ∧
@@ -170,39 +170,109 @@ next
             (∃ #t3. (IsSmaller( tc1, tc2 ) @ #t3) ∧ ¬(last(#t3))))  ∥
            (#t2 < #t1)  ∥ (#t1 = #t2) )
       case case_1
-	  solve( Server( pid, sid, otc1 ) ▶₀ #t1 )
-		case BuyANewYubikey
-		solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
-		  by sorry
-	  next
-		case Server_ReceiveOTP_NewSession_case_1
-		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
-		  by sorry
-	  next
-		case Server_ReceiveOTP_NewSession_case_2
-		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
-		  by sorry
-	  next
-		case Server_ReceiveOTP_NewSession_case_3
-		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
-		  by sorry
-	  next
-		case Server_ReceiveOTP_NewSession_case_4
-		solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
-		  by sorry
-	  qed
+      solve( Server( pid, sid, otc1 ) ▶₀ #t1 )
+        case BuyANewYubikey
+        solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
+          case BuyANewYubikey
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_1
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_2
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_3
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_4
+          by sorry
+        qed
+      next
+        case Server_ReceiveOTP_NewSession_case_1
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
+          case BuyANewYubikey
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_1
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_2
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_3
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_4
+          by sorry
+        qed
+      next
+        case Server_ReceiveOTP_NewSession_case_2
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
+          case BuyANewYubikey
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_1
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_2
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_3
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_4
+          by sorry
+        qed
+      next
+        case Server_ReceiveOTP_NewSession_case_3
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
+          case BuyANewYubikey
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_1
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_2
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_3
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_4
+          by sorry
+        qed
+      next
+        case Server_ReceiveOTP_NewSession_case_4
+        solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
+          case BuyANewYubikey
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_1
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_2
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_3
+          by sorry
+        next
+          case Server_ReceiveOTP_NewSession_case_4
+          by sorry
+        qed
+      qed
     next
       case case_2
-      by contradiction // cyclic
+      by contradiction
     next
       case case_3
-      by contradiction // from formulas
+      by contradiction
     next
       case case_4
-      by contradiction // from formulas
+      by contradiction
     next
       case case_5
-      by contradiction // from formulas
+      by contradiction
     qed
   next
     case case_2

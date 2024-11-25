@@ -268,7 +268,7 @@ lemma one_count_foreach_login[use_induction]:
          ( Ex #t1  . YubiPress(pid,x)@#t1 & #t1<#t2 )"
 induction
   case empty_trace
-  by contradiction // from formulas
+  by contradiction
 next
   case non_empty_trace
   solve( !S_AEAD( pid,
@@ -283,10 +283,10 @@ next
     case write_AEAD
     solve( !KU( xorc(senc(keystream(kh, pid), k), <k2, sid>)
            ) @ #vk.6 )
-      case irecv
-      by contradiction // cyclic
+      case c_xorc
+      by sorry
     next
-      case cxorc
+      case irecvHSM
       by sorry
     next
       case read_AEAD_case_1
