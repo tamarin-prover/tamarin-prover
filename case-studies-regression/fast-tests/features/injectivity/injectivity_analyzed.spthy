@@ -46,7 +46,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( Inj( ~i.1 ) ▶₀ #j )
     case Copy
     solve( Inj( ~i.1 ) ▶₀ #k )
@@ -75,10 +74,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.11.0
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -90,9 +89,9 @@ summary of summaries:
 analyzed: examples/features//injectivity/injectivity.spthy
 
   output:          examples/features//injectivity/injectivity.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.08s
   
-  injectivity_check (all-traces): verified (9 steps)
+  injectivity_check (all-traces): verified (8 steps)
 
 ==============================================================================
 */

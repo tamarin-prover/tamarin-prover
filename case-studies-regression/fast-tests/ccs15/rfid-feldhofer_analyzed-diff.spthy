@@ -61,7 +61,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (!KU( n ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j. (OUT_T_1( n, senc(<~nr, n>, ~k) ) @ #j) ∧ ¬(last(#j))) )
@@ -155,7 +154,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (!KU( n ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j. (OUT_T_1( n, senc(<~nr, n>, ~k) ) @ #j) ∧ ¬(last(#j))) )
@@ -1496,10 +1494,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.11.0
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -1511,10 +1509,10 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          examples/ccs15/rfid-feldhofer.spthy.tmp
-  processing time: 1.96s
+  processing time: 1.19s
   
-  RHS :  types (all-traces): verified (26 steps)
-  LHS :  types (all-traces): verified (26 steps)
+  RHS :  types (all-traces): verified (25 steps)
+  LHS :  types (all-traces): verified (25 steps)
   RHS :  executable (exists-trace): verified (6 steps)
   LHS :  executable (exists-trace): verified (6 steps)
   LHS :  executable_left (exists-trace): verified (6 steps)

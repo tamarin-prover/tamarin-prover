@@ -1842,10 +1842,10 @@ Failed to derive Variable(s): ~s
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.11.0
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -1857,7 +1857,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott.spthy
 
   output:          examples/ake/bilinear/Scott.spthy.tmp
-  processing time: 12.64s
+  processing time: 7.52s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
