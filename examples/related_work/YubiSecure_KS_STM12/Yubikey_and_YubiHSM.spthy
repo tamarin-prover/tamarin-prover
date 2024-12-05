@@ -271,6 +271,7 @@ induction
   by contradiction // from formulas
 next
   case non_empty_trace
+  simplify
   solve( !S_AEAD( pid,
                   <xorc(senc(keystream(kh, pid), k), <k2, sid>), mac(<k2, sid>, k)>
          ) ▶₂ #t2 )

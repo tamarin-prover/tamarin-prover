@@ -148,6 +148,7 @@ induction
   by contradiction // from formulas
 next
   case non_empty_trace
+  simplify
   solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
            (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
            (LoginCounter( pid, otc2, tc2 ) @ #t2)

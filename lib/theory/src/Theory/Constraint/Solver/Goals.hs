@@ -37,6 +37,9 @@ import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
 import           Control.Monad.State                     (gets)
+import           Control.Monad.Trans.State.Lazy          hiding (get,gets)
+import           Control.Monad.Trans.FastFresh           -- GHC7.10 needs: hiding (get,gets)
+import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hiding (get,gets)
 
 import           Extension.Data.Label                    as L
 
@@ -341,7 +344,9 @@ solveChain rules (c, p) = do
          _ -> error "solveChain: not a down fact"
   where
     extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact
-      -> Reduction String
+      -> Control.Monad.Trans.State.Lazy.StateT System
+      (Control.Monad.Trans.FastFresh.FreshT
+      (DisjT (Control.Monad.Trans.Reader.Reader ProofContext))) String
     extendAndMark i ru v faPrem faConc = do
         insertEdges [(c, faConc, faPrem, (i, v))]
         markGoalAsSolved "directly" (PremiseG (i, v) faPrem)

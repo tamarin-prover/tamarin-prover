@@ -225,6 +225,7 @@ induction
   by contradiction // from formulas
 next
   case non_empty_trace
+  simplify
   solve( (¬(#t1 < #t2))  ∥ (∀ z.2. ((otc2+z.1) = (otc1+z+z.2)) ⇒ ⊥) )
     case case_1
     solve( (#t2 = #t1)  ∥ (#t1 < #t2) )

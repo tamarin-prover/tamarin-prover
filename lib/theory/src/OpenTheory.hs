@@ -655,7 +655,7 @@ normalizeTheory =
     stripProofStepAnnotations (ProofStep method ()) = ProofStep
       (case method of
         Sorry _         -> Sorry Nothing
-        Finished (Contradictory _) -> Finished (Contradictory Nothing)
+        Contradiction _ -> Contradiction Nothing
         _               -> method)
       ()
 
