@@ -99,9 +99,15 @@ applyMethodAtPath thy lemmaName proofPath prover i = do
         heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
         tactic = selectTactic prover ctxt
-    methods <- map fst . rankProofMethods ranking tactic ctxt <$> sys
+    methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
-    applyProverAtPath thy lemmaName proofPath (oneStepProver method)
+    applyProverAtPath thy lemmaName proofPath
+      (oneStepProver method                            `mappend`
+       replaceSorryProver (oneStepProver Simplify)     `mappend`
+       replaceSorryProver (contradictionProver)        `mappend`
+       replaceSorryProver (oneStepProver Unfinishable) `mappend`
+       replaceSorryProver (oneStepProver Solved)
+      )
 
 applyMethodAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
                       -> AutoProver             -- ^ How to extract/order the proof methods.
@@ -118,11 +124,11 @@ applyMethodAtPathDiff thy s lemmaName proofPath prover i = do
     methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPathDiff thy s lemmaName proofPath
-      (oneStepProver method                                       `mappend`
-       replaceSorryProver (oneStepProver Simplify)                `mappend`
-       replaceSorryProver (contradictionProver)                   `mappend`
-       replaceSorryProver (oneStepProver (Finished Unfinishable)) `mappend`
-       replaceSorryProver (oneStepProver (Finished Solved))
+      (oneStepProver method                            `mappend`
+       replaceSorryProver (oneStepProver Simplify)     `mappend`
+       replaceSorryProver (contradictionProver)        `mappend`
+       replaceSorryProver (oneStepProver Unfinishable) `mappend`
+       replaceSorryProver (oneStepProver Solved)
       )
 
 applyDiffMethodAtPath :: ClosedDiffTheory -> String -> ProofPath
@@ -1788,10 +1794,10 @@ prevDiffThyPath thy = go
 
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
-isInterestingMethod (Sorry _) = True
-isInterestingMethod (Finished Solved) = True
-isInterestingMethod (Finished Unfinishable) = True
-isInterestingMethod _ = False
+isInterestingMethod (Sorry _)    = True
+isInterestingMethod Solved       = True
+isInterestingMethod Unfinishable = True
+isInterestingMethod _            = False
 
 -- | Interesting diff proof methods that are not skipped by next/prev-smart.
 isInterestingDiffMethod :: DiffProofMethod -> Bool
