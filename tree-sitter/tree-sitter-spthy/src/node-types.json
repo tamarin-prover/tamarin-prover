@@ -179,29 +179,6 @@
     }
   },
   {
-    "type": "action_goal",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "linear_fact",
-          "named": true
-        },
-        {
-          "type": "persistent_fact",
-          "named": true
-        },
-        {
-          "type": "temporal_var",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "and_function",
     "named": true,
     "fields": {},
@@ -300,10 +277,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -320,15 +293,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -357,10 +322,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -397,10 +358,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -417,15 +374,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -450,10 +399,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -772,7 +717,7 @@
     }
   },
   {
-    "type": "chain_goal",
+    "type": "chain_constraint",
     "named": true,
     "fields": {},
     "children": {
@@ -1204,6 +1149,37 @@
     }
   },
   {
+    "type": "constraint",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "action_constraint",
+          "named": true
+        },
+        {
+          "type": "chain_constraint",
+          "named": true
+        },
+        {
+          "type": "disjunction_split_constraint",
+          "named": true
+        },
+        {
+          "type": "eq_split_constraint",
+          "named": true
+        },
+        {
+          "type": "premise_constraint",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "custom_var",
     "named": true,
     "fields": {
@@ -1321,10 +1297,6 @@
           "named": true
         },
         {
-          "type": "exp_term",
-          "named": true
-        },
-        {
           "type": "fresh_name",
           "named": true
         },
@@ -1353,15 +1325,7 @@
           "named": true
         },
         {
-          "type": "mul_term",
-          "named": true
-        },
-        {
           "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
           "named": true
         },
         {
@@ -1426,10 +1390,6 @@
         },
         {
           "type": "tuple_term",
-          "named": true
-        },
-        {
-          "type": "xor_term",
           "named": true
         }
       ]
@@ -1895,7 +1855,7 @@
     }
   },
   {
-    "type": "disjunction_split_goal",
+    "type": "disjunction_split_constraint",
     "named": true,
     "fields": {
       "formula": {
@@ -2047,7 +2007,7 @@
     }
   },
   {
-    "type": "eq_split_goal",
+    "type": "eq_split_constraint",
     "named": true,
     "fields": {},
     "children": {
@@ -2102,10 +2062,6 @@
           "named": true
         },
         {
-          "type": "exp_term",
-          "named": true
-        },
-        {
           "type": "fresh_name",
           "named": true
         },
@@ -2130,15 +2086,7 @@
           "named": true
         },
         {
-          "type": "mul_term",
-          "named": true
-        },
-        {
           "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
           "named": true
         },
         {
@@ -2204,10 +2152,6 @@
         {
           "type": "tuple_term",
           "named": true
-        },
-        {
-          "type": "xor_term",
-          "named": true
         }
       ]
     }
@@ -2237,10 +2181,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -2257,15 +2197,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -2290,10 +2222,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -2319,10 +2247,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -2339,15 +2263,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -2372,10 +2288,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -2691,10 +2603,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -2711,15 +2619,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -2744,10 +2644,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -2773,10 +2669,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -2793,15 +2685,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -2826,10 +2710,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -3034,55 +2914,24 @@
     "type": "global_heuristic",
     "named": true,
     "fields": {
-      "goal_ranking": {
+      "proof_method_ranking": {
         "multiple": true,
         "required": true,
         "types": [
           {
-            "type": "oracle_goal_ranking",
+            "type": "oracle_proof_method_ranking",
             "named": true
           },
           {
-            "type": "standard_goal_ranking",
+            "type": "standard_proof_method_ranking",
             "named": true
           },
           {
-            "type": "tactic_goal_ranking",
+            "type": "tactic_proof_method_ranking",
             "named": true
           }
         ]
       }
-    }
-  },
-  {
-    "type": "goal",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "action_goal",
-          "named": true
-        },
-        {
-          "type": "chain_goal",
-          "named": true
-        },
-        {
-          "type": "disjunction_split_goal",
-          "named": true
-        },
-        {
-          "type": "eq_split_goal",
-          "named": true
-        },
-        {
-          "type": "premise_goal",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -3780,10 +3629,6 @@
           "named": true
         },
         {
-          "type": "exp_term",
-          "named": true
-        },
-        {
           "type": "fresh_name",
           "named": true
         },
@@ -3812,15 +3657,7 @@
           "named": true
         },
         {
-          "type": "mul_term",
-          "named": true
-        },
-        {
           "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
           "named": true
         },
         {
@@ -3885,10 +3722,6 @@
         },
         {
           "type": "tuple_term",
-          "named": true
-        },
-        {
-          "type": "xor_term",
           "named": true
         }
       ]
@@ -4033,20 +3866,20 @@
     "type": "lemma_attr",
     "named": true,
     "fields": {
-      "goal_ranking": {
+      "proof_method_ranking": {
         "multiple": true,
         "required": false,
         "types": [
           {
-            "type": "oracle_goal_ranking",
+            "type": "oracle_proof_method_ranking",
             "named": true
           },
           {
-            "type": "standard_goal_ranking",
+            "type": "standard_proof_method_ranking",
             "named": true
           },
           {
-            "type": "tactic_goal_ranking",
+            "type": "tactic_proof_method_ranking",
             "named": true
           }
         ]
@@ -4092,10 +3925,6 @@
           "named": true
         },
         {
-          "type": "exp_term",
-          "named": true
-        },
-        {
           "type": "fresh_name",
           "named": true
         },
@@ -4112,15 +3941,7 @@
           "named": true
         },
         {
-          "type": "mul_term",
-          "named": true
-        },
-        {
           "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
           "named": true
         },
         {
@@ -4145,10 +3966,6 @@
         },
         {
           "type": "tuple_term",
-          "named": true
-        },
-        {
-          "type": "xor_term",
           "named": true
         }
       ]
@@ -4179,10 +3996,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -4199,15 +4012,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -4232,10 +4037,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -4515,10 +4316,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -4535,15 +4332,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -4568,10 +4357,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -4675,79 +4460,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
             "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -4757,79 +4470,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
             "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -4863,7 +4504,7 @@
     }
   },
   {
-    "type": "mul_term",
+    "type": "mult_term",
     "named": true,
     "fields": {
       "left": {
@@ -4871,79 +4512,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
             "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -4953,79 +4522,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
             "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -5067,78 +4564,6 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
-          {
             "type": "xor_term",
             "named": true
           }
@@ -5148,78 +4573,6 @@
         "multiple": false,
         "required": true,
         "types": [
-          {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
           {
             "type": "xor_term",
             "named": true
@@ -5419,79 +4772,7 @@
       "required": true,
       "types": [
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
-          "type": "comp_var",
-          "named": true
-        },
-        {
-          "type": "custom_var",
-          "named": true
-        },
-        {
-          "type": "exp_term",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
-          "named": true
-        },
-        {
           "type": "mset_term",
-          "named": true
-        },
-        {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "mul_term",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
-          "type": "nested_term",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
-          "named": true
-        },
-        {
-          "type": "tuple_term",
-          "named": true
-        },
-        {
-          "type": "xor_term",
           "named": true
         }
       ]
@@ -5671,7 +4952,7 @@
     }
   },
   {
-    "type": "oracle_goal_ranking",
+    "type": "oracle_proof_method_ranking",
     "named": true,
     "fields": {},
     "children": {
@@ -5730,10 +5011,6 @@
           "named": true
         },
         {
-          "type": "exp_term",
-          "named": true
-        },
-        {
           "type": "fresh_name",
           "named": true
         },
@@ -5762,15 +5039,7 @@
           "named": true
         },
         {
-          "type": "mul_term",
-          "named": true
-        },
-        {
           "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
           "named": true
         },
         {
@@ -5835,10 +5104,6 @@
         },
         {
           "type": "tuple_term",
-          "named": true
-        },
-        {
-          "type": "xor_term",
           "named": true
         }
       ]
@@ -5919,10 +5184,6 @@
           "named": true
         },
         {
-          "type": "exp_term",
-          "named": true
-        },
-        {
           "type": "fresh_name",
           "named": true
         },
@@ -5939,15 +5200,7 @@
           "named": true
         },
         {
-          "type": "mul_term",
-          "named": true
-        },
-        {
           "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
           "named": true
         },
         {
@@ -5972,10 +5225,6 @@
         },
         {
           "type": "tuple_term",
-          "named": true
-        },
-        {
-          "type": "xor_term",
           "named": true
         }
       ]
@@ -6118,7 +5367,7 @@
     }
   },
   {
-    "type": "premise_goal",
+    "type": "premise_constraint",
     "named": true,
     "fields": {},
     "children": {
@@ -6176,7 +5425,7 @@
       "required": true,
       "types": [
         {
-          "type": "standard_goal_ranking",
+          "type": "standard_proof_method_ranking",
           "named": true
         }
       ]
@@ -6493,7 +5742,7 @@
       "required": false,
       "types": [
         {
-          "type": "goal",
+          "type": "constraint",
           "named": true
         }
       ]
@@ -6743,10 +5992,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -6763,15 +6008,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -6796,10 +6033,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -7041,10 +6274,6 @@
           "named": true
         },
         {
-          "type": "exp_term",
-          "named": true
-        },
-        {
           "type": "fresh_name",
           "named": true
         },
@@ -7073,15 +6302,7 @@
           "named": true
         },
         {
-          "type": "mul_term",
-          "named": true
-        },
-        {
           "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
           "named": true
         },
         {
@@ -7146,10 +6367,6 @@
         },
         {
           "type": "tuple_term",
-          "named": true
-        },
-        {
-          "type": "xor_term",
           "named": true
         }
       ]
@@ -7465,10 +6682,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -7485,15 +6698,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -7518,10 +6723,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -7604,10 +6805,6 @@
           "named": true
         },
         {
-          "type": "exp_term",
-          "named": true
-        },
-        {
           "type": "fresh_name",
           "named": true
         },
@@ -7636,15 +6833,7 @@
           "named": true
         },
         {
-          "type": "mul_term",
-          "named": true
-        },
-        {
           "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_term",
           "named": true
         },
         {
@@ -7710,10 +6899,6 @@
         {
           "type": "tuple_term",
           "named": true
-        },
-        {
-          "type": "xor_term",
-          "named": true
         }
       ]
     }
@@ -7743,10 +6928,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -7763,15 +6944,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -7796,10 +6969,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -7825,10 +6994,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -7845,15 +7010,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -7878,10 +7035,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -8071,10 +7224,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -8091,15 +7240,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -8124,10 +7265,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -8153,10 +7290,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -8173,15 +7306,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -8206,10 +7331,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -8244,7 +7365,7 @@
     }
   },
   {
-    "type": "tactic_goal_ranking",
+    "type": "tactic_proof_method_ranking",
     "named": true,
     "fields": {},
     "children": {
@@ -8376,10 +7497,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -8396,15 +7513,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -8429,10 +7538,6 @@
           },
           {
             "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -8458,10 +7563,6 @@
             "named": true
           },
           {
-            "type": "exp_term",
-            "named": true
-          },
-          {
             "type": "fresh_name",
             "named": true
           },
@@ -8478,15 +7579,7 @@
             "named": true
           },
           {
-            "type": "mul_term",
-            "named": true
-          },
-          {
             "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
             "named": true
           },
           {
@@ -8512,10 +7605,6 @@
           {
             "type": "tuple_term",
             "named": true
-          },
-          {
-            "type": "xor_term",
-            "named": true
           }
         ]
       }
@@ -8524,6 +7613,7 @@
   {
     "type": "theory",
     "named": true,
+    "root": true,
     "fields": {
       "theory_name": {
         "multiple": false,
@@ -8649,79 +7739,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
             "named": true
           }
         ]
@@ -8752,79 +7770,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
+            "type": "mult_term",
             "named": true
           }
         ]
@@ -8834,79 +7780,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "exp_term",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "mul_term",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_term",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
-            "named": true
-          },
-          {
-            "type": "xor_term",
+            "type": "mult_term",
             "named": true
           }
         ]
@@ -9442,7 +8316,7 @@
     "named": false
   },
   {
-    "type": "nonAbsurdGoal",
+    "type": "nonAbsurdConstraint",
     "named": false
   },
   {
@@ -9602,7 +8476,7 @@
     "named": false
   },
   {
-    "type": "standard_goal_ranking",
+    "type": "standard_proof_method_ranking",
     "named": true
   },
   {

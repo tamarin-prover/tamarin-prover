@@ -1,4 +1,5 @@
 {
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/grammar.schema.json",
   "name": "spthy",
   "word": "ident",
   "rules": {
@@ -1018,39 +1019,39 @@
         },
         {
           "type": "FIELD",
-          "name": "goal_ranking",
+          "name": "proof_method_ranking",
           "content": {
             "type": "REPEAT1",
             "content": {
               "type": "SYMBOL",
-              "name": "_goal_ranking"
+              "name": "_proof_method_ranking"
             }
           }
         }
       ]
     },
-    "_goal_ranking": {
+    "_proof_method_ranking": {
       "type": "CHOICE",
       "members": [
         {
           "type": "SYMBOL",
-          "name": "standard_goal_ranking"
+          "name": "standard_proof_method_ranking"
         },
         {
           "type": "SYMBOL",
-          "name": "oracle_goal_ranking"
+          "name": "oracle_proof_method_ranking"
         },
         {
           "type": "SYMBOL",
-          "name": "tactic_goal_ranking"
+          "name": "tactic_proof_method_ranking"
         }
       ]
     },
-    "standard_goal_ranking": {
+    "standard_proof_method_ranking": {
       "type": "PATTERN",
       "value": "[CISPcisp][CISPcisp]?[CISPcisp]?[CISPcisp]?"
     },
-    "oracle_goal_ranking": {
+    "oracle_proof_method_ranking": {
       "type": "SEQ",
       "members": [
         {
@@ -1093,7 +1094,7 @@
         }
       ]
     },
-    "tactic_goal_ranking": {
+    "tactic_proof_method_ranking": {
       "type": "SEQ",
       "members": [
         {
@@ -1195,7 +1196,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "standard_goal_ranking"
+          "name": "standard_proof_method_ranking"
         }
       ]
     },
@@ -1440,7 +1441,7 @@
         },
         {
           "type": "STRING",
-          "value": "nonAbsurdGoal"
+          "value": "nonAbsurdConstraint"
         }
       ]
     },
@@ -2079,13 +2080,8 @@
             "name": "_process"
           },
           {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "STRING",
-                "value": "+"
-              }
-            ]
+            "type": "STRING",
+            "value": "+"
           },
           {
             "type": "SYMBOL",
@@ -3695,12 +3691,12 @@
             },
             {
               "type": "FIELD",
-              "name": "goal_ranking",
+              "name": "proof_method_ranking",
               "content": {
                 "type": "REPEAT1",
                 "content": {
                   "type": "SYMBOL",
-                  "name": "_goal_ranking"
+                  "name": "_proof_method_ranking"
                 }
               }
             }
@@ -4172,7 +4168,7 @@
             },
             {
               "type": "SYMBOL",
-              "name": "goal"
+              "name": "constraint"
             },
             {
               "type": "STRING",
@@ -4223,32 +4219,32 @@
         }
       ]
     },
-    "goal": {
+    "constraint": {
       "type": "CHOICE",
       "members": [
         {
           "type": "SYMBOL",
-          "name": "premise_goal"
+          "name": "premise_constraint"
         },
         {
           "type": "SYMBOL",
-          "name": "action_goal"
+          "name": "action_constraint"
         },
         {
           "type": "SYMBOL",
-          "name": "chain_goal"
+          "name": "chain_constraint"
         },
         {
           "type": "SYMBOL",
-          "name": "disjunction_split_goal"
+          "name": "disjunction_split_constraint"
         },
         {
           "type": "SYMBOL",
-          "name": "eq_split_goal"
+          "name": "eq_split_constraint"
         }
       ]
     },
-    "premise_goal": {
+    "premise_constraint": {
       "type": "SEQ",
       "members": [
         {
@@ -4269,24 +4265,41 @@
         }
       ]
     },
-    "action_goal": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "_fact"
-        },
-        {
-          "type": "STRING",
-          "value": "@"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "temporal_var"
-        }
-      ]
+    "action_constraint": {
+      "type": "PREC",
+      "value": "ATOM",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "fact",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_fact"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "@"
+          },
+          {
+            "type": "FIELD",
+            "name": "variable",
+            "content": {
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "temporal_var_optional_prefix"
+              },
+              "named": true,
+              "value": "temporal_var"
+            }
+          }
+        ]
+      }
     },
-    "chain_goal": {
+    "chain_constraint": {
       "type": "SEQ",
       "members": [
         {
@@ -4335,9 +4348,9 @@
         }
       ]
     },
-    "disjunction_split_goal": {
+    "disjunction_split_constraint": {
       "type": "PREC",
-      "value": "CHAIN_GOAL",
+      "value": "CHAIN_CONSTRAINT",
       "content": {
         "type": "SEQ",
         "members": [
@@ -4381,7 +4394,7 @@
         ]
       }
     },
-    "eq_split_goal": {
+    "eq_split_constraint": {
       "type": "SEQ",
       "members": [
         {
@@ -4412,22 +4425,6 @@
         {
           "type": "SYMBOL",
           "name": "mset_term"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "nat_term"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "xor_term"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "mul_term"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "exp_term"
         },
         {
           "type": "SYMBOL",
@@ -4469,7 +4466,7 @@
               "members": [
                 {
                   "type": "SYMBOL",
-                  "name": "_term"
+                  "name": "mset_term"
                 }
               ]
             }
@@ -4488,7 +4485,7 @@
                   "name": "term",
                   "content": {
                     "type": "SYMBOL",
-                    "name": "_term"
+                    "name": "mset_term"
                   }
                 }
               ]
@@ -4512,7 +4509,7 @@
             "name": "left",
             "content": {
               "type": "SYMBOL",
-              "name": "_term"
+              "name": "nat_term"
             }
           },
           {
@@ -4533,7 +4530,7 @@
             "name": "right",
             "content": {
               "type": "SYMBOL",
-              "name": "_term"
+              "name": "nat_term"
             }
           }
         ]
@@ -4550,7 +4547,7 @@
             "name": "left",
             "content": {
               "type": "SYMBOL",
-              "name": "_term"
+              "name": "xor_term"
             }
           },
           {
@@ -4562,7 +4559,7 @@
             "name": "right",
             "content": {
               "type": "SYMBOL",
-              "name": "_term"
+              "name": "xor_term"
             }
           }
         ]
@@ -4579,7 +4576,7 @@
             "name": "left",
             "content": {
               "type": "SYMBOL",
-              "name": "_term"
+              "name": "mult_term"
             }
           },
           {
@@ -4600,13 +4597,13 @@
             "name": "right",
             "content": {
               "type": "SYMBOL",
-              "name": "_term"
+              "name": "mult_term"
             }
           }
         ]
       }
     },
-    "mul_term": {
+    "mult_term": {
       "type": "PREC_LEFT",
       "value": "MULTIPLY",
       "content": {
@@ -4617,7 +4614,7 @@
             "name": "left",
             "content": {
               "type": "SYMBOL",
-              "name": "_term"
+              "name": "exp_term"
             }
           },
           {
@@ -4629,7 +4626,7 @@
             "name": "right",
             "content": {
               "type": "SYMBOL",
-              "name": "_term"
+              "name": "exp_term"
             }
           }
         ]
@@ -4665,8 +4662,8 @@
       }
     },
     "nested_term": {
-      "type": "PREC",
-      "value": "NESTED",
+      "type": "PREC_LEFT",
+      "value": 1,
       "content": {
         "type": "SEQ",
         "members": [
@@ -4676,7 +4673,7 @@
           },
           {
             "type": "SYMBOL",
-            "name": "_term"
+            "name": "mset_term"
           },
           {
             "type": "STRING",
@@ -5931,40 +5928,6 @@
         ]
       }
     },
-    "action_constraint": {
-      "type": "PREC",
-      "value": "ATOM",
-      "content": {
-        "type": "SEQ",
-        "members": [
-          {
-            "type": "FIELD",
-            "name": "fact",
-            "content": {
-              "type": "SYMBOL",
-              "name": "_fact"
-            }
-          },
-          {
-            "type": "STRING",
-            "value": "@"
-          },
-          {
-            "type": "FIELD",
-            "name": "variable",
-            "content": {
-              "type": "ALIAS",
-              "content": {
-                "type": "SYMBOL",
-                "name": "temporal_var_optional_prefix"
-              },
-              "named": true,
-              "value": "temporal_var"
-            }
-          }
-        ]
-      }
-    },
     "term_eq": {
       "type": "PREC",
       "value": "ATOM",
@@ -6237,7 +6200,7 @@
     },
     "ident": {
       "type": "PATTERN",
-      "value": "[A-Za-z0-9]\\w*"
+      "value": "[A-Za-z0-9][a-zA-Z0-9_*]*"
     },
     "param": {
       "type": "PATTERN",
@@ -6355,9 +6318,6 @@
       "fresh_var"
     ],
     [
-      "msg_var_or_nullary_fun"
-    ],
-    [
       "temporal_var"
     ],
     [
@@ -6375,14 +6335,6 @@
       "fresh_var",
       "msg_var_or_nullary_fun",
       "nat_var"
-    ],
-    [
-      "accountability_lemma",
-      "diff_lemma"
-    ],
-    [
-      "lemma",
-      "diff_lemma"
     ],
     [
       "nary_app",
@@ -6462,7 +6414,7 @@
       },
       {
         "type": "STRING",
-        "value": "CHAIN_GOAL"
+        "value": "CHAIN_CONSTRAINT"
       }
     ],
     [

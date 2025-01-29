@@ -16,13 +16,9 @@ module.exports = grammar({
   conflicts: $ => [
       // Conflict between quantifiers and variables:
       // e.g. ∀ msg_var #temp_var.5. T
-      [$.pub_var], [$.fresh_var], [$.msg_var_or_nullary_fun], [$.temporal_var], [$.nat_var],
+      [$.pub_var], [$.fresh_var], [$.temporal_var], [$.nat_var],
       [$.pub_var, $.fresh_var, $.msg_var_or_nullary_fun, $.temporal_var, $.nat_var],
       [$.pub_var, $.fresh_var, $.msg_var_or_nullary_fun, $.nat_var],
-
-      // All Lemmas can use just 'lemma' as a keyword
-      [$.accountability_lemma, $.diff_lemma],
-      [$.lemma, $.diff_lemma],
 
       // Conflict since both look alike, but they don't appear in the same scenarios.
       [$.nary_app, $.predicate_ref],
@@ -71,7 +67,7 @@ module.exports = grammar({
           'PROCESS_LET',
           'LOOKUP',
           'CONDITIONAL'
-      ]
+      ],
   ],
 
   word: $ => $.ident,
@@ -542,7 +538,7 @@ module.exports = grammar({
 
       non_deterministic_choice: $ => prec.left('CHOICE', seq(
           $._process,
-          choice('+'),
+          '+',
           $._process
       )),
 
@@ -1106,7 +1102,7 @@ module.exports = grammar({
           field('exponent', $._term)
       )),
 
-      nested_term: $ => prec('NESTED', seq(
+      nested_term: $ => prec.left(1, seq(
           '(', $.mset_term, ')'
       )),
 
