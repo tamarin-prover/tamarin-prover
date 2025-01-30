@@ -261,67 +261,11 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
             "named": true
           },
           {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
             "type": "temporal_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -342,63 +286,11 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
+            "type": "arguments",
             "named": true
           },
           {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -1261,27 +1153,11 @@
       "required": true,
       "types": [
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
           "type": "binding",
           "named": true
         },
         {
-          "type": "comp_var",
-          "named": true
-        },
-        {
           "type": "conditional",
-          "named": true
-        },
-        {
-          "type": "custom_var",
           "named": true
         },
         {
@@ -1294,14 +1170,6 @@
         },
         {
           "type": "event",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
           "named": true
         },
         {
@@ -1321,31 +1189,11 @@
           "named": true
         },
         {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
-          "type": "nested_term",
-          "named": true
-        },
-        {
           "type": "non_deterministic_choice",
           "named": true
         },
         {
           "type": "null",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
           "named": true
         },
         {
@@ -1358,14 +1206,6 @@
         },
         {
           "type": "process_let",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
           "named": true
         },
         {
@@ -1386,10 +1226,6 @@
         },
         {
           "type": "set_state",
-          "named": true
-        },
-        {
-          "type": "tuple_term",
           "named": true
         }
       ]
@@ -2034,19 +1870,7 @@
           "named": true
         },
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
           "type": "atom",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
-          "type": "comp_var",
           "named": true
         },
         {
@@ -2054,19 +1878,7 @@
           "named": true
         },
         {
-          "type": "custom_var",
-          "named": true
-        },
-        {
           "type": "disjunction",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
           "named": true
         },
         {
@@ -2082,18 +1894,6 @@
           "named": true
         },
         {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
           "type": "negation",
           "named": true
         },
@@ -2102,27 +1902,11 @@
           "named": true
         },
         {
-          "type": "nested_term",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
-          "named": true
-        },
-        {
           "type": "pre_defined",
           "named": true
         },
         {
           "type": "predicate_ref",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
           "named": true
         },
         {
@@ -2148,10 +1932,6 @@
         {
           "type": "term_eq",
           "named": true
-        },
-        {
-          "type": "tuple_term",
-          "named": true
         }
       ]
     }
@@ -2165,63 +1945,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -2231,63 +1955,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -2611,10 +2279,6 @@
             "named": true
           },
           {
-            "type": "mset_term",
-            "named": true
-          },
-          {
             "type": "msg_var_or_nullary_fun",
             "named": true
           },
@@ -2649,8 +2313,8 @@
         ]
       },
       "exponent": {
-        "multiple": false,
-        "required": true,
+        "multiple": true,
+        "required": false,
         "types": [
           {
             "type": "any_var",
@@ -2674,10 +2338,6 @@
           },
           {
             "type": "fresh_var",
-            "named": true
-          },
-          {
-            "type": "mset_term",
             "named": true
           },
           {
@@ -3593,27 +3253,11 @@
       "required": true,
       "types": [
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
           "type": "binding",
           "named": true
         },
         {
-          "type": "comp_var",
-          "named": true
-        },
-        {
           "type": "conditional",
-          "named": true
-        },
-        {
-          "type": "custom_var",
           "named": true
         },
         {
@@ -3626,14 +3270,6 @@
         },
         {
           "type": "event",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
           "named": true
         },
         {
@@ -3653,31 +3289,11 @@
           "named": true
         },
         {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
-          "type": "nested_term",
-          "named": true
-        },
-        {
           "type": "non_deterministic_choice",
           "named": true
         },
         {
           "type": "null",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
           "named": true
         },
         {
@@ -3690,14 +3306,6 @@
         },
         {
           "type": "process_let",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
           "named": true
         },
         {
@@ -3718,10 +3326,6 @@
         },
         {
           "type": "set_state",
-          "named": true
-        },
-        {
-          "type": "tuple_term",
           "named": true
         }
       ]
@@ -3909,63 +3513,7 @@
       "required": true,
       "types": [
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
-          "type": "comp_var",
-          "named": true
-        },
-        {
-          "type": "custom_var",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
-          "named": true
-        },
-        {
           "type": "mset_term",
-          "named": true
-        },
-        {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
-          "type": "nested_term",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
-          "named": true
-        },
-        {
-          "type": "tuple_term",
           "named": true
         }
       ]
@@ -3980,63 +3528,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -4300,63 +3792,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -4466,8 +3902,8 @@
         ]
       },
       "right": {
-        "multiple": false,
-        "required": true,
+        "multiple": true,
+        "required": false,
         "types": [
           {
             "type": "nat_term",
@@ -4504,7 +3940,7 @@
     }
   },
   {
-    "type": "mult_term",
+    "type": "mul_term",
     "named": true,
     "fields": {
       "left": {
@@ -4518,8 +3954,8 @@
         ]
       },
       "right": {
-        "multiple": false,
-        "required": true,
+        "multiple": true,
+        "required": false,
         "types": [
           {
             "type": "exp_term",
@@ -4570,8 +4006,8 @@
         ]
       },
       "right": {
-        "multiple": false,
-        "required": true,
+        "multiple": true,
+        "required": false,
         "types": [
           {
             "type": "xor_term",
@@ -4975,27 +4411,11 @@
       "required": true,
       "types": [
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
           "type": "binding",
           "named": true
         },
         {
-          "type": "comp_var",
-          "named": true
-        },
-        {
           "type": "conditional",
-          "named": true
-        },
-        {
-          "type": "custom_var",
           "named": true
         },
         {
@@ -5008,14 +4428,6 @@
         },
         {
           "type": "event",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
           "named": true
         },
         {
@@ -5035,31 +4447,11 @@
           "named": true
         },
         {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
-          "type": "nested_term",
-          "named": true
-        },
-        {
           "type": "non_deterministic_choice",
           "named": true
         },
         {
           "type": "null",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
           "named": true
         },
         {
@@ -5072,14 +4464,6 @@
         },
         {
           "type": "process_let",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
           "named": true
         },
         {
@@ -5100,10 +4484,6 @@
         },
         {
           "type": "set_state",
-          "named": true
-        },
-        {
-          "type": "tuple_term",
           "named": true
         }
       ]
@@ -5168,63 +4548,7 @@
       "required": true,
       "types": [
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
-          "type": "comp_var",
-          "named": true
-        },
-        {
-          "type": "custom_var",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
-          "named": true
-        },
-        {
           "type": "mset_term",
-          "named": true
-        },
-        {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
-          "type": "nested_term",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
-          "named": true
-        },
-        {
-          "type": "tuple_term",
           "named": true
         }
       ]
@@ -5976,63 +5300,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -6238,27 +5506,11 @@
       "required": true,
       "types": [
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
           "type": "binding",
           "named": true
         },
         {
-          "type": "comp_var",
-          "named": true
-        },
-        {
           "type": "conditional",
-          "named": true
-        },
-        {
-          "type": "custom_var",
           "named": true
         },
         {
@@ -6271,14 +5523,6 @@
         },
         {
           "type": "event",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
           "named": true
         },
         {
@@ -6298,31 +5542,11 @@
           "named": true
         },
         {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
-          "type": "nested_term",
-          "named": true
-        },
-        {
           "type": "non_deterministic_choice",
           "named": true
         },
         {
           "type": "null",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
           "named": true
         },
         {
@@ -6335,14 +5559,6 @@
         },
         {
           "type": "process_let",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
           "named": true
         },
         {
@@ -6363,10 +5579,6 @@
         },
         {
           "type": "set_state",
-          "named": true
-        },
-        {
-          "type": "tuple_term",
           "named": true
         }
       ]
@@ -6666,63 +5878,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -6769,27 +5925,11 @@
       "required": true,
       "types": [
         {
-          "type": "any_var",
-          "named": true
-        },
-        {
-          "type": "binary_app",
-          "named": true
-        },
-        {
           "type": "binding",
           "named": true
         },
         {
-          "type": "comp_var",
-          "named": true
-        },
-        {
           "type": "conditional",
-          "named": true
-        },
-        {
-          "type": "custom_var",
           "named": true
         },
         {
@@ -6802,14 +5942,6 @@
         },
         {
           "type": "event",
-          "named": true
-        },
-        {
-          "type": "fresh_name",
-          "named": true
-        },
-        {
-          "type": "fresh_var",
           "named": true
         },
         {
@@ -6829,31 +5961,11 @@
           "named": true
         },
         {
-          "type": "msg_var_or_nullary_fun",
-          "named": true
-        },
-        {
-          "type": "nary_app",
-          "named": true
-        },
-        {
-          "type": "nat_var",
-          "named": true
-        },
-        {
-          "type": "nested_term",
-          "named": true
-        },
-        {
           "type": "non_deterministic_choice",
           "named": true
         },
         {
           "type": "null",
-          "named": true
-        },
-        {
-          "type": "nullary_fun",
           "named": true
         },
         {
@@ -6866,14 +5978,6 @@
         },
         {
           "type": "process_let",
-          "named": true
-        },
-        {
-          "type": "pub_name",
-          "named": true
-        },
-        {
-          "type": "pub_var",
           "named": true
         },
         {
@@ -6895,10 +5999,6 @@
         {
           "type": "set_state",
           "named": true
-        },
-        {
-          "type": "tuple_term",
-          "named": true
         }
       ]
     }
@@ -6912,63 +6012,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -6978,63 +6022,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -7208,63 +6196,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -7274,63 +6206,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -7481,63 +6357,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -7547,63 +6367,7 @@
         "required": true,
         "types": [
           {
-            "type": "any_var",
-            "named": true
-          },
-          {
-            "type": "binary_app",
-            "named": true
-          },
-          {
-            "type": "comp_var",
-            "named": true
-          },
-          {
-            "type": "custom_var",
-            "named": true
-          },
-          {
-            "type": "fresh_name",
-            "named": true
-          },
-          {
-            "type": "fresh_var",
-            "named": true
-          },
-          {
             "type": "mset_term",
-            "named": true
-          },
-          {
-            "type": "msg_var_or_nullary_fun",
-            "named": true
-          },
-          {
-            "type": "nary_app",
-            "named": true
-          },
-          {
-            "type": "nat_var",
-            "named": true
-          },
-          {
-            "type": "nested_term",
-            "named": true
-          },
-          {
-            "type": "nullary_fun",
-            "named": true
-          },
-          {
-            "type": "pub_name",
-            "named": true
-          },
-          {
-            "type": "pub_var",
-            "named": true
-          },
-          {
-            "type": "tuple_term",
             "named": true
           }
         ]
@@ -7734,9 +6498,19 @@
     "type": "tuple_term",
     "named": true,
     "fields": {
-      "term": {
-        "multiple": true,
+      "left": {
+        "multiple": false,
         "required": true,
+        "types": [
+          {
+            "type": "mset_term",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": false,
         "types": [
           {
             "type": "mset_term",
@@ -7770,17 +6544,17 @@
         "required": true,
         "types": [
           {
-            "type": "mult_term",
+            "type": "mul_term",
             "named": true
           }
         ]
       },
       "right": {
-        "multiple": false,
-        "required": true,
+        "multiple": true,
+        "required": false,
         "types": [
           {
-            "type": "mult_term",
+            "type": "mul_term",
             "named": true
           }
         ]
