@@ -1,0 +1,28 @@
+{
+  "grammars": [
+    {
+      "name": "spthy",
+      "camelcase": "Spthy",
+      "scope": "source.spthy",
+      "path": ".",
+      "file-types": null,
+      "injection-regex": "^spthy$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Spthy grammar for tree-sitter",
+    "links": {
+      "repository": "https://github.com/tamarin-prover/tamarin-prover/tree-sitter/tree-sitter-spthy"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true
+  }
+}
