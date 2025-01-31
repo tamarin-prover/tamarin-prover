@@ -109,7 +109,7 @@ deprio = do
 tactic :: Bool -> Parser (Tactic ProofContext)
 tactic diff = do
     tName <- tacticName
-    presort <- option (SmartRanking diff) (selectedPreSort diff)
+    presort <- if diff then option SmartDiffRanking (selectedPreSort diff) else option (SmartRanking False) (selectedPreSort diff)
     prios <- option [] $ many1 prio
     deprios <- option [] $ many1 deprio
     return $ Tactic tName presort prios deprios
