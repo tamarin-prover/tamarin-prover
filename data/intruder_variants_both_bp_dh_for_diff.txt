@@ -1,17 +1,14 @@
-maude tool: 'maude'
- checking version: 2.7.1. OK.
- checking installation: OK.
 rule (modulo AC) c_exp:
    [ !KU( x ), !KU( x.1 ) ] --[ !KU( x^x.1 ) ]-> [ !KU( x^x.1 ) ]
 
 rule (modulo AC) c_inv:
    [ !KU( x ) ] --[ !KU( inv(x) ) ]-> [ !KU( inv(x) ) ]
 
-rule (modulo AC) c_one:
-   [ ] --[ !KU( one ) ]-> [ !KU( one ) ]
-
 rule (modulo AC) c_DH_neutral:
    [ ] --[ !KU( DH_neutral ) ]-> [ !KU( DH_neutral ) ]
+
+rule (modulo AC) c_one:
+   [ ] --[ !KU( one ) ]-> [ !KU( one ) ]
 
 rule (modulo AC) c_mult:
    [ !KU( x ), !KU( x.1 ) ] --[ !KU( (x*x.1) ) ]-> [ !KU( (x*x.1) ) ]

@@ -73,7 +73,8 @@ import Theory.Text.Pretty qualified as Pretty
 import Theory.Tools.AbstractInterpretation (EvaluationStyle(..))
 import Theory.Tools.IntruderRules
   ( specialIntruderRules, subtermIntruderRules
-  , multisetIntruderRules, xorIntruderRules )
+  , multisetIntruderRules, xorIntruderRules
+  , natIntruderRules )
 import Theory.Tools.MessageDerivationChecks
 import Theory.Tools.Wellformedness
 
@@ -104,7 +105,7 @@ theoryLoadFlags =
 
   ,  flagOpt (prettyGoalRanking $ head $ defaultRankings False)
       ["heuristic"] (updateArg "heuristic") ("(" ++ intercalate "|" (keys goalRankingIdentifiers) ++ ")+")
-      ("Sequence of goal rankings to use (default '" ++ prettyGoalRanking (head $ defaultRankings False) ++ "')")
+      ("Sequence of proof method rankings to use (default '" ++ prettyGoalRanking (head $ defaultRankings False) ++ "')")
 
   , flagOpt "summary" ["partial-evaluation"] (updateArg "partial-evaluation")
       "SUMMARY|VERBOSE"
@@ -660,6 +661,7 @@ addMessageDeductionRuleVariants thy0
   where
     msig  = thy0._thySignature._sigMaudeInfo
     rules = subtermIntruderRules False msig ++ specialIntruderRules False
+              ++ (if enableNat msig then natIntruderRules else [])
               ++ (if enableMSet msig then multisetIntruderRules else [])
               ++ (if enableXor msig then xorIntruderRules else [])
     thy   = addIntrRuleACsAfterTranslate rules thy0
@@ -677,6 +679,7 @@ addMessageDeductionRuleVariantsDiff thy0
   where
     msig        = thy0._diffThySignature._sigMaudeInfo
     rules diff' = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
+                   ++ (if enableNat msig then natIntruderRules else [])
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
     thy         = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0

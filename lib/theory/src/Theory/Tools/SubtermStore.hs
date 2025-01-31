@@ -126,7 +126,7 @@ addNegSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
 addNegSubterm st = modify negSubterms (S.insert st)
 
 -- | returns true if any of the subterms has a reducible operator on the top of the right side.
--- If this is the case when rankProofMethods is empty (i.e., no goals to solve) then the proof cannot be finished
+-- If this is the case when rankProofMethods is empty (i.e., no constraints to solve) then the proof cannot be finished
 hasReducibleOperatorsOnTop :: FunSig -> SubtermStore -> Bool
 hasReducibleOperatorsOnTop reducible sst = all (topIsNotReducible . snd) allSubterms
   where

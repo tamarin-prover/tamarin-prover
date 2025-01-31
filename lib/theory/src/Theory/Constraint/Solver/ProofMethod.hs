@@ -496,7 +496,7 @@ rankProofMethods ranking tactics ctxt sys =
       cs = contradictions ctxt sys
   in case rankedGoals of
     Ranking gs (Just ApplySorry)
-      | null cs && not (null gs) -> [(Sorry (Just "Oracle ranked no goals"), (M.empty, ""))]
+      | null cs && not (null gs) -> [(Sorry (Just "Oracle ranked no proof methods"), (M.empty, ""))]
     Ranking gs _ -> do
       (m, expl) <-
               (contradiction <$> cs)
@@ -546,7 +546,7 @@ rankDiffProofMethods ranking tactics ctxt sys = do
       Just cases -> return (m, (cases, expl))
       Nothing    -> []
 
--- | Smart constructor for heuristics. Schedules the goal rankings in a
+-- | Smart constructor for heuristics. Schedules the proof method rankings in a
 -- round-robin fashion dependent on the proof depth.
 roundRobinHeuristic :: [GoalRanking ProofContext] -> Heuristic ProofContext
 roundRobinHeuristic = Heuristic
@@ -684,7 +684,7 @@ internalTacticRanking tactic quitOnEmpty ctxt _sys ags0 = trace logMsg res
                      ++ inp
                      ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> START OUTPUT\n"
                      ++ prettyOut
-                     ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Oracle call\n"
+                     ++ "\n>>>>>>>>>>>>>>>>>>>>>>>> END Tactic call\n"
 
 -- | Utilities for SAPiC translations specifically 
 

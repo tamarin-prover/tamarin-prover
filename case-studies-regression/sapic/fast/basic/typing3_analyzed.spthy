@@ -26,24 +26,28 @@ heuristic: p
 
 
 
-rule (modulo E) newxlol_0_1[color=#ffffff, process="new x.1:lol;"]:
+rule (modulo E) newxlol_0_1[color=#ffffff, process="new x.1:lol;",
+                            issapicrule]:
    [ State_1( ), Fr( x.1 ) ] --> [ Out( x.1 ) ]
 
   /*
-  rule (modulo AC) newxlol_0_1[color=#ffffff, process="new x.1:lol;"]:
+  rule (modulo AC) newxlol_0_1[color=#ffffff, process="new x.1:lol;",
+                               issapicrule]:
      [ State_1( ), Fr( x ) ] --> [ Out( x ) ]
   */
 
-rule (modulo E) Init[color=#ffffff, process="|"]:
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule]:
    [ ] --[ Init( ) ]-> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newxlol_0_2[color=#ffffff, process="new x.2:lol;"]:
+rule (modulo E) newxlol_0_2[color=#ffffff, process="new x.2:lol;",
+                            issapicrule]:
    [ State_2( ), Fr( x.2 ) ] --> [ Out( x.2 ) ]
 
   /*
-  rule (modulo AC) newxlol_0_2[color=#ffffff, process="new x.2:lol;"]:
+  rule (modulo AC) newxlol_0_2[color=#ffffff, process="new x.2:lol;",
+                               issapicrule]:
      [ State_2( ), Fr( x ) ] --> [ Out( x ) ]
   */
 
@@ -55,17 +59,14 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:

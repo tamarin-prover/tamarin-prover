@@ -42,30 +42,32 @@ qed
 
 
 
-rule (modulo E) inc_0_11[color=#408051, process="in(c.1);"]:
+rule (modulo E) inc_0_11[color=#408051, process="in(c.1);", issapicrule]:
    [ State_11( ), In( c.1 ), Fr( a.1 ), In( <<a.1, 'test'>, 'toto'> ) ]
   --[ AcceptP( ) ]->
    [ ]
 
   /*
-  rule (modulo AC) inc_0_11[color=#408051, process="in(c.1);"]:
+  rule (modulo AC) inc_0_11[color=#408051, process="in(c.1);",
+                            issapicrule]:
      [ State_11( ), In( c ), Fr( a ), In( <<a, 'test'>, 'toto'> ) ]
     --[ AcceptP( ) ]->
      [ ]
   */
 
-rule (modulo E) Init[color=#ffffff, process="|"]:
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule]:
    [ ] --[ Init( ) ]-> [ State_21( ), State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inc_0_21[color=#408065, process="in(c.2);"]:
+rule (modulo E) inc_0_21[color=#408065, process="in(c.2);", issapicrule]:
    [ State_21( ), In( c.2 ), In( <<c.2, 'test'>, 'toto'> ) ]
   --[ AcceptQ( ) ]->
    [ ]
 
   /*
-  rule (modulo AC) inc_0_21[color=#408065, process="in(c.2);"]:
+  rule (modulo AC) inc_0_21[color=#408065, process="in(c.2);",
+                            issapicrule]:
      [ State_21( ), In( c ), In( <<c, 'test'>, 'toto'> ) ]
     --[ AcceptQ( ) ]->
      [ ]
@@ -79,17 +81,14 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -97,7 +96,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/match_new.spthy
 
   output:          examples/sapic/fast/basic/match_new.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.08s
   
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)

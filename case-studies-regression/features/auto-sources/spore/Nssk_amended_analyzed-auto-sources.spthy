@@ -870,8 +870,6 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
-
 lemma AUTO_typing [sources]:
   all-traces
   "(((⊤) ∧
@@ -1662,19 +1660,18 @@ next
   qed
 qed
 
+/* All wellformedness checks were successful. */
+
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -1682,7 +1679,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Nssk_amended.spthy
 
   output:          examples/features/auto-sources/spore/Nssk_amended.spthy.tmp
-  processing time: 5.55s
+  processing time: 6.35s
   
   executability (exists-trace): verified (14 steps)
   Secrecy (all-traces): verified (10 steps)
