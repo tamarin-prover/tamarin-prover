@@ -14,7 +14,7 @@ jobs:
       - name: Installation of dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install graphviz
+          sudo apt-get install graphviz tree-sitter-cli
 
       - name: Caching
         uses: actions/cache@v2
@@ -83,3 +83,12 @@ jobs:
         with:
           name: case-studies
           path: case-studies
+
+      - name: Generate tree-sitter-spthy bindings
+        working-directory: tree-sitter/tree-sitter-spthy
+        run: tree-sitter generate
+
+      - name: Regression tests for tree-sitter-spthy
+        working-directory: tree-sitter/tree-sitter-spthy
+        run: ./regressionParser.sh
+          
