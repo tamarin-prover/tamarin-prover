@@ -280,10 +280,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.11.0
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -295,7 +295,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-1.spthy
 
   output:          examples/regression/diff/issue198-1.spthy.tmp
-  processing time: 0.32s
+  processing time: 0.20s
   
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 

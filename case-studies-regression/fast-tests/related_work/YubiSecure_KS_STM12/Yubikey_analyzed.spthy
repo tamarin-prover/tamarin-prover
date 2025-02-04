@@ -171,7 +171,6 @@ induction
   by contradiction
 next
   case non_empty_trace
-  simplify
   solve( (∀ pid otc1 tc1 otc2 tc2 #t1 #t2.
            (LoginCounter( pid, otc1, tc1 ) @ #t1) ∧
            (LoginCounter( pid, otc2, tc2 ) @ #t2)
@@ -195,9 +194,6 @@ next
       solve( Server( pid, sid, otc1 ) ▶₀ #t1 )
         case BuyANewYubikey
         solve( Server( ~pid, ~sid, otc2 ) ▶₀ #t2 )
-          case 
-          by sorry /* unannotated */
-        next
           case BuyANewYubikey
           by contradiction /* cyclic */
         next
@@ -488,9 +484,6 @@ next
       next
         case Server_ReceiveOTP_NewSession_case_1
         solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
-          case 
-          by sorry /* unannotated */
-        next
           case BuyANewYubikey
           by contradiction /* cyclic */
         next
@@ -639,9 +632,6 @@ next
       next
         case Server_ReceiveOTP_NewSession_case_2
         solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
-          case 
-          by sorry /* unannotated */
-        next
           case BuyANewYubikey
           by contradiction /* cyclic */
         next
@@ -898,9 +888,6 @@ next
       next
         case Server_ReceiveOTP_NewSession_case_3
         solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
-          case 
-          by sorry /* unannotated */
-        next
           case BuyANewYubikey
           by contradiction /* cyclic */
         next
@@ -1049,9 +1036,6 @@ next
       next
         case Server_ReceiveOTP_NewSession_case_4
         solve( Server( ~pid, sid, otc2 ) ▶₀ #t2 )
-          case 
-          by sorry /* unannotated */
-        next
           case BuyANewYubikey
           by contradiction /* cyclic */
         next
@@ -3774,10 +3758,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.11.0
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -3789,10 +3773,10 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 6.49s
+  processing time: 4.85s
   
   Login_reachable (exists-trace): verified (12 steps)
-  slightly_weaker_invariant (all-traces): verified (1141 steps)
+  slightly_weaker_invariant (all-traces): verified (1135 steps)
   no_replay (all-traces): verified (4 steps)
   injective_correspondance (all-traces): verified (23 steps)
   Login_invalidates_smaller_counters (all-traces): verified (4 steps)
