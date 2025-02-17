@@ -43,6 +43,7 @@ import Theory.Text.Parser.Fact
 import Theory.Text.Parser.Term
 import Theory.Text.Parser.Formula
 import Theory.Text.Parser.Exceptions
+import Debug.Trace (traceM)
 
 import Data.Label.Total
 import Data.Label.Mono (Lens)

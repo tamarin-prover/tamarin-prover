@@ -508,3 +508,4 @@ prettyLNFormula fm =
 prettySyntacticLNFormula :: HighlightDocument d => SyntacticLNFormula -> d
 prettySyntacticLNFormula fm =
     Precise.evalFresh (prettyLFormula prettySyntacticNAtom fm) (avoidPrecise fm)
+

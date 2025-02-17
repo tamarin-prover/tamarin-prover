@@ -164,5 +164,4 @@ prettyDiffLemma ppPrf lem =
 prettyTraceQuantifier :: Document d => TraceQuantifier -> d
 prettyTraceQuantifier ExistsTrace = text "exists-trace"
 prettyTraceQuantifier AllTraces   = text "all-traces"
-
 -- FIXME: Sort instances into the right files
