@@ -188,7 +188,7 @@ WARNING: the following wellformedness checks failed!
 Message Derivation Checks
 =========================
 
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
 Rule MessageIDRule: 
 Failed to derive Variable(s): ~mid_
@@ -221,9 +221,9 @@ Failed to derive Variable(s): ~prog_, n.1
 /*
 Generated from:
 Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Maude version 2.7.1
+Git revision: 6365cd62822fe636492db16d36606d765d0edc29 (with uncommited changes), branch: arcz-refactor-accountability
+Compiled at: 2025-02-17 09:19:21.354086 UTC
 */
 
 end

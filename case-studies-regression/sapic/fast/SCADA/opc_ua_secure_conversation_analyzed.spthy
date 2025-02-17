@@ -10238,7 +10238,7 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Message Derivation Checks
 =========================
 
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
 Rule MessageIDRule: 
 Failed to derive Variable(s): ~mid_
@@ -10340,9 +10340,9 @@ Failed to derive Variable(s): ~prog_1, a.1, b.1, kEnc.1, kSign.1
 /*
 Generated from:
 Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Maude version 2.7.1
+Git revision: 6365cd62822fe636492db16d36606d765d0edc29 (with uncommited changes), branch: arcz-refactor-accountability
+Compiled at: 2025-02-17 09:19:21.354086 UTC
 */
 
 end
@@ -10354,7 +10354,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 118.62s
+  processing time: 91.40s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
