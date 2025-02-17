@@ -43,11 +43,11 @@ rule (modulo E) testB:
 
 
 
-rule (modulo E) Init[color=#ffffff, process="in(x.1);"]:
+rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule]:
    [ In( x.1 ) ] --[ Init( ) ]-> [ State_1( x.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="in(x.1);"]:
+  rule (modulo AC) Init[color=#ffffff, process="in(x.1);", issapicrule]:
      [ In( x ) ] --[ Init( ) ]-> [ State_1( x ) ]
   */
 
@@ -55,11 +55,13 @@ restriction Restr_ifTruex_0_1_1:
   "∀ x #NOW. (Restr_ifTruex_0_1_1( x ) @ #NOW) ⇒ (x = true)"
   // safety formula
 
-rule (modulo E) ifTruex_0_1[color=#ffffff, process="if True( x.1 )"]:
+rule (modulo E) ifTruex_0_1[color=#ffffff, process="if True( x.1 )",
+                            issapicrule]:
    [ State_1( x.1 ) ] --[ Restr_ifTruex_0_1_1( x.1 ) ]-> [ State_11( x.1 ) ]
 
   /*
-  rule (modulo AC) ifTruex_0_1[color=#ffffff, process="if True( x.1 )"]:
+  rule (modulo AC) ifTruex_0_1[color=#ffffff, process="if True( x.1 )",
+                               issapicrule]:
      [ State_1( x ) ] --[ Restr_ifTruex_0_1_1( x ) ]-> [ State_11( x ) ]
   */
 
@@ -67,15 +69,15 @@ restriction Restr_ifTruetrue_0_11_1:
   "∀ #NOW. (Restr_ifTruetrue_0_11_1( ) @ #NOW) ⇒ (true = true)"
   // safety formula
 
-rule (modulo E) ifTruetrue_0_11[color=#ffffff,
-                                process="if True( true )"]:
+rule (modulo E) ifTruetrue_0_11[color=#ffffff, process="if True( true )",
+                                issapicrule]:
    [ State_11( x.1 ) ]
   --[ Restr_ifTruetrue_0_11_1( ) ]->
    [ State_111( x.1 ) ]
 
   /*
   rule (modulo AC) ifTruetrue_0_11[color=#ffffff,
-                                   process="if True( true )"]:
+                                   process="if True( true )", issapicrule]:
      [ State_11( x ) ] --[ Restr_ifTruetrue_0_11_1( ) ]-> [ State_111( x ) ]
   */
 
@@ -84,14 +86,14 @@ restriction Restr_ifTrueeqxx_0_111_1:
   // safety formula
 
 rule (modulo E) ifTrueeqxx_0_111[color=#ffffff,
-                                 process="if True( eq(x.1, x.1) )"]:
+                                 process="if True( eq(x.1, x.1) )", issapicrule]:
    [ State_111( x.1 ) ]
   --[ Restr_ifTrueeqxx_0_111_1( eq(x.1, x.1) ) ]->
    [ State_1111( x.1 ) ]
 
   /*
   rule (modulo AC) ifTrueeqxx_0_111[color=#ffffff,
-                                    process="if True( eq(x.1, x.1) )"]:
+                                    process="if True( eq(x.1, x.1) )", issapicrule]:
      [ State_111( x ) ]
     --[ Restr_ifTrueeqxx_0_111_1( true ) ]->
      [ State_1111( x ) ]
@@ -102,14 +104,14 @@ restriction Restr_ifTrueeqxtest_0_1111_1:
   // safety formula
 
 rule (modulo E) ifTrueeqxtest_0_1111[color=#ffffff,
-                                     process="if True( eq(x.1, 'test') )"]:
+                                     process="if True( eq(x.1, 'test') )", issapicrule]:
    [ State_1111( x.1 ) ]
   --[ Restr_ifTrueeqxtest_0_1111_1( eq(x.1, 'test') ) ]->
    [ State_11111( x.1 ) ]
 
   /*
   rule (modulo AC) ifTrueeqxtest_0_1111[color=#ffffff,
-                                        process="if True( eq(x.1, 'test') )"]:
+                                        process="if True( eq(x.1, 'test') )", issapicrule]:
      [ State_1111( x ) ]
     --[ Restr_ifTrueeqxtest_0_1111_1( z ) ]->
      [ State_11111( x ) ]
@@ -128,14 +130,14 @@ restriction Restr_ifAndeqxtesttrue_0_11111_1:
   // safety formula
 
 rule (modulo E) ifAndeqxtesttrue_0_11111[color=#ffffff,
-                                         process="if And2( eq(x.1, 'test'), true )"]:
+                                         process="if And2( eq(x.1, 'test'), true )", issapicrule]:
    [ State_11111( x.1 ) ]
   --[ Restr_ifAndeqxtesttrue_0_11111_1( eq(x.1, 'test') ) ]->
    [ State_111111( x.1 ) ]
 
   /*
   rule (modulo AC) ifAndeqxtesttrue_0_11111[color=#ffffff,
-                                            process="if And2( eq(x.1, 'test'), true )"]:
+                                            process="if And2( eq(x.1, 'test'), true )", issapicrule]:
      [ State_11111( x ) ]
     --[ Restr_ifAndeqxtesttrue_0_11111_1( z ) ]->
      [ State_111111( x ) ]
@@ -155,17 +157,14 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -173,7 +172,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/pub.spthy
 
   output:          examples/sapic/fast/feature-predicates/pub.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.10s
   
 
 ==============================================================================

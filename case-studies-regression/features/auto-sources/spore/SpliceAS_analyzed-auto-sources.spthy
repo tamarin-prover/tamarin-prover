@@ -571,27 +571,6 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule AS_send_key: 
-Failed to derive Variable(s): ~ltkY
-
-Rule C_to_S: 
-Failed to derive Variable(s): ~ltkAS
-
-Rule S_to_AS: 
-Failed to derive Variable(s): ltkC
-
-Rule S_to_C: 
-Failed to derive Variable(s): ~ltkAS
-*/
-
 lemma AUTO_typing [sources]:
   all-traces
   "((⊤) ∧
@@ -770,18 +749,36 @@ next
 qed
 
 /*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule AS_send_key: 
+Failed to derive Variable(s): ~ltkY
+
+Rule C_to_S: 
+Failed to derive Variable(s): ~ltkAS
+
+Rule S_to_AS: 
+Failed to derive Variable(s): ltkC
+
+Rule S_to_C: 
+Failed to derive Variable(s): ~ltkAS
+*/
+
+/*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -789,7 +786,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS.spthy.tmp
-  processing time: 4.24s
+  processing time: 5.47s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

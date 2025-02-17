@@ -112,19 +112,20 @@ restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'l'))"
   // safety formula
 
-rule (modulo E) ReportRule[color=#ffffff, process="!"]:
+rule (modulo E) ReportRule[color=#ffffff, process="!", issapicrule]:
    [ In( <x, loc> ) ]
   --[ Restr_ReportRule_1( loc ) ]->
    [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;"]:
+rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;",
+                              issapicrule]:
    [ State_11( ), Fr( state.1 ), Fr( StateChannel ) ]
   -->
    [
@@ -133,7 +134,8 @@ rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;"]:
    ]
 
   /*
-  rule (modulo AC) newstate_0_11[color=#ffffff, process="new state.1;"]:
+  rule (modulo AC) newstate_0_11[color=#ffffff, process="new state.1;",
+                                 issapicrule]:
      [ State_11( ), Fr( state ), Fr( StateChannel ) ]
     -->
      [
@@ -142,7 +144,7 @@ rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;"]:
      ]
   */
 
-rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11111[color=#ffffff, process="!", issapicrule]:
    [
    !Semistate_111111( StateChannel, state.1 ), L_PureState( state.1, st.1 ),
    Fr( lock )
@@ -154,7 +156,7 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_11111[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11111[color=#ffffff, process="!", issapicrule]:
      [
      !Semistate_111111( StateChannel, state ), L_PureState( state, st ),
      Fr( lock )
@@ -166,7 +168,8 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) inip_0_111111111[color=#408067, process="in(ip.1);"]:
+rule (modulo E) inip_0_111111111[color=#408067, process="in(ip.1);",
+                                 issapicrule]:
    [
    State_111111111( StateChannel, lock, st.1, state.1 ), In( ip.1 ),
    Fr( r.1 ), L_CellLocked( state.1, lock )
@@ -183,7 +186,8 @@ rule (modulo E) inip_0_111111111[color=#408067, process="in(ip.1);"]:
 
   // loop breakers: [0,3]
   /*
-  rule (modulo AC) inip_0_111111111[color=#408067, process="in(ip.1);"]:
+  rule (modulo AC) inip_0_111111111[color=#408067, process="in(ip.1);",
+                                    issapicrule]:
      [
      State_111111111( StateChannel, lock, st, state ), In( ip ), Fr( r ),
      L_CellLocked( state, lock )
@@ -204,12 +208,12 @@ rule (modulo E) inip_0_111111111[color=#408067, process="in(ip.1);"]:
     // loop breakers: [0,3]
   */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1( ) ] --> [ !Semistate_121( ), State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+rule (modulo E) p_1_12[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_121( ), Fr( state.2 ), Fr( StateChannel.1 ) ]
   -->
    [
@@ -218,7 +222,7 @@ rule (modulo E) p_1_12[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_12[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_12[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_121( ), Fr( state ), Fr( StateChannel ) ]
     -->
      [
@@ -227,7 +231,7 @@ rule (modulo E) p_1_12[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
+rule (modulo E) p_1_121111[color=#ffffff, process="!", issapicrule]:
    [
    !Semistate_1211111( StateChannel.1, state.2 ),
    L_PureState( state.2, st.2 ), Fr( lock.1 )
@@ -240,7 +244,7 @@ rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
 
   // loop breaker: [1]
   /*
-  rule (modulo AC) p_1_121111[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_121111[color=#ffffff, process="!", issapicrule]:
      [
      !Semistate_1211111( StateChannel, state ), L_PureState( state, st ),
      Fr( lock )
@@ -253,7 +257,8 @@ rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
     // loop breaker: [1]
   */
 
-rule (modulo E) inip_0_1211111111[color=#408052, process="in(ip.2);"]:
+rule (modulo E) inip_0_1211111111[color=#408052, process="in(ip.2);",
+                                  issapicrule]:
    [
    State_1211111111( StateChannel.1, lock.1, st.2, state.2 ), In( ip.2 ),
    In( <o.2, signedios.1> )
@@ -266,7 +271,8 @@ rule (modulo E) inip_0_1211111111[color=#408052, process="in(ip.2);"]:
    ]
 
   /*
-  rule (modulo AC) inip_0_1211111111[color=#408052, process="in(ip.2);"]:
+  rule (modulo AC) inip_0_1211111111[color=#408052, process="in(ip.2);",
+                                     issapicrule]:
      [
      State_1211111111( StateChannel, lock, st, state ), In( ip ),
      In( <o, signedios> )
@@ -276,7 +282,8 @@ rule (modulo E) inip_0_1211111111[color=#408052, process="in(ip.2);"]:
   */
 
 rule (modulo E) ifoipsndstcheckrepsignediosl_0_121111111111[color=#408052,
-                                                            process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')"]:
+                                                            process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')",
+                                                            issapicrule]:
    [
    State_121111111111( StateChannel.1, lock.1, signedios.1, ip.2, o.2, st.2,
                        state.2
@@ -291,7 +298,8 @@ rule (modulo E) ifoipsndstcheckrepsignediosl_0_121111111111[color=#408052,
 
   /*
   rule (modulo AC) ifoipsndstcheckrepsignediosl_0_121111111111[color=#408052,
-                                                               process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')"]:
+                                                               process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')",
+                                                               issapicrule]:
      [ State_121111111111( StateChannel, lock, signedios, ip, o, st, state ) ]
     --[ Pred_Eq( <o, ip, z>, z.1 ) ]->
      [ State_1211111111111( StateChannel, lock, signedios, ip, o, st, state )
@@ -323,7 +331,8 @@ rule (modulo E) ifoipsndstcheckrepsignediosl_0_121111111111[color=#408052,
   */
 
 rule (modulo E) eventVoutputoipfstst_0_1211111111111[color=#408052,
-                                                     process="event Voutput( <o.2, ip.2, fst(st.2)> );"]:
+                                                     process="event Voutput( <o.2, ip.2, fst(st.2)> );",
+                                                     issapicrule]:
    [
    State_1211111111111( StateChannel.1, lock.1, signedios.1, ip.2, o.2,
                         st.2, state.2
@@ -337,7 +346,8 @@ rule (modulo E) eventVoutputoipfstst_0_1211111111111[color=#408052,
   // loop breaker: [1]
   /*
   rule (modulo AC) eventVoutputoipfstst_0_1211111111111[color=#408052,
-                                                        process="event Voutput( <o.2, ip.2, fst(st.2)> );"]:
+                                                        process="event Voutput( <o.2, ip.2, fst(st.2)> );",
+                                                        issapicrule]:
      [
      State_1211111111111( StateChannel, lock, signedios, ip, o, st, state ),
      L_CellLocked( state, lock )
@@ -356,7 +366,8 @@ rule (modulo E) eventVoutputoipfstst_0_1211111111111[color=#408052,
   */
 
 rule (modulo E) ifoipsndstcheckrepsignediosl_1_121111111111[color=#408052,
-                                                            process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')"]:
+                                                            process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')",
+                                                            issapicrule]:
    [
    State_121111111111( StateChannel.1, lock.1, signedios.1, ip.2, o.2, st.2,
                        state.2
@@ -372,7 +383,8 @@ rule (modulo E) ifoipsndstcheckrepsignediosl_1_121111111111[color=#408052,
 
   /*
   rule (modulo AC) ifoipsndstcheckrepsignediosl_1_121111111111[color=#408052,
-                                                               process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')"]:
+                                                               process="if <o.2, ip.2, snd(st.2)>=check_rep(signedios.1, 'l')",
+                                                               issapicrule]:
      [ State_121111111111( StateChannel, lock, signedios, ip, o, st, state ) ]
     --[ Pred_Not_Eq( <o, ip, z>, z.1 ) ]->
      [ State_1211111111112( StateChannel, lock, signedios, ip, o, st, state )
@@ -404,7 +416,7 @@ rule (modulo E) ifoipsndstcheckrepsignediosl_1_121111111111[color=#408052,
   */
 
 rule (modulo E) eventFail_0_1211111111112[color=#408052,
-                                          process="event Fail( );"]:
+                                          process="event Fail( );", issapicrule]:
    [
    State_1211111111112( StateChannel.1, lock.1, signedios.1, ip.2, o.2,
                         st.2, state.2
@@ -415,7 +427,7 @@ rule (modulo E) eventFail_0_1211111111112[color=#408052,
 
   /*
   rule (modulo AC) eventFail_0_1211111111112[color=#408052,
-                                             process="event Fail( );"]:
+                                             process="event Fail( );", issapicrule]:
      [ State_1211111111112( StateChannel, lock, signedios, ip, o, st, state )
      ]
     --[ Fail( ) ]->
@@ -438,17 +450,14 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -456,7 +465,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 2.36s
+  processing time: 2.44s
   
   attested_comput_second_step (all-traces): falsified - found trace (15 steps)
 

@@ -74,21 +74,21 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1( ), Fr( pki.1 ) ] --> [ !Semistate_111( pki.1 ) ]
 
   /*
-  rule (modulo AC) p_1_[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1( ), Fr( pki ) ] --> [ !Semistate_111( pki ) ]
   */
 
 rule (modulo E) innewuser_0_1111111[color=#408051,
-                                    process="in(<'new', user.1>);"]:
+                                    process="in(<'new', user.1>);", issapicrule]:
    [ State_1111111( pki.1 ), In( <'new', user.1> ), Fr( ~sk.1 ) ]
   --[ HonestKey( ~sk.1 ) ]->
    [
@@ -98,7 +98,7 @@ rule (modulo E) innewuser_0_1111111[color=#408051,
 
   /*
   rule (modulo AC) innewuser_0_1111111[color=#408051,
-                                       process="in(<'new', user.1>);"]:
+                                       process="in(<'new', user.1>);", issapicrule]:
      [ State_1111111( pki ), In( <'new', user> ), Fr( ~sk ) ]
     --[ HonestKey( ~sk ) ]->
      [ Out( pk(~sk) ), ServerDB( pki, user, pk(~sk) ), ClientKey( user, ~sk )
@@ -106,21 +106,21 @@ rule (modulo E) innewuser_0_1111111[color=#408051,
   */
 
 rule (modulo E) inusersk_0_1111112[color=#408051,
-                                   process="in(<user.2, sk.2>);"]:
+                                   process="in(<user.2, sk.2>);", issapicrule]:
    [ State_1111112( pki.1 ), In( <user.2, sk.2> ) ]
   -->
    [ ServerDB( pki.1, user.2, pk(sk.2) ) ]
 
   /*
   rule (modulo AC) inusersk_0_1111112[color=#408051,
-                                      process="in(<user.2, sk.2>);"]:
+                                      process="in(<user.2, sk.2>);", issapicrule]:
      [ State_1111112( pki ), In( <user, sk> ) ]
     -->
      [ ServerDB( pki, user, pk(sk) ) ]
   */
 
 rule (modulo E) inrenewuserpknsk_0_111112[color=#408051,
-                                          process="in(<'renew', user.3, pk(nsk.1)>);"]:
+                                          process="in(<'renew', user.3, pk(nsk.1)>);", issapicrule]:
    [
    State_111112( pki.1 ), In( <'renew', user.3, pk(nsk.1)> ),
    In( sign(<'renew', user.3, pk(nsk.1)>, sk.3) ),
@@ -136,7 +136,7 @@ rule (modulo E) inrenewuserpknsk_0_111112[color=#408051,
   // loop breaker: [3]
   /*
   rule (modulo AC) inrenewuserpknsk_0_111112[color=#408051,
-                                             process="in(<'renew', user.3, pk(nsk.1)>);"]:
+                                             process="in(<'renew', user.3, pk(nsk.1)>);", issapicrule]:
      [
      State_111112( pki ), In( <'renew', user, pk(nsk)> ),
      In( sign(<'renew', user, pk(nsk)>, sk) ), ServerDB( pki, user, pk(sk) )
@@ -149,7 +149,7 @@ rule (modulo E) inrenewuserpknsk_0_111112[color=#408051,
     // loop breaker: [3]
   */
 
-rule (modulo E) p_1_11[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111( pki.1 ) ]
   -->
    [
@@ -158,7 +158,7 @@ rule (modulo E) p_1_11[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_11[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_111( pki ) ]
     -->
      [
@@ -167,17 +167,19 @@ rule (modulo E) p_1_11[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) newuser_0_1112[color=#ffffff, process="new user.4;"]:
+rule (modulo E) newuser_0_1112[color=#ffffff, process="new user.4;",
+                               issapicrule]:
    [ State_1112( pki.1 ), Fr( user.4 ) ]
   -->
    [ !Semistate_111211( pki.1, user.4 ) ]
 
   /*
-  rule (modulo AC) newuser_0_1112[color=#ffffff, process="new user.4;"]:
+  rule (modulo AC) newuser_0_1112[color=#ffffff, process="new user.4;",
+                                  issapicrule]:
      [ State_1112( pki ), Fr( user ) ] --> [ !Semistate_111211( pki, user ) ]
   */
 
-rule (modulo E) p_1_11121[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11121[color=#ffffff, process="!", issapicrule]:
    [
    !Semistate_111211( pki.1, user.4 ), Fr( ~nsk.2 ),
    ClientKey( user.4, ~sk.4 )
@@ -190,7 +192,7 @@ rule (modulo E) p_1_11121[color=#ffffff, process="!"]:
 
   // loop breaker: [2]
   /*
-  rule (modulo AC) p_1_11121[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11121[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_111211( pki, user ), Fr( ~nsk ), ClientKey( user, ~sk ) ]
     --[ HonestKey( ~nsk ) ]->
      [
@@ -201,7 +203,8 @@ rule (modulo E) p_1_11121[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) outsignrenewuserpknsksk_0_1112111111[color=#408041,
-                                                     process="out(sign(<'renew', user.4, pk(~nsk.2)>, ~sk.4));"]:
+                                                     process="out(sign(<'renew', user.4, pk(~nsk.2)>, ~sk.4));",
+                                                     issapicrule]:
    [ State_1112111111( pki.1, ~nsk.2, ~sk.4, user.4 ) ]
   -->
    [
@@ -211,7 +214,8 @@ rule (modulo E) outsignrenewuserpknsksk_0_1112111111[color=#408041,
 
   /*
   rule (modulo AC) outsignrenewuserpknsksk_0_1112111111[color=#408041,
-                                                        process="out(sign(<'renew', user.4, pk(~nsk.2)>, ~sk.4));"]:
+                                                        process="out(sign(<'renew', user.4, pk(~nsk.2)>, ~sk.4));",
+                                                        issapicrule]:
      [ State_1112111111( pki, ~nsk, ~sk, user ) ]
     -->
      [
@@ -222,7 +226,8 @@ rule (modulo E) outsignrenewuserpknsksk_0_1112111111[color=#408041,
 
 rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_11121111111[color=#408041,
                                                                    process="in(sign(<'confirm', sign(<'renew', =user.4, pk(=~nsk.2)>, =~sk.4)>,
-     =pki.1));"]:
+     =pki.1));",
+                                                                   issapicrule]:
    [
    State_11121111111( pki.1, ~nsk.2, ~sk.4, user.4 ),
    In( sign(<'confirm', sign(<'renew', user.4, pk(~nsk.2)>, ~sk.4)>, pki.1)
@@ -234,7 +239,8 @@ rule (modulo E) insignconfirmsignrenewuserpknskskpki_0_11121111111[color=#408041
   /*
   rule (modulo AC) insignconfirmsignrenewuserpknskskpki_0_11121111111[color=#408041,
                                                                       process="in(sign(<'confirm', sign(<'renew', =user.4, pk(=~nsk.2)>, =~sk.4)>,
-     =pki.1));"]:
+     =pki.1));",
+                                                                      issapicrule]:
      [
      State_11121111111( pki, ~nsk, ~sk, user ),
      In( sign(<'confirm', sign(<'renew', user, pk(~nsk)>, ~sk)>, pki) )
@@ -253,7 +259,7 @@ WARNING: the following wellformedness checks failed!
 Message Derivation Checks
 =========================
 
-  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
 Rule inrenewuserpknsk_0_111112: 
 Failed to derive Variable(s): nsk.1, sk.3
@@ -261,17 +267,14 @@ Failed to derive Variable(s): nsk.1, sk.3
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -279,7 +282,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
-  processing time: 0.28s
+  processing time: 0.37s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

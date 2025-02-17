@@ -93,7 +93,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ ni m1 #i.
            (IN_R_1_ni( ni, m1 ) @ #i)
           ∧
@@ -712,17 +711,14 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.8.0
+Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -730,9 +726,9 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3_untagged.spthy
 
   output:          examples/classic/NSLPK3_untagged.spthy.tmp
-  processing time: 2.00s
+  processing time: 1.53s
   
-  types (all-traces): verified (37 steps)
+  types (all-traces): verified (36 steps)
   nonce_secrecy (all-traces): verified (133 steps)
   session_key_setup_possible (exists-trace): verified (9 steps)
 
