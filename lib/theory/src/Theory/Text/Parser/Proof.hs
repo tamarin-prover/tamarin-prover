@@ -33,7 +33,7 @@ nodePrem = parens ((,) <$> nodevar
 -- | Parse a node conclusion.
 nodeConc :: Parser NodeConc
 nodeConc = parens ((,) <$> nodevar
-                       <*> (comma *> fmap (ConcIdx .fromIntegral) natural))
+                       <*> (comma *> fmap (ConcIdx . fromIntegral) natural))
 
 -- | Parse a goal.
 goal :: Parser Goal
@@ -78,9 +78,9 @@ proofMethod = asum
   [ symbol "sorry"         *> pure (Sorry Nothing)
   , symbol "simplify"      *> pure Simplify
   , symbol "solve"         *> (SolveGoal <$> parens goal)
-  , symbol "contradiction" *> pure (Contradiction Nothing)
+  , symbol "contradiction" *> pure (Finished (Contradictory Nothing))
   , symbol "induction"     *> pure Induction
-  , symbol "UNFINISHABLE"  *> pure Unfinishable
+  , symbol "UNFINISHABLE"  *> pure (Finished Unfinishable)
   ]
 
 -- | Start parsing a proof skeleton.
@@ -99,7 +99,7 @@ proofSkeleton =
     solvedProof <|> finalProof <|> interProof
   where
     solvedProof =
-        symbol "SOLVED" *> pure (LNode (ProofStep Solved ()) M.empty)
+        symbol "SOLVED" *> pure (LNode (ProofStep (Finished Solved) ()) M.empty)
 
     finalProof = do
         method <- symbol "by" *> proofMethod

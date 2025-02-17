@@ -1074,24 +1074,26 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newskA_0_11[color=#ffffff, process="new skA.1;"]:
+rule (modulo E) newskA_0_11[color=#ffffff, process="new skA.1;",
+                            issapicrule]:
    [ State_11( ), Fr( skA.1 ) ]
   --[ HonestA( pk(skA.1) ) ]->
    [ !Semistate_111111( skA.1 ), Out( pk(skA.1) ) ]
 
   /*
-  rule (modulo AC) newskA_0_11[color=#ffffff, process="new skA.1;"]:
+  rule (modulo AC) newskA_0_11[color=#ffffff, process="new skA.1;",
+                               issapicrule]:
      [ State_11( ), Fr( skA ) ]
     --[ HonestA( pk(skA) ) ]->
      [ !Semistate_111111( skA ), Out( pk(skA) ) ]
   */
 
-rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11111[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111111( skA.1 ), In( pkB.1 ), Fr( Na.1 ) ]
   --[ OUT_I_1( aenc(<Na.1, pk(skA.1)>, pkB.1) ) ]->
    [
@@ -1100,14 +1102,14 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_11111[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11111[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_111111( skA ), In( pkB ), Fr( Na ) ]
     --[ OUT_I_1( aenc(<Na, pk(skA)>, pkB) ) ]->
      [ State_1111111111( Na, pkB, skA ), Out( aenc(<Na, pk(skA)>, pkB) ) ]
   */
 
 rule (modulo E) incypher_0_1111111111[color=#ffffff,
-                                      process="in(cypher.1);"]:
+                                      process="in(cypher.1);", issapicrule]:
    [ State_1111111111( Na.1, pkB.1, skA.1 ), In( cypher.1 ) ]
   -->
    [ Let_111111111111( adec(cypher.1, skA.1), Na.1, cypher.1, pkB.1, skA.1 )
@@ -1115,7 +1117,7 @@ rule (modulo E) incypher_0_1111111111[color=#ffffff,
 
   /*
   rule (modulo AC) incypher_0_1111111111[color=#ffffff,
-                                         process="in(cypher.1);"]:
+                                         process="in(cypher.1);", issapicrule]:
      [ State_1111111111( Na, pkB, skA ), In( cypher ) ]
     -->
      [ Let_111111111111( z, Na, cypher, pkB, skA ) ]
@@ -1132,7 +1134,8 @@ rule (modulo E) incypher_0_1111111111[color=#ffffff,
   */
 
 rule (modulo E) letNaxNbpkBadeccypherskA_1_11111111111[color=#ffffff,
-                                                       process="let <=Na.1, xNb.1, =pkB.1>=adec(cypher.1, skA.1)"]:
+                                                       process="let <=Na.1, xNb.1, =pkB.1>=adec(cypher.1, skA.1)",
+                                                       issapicrule]:
    [ Let_111111111111( <Na.1, xNb.1, pkB.1>, Na.1, cypher.1, pkB.1, skA.1 )
    ]
   -->
@@ -1140,28 +1143,32 @@ rule (modulo E) letNaxNbpkBadeccypherskA_1_11111111111[color=#ffffff,
 
   /*
   rule (modulo AC) letNaxNbpkBadeccypherskA_1_11111111111[color=#ffffff,
-                                                          process="let <=Na.1, xNb.1, =pkB.1>=adec(cypher.1, skA.1)"]:
+                                                          process="let <=Na.1, xNb.1, =pkB.1>=adec(cypher.1, skA.1)",
+                                                          issapicrule]:
      [ Let_111111111111( <Na, xNb, pkB>, Na, cypher, pkB, skA ) ]
     -->
      [ State_111111111111( Na, cypher, pkB, skA, xNb ) ]
   */
 
 rule (modulo E) eventINInrxNbaencNaxNbpkBpkskA_0_111111111111[color=#ffffff,
-                                                              process="event IN_I_2_nr( xNb.1, aenc(<Na.1, xNb.1, pkB.1>, pk(skA.1)) );"]:
+                                                              process="event IN_I_2_nr( xNb.1, aenc(<Na.1, xNb.1, pkB.1>, pk(skA.1)) );",
+                                                              issapicrule]:
    [ State_111111111111( Na.1, cypher.1, pkB.1, skA.1, xNb.1 ), Fr( k.1 ) ]
   --[ IN_I_2_nr( xNb.1, aenc(<Na.1, xNb.1, pkB.1>, pk(skA.1)) ) ]->
    [ State_11111111111111( Na.1, cypher.1, k.1, pkB.1, skA.1, xNb.1 ) ]
 
   /*
   rule (modulo AC) eventINInrxNbaencNaxNbpkBpkskA_0_111111111111[color=#ffffff,
-                                                                 process="event IN_I_2_nr( xNb.1, aenc(<Na.1, xNb.1, pkB.1>, pk(skA.1)) );"]:
+                                                                 process="event IN_I_2_nr( xNb.1, aenc(<Na.1, xNb.1, pkB.1>, pk(skA.1)) );",
+                                                                 issapicrule]:
      [ State_111111111111( Na, cypher, pkB, skA, xNb ), Fr( k ) ]
     --[ IN_I_2_nr( xNb, aenc(<Na, xNb, pkB>, pk(skA)) ) ]->
      [ State_11111111111111( Na, cypher, k, pkB, skA, xNb ) ]
   */
 
 rule (modulo E) eventOUTIaencxNbkpkB_0_11111111111111[color=#ffffff,
-                                                      process="event OUT_I_2( aenc(<xNb.1, k.1>, pkB.1) );"]:
+                                                      process="event OUT_I_2( aenc(<xNb.1, k.1>, pkB.1) );",
+                                                      issapicrule]:
    [ State_11111111111111( Na.1, cypher.1, k.1, pkB.1, skA.1, xNb.1 ) ]
   --[ OUT_I_2( aenc(<xNb.1, k.1>, pkB.1) ) ]->
    [
@@ -1171,7 +1178,8 @@ rule (modulo E) eventOUTIaencxNbkpkB_0_11111111111111[color=#ffffff,
 
   /*
   rule (modulo AC) eventOUTIaencxNbkpkB_0_11111111111111[color=#ffffff,
-                                                         process="event OUT_I_2( aenc(<xNb.1, k.1>, pkB.1) );"]:
+                                                         process="event OUT_I_2( aenc(<xNb.1, k.1>, pkB.1) );",
+                                                         issapicrule]:
      [ State_11111111111111( Na, cypher, k, pkB, skA, xNb ) ]
     --[ OUT_I_2( aenc(<xNb, k>, pkB) ) ]->
      [
@@ -1181,43 +1189,45 @@ rule (modulo E) eventOUTIaencxNbkpkB_0_11111111111111[color=#ffffff,
   */
 
 rule (modulo E) eventSessionApkskApkBk_0_1111111111111111[color=#ffffff,
-                                                          process="event SessionA( pk(skA.1), pkB.1, k.1 );"]:
+                                                          process="event SessionA( pk(skA.1), pkB.1, k.1 );",
+                                                          issapicrule]:
    [ State_1111111111111111( Na.1, cypher.1, k.1, pkB.1, skA.1, xNb.1 ) ]
   --[ SessionA( pk(skA.1), pkB.1, k.1 ) ]->
    [ ]
 
   /*
   rule (modulo AC) eventSessionApkskApkBk_0_1111111111111111[color=#ffffff,
-                                                             process="event SessionA( pk(skA.1), pkB.1, k.1 );"]:
+                                                             process="event SessionA( pk(skA.1), pkB.1, k.1 );",
+                                                             issapicrule]:
      [ State_1111111111111111( Na, cypher, k, pkB, skA, xNb ) ]
     --[ SessionA( pk(skA), pkB, k ) ]->
      [ ]
   */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1( ) ] --> [ !Semistate_121( ), State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+rule (modulo E) p_1_12[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_121( ), Fr( skB.1 ) ]
   --[ HonestB( pk(skB.1) ) ]->
    [ !Semistate_1211111( skB.1 ), Out( pk(skB.1) ) ]
 
   /*
-  rule (modulo AC) p_1_12[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_12[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_121( ), Fr( skB ) ]
     --[ HonestB( pk(skB) ) ]->
      [ !Semistate_1211111( skB ), Out( pk(skB) ) ]
   */
 
-rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
+rule (modulo E) p_1_121111[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1211111( skB.1 ), In( cypher1.1 ) ]
   -->
    [ Let_121111111( adec(cypher1.1, skB.1), cypher1.1, skB.1 ) ]
 
   /*
-  rule (modulo AC) p_1_121111[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_121111[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1211111( skB ), In( cypher1 ) ]
     -->
      [ Let_121111111( z, cypher1, skB ) ]
@@ -1234,35 +1244,40 @@ rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) letxNapkAadeccypherskB_1_12111111[color=#ffffff,
-                                                  process="let <xNa.1, pkA.1>=adec(cypher1.1, skB.1)"]:
+                                                  process="let <xNa.1, pkA.1>=adec(cypher1.1, skB.1)",
+                                                  issapicrule]:
    [ Let_121111111( <xNa.1, pkA.1>, cypher1.1, skB.1 ) ]
   -->
    [ State_121111111( cypher1.1, pkA.1, skB.1, xNa.1 ) ]
 
   /*
   rule (modulo AC) letxNapkAadeccypherskB_1_12111111[color=#ffffff,
-                                                     process="let <xNa.1, pkA.1>=adec(cypher1.1, skB.1)"]:
+                                                     process="let <xNa.1, pkA.1>=adec(cypher1.1, skB.1)",
+                                                     issapicrule]:
      [ Let_121111111( <xNa, pkA>, cypher1, skB ) ]
     -->
      [ State_121111111( cypher1, pkA, skB, xNa ) ]
   */
 
 rule (modulo E) eventINRnixNaaencxNapkApkskB_0_121111111[color=#ffffff,
-                                                         process="event IN_R_1_ni( xNa.1, aenc(<xNa.1, pkA.1>, pk(skB.1)) );"]:
+                                                         process="event IN_R_1_ni( xNa.1, aenc(<xNa.1, pkA.1>, pk(skB.1)) );",
+                                                         issapicrule]:
    [ State_121111111( cypher1.1, pkA.1, skB.1, xNa.1 ), Fr( Nb.1 ) ]
   --[ IN_R_1_ni( xNa.1, aenc(<xNa.1, pkA.1>, pk(skB.1)) ) ]->
    [ State_12111111111( Nb.1, cypher1.1, pkA.1, skB.1, xNa.1 ) ]
 
   /*
   rule (modulo AC) eventINRnixNaaencxNapkApkskB_0_121111111[color=#ffffff,
-                                                            process="event IN_R_1_ni( xNa.1, aenc(<xNa.1, pkA.1>, pk(skB.1)) );"]:
+                                                            process="event IN_R_1_ni( xNa.1, aenc(<xNa.1, pkA.1>, pk(skB.1)) );",
+                                                            issapicrule]:
      [ State_121111111( cypher1, pkA, skB, xNa ), Fr( Nb ) ]
     --[ IN_R_1_ni( xNa, aenc(<xNa, pkA>, pk(skB)) ) ]->
      [ State_12111111111( Nb, cypher1, pkA, skB, xNa ) ]
   */
 
 rule (modulo E) eventOUTRaencxNaNbpkskBpkA_0_12111111111[color=#ffffff,
-                                                         process="event OUT_R_1( aenc(<xNa.1, Nb.1, pk(skB.1)>, pkA.1) );"]:
+                                                         process="event OUT_R_1( aenc(<xNa.1, Nb.1, pk(skB.1)>, pkA.1) );",
+                                                         issapicrule]:
    [ State_12111111111( Nb.1, cypher1.1, pkA.1, skB.1, xNa.1 ) ]
   --[ OUT_R_1( aenc(<xNa.1, Nb.1, pk(skB.1)>, pkA.1) ) ]->
    [
@@ -1272,7 +1287,8 @@ rule (modulo E) eventOUTRaencxNaNbpkskBpkA_0_12111111111[color=#ffffff,
 
   /*
   rule (modulo AC) eventOUTRaencxNaNbpkskBpkA_0_12111111111[color=#ffffff,
-                                                            process="event OUT_R_1( aenc(<xNa.1, Nb.1, pk(skB.1)>, pkA.1) );"]:
+                                                            process="event OUT_R_1( aenc(<xNa.1, Nb.1, pk(skB.1)>, pkA.1) );",
+                                                            issapicrule]:
      [ State_12111111111( Nb, cypher1, pkA, skB, xNa ) ]
     --[ OUT_R_1( aenc(<xNa, Nb, pk(skB)>, pkA) ) ]->
      [
@@ -1282,7 +1298,7 @@ rule (modulo E) eventOUTRaencxNaNbpkskBpkA_0_12111111111[color=#ffffff,
   */
 
 rule (modulo E) incypher_0_1211111111111[color=#ffffff,
-                                         process="in(cypher2.1);"]:
+                                         process="in(cypher2.1);", issapicrule]:
    [
    State_1211111111111( Nb.1, cypher1.1, pkA.1, skB.1, xNa.1 ),
    In( cypher2.1 )
@@ -1296,7 +1312,7 @@ rule (modulo E) incypher_0_1211111111111[color=#ffffff,
 
   /*
   rule (modulo AC) incypher_0_1211111111111[color=#ffffff,
-                                            process="in(cypher2.1);"]:
+                                            process="in(cypher2.1);", issapicrule]:
      [ State_1211111111111( Nb, cypher1, pkA, skB, xNa ), In( cypher2 ) ]
     -->
      [ Let_121111111111111( z, Nb, cypher1, cypher2, pkA, skB, xNa ) ]
@@ -1313,7 +1329,8 @@ rule (modulo E) incypher_0_1211111111111[color=#ffffff,
   */
 
 rule (modulo E) letNbxkadeccypherskB_1_12111111111111[color=#ffffff,
-                                                      process="let <=Nb.1, xk.1>=adec(cypher2.1, skB.1)"]:
+                                                      process="let <=Nb.1, xk.1>=adec(cypher2.1, skB.1)",
+                                                      issapicrule]:
    [
    Let_121111111111111( <Nb.1, xk.1>, Nb.1, cypher1.1, cypher2.1, pkA.1,
                         skB.1, xNa.1
@@ -1328,14 +1345,16 @@ rule (modulo E) letNbxkadeccypherskB_1_12111111111111[color=#ffffff,
 
   /*
   rule (modulo AC) letNbxkadeccypherskB_1_12111111111111[color=#ffffff,
-                                                         process="let <=Nb.1, xk.1>=adec(cypher2.1, skB.1)"]:
+                                                         process="let <=Nb.1, xk.1>=adec(cypher2.1, skB.1)",
+                                                         issapicrule]:
      [ Let_121111111111111( <Nb, xk>, Nb, cypher1, cypher2, pkA, skB, xNa ) ]
     -->
      [ State_121111111111111( Nb, cypher1, cypher2, pkA, skB, xNa, xk ) ]
   */
 
 rule (modulo E) eventSessionBpkApkskBxk_0_121111111111111[color=#ffffff,
-                                                          process="event SessionB( pkA.1, pk(skB.1), xk.1 );"]:
+                                                          process="event SessionB( pkA.1, pk(skB.1), xk.1 );",
+                                                          issapicrule]:
    [
    State_121111111111111( Nb.1, cypher1.1, cypher2.1, pkA.1, skB.1, xNa.1,
                           xk.1
@@ -1346,7 +1365,8 @@ rule (modulo E) eventSessionBpkApkskBxk_0_121111111111111[color=#ffffff,
 
   /*
   rule (modulo AC) eventSessionBpkApkskBxk_0_121111111111111[color=#ffffff,
-                                                             process="event SessionB( pkA.1, pk(skB.1), xk.1 );"]:
+                                                             process="event SessionB( pkA.1, pk(skB.1), xk.1 );",
+                                                             issapicrule]:
      [ State_121111111111111( Nb, cypher1, cypher2, pkA, skB, xNa, xk ) ]
     --[ SessionB( pkA, pk(skB), xk ) ]->
      [ ]
@@ -1360,17 +1380,14 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -1378,7 +1395,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 4.65s
+  processing time: 5.73s
   
   sanity1 (all-traces): falsified - found trace (7 steps)
   sanity2 (all-traces): falsified - found trace (8 steps)

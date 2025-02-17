@@ -329,7 +329,7 @@ solve( (∃ matchingSession #i3 matchingRole.
             case Init_1
             solve( Sid( matchingSession,
                         <$B, $A, Y, 'g'^h1(<~ex, sk($A)>), matchingRole>
-                   ) @ #i3 )
+                   ) @ #i3.1 )
               case Init_2
               by contradiction /* from formulas */
             next
@@ -426,7 +426,7 @@ solve( (∃ matchingSession #i3 matchingRole.
         case Resp_1
         solve( Sid( matchingSession,
                     <$A, $B, X, 'g'^h1(<~ey, sk($B)>), matchingRole>
-               ) @ #i3 )
+               ) @ #i3.1 )
           case Init_2
           solve( Init_1( ~ex, $A, $B ) ▶₀ #i3 )
             case Init_1
@@ -603,17 +603,14 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.8.0
+Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -621,7 +618,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 0.92s
+  processing time: 0.80s
   
   eCK_key_secrecy (all-traces): verified (89 steps)
 

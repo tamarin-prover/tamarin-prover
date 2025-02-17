@@ -6,64 +6,53 @@
 -- Portability : GHC only
 --
 -- Translation specific fact types that are translated into LNFacts
-module Sapic.Facts (
-     TransAction(..)
-   , TransFact(..)
-   , SpecialPosition(..)
-   , AnnotatedRule(..)
-   , FactType(..)
-   , mapAct
-   , StateKind(..)
-   , isSemiState
-   , isState
-   , isFrFact
-   , isOutFact
-   , isStateFact
-   , isLetFact
-   , isLockFact
-   , isNonSemiState
-   , addVarToState
-   , factToFact
-   , actionToFact
-   , actionToFactFormula
-   , pureStateFactTag
-   , pureStateLockFactTag
-   , toRule
-   , varMID
-   , varProgress
-   , msgVarProgress
-   , patternInsFilter
-   , nonPatternInsFilter
-   , isPattern
-   , hasPattern
-   , propagateNames
-) where
--- import Data.Maybe
--- import Data.Foldable
--- import Control.Exception
--- import Control.Monad.Fresh
--- import Control.Monad.Catch
--- import Sapic.Exceptions
+module Sapic.Facts
+  ( TransAction(..)
+  , TransFact(..)
+  , SpecialPosition(..)
+  , AnnotatedRule(..)
+  , FactType(..)
+  , mapAct
+  , StateKind(..)
+  , isSemiState
+  , isState
+  , isFrFact
+  , isOutFact
+  , isStateFact
+  , isLetFact
+  , isLockFact
+  , isNonSemiState
+  , addVarToState
+  , factToFact
+  , actionToFact
+  , actionToFactFormula
+  , pureStateFactTag
+  , pureStateLockFactTag
+  , toRule
+  , varMID
+  , varProgress
+  , msgVarProgress
+  , patternInsFilter
+  , nonPatternInsFilter
+  , isPattern
+  , hasPattern
+  , propagateNames
+  ) where
+
 import Theory
--- import Theory.Text.Parser
 import Theory.Sapic
 import Theory.Sapic.Print
 import Sapic.Annotation
--- import Theory.Model.Rule
--- import Theory.Model.Rule
--- import Data.Typeable
--- import Data.Text
 import Data.Char
-import Data.Bits
-import qualified Data.Set as S
 import Data.Color
-import qualified Data.List              as List
--- import Control.Monad.Trans.FastFresh
+import Data.Bits
+import Data.List qualified as List
+import Data.Set qualified as S
 
 -- | Facts that are used as actions
-data TransAction =
+data TransAction
   -- base translation
-  InitEmpty
+  = InitEmpty
   -- storage
   | IsIn LNTerm LVar
   | IsNotSet LNTerm
@@ -117,16 +106,16 @@ data SpecialPosition = InitPosition -- initial position, is logically the predec
                      | NoPosition -- no real position, e.g., message id rule
 
 -- | annotated rules know:
-data AnnotatedRule ann = AnnotatedRule {
-      processName  :: Maybe String    -- optional name for rules that are not bound to a process, e.g., Init
-    , process      :: LProcess ann   -- process this rules was generated for
-    , position     :: Either ProcessPosition SpecialPosition -- position of this process in top-level process
-    , prems        :: [TransFact]     -- Facts/actions to be translated
-    , acts         :: [TransAction]
-    , concs        :: [TransFact]
-    , restr        :: [SyntacticLNFormula]
-    , index        :: Int             -- Index to distinguish multiple rules originating from the same process
-}
+data AnnotatedRule ann = AnnotatedRule
+  { processName :: Maybe String    -- optional name for rules that are not bound to a process, e.g., Init
+  , process     :: LProcess ann   -- process this rules was generated for
+  , position    :: Either ProcessPosition SpecialPosition -- position of this process in top-level process
+  , prems       :: [TransFact]     -- Facts/actions to be translated
+  , acts        :: [TransAction]
+  , concs       :: [TransFact]
+  , restr       :: [SyntacticLNFormula]
+  , index       :: Int             -- Index to distinguish multiple rules originating from the same process
+  }
 
 -- | Fact types used by the MSR to ProverIf translation.
 data FactType = GET | IN | NEW | EVENT | INSERT | OUT
@@ -375,7 +364,8 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
                          ++ "_" ++ show index ++ "_"
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
-                   , Process $ toProcess process]
+                   , Process $ toProcess process
+                   , IsSAPiCRule]
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs

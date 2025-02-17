@@ -158,7 +158,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (Sent( S, m.1 ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #s #j.
@@ -733,7 +732,6 @@ guarded formula characterizing all satisfying traces:
 */
 induction
   case non_empty_trace
-  simplify
   solve( (∃ rid commit #i #j.
            (AssumeCommitNotExpired( rid, commit ) @ #i) ∧
            (CommitExpired( commit ) @ #j)
@@ -794,17 +792,14 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.8.0
+Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -812,10 +807,10 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 3.27s
+  processing time: 1.91s
   
-  authentic (all-traces): verified (158 steps)
-  authentic_reachable (exists-trace): verified (13 steps)
+  authentic (all-traces): verified (157 steps)
+  authentic_reachable (exists-trace): verified (12 steps)
 
 ==============================================================================
 */

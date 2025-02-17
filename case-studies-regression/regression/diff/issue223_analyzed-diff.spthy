@@ -3,7 +3,7 @@ theory issue223 begin
 // Function signature and definition of the equational theory E
 
 functions: commit/3, fake/4, fst/1, open/3, pair/2, pk/1, snd/1
-equations:
+equations [convergent]:
     commit(ni2, fake(ni1, r, sk, ni2), pk(sk)) = commit(ni1, r, pk(sk)),
     fake(ni2, fake(ni1, r, sk, ni2), sk, ni3) = fake(ni1, r, sk, ni3),
     fst(<x.1, x.2>) = x.1,
@@ -24,8 +24,6 @@ rule (modulo E) Attack3:
    Out( commit(~ni1, ~rnd1, pk(~ltkV1)) ),
    Out( fake(~ni1, ~rnd1, ~ltkV1, ~ni1) ), Out( ~ltkV1 )
    ]
-
-/* All wellformedness checks were successful. */
 
 diffLemma Observational_equivalence:
 rule-equivalence
@@ -3237,19 +3235,18 @@ next
   qed
 qed
 
+/* All wellformedness checks were successful. */
+
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -3257,7 +3254,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 2.85s
+  processing time: 2.81s
   
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 

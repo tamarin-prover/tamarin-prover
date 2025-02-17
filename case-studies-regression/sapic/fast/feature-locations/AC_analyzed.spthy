@@ -120,19 +120,20 @@ restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
   // safety formula
 
-rule (modulo E) ReportRule[color=#ffffff, process="!"]:
+rule (modulo E) ReportRule[color=#ffffff, process="!", issapicrule]:
    [ In( <x, loc> ) ]
   --[ Restr_ReportRule_1( loc ) ]->
    [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="!"]:
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
    [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;"]:
+rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;",
+                              issapicrule]:
    [ State_11( ), Fr( state.1 ), Fr( StateChannel ) ]
   -->
    [
@@ -141,14 +142,15 @@ rule (modulo E) newstate_0_11[color=#ffffff, process="new state.1;"]:
    ]
 
   /*
-  rule (modulo AC) newstate_0_11[color=#ffffff, process="new state.1;"]:
+  rule (modulo AC) newstate_0_11[color=#ffffff, process="new state.1;",
+                                 issapicrule]:
      [ State_11( ), Fr( state ), Fr( StateChannel ) ]
     -->
      [ !Semistate_111111( StateChannel, state ), L_PureState( state, 'init' )
      ]
   */
 
-rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11111[color=#ffffff, process="!", issapicrule]:
    [
    !Semistate_111111( StateChannel, state.1 ),
    L_PureState( state.1, lio.1 ), Fr( lock )
@@ -160,7 +162,7 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_11111[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11111[color=#ffffff, process="!", issapicrule]:
      [
      !Semistate_111111( StateChannel, state ), L_PureState( state, lio ),
      Fr( lock )
@@ -173,7 +175,7 @@ rule (modulo E) p_1_11111[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) eventReadlio_0_111111111[color=#408067,
-                                         process="event Read( lio.1 );"]:
+                                         process="event Read( lio.1 );", issapicrule]:
    [
    State_111111111( StateChannel, lock, lio.1, state.1 ), In( i.1 ),
    Fr( r.1 )
@@ -184,7 +186,7 @@ rule (modulo E) eventReadlio_0_111111111[color=#408067,
   // loop breaker: [0]
   /*
   rule (modulo AC) eventReadlio_0_111111111[color=#408067,
-                                            process="event Read( lio.1 );"]:
+                                            process="event Read( lio.1 );", issapicrule]:
      [ State_111111111( StateChannel, lock, lio, state ), In( i ), Fr( r ) ]
     --[ Read( lio ) ]->
      [ State_111111111111( StateChannel, lock, i, lio, r, state ) ]
@@ -192,7 +194,8 @@ rule (modulo E) eventReadlio_0_111111111[color=#408067,
   */
 
 rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#408067,
-                                                           process="event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );"]:
+                                                           process="event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );",
+                                                           issapicrule]:
    [
    State_111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ),
    L_CellLocked( state.1, lock )
@@ -208,7 +211,8 @@ rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#408067,
   // loop breaker: [1]
   /*
   rule (modulo AC) eventRemoteprogrilioilioloc_0_111111111111[color=#408067,
-                                                              process="event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );"]:
+                                                              process="event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );",
+                                                              issapicrule]:
      [
      State_111111111111( StateChannel, lock, i, lio, r, state ),
      L_CellLocked( state, lock )
@@ -221,12 +225,12 @@ rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#408067,
     // loop breaker: [1]
   */
 
-rule (modulo E) p_1_[color=#ffffff, process="!"]:
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1( ) ] --> [ !Semistate_121( ), State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_12[color=#ffffff, process="!"]:
+rule (modulo E) p_1_12[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_121( ), Fr( state2.1 ), Fr( StateChannel.1 ) ]
   -->
    [
@@ -235,7 +239,7 @@ rule (modulo E) p_1_12[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_12[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_12[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_121( ), Fr( state2 ), Fr( StateChannel ) ]
     -->
      [
@@ -243,7 +247,7 @@ rule (modulo E) p_1_12[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
+rule (modulo E) p_1_121111[color=#ffffff, process="!", issapicrule]:
    [
    !Semistate_1211111( StateChannel.1, state2.1 ), In( <i.2, o.2, r.2> ),
    L_PureState( state2.1, lio.2 ), Fr( lock.1 )
@@ -257,7 +261,7 @@ rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
 
   // loop breaker: [2]
   /*
-  rule (modulo AC) p_1_121111[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_121111[color=#ffffff, process="!", issapicrule]:
      [
      !Semistate_1211111( StateChannel, state2 ), In( <i, o, r> ),
      L_PureState( state2, lio ), Fr( lock )
@@ -271,7 +275,7 @@ rule (modulo E) p_1_121111[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) eventReadlio_0_12111111111[color=#408052,
-                                           process="event Read( lio.2 );"]:
+                                           process="event Read( lio.2 );", issapicrule]:
    [
    State_12111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2, r.2
    )
@@ -285,14 +289,15 @@ rule (modulo E) eventReadlio_0_12111111111[color=#408052,
 
   /*
   rule (modulo AC) eventReadlio_0_12111111111[color=#408052,
-                                              process="event Read( lio.2 );"]:
+                                              process="event Read( lio.2 );", issapicrule]:
      [ State_12111111111( StateChannel, lock, state2, i, lio, o, r ) ]
     --[ Read( lio ) ]->
      [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
   */
 
 rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#408052,
-                                                   process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
+                                                   process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')",
+                                                   issapicrule]:
    [
    State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
                        r.2
@@ -307,7 +312,8 @@ rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#408052,
 
   /*
   rule (modulo AC) ifoiliocheckreprloc_0_121111111111[color=#408052,
-                                                      process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
+                                                      process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')",
+                                                      issapicrule]:
      [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
     --[ Pred_Eq( <o, i, lio>, z ) ]->
      [ State_1211111111111( StateChannel, lock, state2, i, lio, o, r ) ]
@@ -320,7 +326,8 @@ rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#408052,
   */
 
 rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#408052,
-                                                   process="event Local( <o.2, i.2, lio.2>, 'loc' );"]:
+                                                   process="event Local( <o.2, i.2, lio.2>, 'loc' );",
+                                                   issapicrule]:
    [
    State_1211111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
                         r.2
@@ -333,7 +340,8 @@ rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#408052,
   // loop breaker: [1]
   /*
   rule (modulo AC) eventLocaloilioloc_0_1211111111111[color=#408052,
-                                                      process="event Local( <o.2, i.2, lio.2>, 'loc' );"]:
+                                                      process="event Local( <o.2, i.2, lio.2>, 'loc' );",
+                                                      issapicrule]:
      [
      State_1211111111111( StateChannel, lock, state2, i, lio, o, r ),
      L_CellLocked( state2, lock )
@@ -344,7 +352,8 @@ rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#408052,
   */
 
 rule (modulo E) ifoiliocheckreprloc_1_121111111111[color=#408052,
-                                                   process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
+                                                   process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')",
+                                                   issapicrule]:
    [
    State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
                        r.2
@@ -357,7 +366,8 @@ rule (modulo E) ifoiliocheckreprloc_1_121111111111[color=#408052,
   // loop breaker: [1]
   /*
   rule (modulo AC) ifoiliocheckreprloc_1_121111111111[color=#408052,
-                                                      process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')"]:
+                                                      process="if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')",
+                                                      issapicrule]:
      [
      State_121111111111( StateChannel, lock, state2, i, lio, o, r ),
      L_CellLocked( state2, lock )
@@ -389,17 +399,14 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -407,7 +414,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 1.07s
+  processing time: 1.41s
   
   can_run_v (exists-trace): verified (8 steps)
   simp (all-traces): verified (7 steps)

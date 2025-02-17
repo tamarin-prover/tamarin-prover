@@ -37,9 +37,6 @@ import           Control.Basics
 import           Control.Category
 import           Control.Monad.Disj
 import           Control.Monad.State                     (gets)
-import           Control.Monad.Trans.State.Lazy          hiding (get,gets)
-import           Control.Monad.Trans.FastFresh           -- GHC7.10 needs: hiding (get,gets)
-import           Control.Monad.Trans.Reader              -- GHC7.10 needs: hiding (get,gets)
 
 import           Extension.Data.Label                    as L
 
@@ -206,7 +203,7 @@ solveGoal goal = do
     markGoalAsSolved "directly" goal
     rules <- askM pcRules
     case goal of
-      ActionG i fa  -> solveAction  (nonSilentRules rules) (i, fa)
+      ActionG i fa  -> solveAction (nonSilentRules rules) (i, fa)
       PremiseG p fa ->
            solvePremise (get crProtocol rules ++ get crConstruct rules) p fa
       ChainG c p    -> solveChain (get crDestruct  rules) (c, p)
@@ -260,7 +257,7 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
     requiresKU t = do
         j <- freshLVar "vk" LSortNode
         let faKU = kuFact t
-        insertLess j i Adversary
+        insertLess (LessAtom j i Adversary)
         void (insertAction j faKU)
 
 -- | CR-rules *DG_{2,P}* and *DG_{2,d}*: solve a premise with a direct edge
@@ -344,9 +341,7 @@ solveChain rules (c, p) = do
          _ -> error "solveChain: not a down fact"
   where
     extendAndMark :: NodeId -> RuleACInst -> PremIdx -> LNFact -> LNFact
-      -> Control.Monad.Trans.State.Lazy.StateT System
-      (Control.Monad.Trans.FastFresh.FreshT
-      (DisjT (Control.Monad.Trans.Reader.Reader ProofContext))) String
+      -> Reduction String
     extendAndMark i ru v faPrem faConc = do
         insertEdges [(c, faConc, faPrem, (i, v))]
         markGoalAsSolved "directly" (PremiseG (i, v) faPrem)

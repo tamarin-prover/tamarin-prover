@@ -45,7 +45,6 @@ guarded formula characterizing all satisfying traces:
 */
 induction
   case non_empty_trace
-  simplify
   solve( Secret( k ) @ #i )
     case Send
     solve( Sender( k0 ) ▶₀ #i )
@@ -66,7 +65,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#j))  ∥ (last(#i)) )
     case case_1
     solve( Secret( k ) @ #i )
@@ -141,17 +139,14 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.8.0
+Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -159,10 +154,10 @@ summary of summaries:
 analyzed: examples/loops/Minimal_KeyRenegotiation.spthy
 
   output:          examples/loops/Minimal_KeyRenegotiation.spthy.tmp
-  processing time: 0.13s
+  processing time: 0.12s
   
-  Secret_reachable (exists-trace): verified (5 steps)
-  secrecy (all-traces): verified (23 steps)
+  Secret_reachable (exists-trace): verified (4 steps)
+  secrecy (all-traces): verified (22 steps)
 
 ==============================================================================
 */

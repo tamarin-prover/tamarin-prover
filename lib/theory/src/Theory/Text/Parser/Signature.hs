@@ -22,6 +22,7 @@ module Theory.Text.Parser.Signature (
 )
 where
 
+import Term.Maude.Signature
 import           Prelude                    hiding (id)
 import qualified Data.ByteString.Char8      as BC
 import           Data.Either
@@ -157,18 +158,24 @@ functions :: Parser [SapicFunSym]
 functions =
     (try (symbol "functions") <|> symbol "function") *> colon *> commaSep1 function
 
-
 equations :: Parser ()
-equations =
-      (symbol "equations" *> colon *> commaSep1 equation) Data.Functor.$> ()
-    where
-      equation = do
+equations = do
+    convergent <- option False (try $ do
+        _ <- symbol "equations"
+        _ <- brackets (symbol "convergent")
+        colon
+        return True)
+    unless convergent $ symbol "equations" *> colon
+    eqs <- commaSep1 equation
+    modifyStateSig (\sig -> foldl (flip addCtxtStRule) sig eqs)
+    modifyState (\st -> st { sig = (sig st) { eqConvergent = convergent } })  -- Explicit state update
+    return ()
+  where
+    equation = do
         rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
         case rRuleToCtxtStRule rrule of
-          Just str ->
-              modifyStateSig (addCtxtStRule str)
-          Nothing  ->
-              fail $ "Not a correct equation: " ++ show rrule
+          Just str -> return str
+          Nothing  -> fail $ "Not a correct equation: " ++ show rrule
 
 -- | options
 options :: OpenTheory -> Parser OpenTheory
@@ -228,7 +235,7 @@ heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
 heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> (concat <$> many1 (goalRanking diff workDir)) <* lexeme spaces
 
 goalRanking :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
-goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "goal ranking"
+goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "proof method ranking"
    where
        regularRanking = filterHeuristic diff <$> many1 letter <* skipMany (char ' ')
 

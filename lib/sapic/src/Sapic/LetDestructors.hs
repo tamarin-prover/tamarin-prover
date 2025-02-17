@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternGuards #-}
 -- |
 -- Copyright   : (c) 2019 Charlie Jacomme <charlie.jacomme@lsv.fr>
 -- License     : GPL v3 (see LICENSE)
@@ -8,9 +7,9 @@
 --
 -- Compute annotations for let destructors
 
-module Sapic.LetDestructors (
-  translateLetDestr
-) where
+module Sapic.LetDestructors
+  ( translateLetDestr
+  ) where
 
 import           Data.Set as S
 import           Data.List as L
@@ -29,11 +28,11 @@ mapProc :: ( MonadThrow m)
 mapProc _  (ProcessNull ann)  = return $ ProcessNull ann
 mapProc rules (ProcessAction ac ann p') = do
   pr <- mapProc rules p'
-  return $ ProcessAction (ac) ann pr
+  return $ ProcessAction ac ann pr
 
 mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
   case (t1, viewTerm t1', viewTerm t2') of
-    ( (LIT (Var _)) ,(Lit (Var _)), FApp funsym@(NoEq (_, (_,_,Destructor))) rightterms) ->
+    (LIT (Var _) ,Lit (Var _), FApp funsym@(NoEq (_, (_,_,Destructor))) rightterms) ->
       -- we are in the case where the let binding is of the form let invar = dest(rightTerms) in
       (case  L.foldl (findRule funsym) Nothing rules of
         -- if the desrtructor does not have any associated rule, it never succeed, and we thus always go in the else branch we simply substitute in the process, to optimize
@@ -57,10 +56,9 @@ mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
                 subst = substFromList [(outvar, t1')]
                 new_an = annDestructorEquation leftermssubst (toPairs rightterms) elsebranch
           )
-    ( (LIT (Var svar)) , _ , _ )  | not(svar `S.member` mv) -> do
-            res <- applyM (substFromList  (L.map (\x -> (x,t2)) (make_untyped_variant svar))) pl
-            npl <- mapProc rules res
-            return npl
+    (LIT (Var svar) , _ , _ )  | not (svar `S.member` mv) -> do
+      res <- applyM (substFromList ((,t2) <$> make_untyped_variant svar)) pl
+      mapProc rules res
     _ -> do
       npl <- mapProc rules pl
       npr <- mapProc rules pr
@@ -78,7 +76,7 @@ mapProc rules (ProcessComb c@(Let t1 t2 mv) _ pl pr) =
             _ -> True
             -- essentially, with let sk:skey in P, if with subsitute variable sk:skey inside P, it will not substitute untyped occurences of sk, which is bad.
           make_untyped_variant svar@(SapicLVar sl_var (Just _)) =
-            [svar, (SapicLVar sl_var Nothing)]
+            [svar, SapicLVar sl_var Nothing]
           make_untyped_variant svar = [svar]
 
 mapProc rules (ProcessComb c ann pl pr) = do
@@ -94,9 +92,9 @@ findRule funsym acc rule =
   case ctxtStRuleToRRule rule of
     (fhs `RRule` rhs) ->
       case (viewTerm fhs, viewTerm rhs) of
-        (FApp fs y, (Lit (Var v))) | fs == funsym -> Just (y, v)
+        (FApp fs y, Lit (Var v)) | fs == funsym -> Just (y, v)
         _ -> acc
 
 translateLetDestr :: ( MonadThrow m)
                     =>  Set CtxtStRule -> LProcess (ProcessAnnotation LVar) -> m (LProcess (ProcessAnnotation LVar))
-translateLetDestr rules anp = mapProc rules anp
+translateLetDestr = mapProc

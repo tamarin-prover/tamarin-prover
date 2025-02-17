@@ -22,7 +22,7 @@ tamarin-prover         --diff KCL07-UK3_attack.spthy
 
 
 
-For OTYT06 for UK1 the file must be loaded in interactive mode, the lemma Observational_equivalence must be opened, after one step the goal Rule_equality needs to be chosen, and after the next step one is automatically in the LHS goal, on which the autoprover can be started. (For UK3 a 'nicer' attack is found by following these steps, but a basic attack is found without.) Alternatively, the stored proofs can be loaded without --prove:
+For OTYT06 for UK1 the file must be loaded in interactive mode, the lemma Observational_equivalence must be opened, after one step the proof method Rule_equality needs to be chosen, and after the next step one is automatically in the LHS proof method, on which the autoprover can be started. (For UK3 a 'nicer' attack is found by following these steps, but a basic attack is found without.) Alternatively, the stored proofs can be loaded without --prove:
 
 tamarin-prover interactive --diff OTYT06*
 

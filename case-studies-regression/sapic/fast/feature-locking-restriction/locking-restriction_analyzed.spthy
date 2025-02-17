@@ -28,31 +28,35 @@ by solve( State_111( lock, lock.1 ) ▶₀ #t )
 
 
 
-rule (modulo E) Init[color=#ffffff, process="lock 'P';"]:
+rule (modulo E) Init[color=#ffffff, process="lock 'P';", issapicrule]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockP_0_[color=#ffffff, process="lock 'P';"]:
+rule (modulo E) lockP_0_[color=#ffffff, process="lock 'P';",
+                         issapicrule]:
    [ State_( ), Fr( lock ) ]
   --[ Lock_0( '0', lock, 'P' ), Lock( '0', lock, 'P' ) ]->
    [ State_11( lock ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) lockP_0_11[color=#408051, process="lock 'P';"]:
+rule (modulo E) lockP_0_11[color=#408051, process="lock 'P';",
+                           issapicrule]:
    [ State_11( lock ), Fr( lock.1 ) ]
   --[ Lock_1( '1', lock.1, 'P' ), Lock( '1', lock.1, 'P' ) ]->
    [ State_111( lock, lock.1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_111[color=#408051, process="event A( );"]:
+rule (modulo E) eventA_0_111[color=#408051, process="event A( );",
+                             issapicrule]:
    [ State_111( lock, lock.1 ) ] --[ A( ) ]-> [ State_1111( lock, lock.1 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) unlockP_0_1111[color=#408051, process="unlock 'P';"]:
+rule (modulo E) unlockP_0_1111[color=#408051, process="unlock 'P';",
+                               issapicrule]:
    [ State_1111( lock, lock.1 ) ]
   --[ Unlock_1( '1', lock.1, 'P' ), Unlock( '1', lock.1, 'P' ) ]->
    [ ]
@@ -89,17 +93,14 @@ restriction locking_0:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -107,7 +108,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy
 
   output:          examples/sapic/fast/feature-locking-restriction/locking-restriction.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.10s
   
   ANotReachable (all-traces): verified (2 steps)
 

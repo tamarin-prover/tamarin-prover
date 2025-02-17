@@ -203,7 +203,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
             g (nodeid, pid, tidx, term) = do
               position <- findPos v term
               ruleSys  <- nodeRuleSafe nodeid source
-              rule     <- find ((ruleName ruleSys ==).ruleName) rules
+              rule     <- find ((ruleName ruleSys ==) . ruleName) rules
               premise  <- lookupPrem pid $ L.get cprRuleAC rule
               t'       <- protoOrInFactView premise
               t        <- atMay t' tidx
@@ -396,7 +396,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
 -- Open theory construction / modification
 ------------------------------------------------------------------------------
 defaultOption :: Option
-defaultOption = Option False False False False False False False False S.empty [] 10 5
+defaultOption = Option False False False False False False False False False S.empty [] 10 5
 
 
 
@@ -652,12 +652,12 @@ normalizeTheory =
   where
     stripProofAnnotations :: ProofSkeleton -> ProofSkeleton
     stripProofAnnotations = fmap stripProofStepAnnotations
-    stripProofStepAnnotations (ProofStep method ()) =
-        ProofStep (case method of
-                     Sorry _         -> Sorry Nothing
-                     Contradiction _ -> Contradiction Nothing
-                     _               -> method)
-                  ()
+    stripProofStepAnnotations (ProofStep method ()) = ProofStep
+      (case method of
+        Sorry _         -> Sorry Nothing
+        Finished (Contradictory _) -> Finished (Contradictory Nothing)
+        _               -> method)
+      ()
 
 
 

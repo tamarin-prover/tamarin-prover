@@ -5,7 +5,6 @@ module Theory.Tools.MessageDerivationChecks (
 
 import  Theory.Model.Formula
 import  qualified Data.Label as L
-import Theory (OpenTranslatedTheory, OpenDiffTheory, getLeftProtoRule, getRightProtoRule)
 import Items.RuleItem
 import TheoryObject
 import Theory.Model
@@ -18,6 +17,15 @@ import Text.PrettyPrint.Class
 import qualified Text.PrettyPrint.Class as Pretty
 import ClosedTheory
 import qualified Data.List as List
+
+import Control.Basics
+import Control.Category
+
+import Prelude hiding (id, (.))
+
+import           Prelude                             hiding (id, (.))                 
+import OpenTheory
+
 
 -----------------------------------------------
 -- DerivationChecks
@@ -112,7 +120,7 @@ reportVars :: [[ProofStatus]] -> [OpenProtoRule] -> [[LVar]] -> WfErrorReport
 reportVars analysisresults rules vars = case rulesAndVars of
     []     -> []
     errors -> [(underlineTopic "Message Derivation Checks",
-        text $ "The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
+        text $ "The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
         ++ errors)]
     where
         rulesAndVars :: String
@@ -130,7 +138,7 @@ reportDiffVars :: [[ProofStatus]] -> [DiffProtoRule] -> [[LVar]] -> WfErrorRepor
 reportDiffVars analysisresults rules vars = case rulesAndVars of
     []     -> []
     errors -> [(underlineTopic "Message Derivation Checks",
-        text $ "The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
+        text $ "The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.\n\n"
         ++ errors)]
     where
         rulesAndVars :: String

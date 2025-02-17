@@ -1316,97 +1316,98 @@ restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
   // safety formula
 
-rule (modulo E) ReportRule[color=#ffffff, process="new skV.1;"]:
+rule (modulo E) ReportRule[color=#ffffff, process="new skV.1;",
+                           issapicrule]:
    [ In( <x, loc> ) ]
   --[ Restr_ReportRule_1( loc ) ]->
    [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="new skV.1;"]:
+rule (modulo E) Init[color=#ffffff, process="new skV.1;", issapicrule]:
    [ Fr( skV.1 ), Fr( pc.1 ), Fr( cu.1 ), Fr( pw.1 ) ]
   --[ Init( ) ]->
    [ State_1111( cu.1, pc.1, pw.1, skV.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new skV.1;"]:
+  rule (modulo AC) Init[color=#ffffff, process="new skV.1;", issapicrule]:
      [ Fr( skV ), Fr( pc ), Fr( cu ), Fr( pw ) ]
     --[ Init( ) ]->
      [ State_1111( cu, pc, pw, skV ) ]
   */
 
 rule (modulo E) eventChancuchannel_0_1111[color=#ffffff,
-                                          process="event Chan( cu.1:channel );"]:
+                                          process="event Chan( cu.1:channel );", issapicrule]:
    [ State_1111( cu.1, pc.1, pw.1, skV.1 ) ]
   --[ Chan( cu.1 ) ]->
    [ State_11111( cu.1, pc.1, pw.1, skV.1 ) ]
 
   /*
   rule (modulo AC) eventChancuchannel_0_1111[color=#ffffff,
-                                             process="event Chan( cu.1:channel );"]:
+                                             process="event Chan( cu.1:channel );", issapicrule]:
      [ State_1111( cu, pc, pw, skV ) ]
     --[ Chan( cu ) ]->
      [ State_11111( cu, pc, pw, skV ) ]
   */
 
 rule (modulo E) eventChanpcchannel_0_11111[color=#ffffff,
-                                           process="event Chan( pc.1:channel );"]:
+                                           process="event Chan( pc.1:channel );", issapicrule]:
    [ State_11111( cu.1, pc.1, pw.1, skV.1 ) ]
   --[ Chan( pc.1 ) ]->
    [ State_1111111( cu.1, pc.1, pw.1, skV.1 ), Out( pw.1 ) ]
 
   /*
   rule (modulo AC) eventChanpcchannel_0_11111[color=#ffffff,
-                                              process="event Chan( pc.1:channel );"]:
+                                              process="event Chan( pc.1:channel );", issapicrule]:
      [ State_11111( cu, pc, pw, skV ) ]
     --[ Chan( pc ) ]->
      [ State_1111111( cu, pc, pw, skV ), Out( pw ) ]
   */
 
 rule (modulo E) eventKeyskV_0_1111111[color=#ffffff,
-                                      process="event Key( skV.1 );"]:
+                                      process="event Key( skV.1 );", issapicrule]:
    [ State_1111111( cu.1, pc.1, pw.1, skV.1 ) ]
   --[ Key( skV.1 ) ]->
    [ !Semistate_1111111111( cu.1, pc.1, pw.1, skV.1 ), Out( pk(skV.1) ) ]
 
   /*
   rule (modulo AC) eventKeyskV_0_1111111[color=#ffffff,
-                                         process="event Key( skV.1 );"]:
+                                         process="event Key( skV.1 );", issapicrule]:
      [ State_1111111( cu, pc, pw, skV ) ]
     --[ Key( skV ) ]->
      [ !Semistate_1111111111( cu, pc, pw, skV ), Out( pk(skV) ) ]
   */
 
 rule (modulo E) inpcchannelcode_0_111111111111[color=#40807b,
-                                               process="in(pc.1:channel,code.1);"]:
+                                               process="in(pc.1:channel,code.1);", issapicrule]:
    [ State_111111111111( cu.1, pc.1, pw.1, skV.1 ), Message( pc.1, x.2 ) ]
   -->
    [ Let_1111111111111( x.2, cu.1, pc.1, pw.1, skV.1 ), Ack( pc.1, x.2 ) ]
 
   /*
   rule (modulo AC) inpcchannelcode_0_111111111111[color=#40807b,
-                                                  process="in(pc.1:channel,code.1);"]:
+                                                  process="in(pc.1:channel,code.1);", issapicrule]:
      [ State_111111111111( cu, pc, pw, skV ), Message( pc, x ) ]
     -->
      [ Let_1111111111111( x, cu, pc, pw, skV ), Ack( pc, x ) ]
   */
 
 rule (modulo E) inpcchannelcode_1_111111111111[color=#40807b,
-                                               process="in(pc.1:channel,code.1);"]:
+                                               process="in(pc.1:channel,code.1);", issapicrule]:
    [ Let_1111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ) ]
   -->
    [ State_1111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ) ]
 
   /*
   rule (modulo AC) inpcchannelcode_1_111111111111[color=#40807b,
-                                                  process="in(pc.1:channel,code.1);"]:
+                                                  process="in(pc.1:channel,code.1);", issapicrule]:
      [ Let_1111111111111( code, cu, pc, pw, skV ) ]
     -->
      [ State_1111111111111( code, cu, pc, pw, skV ) ]
   */
 
 rule (modulo E) eventProvUcode_0_1111111111111[color=#40807b,
-                                               process="event ProvU( code.1 );"]:
+                                               process="event ProvU( code.1 );", issapicrule]:
    [ State_1111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ) ]
   --[ ProvU( code.1 ) ]->
    [
@@ -1417,7 +1418,7 @@ rule (modulo E) eventProvUcode_0_1111111111111[color=#40807b,
   // loop breaker: [0]
   /*
   rule (modulo AC) eventProvUcode_0_1111111111111[color=#40807b,
-                                                  process="event ProvU( code.1 );"]:
+                                                  process="event ProvU( code.1 );", issapicrule]:
      [ State_1111111111111( code, cu, pc, pw, skV ) ]
     --[ ProvU( code ) ]->
      [ !Semistate_1111111111111111( code, cu, pc, pw, skV ), Out( cde(code) )
@@ -1425,7 +1426,8 @@ rule (modulo E) eventProvUcode_0_1111111111111[color=#40807b,
     // loop breaker: [0]
   */
 
-rule (modulo E) p_1_111111111111111[color=#40807b, process="!"]:
+rule (modulo E) p_1_111111111111111[color=#40807b, process="!",
+                                    issapicrule]:
    [
    !Semistate_1111111111111111( code.1, cu.1, pc.1, pw.1, skV.1 ),
    Fr( fr.1 )
@@ -1437,7 +1439,8 @@ rule (modulo E) p_1_111111111111111[color=#40807b, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_111111111111111[color=#40807b, process="!"]:
+  rule (modulo AC) p_1_111111111111111[color=#40807b, process="!",
+                                       issapicrule]:
      [ !Semistate_1111111111111111( code, cu, pc, pw, skV ), Fr( fr ) ]
     --[ AskU( pw, fr ) ]->
      [
@@ -1446,7 +1449,7 @@ rule (modulo E) p_1_111111111111111[color=#40807b, process="!"]:
      ]
   */
 
-rule (modulo E) p_1_111111111[color=#ffffff, process="!"]:
+rule (modulo E) p_1_111111111[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_1111111111( cu.1, pc.1, pw.1, skV.1 ) ]
   -->
    [
@@ -1455,7 +1458,7 @@ rule (modulo E) p_1_111111111[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_111111111[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_111111111[color=#ffffff, process="!", issapicrule]:
      [ !Semistate_1111111111( cu, pc, pw, skV ) ]
     -->
      [
@@ -1465,7 +1468,7 @@ rule (modulo E) p_1_111111111[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) newsharedk_0_11111111112111[color=#408070,
-                                            process="new shared_k.1;"]:
+                                            process="new shared_k.1;", issapicrule]:
    [ State_11111111112111( cu.1, pc.1, pw.1, skV.1 ), Fr( shared_k.1 ) ]
   --[ SessionP( pk(skV.1), shared_k.1 ) ]->
    [
@@ -1477,7 +1480,7 @@ rule (modulo E) newsharedk_0_11111111112111[color=#408070,
 
   /*
   rule (modulo AC) newsharedk_0_11111111112111[color=#408070,
-                                               process="new shared_k.1;"]:
+                                               process="new shared_k.1;", issapicrule]:
      [ State_11111111112111( cu, pc, pw, skV ), Fr( shared_k ) ]
     --[ SessionP( pk(skV), shared_k ) ]->
      [
@@ -1489,7 +1492,7 @@ rule (modulo E) newsharedk_0_11111111112111[color=#408070,
   */
 
 rule (modulo E) incdcode_0_11111111112111111[color=#408070,
-                                             process="in(cdcode.1);"]:
+                                             process="in(cdcode.1);", issapicrule]:
    [
    State_11111111112111111( cu.1, pc.1, pw.1, shared_k.1, skV.1 ),
    In( cdcode.1 )
@@ -1503,7 +1506,7 @@ rule (modulo E) incdcode_0_11111111112111111[color=#408070,
 
   /*
   rule (modulo AC) incdcode_0_11111111112111111[color=#408070,
-                                                process="in(cdcode.1);"]:
+                                                process="in(cdcode.1);", issapicrule]:
      [ State_11111111112111111( cu, pc, pw, shared_k, skV ), In( cdcode ) ]
     --[ ProvE( z ) ]->
      [
@@ -1521,7 +1524,7 @@ rule (modulo E) incdcode_0_11111111112111111[color=#408070,
   */
 
 rule (modulo E) inskosenc_0_11111111112111111111[color=#408070,
-                                                 process="in(skosenc.1);"]:
+                                                 process="in(skosenc.1);", issapicrule]:
    [
    State_11111111112111111111( cdcode.1, cu.1, pc.1, pw.1, shared_k.1, skV.1
    ),
@@ -1536,7 +1539,7 @@ rule (modulo E) inskosenc_0_11111111112111111111[color=#408070,
 
   /*
   rule (modulo AC) inskosenc_0_11111111112111111111[color=#408070,
-                                                    process="in(skosenc.1);"]:
+                                                    process="in(skosenc.1);", issapicrule]:
      [
      State_11111111112111111111( cdcode, cu, pc, pw, shared_k, skV ),
      In( skosenc )
@@ -1549,7 +1552,8 @@ rule (modulo E) inskosenc_0_11111111112111111111[color=#408070,
      ]
   */
 
-rule (modulo E) p_1_111111111121111111111[color=#408070, process="!"]:
+rule (modulo E) p_1_111111111121111111111[color=#408070, process="!",
+                                          issapicrule]:
    [
    !Semistate_1111111111211111111111( cdcode.1, cu.1, pc.1, pw.1,
                                       shared_k.1, skV.1, skosenc.1
@@ -1565,7 +1569,8 @@ rule (modulo E) p_1_111111111121111111111[color=#408070, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_111111111121111111111[color=#408070, process="!"]:
+  rule (modulo AC) p_1_111111111121111111111[color=#408070, process="!",
+                                             issapicrule]:
      [
      !Semistate_1111111111211111111111( cdcode, cu, pc, pw, shared_k, skV,
                                         skosenc
@@ -1582,7 +1587,8 @@ rule (modulo E) p_1_111111111121111111111[color=#408070, process="!"]:
   */
 
 rule (modulo E) incuchannelpwfr_1_1111111111211111111111[color=#408070,
-                                                         process="in(cu.1:channel,<=pw.1, fr.2>);"]:
+                                                         process="in(cu.1:channel,<=pw.1, fr.2>);",
+                                                         issapicrule]:
    [
    Let_11111111112111111111111( <pw.1, fr.2>, cdcode.1, cu.1, pc.1, pw.1,
                                 shared_k.1, skV.1, skosenc.1
@@ -1597,7 +1603,8 @@ rule (modulo E) incuchannelpwfr_1_1111111111211111111111[color=#408070,
 
   /*
   rule (modulo AC) incuchannelpwfr_1_1111111111211111111111[color=#408070,
-                                                            process="in(cu.1:channel,<=pw.1, fr.2>);"]:
+                                                            process="in(cu.1:channel,<=pw.1, fr.2>);",
+                                                            issapicrule]:
      [
      Let_11111111112111111111111( <pw, fr>, cdcode, cu, pc, pw, shared_k, skV,
                                   skosenc
@@ -1612,7 +1619,7 @@ rule (modulo E) incuchannelpwfr_1_1111111111211111111111[color=#408070,
   */
 
 rule (modulo E) incypher_0_11111111112111111111111[color=#408070,
-                                                   process="in(cypher.1);"]:
+                                                   process="in(cypher.1);", issapicrule]:
    [
    State_11111111112111111111111( cdcode.1, cu.1, pc.1, pw.1, shared_k.1,
                                   skV.1, skosenc.1, fr.2
@@ -1628,7 +1635,7 @@ rule (modulo E) incypher_0_11111111112111111111111[color=#408070,
 
   /*
   rule (modulo AC) incypher_0_11111111112111111111111[color=#408070,
-                                                      process="in(cypher.1);"]:
+                                                      process="in(cypher.1);", issapicrule]:
      [
      State_11111111112111111111111( cdcode, cu, pc, pw, shared_k, skV,
                                     skosenc, fr
@@ -1693,7 +1700,7 @@ rule (modulo E) incypher_0_11111111112111111111111[color=#408070,
        z.1   = x.14
   */
 
-rule (modulo E) p_1_11111111112[color=#ffffff, process="!"]:
+rule (modulo E) p_1_11111111112[color=#ffffff, process="!", issapicrule]:
    [ !Semistate_111111111121( cu.1, pc.1, pw.1, skV.1 ) ]
   -->
    [
@@ -1702,7 +1709,8 @@ rule (modulo E) p_1_11111111112[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_11111111112[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_11111111112[color=#ffffff, process="!",
+                                   issapicrule]:
      [ !Semistate_111111111121( cu, pc, pw, skV ) ]
     -->
      [
@@ -1711,7 +1719,8 @@ rule (modulo E) p_1_11111111112[color=#ffffff, process="!"]:
      ]
   */
 
-rule (modulo E) p_1_1111111111212[color=#ffffff, process="!"]:
+rule (modulo E) p_1_1111111111212[color=#ffffff, process="!",
+                                  issapicrule]:
    [ !Semistate_11111111112121( cu.1, pc.1, pw.1, skV.1 ), In( share.1 ) ]
   -->
    [
@@ -1720,7 +1729,8 @@ rule (modulo E) p_1_1111111111212[color=#ffffff, process="!"]:
    ]
 
   /*
-  rule (modulo AC) p_1_1111111111212[color=#ffffff, process="!"]:
+  rule (modulo AC) p_1_1111111111212[color=#ffffff, process="!",
+                                     issapicrule]:
      [ !Semistate_11111111112121( cu, pc, pw, skV ), In( share ) ]
     -->
      [ Let_11111111112121111( z, cu, pc, pw, share, skV ) ]
@@ -1733,7 +1743,8 @@ rule (modulo E) p_1_1111111111212[color=#ffffff, process="!"]:
   */
 
 rule (modulo E) letcyphersigneddsharedshare_1_1111111111212111[color=#ffffff,
-                                                               process="let <cypher.2, signed.2>=dshared(share.1)"]:
+                                                               process="let <cypher.2, signed.2>=dshared(share.1)",
+                                                               issapicrule]:
    [
    Let_11111111112121111( <cypher.2, signed.2>, cu.1, pc.1, pw.1, share.1,
                           skV.1
@@ -1748,14 +1759,16 @@ rule (modulo E) letcyphersigneddsharedshare_1_1111111111212111[color=#ffffff,
 
   /*
   rule (modulo AC) letcyphersigneddsharedshare_1_1111111111212111[color=#ffffff,
-                                                                  process="let <cypher.2, signed.2>=dshared(share.1)"]:
+                                                                  process="let <cypher.2, signed.2>=dshared(share.1)",
+                                                                  issapicrule]:
      [ Let_11111111112121111( <cypher, signed>, cu, pc, pw, share, skV ) ]
     -->
      [ State_11111111112121111( cu, pc, pw, share, skV, cypher, signed ) ]
   */
 
 rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedloc_0_11111111112121111[color=#408046,
-                                                                              process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, 'loc')"]:
+                                                                              process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, 'loc')",
+                                                                              issapicrule]:
    [
    State_11111111112121111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
                             signed.2
@@ -1774,7 +1787,8 @@ rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedloc_0_11111111112121111[co
 
   /*
   rule (modulo AC) ifaencadeccypherskVpkskVcheckrepsignedloc_0_11111111112121111[color=#408046,
-                                                                                 process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, 'loc')"]:
+                                                                                 process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, 'loc')",
+                                                                                 issapicrule]:
      [ State_11111111112121111( cu, pc, pw, share, skV, cypher, signed ) ]
     --[ Pred_Eq( aenc(z, pk(skV)), z.1 ) ]->
      [ State_111111111121211111( cu, pc, pw, share, skV, cypher, signed ) ]
@@ -1813,7 +1827,8 @@ rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedloc_0_11111111112121111[co
   */
 
 rule (modulo E) eventSessionVpkskVadeccypherskV_0_111111111121211111[color=#408046,
-                                                                     process="event SessionV( pk(skV.1), adec(cypher.2, skV.1) );"]:
+                                                                     process="event SessionV( pk(skV.1), adec(cypher.2, skV.1) );",
+                                                                     issapicrule]:
    [
    State_111111111121211111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
                              signed.2
@@ -1830,7 +1845,8 @@ rule (modulo E) eventSessionVpkskVadeccypherskV_0_111111111121211111[color=#4080
 
   /*
   rule (modulo AC) eventSessionVpkskVadeccypherskV_0_111111111121211111[color=#408046,
-                                                                        process="event SessionV( pk(skV.1), adec(cypher.2, skV.1) );"]:
+                                                                        process="event SessionV( pk(skV.1), adec(cypher.2, skV.1) );",
+                                                                        issapicrule]:
      [
      State_111111111121211111( cu, pc, pw, share, skV, cypher, signed ),
      Fr( code )
@@ -1855,7 +1871,7 @@ rule (modulo E) eventSessionVpkskVadeccypherskV_0_111111111121211111[color=#4080
   */
 
 rule (modulo E) outpcchannelcode_1_11111111112121111111[color=#408046,
-                                                        process="out(pc.1:channel,code.3);"]:
+                                                        process="out(pc.1:channel,code.3);", issapicrule]:
    [
    Semistate_111111111121211111111( cu.1, pc.1, pw.1, share.1, skV.1,
                                     cypher.2, signed.2, code.3
@@ -1871,7 +1887,7 @@ rule (modulo E) outpcchannelcode_1_11111111112121111111[color=#408046,
 
   /*
   rule (modulo AC) outpcchannelcode_1_11111111112121111111[color=#408046,
-                                                           process="out(pc.1:channel,code.3);"]:
+                                                           process="out(pc.1:channel,code.3);", issapicrule]:
      [
      Semistate_111111111121211111111( cu, pc, pw, share, skV, cypher, signed,
                                       code
@@ -1887,7 +1903,8 @@ rule (modulo E) outpcchannelcode_1_11111111112121111111[color=#408046,
   */
 
 rule (modulo E) ifsdecdscodesccypheradeccypherskVcode_0_1111111111212111111111[color=#408046,
-                                                                               process="if sdec(dscode(sccypher.1), adec(cypher.2, skV.1))=code.3"]:
+                                                                               process="if sdec(dscode(sccypher.1), adec(cypher.2, skV.1))=code.3",
+                                                                               issapicrule]:
    [
    State_1111111111212111111111( cu.1, pc.1, pw.1, sccypher.1, share.1,
                                  skV.1, cypher.2, signed.2, code.3
@@ -1903,7 +1920,8 @@ rule (modulo E) ifsdecdscodesccypheradeccypherskVcode_0_1111111111212111111111[c
 
   /*
   rule (modulo AC) ifsdecdscodesccypheradeccypherskVcode_0_1111111111212111111111[color=#408046,
-                                                                                  process="if sdec(dscode(sccypher.1), adec(cypher.2, skV.1))=code.3"]:
+                                                                                  process="if sdec(dscode(sccypher.1), adec(cypher.2, skV.1))=code.3",
+                                                                                  issapicrule]:
      [
      State_1111111111212111111111( cu, pc, pw, sccypher, share, skV, cypher,
                                    signed, code
@@ -1960,7 +1978,7 @@ rule (modulo E) ifsdecdscodesccypheradeccypherskVcode_0_1111111111212111111111[c
   */
 
 rule (modulo E) eventProvScode_0_11111111112121111111111[color=#408046,
-                                                         process="event ProvS( code.3 );"]:
+                                                         process="event ProvS( code.3 );", issapicrule]:
    [
    State_11111111112121111111111( cu.1, pc.1, pw.1, sccypher.1, share.1,
                                   skV.1, cypher.2, signed.2, code.3
@@ -1977,7 +1995,7 @@ rule (modulo E) eventProvScode_0_11111111112121111111111[color=#408046,
 
   /*
   rule (modulo AC) eventProvScode_0_11111111112121111111111[color=#408046,
-                                                            process="event ProvS( code.3 );"]:
+                                                            process="event ProvS( code.3 );", issapicrule]:
      [
      State_11111111112121111111111( cu, pc, pw, sccypher, share, skV, cypher,
                                     signed, code
@@ -2004,7 +2022,7 @@ rule (modulo E) eventProvScode_0_11111111112121111111111[color=#408046,
   */
 
 rule (modulo E) p_1_11111111112121111111111111[color=#408046,
-                                               process="!"]:
+                                               process="!", issapicrule]:
    [
    !Semistate_111111111121211111111111111( cu.1, pc.1, pw.1, sccypher.1,
                                            share.1, skV.1, cypher.2, kOTP.2, signed.2, code.3
@@ -2021,7 +2039,7 @@ rule (modulo E) p_1_11111111112121111111111111[color=#408046,
 
   /*
   rule (modulo AC) p_1_11111111112121111111111111[color=#408046,
-                                                  process="!"]:
+                                                  process="!", issapicrule]:
      [
      !Semistate_111111111121211111111111111( cu, pc, pw, sccypher, share, skV,
                                              cypher, kOTP, signed, code
@@ -2048,7 +2066,7 @@ rule (modulo E) p_1_11111111112121111111111111[color=#408046,
   */
 
 rule (modulo E) inhashed_0_111111111121211111111111111111[color=#408046,
-                                                          process="in(hashed.1);"]:
+                                                          process="in(hashed.1);", issapicrule]:
    [
    State_111111111121211111111111111111( cu.1, pc.1, pw.1, sccypher.1,
                                          share.1, skV.1, challenge.2, cypher.2, kOTP.2, signed.2, code.3
@@ -2065,7 +2083,7 @@ rule (modulo E) inhashed_0_111111111121211111111111111111[color=#408046,
 
   /*
   rule (modulo AC) inhashed_0_111111111121211111111111111111[color=#408046,
-                                                             process="in(hashed.1);"]:
+                                                             process="in(hashed.1);", issapicrule]:
      [
      State_111111111121211111111111111111( cu, pc, pw, sccypher, share, skV,
                                            challenge, cypher, kOTP, signed, code
@@ -2081,7 +2099,8 @@ rule (modulo E) inhashed_0_111111111121211111111111111111[color=#408046,
   */
 
 rule (modulo E) ifhashedhpwhashkOTPchallenge_0_1111111111212111111111111111111[color=#408046,
-                                                                               process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>"]:
+                                                                               process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>",
+                                                                               issapicrule]:
    [
    State_1111111111212111111111111111111( cu.1, hashed.1, pc.1, pw.1,
                                           sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2, signed.2,
@@ -2098,7 +2117,8 @@ rule (modulo E) ifhashedhpwhashkOTPchallenge_0_1111111111212111111111111111111[c
 
   /*
   rule (modulo AC) ifhashedhpwhashkOTPchallenge_0_1111111111212111111111111111111[color=#408046,
-                                                                                  process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>"]:
+                                                                                  process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>",
+                                                                                  issapicrule]:
      [
      State_1111111111212111111111111111111( cu, hashed, pc, pw, sccypher,
                                             share, skV, challenge, cypher, kOTP, signed, code
@@ -2113,7 +2133,8 @@ rule (modulo E) ifhashedhpwhashkOTPchallenge_0_1111111111212111111111111111111[c
   */
 
 rule (modulo E) eventAcceptpwchallenge_0_11111111112121111111111111111111[color=#408046,
-                                                                          process="event Accept( pw.1, challenge.2 );"]:
+                                                                          process="event Accept( pw.1, challenge.2 );",
+                                                                          issapicrule]:
    [
    State_11111111112121111111111111111111( cu.1, hashed.1, pc.1, pw.1,
                                            sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2,
@@ -2125,7 +2146,8 @@ rule (modulo E) eventAcceptpwchallenge_0_11111111112121111111111111111111[color=
 
   /*
   rule (modulo AC) eventAcceptpwchallenge_0_11111111112121111111111111111111[color=#408046,
-                                                                             process="event Accept( pw.1, challenge.2 );"]:
+                                                                             process="event Accept( pw.1, challenge.2 );",
+                                                                             issapicrule]:
      [
      State_11111111112121111111111111111111( cu, hashed, pc, pw, sccypher,
                                              share, skV, challenge, cypher, kOTP, signed, code
@@ -2136,7 +2158,8 @@ rule (modulo E) eventAcceptpwchallenge_0_11111111112121111111111111111111[color=
   */
 
 rule (modulo E) ifhashedhpwhashkOTPchallenge_1_1111111111212111111111111111111[color=#408046,
-                                                                               process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>"]:
+                                                                               process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>",
+                                                                               issapicrule]:
    [
    State_1111111111212111111111111111111( cu.1, hashed.1, pc.1, pw.1,
                                           sccypher.1, share.1, skV.1, challenge.2, cypher.2, kOTP.2, signed.2,
@@ -2148,7 +2171,8 @@ rule (modulo E) ifhashedhpwhashkOTPchallenge_1_1111111111212111111111111111111[c
 
   /*
   rule (modulo AC) ifhashedhpwhashkOTPchallenge_1_1111111111212111111111111111111[color=#408046,
-                                                                                  process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>"]:
+                                                                                  process="if hashed.1=<h(pw.1), hash(kOTP.2, challenge.2)>",
+                                                                                  issapicrule]:
      [
      State_1111111111212111111111111111111( cu, hashed, pc, pw, sccypher,
                                             share, skV, challenge, cypher, kOTP, signed, code
@@ -2159,7 +2183,8 @@ rule (modulo E) ifhashedhpwhashkOTPchallenge_1_1111111111212111111111111111111[c
   */
 
 rule (modulo E) ifsdecdscodesccypheradeccypherskVcode_1_1111111111212111111111[color=#408046,
-                                                                               process="if sdec(dscode(sccypher.1), adec(cypher.2, skV.1))=code.3"]:
+                                                                               process="if sdec(dscode(sccypher.1), adec(cypher.2, skV.1))=code.3",
+                                                                               issapicrule]:
    [
    State_1111111111212111111111( cu.1, pc.1, pw.1, sccypher.1, share.1,
                                  skV.1, cypher.2, signed.2, code.3
@@ -2172,7 +2197,8 @@ rule (modulo E) ifsdecdscodesccypheradeccypherskVcode_1_1111111111212111111111[c
 
   /*
   rule (modulo AC) ifsdecdscodesccypheradeccypherskVcode_1_1111111111212111111111[color=#408046,
-                                                                                  process="if sdec(dscode(sccypher.1), adec(cypher.2, skV.1))=code.3"]:
+                                                                                  process="if sdec(dscode(sccypher.1), adec(cypher.2, skV.1))=code.3",
+                                                                                  issapicrule]:
      [
      State_1111111111212111111111( cu, pc, pw, sccypher, share, skV, cypher,
                                    signed, code
@@ -2225,7 +2251,8 @@ rule (modulo E) ifsdecdscodesccypheradeccypherskVcode_1_1111111111212111111111[c
   */
 
 rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedloc_1_11111111112121111[color=#408046,
-                                                                              process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, 'loc')"]:
+                                                                              process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, 'loc')",
+                                                                              issapicrule]:
    [
    State_11111111112121111( cu.1, pc.1, pw.1, share.1, skV.1, cypher.2,
                             signed.2
@@ -2240,7 +2267,8 @@ rule (modulo E) ifaencadeccypherskVpkskVcheckrepsignedloc_1_11111111112121111[co
 
   /*
   rule (modulo AC) ifaencadeccypherskVpkskVcheckrepsignedloc_1_11111111112121111[color=#408046,
-                                                                                 process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, 'loc')"]:
+                                                                                 process="if aenc(adec(cypher.2, skV.1), pk(skV.1))=check_rep(signed.2, 'loc')",
+                                                                                 issapicrule]:
      [ State_11111111112121111( cu, pc, pw, share, skV, cypher, signed ) ]
     --[ Pred_Not_Eq( aenc(z, pk(skV)), z.1 ) ]->
      [ ]
@@ -2290,21 +2318,27 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Derivation Checks
+=================
+
+  Derivation checks timed out.
+  Use --derivcheck-timeout=INT to configure timeout.
+  Set to 0 to deactivate for no timeout.
+*/
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -2312,7 +2346,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 18.94s
+  processing time: 20.88s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   reachV (exists-trace): verified (7 steps)
   secrecy_key (all-traces): verified (8 steps)

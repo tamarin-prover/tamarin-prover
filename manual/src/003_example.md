@@ -111,7 +111,7 @@ incomparable subsorts `fresh`, `pub` and `nat` of that top sort. Timepoint
 variables of sort `temporal` are unconnected.
 
 The above rule can therefore be read as follows. First, generate
-a fresh name `~ltk` (of sort fresh), which is the new private key, and
+a fresh name `~ltk` (of sort fresh), which is the new private (long-term) key, and
 non-deterministically choose a public name `A`, for the agent for whom we
 are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
 (the exclamation mark `!` denotes that the fact is persistent, i.e., it
@@ -174,7 +174,7 @@ a protocol execution.
 
 We have two properties that we would like to evaluate. In the Tamarin framework,
 properties to be evaluated are denoted by lemmas. The first of these is on the
-secrecy of session key secrecy from the client point of view. The lemma
+secrecy of the session key from the client point of view. The lemma
 `Client_session_key_secrecy` says that it cannot be that a client has set up a
 session key `k` with a server `S` and the adversary learned that `k` unless the
 adversary performed a long-term key reveal on the server `S`. The second lemma
@@ -436,7 +436,7 @@ steps based on a heuristic. Here we have two constraints to resolve:
 `Client_1( S, k )` and `KU( k )`, both of which are premises for the rules in 
 the unfinished current constraint system.
 
-Note that that the proof methods in the GUI are sorted according to the same 
+Note that the proof methods in the GUI are sorted according to the same 
 heuristic as is used by the `autoprove` command. Any proof found by always 
 selecting the first proof method will be identical to the one constructed by 
 the `autoprove` command. However, because the general problem is

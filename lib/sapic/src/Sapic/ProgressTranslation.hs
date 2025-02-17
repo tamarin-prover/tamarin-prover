@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE QuasiQuotes #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -14,24 +13,25 @@
 -- Approach for Reasoning about Liveness in Cryptographic Protocols and its
 -- Application to Fair Exchange". EuroS&P 2017
 --
-module Sapic.ProgressTranslation (
-     progressTrans
-   , progressTransNull
-   , progressTransAct
-   , progressTransComb
-   , progressInit
-   , progressRestr
-) where
-import qualified Data.List              as List
-import           Data.Set               hiding (map)
-import           Data.Typeable
-import qualified Text.RawString.QQ    as QQ
-import           Control.Monad.Catch
-import           Theory
-import           Theory.Sapic
-import           Sapic.Facts
-import           Sapic.ProgressFunction
-import           Sapic.Basetranslation
+module Sapic.ProgressTranslation
+  ( progressTrans
+  , progressTransNull
+  , progressTransAct
+  , progressTransComb
+  , progressInit
+  , progressRestr
+  ) where
+
+import Control.Monad.Catch
+import Data.List qualified as List
+import Data.Set               hiding (map)
+import Data.Typeable
+import Text.RawString.QQ qualified as QQ
+import Theory
+import Theory.Sapic
+import Sapic.Facts
+import Sapic.ProgressFunction
+import Sapic.Basetranslation
 
 -- | Adds event @ProgressFrom@ to any rule with a state fact (not semi-state
 -- fact) on the rhs, if the followup position (as marked in the state) is in
@@ -91,7 +91,7 @@ addProgressItems domPF invPF pos =addProgressFrom domPF (lhsP pos) -- can only s
 --                  -> ([] TransFact, [TransAction], c, d)
 --                  -> (t TransFact, [TransAction], c,d )
 addProgressTo :: Foldable t => ([Int] -> Maybe ProcessPosition) -> [Int] -> (a, [TransAction], t TransFact, d) -> (a, [TransAction], t TransFact, d)
-addProgressTo invPF child (l,a,r,res) 
+addProgressTo invPF child (l,a,r,res)
 --   | any isState l
 --   , (Just posFrom) <- invPF child = (l,ProgressTo child posFrom:a,r,res)
   | any isTargetState r

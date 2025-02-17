@@ -3,7 +3,7 @@ theory issue223 begin
 // Function signature and definition of the equational theory E
 
 functions: commit/3, fake/4, fst/1, open/3, pair/2, pk/1, snd/1
-equations:
+equations [convergent]:
     commit(ni2, fake(ni1, r, sk, ni2), pk(sk)) = commit(ni1, r, pk(sk)),
     fake(ni2, fake(ni1, r, sk, ni2), sk, ni3) = fake(ni1, r, sk, ni3),
     fst(<x.1, x.2>) = x.1,
@@ -3239,10 +3239,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.2.2
-Git revision: 0194f3b61d6d8b8c1d70bbad8fe0a7143cac0fb3, branch: feature/export-wellformedness
-Compiled at: 2023-10-25 08:40:09.47146758 UTC
+Tamarin version 1.11.0
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -3254,7 +3254,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 4.42s
+  processing time: 1.79s
   
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 

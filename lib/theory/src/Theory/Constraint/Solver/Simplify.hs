@@ -51,9 +51,6 @@ import           Theory.Model
 import           Theory.Text.Pretty
 import           Theory.Tools.InjectiveFactInstances
 
-import           Utils.Misc
-
-
 -- | Apply CR-rules that don't result in case splitting until the constraint
 -- system does not change anymore.
 simplifySystem :: Reduction ()
@@ -168,8 +165,8 @@ exploitUniqueMsgOrder = do
     kdConcs   <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKDConcs)
     kuActions <- gets (M.fromList . map (\(i, _, m) -> (m, i)) . allKUActions)
     -- We can add all elements where we have an intersection
-    F.mapM_ (uncurry3 insertLess) (M.map (\(x,y)->(x,y, NormalForm))  
-              $ M.intersectionWith (,) kdConcs kuActions )
+    F.mapM_ insertLess (M.map (\(x,y)-> LessAtom x y NormalForm)
+              $ M.intersectionWith (,) kdConcs kuActions)
 
 -- | CR-rules *DG4*, *N5_u*, and *N5_d*: enforcing uniqueness of *Fresh* rule
 -- instances, *KU*-actions, and *KD*-conclusions.
@@ -446,12 +443,12 @@ freshOrdering = do
   let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  -- add a fake-subterm (f,f) for each freshVar f to the graph
   let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms  -- graph that has subterms (s,t) as nodes and edges (s,t) -> (u,v) if t `el` u
   let termsContaining = [((nid,x), map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]  -- (freshNodeId, t) for all terms t that have to contain x. So also the ones transitively connected by ⊏ to x
-  let newLesses = [(i,j,Fresh) | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r, i/=j]  -- new ordering constraints that can be added (or enhanced and then added)
-  let enhancedLesses = [(last rs, j, Fresh) | (i, j, _) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
+  let newLesses = [ LessAtom i j Fresh | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r, i/=j]  -- new ordering constraints that can be added (or enhanced and then added)
+  let enhancedLesses = [ LessAtom (last rs) j Fresh | (LessAtom i j _) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
   let allLesses = newLesses ++ enhancedLesses
 
   oldLesses <- gets (get sLessAtoms)
-  mapM_ (uncurry3 insertLess) allLesses
+  mapM_ insertLess allLesses
   modifiedLesses <- gets (get sLessAtoms)
   return $ if oldLesses == modifiedLesses
     then Unchanged
@@ -591,7 +588,7 @@ simpInjectiveFactEqMon = do
   -- generate and execute changes
   let (newFormulas, newLesses) = (concat *** concat) $ unzip $ map simpSingle (getPairs inj nodes)
   mapM_ insertFormula newFormulas
-  mapM_ (\(x, y) -> insertLess x y InjectiveFacts) -- $ trace (show ("newLesses", newLesses))
+  mapM_ (\(x, y) -> insertLess (LessAtom x y InjectiveFacts)) -- $ trace (show ("newLesses", newLesses))
                               newLesses
 
   -- check if anything changed
@@ -716,8 +713,8 @@ addNonInjectiveFactInstances :: Reduction ()
 addNonInjectiveFactInstances = do
   se <- gets id
   ctxt <- ask
-  let list = map (\(x,y)-> (x,y,InjectiveFacts)) $ nonInjectiveFactInstances ctxt se
-  mapM_ (uncurry3 insertLess) list
+  let list = map (\(x,y)-> LessAtom x y InjectiveFacts) $ nonInjectiveFactInstances ctxt se
+  mapM_ insertLess list
 
 
 

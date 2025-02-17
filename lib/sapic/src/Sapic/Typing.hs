@@ -1,36 +1,32 @@
-{-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns #-}
-module Sapic.Typing (
-      typeTheory
-    , typeTheoryEnv
-    , typeTermsWithEnv
-    , typeProcess
-    , TypingEnvironment (..)
-) where
 
-import qualified Data.Map.Strict as Map
-import qualified Data.Foldable as F
-import qualified Data.Set as S
-import Data.Maybe
-import Data.Tuple
+module Sapic.Typing
+  ( typeTheory
+  , typeTheoryEnv
+  , typeTermsWithEnv
+  , typeProcess
+  , TypingEnvironment (..)
+  ) where
 
-import qualified Extension.Data.Label                as L
-
-import Control.Monad.Trans.State.Lazy
 import Control.Monad.Catch
+import Control.Monad.Fresh
+import Control.Monad.Trans.PreciseFresh qualified as Precise
+import Control.Monad.Trans.State.Lazy
+import Data.Bifunctor (Bifunctor(second))
+import Data.Foldable qualified as F
+import Data.List qualified as List
+import Data.Map.Strict qualified as Map
+import Data.Maybe
+import Data.Set qualified as S
+import Data.Tuple
+import Data.Typeable (Typeable)
+import GHC.Stack (HasCallStack)
+
 import Theory
 import Theory.Sapic
 import Term.SubtermRule
 import Sapic.Exceptions
 import Sapic.Bindings
-import Control.Monad.Fresh
-import qualified Control.Monad.Trans.PreciseFresh as Precise
-import Data.Bifunctor ( Bifunctor(second) )
-import GHC.Stack (HasCallStack)
-import qualified Data.List as List
-import Data.Typeable (Typeable)
-
 
 -- | Smaller-or-equal / More-or-equally-specific relation on types.
 smallerType :: Eq a => Maybe a -> Maybe a -> Bool
@@ -189,7 +185,7 @@ initTEFromSig th = do
   foldM typeRule initTE sigRules
   where
     -- we load all funs and add default type
-    sig = L.get sigpMaudeSig (L.get thySignature th)
+    sig = th._thySignature._sigMaudeInfo
     funSet = stFunSyms sig
     funTyped = foldMap (\fs@(_,(n,_,_)) -> Map.singleton fs (defaultFunctionType n)) funSet
     -- we then also add the custom used defined types
@@ -216,8 +212,8 @@ typeTheoryEnv th = do
                 modify' (\s -> s { vars = Map.empty})
                 typeProcess pUnique
         typeAndRenameProcessDef p = do
-                let pr = L.get pBody p
-                let pvars = fromMaybe (S.toList (varsProc pr) List.\\ accBindings pr) (L.get pVars p)
+                let pr = p._pBody
+                let pvars = fromMaybe (S.toList (varsProc pr) List.\\ accBindings pr) p._pVars
                 let aux_pr = ProcessAction (ChIn Nothing (fAppList (map varTerm pvars)) S.empty) mempty pr
                 renamedP <- typeAndRenameProcess aux_pr
                 case renamedP of
