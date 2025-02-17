@@ -71,7 +71,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (!KU( m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ x #j. (Exclusive( x, m ) @ #j) ∧ ¬(last(#j)))  ∥
@@ -288,10 +287,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.11.0
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -303,9 +302,9 @@ summary of summaries:
 analyzed: examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy
 
   output:          examples/related_work/StatVerif_ARR_CSF11/StatVerif_Security_Device.spthy.tmp
-  processing time: 0.32s
+  processing time: 0.26s
   
-  types (all-traces): verified (32 steps)
+  types (all-traces): verified (31 steps)
   reachability_left (exists-trace): verified (5 steps)
   reachability_right (exists-trace): verified (5 steps)
   secrecy (all-traces): verified (20 steps)
