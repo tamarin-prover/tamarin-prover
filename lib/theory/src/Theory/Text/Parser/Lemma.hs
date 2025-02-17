@@ -11,6 +11,7 @@ module Theory.Text.Parser.Lemma(
       lemma
       , lemmaAttribute
       , plainLemma
+      , lemmaWithMsig
       , diffLemma
 )
 where
@@ -58,12 +59,33 @@ traceQuantifier = asum
   , symbol "exists-trace"  *> pure ExistsTrace
   ]
 
+removeComments :: String -> String
+removeComments [] = []
+removeComments('\n' : '/' : '/' : rest) = removeComments (dropWhile (/= '\n') rest)
+removeComments('/' : '/' : rest) = removeComments (dropWhile (/= '\n') rest)
+removeComments('\n': '/' : '*' : rest) = removeCommentBlock rest
+removeComments('/' : '*' : rest) = removeCommentBlock rest
+removeComments(x : rest) = x : removeComments rest
+
+removeCommentBlock :: String -> String
+removeCommentBlock  ('*' : '/' : '\n' : rest) = removeComments rest
+removeCommentBlock  ('*' : '/' : rest) = removeComments rest
+removeCommentBlock  (_ : rest) = removeCommentBlock rest
+removeCommentBlock  [] = []
+
+
+-- | parse a ProtoLemma
 protoLemma :: Parser f -> Maybe FilePath -> Parser (ProtoLemma f ProofSkeleton)
-protoLemma parseFormula workDir = skeletonLemma <$> (symbol "lemma" *> optional moduloE *> identifier)
-                      <*> (option [] $ list (lemmaAttribute False workDir))
-                      <*> (colon *> option AllTraces traceQuantifier)
-                      <*> doubleQuoted parseFormula
-                      <*> (startProofSkeleton <|> pure (unproven ()))
+protoLemma parseFormula workDir = try $ do
+  start <- getInput
+  name <- symbol "lemma" *> optional moduloE *> identifier
+  attr <- option [] $ list (lemmaAttribute False workDir)
+  quan <- colon *> option AllTraces traceQuantifier
+  formula <- doubleQuoted parseFormula
+  pskelet <- startProofSkeleton <|> pure (unproven ())
+  end <- getInput
+  let inputString = removeComments $ take (length start - length end) start
+  return $ skeletonLemma name inputString False attr quan formula pskelet
 
 
 -- | Parse a lemma.
@@ -74,8 +96,15 @@ lemma = protoLemma $ standardFormula msgvar nodevar
 plainLemma :: Maybe FilePath -> Parser (Lemma ProofSkeleton)
 plainLemma = protoLemma plainFormula
 
+-- | parse a lemma with a given signature
+lemmaWithMsig :: MaudeSig -> Maybe FilePath -> Parser (Lemma ProofSkeleton)
+lemmaWithMsig s = (return s >>) <$> plainLemma
+
 -- | Parse a diff lemma.
 diffLemma :: Maybe FilePath -> Parser (DiffLemma DiffProofSkeleton)
-diffLemma workDir = skeletonDiffLemma <$> (symbol "diffLemma" *> identifier)
-                              <*> (option [] $ list (lemmaAttribute True workDir))
-                              <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
+diffLemma workDir = do
+    traceM "diffLemma"
+    skeletonDiffLemma 
+     <$> (symbol "diffLemma" *> identifier)
+     <*> (option [] $ list (lemmaAttribute True workDir))
+     <*> (colon *> (diffProofSkeleton <|> pure (diffUnproven ())))
