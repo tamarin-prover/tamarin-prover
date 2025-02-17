@@ -179,7 +179,7 @@ generateAction :: [LVar] ->Int -> LNFact
 generateAction vars idx = protoFact Persistent ("Generated_" ++ show idx) (map lvarToLnterm (deleteGlobals vars))
 
 generateSeparatedLemmas :: Int -> [LVar]-> [ProtoLemma (ProtoFormula Unit2 (String, LSort) Name LVar) (Proof ())]
-generateSeparatedLemmas idx vars = map (\v -> Lemma (show v) ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : [(lntermToKUFact (lvarToLnterm v))]) [] (unproven ())) vars
+generateSeparatedLemmas idx vars = map (\v -> Lemma (show v) "message_deriv" False ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : [(lntermToKUFact (lvarToLnterm v))]) [] (unproven ())) vars
 
 deleteGlobals :: [LVar] -> [LVar]
 deleteGlobals = filter (\v -> lvarSort v /= LSortPub)
