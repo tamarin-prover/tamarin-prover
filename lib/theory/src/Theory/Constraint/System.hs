@@ -125,6 +125,7 @@ module Theory.Constraint.System (
 
   -- ** Construction
   , emptySystem
+  , isInitialSystem
   , emptyDiffSystem
 
   , SystemTraceQuantifier(..)
@@ -644,12 +645,12 @@ stringToGoalRankingMay :: Bool -> String -> Maybe (GoalRanking ProofContext)
 stringToGoalRankingMay noOracle s = if noOracle then M.lookup s goalRankingIdentifiersNoOracle else M.lookup s goalRankingIdentifiers
 
 goalRankingToChar :: GoalRanking ProofContext -> Char
-goalRankingToChar g = fromMaybe (error $ render $ sep $ map text $ lines $ "Unknown goal ranking."++ show g)
+goalRankingToChar g = fromMaybe (error $ render $ sep $ map text $ lines $ "Unknown proof method ranking."++ show g)
     $ M.lookup g goalRankingToIdentifiersNoOracle
 
 stringToGoalRanking :: Bool -> String -> GoalRanking ProofContext
 stringToGoalRanking noOracle s = fromMaybe
-    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
+    (error $ render $ sep $ map text $ lines $ "Unknown proof method ranking '" ++ s
         ++ "'. Use one of the following:\n" ++ listGoalRankings noOracle)
     $ stringToGoalRankingMay noOracle s
 
@@ -658,7 +659,7 @@ stringToGoalRankingDiffMay noOracle s = if noOracle then M.lookup s goalRankingI
 
 stringToGoalRankingDiff :: Bool -> String -> GoalRanking ProofContext
 stringToGoalRankingDiff noOracle s = fromMaybe
-    (error $ render $ sep $ map text $ lines $ "Unknown goal ranking '" ++ s
+    (error $ render $ sep $ map text $ lines $ "Unknown proof method ranking '" ++ s
         ++ "'. Use one of the following:\n" ++ listGoalRankingsDiff noOracle)
     $ stringToGoalRankingDiffMay noOracle s  
 
@@ -715,10 +716,10 @@ prettyGoalRanking ranking = case ranking of
   where
     findIdentifier r = case find (compareRankings r . snd) combinedIdentifiers of
         Just (k,_) -> k
-        Nothing    -> error "Goal ranking does not have a defined identifier"
+        Nothing    -> error " does not have a defined identifier"
 
     -- Note because find works left first this will look at non-diff identifiers first. Thus,
-    -- this assumes the diff rankings don't use a different character for the same goal ranking.
+    -- this assumes the diff rankings don't use a different character for the same proof method ranking.
     combinedIdentifiers = M.toList goalRankingIdentifiers ++ M.toList goalRankingIdentifiersDiff
 
     compareRankings (OracleRanking _ _) (OracleRanking _ _) = True
@@ -822,6 +823,11 @@ emptySystem d isdiff = System
     M.empty S.empty S.empty Nothing emptySubtermStore emptyEqStore
     S.empty S.empty S.empty
     M.empty 0 d isdiff
+
+-- TODO: I do not like the second conjunct; this should be done cleaner
+isInitialSystem :: System -> Bool
+isInitialSystem sys = null (L.get sSolvedFormulas sys) && not (S.member bot (L.get sFormulas sys))
+  where bot = GDisj (Disj [])
 
 -- | The empty diff constraint system.
 emptyDiffSystem :: DiffSystem
@@ -1655,7 +1661,7 @@ prettySystem se = vcat $
       , ("actions",        fsepList ppActionAtom $ unsolvedActionAtoms se)
       , ("edges",          fsepList prettyEdge   $ S.toList $ L.get sEdges se)
       , ("less",           fsepList prettyLess   $ S.toList $ L.get sLessAtoms se)
-      , ("unsolved goals", prettyGoals False se)
+      , ("unsolved constraints", prettyGoals False se)
       ]
     ++ [prettyNonGraphSystem se]
   where
@@ -1673,8 +1679,8 @@ prettyNonGraphSystem se = vsep $ map combine_ -- text $ show se
   , ("lemmas",          vsep $ map prettyGuarded $ S.toList $ L.get sLemmas se)
   , ("allowed cases",   text $ show $ L.get sSourceKind se)
   , ("solved formulas", vsep $ map prettyGuarded $ S.toList $ L.get sSolvedFormulas se)
-  , ("unsolved goals",  prettyGoals False se)
-  , ("solved goals",    prettyGoals True se)
+  , ("unsolved constraints", prettyGoals False se)
+  , ("solved constraints", prettyGoals True se)
   ]
   where
     combine_ (header, d)  = fsep [keyword_ header <> colon, nest 2 d]
@@ -1725,7 +1731,7 @@ prettyProofType :: HighlightDocument d => Maybe DiffProofType -> d
 prettyProofType Nothing  = text "none"
 prettyProofType (Just p) = text $ show p
 
--- | Pretty print solved or unsolved goals.
+-- | Pretty print solved or un.
 prettyGoals :: HighlightDocument d => Bool -> System -> d
 prettyGoals solved sys = vsep $ do
     (goal, status) <- M.toList $ L.get sGoals sys

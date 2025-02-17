@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE PatternGuards #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -18,24 +16,14 @@ module Sapic.ProcessUtils (
 ,  isChIn
 ,  isChOut
 ) where
--- import Data.Maybe
--- import Data.Foldable
--- import Control.Exception
--- import Control.Monad.Fresh
-import Data.Typeable
+
 import Control.Monad.Catch
-import qualified Data.Monoid            as M
--- import Sapic.Exceptions
--- import Theory
+import Data.Typeable
+import Data.Monoid qualified as M
 import Theory.Sapic
 import Theory
 import Sapic.Exceptions
 import Sapic.Annotation
-
--- import Theory.Model.Rule
--- import Data.Typeable
--- import qualified Data.Set                   as S
--- import Control.Monad.Trans.FastFresh
 
 -- | Return subprocess at position p. Throw exceptions if p is an invalid
 -- positions.

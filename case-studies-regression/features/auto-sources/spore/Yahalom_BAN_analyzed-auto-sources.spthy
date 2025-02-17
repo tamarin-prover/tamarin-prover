@@ -321,15 +321,6 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Facts occur in the left-hand-side but not in any right-hand-side 
-=================================================================
-
-  1. in rule "Reveal_Shortterm_Key":  factName `ShorttermKey' arity: 3 multiplicity: Persistent
-*/
-
 lemma AUTO_typing [sources]:
   all-traces
   "(⊤) ∧
@@ -394,18 +385,24 @@ next
 qed
 
 /*
+WARNING: the following wellformedness checks failed!
+
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "Reveal_Shortterm_Key":  factName `ShorttermKey' arity: 3 multiplicity: Persistent
+*/
+
+/*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -413,7 +410,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom_BAN.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom_BAN.spthy.tmp
-  processing time: 1.07s
+  processing time: 1.48s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

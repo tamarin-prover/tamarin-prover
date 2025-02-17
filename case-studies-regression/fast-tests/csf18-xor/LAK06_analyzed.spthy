@@ -274,7 +274,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (Running( <'T', 'R', t> ) @ #j) ∧ ¬(last(#j))) )
     case case_1
@@ -6526,7 +6525,6 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (Running( <'R', 'T', t> ) @ #j) ∧ ¬(last(#j))) )
     case case_1
@@ -6573,17 +6571,14 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.8.0
+Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -6591,12 +6586,12 @@ summary of summaries:
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 6.20s
+  processing time: 4.99s
   
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)
-  noninjectiveagreementTAG (all-traces): verified (2082 steps)
-  noninjectiveagreementREADER (all-traces): falsified - found trace (13 steps)
+  noninjectiveagreementTAG (all-traces): verified (2081 steps)
+  noninjectiveagreementREADER (all-traces): falsified - found trace (12 steps)
 
 ==============================================================================
 */

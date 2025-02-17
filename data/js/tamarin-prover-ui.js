@@ -688,7 +688,7 @@ var proofScript = {
     },
 
     /**
-     * Just jump to next open goal or case if no open goal.
+     * Just jump to next open proof methods or case if no open proof methods.
      * @param target Jump relative to this target.
      */
     jumpNextOpenGoal: function(target) {
@@ -696,7 +696,7 @@ var proofScript = {
         // Perform smart jump
         proofScript.jump('next/smart', function() {
             // If smart jump failed (e.g. there are
-            // no more open goals), perform normal jump
+            // no more open proof methods), perform normal jump
             proofScript.jump('next/normal', function() {
                 // If both failed, just jump to target
                 proofScript.jumpToTarget(target);

@@ -213,7 +213,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ pid sc #t2.
            (YubiPress( pid, sc ) @ #t2)
           ⇒
@@ -305,7 +304,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #t3 k2 k m sc enc mac.
            (OtpDecode( k2, k, m, sc, enc, mac ) @ #t3)
           ⇒
@@ -1155,7 +1153,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ #t1 #t2 k. (MasterKey( k ) @ #t1) ∧ (!KU( k ) @ #t2))  ∥
          (∃ #t5 #t6 k6 pid. (Init( pid, k6 ) @ #t5) ∧ (!KU( k6 ) @ #t6)) )
     case case_1
@@ -1746,7 +1743,6 @@ induction
   by contradiction
 next
   case non_empty_trace
-  simplify
   solve( !S_AEAD( pid,
                   <xorc(senc(keystream(kh, pid), k), <k2, sid>), mac(<k2, sid>, k)>
          ) ▶₂ #t2 )
@@ -6192,12 +6188,6 @@ next
         qed
       qed
     next
-      case cxorc
-      by sorry /* unannotated */
-    next
-      case irecv
-      by contradiction /* unannotated */
-    next
       case irecvHSM
       by contradiction /* cyclic */
     next
@@ -7549,7 +7539,7 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Message Derivation Checks
 =========================
 
-  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
 Rule YSM_AEAD_YUBIKEY_OTP_DECODE: 
 Failed to derive Variable(s): N
@@ -7557,17 +7547,14 @@ Failed to derive Variable(s): N
 
 /*
 Generated from:
-Tamarin version 1.8.0
+Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -7575,15 +7562,15 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 20.21s
+  processing time: 15.38s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
-  adv_can_guess_counter (all-traces): verified (24 steps)
-  otp_decode_does_not_help_adv_use_induction (all-traces): verified (275 steps)
-  neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (185 steps)
-  one_count_foreach_login (all-traces): verified (1903 steps)
+  adv_can_guess_counter (all-traces): verified (23 steps)
+  otp_decode_does_not_help_adv_use_induction (all-traces): verified (274 steps)
+  neither_k_nor_k2_are_ever_leaked_inv (all-traces): verified (184 steps)
+  one_count_foreach_login (all-traces): verified (1900 steps)
 
 ==============================================================================
 */

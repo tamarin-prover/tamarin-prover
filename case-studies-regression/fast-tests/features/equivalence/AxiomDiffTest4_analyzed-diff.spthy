@@ -18,8 +18,6 @@ restriction BlockSometimes [right]:
   "∀ t #e. (RNeq( t, t ) @ #e) ⇒ (⊥)"
   // safety formula
 
-/* All wellformedness checks were successful. */
-
 diffLemma Observational_equivalence:
 rule-equivalence
   case Rule_not_match
@@ -30,19 +28,18 @@ rule-equivalence
   qed
 qed
 
+/* All wellformedness checks were successful. */
+
 /*
 Generated from:
-Tamarin version 1.8.0
+Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -50,7 +47,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest4.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest4.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.08s
   
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 
