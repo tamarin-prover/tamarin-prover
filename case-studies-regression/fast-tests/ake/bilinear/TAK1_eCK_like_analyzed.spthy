@@ -107,8 +107,8 @@ rule (modulo E) Proto2:
         z     = em(x.9, x.12)^(x.10*inv((x.8*x.11)))
     
     13. XB    = pmult(inv((x.8*x.9)), x.10)
-        XC    = pmult(x.8, x.11)
-        z     = em(x.10, x.11)^inv(x.9)
+        XC    = pmult(x.9, x.11)
+        z     = em(x.10, x.11)^inv(x.8)
     
     14. XB    = pmult(inv((x.8*x.9)), x.10)
         XC    = pmult((x.8*x.11), x.12)
@@ -139,8 +139,8 @@ rule (modulo E) Proto2:
         z     = em(x.10, x.13)^(x.9*x.11*inv(x.12))
     
     21. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
-        XC    = pmult(inv((x.8*x.12)), x.13)
-        z     = em(x.11, x.13)^(x.9*inv((x.10*x.12)))
+        XC    = pmult(inv((x.9*x.12)), x.13)
+        z     = em(x.11, x.13)^(x.8*inv((x.10*x.12)))
     
     22. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
         XC    = pmult((x.10*x.12*inv(x.8)), x.13)
@@ -151,8 +151,8 @@ rule (modulo E) Proto2:
         z     = em(x.11, x.14)^(x.9*x.12*inv(x.13))
     
     24. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
-        XC    = pmult((x.10*inv(x.8)), x.12)
-        z     = em(x.11, x.12)^x.9
+        XC    = pmult((x.10*inv(x.9)), x.12)
+        z     = em(x.11, x.12)^x.8
     
     25. XB    = pmult((x.8*x.9*inv(x.10)), x.11)
         XC    = pmult((x.10*inv((x.8*x.12))), x.13)
@@ -171,12 +171,12 @@ rule (modulo E) Proto2:
         z     = em(x.12, x.15)^(x.9*x.13*inv((x.11*x.14)))
     
     29. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
-        XC    = pmult((x.10*inv(x.8)), x.13)
-        z     = em(x.12, x.13)^(x.9*inv(x.11))
-    
-    30. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
         XC    = pmult((x.10*inv((x.8*x.13))), x.14)
         z     = em(x.12, x.14)^(x.9*inv((x.11*x.13)))
+    
+    30. XB    = pmult((x.8*x.9*inv((x.10*x.11))), x.12)
+        XC    = pmult((x.11*inv(x.9)), x.13)
+        z     = em(x.12, x.13)^(x.8*inv(x.10))
     
     31. XB    = pmult((x.8*inv(x.9)), x.10)
         XC    = pmult(x.9, x.11)
@@ -219,8 +219,8 @@ rule (modulo E) Proto2:
         z     = em(x.10, x.13)^(x.11*inv((x.9*x.12)))
     
     41. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
-        XC    = pmult(x.9, x.12)
-        z     = em(x.11, x.12)^(x.8*inv(x.10))
+        XC    = pmult(x.10, x.12)
+        z     = em(x.11, x.12)^(x.8*inv(x.9))
     
     42. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*x.12), x.13)
@@ -239,16 +239,16 @@ rule (modulo E) Proto2:
         z     = em(x.11, x.14)^(x.12*inv((x.10*x.13)))
     
     46. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
-        XC    = pmult((x.9*inv(x.8)), x.12)
-        z     = em(x.11, x.12)^inv(x.10)
-    
-    47. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*inv(x.12)), x.13)
         z     = em(x.11, x.13)^(x.8*inv((x.10*x.12)))
     
-    48. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+    47. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
         XC    = pmult((x.9*inv((x.8*x.12))), x.13)
         z     = em(x.11, x.13)^inv((x.10*x.12))
+    
+    48. XB    = pmult((x.8*inv((x.9*x.10))), x.11)
+        XC    = pmult((x.10*inv(x.8)), x.12)
+        z     = em(x.11, x.12)^inv(x.9)
   */
 
 rule (modulo E) Proto3:
@@ -553,9 +553,9 @@ Failed to derive Variable(s): ~eb, ~ec, XB, XC
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 2.7.1
-Git revision: a2a7d23228e0ce1f4ba03ba0ebb2ca33264a0aa7 (with uncommited changes), branch: arcz-refactor-accountability
-Compiled at: 2025-02-17 10:29:03.196292 UTC
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -567,7 +567,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 26.47s
+  processing time: 26.25s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

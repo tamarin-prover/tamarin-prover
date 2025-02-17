@@ -284,9 +284,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 2.7.1
-Git revision: a2a7d23228e0ce1f4ba03ba0ebb2ca33264a0aa7 (with uncommited changes), branch: arcz-refactor-accountability
-Compiled at: 2025-02-17 10:29:03.196292 UTC
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -298,7 +298,7 @@ summary of summaries:
 analyzed: examples/features//multiset/counter.spthy
 
   output:          examples/features//multiset/counter.spthy.tmp
-  processing time: 0.25s
+  processing time: 0.22s
   
   counters_linear_order (all-traces): verified (31 steps)
   counter_start (all-traces): verified (7 steps)

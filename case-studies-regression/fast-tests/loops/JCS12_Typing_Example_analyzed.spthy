@@ -291,9 +291,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 2.7.1
-Git revision: a2a7d23228e0ce1f4ba03ba0ebb2ca33264a0aa7 (with uncommited changes), branch: arcz-refactor-accountability
-Compiled at: 2025-02-17 10:29:03.196292 UTC
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -305,7 +305,7 @@ summary of summaries:
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          examples/loops/JCS12_Typing_Example.spthy.tmp
-  processing time: 0.26s
+  processing time: 0.23s
   
   typing_assertion (all-traces): verified (15 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
