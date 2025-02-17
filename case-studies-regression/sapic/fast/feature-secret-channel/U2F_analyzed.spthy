@@ -8487,9 +8487,9 @@ Derivation Checks
 /*
 Generated from:
 Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Maude version 2.7.1
+Git revision: 6365cd62822fe636492db16d36606d765d0edc29 (with uncommited changes), branch: arcz-refactor-accountability
+Compiled at: 2025-02-17 09:19:21.354086 UTC
 */
 
 end
@@ -8501,7 +8501,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-secret-channel/U2F.spthy
 
   output:          examples/sapic/fast/feature-secret-channel/U2F.spthy.tmp
-  processing time: 366.70s
+  processing time: 296.18s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

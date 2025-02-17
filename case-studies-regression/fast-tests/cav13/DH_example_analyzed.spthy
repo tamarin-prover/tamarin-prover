@@ -141,9 +141,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.2.1
-Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
-Compiled at: 2024-11-25 14:27:26.931961 UTC
+Maude version 2.7.1
+Git revision: a2a7d23228e0ce1f4ba03ba0ebb2ca33264a0aa7 (with uncommited changes), branch: arcz-refactor-accountability
+Compiled at: 2025-02-17 10:29:03.196292 UTC
 */
 
 end
@@ -155,7 +155,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.16s
+  processing time: 0.22s
   
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)

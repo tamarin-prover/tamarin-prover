@@ -555,9 +555,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.2.1
-Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
-Compiled at: 2024-11-25 14:27:26.931961 UTC
+Maude version 2.7.1
+Git revision: a2a7d23228e0ce1f4ba03ba0ebb2ca33264a0aa7 (with uncommited changes), branch: arcz-refactor-accountability
+Compiled at: 2025-02-17 10:29:03.196292 UTC
 */
 
 end
@@ -569,7 +569,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 3.92s
+  processing time: 4.48s
   
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (53 steps)

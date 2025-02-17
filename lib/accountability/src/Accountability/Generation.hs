@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 -- Copyright   : (c) 2019-2022 Robert Künnemann, Kevin Morio & Yavor Ivanov
 -- License     : GPL v3 (see LICENSE)
 --
@@ -6,28 +5,37 @@
 -- Portability : GHC only
 --
 -- Compute translation-specific restrictions
-module Accountability.Generation (
-        generateAccountabilityLemmas
-      , checkWellformedness
-) where
+module Accountability.Generation
+  ( generateAccountabilityLemmas
+  , checkWellformedness
+  ) where
 
-import           Control.Monad.Catch         (MonadThrow)
-import           Control.Monad.Fresh         (MonadFresh, evalFreshT)
-import qualified Extension.Data.Label        as L
-import           Text.PrettyPrint.Class      (Document(text, ($-$)), ($--$), vcat, Doc)
-import           Theory
-import           Theory.Tools.Wellformedness (WfErrorReport)
-
-
+import Control.Monad.Catch (MonadThrow)
+import Control.Monad.Fresh (MonadFresh, evalFreshT)
+import Text.PrettyPrint.Class (Document(text, ($-$)), ($--$), vcat, Doc)
+import Theory
+import Theory.Tools.Wellformedness (WfErrorReport)
 
 ------------------------------------------------------------------------------
 -- Utilities
 ------------------------------------------------------------------------------
 
 -- | Create a lemma from a formula with quantifier. Copies accLemma's name (plus suffix) and attributes.
-toLemma :: AccLemma -> TraceQuantifier -> String -> SyntacticLNFormula -> ProtoLemma SyntacticLNFormula ProofSkeleton
+toLemma
+  :: AccLemma
+  -> TraceQuantifier
+  -> String
+  -> SyntacticLNFormula
+  -> ProtoLemma SyntacticLNFormula ProofSkeleton
 toLemma accLemma quantifier suffix formula =
-        skeletonLemma (L.get aName accLemma ++ suffix) "generation" False (L.get aAttributes accLemma) quantifier formula (unproven ())
+  skeletonLemma (accLemma._aName ++ suffix) "generation" False accLemma._aAttributes quantifier formula (unproven ())
+-- -- <<<<<<< HEAD
+--         skeletonLemma (L.get aName accLemma ++ suffix) "generation" False (L.get aAttributes accLemma) quantifier formula (unproven ())
+-- ||||||| 75ecd7a0
+--         skeletonLemma (L.get aName accLemma ++ suffix) (L.get aAttributes accLemma) quantifier formula (unproven ())
+-- =======
+--   skeletonLemma (accLemma._aName ++ suffix) accLemma._aAttributes quantifier formula (unproven ())
+-- >>>>>>> 9d54c5ff8517ae3549421d2c730a3e14ea5e5dfd
 
 -- | Quantify the given variables
 quantifyVars :: ((String, LSort) -> LVar -> SyntacticLNFormula -> SyntacticLNFormula) -> [LVar] -> SyntacticLNFormula -> SyntacticLNFormula
@@ -54,13 +62,14 @@ msgVar name = LVar name LSortMsg  0
 
 freesSubsetCorrupt :: [LVar] -> SyntacticLNFormula
 freesSubsetCorrupt vars = foldl1 (.&&.) corrupted
-    where
-        corrupted = map corrupt vars
-        corrupt var = quantifyVars exists [tempVar "i"] $ protoFactFormula "Corrupted" [varTerm $ Free var] (tempTerm "i")
+  where
+    corrupted = map corrupt vars
+    corrupt var = quantifyVars exists [tempVar "i"] $ protoFactFormula "Corrupted" [varTerm $ Free var] (tempTerm "i")
 
 corruptSubsetFrees :: [LVar] -> SyntacticLNFormula
-corruptSubsetFrees vars = quantifyVars forAll [msgVar "a", tempVar "i"] $
-                            (protoFactFormula "Corrupted" [msgTerm "a"] (tempTerm "i") .==>. isElem (msgVar "a") vars)
+corruptSubsetFrees vars =
+  quantifyVars forAll [msgVar "a", tempVar "i"]
+    (protoFactFormula "Corrupted" [msgTerm "a"] (tempTerm "i") .==>. isElem (msgVar "a") vars)
 
 isElem :: LVar -> [LVar] -> SyntacticLNFormula
 isElem v vars = foldr1 (.||.) (map (eq v) vars)
@@ -70,12 +79,12 @@ isElem v vars = foldr1 (.||.) (map (eq v) vars)
 strictSubsetOf :: [LVar] -> [LVar] -> SyntacticLNFormula
 strictSubsetOf lhs rhs = subset lhs rhs .&&. strict lhs rhs
     where
-        subset xs ys = foldr1 (.&&.) (map (\x -> foldr1 (.||.) (map (\y -> eq x y) ys)) xs)
-        strict xs ys = foldr1 (.||.) (map (\y -> foldr1 (.&&.) (map (\x -> Not $ eq y x) xs)) ys)
+        subset xs ys = foldr1 (.&&.) (map (\x -> foldr1 (.||.) (map (eq x) ys)) xs)
+        strict xs ys = foldr1 (.||.) (map (\y -> foldr1 (.&&.) (map (Not . eq y) xs)) ys)
         eq x y = Ato $ EqE (varTerm $ Free x) (varTerm $ Free y)
 
 ntuple :: [LVar] -> VTerm Name (BVar LVar)
-ntuple vars = foldr1 (\a b -> fAppPair (a, b)) (map (varTerm . Free) vars)
+ntuple vars = foldr1 (curry fAppPair) (map (varTerm . Free) vars)
 
 varsEq :: [LVar] -> [LVar] -> SyntacticLNFormula
 varsEq l r = Ato $ EqE (ntuple l) (ntuple r)
@@ -94,9 +103,13 @@ singleMatch t = do
     return $ t1 .&&. quantifyVars forAll (frees t2) (t2 .==>. varsEq (frees t2) (frees t1))
 
 caseTestFormulasExcept :: AccLemma -> CaseTest -> [SyntacticLNFormula]
-caseTestFormulasExcept accLemma caseTest = map (L.get cFormula) (filter (\c -> L.get cName caseTest /= L.get cName c) (L.get aCaseTests accLemma))
+caseTestFormulasExcept accLemma caseTest =
+  map (._cFormula) (filter (\c -> caseTest._cName /= c._cName) accLemma._aCaseTests)
 
-foldConn :: (SyntacticLNFormula -> SyntacticLNFormula -> SyntacticLNFormula) -> [SyntacticLNFormula] -> SyntacticLNFormula
+foldConn
+  :: (SyntacticLNFormula -> SyntacticLNFormula -> SyntacticLNFormula)
+  -> [SyntacticLNFormula]
+  -> SyntacticLNFormula
 foldConn _ [fm] = fm
 foldConn op fms = foldl1 op fms
 
@@ -110,7 +123,7 @@ formulaActionFacts = foldFormula fAto (const []) id (\_ p q -> p ++ q) (\_ _ p -
 
 -- | Get the facts in the case tests of a theory.
 caseTestsFacts :: OpenTheory -> [Fact (VTerm Name (BVar LVar))]
-caseTestsFacts thy = concatMap (formulaActionFacts . L.get cFormula) (theoryCaseTests thy)
+caseTestsFacts thy = concatMap (formulaActionFacts . (._cFormula)) (theoryCaseTests thy)
 
 -- | Get the LNTerms (in the premises, actions and conclusions) in the rules of a theory.
 rulesLNTerms :: OpenTheory -> [LNTerm]
@@ -118,28 +131,30 @@ rulesLNTerms thy = concatMap factTerms $ rulesLNFacts thy
 
 -- | Get the LNFacts (in the premises, actions and conclusions) in the rules of a theory.
 rulesLNFacts :: OpenTheory -> [LNFact]
-rulesLNFacts thy = concat $ (rulesEPrems ++ rulesEActs ++ rulesEConcs ++ rulesACPrems ++ rulesACActs ++ rulesACConcs)
-    where
-        rulesE       = [ L.get oprRuleE ru | RuleItem ru <- L.get thyItems thy ]
-        rulesEPrems  = map (L.get rPrems) rulesE
-        rulesEActs   = map (L.get rActs) rulesE
-        rulesEConcs  = map (L.get rConcs) rulesE
-        rulesAC      = concat [ L.get oprRuleAC ru | RuleItem ru <- L.get thyItems thy ]
-        rulesACPrems = map (L.get rPrems) rulesAC
-        rulesACActs  = map (L.get rActs) rulesAC
-        rulesACConcs = map (L.get rConcs) rulesAC
+rulesLNFacts thy =
+  concat (rulesEPrems ++ rulesEActs ++ rulesEConcs ++ rulesACPrems ++ rulesACActs ++ rulesACConcs)
+  where
+    rulesE       = [ ru._oprRuleE | RuleItem ru <- thy._thyItems ]
+    rulesEPrems  = map (._rPrems) rulesE
+    rulesEActs   = map (._rActs) rulesE
+    rulesEConcs  = map (._rConcs) rulesE
+    rulesAC      = concat [ ru._oprRuleAC | RuleItem ru <- thy._thyItems ]
+    rulesACPrems = map (._rPrems) rulesAC
+    rulesACActs  = map (._rActs) rulesAC
+    rulesACConcs = map (._rConcs) rulesAC
 
 -- | Get the actions in the rules of a theory.
 rulesActions :: OpenTheory -> [LNFact]
-rulesActions thy = concat ([ L.get rActs $ L.get oprRuleE ru | RuleItem ru <- L.get thyItems thy ]
-                        ++ [ L.get rActs $ r | RuleItem ru <- L.get thyItems thy, r <- L.get oprRuleAC ru ])
+rulesActions thy =
+  concat ([ ru._oprRuleE._rActs | RuleItem ru <- thy._thyItems ]
+       ++ [ r._rActs | RuleItem ru <- thy._thyItems, r <- ru._oprRuleAC ])
 
 -- | Check if a LNTerm contains public constants.
 termContainsPubConst :: LNTerm -> Bool
 termContainsPubConst = go
-    where
-        go c@(LIT _)   = isPubConst c
-        go (FAPP  _ a) = any go a
+  where
+    go c@(LIT _)   = isPubConst c
+    go (FAPP  _ a) = any go a
 
 -- | Check if a term is a free variable.
 termIsFreeVar :: VTerm c (BVar v) -> Bool
@@ -148,83 +163,82 @@ termIsFreeVar t = maybe False isFree (termVar t)
         isFree (Free _) = True
         isFree (Bound _) = False
 
-
-
 ------------------------------------------------------------------------------
 -- Verification Conditions
 ------------------------------------------------------------------------------
 
 sufficiency :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
 sufficiency accLemma caseTest = do
-    t1 <- singleMatch tau
+  t1 <- singleMatch tau
 
-    let formula = quantifyFrees exists (t1 .&&. andIf (not $ null taus) (corruptSubsetFrees (frees t1)) (noOther taus))
+  let formula = quantifyFrees exists (t1 .&&. andIf (not $ null taus) (corruptSubsetFrees (frees t1)) (noOther taus))
 
-    return $ toLemma accLemma ExistsTrace name (toIntermediate formula)
-    where
-        name = "_" ++ L.get cName caseTest ++ "_suff"
-        tau = L.get cFormula caseTest
-        taus = caseTestFormulasExcept accLemma caseTest
+  return $ toLemma accLemma ExistsTrace name (toIntermediate formula)
+  where
+    name = "_" ++ caseTest._cName ++ "_suff"
+    tau = caseTest._cFormula
+    taus = caseTestFormulasExcept accLemma caseTest
 
 verifiabilityEmpty :: MonadFresh m => AccLemma -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
 verifiabilityEmpty accLemma = return $ toLemma accLemma AllTraces name formula
     where
         name = "_verif_empty"
-        taus = map (L.get cFormula) (L.get aCaseTests accLemma)
+        taus = map (._cFormula) accLemma._aCaseTests
         lhs = Not $ foldConn (.||.) $ map (quantifyFrees exists) taus
-        phi = L.get aFormula accLemma
+        phi = accLemma._aFormula
         formula = quantifyFrees forAll $ lhs .==>. phi
 
 verifiabilityNonEmpty :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
-verifiabilityNonEmpty accLemma caseTest = return $ toLemma accLemma AllTraces name (toIntermediate formula)
-    where
-        name = "_" ++ L.get cName caseTest ++ "_verif_nonempty"
-        tau = L.get cFormula caseTest
-        phi = L.get aFormula accLemma
-        formula = quantifyFrees forAll $ tau .==>. Not phi
+verifiabilityNonEmpty accLemma caseTest =
+  return $ toLemma accLemma AllTraces name (toIntermediate formula)
+  where
+    name = "_" ++ caseTest._cName ++ "_verif_nonempty"
+    tau = caseTest._cFormula
+    phi = accLemma._aFormula
+    formula = quantifyFrees forAll $ tau .==>. Not phi
 
 minimality :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
 minimality accLemma caseTest = do
-    t1 <- rename tau
-    tts <- mapM rename taus
+  t1 <- rename tau
+  tts <- mapM rename taus
 
-    let rhs = map (\t -> Not (quantifyVars exists (frees t) $ t .&&. strictSubsetOf (frees t) (frees t1))) tts
-    let formula = quantifyFrees forAll $ t1 .==>. foldConn (.&&.) rhs
+  let rhs = map (\t -> Not (quantifyVars exists (frees t) $ t .&&. strictSubsetOf (frees t) (frees t1))) tts
+  let formula = quantifyFrees forAll $ t1 .==>. foldConn (.&&.) rhs
 
-    return $ toLemma accLemma AllTraces name (toIntermediate formula)
-    where
-        name = "_" ++ L.get cName caseTest ++ "_min"
-        tau = L.get cFormula caseTest
-        taus = map (L.get cFormula) (L.get aCaseTests accLemma)
+  return $ toLemma accLemma AllTraces name (toIntermediate formula)
+  where
+    name = "_" ++ caseTest._cName ++ "_min"
+    tau = caseTest._cFormula
+    taus = map (._cFormula) accLemma._aCaseTests
 
 uniqueness :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
-uniqueness accLemma caseTest = return $ toLemma accLemma AllTraces name (toIntermediate formula)
-    where
-        name = "_" ++ L.get cName caseTest ++ "_uniq"
-        tau = L.get cFormula caseTest
-        formula = quantifyFrees forAll (tau .==>. freesSubsetCorrupt (frees tau))
+uniqueness accLemma caseTest =
+  return $ toLemma accLemma AllTraces name (toIntermediate formula)
+  where
+    name = "_" ++ caseTest._cName ++ "_uniq"
+    tau = caseTest._cFormula
+    formula = quantifyFrees forAll (tau .==>. freesSubsetCorrupt (frees tau))
 
 -- | :TODO: : Avoid duplicates
 injective :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
-injective accLemma caseTest = return $ toLemma accLemma AllTraces name (toIntermediate formula)
-    where
-        name = "_" ++ L.get cName caseTest ++ "_inj"
-        tau = L.get cFormula caseTest
-        formula = quantifyFrees forAll (tau .==>. foldl (.&&.) (TF True) [ Not $ varsEq [x] [y] | x <- frees tau, y <- frees tau, x /= y ])
+injective accLemma caseTest =
+  return $ toLemma accLemma AllTraces name (toIntermediate formula)
+  where
+    name = "_" ++ caseTest._cName ++ "_inj"
+    tau = caseTest._cFormula
+    formula = quantifyFrees forAll (tau .==>. foldl (.&&.) (TF True) [ Not $ varsEq [x] [y] | x <- frees tau, y <- frees tau, x /= y ])
 
 singlematched :: MonadFresh m => AccLemma -> CaseTest -> m (ProtoLemma SyntacticLNFormula ProofSkeleton)
 singlematched accLemma caseTest = do
-    t1 <- singleMatch tau
+  t1 <- singleMatch tau
 
-    let formula = quantifyFrees exists $ andIf (not $ null taus) t1 (noOther taus)
+  let formula = quantifyFrees exists $ andIf (not $ null taus) t1 (noOther taus)
 
-    return $ toLemma accLemma ExistsTrace name (toIntermediate formula)
-    where
-        name = "_" ++ L.get cName caseTest ++ "_single"
-        tau = L.get cFormula caseTest
-        taus = caseTestFormulasExcept accLemma caseTest
-
-
+  return $ toLemma accLemma ExistsTrace name (toIntermediate formula)
+  where
+    name = "_" ++ caseTest._cName ++ "_single"
+    tau = caseTest._cFormula
+    taus = caseTestFormulasExcept accLemma caseTest
 
 ------------------------------------------------------------------------------
 -- Generation
@@ -232,22 +246,20 @@ singlematched accLemma caseTest = do
 
 casesLemmas :: MonadFresh m => AccLemma -> m [ProtoLemma SyntacticLNFormula ProofSkeleton]
 casesLemmas accLemma = do
-        s <- mapM (sufficiency accLemma) caseTests
-        ve <- verifiabilityEmpty accLemma
-        vne <- mapM (verifiabilityNonEmpty accLemma) caseTests
-        m <- mapM (minimality    accLemma) caseTests
-        u <- mapM (uniqueness    accLemma) caseTests
-        i <- mapM (injective     accLemma) caseTests
-        t <- mapM (singlematched accLemma) caseTests
+  s <- mapM (sufficiency accLemma) caseTests
+  ve <- verifiabilityEmpty accLemma
+  vne <- mapM (verifiabilityNonEmpty accLemma) caseTests
+  m <- mapM (minimality    accLemma) caseTests
+  u <- mapM (uniqueness    accLemma) caseTests
+  i <- mapM (injective     accLemma) caseTests
+  t <- mapM (singlematched accLemma) caseTests
 
-        return $ s ++ [ve] ++ vne ++ m ++ u ++ i ++ t
-    where
-        caseTests = L.get aCaseTests accLemma
+  return $ s ++ [ve] ++ vne ++ m ++ u ++ i ++ t
+  where
+    caseTests = accLemma._aCaseTests
 
 generateAccountabilityLemmas :: (Monad m, MonadThrow m) => AccLemma -> m [ProtoLemma SyntacticLNFormula ProofSkeleton]
 generateAccountabilityLemmas accLemma = evalFreshT (casesLemmas accLemma) 0
-
-
 
 ------------------------------------------------------------------------------
 -- Intermediate transformation
@@ -316,21 +328,23 @@ rulesContainPubConst thy = any termContainsPubConst $ rulesLNTerms thy
 -- | Create a report on the status of the conditions needed for RP (BR).
 accRPReport :: OpenTheory -> WfErrorReport
 accRPReport thy
-   | not $ null $ warnings = [("Accountability (RP check)", vcat warnings $--$ detailedExplanation)]
-   | otherwise = []
-    where
-        warnings :: [Doc]
-        warnings = fmap text (["The specification contains at least one restriction." | not $ null $ theoryRestrictions thy]
-                ++ ["The specification contains public names." | rulesContainPubConst thy]
-                ++ ["At least one case test can be instantiated with non-public names." | not $ caseTestsInstantiatedByPubVars thy])
+  | not $ null warnings = [("Accountability (RP check)", vcat warnings $--$ detailedExplanation)]
+  | otherwise = []
+  where
+    warnings :: [Doc]
+    warnings =
+      fmap text $
+        ["The specification contains at least one restriction." | not $ null $ theoryRestrictions thy]
+        ++ ["The specification contains public names." | rulesContainPubConst thy]
+        ++ ["At least one case test can be instantiated with non-public names." | not $ caseTestsInstantiatedByPubVars thy]
 
-        detailedExplanation :: Doc
-        detailedExplanation = text "Please verify manually that your protocol fulfills the following condition:"
-                         $--$ text "For each case test τ, traces t, t’, and instantiations ρ, ρ’:"
-                          $-$ text "If τ holds on t with ρ, and τ single-matches with ρ’ on t’, then"
-                          $-$ text "there exists a trace t’’ such that τ single-matches with ρ on t’’"
-                          $-$ text "and the parties corrupted in t’’ are the same as the parties"
-                          $-$ text "corrupted in t’ renamed from rng(ρ’) to rng(ρ)."
+    detailedExplanation :: Doc
+    detailedExplanation = text "Please verify manually that your protocol fulfills the following condition:"
+                     $--$ text "For each case test τ, traces t, t’, and instantiations ρ, ρ’:"
+                      $-$ text "If τ holds on t with ρ, and τ single-matches with ρ’ on t’, then"
+                      $-$ text "there exists a trace t’’ such that τ single-matches with ρ on t’’"
+                      $-$ text "and the parties corrupted in t’’ are the same as the parties"
+                      $-$ text "corrupted in t’ renamed from rng(ρ’) to rng(ρ)."
 
 checkWellformedness :: OpenTheory -> WfErrorReport
 checkWellformedness thy = if null $ theoryAccLemmas thy then [] else accRPReport thy
