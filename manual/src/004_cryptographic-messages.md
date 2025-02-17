@@ -129,7 +129,7 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 : This theory models a public key encryption scheme. It defines the
   function symbols `aenc/2`, `adec/2`, and `pk/1`, which are
   related by the equation `adec(aenc(m, pk(sk)), sk) = m`.
-  Note that as described in [Syntax Description](015_syntax_description.html),
+  Note that as described in [Syntax Description](016_syntax_description.html),
   `aenc{x,y}pkB` is syntactic sugar for `aenc(<x,y>, pkB)`.
   <!-- This is otherwise not mentioned until Ch14: Syntax Description -->
 
@@ -200,7 +200,7 @@ x ⊕ x       = zero
 
 `multiset`:
 
-: This theory introduces the associative-commutative operator `++` which is usually used to model multisets^[In earlier versions of Tamarin, this operator was `+` wich is still supported but deprecated. The reason for this change is that in the end, we want to use `+` for addition on natural numbers (instead of the current `%+`).].
+: This theory introduces the associative-commutative operator `++` which is usually used to model multisets^[In earlier versions of Tamarin, this operator was `+` which is still supported but deprecated. The reason for this change is that in the end, we want to use `+` for addition on natural numbers (instead of the current `%+`).].
 
 `natural-numbers`:
 : This theory introduces the associative-commutative operator `%+` and the public constant `%1` which are used to model counters. It also introduces the sort `nat` with which variables can be annotated like the sort `pub $`: `n:nat` or `%n`. Furthermore, the operator `%+` only accepts terms of sort `nat` and is the only one to produce `nat` terms. This guarantees, that any term of sort `nat` is essentially a sum of `%1`. So all natural numbers are public knowledge which speeds up Tamarin as no attacker construction of a number has to be searched for.

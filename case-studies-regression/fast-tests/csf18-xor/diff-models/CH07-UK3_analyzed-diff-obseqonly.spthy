@@ -266,7 +266,7 @@ Check presence of the --prove/--lemma arguments in theory
 Message Derivation Checks
 =========================
 
-  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
 Rule reader2: 
 Failed to derive Variable(s): hash
@@ -274,10 +274,10 @@ Failed to derive Variable(s): hash
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.2.2
-Git revision: 0194f3b61d6d8b8c1d70bbad8fe0a7143cac0fb3, branch: feature/export-wellformedness
-Compiled at: 2023-10-25 08:40:09.47146758 UTC
+Tamarin version 1.11.0
+Maude version 3.2.1
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
@@ -289,7 +289,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 248.08s
+  processing time: 65.01s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

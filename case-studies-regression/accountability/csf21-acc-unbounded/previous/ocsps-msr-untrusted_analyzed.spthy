@@ -545,9 +545,9 @@ Accountability (RP check)
 /*
 Generated from:
 Tamarin version 1.9.0
-Maude version 3.2.2
-Git revision: c838686f5a3d41b6a355eafd32cc2104ca41809c (with uncommited changes), branch: HEAD
-Compiled at: 2023-10-25 11:27:38.363683988 UTC
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
@@ -559,7 +559,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ocsps-msr-untrusted.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ocsps-msr-untrusted.spthy.tmp
-  processing time: 1.45s
+  processing time: 0.87s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -37,7 +37,7 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="if True( )"]:
+rule (modulo E) Init[color=#ffffff, process="if True( )", issapicrule]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
@@ -46,7 +46,8 @@ restriction Restr_ifTrue_0__1:
   "∀ #NOW. (Restr_ifTrue_0__1( ) @ #NOW) ⇒ (⊤)"
   // safety formula
 
-rule (modulo E) ifTrue_0_[color=#ffffff, process="if True( )"]:
+rule (modulo E) ifTrue_0_[color=#ffffff, process="if True( )",
+                          issapicrule]:
    [ State_( ) ]
   --[ PositiveBranch( ), Restr_ifTrue_0__1( ) ]->
    [ State_11( ) ]
@@ -54,29 +55,29 @@ rule (modulo E) ifTrue_0_[color=#ffffff, process="if True( )"]:
   /* has exactly the trivial AC variant */
 
 rule (modulo E) lookupxasx_0_11[color=#ffffff,
-                                process="lookup 'x' as x.1"]:
+                                process="lookup 'x' as x.1", issapicrule]:
    [ State_11( ) ] --[ IsIn( 'x', x.1 ) ]-> [ ]
 
   /*
   rule (modulo AC) lookupxasx_0_11[color=#ffffff,
-                                   process="lookup 'x' as x.1"]:
+                                   process="lookup 'x' as x.1", issapicrule]:
      [ State_11( ) ] --[ IsIn( 'x', x ) ]-> [ ]
   */
 
 rule (modulo E) lookupxasx_1_11[color=#ffffff,
-                                process="lookup 'x' as x.1"]:
+                                process="lookup 'x' as x.1", issapicrule]:
    [ State_11( ) ] --[ IsNotSet( 'x' ) ]-> [ State_112( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) eventLookupElse_0_112[color=#ffffff,
-                                      process="event LookupElse( );"]:
+                                      process="event LookupElse( );", issapicrule]:
    [ State_112( ) ] --[ LookupElse( ) ]-> [ State_1121( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertyy_0_1121[color=#ffffff,
-                                process="insert 'y','y';"]:
+rule (modulo E) insertyy_0_1121[color=#ffffff, process="insert 'y','y';",
+                                issapicrule]:
    [ State_1121( ) ] --[ Insert( 'y', 'y' ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
@@ -104,7 +105,7 @@ WARNING: the following wellformedness checks failed!
 Message Derivation Checks
 =========================
 
-  The variables of the follwing rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
 Rule lookupxasx_0_11: 
 Failed to derive Variable(s): x.1
@@ -112,17 +113,14 @@ Failed to derive Variable(s): x.1
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -130,7 +128,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.06s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

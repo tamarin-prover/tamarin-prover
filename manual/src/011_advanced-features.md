@@ -10,10 +10,10 @@ preprocessor, and how to measure the time needed for proofs.
 Heuristics {#sec:heuristics}
 ----------
 
-A heuristic describes a method to rank the open goals of a constraint system and is specified as a sequence of goal rankings.
-Each goal ranking is abbreviated by a single character from the set `{s,S,c,C,i,I,o,O}`.
+A heuristic describes a method to rank the open constraints of a constraint system and is specified as a sequence of proof method rankings.
+Each proof method ranking is abbreviated by a single character from the set `{s,S,c,C,i,I,o,O}`.
 
-A global heuristic for a protocol file can be defined using the `heuristic:` statement followed by the sequence of goal rankings.
+A global heuristic for a protocol file can be defined using the `heuristic:` statement followed by the sequence of proof method rankings.
 The heuristic which is used for a particular lemma can be overwritten using the `heuristic` lemma attribute.
 Finally, the heuristic can be specified using the `--heuristic` command line option.
 
@@ -26,15 +26,15 @@ The precedence of heuristics is:
 3. Global (`heuristic:`)
 4. Default (`s`)
 
-The goal rankings are as follows.
+The proof method rankings are as follows.
 
 `s`:
 : the 'smart' ranking is the ranking described in the extended version of
   our CSF'12 paper. It is the default ranking and works very well in a wide
-  range of situations. Roughly, this ranking prioritizes chain goals,
+  range of situations. Roughly, this ranking prioritizes chain constraints,
   disjunctions, facts, actions, and adversary knowledge of private and
   fresh terms in that order (e.g., every action will be solved before any
-  knowledge goal). Goals marked 'Probably Constructable' and
+  knowledge constraint). Constraints marked 'Probably Constructable' and
   'Currently Deducible' in the GUI are lower priority.
 
 `S`:
@@ -47,51 +47,51 @@ The goal rankings are as follows.
   loop breakers in the 'Multiset rewriting rules' page in the GUI.
 
 `c`:
-: is the 'consecutive' or 'conservative' ranking. It solves goals in the
-  order they occur in the constraint system. This guarantees that no goal
+: is the 'consecutive' or 'conservative' ranking. It solves constraints in the
+  order they occur in the constraint system. This guarantees that no constraint
   is delayed indefinitely, but often leads to large proofs because some
-  of the early goals are not worth solving.
+  of the early constraints are not worth solving.
 
 `C`:
 : is like 'c' but without delaying loop breakers.
 
 `i`:
 : is a ranking developed to be well-suited to injective stateful protocols.
-  The priority of goals is similar to the 'S' ranking, but instead of a
-  strict priority hierarchy, the fact, action, and knowledge goals are
+  The priority of proof methods is similar to the 'S' ranking, but instead of a
+  strict priority hierarchy, the fact, action, and knowledge constraints are
   considered equal priority and solved by their age. This is useful for
   stateful protocols with an unbounded number of runs, in which for example
-  solving a fact goal may create a new fact goal for the previous protocol
-  run. This ranking will prioritize existing fact, action, and knowledge goals
-  before following up on the fact goal of that previous run. In contrast the 'S'
-  ranking would prioritize this new fact goal ahead of any existing action or
-  knowledge goal, although solving the new goal may create yet another
-  earlier fact goal and so on, preventing termination.
+  solving a fact constraint may create a new fact constraint for the previous protocol
+  run. This ranking will prioritize existing fact, action, and knowledge constraints
+  before following up on the fact constraint of that previous run. In contrast the 'S'
+  ranking would prioritize this new fact constraint ahead of any existing action or
+  knowledge constraint, although solving the new constraint may create yet another
+  earlier fact constraint and so on, preventing termination.
 
 `I`:
 : is like 'i' but without delaying loop breakers.
 
 `{.}`:
-: is the tactic ranking. It allows the user to provide an arbitrary ranking for the proof goals, specified in a language native to Tamarin. Each tactic needs to be given a name. For the tactic named `default`, the call would be `{default}`.
-The syntax of the tactics will be detailed below in the part `Using a tactic`. However, for a quick overview, a tactic is composed of several fields. The first one, `tactic`, specifies the name of the tactic and is mandatory. Then `presort` (optional) allows the user to choose the based ranking of the input. The keywords `prio` and `deprio` defines the ranks of the goals. They gather functions that will recognize the goals. The higher the prio that recognize a goal, the sooner it will be treated and the lower the deprio, the later. The user can choose to write as much of prio or deprio as needed. A tactic can also be composed of only prio or deprio. The functions are preimplemented and allow to reach information unavailable from oracle (the state of the system or the proof context).
+: is the tactic ranking. It allows the user to provide an arbitrary ranking for the proof methods, specified in a language native to Tamarin. Each tactic needs to be given a name. For the tactic named `default`, the call would be `{default}`.
+The syntax of the tactics will be detailed below in the part `Using a tactic`. However, for a quick overview, a tactic is composed of several fields. The first one, `tactic`, specifies the name of the tactic and is mandatory. Then `presort` (optional) allows the user to choose the base ranking of the input. The keywords `prio` and `deprio` defines the ranks of the proof methods. They gather functions that will recognize the constraints. The higher the prio that recognizes a constraint, the sooner it will be treated and the lower the deprio, the later. The user can choose to write as much of prio or deprio as needed. A tactic can also be composed of only prio or deprio. The functions are preimplemented and allow to reach information unavailable from oracle (the state of the system or the proof context).
 
 `o`:
 : is the oracle ranking. It allows the user to provide an arbitrary program
-  that runs independently of Tamarin and ranks the proof goals.
-  The path of the program can be specified after the goal ranking, e.g., `o "oracles/oracle-default"`
+  that runs independently of Tamarin and ranks the proof methods.
+  The path of the program can be specified after the proof method ranking, e.g., `o "oracles/oracle-default"`
   to use the program `oracles/oracle-default` as the oracle.
   If no path is specified, the default is `oracle`.
-  The path of the program is relative to the directory of the protocol file containing the goal ranking.
+  The path of the program is relative to the directory of the protocol file containing the proof method ranking.
   If the heuristic is specified using the `--heuristic` option, the path can be given using the
   `--oraclename` command line option. In this case, the path is relative to the current working directory.
   The oracle's input is a numbered list
-  of proof goals, given in the 'Consecutive' ranking (as generated by the heuristic `C`).
-  Every line of the input is a new goal and starts with "%i: ", where %i is the
-  index of the goal. The oracle's output is expected to be a line-separated list of
-  indices, prioritizing the given proof goals. Note that it suffices to output
-  the index of a single proof goal, as the first ranked goal will always be selected.
+  of proof methods, given in the 'Consecutive' ranking (as generated by the heuristic `C`).
+  Every line of the input is a new constraint and starts with "%i: ", where %i is the
+  index of the constraint. The oracle's output is expected to be a line-separated list of
+  indices, prioritizing the given proof methods. Note that it suffices to output
+  the index of a single proof method, as the first ranked proof method will always be selected.
   Moreover, the oracle is also allowed to terminate without printing a valid index.
-  In this case, the first goal of the 'Consecutive' ranking will be selected.
+  In this case, the first proof method of the 'Consecutive' ranking will be selected.
 
 `O`:
 : is the oracle ranking based on the 'smart' heuristic `s`. It works the same as `o` but uses 'smart' instead of 'Consecutive' ranking to start with.
@@ -99,9 +99,9 @@ The syntax of the tactics will be detailed below in the part `Using a tactic`. H
 `p`:
 : is the SAPIC-specific ranking. It is a modified version of the smart `s`
 heuristic, but resolves SAPIC's `state`-facts right away, as well as Unlock
-goals, and some helper facts introduced in SAPICs translation (`MID_Receiver`,
+constraints, and some helper facts introduced in SAPICs translation (`MID_Receiver`,
 `MID_Sender`).
-`Progress_To` goals (which are generated when using the optional
+`Progress_To` constraints (which are generated when using the optional
 [local progress](006_protocol-specification-processes.html#sec:local-progress))
 are also prioritised.
 Similar to [fact annotations]( #sec:fact-annotations ) below,
@@ -118,7 +118,7 @@ See [@KK-jcs16] for the reasoning behind this ranking.
 If several rankings are given for the heuristic flag, then they are employed
 in a round-robin fashion depending on the proof-depth. For example, a flag
 `--heuristic=ssC` always uses two times the smart ranking and then once the
-'Consecutive' goal ranking. The idea is that you can mix goal rankings easily
+'Consecutive' proof method ranking. The idea is that you can mix proof method rankings easily
 in this way.
 
 Fact annotations {#sec:fact-annotations}
@@ -139,6 +139,12 @@ with a rule conclusion containing `A(x)`. This allows multiple instances
 of the same fact to be solved with different priorities by annotating them
 differently.
 
+When an `In()` premise is annotated, the annotations are propagated up
+to the corresponding `!KU()` goals. For example, the premise `In(f(x))[+]`
+will generate a `!KU(f(x))[+]` goal that will be solved with high priority,
+while the premise `In(<y,g(y,z)>)[-]` will generate `!KU(y)[-]` and `!KU(g(y,z))[-]`
+goals to be solved with low priority.
+
 The `+` and `-` annotations can also be used to prioritize actions.
 For example, A reusable lemma of the form
 ```
@@ -153,13 +159,15 @@ respectively. Note however that these prefixes must apply to every instance
 of the fact, as a fact `F_A(x)` cannot unify with a fact `A(x)`.
 
 Facts in rule premises can also be annotated with `no_precomp` to prevent the
-tool from precomputing their sources.
-Use of the `no_precomp` annotation in key places can be very
-useful for reducing the precomputation time required to load large models, however
-it should be used sparingly. Preventing the precomputation of sources for a premise
-that is solved frequently will typically slow down the tool, as it must solve the
-premise each time instead of directly applying precomputed sources. Note also that
-using this annotation may cause partial deconstructions if the source of a premise
+tool from precomputing their sources, and to prevent them from being considered
+during the computation of loop-breakers.
+Use of the `no_precomp` annotation allows the modeller to manually control how
+loops are broken, or can be used to reduce
+the precomputation time required to load large models. Note, however
+that preventing the precomputation of sources for a premise
+that is solved frequently will typically slow down the tool, as there will be no
+precomputed sources to apply. Using this annotation may also cause 
+partial deconstructions if the source of a premise
 was necessary to compute a full deconstruction.
 
 The `no_precomp` annotation can be used in combination with heuristic annotations
@@ -168,7 +176,7 @@ by including both separated by commas---e.g., a premise
 
 ### Using a Tactic {subsec: tactic}
 
-The tactics are a language native to Tamarin designed to allow user to write custom rankings of proof goals.
+The tactics are a language native to Tamarin designed to allow user to write custom rankings of proof methods.
 
 #### Writing a tactic
 
@@ -180,9 +188,9 @@ tactic: uniqueness
 presort: C
 ```
 
-Then we will start to write the priorities following which we want to order the goals. Every priority, announced by the `prio`  keywords, is composed of functions that will try to recognize characteristics in the goals given by the Tamarin proofs. If a goal is recognized by a function in a priority, it will be be ranked as such, i.e., the higher the priority in the tactic, the higher the goals it recognizes will be ranked. The particularity recognized by every function will be detailed in a paragraph below. The tactic language authorizes to combine functions using `|`, `&` and `not`.
-Even if the option is not necessary for the proof of the lemma uniqueness, let's now explore the `deprio` keyword. It works as the `prio` one but with the opposite goal since it allows the user to put the recognized goals at the bottom of the ranking. In case several `deprio` are written, the first one will be ranked higher than the last ones. If a goal is recognized by two or more 'priorities' or 'depriorities', only the first one (i.e., the higher rank possible) will be taken into account for the final ranking.
-The order of the goals recognized by the same priority is usually predetermined by the presort. However, if this order is not appropriate for one priority, the user can call a 'postranking function'. This function will reorder the goals inside the priority given a criteria. If no postranking function is determined, Tamarin will use the identity. For now, the only other option is `smallest`, a function that will order the goals by increasing size of their pretty-printed strings.
+Then we will start to write the priorities following which we want to order the proof methods. Every priority, announced by the `prio`  keywords, is composed of functions that will try to recognize characteristics in the proof methods given by Tamarin. If a proof method is recognized by a function in a priority, it will be be ranked as such, i.e., the higher the priority in the tactic, the higher the proof methods it recognizes will be ranked. The particularity recognized by every function will be detailed in a paragraph below. The tactic language authorizes to combine functions using `|`, `&` and `not`.
+Even if the option is not necessary for the proof of the lemma uniqueness, let's now explore the `deprio` keyword. It works as the `prio` one but with the opposite goal since it allows the user to put the recognized proof methods at the bottom of the ranking. In case several `deprio` are written, the first one will be ranked higher than the last ones. If a proof method is recognized by two or more 'priorities' or 'depriorities', only the first one (i.e., the higher rank possible) will be taken into account for the final ranking.
+The order of the proof methods recognized by the same priority is usually predetermined by the presort. However, if this order is not appropriate for one priority, the user can call a 'postranking function'. This function will reorder the proof methods inside the priority given a criteria. If no postranking function is determined, Tamarin will use the identity. For now, the only other option is `smallest`, a function that will order the proof methods by increasing size of their pretty-printed strings.
 
 ```
 prio:
@@ -206,22 +214,22 @@ The other way is directly integrated in the file by adding `[heuristic={uniquene
 The functions used in the tactic language are implemented in Tamarin. Below you can find a list of the currently available functions. At the end at this section, you will find an explanation on how to write your own functions if the one described here do not suffice for your usage.
 
 Pre-implemented functions
-    * `regex`: as explain above, this function takes in parameter a string and will use it as a pattern to match against the goals. (Since it is based on the Text.Regex.PCRE module of Haskell, some characters, as the parenthesis, will need to be escaped to achieve the desired behavior).
+    * `regex`: as explain above, this function takes in parameter a string and will use it as a pattern to match against the proof methods. (Since it is based on the Text.Regex.PCRE module of Haskell, some characters, as the parenthesis, will need to be escaped to achieve the desired behavior).
     * `isFactName`: as is given by its name, this function will go look in the Tamarin object 'goal' and check if the field FactName matches its parameter. To give an example of its usage, `isFactName` could be used instead of `regex` for the first prio of the above example with same results.
     * `isInFactTerms`: the function will look in the list contained in the field FactTest whether an element corresponding the parameter can be found.
 The following functions are also implemented but specifically designed to translate the oracles of the Vacarme tool into tactics:
-    * `dhreNoise`: recognize goals containing a Diffie-Hellman exponentiation. For example, the goal `Recv( <'g'^~e.1,aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer),aead(kdf2(<kdf1(<ck, 'g'^(~e*~e.1)>), z>), '0',h(<h(<hash, 'g'^~e.1>),aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer)>), payload)>) ▶₁ #claim` is recognized thanks to the presence of the following pattern `'g'^~e.1`. The function does need one parameter from the user, the type of oracle it is used for. It can be `def` for the Vacarme default case, `curve` for Vacarme oracle_C25519_K1X1 case and `diff` if the tactic is used to prove an equivalence lemma. If the parameter specified is anything else, the default case will be used.
-    It works as follows. First, it will retrieve from the system state the formulas that have the `Reveal` fact name and matches the regex `exp\\('g'`. For the retrieved formulas, it will then put in a list the content of the `Free` variables along the variable `~n`. In the case of the example given above, the list would be `[~n,~e,~e.1]`. They are the variable that the function will try to match against. Once it is done, the tested goal will be recognized if it includes an exponentiation that uses the previously listed elements (just one as exponent or a multiplication).  
-    * `defaultNoise`: this function takes two parameter: the oracle type (as explained for `dhreNoise`) and a regex pattern. The regex pattern should allow the program to extract the nonces targeted by the user from the goal. For example, in the default case of Vacarme, the regex is `(?<!'g'\^)\~[a-zA-Z.0-9]*` and aims at recovering the nonces used in exponentiation. The goal of the function is to verify that all the recovered nonces can be found in the list extracted from the system state as explained for `dhreNoise`. The goal will only be recognized if all his nonces are in the list.
-    * `reasonableNoncesNoise`: takes one parameter (same as `dhreNoise`). It works as `defaultNoise` but works with all the nonces of the goal and therefore does not need a regex pattern to retrieve them.
-    * `nonAbsurdGoal`: this function retrieve the functions names present in the goal and verifies if they are "Ku" or "inv" (this means the key words coming before parenthesis). It also retrieves the list of nonces form the system state as explained for `dhreNoise` and checks if they do not appear in the goal. If both the conditions are verified, the goal is recognized. It only takes one argument (the same as dhreNoise).
+    * `dhreNoise`: recognize constraints containing a Diffie-Hellman exponentiation. For example, the constraint `Recv( <'g'^~e.1,aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer),aead(kdf2(<kdf1(<ck, 'g'^(~e*~e.1)>), z>), '0',h(<h(<hash, 'g'^~e.1>),aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer)>), payload)>) ▶₁ #claim` is recognized thanks to the presence of the following pattern `'g'^~e.1`. The function does need one parameter from the user, the type of oracle it is used for. It can be `def` for the Vacarme default case, `curve` for Vacarme oracle_C25519_K1X1 case and `diff` if the tactic is used to prove an equivalence lemma. If the parameter specified is anything else, the default case will be used.
+    It works as follows. First, it will retrieve from the system state the formulas that have the `Reveal` fact name and matches the regex `exp\\('g'`. For the retrieved formulas, it will then put in a list the content of the `Free` variables along the variable `~n`. In the case of the example given above, the list would be `[~n,~e,~e.1]`. They are the variable that the function will try to match against. Once it is done, the tested constraint will be recognized if it includes an exponentiation that uses the previously listed elements (just one as exponent or a multiplication).  
+    * `defaultNoise`: this function takes two parameter: the oracle type (as explained for `dhreNoise`) and a regex pattern. The regex pattern should allow the program to extract the nonces targeted by the user from the constraint. For example, in the default case of Vacarme, the regex is `(?<!'g'\^)\~[a-zA-Z.0-9]*` and aims at recovering the nonces used in exponentiation. The goal of the function is to verify that all the recovered nonces can be found in the list extracted from the system state as explained for `dhreNoise`. The constraint will only be recognized if all his nonces are in the list.
+    * `reasonableNoncesNoise`: takes one parameter (same as `dhreNoise`). It works as `defaultNoise` but works with all the nonces of the constraint and therefore does not need a regex pattern to retrieve them.
+    * `nonAbsurdConstraint`: this function retrieve the functions names present in the constraint and verifies if they are "Ku" or "inv" (this means the key words coming before parenthesis). It also retrieves the list of nonces form the system state as explained for `dhreNoise` and checks if they do not appear in the constraint. If both the conditions are verified, the constraint is recognized. It only takes one argument (the same as dhreNoise).
 
 
 #### How to write your own function(s)
 
 The functions need to be added to the lib/theory/src/Theory/Text/Parser/Tactics.hs file, in the function named tacticFunctions. The implementation has been designed to be modular. The first step is to record the function in the repertory, the name in quote will be the one used by the user in the tactic, the other, the one used for the implementation. They can be different if necessary. The "user function name" also need to be added to the nameToFunction list, along with a quick description for the error message.
-Regarding the implementation of the function, the first thing to know is that every function you write will take two parameters. The first one is the list of strings that the user may pass to the function (the pattern for regex for example). Nothing forbids the user to write as many parameters as he wants, we will however only use the first ones we need. The second parameter is a triplet composed of the goal being tested, the proof context and the system. The function then needs to return a boolean, `True` if the goal, proof context or system have been recognized, `False` if not.
-If needed, new postranking functions can be added by doing the following steps.  First registering the name of the new function in the `rankingFunctions` function in lib/theory/src/Theory/Text/Parser/Tactics.hs. Then writing the function. It only needs to take in parameters the goals to sort and return them in the new order.
+Regarding the implementation of the function, the first thing to know is that every function you write will take two parameters. The first one is the list of strings that the user may pass to the function (the pattern for regex for example). Nothing forbids the user to write as many parameters as he wants, we will however only use the first ones we need. The second parameter is a triplet composed of the constraint being tested, the proof context and the system. The function then needs to return a boolean, `True` if the constraint, proof context or system have been recognized, `False` if not.
+If needed, new postranking functions can be added by doing the following steps.  First registering the name of the new function in the `rankingFunctions` function in lib/theory/src/Theory/Text/Parser/Tactics.hs. Then writing the function. It only needs to take in parameters the proof methods to sort and return them in the new order.
 To be considered, the code then needs to be recompiled, using `make`. The new function is then ready to be used.
 
 
@@ -229,20 +237,20 @@ To be considered, the code then needs to be recompiled, using `make`. The new fu
 ### Using an Oracle
 
 Oracles allow to implement user-defined heuristics as custom rankings of proof
-goals. They are invoked as a process with the lemma under scrutiny as the first
-argument and all current proof goals seperated by EOL over stdin. Proof goals
-match the regex `(\d+):(.+)` where `(\d+)` is the goal's index, and `(.+)` is
-the actual goal. A proof goal is formatted like one of the applicable proof
+methods. They are invoked as a process with the lemma under scrutiny as the first
+argument and all current proof methods seperated by EOL over stdin. Proof methods
+match the regex `(\d+):(.+)` where `(\d+)` is the method's index, and `(.+)` is
+the actual constraint. A proof method is formatted like one of the applicable proof
 methods shown in the interactive view, but without **solve(...)** surrounding
 it. One can also observe the input to the oracle in the stdout of tamarin
 itself. Oracle calls are logged between `START INPUT`, `START OUTPUT`, and
 `END Oracle call`.
 
-The oracle can set the new order of proof goals by writing the proof indices to
+The oracle can set the new order of proof methods by writing the proof indices to
 stdout, separated by EOL. The order of the indices determines the new order of
-proof goals. An oracle does not need to rank all goals. Unranked goals will be
-ranked with lower priority than ranked goals but kept in order. For example, if
-an oracle was given the goals 1-4, and would output:
+proof methods. An oracle does not need to rank all proof methods. Unranked proof methods will be
+ranked with lower priority than ranked proof methods but kept in order. For example, if
+an oracle was given the proof methods 1-4, and would output:
 ```
 4
 2
@@ -344,11 +352,11 @@ The generated proof consists of only 10 steps.
 (162 steps with 'consecutive' ranking, non-termination with 'smart' ranking).
 
 Sometimes, one makes mistakes when writing an oracle or forgets to address a
-case in which the oracle would need to rank a goal for termination. For example
+case in which the oracle would need to rank a proof method for termination. For example
 in the oracle above, it could happen that none of the three checks apply to any
-of the goals and the oracle prints nothing. To help debugging oracles, the
+of the proof method and the oracle prints nothing. To help debugging oracles, the
 interactive mode of Tamarin provides an autoprove option that stops proving
-whenever the oracle ranks no goals (it is called `o. autoprove until oracle
+whenever the oracle ranks no proof methods (it is called `o. autoprove until oracle
 returns nothing`). This way, you can easily find and inspect the cases in which
 you might need to refine your oracle.
 
@@ -748,11 +756,11 @@ It gets more complicated when working with operators that are on top of a rewrit
 
 #### Non-Provable Lemmas
 
-Tamarins reasoning for subterms works well for irreducible operators. For reducible operators, however, the following situation can appear: No more goals are left but there are reducible operators in subterms. Usually, we have found a trace if no goals are left. However, if we have, e.g., `x⊏x⊕y` as a constraint left, then our constraint solving algorithm cannot solve this constraint, i.e., it is not clear whether we found a trace. In such a situation, Tamarin indicates with a yellow color in the proof tree that this part of the proof cannot be completed, i.e., there could be a trace, but we're not sure. Even with such a yellow part, it can be that we find a trace in another part of the proof tree and prove an `exists-trace` lemma.
+Tamarins reasoning for subterms works well for irreducible operators. For reducible operators, however, the following situation can appear: No more constraints are left but there are reducible operators in subterms. Usually, we have found a trace if no constraints are left. However, if we have, e.g., `x⊏x⊕y` as a constraint left, then our constraint solving algorithm cannot solve this constraint, i.e., it is not clear whether we found a trace. In such a situation, Tamarin indicates with a yellow color in the proof tree that this part of the proof cannot be completed, i.e., there could be a trace, but we're not sure. Even with such a yellow part, it can be that we find a trace in another part of the proof tree and prove an `exists-trace` lemma.
 
 In the following picture one can see the subterm with the reducible operator `fst` on the right side. Therefore, on the left side, the proof is marked yellow (with the blue line marking the current position). Also, this example demonstrates in `lemma GreenYellow`, that in an `exists-trace` lemma, a trace can be still found and the lemma proven even if there is a part of the proof that cannot be finished. Analogously, `lemma RedYellow` demonstrates that a `all-traces` lemma can still be disproven if a violating trace was found. The last two lemmas are ones where no traces were found in the rest of the proof, thus the overall result of the computation is `Tamarin cannot prove this property`.
 
-![Subterms](../images/YellowSubterms.png "Subterms")\
+![Subterms](../images/YellowSubterms.png "Subterms"){width=100%}\
 
 
 #### Subterm Store

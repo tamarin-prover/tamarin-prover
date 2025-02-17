@@ -38,27 +38,29 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="event A( );"]:
+rule (modulo E) Init[color=#ffffff, process="event A( );", issapicrule]:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_[color=#ffffff, process="event A( );"]:
+rule (modulo E) eventA_0_[color=#ffffff, process="event A( );",
+                          issapicrule]:
    [ State_( ) ] --[ A( ), Event( ) ]-> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ina_0_1[color=#ffffff, process="in('a');"]:
+rule (modulo E) ina_0_1[color=#ffffff, process="in('a');", issapicrule]:
    [ State_1( ), In( x ) ] --[ ChannelIn( x ) ]-> [ Let_11( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ina_1_1[color=#ffffff, process="in('a');"]:
+rule (modulo E) ina_1_1[color=#ffffff, process="in('a');", issapicrule]:
    [ Let_11( 'a' ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );"]:
+rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );",
+                            issapicrule]:
    [ State_11( ) ] --[ B( ), Event( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
@@ -80,17 +82,14 @@ restriction in_event:
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.9.0
+Maude version 3.4
+Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
+Compiled at: 2024-10-29 14:19:56.449404967 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:

@@ -152,7 +152,7 @@ solveAllSafeGoals ths' openChainsLimit =
       case goal of
         ChainG _ _    -> if (chainsLeft > 0)
                             then True
-                            else trace ("[Open Chains] Too many chain goals, stopping precomputation. Open Chains limits (can be changed with -c=): "++ show openChainsLimit) False
+                            else trace ("[Open Chains] Too many chain constraints, stopping precomputation. Open Chains limits (can be changed with -c=): "++ show openChainsLimit) False
         ActionG _ fa  -> not (isKUFact fa)
         -- we do not solve KD goals for Xor facts as insertAction inserts
         -- these goals directly. This prevents loops in the precomputations

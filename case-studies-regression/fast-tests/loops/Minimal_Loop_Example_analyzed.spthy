@@ -39,7 +39,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#j))  ∥
          (∃ #i. (Start( x ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #j)) )
     case case_1
@@ -83,7 +82,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( A( ~n ) ▶₀ #j )
     case Loop
     solve( A( ~n ) ▶₀ #i )
@@ -149,7 +147,6 @@ guarded formula characterizing all satisfying traces:
 */
 induction
   case empty_trace
-  simplify
   SOLVED // trace found
 qed
 
@@ -163,17 +160,14 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.8.0
+Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
+Compiled at: 2024-11-25 14:27:26.931961 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -181,13 +175,13 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.09s
   
-  Start_before_Loop (all-traces): verified (8 steps)
+  Start_before_Loop (all-traces): verified (7 steps)
   Start_before_Stop (all-traces): verified (4 steps)
-  Loop_before_Stop (all-traces): verified (9 steps)
+  Loop_before_Stop (all-traces): verified (8 steps)
   Stop_unique (all-traces): verified (12 steps)
-  Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
+  Satisfied_by_empty_trace_only (exists-trace): verified (2 steps)
 
 ==============================================================================
 */

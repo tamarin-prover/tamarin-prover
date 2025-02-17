@@ -235,7 +235,7 @@ heuristic :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
 heuristic diff workDir = symbol "heuristic" *> char ':' *> skipMany (char ' ') *> (concat <$> many1 (goalRanking diff workDir)) <* lexeme spaces
 
 goalRanking :: Bool -> Maybe FilePath -> Parser [GoalRanking ProofContext]
-goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "goal ranking"
+goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regularRanking <?> "proof method ranking"
    where
        regularRanking = filterHeuristic diff <$> many1 letter <* skipMany (char ' ')
 

@@ -40,6 +40,7 @@ import Theory.Constraint.System.Dot
 import Text.Dot qualified as D
 import Theory.Constraint.System.Graph.Graph
 import Theory.Constraint.System.JSON (sequentsToJSONPretty)
+import Theory.Constraint.Solver (ProofMethod(Finished))
 
 import ClosedTheory (prettyPrecomputation,prettyDiffPrecomputation)
 
@@ -279,9 +280,9 @@ run thisMode as
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof.
             proofSystems :: IncrementalProof -> [(ProofPath, System)]
-            proofSystems (LNode (ProofStep Solved (Just rootSystem)) _) =  [([], rootSystem)]
-            proofSystems (LNode (ProofStep _ _) children) =
-              [(l : ls, system) | (l, subProof) <- M.toList children
+            proofSystems (LNode (ProofStep (Finished Solved) (Just rootSystem)) _) =  [([], rootSystem)]
+            proofSystems (LNode (ProofStep _ _) children) =  
+              [(l : ls, system) | (l, subProof) <- M.toList children 
                                 , (ls, system) <- proofSystems subProof ]
 
             -- | Make a label for use in the trace output out of all relevant information for a constraint system.
