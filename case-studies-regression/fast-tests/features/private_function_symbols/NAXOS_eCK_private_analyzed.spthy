@@ -605,8 +605,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
-Compiled at: 2024-11-25 14:27:26.931961 UTC
+Git revision: b42966f15d33cd6b440f2b0fff3a22fe98a18628 (with uncommited changes), branch: HEAD
+Compiled at: 2025-02-17 12:32:13.822416425 UTC
 */
 
 end
@@ -618,7 +618,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 0.80s
+  processing time: 1.36s
   
   eCK_key_secrecy (all-traces): verified (89 steps)
 

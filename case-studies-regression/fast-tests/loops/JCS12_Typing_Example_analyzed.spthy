@@ -292,8 +292,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
-Compiled at: 2024-11-25 14:27:26.931961 UTC
+Git revision: b42966f15d33cd6b440f2b0fff3a22fe98a18628 (with uncommited changes), branch: HEAD
+Compiled at: 2025-02-17 12:32:13.822416425 UTC
 */
 
 end
@@ -305,7 +305,7 @@ summary of summaries:
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          examples/loops/JCS12_Typing_Example.spthy.tmp
-  processing time: 0.23s
+  processing time: 0.35s
   
   typing_assertion (all-traces): verified (15 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)
