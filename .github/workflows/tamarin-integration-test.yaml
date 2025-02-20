@@ -17,7 +17,7 @@ jobs:
           sudo apt-get install graphviz tree-sitter-cli
 
       - name: Caching
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.stack
@@ -37,7 +37,7 @@ jobs:
           curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
           chmod a+x ~/.local/bin/stack
           stack --no-terminal setup
-          curl -L https://github.com/SRI-CSL/Maude/releases/download/3.2.1/Maude-3.2.1-linux.zip > maude.zip
+          curl -L https://github.com/maude-lang/Maude/releases/download/Maude3.4/Maude-linux.zip > maude.zip
           unzip -oj maude.zip -d ~/.local/bin/
           mv -f ~/.local/bin/maude.linux64 ~/.local/bin/maude
           chmod a+x ~/.local/bin/maude
