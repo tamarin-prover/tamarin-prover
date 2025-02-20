@@ -365,9 +365,13 @@ toRule AnnotatedRule{..} = -- this is a Record Wildcard
                          ++ prettyEitherPositionOrSpecial position
             attr = [ RuleColor $ colorForProcessName $ getTopLevelName process
                    , Process $ toProcess process
-                   , IsSAPiCRule]
+                   , IsSAPiCRule
+                   ] 
+                   ++ if isLookup process then [ IgnoreDerivChecks] else [] 
             l = map factToFact prems
             a = map actionToFact acts
             r = map factToFact concs
             stripNonAlphanumerical = filter isAlpha
             unNull s = if null s then "p" else s
+            isLookup (ProcessComb (Lookup _ _) _ _ _)= True 
+            isLookup _ = False 

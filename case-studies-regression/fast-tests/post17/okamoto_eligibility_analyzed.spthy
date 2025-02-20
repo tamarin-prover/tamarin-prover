@@ -244,8 +244,8 @@ Failed to derive Variable(s): ~ltkA
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
-Compiled at: 2024-11-25 14:27:26.931961 UTC
+Git revision: b42966f15d33cd6b440f2b0fff3a22fe98a18628 (with uncommited changes), branch: HEAD
+Compiled at: 2025-02-17 12:32:13.822416425 UTC
 */
 
 end
@@ -257,7 +257,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.62s
+  processing time: 1.20s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
