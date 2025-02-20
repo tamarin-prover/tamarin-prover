@@ -523,8 +523,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.2.1
-Git revision: 45ba0ade4124513bbb2cb67c0c31470af4edc4f8 (with uncommited changes), branch: HEAD
-Compiled at: 2024-11-25 14:27:26.931961 UTC
+Git revision: b42966f15d33cd6b440f2b0fff3a22fe98a18628 (with uncommited changes), branch: HEAD
+Compiled at: 2025-02-17 12:32:13.822416425 UTC
 */
 
 end
@@ -536,7 +536,7 @@ summary of summaries:
 analyzed: examples/loops/RFID_Simple.spthy
 
   output:          examples/loops/RFID_Simple.spthy.tmp
-  processing time: 0.37s
+  processing time: 0.65s
   
   types (all-traces): verified (85 steps)
   Device_ToBob (all-traces): verified (11 steps)
