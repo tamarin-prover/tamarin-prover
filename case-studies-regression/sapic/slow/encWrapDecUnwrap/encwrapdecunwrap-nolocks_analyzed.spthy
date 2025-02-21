@@ -161,14 +161,14 @@ rule (modulo E) insetwraph_0_1111112[color=#ffffff,
   */
 
 rule (modulo E) lookupatthasa_0_11111121[color=#ffffff,
-                                         process="lookup <'att', h.2> as a.1", issapicrule]:
+                                         process="lookup <'att', h.2> as a.1", issapicrule, derivchecks]:
    [ State_11111121( h.2 ) ]
   --[ IsIn( <'att', h.2>, a.1 ) ]->
    [ State_111111211( a.1, h.2 ) ]
 
   /*
   rule (modulo AC) lookupatthasa_0_11111121[color=#ffffff,
-                                            process="lookup <'att', h.2> as a.1", issapicrule]:
+                                            process="lookup <'att', h.2> as a.1", issapicrule, derivchecks]:
      [ State_11111121( h ) ]
     --[ IsIn( <'att', h>, a ) ]->
      [ State_111111211( a, h ) ]
@@ -257,14 +257,14 @@ rule (modulo E) insetdech_0_111112[color=#ffffff,
   */
 
 rule (modulo E) lookupatthasa_0_1111121[color=#ffffff,
-                                        process="lookup <'att', h.3> as a.2", issapicrule]:
+                                        process="lookup <'att', h.3> as a.2", issapicrule, derivchecks]:
    [ State_1111121( h.3 ) ]
   --[ IsIn( <'att', h.3>, a.2 ) ]->
    [ State_11111211( a.2, h.3 ) ]
 
   /*
   rule (modulo AC) lookupatthasa_0_1111121[color=#ffffff,
-                                           process="lookup <'att', h.3> as a.2", issapicrule]:
+                                           process="lookup <'att', h.3> as a.2", issapicrule, derivchecks]:
      [ State_1111121( h ) ]
     --[ IsIn( <'att', h>, a ) ]->
      [ State_11111211( a, h ) ]
@@ -343,14 +343,14 @@ rule (modulo E) inhsencmk_0_11112[color=#ffffff,
   */
 
 rule (modulo E) lookupatthasa_0_111121[color=#ffffff,
-                                       process="lookup <'att', h.4> as a.3", issapicrule]:
+                                       process="lookup <'att', h.4> as a.3", issapicrule, derivchecks]:
    [ State_111121( m.1, k.2, h.4 ) ]
   --[ IsIn( <'att', h.4>, a.3 ) ]->
    [ State_1111211( m.1, k.2, a.3, h.4 ) ]
 
   /*
   rule (modulo AC) lookupatthasa_0_111121[color=#ffffff,
-                                          process="lookup <'att', h.4> as a.3", issapicrule]:
+                                          process="lookup <'att', h.4> as a.3", issapicrule, derivchecks]:
      [ State_111121( m, k, h ) ]
     --[ IsIn( <'att', h>, a ) ]->
      [ State_1111211( m, k, a, h ) ]
@@ -371,14 +371,14 @@ rule (modulo E) ifadec_0_1111211[color=#ffffff, process="if a.3='dec'",
   */
 
 rule (modulo E) lookupkeyhaskp_0_11112111[color=#ffffff,
-                                          process="lookup <'key', h.4> as kp.1", issapicrule]:
+                                          process="lookup <'key', h.4> as kp.1", issapicrule, derivchecks]:
    [ State_11112111( m.1, k.2, a.3, h.4 ) ]
   --[ IsIn( <'key', h.4>, kp.1 ) ]->
    [ State_111121111( kp.1, m.1, k.2, a.3, h.4 ) ]
 
   /*
   rule (modulo AC) lookupkeyhaskp_0_11112111[color=#ffffff,
-                                             process="lookup <'key', h.4> as kp.1", issapicrule]:
+                                             process="lookup <'key', h.4> as kp.1", issapicrule, derivchecks]:
      [ State_11112111( m, k, a, h ) ]
     --[ IsIn( <'key', h>, kp ) ]->
      [ State_111121111( kp, m, k, a, h ) ]
@@ -469,14 +469,14 @@ rule (modulo E) inhm_0_1112[color=#ffffff, process="in(<h.5, m.2>);",
   */
 
 rule (modulo E) lookupatthasa_0_11121[color=#ffffff,
-                                      process="lookup <'att', h.5> as a.4", issapicrule]:
+                                      process="lookup <'att', h.5> as a.4", issapicrule, derivchecks]:
    [ State_11121( m.2, h.5 ) ]
   --[ IsIn( <'att', h.5>, a.4 ) ]->
    [ State_111211( m.2, a.4, h.5 ) ]
 
   /*
   rule (modulo AC) lookupatthasa_0_11121[color=#ffffff,
-                                         process="lookup <'att', h.5> as a.4", issapicrule]:
+                                         process="lookup <'att', h.5> as a.4", issapicrule, derivchecks]:
      [ State_11121( m, h ) ]
     --[ IsIn( <'att', h>, a ) ]->
      [ State_111211( m, a, h ) ]
@@ -497,14 +497,14 @@ rule (modulo E) ifadec_0_111211[color=#ffffff, process="if a.4='dec'",
   */
 
 rule (modulo E) lookupkeyhask_0_1112111[color=#ffffff,
-                                        process="lookup <'key', h.5> as k.3", issapicrule]:
+                                        process="lookup <'key', h.5> as k.3", issapicrule, derivchecks]:
    [ State_1112111( m.2, a.4, h.5 ) ]
   --[ IsIn( <'key', h.5>, k.3 ) ]->
    [ State_11121111( m.2, k.3, a.4, h.5 ) ]
 
   /*
   rule (modulo AC) lookupkeyhask_0_1112111[color=#ffffff,
-                                           process="lookup <'key', h.5> as k.3", issapicrule]:
+                                           process="lookup <'key', h.5> as k.3", issapicrule, derivchecks]:
      [ State_1112111( m, a, h ) ]
     --[ IsIn( <'key', h>, k ) ]->
      [ State_11121111( m, k, a, h ) ]
@@ -565,14 +565,14 @@ rule (modulo E) inhh_0_112[color=#ffffff, process="in(<h1.1, h2.1>);",
   */
 
 rule (modulo E) lookupatthasa_0_1121[color=#ffffff,
-                                     process="lookup <'att', h1.1> as a1.1", issapicrule]:
+                                     process="lookup <'att', h1.1> as a1.1", issapicrule, derivchecks]:
    [ State_1121( h1.1, h2.1 ) ]
   --[ IsIn( <'att', h1.1>, a1.1 ) ]->
    [ State_11211( a1.1, h1.1, h2.1 ) ]
 
   /*
   rule (modulo AC) lookupatthasa_0_1121[color=#ffffff,
-                                        process="lookup <'att', h1.1> as a1.1", issapicrule]:
+                                        process="lookup <'att', h1.1> as a1.1", issapicrule, derivchecks]:
      [ State_1121( h1, h2 ) ]
     --[ IsIn( <'att', h1>, a1 ) ]->
      [ State_11211( a1, h1, h2 ) ]
@@ -593,28 +593,28 @@ rule (modulo E) ifawrap_0_11211[color=#ffffff, process="if a1.1='wrap'",
   */
 
 rule (modulo E) lookupkeyhask_0_112111[color=#ffffff,
-                                       process="lookup <'key', h1.1> as k1.1", issapicrule]:
+                                       process="lookup <'key', h1.1> as k1.1", issapicrule, derivchecks]:
    [ State_112111( a1.1, h1.1, h2.1 ) ]
   --[ IsIn( <'key', h1.1>, k1.1 ) ]->
    [ State_1121111( a1.1, h1.1, h2.1, k1.1 ) ]
 
   /*
   rule (modulo AC) lookupkeyhask_0_112111[color=#ffffff,
-                                          process="lookup <'key', h1.1> as k1.1", issapicrule]:
+                                          process="lookup <'key', h1.1> as k1.1", issapicrule, derivchecks]:
      [ State_112111( a1, h1, h2 ) ]
     --[ IsIn( <'key', h1>, k1 ) ]->
      [ State_1121111( a1, h1, h2, k1 ) ]
   */
 
 rule (modulo E) lookupkeyhask_0_1121111[color=#ffffff,
-                                        process="lookup <'key', h2.1> as k2.1", issapicrule]:
+                                        process="lookup <'key', h2.1> as k2.1", issapicrule, derivchecks]:
    [ State_1121111( a1.1, h1.1, h2.1, k1.1 ) ]
   --[ IsIn( <'key', h2.1>, k2.1 ) ]->
    [ State_11211111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ]
 
   /*
   rule (modulo AC) lookupkeyhask_0_1121111[color=#ffffff,
-                                           process="lookup <'key', h2.1> as k2.1", issapicrule]:
+                                           process="lookup <'key', h2.1> as k2.1", issapicrule, derivchecks]:
      [ State_1121111( a1, h1, h2, k1 ) ]
     --[ IsIn( <'key', h2>, k2 ) ]->
      [ State_11211111( a1, h1, h2, k1, k2 ) ]
@@ -703,14 +703,14 @@ rule (modulo E) inhsencmk_0_12[color=#ffffff,
   */
 
 rule (modulo E) lookupatthasa_0_121[color=#ffffff,
-                                    process="lookup <'att', h1.2> as a1.2", issapicrule]:
+                                    process="lookup <'att', h1.2> as a1.2", issapicrule, derivchecks]:
    [ State_121( h1.2, m.3, k.4 ) ]
   --[ IsIn( <'att', h1.2>, a1.2 ) ]->
    [ State_1211( a1.2, h1.2, m.3, k.4 ) ]
 
   /*
   rule (modulo AC) lookupatthasa_0_121[color=#ffffff,
-                                       process="lookup <'att', h1.2> as a1.2", issapicrule]:
+                                       process="lookup <'att', h1.2> as a1.2", issapicrule, derivchecks]:
      [ State_121( h1, m, k ) ]
     --[ IsIn( <'att', h1>, a1 ) ]->
      [ State_1211( a1, h1, m, k ) ]
@@ -731,14 +731,14 @@ rule (modulo E) ifawrap_0_1211[color=#ffffff, process="if a1.2='wrap'",
   */
 
 rule (modulo E) lookupkeyhask_0_12111[color=#ffffff,
-                                      process="lookup <'key', h1.2> as k1.2", issapicrule]:
+                                      process="lookup <'key', h1.2> as k1.2", issapicrule, derivchecks]:
    [ State_12111( a1.2, h1.2, m.3, k.4 ) ]
   --[ IsIn( <'key', h1.2>, k1.2 ) ]->
    [ State_121111( a1.2, h1.2, k1.2, m.3, k.4 ) ]
 
   /*
   rule (modulo AC) lookupkeyhask_0_12111[color=#ffffff,
-                                         process="lookup <'key', h1.2> as k1.2", issapicrule]:
+                                         process="lookup <'key', h1.2> as k1.2", issapicrule, derivchecks]:
      [ State_12111( a1, h1, m, k ) ]
     --[ IsIn( <'key', h1>, k1 ) ]->
      [ State_121111( a1, h1, k1, m, k ) ]
@@ -883,52 +883,19 @@ Message Derivation Checks
 
   The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
-Rule lookupatthasa_0_11111121: 
-Failed to derive Variable(s): a.1
-
-Rule lookupatthasa_0_1111121: 
-Failed to derive Variable(s): a.2
-
 Rule inhsencmk_0_11112: 
 Failed to derive Variable(s): m.1, k.2
 
-Rule lookupatthasa_0_111121: 
-Failed to derive Variable(s): a.3
-
-Rule lookupkeyhaskp_0_11112111: 
-Failed to derive Variable(s): kp.1
-
-Rule lookupatthasa_0_11121: 
-Failed to derive Variable(s): a.4
-
-Rule lookupkeyhask_0_1112111: 
-Failed to derive Variable(s): k.3
-
-Rule lookupatthasa_0_1121: 
-Failed to derive Variable(s): a1.1
-
-Rule lookupkeyhask_0_112111: 
-Failed to derive Variable(s): k1.1
-
-Rule lookupkeyhask_0_1121111: 
-Failed to derive Variable(s): k2.1
-
 Rule inhsencmk_0_12: 
 Failed to derive Variable(s): m.3, k.4
-
-Rule lookupatthasa_0_121: 
-Failed to derive Variable(s): a1.2
-
-Rule lookupkeyhask_0_12111: 
-Failed to derive Variable(s): k1.2
 */
 
 /*
 Generated from:
-Tamarin version 1.9.0
+Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
@@ -940,7 +907,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap-nolocks.spthy.tmp
-  processing time: 527.70s
+  processing time: 328.75s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

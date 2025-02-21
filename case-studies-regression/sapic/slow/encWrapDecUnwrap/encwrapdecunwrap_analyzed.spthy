@@ -66,7 +66,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ k m #t1.
            (DecUsing( k, m ) @ #t1)
           ⇒
@@ -1769,7 +1768,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ h1 #t1. (NewKey( h1, k.1 ) @ #t1) ⇒ ¬(#t1 < #t2))  ∥
          (∀ hp #t0.
            (WrapKey( hp, k.1 ) @ #t0)
@@ -8199,7 +8197,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #t2 #t3 h1 h2 k.
            (DecKey( h1, k ) @ #t2) ∧ (WrapKey( h2, k ) @ #t3)
           ⇒
@@ -9195,7 +9192,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #t2 #t3 h1 h2 k.
            (DecKey( h1, k ) @ #t2) ∧ (Unwrapped( h2, k ) @ #t3)
           ⇒
@@ -12487,7 +12483,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #i #j h k.
            (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j) ⇒ ((last(#j)) ∨ (last(#i))))  ∥
          (∃ x y #t3.
@@ -14302,14 +14297,14 @@ rule (modulo E) insetwrapLh_0_1111112[color=#ffffff,
   */
 
 rule (modulo E) lookupLhasv_0_111111211[color=#ffffff,
-                                        process="lookup L_h.2 as v.1", issapicrule]:
+                                        process="lookup L_h.2 as v.1", issapicrule, derivchecks]:
    [ State_111111211( lock.1, L_h.2 ) ]
   --[ IsIn( L_h.2, v.1 ) ]->
    [ State_1111112111( lock.1, v.1, L_h.2 ) ]
 
   /*
   rule (modulo AC) lookupLhasv_0_111111211[color=#ffffff,
-                                           process="lookup L_h.2 as v.1", issapicrule]:
+                                           process="lookup L_h.2 as v.1", issapicrule, derivchecks]:
      [ State_111111211( lock, L_h ) ]
     --[ IsIn( L_h, v ) ]->
      [ State_1111112111( lock, v, L_h ) ]
@@ -14446,14 +14441,14 @@ rule (modulo E) insetdecLh_0_111112[color=#ffffff,
   */
 
 rule (modulo E) lookupLhasv_0_11111211[color=#ffffff,
-                                       process="lookup L_h.3 as v.2", issapicrule]:
+                                       process="lookup L_h.3 as v.2", issapicrule, derivchecks]:
    [ State_11111211( lock.2, L_h.3 ) ]
   --[ IsIn( L_h.3, v.2 ) ]->
    [ State_111112111( lock.2, v.2, L_h.3 ) ]
 
   /*
   rule (modulo AC) lookupLhasv_0_11111211[color=#ffffff,
-                                          process="lookup L_h.3 as v.2", issapicrule]:
+                                          process="lookup L_h.3 as v.2", issapicrule, derivchecks]:
      [ State_11111211( lock, L_h ) ]
     --[ IsIn( L_h, v ) ]->
      [ State_111112111( lock, v, L_h ) ]
@@ -14576,14 +14571,14 @@ rule (modulo E) inLhc_0_11112[color=#ffffff, process="in(<L_h.4, c.1>);",
   */
 
 rule (modulo E) lookupLhasv_0_1111211[color=#ffffff,
-                                      process="lookup L_h.4 as v.3", issapicrule]:
+                                      process="lookup L_h.4 as v.3", issapicrule, derivchecks]:
    [ State_1111211( c.1, lock.3, L_h.4 ) ]
   --[ IsIn( L_h.4, v.3 ) ]->
    [ State_11112111( c.1, lock.3, v.3, L_h.4 ) ]
 
   /*
   rule (modulo AC) lookupLhasv_0_1111211[color=#ffffff,
-                                         process="lookup L_h.4 as v.3", issapicrule]:
+                                         process="lookup L_h.4 as v.3", issapicrule, derivchecks]:
      [ State_1111211( c, lock, L_h ) ]
     --[ IsIn( L_h, v ) ]->
      [ State_11112111( c, lock, v, L_h ) ]
@@ -14762,14 +14757,14 @@ rule (modulo E) inLhm_0_1112[color=#ffffff, process="in(<L_h.5, m.2>);",
   */
 
 rule (modulo E) lookupLhasv_0_111211[color=#ffffff,
-                                     process="lookup L_h.5 as v.4", issapicrule]:
+                                     process="lookup L_h.5 as v.4", issapicrule, derivchecks]:
    [ State_111211( m.2, lock.4, L_h.5 ) ]
   --[ IsIn( L_h.5, v.4 ) ]->
    [ State_1112111( m.2, lock.4, v.4, L_h.5 ) ]
 
   /*
   rule (modulo AC) lookupLhasv_0_111211[color=#ffffff,
-                                        process="lookup L_h.5 as v.4", issapicrule]:
+                                        process="lookup L_h.5 as v.4", issapicrule, derivchecks]:
      [ State_111211( m, lock, L_h ) ]
     --[ IsIn( L_h, v ) ]->
      [ State_1112111( m, lock, v, L_h ) ]
@@ -14873,14 +14868,14 @@ rule (modulo E) inLhLh_0_112[color=#ffffff,
   */
 
 rule (modulo E) lookupLhasv_0_11211[color=#ffffff,
-                                    process="lookup L_h1.1 as v1.1", issapicrule]:
+                                    process="lookup L_h1.1 as v1.1", issapicrule, derivchecks]:
    [ State_11211( L_h1.1, L_h2.1, lock.5 ) ]
   --[ IsIn( L_h1.1, v1.1 ) ]->
    [ State_112111( L_h1.1, L_h2.1, v1.1, lock.5 ) ]
 
   /*
   rule (modulo AC) lookupLhasv_0_11211[color=#ffffff,
-                                       process="lookup L_h1.1 as v1.1", issapicrule]:
+                                       process="lookup L_h1.1 as v1.1", issapicrule, derivchecks]:
      [ State_11211( L_h1, L_h2, lock ) ]
     --[ IsIn( L_h1, v1 ) ]->
      [ State_112111( L_h1, L_h2, v1, lock ) ]
@@ -14907,14 +14902,14 @@ rule (modulo E) ifattCvwrap_0_112111[color=#ffffff,
   */
 
 rule (modulo E) lookupLhasv_0_1121111[color=#ffffff,
-                                      process="lookup L_h2.1 as v2.1", issapicrule]:
+                                      process="lookup L_h2.1 as v2.1", issapicrule, derivchecks]:
    [ State_1121111( L_h1.1, L_h2.1, v1.1, lock.5 ) ]
   --[ IsIn( L_h2.1, v2.1 ) ]->
    [ State_11211111( L_h1.1, L_h2.1, v1.1, v2.1, lock.5 ) ]
 
   /*
   rule (modulo AC) lookupLhasv_0_1121111[color=#ffffff,
-                                         process="lookup L_h2.1 as v2.1", issapicrule]:
+                                         process="lookup L_h2.1 as v2.1", issapicrule, derivchecks]:
      [ State_1121111( L_h1, L_h2, v1, lock ) ]
     --[ IsIn( L_h2, v2 ) ]->
      [ State_11211111( L_h1, L_h2, v1, v2, lock ) ]
@@ -15078,14 +15073,14 @@ rule (modulo E) inLhsencmk_0_12[color=#ffffff,
   */
 
 rule (modulo E) lookupLhasv_0_1211[color=#ffffff,
-                                   process="lookup L_h.6 as v.5", issapicrule]:
+                                   process="lookup L_h.6 as v.5", issapicrule, derivchecks]:
    [ State_1211( k.2, m.3, L_h.6, lock.6 ) ]
   --[ IsIn( L_h.6, v.5 ) ]->
    [ State_12111( k.2, m.3, v.5, L_h.6, lock.6 ) ]
 
   /*
   rule (modulo AC) lookupLhasv_0_1211[color=#ffffff,
-                                      process="lookup L_h.6 as v.5", issapicrule]:
+                                      process="lookup L_h.6 as v.5", issapicrule, derivchecks]:
      [ State_1211( k, m, L_h, lock ) ]
     --[ IsIn( L_h, v ) ]->
      [ State_12111( k, m, v, L_h, lock ) ]
@@ -15368,37 +15363,16 @@ Message Derivation Checks
 
   The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
-Rule lookupLhasv_0_111111211: 
-Failed to derive Variable(s): v.1
-
-Rule lookupLhasv_0_11111211: 
-Failed to derive Variable(s): v.2
-
-Rule lookupLhasv_0_1111211: 
-Failed to derive Variable(s): v.3
-
-Rule lookupLhasv_0_111211: 
-Failed to derive Variable(s): v.4
-
-Rule lookupLhasv_0_11211: 
-Failed to derive Variable(s): v1.1
-
-Rule lookupLhasv_0_1121111: 
-Failed to derive Variable(s): v2.1
-
 Rule inLhsencmk_0_12: 
 Failed to derive Variable(s): k.2, m.3
-
-Rule lookupLhasv_0_1211: 
-Failed to derive Variable(s): v.5
 */
 
 /*
 Generated from:
-Tamarin version 1.9.0
+Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
@@ -15410,16 +15384,16 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 72.92s
+  processing time: 155.18s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  dec_limits (all-traces): verified (281 steps)
-  wrap_key_origins (all-traces): verified (1110 steps)
-  no_key_is_wrap_and_dec_ind (all-traces): verified (138 steps)
-  no_key_is_wrap_and_dec_ind2 (all-traces): verified (540 steps)
-  cannot_obtain_key_ind (all-traces): verified (310 steps)
+  dec_limits (all-traces): verified (280 steps)
+  wrap_key_origins (all-traces): verified (1109 steps)
+  no_key_is_wrap_and_dec_ind (all-traces): verified (137 steps)
+  no_key_is_wrap_and_dec_ind2 (all-traces): verified (539 steps)
+  cannot_obtain_key_ind (all-traces): verified (309 steps)
 
 ==============================================================================
 */

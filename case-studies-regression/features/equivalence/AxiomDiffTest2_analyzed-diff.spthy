@@ -1,0 +1,65 @@
+theory AxiomDiffTest2 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+rule (modulo E) Test:
+   [ Fr( ~f ) ] --[ Never1( ~f ) ]-> [ Fact( ~f ) ]
+
+rule (modulo E) Test2:
+   [ Fact( f ) ] --[ Never2( f ) ]-> [ Fact2( f ) ]
+
+restriction blockLeft [left]:
+  "∀ #i #j f. ((Never1( f ) @ #i) ∧ (Never2( f ) @ #j)) ⇒ (⊥)"
+  // safety formula
+
+restriction blockLeft2 [left]:
+  "∀ #i f. (Never2( f ) @ #i) ⇒ (∀ #j. (Never1( f ) @ #j) ⇒ (⊥))"
+  // safety formula
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Test2
+  backward-search
+    case RHS
+    step( simplify )
+    step( solve( Fact( f ) ▶₀ #i ) )
+      case Test
+      by ATTACK // trace found
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/equivalence/AxiomDiffTest2.spthy
+
+  output:          examples/features/equivalence/AxiomDiffTest2.spthy.tmp
+  processing time: 0.05s
+  
+  DiffLemma:  Observational_equivalence : falsified - found trace (5 steps)
+
+==============================================================================
+*/

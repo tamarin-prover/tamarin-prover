@@ -160,7 +160,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ k m #t1.
            (DecUsing( k, m ) @ #t1)
           ∧
@@ -8747,7 +8746,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ h2 k #t2 a.
            (Unwrapped( h2, k, a ) @ #t2)
           ⇒
@@ -10548,7 +10546,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #t2 #t3 h1 h2 k.
            (DecKey( h1, k, 'on' ) @ #t2) ∧ (WrapKey( h2, k, 'on' ) @ #t3)
           ⇒
@@ -16171,7 +16168,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #t2 #t3 h1 h2 k.
            (EncKey( h1, k, 'on' ) @ #t2) ∧ (UnwrapKey( h2, k, 'on' ) @ #t3)
           ⇒
@@ -17773,7 +17769,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #i #j L_h k.
            (NewKey( L_h, k, 'on' ) @ #i) ∧ (!KU( k ) @ #j)
           ⇒
@@ -20331,7 +20326,7 @@ rule (modulo E) increateattsptr_0_1111111111[color=#408056,
 
 rule (modulo E) lookupFtemplateptrastempl_0_11111111111111[color=#408056,
                                                            process="lookup <'F_template', ptr.1> as templ.1",
-                                                           issapicrule]:
+                                                           issapicrule, derivchecks]:
    [ State_11111111111111( lock, L_h.1, atts.1, k.1, ptr.1 ) ]
   --[ IsIn( <'F_template', ptr.1>, templ.1 ) ]->
    [ State_111111111111111( lock, L_h.1, atts.1, k.1, ptr.1, templ.1 ) ]
@@ -20339,7 +20334,7 @@ rule (modulo E) lookupFtemplateptrastempl_0_11111111111111[color=#408056,
   /*
   rule (modulo AC) lookupFtemplateptrastempl_0_11111111111111[color=#408056,
                                                               process="lookup <'F_template', ptr.1> as templ.1",
-                                                              issapicrule]:
+                                                              issapicrule, derivchecks]:
      [ State_11111111111111( lock, L_h, atts, k, ptr ) ]
     --[ IsIn( <'F_template', ptr>, templ ) ]->
      [ State_111111111111111( lock, L_h, atts, k, ptr, templ ) ]
@@ -20706,14 +20701,16 @@ rule (modulo E) inLhsencmk_0_1111111121[color=#408078,
   */
 
 rule (modulo E) lookupobjLhasv_0_111111112111[color=#408078,
-                                              process="lookup <'obj', L_h.2> as v.1", issapicrule]:
+                                              process="lookup <'obj', L_h.2> as v.1", issapicrule,
+                                              derivchecks]:
    [ State_111111112111( lock.1, m.1, L_h.2, k.2 ) ]
   --[ IsIn( <'obj', L_h.2>, v.1 ) ]->
    [ State_1111111121111( lock.1, m.1, v.1, L_h.2, k.2 ) ]
 
   /*
   rule (modulo AC) lookupobjLhasv_0_111111112111[color=#408078,
-                                                 process="lookup <'obj', L_h.2> as v.1", issapicrule]:
+                                                 process="lookup <'obj', L_h.2> as v.1", issapicrule,
+                                                 derivchecks]:
      [ State_111111112111( lock, m, L_h, k ) ]
     --[ IsIn( <'obj', L_h>, v ) ]->
      [ State_1111111121111( lock, m, v, L_h, k ) ]
@@ -20864,14 +20861,16 @@ rule (modulo E) inLhm_0_111111121[color=#408071,
   */
 
 rule (modulo E) lookupobjLhasv_0_11111112111[color=#408071,
-                                             process="lookup <'obj', L_h.3> as v.2", issapicrule]:
+                                             process="lookup <'obj', L_h.3> as v.2", issapicrule,
+                                             derivchecks]:
    [ State_11111112111( lock.2, m.2, L_h.3 ) ]
   --[ IsIn( <'obj', L_h.3>, v.2 ) ]->
    [ State_111111121111( lock.2, m.2, v.2, L_h.3 ) ]
 
   /*
   rule (modulo AC) lookupobjLhasv_0_11111112111[color=#408071,
-                                                process="lookup <'obj', L_h.3> as v.2", issapicrule]:
+                                                process="lookup <'obj', L_h.3> as v.2", issapicrule,
+                                                derivchecks]:
      [ State_11111112111( lock, m, L_h ) ]
     --[ IsIn( <'obj', L_h>, v ) ]->
      [ State_111111121111( lock, m, v, L_h ) ]
@@ -20976,28 +20975,30 @@ rule (modulo E) inhh_0_11111121[color=#408044,
   */
 
 rule (modulo E) lookupobjhasv_0_1111112111[color=#408044,
-                                           process="lookup <'obj', h1.1> as v1.1", issapicrule]:
+                                           process="lookup <'obj', h1.1> as v1.1", issapicrule, derivchecks]:
    [ State_1111112111( h1.1, h2.1, lock.3 ) ]
   --[ IsIn( <'obj', h1.1>, v1.1 ) ]->
    [ State_11111121111( h1.1, h2.1, v1.1, lock.3 ) ]
 
   /*
   rule (modulo AC) lookupobjhasv_0_1111112111[color=#408044,
-                                              process="lookup <'obj', h1.1> as v1.1", issapicrule]:
+                                              process="lookup <'obj', h1.1> as v1.1", issapicrule,
+                                              derivchecks]:
      [ State_1111112111( h1, h2, lock ) ]
     --[ IsIn( <'obj', h1>, v1 ) ]->
      [ State_11111121111( h1, h2, v1, lock ) ]
   */
 
 rule (modulo E) lookupobjhasv_0_11111121111[color=#408044,
-                                            process="lookup <'obj', h2.1> as v2.1", issapicrule]:
+                                            process="lookup <'obj', h2.1> as v2.1", issapicrule, derivchecks]:
    [ State_11111121111( h1.1, h2.1, v1.1, lock.3 ) ]
   --[ IsIn( <'obj', h2.1>, v2.1 ) ]->
    [ State_111111211111( h1.1, h2.1, v1.1, v2.1, lock.3 ) ]
 
   /*
   rule (modulo AC) lookupobjhasv_0_11111121111[color=#408044,
-                                               process="lookup <'obj', h2.1> as v2.1", issapicrule]:
+                                               process="lookup <'obj', h2.1> as v2.1", issapicrule,
+                                               derivchecks]:
      [ State_11111121111( h1, h2, v1, lock ) ]
     --[ IsIn( <'obj', h2>, v2 ) ]->
      [ State_111111211111( h1, h2, v1, v2, lock ) ]
@@ -21130,7 +21131,7 @@ rule (modulo E) ifCanwrapattwraptemvattunwraptemvattenctemvattdectemvattsenstemv
 
 rule (modulo E) lookupFtemplateattwttemvaswt_0_1111112111111[color=#408044,
                                                              process="lookup <'F_template', attwt(tem(v1.1))> as wt.1",
-                                                             issapicrule]:
+                                                             issapicrule, derivchecks]:
    [ State_1111112111111( h1.1, h2.1, v1.1, v2.1, lock.3 ) ]
   --[ IsIn( <'F_template', attwt(tem(v1.1))>, wt.1 ) ]->
    [ State_11111121111111( h1.1, h2.1, v1.1, v2.1, wt.1, lock.3 ) ]
@@ -21138,7 +21139,7 @@ rule (modulo E) lookupFtemplateattwttemvaswt_0_1111112111111[color=#408044,
   /*
   rule (modulo AC) lookupFtemplateattwttemvaswt_0_1111112111111[color=#408044,
                                                                 process="lookup <'F_template', attwt(tem(v1.1))> as wt.1",
-                                                                issapicrule]:
+                                                                issapicrule, derivchecks]:
      [ State_1111112111111( h1, h2, v1, v2, lock ) ]
     --[ IsIn( <'F_template', z>, wt ) ]->
      [ State_11111121111111( h1, h2, v1, v2, wt, lock ) ]
@@ -21664,14 +21665,15 @@ rule (modulo E) inLhsencmkatts_0_1111121[color=#40804a,
   */
 
 rule (modulo E) lookupobjLhasv_0_111112111[color=#40804a,
-                                           process="lookup <'obj', L_h.4> as v.3", issapicrule]:
+                                           process="lookup <'obj', L_h.4> as v.3", issapicrule, derivchecks]:
    [ State_111112111( atts.2, k.3, m.3, L_h.4, lock.4 ) ]
   --[ IsIn( <'obj', L_h.4>, v.3 ) ]->
    [ State_1111121111( atts.2, k.3, m.3, v.3, L_h.4, lock.4 ) ]
 
   /*
   rule (modulo AC) lookupobjLhasv_0_111112111[color=#40804a,
-                                              process="lookup <'obj', L_h.4> as v.3", issapicrule]:
+                                              process="lookup <'obj', L_h.4> as v.3", issapicrule,
+                                              derivchecks]:
      [ State_111112111( atts, k, m, L_h, lock ) ]
     --[ IsIn( <'obj', L_h>, v ) ]->
      [ State_1111121111( atts, k, m, v, L_h, lock ) ]
@@ -21746,7 +21748,7 @@ rule (modulo E) ifkeyvk_0_11111211111[color=#40804a,
 
 rule (modulo E) lookupFtemplateattuttemvasut_0_111112111111[color=#40804a,
                                                             process="lookup <'F_template', attut(tem(v.3))> as ut.1",
-                                                            issapicrule]:
+                                                            issapicrule, derivchecks]:
    [ State_111112111111( atts.2, k.3, m.3, v.3, L_h.4, lock.4 ) ]
   --[ IsIn( <'F_template', attut(tem(v.3))>, ut.1 ) ]->
    [ State_1111121111111( ut.1, atts.2, k.3, m.3, v.3, L_h.4, lock.4 ) ]
@@ -21754,7 +21756,7 @@ rule (modulo E) lookupFtemplateattuttemvasut_0_111112111111[color=#40804a,
   /*
   rule (modulo AC) lookupFtemplateattuttemvasut_0_111112111111[color=#40804a,
                                                                process="lookup <'F_template', attut(tem(v.3))> as ut.1",
-                                                               issapicrule]:
+                                                               issapicrule, derivchecks]:
      [ State_111112111111( atts, k, m, v, L_h, lock ) ]
     --[ IsIn( <'F_template', z>, ut ) ]->
      [ State_1111121111111( ut, atts, k, m, v, L_h, lock ) ]
@@ -22224,14 +22226,15 @@ rule (modulo E) inLh_0_111121[color=#408051, process="in(L_h.5);",
   */
 
 rule (modulo E) lookupobjLhasv_0_11112111[color=#408051,
-                                          process="lookup <'obj', L_h.5> as v.4", issapicrule]:
+                                          process="lookup <'obj', L_h.5> as v.4", issapicrule, derivchecks]:
    [ State_11112111( L_h.5, lock.5 ) ]
   --[ IsIn( <'obj', L_h.5>, v.4 ) ]->
    [ State_111121111( v.4, L_h.5, lock.5 ) ]
 
   /*
   rule (modulo AC) lookupobjLhasv_0_11112111[color=#408051,
-                                             process="lookup <'obj', L_h.5> as v.4", issapicrule]:
+                                             process="lookup <'obj', L_h.5> as v.4", issapicrule,
+                                             derivchecks]:
      [ State_11112111( L_h, lock ) ]
     --[ IsIn( <'obj', L_h>, v ) ]->
      [ State_111121111( v, L_h, lock ) ]
@@ -22450,10 +22453,10 @@ Derivation Checks
 
 /*
 Generated from:
-Tamarin version 1.9.0
+Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
@@ -22465,16 +22468,16 @@ summary of summaries:
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 132.34s
+  processing time: 77.34s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  dec_limits (all-traces): verified (1397 steps)
-  bad_keys (all-traces): verified (311 steps)
-  no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (860 steps)
-  no_key_is_enc_and_unwrap (all-traces): verified (289 steps)
-  cannot_obtain_key_ind (all-traces): verified (446 steps)
+  dec_limits (all-traces): verified (1396 steps)
+  bad_keys (all-traces): verified (310 steps)
+  no_key_is_wrap_and_dec__or_unwrap_and_dec_ind (all-traces): verified (859 steps)
+  no_key_is_enc_and_unwrap (all-traces): verified (288 steps)
+  cannot_obtain_key_ind (all-traces): verified (445 steps)
   cannot_obtain_key (all-traces): verified (2 steps)
 
 ==============================================================================

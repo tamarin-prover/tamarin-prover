@@ -91,7 +91,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ k m #t1.
            (DecUsing( k, m ) @ #t1)
           ⇒
@@ -332,7 +331,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #i #j h k.
            (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j) ⇒ ((last(#j)) ∨ (last(#i))))  ∥
          (∃ x y #t3.
@@ -639,14 +637,14 @@ rule (modulo E) inhc_0_112[color=#ffffff, process="in(<h.3, c.1>);",
   */
 
 rule (modulo E) lookupatthasa_0_1121[color=#ffffff,
-                                     process="lookup <'att', h.3> as a.1", issapicrule]:
+                                     process="lookup <'att', h.3> as a.1", issapicrule, derivchecks]:
    [ State_1121( c.1, h.3 ) ]
   --[ IsIn( <'att', h.3>, a.1 ) ]->
    [ State_11211( a.1, c.1, h.3 ) ]
 
   /*
   rule (modulo AC) lookupatthasa_0_1121[color=#ffffff,
-                                        process="lookup <'att', h.3> as a.1", issapicrule]:
+                                        process="lookup <'att', h.3> as a.1", issapicrule, derivchecks]:
      [ State_1121( c, h ) ]
     --[ IsIn( <'att', h>, a ) ]->
      [ State_11211( a, c, h ) ]
@@ -667,14 +665,14 @@ rule (modulo E) ifadec_0_11211[color=#ffffff, process="if a.1='dec'",
   */
 
 rule (modulo E) lookupkeyhask_0_112111[color=#ffffff,
-                                       process="lookup <'key', h.3> as k.2", issapicrule]:
+                                       process="lookup <'key', h.3> as k.2", issapicrule, derivchecks]:
    [ State_112111( a.1, c.1, h.3 ) ]
   --[ IsIn( <'key', h.3>, k.2 ) ]->
    [ State_1121111( a.1, c.1, k.2, h.3 ) ]
 
   /*
   rule (modulo AC) lookupkeyhask_0_112111[color=#ffffff,
-                                          process="lookup <'key', h.3> as k.2", issapicrule]:
+                                          process="lookup <'key', h.3> as k.2", issapicrule, derivchecks]:
      [ State_112111( a, c, h ) ]
     --[ IsIn( <'key', h>, k ) ]->
      [ State_1121111( a, c, k, h ) ]
@@ -772,14 +770,14 @@ rule (modulo E) inhh_0_12[color=#ffffff, process="in(<h1.1, h2.1>);",
   */
 
 rule (modulo E) lookupatthasa_0_121[color=#ffffff,
-                                    process="lookup <'att', h1.1> as a1.1", issapicrule]:
+                                    process="lookup <'att', h1.1> as a1.1", issapicrule, derivchecks]:
    [ State_121( h1.1, h2.1 ) ]
   --[ IsIn( <'att', h1.1>, a1.1 ) ]->
    [ State_1211( a1.1, h1.1, h2.1 ) ]
 
   /*
   rule (modulo AC) lookupatthasa_0_121[color=#ffffff,
-                                       process="lookup <'att', h1.1> as a1.1", issapicrule]:
+                                       process="lookup <'att', h1.1> as a1.1", issapicrule, derivchecks]:
      [ State_121( h1, h2 ) ]
     --[ IsIn( <'att', h1>, a1 ) ]->
      [ State_1211( a1, h1, h2 ) ]
@@ -800,28 +798,28 @@ rule (modulo E) ifawrap_0_1211[color=#ffffff, process="if a1.1='wrap'",
   */
 
 rule (modulo E) lookupkeyhask_0_12111[color=#ffffff,
-                                      process="lookup <'key', h1.1> as k1.1", issapicrule]:
+                                      process="lookup <'key', h1.1> as k1.1", issapicrule, derivchecks]:
    [ State_12111( a1.1, h1.1, h2.1 ) ]
   --[ IsIn( <'key', h1.1>, k1.1 ) ]->
    [ State_121111( a1.1, h1.1, h2.1, k1.1 ) ]
 
   /*
   rule (modulo AC) lookupkeyhask_0_12111[color=#ffffff,
-                                         process="lookup <'key', h1.1> as k1.1", issapicrule]:
+                                         process="lookup <'key', h1.1> as k1.1", issapicrule, derivchecks]:
      [ State_12111( a1, h1, h2 ) ]
     --[ IsIn( <'key', h1>, k1 ) ]->
      [ State_121111( a1, h1, h2, k1 ) ]
   */
 
 rule (modulo E) lookupkeyhask_0_121111[color=#ffffff,
-                                       process="lookup <'key', h2.1> as k2.1", issapicrule]:
+                                       process="lookup <'key', h2.1> as k2.1", issapicrule, derivchecks]:
    [ State_121111( a1.1, h1.1, h2.1, k1.1 ) ]
   --[ IsIn( <'key', h2.1>, k2.1 ) ]->
    [ State_1211111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ]
 
   /*
   rule (modulo AC) lookupkeyhask_0_121111[color=#ffffff,
-                                          process="lookup <'key', h2.1> as k2.1", issapicrule]:
+                                          process="lookup <'key', h2.1> as k2.1", issapicrule, derivchecks]:
      [ State_121111( a1, h1, h2, k1 ) ]
     --[ IsIn( <'key', h2>, k2 ) ]->
      [ State_1211111( a1, h1, h2, k1, k2 ) ]
@@ -926,36 +924,14 @@ restriction locking_0:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule lookupatthasa_0_1121: 
-Failed to derive Variable(s): a.1
-
-Rule lookupkeyhask_0_112111: 
-Failed to derive Variable(s): k.2
-
-Rule lookupatthasa_0_121: 
-Failed to derive Variable(s): a1.1
-
-Rule lookupkeyhask_0_12111: 
-Failed to derive Variable(s): k1.1
-
-Rule lookupkeyhask_0_121111: 
-Failed to derive Variable(s): k2.1
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
+Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
@@ -967,15 +943,12 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 3.21s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 2.05s
   
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)
-  dec_limits (all-traces): verified (46 steps)
-  cannot_obtain_key_ind (all-traces): verified (34 steps)
+  dec_limits (all-traces): verified (45 steps)
+  cannot_obtain_key_ind (all-traces): verified (33 steps)
   cannot_obtain_key (all-traces): verified (2 steps)
 
 ==============================================================================
