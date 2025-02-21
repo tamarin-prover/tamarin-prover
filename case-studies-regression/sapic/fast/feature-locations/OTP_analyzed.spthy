@@ -300,7 +300,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case eventProvScode_0_11111111112121111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvScode_0_11111111112121111111111
               by contradiction /* from formulas */
             next
@@ -336,7 +336,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case p_1_11111111112121111111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvUcode_0_1111111111111
               solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.36 )
                 case inpcchannelcode_1_111111111111_case_1
@@ -384,7 +384,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case eventProvScode_0_11111111112121111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvScode_0_11111111112121111111111
               by contradiction /* from formulas */
             next
@@ -420,7 +420,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case p_1_11111111112121111111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvUcode_0_1111111111111
               solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.36 )
                 case inpcchannelcode_1_111111111111_case_1
@@ -468,7 +468,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case eventProvScode_0_11111111112121111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvScode_0_11111111112121111111111
               by contradiction /* from formulas */
             next
@@ -504,7 +504,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case p_1_11111111112121111111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvUcode_0_1111111111111
               solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.36 )
                 case inpcchannelcode_1_111111111111_case_1
@@ -681,7 +681,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case eventProvScode_0_11111111112121111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvScode_0_11111111112121111111111
               by contradiction /* from formulas */
             next
@@ -717,7 +717,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case p_1_11111111112121111111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvUcode_0_1111111111111
               solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.36 )
                 case inpcchannelcode_1_111111111111_case_1
@@ -765,7 +765,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case eventProvScode_0_11111111112121111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvScode_0_11111111112121111111111
               by contradiction /* from formulas */
             next
@@ -801,7 +801,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case p_1_11111111112121111111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvUcode_0_1111111111111
               solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.36 )
                 case inpcchannelcode_1_111111111111_case_1
@@ -849,7 +849,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case eventProvScode_0_11111111112121111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvScode_0_11111111112121111111111
               by contradiction /* from formulas */
             next
@@ -885,7 +885,7 @@ solve( State_11111111112111111111111( cdcode, cu, pc, pw, k, skV,
             qed
           next
             case p_1_11111111112121111111111111
-            solve( !KU( ~n.6 ) @ #t2.1 )
+            solve( !KU( ~n.6 ) @ #t2.2 )
               case eventProvUcode_0_1111111111111
               solve( State_1111111111111( code, cu, pc, pw, skV ) ▶₀ #vr.36 )
                 case inpcchannelcode_1_111111111111_case_1
@@ -2318,23 +2318,14 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Derivation Checks
-=================
-
-  Derivation checks timed out.
-  Use --derivcheck-timeout=INT to configure timeout.
-  Set to 0 to deactivate for no timeout.
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
+Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
@@ -2346,10 +2337,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 20.88s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 13.91s
   
   reachV (exists-trace): verified (7 steps)
   secrecy_key (all-traces): verified (8 steps)

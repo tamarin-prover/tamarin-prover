@@ -1,0 +1,135 @@
+theory xor3 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+rule (modulo E) testsend:
+   [ Fr( ~a ), Fr( ~b ), Fr( ~c ) ]
+  --[ OnlyOnce( ), Secret( (~a⊕~b) ) ]->
+   [ Out( <(~a⊕~c), (~b⊕~c)> ) ]
+
+  /*
+  rule (modulo AC) testsend:
+     [ Fr( ~a ), Fr( ~b ), Fr( ~c ) ]
+    --[ OnlyOnce( ), Secret( z.2 ) ]->
+     [ Out( <z, z.1> ) ]
+    variants (modulo AC)
+    1. ~a    = ~a.7
+       ~b    = ~b.7
+       ~c    = ~c.7
+       z     = (~a.7⊕~c.7)
+       z.1   = (~b.7⊕~c.7)
+       z.2   = (~a.7⊕~b.7)
+    
+    2. ~a    = ~x.7
+       ~b    = ~x.7
+       ~c    = ~x.7
+       z     = zero
+       z.1   = zero
+       z.2   = zero
+    
+    3. ~a    = ~x.7
+       ~b    = ~x.7
+       ~c    = ~c.8
+       z     = (~x.7⊕~c.8)
+       z.1   = (~x.7⊕~c.8)
+       z.2   = zero
+    
+    4. ~a    = ~x.7
+       ~b    = ~b.8
+       ~c    = ~x.7
+       z     = zero
+       z.1   = (~x.7⊕~b.8)
+       z.2   = (~x.7⊕~b.8)
+    
+    5. ~a    = ~a.8
+       ~b    = ~x.7
+       ~c    = ~x.7
+       z     = (~x.7⊕~a.8)
+       z.1   = zero
+       z.2   = (~x.7⊕~a.8)
+  */
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma secrecybroken:
+  all-traces "∀ x #i. (Secret( x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Secret( x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+simplify
+solve( splitEqs(0) )
+  case split
+  solve( !KU( (~a⊕~b) ) @ #vk )
+    case coerce
+    solve( !KD( (~a⊕~b) ) ▶₀ #vk )
+      case testsend
+      solve( (#vl, 0) ~~> (#vk, 0) )
+        case d_0_fst
+        solve( (#vr, 0) ~~> (#vk, 0) )
+          case d_xor_case_1
+          solve( (#vr.1, 0) ~~> (#vk, 0) )
+            case Xor
+            solve( !KU( (~b⊕~c) ) @ #vk.1 )
+              case coerce
+              solve( !KD( (~b⊕~c) ) ▶₀ #vk.1 )
+                case testsend
+                solve( (#vl, 0) ~~> (#vk.1, 0) )
+                  case d_0_snd
+                  solve( (#vr.2, 0) ~~> (#vk.1, 0) )
+                    case Xor
+                    SOLVED // trace found
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/xor/basicfunctionality/xor3.spthy
+
+  output:          examples/features/xor/basicfunctionality/xor3.spthy.tmp
+  processing time: 0.13s
+  
+  secrecybroken (all-traces): falsified - found trace (12 steps)
+
+==============================================================================
+*/
