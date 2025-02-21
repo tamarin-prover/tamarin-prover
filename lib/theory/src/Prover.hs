@@ -3,6 +3,7 @@
 
 module Prover (
     module Prover
+    , mkSystem
 ) where
 
 import           Prelude                             hiding (id, (.))
@@ -71,10 +72,10 @@ closeDiffTheoryWithMaude :: SignatureWithMaude -> OpenDiffTheory -> Bool -> Clos
 closeDiffTheoryWithMaude sig thy0 autoSources =
   if autoSources && (containsPartialDeconstructions (cacheLeft items) || containsPartialDeconstructions (cacheRight items))
     then
-      proveDiffTheory (const True) checkProof checkDiffProof
+      proveDiffTheory (const True) checkProofM checkDiffProof
         (DiffTheory (L.get diffThyName thy0) (L.get diffThyInFile thy0) h t sig (cacheLeft items') (cacheRight items') (diffCacheLeft items') (diffCacheRight items') items' (L.get diffThyOptions thy0) (_diffThyIsSapic thy0))
     else
-      proveDiffTheory (const True) checkProof checkDiffProof
+      proveDiffTheory (const True) checkProofM checkDiffProof
         (DiffTheory (L.get diffThyName thy0) (L.get diffThyInFile thy0) h t sig (cacheLeft items) (cacheRight items) (diffCacheLeft items) (diffCacheRight items) items (L.get diffThyOptions thy0) (_diffThyIsSapic thy0))
 
   where
@@ -86,7 +87,7 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
     cacheLeft  its = closeRuleCache parameters restrictionsLeft  (typAsms its) S.empty sig (leftClosedRules its)  (L.get diffThyCacheLeft  thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
     cacheRight its = closeRuleCache parameters restrictionsRight (typAsms its) S.empty sig (rightClosedRules its) (L.get diffThyCacheRight thy0) (L.get (verboseOption . diffThyOptions) thy0) False (L.get diffThyIsSapic thy0)
 
-    checkProof = checkAndExtendProver (sorryProver Nothing)
+    checkProofM = checkAndExtendProver (sorryProver Nothing)
     checkDiffProof = checkAndExtendDiffProver (sorryDiffProver Nothing)
     diffRules  = map (applyMacroInDiffProtoRule (diffTheoryMacros thy0)) $ diffTheoryDiffRules thy0
     leftOpenRules  = map (addProtoRuleLabel . getLeftProtoRule)  diffRules

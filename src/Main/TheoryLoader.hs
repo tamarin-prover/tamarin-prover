@@ -45,16 +45,10 @@ import Data.Set qualified
 import Debug.Trace
 
 ------------------------------------
-import           Data.Label
 import           Data.Function (on)
 import qualified Data.Label as L
 
-import           Control.Category
-
 import           Control.Monad.Reader
-
-import           GHC.Records (HasField(getField))
-import           GHC.Num (integerFromInt)
 
 -----------------------------------
 import Control.DeepSeq (force)
@@ -455,16 +449,10 @@ checkTranslatedTheory thyOpts sign thy = do
   let transReport = either (`checkWellformedness` sign)
                            (`checkWellformednessDiff` sign) thy
 
-<<<<<<< HEAD
   deducThy0 <- bitraverse (\x -> return ((addMessageDeductionRuleVariants x) `runReader` (L.get sigmMaudeHandle sign)))
                          (\x -> return ((addMessageDeductionRuleVariantsDiff x) `runReader` (L.get sigmMaudeHandle sign))) thy
 
   deducThy <- bitraverse (liftIO . evaluate . force . (checkCloseIntrRule sign (theoryName thy))) (liftIO . evaluate . force . (checkCloseIntrRuleDiff sign (theoryName thy))) deducThy0
-=======
-  let deducThy = bimap addMessageDeductionRuleVariants
-                       addMessageDeductionRuleVariantsDiff
-                       thy
->>>>>>> develop_principal
 
   variableReport <- case compare derivChecks 0 of
     EQ -> pure $ Just []
@@ -492,27 +480,15 @@ checkTranslatedTheory thyOpts sign thy = do
 
     defaultProver = replaceSorryProver $ runAutoProver $ constructAutoProver defaultTheoryLoadOptions
     defaultDiffProver = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver defaultTheoryLoadOptions
-<<<<<<< HEAD
-    maudePublicSig s = Signature $ (getSignature s)
-      {stFunSyms = makepublic (stFunSyms (getSignature s))
-      , stACFunSyms = makepublicAC (stACFunSyms (getSignature s))
-      , funSyms = makepublicsym (funSyms (getSignature s))
-      , irreducibleFunSyms = makepublicsym (irreducibleFunSyms (getSignature s))
-      , reducibleFunSyms = makepublicsym (reducibleFunSyms (getSignature s))}
-    getSignature =  Data.Label.get sigpMaudeSig
-    makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name,(int, Public, construct)))
-    makepublicAC = Data.Set.map (\(name, (_, construct)) -> (name,(Public, construct)))
-    makepublicsym  = Data.Set.map (\el -> case el of
-=======
     maudePublicSig s = Signature $ s._sigMaudeInfo
-      { stFunSyms = makepublic (stFunSyms s._sigMaudeInfo)
+      {stFunSyms = makepublic (stFunSyms s._sigMaudeInfo)
+      , stACFunSyms = makepublicAC (stACFunSyms s._sigMaudeInfo)
       , funSyms = makepublicsym (funSyms s._sigMaudeInfo)
       , irreducibleFunSyms = makepublicsym (irreducibleFunSyms s._sigMaudeInfo)
-      , reducibleFunSyms = makepublicsym (reducibleFunSyms s._sigMaudeInfo)
-      }
+      , reducibleFunSyms = makepublicsym (reducibleFunSyms s._sigMaudeInfo)}
     makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name,(int, Public, construct)))
+    makepublicAC = Data.Set.map (\(name, (_, construct)) -> (name,(Public, construct)))
     makepublicsym  = Data.Set.map $ \case
->>>>>>> develop_principal
       NoEq (name, (int, _, constr)) -> NoEq (name,(int, Public, constr))
       AC (ACfct (name, (_, constr))) -> AC (ACfct (name,(Public, constr)))
       x -> x
@@ -740,9 +716,8 @@ addMessageDeductionRuleVariants thy0
   | enableDH msig = addIntruderVariants [ mkDhIntruderVariants ]
   | otherwise     = thy
   where
-<<<<<<< HEAD
-    msig         = get (sigpMaudeSig . thySignature) thy0
-    rules0     = reader $ \hnd -> subtermIntruderRules hnd False msig ++ specialIntruderRules False
+    msig         = thy0._thySignature._sigMaudeInfo --get (sigpMaudeSig . thySignature) thy0
+    rules0     = reader $ \hnd -> subtermIntruderRules hnd msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
     rulesAC = (destructionRulesAC False (acUserFunSyms msig))
@@ -760,19 +735,11 @@ addMessageDeductionRuleVariantsWithoutMaude thy0
   | enableDH msig = addIntruderVariants [ mkDhIntruderVariants ]
   | otherwise     = thy
   where
-    msig         = get (sigpMaudeSig . thySignature) thy0
-    rules       = specialIntruderRules False -- subtermIntruderRules hnd False msig ++ 
+    msig         = thy0._thySignature._sigMaudeInfo
+    rules       = specialIntruderRules False -- subtermIntruderRules hnd msig ++ 
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
     thy          = addIntrRuleACsAfterTranslate rules thy0
-=======
-    msig  = thy0._thySignature._sigMaudeInfo
-    rules = subtermIntruderRules False msig ++ specialIntruderRules False
-              ++ (if enableNat msig then natIntruderRules else [])
-              ++ (if enableMSet msig then multisetIntruderRules else [])
-              ++ (if enableXor msig then xorIntruderRules else [])
-    thy   = addIntrRuleACsAfterTranslate rules thy0
->>>>>>> develop_principal
     addIntruderVariants mkRuless = addIntrRuleACsAfterTranslate (concatMap ($ msig) mkRuless) thy
 
 
@@ -786,9 +753,8 @@ addMessageDeductionRuleVariantsDiff thy0
   | enableDH msig = addIntruderVariantsDiff [ mkDhIntruderVariants ]
   | otherwise     = thy >>= \x -> return (addIntrRuleLabels x)
   where
-<<<<<<< HEAD
-    msig         = get (sigpMaudeSig . diffThySignature) thy0
-    rules0 diff'  = reader $ \hnd -> subtermIntruderRules hnd diff' msig ++ specialIntruderRules diff'
+    msig         = thy0._diffThySignature._sigMaudeInfo -- get (sigpMaudeSig . diffThySignature) thy0
+    rules0 diff'  = reader $ \hnd -> subtermIntruderRules hnd msig ++ specialIntruderRules diff'
                     ++ (if enableMSet msig then multisetIntruderRules else [])
                     ++ (if enableXor msig then xorIntruderRules else [])
     rulesAC diff' = (destructionRulesAC diff' (acUserFunSyms msig))
@@ -798,17 +764,5 @@ addMessageDeductionRuleVariantsDiff thy0
     bothDiffTh = rules True >>= \x -> return (addIntrRuleACsDiffBothDiff x thy0)
     thy          = rules False >>= (\x -> (bothDiffTh >>= (return . addIntrRuleACsDiffBoth x)))
     addIntruderVariantsDiff mkRuless =
-         thy >>= (\x -> return (addIntrRuleLabels (addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) $ addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) x)))
+         thy >>= (\x -> return (addIntrRuleLabels $ addIntrRuleACsDiffBothDiff (concatMap ($ msig) mkRuless) (addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) x)))
 
-=======
-    msig        = thy0._diffThySignature._sigMaudeInfo
-    rules diff' = subtermIntruderRules diff' msig ++ specialIntruderRules diff'
-                   ++ (if enableNat msig then natIntruderRules else [])
-                   ++ (if enableMSet msig then multisetIntruderRules else [])
-                   ++ (if enableXor msig then xorIntruderRules else [])
-    thy         = addIntrRuleACsDiffBoth (rules False) $ addIntrRuleACsDiffBothDiff (rules True) thy0
-    addIntruderVariantsDiff mkRuless = addIntrRuleLabels $
-      addIntrRuleACsDiffBothDiff
-        (concatMap ($ msig) mkRuless)
-        (addIntrRuleACsDiffBoth (concatMap ($ msig) mkRuless) thy)
->>>>>>> develop_principal

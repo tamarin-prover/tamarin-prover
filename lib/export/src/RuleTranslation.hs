@@ -171,10 +171,10 @@ incorrectTermTypes thy t = case viewTerm t of
           filterfct (NoEqUser (f,_),_,_) = BC.unpack f == name
           filterfct (ACfctUser (f,_),_,_) = BC.unpack f == name
 
-    typeChecker name _ (Just _)             = Just name
-    typeChecker _ [] _                      = Nothing
-    typeChecker name (Nothing : ts) outType = typeChecker name ts outType
-    typeChecker name (Just _ : _) _         = Just name
+      typeChecker name _ (Just _)             = Just name
+      typeChecker _ [] _                      = Nothing
+      typeChecker name (Nothing : ts) outType = typeChecker name ts outType
+      typeChecker name (Just _ : _) _         = Just name
 
 translateProtoRule
   :: HighlightDocument d
@@ -393,16 +393,15 @@ translateTerm vars checkEq t = text $ printTerm True vars checkEq t
 
 printTerm :: (Show l) => Bool -> S.Set String -> Bool -> Term l -> String
 printTerm sanitizeAtoms vars checkEq t = case viewTerm t of
-<<<<<<< HEAD
     Lit l | checkEq && (S.member (show l) vars || head (show l) == '\'') -> '=' : showAtom sanitizeAtoms (show l)
     Lit l                                           -> showAtom sanitizeAtoms $ show l
     FApp (AC Mult)     ts                           -> printFuncApp "mult" ts
     FApp (AC Union)    ts                           -> printFuncApp "union" ts
     FApp (AC Xor)      ts                           -> printFuncApp "xor" ts
-    FApp (AC NatPlus)  ts                           -> printFuncApp "natplus" ts
+    FApp (AC NatPlus)  ts                           -> printFuncApp "plus" ts
     FApp (NoEq (f, _)) ts | BC.unpack f == "pair"   -> printFuncApp "" ts
     FApp (NoEq (f, _)) ts                           -> ppFunSym f ++ printTermsList ts
-    FApp (AC (ACfct (f, _))) ts                          -> ppFunSym f ++ printTermsList ts
+    FApp (AC (ACfct (f, _))) ts                     -> ppFunSym f ++ printTermsList ts
     FApp (C EMap)      ts                           -> "em" ++ printTermsList ts
     FApp List          ts                           -> printTermsList ts
     where
@@ -410,23 +409,6 @@ printTerm sanitizeAtoms vars checkEq t = case viewTerm t of
       printFuncApp acOp [t1,t2] = acOp ++ "(" ++ printTerm sanitizeAtoms vars checkEq t1 ++ ", " ++ printTerm sanitizeAtoms vars checkEq t2 ++ ")"
       printFuncApp acOp (tr:trs) = acOp ++ "(" ++ printTerm sanitizeAtoms vars checkEq tr ++ ", " ++ printFuncApp acOp trs ++ ")"
       printFuncApp _ [] = []
-=======
-  Lit l | checkEq && (S.member (show l) vars || head (show l) == '\'') -> '=' : showAtom sanitizeAtoms (show l)
-  Lit l                                         -> showAtom sanitizeAtoms $ show l
-  FApp (AC Mult)     ts                         -> printFuncApp "mult" ts
-  FApp (AC Union)    ts                         -> printFuncApp "union" ts
-  FApp (AC Xor)      ts                         -> printFuncApp "xor" ts
-  FApp (AC NatPlus)  ts                         -> printFuncApp "plus" ts
-  FApp (NoEq (f, _)) ts | BC.unpack f == "pair" -> printFuncApp "" ts
-  FApp (NoEq (f, _)) ts                         -> ppFunSym f ++ printTermsList ts
-  FApp (C EMap)      ts                         -> "em" ++ printTermsList ts
-  FApp List          ts                         -> printTermsList ts
-  where
-    printTermsList ts = "(" ++ intercalate ", " (map (printTerm sanitizeAtoms vars checkEq) ts) ++ ")"
-    printFuncApp acOp [t1,t2] = acOp ++ "(" ++ printTerm sanitizeAtoms vars checkEq t1 ++ ", " ++ printTerm sanitizeAtoms vars checkEq t2 ++ ")"
-    printFuncApp acOp (tr:trs) = acOp ++ "(" ++ printTerm sanitizeAtoms vars checkEq tr ++ ", " ++ printFuncApp acOp trs ++ ")"
-    printFuncApp _ [] = []
->>>>>>> develop_principal
 
 
 translatePatternTerm

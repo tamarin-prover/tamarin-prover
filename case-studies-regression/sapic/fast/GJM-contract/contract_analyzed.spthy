@@ -1642,18 +1642,6 @@ Message Derivation Checks
 =========================
 
   The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-<<<<<<< HEAD
-
-Rule lookupctasstate_0_111111111: 
-Failed to derive Variable(s): state.1
-
-Rule lookupctasstatus_0_1111211111111: 
-Failed to derive Variable(s): status.1
-
-Rule lookupctasstatus_0_111121211111111: 
-Failed to derive Variable(s): status.2
-=======
->>>>>>> develop_principal
 
 Rule letctpkskpksignedcheckgetmsgsignedpkskT_1_1111212121111: 
 Failed to derive Variable(s): sk1.1

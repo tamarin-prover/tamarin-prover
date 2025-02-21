@@ -237,8 +237,6 @@ module Theory (
 
   , getSource
   , getDiffSource
-  -- ** Alice
-  , Theory
   -- ** Proving
   , ProofSkeleton
   , DiffProofSkeleton

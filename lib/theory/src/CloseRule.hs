@@ -40,7 +40,7 @@ import           OpenTheory
 import           Theory.Model
 import           Theory.Proof
 import           Theory.Tools.InjectiveFactInstances
-import           Theory.Tools.IntruderRules
+-- import           Theory.Tools.IntruderRules
 
 import           Term.Positions
 
@@ -62,10 +62,10 @@ closeTheoryWithMaude :: SignatureWithMaude -> OpenTranslatedTheory -> Bool -> Bo
 closeTheoryWithMaude sig thy0 autoSources showSaturation =
   if autoSources && containsPartialDeconstructions (cache items)
     then
-        proveTheory (const True) checkProof
+        proveTheory (const True) checkProofM
       $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items') items' (L.get thyOptions thy0)  (L.get thyIsSapic thy0)
     else
-        proveTheory (const True) checkProof
+        proveTheory (const True) checkProofM
       $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items) items (L.get thyOptions thy0) (L.get thyIsSapic thy0)
   where
     parameters = Sources.IntegerParameters (L.get (openChainsLimit . thyOptions) thy0) (L.get (saturationLimit . thyOptions) thy0) showSaturation
@@ -73,7 +73,7 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     t          = L.get thyTactic thy0
     forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
     cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
-    checkProof = checkAndExtendProver (sorryProver Nothing)
+    checkProofM = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
     hnd = L.get sigmMaudeHandle sig
@@ -206,7 +206,7 @@ landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
 landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map (fmap (fmap (fmap Free))) facts))
 
 derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-derivationTest sig intrR fact terms = checkProof tabProof || checkProof tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
+derivationTest sig intrR fact terms = checkProofd tabProof || checkProofd tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
   where
     setD = decompose terms
 
@@ -216,11 +216,9 @@ derivationTest sig intrR fact terms = checkProof tabProof || checkProof tabProof
     decompose (f:l) = map ([f] ++) (decompose l)
     decompose [] = [[]]
 
-    emptyThy = Theory "checkReduction" "checkReduction" [] [] (toSignaturePure sig) intrR [] (Option False False False False False False False False False S.empty [] 10 5) False
+    emptyThy = Theory "checkReduction" "checkReduction" [] [] (toSignaturePure sig) intrR [] (Option False False False False False False False False False False S.empty [] 10 5) False
 
-    --tabProof = concatMap (\_ -> [TraceFound]) provenTheory
     tabProof = concatMap checkProofStatuses provenTheory
-    --provenTheory = closedTheory 
     provenTheory = map (proveTheory (const True) defaultProver) closedTheory
     closedTheory = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory -- no AutoSources
     modifiedTheory = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction1]) t) setD (repeat emptyThy)
@@ -233,8 +231,7 @@ derivationTest sig intrR fact terms = checkProof tabProof || checkProof tabProof
     tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimit prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
     tabTheory [] = ""
 
-    -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory) 
-    -- trace ("\nterms for deduction : " ++ show s1 ++ "\nfact : " ++ show fact)
+    -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory)
 
     newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "0") [] []) (pre s) (co s) (a s) []) []]
     varD s = frees $ concatMap factTerms s
@@ -244,7 +241,7 @@ derivationTest sig intrR fact terms = checkProof tabProof || checkProof tabProof
     a s = [protoFact Linear "Generated_0" (map (msgToFreshTerms . lvarToLnterm) (varD s)),factOnlyOnce]
     alemma s = [protoFact Linear "Generated_0" (map lvarToLnterm (varD s))]
 
-    newLemmas s = [Lemma "Derivation" AllTraces (Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])) [] (unproven ())] -- FIX-ME : the head should be a problem
+    newLemmas s = [Lemma "Derivation" "Derivation" False AllTraces (Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])) [] (unproven ())] -- FIX-ME : the head should be a problem
     
     newRestriction0 = Restriction "OnlyOnce" (forAllFormula (factAnd "i" .&&. factAnd "j" .==>. factEq))
     factAnd x = Ato (Action (LIT (Var (Free (LVar x LSortNode 0)))) factOnlyOnce)
@@ -255,11 +252,11 @@ derivationTest sig intrR fact terms = checkProof tabProof || checkProof tabProof
     factAndD x = Ato (Action (LIT (Var (Free (LVar x LSortNode 0)))) factOnlyOnceD)
     factOnlyOnceD = protoFact Linear "OnlyOnceD" []
 
-    defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS)
+    defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS False)
 
-    checkProof (TraceFound:q) = checkProof q
-    checkProof [] = True
-    checkProof _ = False
+    checkProofd (TraceFound:q) = checkProofd q
+    checkProofd [] = True
+    checkProofd _ = False
 
     msgToFreshVars :: LVar -> LVar
     msgToFreshVars (LVar name LSortMsg idx) = LVar name LSortFresh idx
