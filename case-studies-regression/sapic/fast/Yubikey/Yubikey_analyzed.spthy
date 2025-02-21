@@ -39,7 +39,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ k #i.
            (Sec( k ) @ #i) ⇒ ((last(#i)) ∨ (∀ #j. (!KU( k ) @ #j) ⇒ last(#j))))  ∥
          (∃ pid k tc1 tc2 #t1 #t2.
@@ -121,7 +120,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (¬(tuple = <sid, k, otc>))  ∥
          (∀ #j. (YubiInit( pid, sid, k ) @ #j) ⇒ ¬(#j < #i)) )
     case case_1
@@ -305,7 +303,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ pid sid k tuple otc tc #i.
            (InitStuff( pid, sid, k, tuple, otc, tc ) @ #i)
           ⇒
@@ -517,7 +514,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ pid k x #t2.
            (Login( pid, k, x ) @ #t2)
           ⇒
@@ -627,7 +623,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #t1 sid. (YubiPress( pid, sid, k, x ) @ #t1) ⇒ ¬(#t1 < #t2))  ∥
          (∃ #t3. (Login( pid, k, x ) @ #t3) ∧ ¬(#t3 = #t2)) )
     case case_1
@@ -1042,7 +1037,8 @@ rule (modulo E) p_1_111111112111111[color=#ffffff, process="!",
   */
 
 rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#40805e,
-                                                       process="lookup YL_pid.1 as sc.1", issapicrule]:
+                                                       process="lookup YL_pid.1 as sc.1", issapicrule,
+                                                       derivchecks]:
    [
    State_11111111211111111111( StateChannel, L_pid.1, SL_pid.1,
                                StateChannel.1, YL_pid.1, k.2, secretid.2
@@ -1060,7 +1056,8 @@ rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#40805e,
   // loop breaker: [1]
   /*
   rule (modulo AC) lookupYLpidassc_0_11111111211111111111[color=#40805e,
-                                                          process="lookup YL_pid.1 as sc.1", issapicrule]:
+                                                          process="lookup YL_pid.1 as sc.1", issapicrule,
+                                                          derivchecks]:
      [
      State_11111111211111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
                                  YL_pid, k, secretid
@@ -1140,7 +1137,8 @@ rule (modulo E) p_1_11111111211111111[color=#40805e, process="!",
   */
 
 rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#40805e,
-                                                       process="lookup YL_pid.1 as tc.2", issapicrule]:
+                                                       process="lookup YL_pid.1 as tc.2", issapicrule,
+                                                       derivchecks]:
    [
    State_11111111211111111121( StateChannel, L_pid.1, SL_pid.1,
                                StateChannel.1, YL_pid.1, k.2, secretid.2
@@ -1158,7 +1156,8 @@ rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#40805e,
   // loop breaker: [1]
   /*
   rule (modulo AC) lookupYLpidastc_0_11111111211111111121[color=#40805e,
-                                                          process="lookup YL_pid.1 as tc.2", issapicrule]:
+                                                          process="lookup YL_pid.1 as tc.2", issapicrule,
+                                                          derivchecks]:
      [
      State_11111111211111111121( StateChannel, L_pid, SL_pid, StateChannel.1,
                                  YL_pid, k, secretid
@@ -1233,10 +1232,10 @@ Failed to derive Variable(s): k.1, npr.1, secretid.1, tc.1
 
 /*
 Generated from:
-Tamarin version 1.9.0
+Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f9197c94c56c6d5f1fffbd353890449ce7945e9d, branch: develop
-Compiled at: 2024-10-29 16:10:37.527017172 UTC
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
@@ -1248,19 +1247,19 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 11.01s
+  processing time: 8.35s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  secrecy_enc (all-traces): verified (18 steps)
-  init_server (all-traces): verified (42 steps)
-  init_server_secrecy (all-traces): verified (20 steps)
+  secrecy_enc (all-traces): verified (17 steps)
+  init_server (all-traces): verified (41 steps)
+  init_server_secrecy (all-traces): verified (19 steps)
   Login_reachable (exists-trace): verified (16 steps)
   Login_reachable_two (exists-trace): verified (16 steps)
-  one_count_foreach_login (all-traces): verified (21 steps)
+  one_count_foreach_login (all-traces): verified (20 steps)
   no_replay (all-traces): verified (2 steps)
-  injective_correspondance (all-traces): verified (6 steps)
+  injective_correspondance (all-traces): verified (5 steps)
   Login_invalidates_smaller_counters (all-traces): verified (6 steps)
 
 ==============================================================================

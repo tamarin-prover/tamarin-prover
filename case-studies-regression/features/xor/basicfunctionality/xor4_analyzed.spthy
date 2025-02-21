@@ -1,0 +1,257 @@
+theory xor4 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+rule (modulo E) testsend:
+   [ Fr( ~a ), Fr( ~b ), Fr( ~c ), Fr( ~d ), Fr( ~e ) ]
+  --[ OnlyOnce( ), Secret( ~a ) ]->
+   [ Out( <(~a⊕~b), (~b⊕~c), (~c⊕~d⊕~e), (~d⊕~e)> ) ]
+
+  /*
+  rule (modulo AC) testsend:
+     [ Fr( ~a ), Fr( ~b ), Fr( ~c ), Fr( ~d ), Fr( ~e ) ]
+    --[ OnlyOnce( ), Secret( ~a ) ]->
+     [ Out( <z, z.1, z.2, z.3> ) ]
+    variants (modulo AC)
+     1. ~a    = ~a.10
+        ~b    = ~b.10
+        ~c    = ~c.10
+        ~d    = ~d.10
+        ~e    = ~e.10
+        z     = (~a.10⊕~b.10)
+        z.1   = (~b.10⊕~c.10)
+        z.2   = (~c.10⊕~d.10⊕~e.10)
+        z.3   = (~d.10⊕~e.10)
+    
+     2. ~a    = ~x.10
+        ~b    = ~x.10
+        ~c    = ~x.10
+        ~d    = ~x.10
+        ~e    = ~e.11
+        z     = zero
+        z.1   = zero
+        z.2   = ~e.11
+        z.3   = (~x.10⊕~e.11)
+    
+     3. ~a    = ~x.10
+        ~b    = ~x.10
+        ~c    = ~x.10
+        ~d    = ~d.11
+        ~e    = ~x.10
+        z     = zero
+        z.1   = zero
+        z.2   = ~d.11
+        z.3   = (~x.10⊕~d.11)
+    
+     4. ~a    = ~x.10
+        ~b    = ~x.10
+        ~c    = ~x.10
+        ~d    = ~d.11
+        ~e    = ~e.11
+        z     = zero
+        z.1   = zero
+        z.2   = (~x.10⊕~d.11⊕~e.11)
+        z.3   = (~d.11⊕~e.11)
+    
+     5. ~a    = ~x.10
+        ~b    = ~x.10
+        ~c    = ~x.10
+        ~d    = ~x.11
+        ~e    = ~x.11
+        z     = zero
+        z.1   = zero
+        z.2   = ~x.10
+        z.3   = zero
+    
+     6. ~a    = ~x.10
+        ~b    = ~x.10
+        ~c    = ~c.11
+        ~d    = ~d.11
+        ~e    = ~e.11
+        z     = zero
+        z.1   = (~x.10⊕~c.11)
+        z.2   = (~c.11⊕~d.11⊕~e.11)
+        z.3   = (~d.11⊕~e.11)
+    
+     7. ~a    = ~x.10
+        ~b    = ~x.10
+        ~c    = ~x.11
+        ~d    = ~x.11
+        ~e    = ~e.12
+        z     = zero
+        z.1   = (~x.10⊕~x.11)
+        z.2   = ~e.12
+        z.3   = (~x.11⊕~e.12)
+    
+     8. ~a    = ~x.10
+        ~b    = ~x.10
+        ~c    = ~x.11
+        ~d    = ~d.12
+        ~e    = ~x.11
+        z     = zero
+        z.1   = (~x.10⊕~x.11)
+        z.2   = ~d.12
+        z.3   = (~x.11⊕~d.12)
+    
+     9. ~a    = ~x.10
+        ~b    = ~x.10
+        ~c    = ~c.13
+        ~d    = ~x.12
+        ~e    = ~x.12
+        z     = zero
+        z.1   = (~x.10⊕~c.13)
+        z.2   = ~c.13
+        z.3   = zero
+    
+    10. ~a    = ~a.11
+        ~b    = ~x.10
+        ~c    = ~x.10
+        ~d    = ~x.10
+        ~e    = ~e.11
+        z     = (~x.10⊕~a.11)
+        z.1   = zero
+        z.2   = ~e.11
+        z.3   = (~x.10⊕~e.11)
+    
+    11. ~a    = ~a.11
+        ~b    = ~x.10
+        ~c    = ~x.10
+        ~d    = ~d.11
+        ~e    = ~x.10
+        z     = (~x.10⊕~a.11)
+        z.1   = zero
+        z.2   = ~d.11
+        z.3   = (~x.10⊕~d.11)
+    
+    12. ~a    = ~a.11
+        ~b    = ~x.10
+        ~c    = ~x.10
+        ~d    = ~d.11
+        ~e    = ~e.11
+        z     = (~x.10⊕~a.11)
+        z.1   = zero
+        z.2   = (~x.10⊕~d.11⊕~e.11)
+        z.3   = (~d.11⊕~e.11)
+    
+    13. ~a    = ~a.11
+        ~b    = ~b.11
+        ~c    = ~x.10
+        ~d    = ~x.10
+        ~e    = ~e.11
+        z     = (~a.11⊕~b.11)
+        z.1   = (~x.10⊕~b.11)
+        z.2   = ~e.11
+        z.3   = (~x.10⊕~e.11)
+    
+    14. ~a    = ~a.11
+        ~b    = ~b.11
+        ~c    = ~x.10
+        ~d    = ~d.11
+        ~e    = ~x.10
+        z     = (~a.11⊕~b.11)
+        z.1   = (~x.10⊕~b.11)
+        z.2   = ~d.11
+        z.3   = (~x.10⊕~d.11)
+    
+    15. ~a    = ~a.11
+        ~b    = ~b.11
+        ~c    = ~c.11
+        ~d    = ~x.10
+        ~e    = ~x.10
+        z     = (~a.11⊕~b.11)
+        z.1   = (~b.11⊕~c.11)
+        z.2   = ~c.11
+        z.3   = zero
+    
+    16. ~a    = ~a.12
+        ~b    = ~x.10
+        ~c    = ~x.10
+        ~d    = ~x.11
+        ~e    = ~x.11
+        z     = (~x.10⊕~a.12)
+        z.1   = zero
+        z.2   = ~x.10
+        z.3   = zero
+  */
+
+restriction unique:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+lemma secrecybroken:
+  all-traces "∀ x #i. (Secret( x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Secret( x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+simplify
+solve( !KU( ~a ) @ #vk )
+  case testsend
+  solve( !KU( ~b ) @ #vk.1 )
+    case testsend_case_2
+    solve( !KU( ~c ) @ #vk.2 )
+      case testsend_case_2
+      solve( !KU( (~d⊕~e) ) @ #vk.3 )
+        case coerce
+        solve( !KD( (~d⊕~e) ) ▶₀ #vk.3 )
+          case testsend
+          solve( (#vl, 0) ~~> (#vk.3, 0) )
+            case d_0_snd
+            solve( (#vr.2, 0) ~~> (#vk.3, 0) )
+              case d_0_snd
+              solve( (#vr.5, 0) ~~> (#vk.3, 0) )
+                case d_0_snd
+                solve( (#vr.8, 0) ~~> (#vk.3, 0) )
+                  case Xor
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/xor/basicfunctionality/xor4.spthy
+
+  output:          examples/features/xor/basicfunctionality/xor4.spthy.tmp
+  processing time: 0.50s
+  
+  secrecybroken (all-traces): falsified - found trace (11 steps)
+
+==============================================================================
+*/

@@ -38,7 +38,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ #i cnt.
            (ServerAccept( cnt ) @ #i)
           ⇒
@@ -7437,7 +7436,8 @@ rule (modulo E) lockEvServer_0_1111111111111111111[color=#408051,
   */
 
 rule (modulo E) lookupEvServerascnt_0_11111111111111111111[color=#408051,
-                                                           process="lookup 'EvServer' as cnt.1", issapicrule]:
+                                                           process="lookup 'EvServer' as cnt.1", issapicrule,
+                                                           derivchecks]:
    [
    State_11111111111111111111( lock, ~btn.1, ~kb.1, ~tls.1, ~u2f.1, chall.1,
                                log.1, pass.1, signed.1, u2fkey.1
@@ -7453,7 +7453,7 @@ rule (modulo E) lookupEvServerascnt_0_11111111111111111111[color=#408051,
   /*
   rule (modulo AC) lookupEvServerascnt_0_11111111111111111111[color=#408051,
                                                               process="lookup 'EvServer' as cnt.1",
-                                                              issapicrule]:
+                                                              issapicrule, derivchecks]:
      [
      State_11111111111111111111( lock, ~btn, ~kb, ~tls, ~u2f, chall, log,
                                  pass, signed, u2fkey
@@ -8177,7 +8177,8 @@ rule (modulo E) lockEvToken_0_111111111121[color=#408050,
   */
 
 rule (modulo E) lookupEvTokenascnt_0_1111111111211[color=#408050,
-                                                   process="lookup 'EvToken' as cnt.2", issapicrule]:
+                                                   process="lookup 'EvToken' as cnt.2", issapicrule,
+                                                   derivchecks]:
    [
    State_1111111111211( ~btn.1, ~kb.1, ~tls.1, ~u2f.1, lock.1, log.1,
                         pass.1, u2fkey.1
@@ -8192,7 +8193,8 @@ rule (modulo E) lookupEvTokenascnt_0_1111111111211[color=#408050,
 
   /*
   rule (modulo AC) lookupEvTokenascnt_0_1111111111211[color=#408050,
-                                                      process="lookup 'EvToken' as cnt.2", issapicrule]:
+                                                      process="lookup 'EvToken' as cnt.2", issapicrule,
+                                                      derivchecks]:
      [ State_1111111111211( ~btn, ~kb, ~tls, ~u2f, lock, log, pass, u2fkey ) ]
     --[ IsIn( 'EvToken', cnt ) ]->
      [
@@ -8486,10 +8488,10 @@ Derivation Checks
 
 /*
 Generated from:
-Tamarin version 1.9.0
+Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
@@ -8501,12 +8503,12 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-secret-channel/U2F.spthy
 
   output:          examples/sapic/fast/feature-secret-channel/U2F.spthy.tmp
-  processing time: 366.70s
+  processing time: 240.73s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  auth (all-traces): verified (2302 steps)
+  auth (all-traces): verified (2301 steps)
 
 ==============================================================================
 */

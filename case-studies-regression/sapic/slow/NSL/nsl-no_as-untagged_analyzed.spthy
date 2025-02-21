@@ -96,7 +96,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ ni m1 #i.
            (IN_R_1_ni( ni, m1 ) @ #i)
           ∧
@@ -1380,10 +1379,10 @@ restriction single_session:
 
 /*
 Generated from:
-Tamarin version 1.9.0
+Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
@@ -1395,11 +1394,11 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 5.73s
+  processing time: 3.72s
   
   sanity1 (all-traces): falsified - found trace (7 steps)
   sanity2 (all-traces): falsified - found trace (8 steps)
-  source (all-traces): verified (40 steps)
+  source (all-traces): verified (39 steps)
   secrecy (all-traces): verified (244 steps)
 
 ==============================================================================
