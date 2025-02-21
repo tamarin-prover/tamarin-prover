@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleInstances #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -9,22 +7,24 @@
 --
 -- Exceptions used during translation
 
-module Sapic.Exceptions (
-    WFLockTag(..),
-    WFerror(..),
-    SapicException(..),
-    ExportException(..)) where
-import Data.Typeable
-import Data.Set as S
-import qualified Data.List as List
+module Sapic.Exceptions
+  ( WFLockTag(..)
+  , WFerror(..)
+  , SapicException(..)
+  , ExportException(..)
+  ) where
+
 import Control.Exception
+import Data.List qualified as List
+import Data.Maybe qualified
+import Data.Set as S
+import Data.Typeable
+
 import Theory
 import Theory.Sapic
-import Data.Label
-import qualified Data.Maybe
 import Theory.Text.Pretty
 import Theory.Sapic.Print (prettySapic)
-import qualified Theory.Text.Pretty as Pretty
+import Theory.Text.Pretty qualified as Pretty
 
 -- two different kind of locking erros
 data WFLockTag = WFRep | WFPar  deriving (Show)
@@ -97,7 +97,7 @@ instance Show (SapicException an) where
     show (CannotExpandPredicate facttag rstr) = "Undefined predicate "
                               ++ showFactTagArity facttag
                               ++ " in definition of predicate: "
-                              ++ get rstrName rstr
+                              ++ rstr._rstrName
                               ++ "."
 
 instance Show WFerror where

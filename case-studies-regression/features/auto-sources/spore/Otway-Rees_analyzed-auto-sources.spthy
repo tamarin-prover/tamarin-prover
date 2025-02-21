@@ -600,7 +600,6 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case non_empty_trace
-  simplify
   solve( (∃ A B t #i.
            (Commit_S_A( A, B, t ) @ #i)
           ∧
@@ -621,7 +620,7 @@ induction
               (∃ A2 B2 #i2. (Commit_S_B( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
            (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
            (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)) )
-    case case_2
+    case case_1
     solve( (last(#i))  ∥
            (∃ #j.
              (Running_A( A, B, <m, na> ) @ #j)
@@ -639,43 +638,46 @@ induction
           case Init
           solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
             case A_1
-            solve( !KU( senc(<'2', nb, ~m, $X, $X.1>, ~kbs) ) @ #vk.8 )
-              case B_1
+            solve( (∃ #j.
+                     (Running_A( A2, B2, <~m, ~na> ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧
+                     (#j < #i2) ∧
+                     (∀ A2.1 B2.1 #i2.1.
+                       (Commit_S_A( A2.1, B2.1, <~m, ~na> ) @ #i2.1)
+                      ⇒
+                       ((last(#i2.1)) ∨ (#i2.1 = #i2))))  ∥
+                   (∃ #r. (Reveal( A2 ) @ #r) ∧ ¬(last(#r)))  ∥
+                   (∃ #r. (Reveal( B2 ) @ #r) ∧ ¬(last(#r))) )
+              case case_1
               solve( (∃ #j.
-                       (Running_A( A2, B2, <~m, na.1> ) @ #j)
+                       (Running_B( $X, $X.1, <~m, nb.1> ) @ #j)
                       ∧
                        (¬(last(#j))) ∧
                        (#j < #i2) ∧
-                       (∀ A2.1 B2.1 #i2.1.
-                         (Commit_S_A( A2.1, B2.1, <~m, na.1> ) @ #i2.1)
+                       (∀ A2 B2 #i2.1.
+                         (Commit_S_B( A2, B2, <~m, nb.1> ) @ #i2.1)
                         ⇒
                          ((last(#i2.1)) ∨ (#i2.1 = #i2))))  ∥
-                     (∃ #r. (Reveal( A2 ) @ #r) ∧ ¬(last(#r)))  ∥
-                     (∃ #r. (Reveal( B2 ) @ #r) ∧ ¬(last(#r))) )
+                     (∃ #r. (Reveal( $X ) @ #r) ∧ ¬(last(#r)))  ∥
+                     (∃ #r. (Reveal( $X.1 ) @ #r) ∧ ¬(last(#r))) )
                 case case_1
-                solve( (∃ #j.
-                         (Running_B( $X, $X.1, <~m, ~nb> ) @ #j)
-                        ∧
-                         (¬(last(#j))) ∧
-                         (#j < #i2) ∧
-                         (∀ A2 B2 #i2.1.
-                           (Commit_S_B( A2, B2, <~m, ~nb> ) @ #i2.1)
-                          ⇒
-                           ((last(#i2.1)) ∨ (#i2.1 = #i2))))  ∥
-                       (∃ #r. (Reveal( $X ) @ #r) ∧ ¬(last(#r)))  ∥
-                       (∃ #r. (Reveal( $X.1 ) @ #r) ∧ ¬(last(#r))) )
-                  case case_1
-                  solve( !LongtermKey( ~kas.1, $X ) ▶₁ #i2 )
+                solve( !LongtermKey( ~kas.1, $X ) ▶₁ #i2 )
+                  case Init
+                  solve( !LongtermKey( ~kbs.1, $X.1 ) ▶₂ #i2 )
                     case Init
-                    solve( !LongtermKey( ~kbs.1, $X.1 ) ▶₂ #i2 )
+                    solve( !LongtermKey( ~kbs.2, $X.1 ) ▶₁ #j )
                       case Init
-                      solve( !KU( senc(<'1', ~na, ~m, $X, $X.1>, ~kas.1) ) @ #vk.17 )
-                        case A_1
-                        solve( !KU( senc(<'2', ~nb, ~m, $X, $X.1>, ~kbs.1) ) @ #vk.17 )
-                          case B_1
-                          solve( !KU( ~m ) @ #vk.6 )
-                            case A_1_case_1
-                            SOLVED // trace found
+                      solve( !KU( senc(<'2', nb, ~m, $X, $X.1>, ~kbs) ) @ #vk.14 )
+                        case B_1
+                        solve( !KU( senc(<'1', ~na, ~m, $X, $X.1>, ~kas.1) ) @ #vk.19 )
+                          case A_1
+                          solve( !KU( senc(<'2', ~nb.1, ~m, $X, $X.1>, ~kbs.1) ) @ #vk.19 )
+                            case B_1
+                            solve( !KU( ~m ) @ #vk.9 )
+                              case A_1_case_1
+                              SOLVED // trace found
+                            qed
                           qed
                         qed
                       qed
@@ -723,7 +725,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ A B t #i.
            (Commit_S_A( A, B, t ) @ #i)
           ∧
@@ -962,8 +963,6 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
-
 lemma AUTO_typing [sources]:
   all-traces
   "((⊤) ∧
@@ -993,7 +992,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ x m #i.
            (AUTO_IN_TERM_3_0_1_1_1_0_0_1_0__S( m, x ) @ #i)
           ∧
@@ -3369,19 +3367,18 @@ next
   qed
 qed
 
+/* All wellformedness checks were successful. */
+
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -3389,7 +3386,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
 
   output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
-  processing time: 7.87s
+  processing time: 4.95s
   
   Secrecy (all-traces): verified (40 steps)
   injectiveagreement_B (all-traces): verified (50 steps)
@@ -3397,9 +3394,9 @@ analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
   injectiveagreement_A (all-traces): verified (16 steps)
   agreement_A (all-traces): verified (10 steps)
   injectiveagreement_S (all-traces): falsified - found trace (16 steps)
-  agreement_S (all-traces): verified (40 steps)
+  agreement_S (all-traces): verified (39 steps)
   executability (exists-trace): verified (15 steps)
-  AUTO_typing (all-traces): verified (475 steps)
+  AUTO_typing (all-traces): verified (474 steps)
 
 ==============================================================================
 */

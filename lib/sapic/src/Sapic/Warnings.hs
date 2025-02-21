@@ -1,16 +1,16 @@
-module Sapic.Warnings(
-    module Sapic.Warnings
-) where
+module Sapic.Warnings
+  ( module Sapic.Warnings
+  ) where
+
+import Control.Monad.Catch
+import Data.Foldable (traverse_)
 
 import Theory
 import Theory.Sapic
 import Sapic.Exceptions
 import Sapic.Bindings
-import Control.Monad.Catch
-import Data.Foldable (traverse_)
 import Theory.Tools.Wellformedness (WfErrorReport)
 import Theory.Text.Pretty (text)
-
 
 -- warnProcess :: [WFerror AnnotatedProcess]
 warnProcess :: GoodAnnotation a => Process a SapicLVar -> [WFerror]

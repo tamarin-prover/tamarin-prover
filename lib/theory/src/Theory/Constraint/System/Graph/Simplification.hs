@@ -24,7 +24,6 @@ import           Extension.Data.Label
 import           Theory                   
 import qualified Data.DAG.Simple          as Dag
 import           Data.Monoid              (Any(..))
-import           Utils.Misc
 
 ------------------------------------------------------------------------------
 -- Compressed versions of a sequent (originally from Dot module)
@@ -36,7 +35,7 @@ dropEntailedOrdConstraints se =
     modify sLessAtoms (S.filter (not . entailed)) se
   where
     edges               = rawEdgeRel se
-    entailed (from, to, _) = to `S.member` Dag.reachableSet [from] edges
+    entailed (LessAtom from to _) = to `S.member` Dag.reachableSet [from] edges
 
 -- | Unsound compression of the sequent that drops fully connected learns and
 -- knows nodes.
@@ -69,10 +68,10 @@ transitiveReduction sys totalRed=
         oldLessesWithR = S.toList $ get sLessAtoms sys
         oldLesses = rawLessRel sys
         newLesses = if totalRed
-            then [(x,y,z)| (x,y,z)<- oldLessesWithR,
-                            (x,y) `elem` (Dag.transRed oldLesses) ]
-            else [(x,y,z)| (x,y,z)<- oldLessesWithR,
-                            (x,y) `elem` (Dag.transRed oldLesses) || z == Formula || z == Adversary ]
+            then [ la | la@(LessAtom x y _) <- oldLessesWithR,
+                            (x,y) `elem` Dag.transRed oldLesses ]
+            else [ la | la@(LessAtom x y z) <- oldLessesWithR,
+                            (x,y) `elem` Dag.transRed oldLesses || z == Formula || z == Adversary ]
 
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
@@ -100,8 +99,8 @@ tryHideNodeId v se = fromMaybe se $ do
     hideAction = do
         guard $  not (null kuActions)
               && all eligibleTerm kuActions
-              && all (\(i, j, _) -> not (i == j)) lNews
-              && notOccursIn (standardActionAtoms)
+              && all (\(LessAtom i j _) -> i /= j) lNews
+              && notOccursIn standardActionAtoms
               && notOccursIn (get sLastAtom)
               && notOccursIn (get sEdges)
 
@@ -118,9 +117,9 @@ tryHideNodeId v se = fromMaybe se $ do
 
         removeAction m (i, fa, _) = M.delete (ActionG i fa) m
 
-        lIns  = selectPart sLessAtoms ((v ==) . snd3)
-        lOuts = selectPart sLessAtoms ((v ==) . fst3)
-        lNews = [ (i, j, r) | (i, _, _) <- lIns, (_, j, r) <- lOuts ]
+        lIns  = selectPart sLessAtoms ((v ==) . get laLarger)
+        lOuts = selectPart sLessAtoms ((v ==) . get laSmaller)
+        lNews = [ LessAtom i j r | (LessAtom i _ _) <- lIns, (LessAtom _ j r) <- lOuts ]
 
     -- hide a rule, if it is not "too complicated"
     hideRule :: RuleACInst -> Maybe System

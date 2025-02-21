@@ -380,8 +380,6 @@ qed
 
 
 
-/* All wellformedness checks were successful. */
-
 lemma AUTO_typing [sources]:
   all-traces
   "(⊤) ∧
@@ -402,7 +400,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j.
@@ -447,19 +444,18 @@ next
   qed
 qed
 
+/* All wellformedness checks were successful. */
+
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -467,7 +463,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 0.67s
+  processing time: 0.53s
   
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)
@@ -475,7 +471,7 @@ analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
   agreement_B (all-traces): verified (9 steps)
   injectiveagreement_S (all-traces): falsified - found trace (9 steps)
   agreement_S (all-traces): verified (7 steps)
-  AUTO_typing (all-traces): verified (14 steps)
+  AUTO_typing (all-traces): verified (13 steps)
 
 ==============================================================================
 */

@@ -9,7 +9,7 @@ functions:
 	/* Common terms */
 	transform/1, comb/2, plus/2, pk/1, h/1, split/2
 
-equations:
+equations [convergent]:
 
 	dec(enc(m,pk(sk)),sk) = m,
 	comb(pdec(c,sk1), pdec(c,sk2)) = dec(c,plus(sk1, sk2)),

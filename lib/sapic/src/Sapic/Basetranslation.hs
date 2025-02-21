@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE PatternGuards #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -31,21 +30,20 @@ module Sapic.Basetranslation (
    , TransFComb
 ) where
 
-import           Control.Exception
-import           Control.Monad.Catch
-import           Data.Set             hiding (map, (\\))
-import           Data.Maybe
-import qualified Data.List as List
-import qualified Extension.Data.Label as L
-import           Sapic.Annotation
-import           Sapic.Exceptions
-import           Sapic.Facts
-import           Sapic.ProcessUtils
-import qualified Text.RawString.QQ    as QQ
-import           Theory
-import           Theory.Sapic
-import           Theory.Sapic.Print
-import           Theory.Text.Parser
+import Control.Exception
+import Control.Monad.Catch
+import Data.Set hiding (map, (\\))
+import Data.Maybe
+import Data.List qualified as List
+import Sapic.Annotation
+import Sapic.Exceptions
+import Sapic.Facts
+import Sapic.ProcessUtils
+import Text.RawString.QQ qualified as QQ
+import Theory
+import Theory.Sapic
+import Theory.Sapic.Print
+import Theory.Text.Parser
 
 type TranslationResultNull  = [([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])]
 type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
@@ -236,7 +234,7 @@ baseTransComb c an p tildex
                     ([def_state], [], [def_state2 tildex], [Not f])]
                      , tildex, tildex )
         else
-                    throw $ WFUnbound (freevars_f `difference` tildex) 
+                    throw $ WFUnbound (freevars_f `difference` tildex)
     | CondEq t1 t2 <- c =
         let fa = toLNFact (protoFact Linear "Eq" [t1,t2]) in
         let vars_f = fromList $ getFactVariables fa in
@@ -422,8 +420,8 @@ resLocking hasUnlock v =  do
               Action t (f {factTag = ProtoFact Linear (hardcode "Unlock") 3})
             | otherwise = a
         hardcode s = s ++ "_" ++ show (lvarIdx v)
-        mapFormula = L.modify rstrFormula
-        mapName = L.modify rstrName
+        mapFormula f r = r { _rstrFormula = f r._rstrFormula }
+        mapName f r = r { _rstrName = f r._rstrName }
 
 resEq :: String
 resEq = [QQ.r|restriction predicate_eq:

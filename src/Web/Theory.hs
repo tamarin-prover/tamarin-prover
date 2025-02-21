@@ -40,7 +40,7 @@ module Web.Theory
 where
 
 
-import           Debug.Trace                  (trace)
+import           Debug.Trace                  (trace, traceM)
 
 import           Data.Char                    (toUpper)
 import           Data.List
@@ -81,6 +81,7 @@ import           TheoryObject
 
 import           Web.Settings
 import           Web.Types
+import Theory.Constraint.System (usesOracle)
 
 ------------------------------------------------------------------------------
 -- Various other functions
@@ -98,15 +99,9 @@ applyMethodAtPath thy lemmaName proofPath prover i = do
         heuristic = selectHeuristic prover ctxt
         ranking = useHeuristic heuristic (length proofPath)
         tactic = selectTactic prover ctxt
-    methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
+    methods <- map fst . rankProofMethods ranking tactic ctxt <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
-    applyProverAtPath thy lemmaName proofPath
-      (oneStepProver method                            `mappend`
-       replaceSorryProver (oneStepProver Simplify)     `mappend`
-       replaceSorryProver (contradictionProver)        `mappend`
-       replaceSorryProver (oneStepProver Unfinishable) `mappend`
-       replaceSorryProver (oneStepProver Solved)
-      )
+    applyProverAtPath thy lemmaName proofPath (oneStepProver method)
 
 applyMethodAtPathDiff :: ClosedDiffTheory -> Side -> String -> ProofPath
                       -> AutoProver             -- ^ How to extract/order the proof methods.
@@ -123,11 +118,11 @@ applyMethodAtPathDiff thy s lemmaName proofPath prover i = do
     methods <- (map fst . rankProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyProverAtPathDiff thy s lemmaName proofPath
-      (oneStepProver method                            `mappend`
-       replaceSorryProver (oneStepProver Simplify)     `mappend`
-       replaceSorryProver (contradictionProver)        `mappend`
-       replaceSorryProver (oneStepProver Unfinishable) `mappend`
-       replaceSorryProver (oneStepProver Solved)
+      (oneStepProver method                                       `mappend`
+       replaceSorryProver (oneStepProver Simplify)                `mappend`
+       replaceSorryProver (contradictionProver)                   `mappend`
+       replaceSorryProver (oneStepProver (Finished Unfinishable)) `mappend`
+       replaceSorryProver (oneStepProver (Finished Solved))
       )
 
 applyDiffMethodAtPath :: ClosedDiffTheory -> String -> ProofPath
@@ -145,11 +140,11 @@ applyDiffMethodAtPath thy lemmaName proofPath prover i = do
     methods <- (map fst . rankDiffProofMethods ranking tactic ctxt) <$> sys
     method <- if length methods >= i then Just (methods !! (i-1)) else Nothing
     applyDiffProverAtPath thy lemmaName proofPath
-      (oneStepDiffProver method                        `mappend`
-       replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify)) `mappend`
-       replaceDiffSorryProver (contradictionDiffProver)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffMirrored)    `mappend`
-       replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
+      (   oneStepDiffProver method                                 
+       <> replaceDiffSorryProver (oneStepDiffProver (DiffBackwardSearchStep Simplify))
+       <> replaceDiffSorryProver contradictionDiffProver
+       <> replaceDiffSorryProver (oneStepDiffProver DiffMirrored)
+       <> replaceDiffSorryProver (oneStepDiffProver DiffUnfinishable)
       )
 
 applyProverAtPath :: ClosedTheory -> String -> ProofPath
@@ -174,15 +169,18 @@ applyDiffProverAtPath thy lemmaName proofPath prover =
 
 -- | Reference a dot graph for the given path.
 refDotPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> TheoryPath -> d
-refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath)]
-  where imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
+refDotPath renderUrl tidx path = closedTag "img" [("class", "graph"), ("src", imgPath), ("onclick", jsOpenSrcInNewTab)]
+  where
+    imgPath = T.unpack $ renderUrl (TheoryGraphR tidx path)
+    jsOpenSrcInNewTab = "window.open(this.src, '_blank')"
 
 -- | Reference a dot graph for the given diff path.
 refDotDiffPath :: HtmlDocument d => RenderUrl -> TheoryIdx -> DiffTheoryPath -> Bool -> d
-refDotDiffPath renderUrl tidx path mirror = closedTag "img" [("class", "graph"), ("src", imgPath)]
-    where imgPath = if mirror
-          then T.unpack $ renderUrl (TheoryMirrorDiffR tidx path)
-          else T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
+refDotDiffPath renderUrl tidx path mirror = withTag "a" [("href", imgPath), ("target", "_blank")] $ closedTag "img" [("class", "graph"), ("src", imgPath)]
+  where
+    imgPath = if mirror
+              then T.unpack $ renderUrl (TheoryMirrorDiffR tidx path)
+              else T.unpack $ renderUrl (TheoryGraphDiffR tidx path)
 
 -- | Generate the dot file path for an intermediate dot output.
 getDotPath :: String -> FilePath
@@ -213,11 +211,13 @@ preformatted cl = withTag "div" [("class", classes cl)]
 
 -- | Render a proof index relative to a theory path constructor.
 proofIndex :: HtmlDocument d
-           => RenderUrl
+           => String
+           -> Int
+           -> RenderUrl
            -> (ProofPath -> Route WebUI)         -- ^ Relative addressing function
            -> Proof (Maybe System, ProofStepColor) -- ^ The annotated incremental proof
            -> d
-proofIndex renderUrl mkRoute =
+proofIndex l tidx renderUrl mkRoute =
     prettyProofWith ppStep ppCase . insertPaths
   where
     ppCase step = markStatus (fst $ psInfo step)
@@ -227,7 +227,7 @@ proofIndex renderUrl mkRoute =
                (Nothing, _)  -> superfluousStep
                (_, Unmarked) -> stepLink ["sorry-step"]
                (_, Green)    -> stepLink ["hl_good"]
-               (_, Yellow)   -> stepLink ["hl_medium"]
+               (_, Yellow)   -> invalidatedStep
                (_, Red)      -> stepLink ["hl_bad"]
         <> case psMethod step of
                Sorry _ -> emptyDoc
@@ -239,6 +239,12 @@ proofIndex renderUrl mkRoute =
             ("proof-step" : cls) ppMethod
 
         superfluousStep = withTag "span" [("class","hl_superfluous")] ppMethod
+
+        invalidatedStep = if psMethod step == Invalidated 
+                            then stepLink ["hl_medium"] <-> 
+                                  (linkToPath renderUrl (TheoryVerifyR tidx $ TheoryProof l []) ["hl_medium"] $ text "verify it")
+                            else stepLink ["hl_medium"]
+
 
         removeStep = linkToPath renderUrl (mkRoute . snd . psInfo $ step)
           ["remove-step"] emptyDoc
@@ -285,21 +291,29 @@ lemmaIndex :: HtmlDocument d
 lemmaIndex renderUrl tidx l =
     ( markStatus (psInfo $ root annPrf) $
         (kwLemma <-> prettyLemmaName l <> colon)
-        -- FIXME: Reactivate theory editing.
-        -- <->
-        -- (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
-        -- linkToPath renderUrl lemmaRoute ["delete-link"] deletePng)
         $-$
         nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
                      , doubleQuotes $ prettyLNFormula $ get lFormula l
                      ] )
+
+        $-$
+        (linkToPath renderUrl lemmaEdit ["edit"] $ text "edit lemma") 
+        <->
+        text " or " 
+        <->
+        (linkToPath renderUrl lemmaDelete ["delete"] $ text "delete lemma")
+
     ) $-$
-    proofIndex renderUrl mkRoute annPrf
+    proofIndex (get lName l) tidx renderUrl mkRoute annPrf
+    $-$
+    text ""
+    $-$
+    (linkToPath renderUrl lemmaAdd ["add"] $ text "add lemma")
   where
-    -- editPng = png "/static/img/edit.png"
-    -- deletePng = png "/static/img/delete.png"
-    -- png path = closedTag "img" [("class","icon"),("src",path)]
-    -- lemmaRoute = TheoryPathMR tidx (TheoryLemma $ get lName l)
+
+    lemmaEdit = TheoryPathMR tidx $ TheoryEdit $ get lName l
+    lemmaDelete = TheoryPathMR tidx $ TheoryDelete $ get lName l
+    lemmaAdd = TheoryPathMR tidx $ TheoryAdd $ get lName l
 
     annPrf = annotateLemmaProof l
     mkRoute proofPath = TheoryPathMR tidx (TheoryProof (get lName l) proofPath)
@@ -315,22 +329,13 @@ lemmaIndexDiff renderUrl tidx s l =
 --     error (show annPrf)
     ( markStatus (psInfo $ root annPrf) $
         (kwLemma <-> prettyLemmaName l <> colon)
-        -- FIXME: Reactivate theory editing.
-        -- <->
-        -- (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
-        -- linkToPath renderUrl lemmaRoute ["delete-link"] deletePng)
         $-$
         nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
                      , doubleQuotes $ prettyLNFormula $ get lFormula l
                      ] )
     ) $-$
-    proofIndex renderUrl mkRoute annPrf
+    proofIndex (get lName l) tidx renderUrl mkRoute annPrf
   where
-    -- editPng = png "/static/img/edit.png"
-    -- deletePng = png "/static/img/delete.png"
-    -- png path = closedTag "img" [("class","icon"),("src",path)]
-    -- lemmaRoute = TheoryPathMR tidx (TheoryLemma $ get lName l)
-
     annPrf = annotateLemmaProof l
     mkRoute proofPath = TheoryPathDiffMR tidx (DiffTheoryProof s (get lName l) proofPath)
 
@@ -344,21 +349,9 @@ diffLemmaIndex renderUrl tidx l =
 --     error (show annPrf)
     ( markStatusDiff (dpsInfo $ root annPrf) $
         (kwLemma <-> prettyDiffLemmaName l {-<> text (show annPrf)-} <> colon)
-        -- FIXME: Reactivate theory editing.
-        -- <->
-        -- (linkToPath renderUrl lemmaRoute  ["edit-link"] editPng <->
-        -- linkToPath renderUrl lemmaRoute ["delete-link"] deletePng)
---         $-$
---         nest 2 ( sep [ prettyTraceQuantifier $ get lTraceQuantifier l
---                      , doubleQuotes $ prettyLNFormula $ get lFormula l
---                      ] )
     ) $-$
     diffProofIndex renderUrl mkRoute annPrf
   where
-    -- editPng = png "/static/img/edit.png"
-    -- deletePng = png "/static/img/delete.png"
-    -- png path = closedTag "img" [("class","icon"),("src",path)]
-    -- lemmaRoute = TheoryPathMR tidx (TheoryLemma $ get lName l)
 
     annPrf = annotateDiffLemmaProof l
     mkRoute proofPath = TheoryPathDiffMR tidx (DiffTheoryDiffProof (get lDiffName l) proofPath)
@@ -380,6 +373,8 @@ theoryIndex renderUrl tidx thy = foldr1 ($-$)
     , reqCasesLink "Raw sources" RawSource
     , text ""
     , reqCasesLink "Refined sources " RefinedSource
+    , text ""
+    , (linkToPath renderUrl (TheoryPathMR tidx $ TheoryAdd $ "<first>") ["add"] $ text "add lemma")
     , text ""
     , vcat $ intersperse (text "") lemmas
     , text ""
@@ -538,21 +533,23 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
         pms ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
-          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , preformatted (Just "methods") (numbered' $ zipWith prettyPM [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
-          , autoProverLinks 'b' "bounded-" boundDesc bound
-          , autoProverLinks 's' "all-"     allProve      0
-          ]
+          , autoProverLinks 'b' "bounded-" boundDesc bound ] ++
+          [ autoProverLinks 'o' "oracle-"  oracleDesc    0
+          | usesOracle heuristic ] ++
+          [ autoProverLinks 's' "all-"     allProve      0 ]
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ tiAutoProver ti
-          allProve  = text $ " for all lemmas "
+          oracleDesc = text "until oracle returns nothing"
+          allProve  = text " for all lemmas "
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoProverAllR tidx CutDFS bound (TheoryProof lemma proofPath))
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -561,22 +558,29 @@ subProofSnippet renderUrl renderImgUrl tidx ti lemma proofPath ctxt prf =
               (keyword_ "for all solutions")
       , nameSuffix
       ]
+    autoProverLinks key "oracle-" nameSuffix bound = hsep
+      [ text (key : ".")
+      , linkToPath renderUrl
+            (AutoProverR tidx CutDFS bound True (TheoryProof lemma proofPath))
+            ["oracle-autoprove"]
+            (keyword_ "autoprove")
+      , nameSuffix ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
-            (AutoProverR tidx CutDFS bound (TheoryProof lemma proofPath))
+            (AutoProverR tidx CutDFS bound False (TheoryProof lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
-              (AutoProverR tidx CutNothing bound (TheoryProof lemma proofPath))
+              (AutoProverR tidx CutNothing bound False (TheoryProof lemma proofPath))
               [classPrefix ++ "characterization"]
               (keyword_ "for all solutions")
       , nameSuffix
       ]
 
-    prettyPM (i, (m, (_cases, expl))) =
+    prettyPM i (m, (_cases, expl)) =
       linkToPath renderUrl
         (TheoryPathMR tidx (TheoryMethod lemma proofPath i))
         ["proof-method"] (prettyProofMethod m)
@@ -639,14 +643,14 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
-          allProve  = text $ " for all lemmas "
+          allProve  = text " for all lemmas "
 
     autoProverLinks key "all-" nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoProverAllDiffR tidx CutDFS bound)
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -660,7 +664,7 @@ subProofDiffSnippet renderUrl tidx ti s lemma proofPath ctxt prf =
       , linkToPath renderUrl
             (AutoProverDiffR tidx CutDFS bound s (DiffTheoryProof s lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
@@ -728,7 +732,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         (pms, _, _) ->
           [ withTag "h3" [] (text "Applicable Proof Methods:" <->
                              comment_ (goalRankingName ranking))
-          , preformatted (Just "methods") (numbered' $ map prettyPM $ zip [1..] pms)
+          , preformatted (Just "methods") (numbered' $ zipWith prettyPM [1..] pms)
           , autoProverLinks 'a' ""         emptyDoc      0
           , autoProverLinks 'b' "bounded-" boundDesc bound
           , autoProverLinks 's' "all-"     allProve      0
@@ -736,7 +740,7 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
         where
           boundDesc = text $ " with proof-depth bound " ++ show bound
           bound     = fromMaybe 5 $ apBound $ dtiAutoProver ti
-          allProve  = text $ " for all lemmas "
+          allProve  = text " for all lemmas "
 
     mirrorSystem =
         if dpsMethod (root prf) == DiffMirrored
@@ -760,31 +764,29 @@ subDiffProofSnippet renderUrl tidx ti lemma proofPath ctxt prf =
       , linkToPath renderUrl
             (AutoProverAllDiffR tidx CutDFS bound)
             ["autoprove-all"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
               (AutoProverAllDiffR tidx CutNothing bound)
               ["characterization-all"]
               (keyword_ "for all solutions")
-      , nameSuffix
-      ]
+      , nameSuffix ]
     autoProverLinks key classPrefix nameSuffix bound = hsep
       [ text (key : ".")
       , linkToPath renderUrl
             (AutoDiffProverR tidx CutDFS bound (DiffTheoryDiffProof lemma proofPath))
             [classPrefix ++ "autoprove"]
-            (keyword_ $ "autoprove")
+            (keyword_ "autoprove")
       , parens $
           text (toUpper key : ".") <->
           linkToPath renderUrl
               (AutoDiffProverR tidx CutNothing bound (DiffTheoryDiffProof lemma proofPath))
               [classPrefix ++ "characterization"]
               (keyword_ "for all solutions")
-      , nameSuffix
-      ]
+      , nameSuffix ]
 
-    prettyPM (i, (m, (_cases, expl))) =
+    prettyPM i (m, (_cases, expl)) =
       linkToPath renderUrl
         (TheoryPathDiffMR tidx (DiffTheoryDiffMethod lemma proofPath i))
         ["proof-method"] (prettyDiffProofMethod m)
@@ -853,7 +855,7 @@ htmlSourceDiff renderUrl tidx s kind d (j, th) =
                                , text " / named ", doubleQuotes (text name),
                                  if isPartial then text "(partial deconstructions)" else text "" ]
       , refDotDiffPath renderUrl tidx (DiffTheorySource s kind d j i) False
-      , withTag "p" [] $ ppPrem
+      , withTag "p" [] ppPrem
       , wrapP $ prettyNonGraphSystem se
       ]
       where
@@ -985,9 +987,9 @@ htmlThyPath :: RenderUrl      -- ^ The function for rendering Urls.
             -> RenderUrl      -- ^ URL renderer that includes GET parameters for the image.
             -> TheoryInfo     -- ^ The info of the theory to render
             -> TheoryPath     -- ^ Path to render
+            -> String         -- ^ the lemma's plaintext
             -> Html
-htmlThyPath renderUrl renderImgUrl info path =
-  go path
+htmlThyPath renderUrl renderImgUrl info path lPlaintext =   go path
   where
     thy  = tiTheory info
     tidx = tiIndex  info
@@ -1011,7 +1013,116 @@ htmlThyPath renderUrl renderImgUrl info path =
            subProofSnippet renderUrl renderImgUrl tidx info l p (getProofContext lemma thy)
              <$> resolveProofPath thy l p
 
-    go (TheoryLemma _)         = pp $ text "Implement lemma pretty printing!"
+    go (TheoryEdit name) = do
+        let p = "../../edit/edit/"++name
+        [hamlet|
+             <form method="post" action=#{p}>
+                <div contenteditable="true">
+                    <label for="lemmaTextArea"> Edit Lemma #{name}
+                    <textarea name="lemma-text" id="lemmaTextArea" rows=#{textHeight}>#{lPlaintext}
+                <button type="submit">Submit
+                <p>
+                <h3> Introduction to Lemma Edit:
+                <noscript>
+                  <div class="warning">
+                    Warning: JavaScript must be enabled for the
+                    <span class="tamarin">Tamarin</span>
+                    prover GUI to function properly.
+                <p>
+                  <ul .wrap-text>
+                    <li>
+                     Modifying the lemma in the box above and clicking the submit button will attempt to modify the lemma in the current theory.
+                     <br>&zwnj;
+                    <li>
+                     Failures in parsing the lemma or verifying its well-formedness will result in an error, and the lemma will NOT be modified.
+                     However, your changes will be kept on this page until you leave this right panel.
+                     <br>&zwnj;
+                    <li>
+                     Editing a lemma will NOT modify the file it was loaded from, but clicking on the "append lemmas to file" button adds all modified lemmas as a comment at the end of the file on disk they were loaded from.
+                     <br>&zwnj;
+                    <li>
+                     Clicking on the "Download" button will download the modified version of the theory (including the modified lemmas), but not modify the file on disk.
+                     <br>&zwnj;
+                    <li>
+                     Modifying a reuse lemma will invalidate all subsequent proofs.
+                     <br>&zwnj;
+                    <li>
+                     Modifying a sources lemma is not supported and will result in an error.
+                  <style>
+                     .wrap-text li {
+                         white-space: normal;
+                         word-wrap: break-word;
+                     }
+                  |] renderUrl
+        where textHeight = 2 + (length $ filter (=='\n') lPlaintext)
+
+    go (TheoryLemma _)         = pp $ text "this is a mistake"
+
+    go (TheoryDelete name)        = do
+        let p = "../../edit/delete/" ++ name
+        [hamlet|
+        <p> Do you want to delete lemma #{name}?
+        <form method="post" action=#{p}>
+            <button type="submit">Yes
+          <p>
+          <h3> Introduction to Lemma Delete:
+          <noscript>
+            <div class="warning">
+              Warning: JavaScript must be enabled for the
+              <span class="tamarin">Tamarin</span>
+              prover GUI to function properly.
+          <p>
+            <ul .wrap-text>
+              <li>
+               Clicking on the button above will delete the lemma from the loaded theory.
+               <br>&zwnj;
+              <li>
+               Deleting a lemma will NOT modify the file it was loaded from, but clicking on the "Download" button will download the modified version of the theory (so without the deleted lemmas).
+               <br>&zwnj;
+              <li>
+               Deleting a reuse lemma will invalidate all subsequent proofs.
+               <br>&zwnj;
+              <li>
+               Deleting a source lemma is not supported and will result in an error.
+             <style>
+                 .wrap-text li {
+                     white-space: normal;
+                     word-wrap: break-word;
+                 }
+             |] renderUrl
+
+    go (TheoryAdd name)  = do
+        let p = "../../edit/add/" ++ name
+        [hamlet|
+             <form method="post" action=#{p}>
+                <div contenteditable="true">
+                    <label for="lemmaTextArea">LemmaText
+                    <textarea name="lemma-text" id="lemmaTextArea">#{lPlaintext}
+                <button type="submit">Submit
+              <p>
+              <h3> Introduction to Adding Lemmas:
+              <noscript>
+                <div class="warning">
+                  Warning: JavaScript must be enabled for the
+                  <span class="tamarin">Tamarin</span>
+                  prover GUI to function properly.
+              <p>
+                <ul .wrap-text>
+                  <li>
+                   Adds the lemma in the current position in the theory, but will throw an error if a lemma with the same name exists, the parsing fails, or the lemma isn't well-formed.
+                   <br>&zwnj;
+                  <li>
+                   Adding a lemma will NOT modify the loaded source file, but clicking on the "Append lemmas to file" button appends all added lemmas as a comment at the end of the current theory file.
+                   <br>&zwnj;
+                  <li>
+                   Clicking on the "Download" button will download the modified version of the theory (including the added lemmas).
+                <style>
+                    .wrap-text li {
+                        white-space: normal;
+                        word-wrap: break-word;
+                    }
+                |] renderUrl
+
 
     go TheoryHelp              = do
       [hamlet|
@@ -1060,7 +1171,7 @@ htmlThyPath renderUrl renderImgUrl info path =
               <td>
                 <span class="keys">J/K
               <td>
-                Jump to the next/previous open goal within the currently
+                Jump to the next/previous open constraint within the currently
                 \ focused lemma, or to the next/previous lemma if there are no
                 \ more #
                 <tt>sorry
@@ -1201,7 +1312,7 @@ htmlDiffThyPath renderUrl info path =
               <td>
                 <span class="keys">J/K
               <td>
-                Jump to the next/previous open goal within the currently
+                Jump to the next/previous open constraint within the currently
                 \ focused lemma, or to the next/previous lemma if there are no
                 \ more #
                 <tt>sorry
@@ -1310,7 +1421,7 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
     prefixedShowDot dot = unlines
         [ "// protocol rules: "          ++ ruleList (getProtoRuleEs thy)
         , "// message deduction rules: " ++ ruleList (getIntrVariants thy)
-        , D.showDot dot
+        , D.showDot "G" dot
         ]
       where
         ruleList :: HasRuleName (Rule i) => [Rule i] -> String
@@ -1327,30 +1438,32 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
               graphExists <- doesFileExist graphPath
               imgExists <- doesFileExist imgPath
               if (n > 0 && graphExists && not imgExists)
-                  then do threadDelay (10 * 1000) -- wait 10 ms
-                          renderedOrRendering (n - 1)
+                  then do
+                    threadDelay (10 * 1000) -- wait 10 ms
+                    renderedOrRendering (n - 1)
                   else return imgExists
 
       -- Ensure that the output directory exists.
       createDirectoryIfMissing True (takeDirectory graphPath)
 
       imgGenerated <- firstSuccess
-          [ -- There might be some other thread that rendered or is rendering
-            -- this dot file. We wait at most 50 iterations (0.5 sec timout)
-            -- for this other thread to render the image. Afterwards, we give
-            -- it a try by ourselves.
-            renderedOrRendering 50
-            -- create dot-file and render to image
-          , do writeFile graphPath code
-               -- select the correct command to generate img
-               case ocFormat outputCommand of
-                 OutDot  -> dotToImg "dot" graphPath imgPath
-                 OutJSON -> jsonToImg graphPath imgPath
-            -- sometimes 'dot' fails => use 'fdp' as a backup tool
-          , case ocFormat outputCommand of
-              OutDot -> dotToImg "fdp" graphPath imgPath
-              _      -> return False
-          ]
+        [ -- There might be some other thread that rendered or is rendering
+          -- this dot file. We wait at most 50 iterations (0.5 sec timout)
+          -- for this other thread to render the image. Afterwards, we give
+          -- it a try by ourselves.
+          renderedOrRendering 50,
+          -- create dot-file and render to image
+          do
+            writeFile graphPath code
+            -- select the correct command to generate img
+            case ocFormat outputCommand of
+              OutDot  -> dotToImg "dot" graphPath imgPath
+              OutJSON -> jsonToImg graphPath imgPath,
+          -- sometimes 'dot' fails => use 'fdp' as a backup tool
+          case ocFormat outputCommand of
+            OutDot -> dotToImg "fdp" graphPath imgPath
+            _      -> return False
+        ]
       if imgGenerated
         then return $ Just imgPath
         else trace ("WARNING: failed to convert:\n  '" ++ graphPath ++ "'")
@@ -1383,7 +1496,6 @@ imgThyPath imageFormat outputCommand cacheDir_ toDot toJSON thy thyPath =
       s <- m
       if s then return True else firstSuccess ms
 
-
 -- | Render the image corresponding to the given theory path.
 -- Returns Nothing if there was an error during image generation.
 imgDiffThyPath :: ImageFormat
@@ -1407,7 +1519,7 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path mirror = go path
         , "// message deduction rules: " ++ ruleList (getIntrVariantsDiff LHS thy) -- FIXME RS: the intruder rule names are the same on LHS and RHS; should pass the current Side through to make this clean
 --        , "// message deduction rules: " ++ ruleList ((intruderRules . get (_crcRules . diffThyCacheLeft)) thy) -- FIXME RS: again, we arbitrarily pick the LHS version of the cache, should be the same on both sides
 --intruderRules . L.get (crcRules . diffThyCacheLeft)
-        , D.showDot dot
+        , D.showDot "G" dot
         ]
       where
         ruleList :: HasRuleName (Rule i) => [Rule i] -> String
@@ -1421,14 +1533,14 @@ imgDiffThyPath imgFormat dotCommand cacheDir_ compact thy path mirror = go path
 
     -- Get dot code for proof path in lemma
     proofPathDotCode s lemma proofPath =
-      D.showDot $ fromMaybe (return ()) $ do
+      D.showDot "G" $ fromMaybe (return ()) $ do
         subProof <- resolveProofPathDiff thy s lemma proofPath
         sequent <- psInfo $ root subProof
         return $ compact sequent
 
     -- Get dot code for proof path in lemma
     proofPathDotCodeDiff lemma proofPath mir =
-      D.showDot $ fromMaybe (return ()) $ do
+      D.showDot "G" $ fromMaybe (return ()) $ do
         subProof <- resolveProofPathDiffLemma thy lemma proofPath
         diffSequent <- dpsInfo $ root subProof
         if mir
@@ -1507,6 +1619,9 @@ titleThyPath thy path = go path
     go TheoryTactic                     = "Tactics"
     go (TheorySource RawSource _ _)     = "Raw sources"
     go (TheorySource RefinedSource _ _) = "Refined sources"
+    go (TheoryEdit l)                   = "Edit Lemma: " ++ l
+    go (TheoryAdd _)                    = "Add new Lemma"
+    go (TheoryDelete l)                 = "Delete " ++ l
     go (TheoryLemma l)                  = "Lemma: " ++ l
     go (TheoryProof l [])               = "Lemma: " ++ l
     go (TheoryProof l p)
@@ -1597,6 +1712,9 @@ nextThyPath thy = go
     go (TheorySource RawSource _ _)     = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource _ _) = fromMaybe TheoryHelp firstLemma
     go (TheoryLemma lemma)              = TheoryProof lemma []
+    go (TheoryEdit _)                   = TheoryHelp 
+    go (TheoryAdd _)                    = TheoryHelp
+    go (TheoryDelete _)                 = TheoryHelp
     go (TheoryProof l p)
       | Just nextPath <- getNextPath l p = TheoryProof l nextPath
       | Just nextLemma <- getNextLemma l = TheoryProof nextLemma []
@@ -1688,6 +1806,9 @@ prevThyPath thy = go
     go TheoryTactic                      = TheoryRules
     go (TheorySource RawSource _ _)      = TheoryTactic
     go (TheorySource RefinedSource _ _)  = TheorySource RawSource 0 0
+    go (TheoryEdit  _ )                  = TheoryHelp 
+    go (TheoryAdd _)                     = TheoryHelp
+    go (TheoryDelete _)                  = TheoryHelp
     go (TheoryLemma l)
       | Just prevLemma <- getPrevLemma l = TheoryProof prevLemma (lastPath prevLemma)
       | otherwise                        = TheorySource RefinedSource 0 0
@@ -1783,10 +1904,10 @@ prevDiffThyPath thy = go
 
 -- | Interesting proof methods that are not skipped by next/prev-smart.
 isInterestingMethod :: ProofMethod -> Bool
-isInterestingMethod (Sorry _)    = True
-isInterestingMethod Solved       = True
-isInterestingMethod Unfinishable = True
-isInterestingMethod _            = False
+isInterestingMethod (Sorry _) = True
+isInterestingMethod (Finished Solved) = True
+isInterestingMethod (Finished Unfinishable) = True
+isInterestingMethod _ = False
 
 -- | Interesting diff proof methods that are not skipped by next/prev-smart.
 isInterestingDiffMethod :: DiffProofMethod -> Bool
@@ -1804,6 +1925,9 @@ nextSmartThyPath thy = go
     go TheoryTactic                       = TheorySource RawSource 0 0
     go (TheorySource RawSource _ _)       = TheorySource RefinedSource 0 0
     go (TheorySource RefinedSource   _ _) = fromMaybe TheoryHelp firstLemma
+    go (TheoryEdit  _ )                   = TheoryHelp 
+    go (TheoryAdd _ )                     = TheoryHelp
+    go (TheoryDelete _)                   = TheoryHelp
     go (TheoryLemma lemma)                = TheoryProof lemma []
     go (TheoryProof l p)
       | Just nextPath <- getNextPath l p = TheoryProof l nextPath
@@ -1902,6 +2026,9 @@ prevSmartThyPath thy = go
     go TheoryTactic                        = TheoryRules
     go (TheorySource RawSource _ _)        = TheoryTactic
     go (TheorySource RefinedSource   _ _)  = TheorySource RawSource 0 0
+    go (TheoryEdit  _)                     = TheoryHelp 
+    go (TheoryAdd _ )                      = TheoryHelp
+    go (TheoryDelete _ )                   = TheoryHelp
     go (TheoryLemma l)
       | Just prevLemma <- getPrevLemma l   = TheoryProof prevLemma (lastPath prevLemma)
       | otherwise                          = TheorySource RefinedSource 0 0
@@ -2082,21 +2209,22 @@ annotateLemmaProof lem =
     mapProofInfo (second interpret) prf
   where
     prf = annotateProof annotate $ get lProof lem
-    annotate step cs =
-        ( psInfo step
-        , mconcat $ proofStepStatus step : incomplete ++ map snd cs
-        )
+    annotate step cs  =
+        case get lProof lem of
+           LNode (ProofStep  Invalidated _) _ -> (psInfo step, InvalidatedProof)
+           _                                  -> ( psInfo step, mconcat $ proofStepStatus step : incomplete ++ map snd cs)
       where
         incomplete = if isNothing (psInfo step) then [IncompleteProof] else []
 
     interpret status = case (get lTraceQuantifier lem, status) of
-      (_,           IncompleteProof)   -> Unmarked
-      (_,           UndeterminedProof) -> Unmarked
-      (_,           UnfinishableProof) -> Yellow
-      (AllTraces,   TraceFound)        -> Red
-      (AllTraces,   CompleteProof)     -> Green
-      (ExistsTrace, TraceFound)        -> Green
-      (ExistsTrace, CompleteProof)     -> Red
+      (_,                IncompleteProof)   -> Unmarked
+      (_,                UndeterminedProof) -> Unmarked
+      (_,                UnfinishableProof) -> Yellow
+      (_,                InvalidatedProof)  -> Yellow
+      (AllTraces,        TraceFound)        -> Red
+      (AllTraces,        CompleteProof)     -> Green
+      (ExistsTrace,      TraceFound)        -> Green
+      (ExistsTrace,      CompleteProof)     -> Red
 
 -- | Annotate a proof for pretty printing.
 -- The boolean flag indicates that the given proof step's children
@@ -2118,5 +2246,6 @@ annotateDiffLemmaProof lem =
       IncompleteProof   -> Unmarked
       UndeterminedProof -> Unmarked
       UnfinishableProof -> Yellow
+      InvalidatedProof -> Yellow
       TraceFound        -> Red
       CompleteProof     -> Green

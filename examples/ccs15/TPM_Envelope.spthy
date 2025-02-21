@@ -24,7 +24,7 @@ Protocol specification for trace properties only:
 
   The verification with reboot takes 75 seconds on this Intel i7 laptop. The
   key reason why both of these times are so high is that the heuristic has
-  trouble discerning between the useful looping goals and the useless ones. A
+  trouble discerning between the useful looping proof methods and the useless ones. A
   manual proof can be much shorter than the one automatically produced.
   Investigating a better heuristic is future work.
 */

@@ -205,7 +205,7 @@ solveMatchLTerm sortOf matchProblem =
       Just ms -> reader $ matchTerms ms
   where
     trace' res = trace
-      (unlines $ ["matchLTerm: "++ show matchProblem, "result = "++  show res])
+      (unlines ["matchLTerm: "++ show matchProblem, "result = "++  show res])
       res
 
     matchTerms ms hnd =

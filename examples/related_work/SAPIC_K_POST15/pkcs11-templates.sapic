@@ -175,6 +175,7 @@ attwt(tem(v)), attut(tem(v))) then
             event GetKeyValue(key(v)); out(key(v)); unlock 'device'
         )
 
+process:
 insert <'template','trusted'>,
 //       wrap, unwrap, enc, dec, sens, extr, trus, wwt, wt, ut
        < 'on', 'on', 'off','off','on','on', 'on', 'on','usage','usage'>;
@@ -221,7 +222,7 @@ insert <'template','untrusted'>,
 /* 	exists-trace */
 /* 	"Ex #t h k .Unwrapped(h,k)@t" */
 
-lemma dec_limits[typing]: 
+lemma dec_limits[sources]: 
 	"( 
           All k m #t1. DecUsing(k,m)@t1 ==> 
           ( Ex h2  k2 #t2 #t3 . NewKey(h2, k2, 'on')@t2 & KU(k2)@t3 & t2<t1 & t3<t1)

@@ -15,6 +15,9 @@ module Text.Dot
         (
           -- * Dot
           Dot           -- abstract
+        , runDot
+        , DotGenState(..)
+        , addElements
           -- * Nodes
         , node
         , NodeId        -- abstract
@@ -32,7 +35,11 @@ module Text.Dot
         , graphAttributes
         , share
         , same
+        , createClusterNodeId 
         , cluster
+        , createSubGraph
+          -- * Record construction
+        , rawNode
           -- * Record specification
         , Record       -- abstract
         , field
@@ -52,6 +59,11 @@ module Text.Dot
 
           -- * Html labels.
         , htmlLabel
+        , initializeDotGenState
+        , modifyDotGenState
+        , getDotGenStateElements
+        , setId
+        , nextId
         , module Data.GraphViz.Attributes.HTML
         , module Data.GraphViz.Attributes.Colors
         ) where
@@ -65,6 +77,7 @@ import Extension.Data.Label
 import Data.GraphViz.Printing (renderDot, unqtDot)
 import Data.GraphViz.Attributes.HTML
 import Data.GraphViz.Attributes.Colors
+import Data.GraphViz (GraphvizCommand(Dot), DotRepr (setID))
 
 -- | Identifier for a node in a dot file.
 data NodeId = NodeId String
@@ -105,19 +118,42 @@ nextId = do
   uq <- getM dgsId
   () <- setM dgsId (succ uq)
   return uq
+
+setId :: Int  -> Dot()
+setId i = do 
+  setM dgsId i
+
+-- | Initialize DotGenState
+initializeDotGenState :: DotGenState
+initializeDotGenState = DotGenState { _dgsId = 0, _dgsElements = [] }
+
+-- | Modify DotGenState
+modifyDotGenState :: Dot a -> DotGenState -> DotGenState
+modifyDotGenState action state = snd (runDot state action)
+
+-- | Get elements from DotGenState
+getDotGenStateElements :: Dot [GraphElement]
+getDotGenStateElements = getM dgsElements
+
+createClusterNodeId :: String -> NodeId
+createClusterNodeId agentName = NodeId ("cluster_" ++ agentName)
   
+createSubGraph :: Maybe NodeId -> [GraphElement] -> GraphElement
+createSubGraph = SubGraph
+
 -- | Add elements to the dot state.
 addElements :: [GraphElement] -> Dot ()
 addElements elems = do
   modM dgsElements (++elems)
 
 -- | 'rawNode' takes a list of attributes, generates a new node, and gives a 'NodeId'.
-rawNode      :: [(String,String)] -> Dot NodeId
+rawNode :: [(String, String)] -> Dot NodeId
 rawNode attrs = do 
     uq <- nextId
     let nid = NodeId $ "n" ++ show uq
-    addElements [ GraphNode nid attrs ]
+    addElements [GraphNode nid attrs]
     return nid
+
 
 -- | 'node' takes a list of attributes, generates a new node, and gives a
 -- 'NodeId'. Multi-line labels are fixed such that they use non-breaking
@@ -172,7 +208,6 @@ cluster dot = do
   addElements [SubGraph (Just cid) (get dgsElements finalState)]
   return (cid, a)
 
-
 -- | 'attribute' gives a attribute to the current scope.
 attribute :: (String,String) -> Dot ()
 attribute (name,val) = addElements [  GraphAttribute name val ]
@@ -189,14 +224,21 @@ edgeAttributes attrs = addElements [ GraphNode (NodeId "edge") attrs]
 graphAttributes :: [(String,String)] -> Dot ()
 graphAttributes attrs = addElements [ GraphNode (NodeId "graph") attrs]
 
--- 'showDot' renders a dot graph as a 'String'.
-showDot :: Dot a -> String
-showDot dot = 
-  let initialState = DotGenState { _dgsId = 0, _dgsElements = [] } 
+-- 'showDot' renders a dot graph as a 'String' with the supplied label as the digraph id.
+showDot :: String -> Dot a -> String
+showDot label dot =
+      -- We must escape all double quote characters in the graphviz label by using a backslash. 
+      -- In the comparison we just use '"' because it is a single character.
+      -- Then for the replacement we must use three \, the first two insert a literal backslash into the string, 
+      -- the third one is used to insert a literal double quote into the string. 
+  let escapedLabel = concatMap (\c -> if c == '"' then "\\\"" else [c]) label
+      initialState = DotGenState { _dgsId = 0, _dgsElements = [] } 
       (_, finalState) = runDot initialState dot
       elems = get dgsElements finalState
   in 
-    "digraph G {\n" ++ unlines (map showGraphElement elems) ++ "\n}\n"
+    "digraph " ++ 
+    "\"" ++ escapedLabel ++ "\"" ++
+    " {\n" ++ unlines (map showGraphElement elems) ++ "\n}\n"
 
 -- | Render a record in the Dot monad. It exploits the internal counter in
 -- order to generate unique port-ids. However, they must be combined with the

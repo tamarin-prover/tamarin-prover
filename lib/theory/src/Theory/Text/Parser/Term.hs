@@ -86,7 +86,6 @@ reservedBuiltins =  map unpackChars [
 naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 naryOpApp eqn plit = do
     op <- identifier
-    --traceM $ show op ++ " " ++ show eqn
     when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv,constr,acstate) <- lookupArity op

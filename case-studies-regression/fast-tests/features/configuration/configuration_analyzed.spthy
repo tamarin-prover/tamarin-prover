@@ -35,15 +35,14 @@ SOLVED // trace found
 
 /*
 Generated from:
-Tamarin version 1.7.1
-Maude version 3.2.2
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.2. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -51,7 +50,7 @@ summary of summaries:
 analyzed: examples/features//configuration/configuration.spthy
 
   output:          examples/features//configuration/configuration.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.04s
   
   test_lemma (exists-trace): verified (2 steps)
 

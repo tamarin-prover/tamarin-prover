@@ -6,18 +6,18 @@
 -- Portability : GHC only
 --
 -- Compute annotations for locks.
-module Sapic.Locks (
-    annotateLocks
-) where
-import           Control.Exception
-import           Control.Monad.Catch as Catch
-import           Control.Monad.Fresh
-import           Data.Typeable
--- import qualified Data.Traversable as T
-import           Sapic.Annotation
-import           Sapic.Exceptions
-import           Theory
-import           Theory.Sapic
+module Sapic.Locks
+  ( annotateLocks
+  ) where
+
+import Control.Exception
+import Control.Monad.Catch as Catch
+import Control.Monad.Fresh
+import Data.Typeable
+import Sapic.Annotation
+import Sapic.Exceptions
+import Theory
+import Theory.Sapic
 
 -- This exceptions is thrown im annotateEachClosestUnlock finds
 -- a parallel or replications below the locks. The calling function
@@ -62,9 +62,9 @@ annotateEachClosestUnlock' :: (MonadCatch m, Typeable v2) =>
                              -> AnVar v2
                              -> Process (ProcessAnnotation v2) SapicLVar
                              -> m (Process (ProcessAnnotation v2) SapicLVar)
-annotateEachClosestUnlock' t v p = 
+annotateEachClosestUnlock' t v p =
         Catch.catch (annotateEachClosestUnlock t v p)
-        (\(LocalException tag) 
+        (\(LocalException tag)
             -> throwM (ProcessNotWellformed (WFLock tag) (Just p))
         )
 

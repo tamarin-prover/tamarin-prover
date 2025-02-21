@@ -12,9 +12,12 @@ module Term.SubtermRule (
     , CtxtStRule(..)
     , findSubterm
     , findAllSubterms
+    , filterNonSubtermCtxtRule
     , isSubtermConvergentCtxtRule
     , rRuleToCtxtStRule
     , ctxtStRuleToRRule
+    , findAllSubterms
+    , findSubterm
 
     -- * Pretty Printing
     , prettyCtxtStRule
@@ -30,6 +33,7 @@ import Term.LTerm
 import Term.Positions
 import Term.Rewriting.Definitions
 import Text.PrettyPrint.Highlight
+import Data.ByteString (find)
 
 -- | The righthand-side of a context subterm rewrite rule.
 --   Does not enforce that the term for RhsGround must be ground.
@@ -66,7 +70,6 @@ rRuleToCtxtStRule (lhs `RRule` rhs)
                                      []  -> positions lhs
                                      pos -> pos
 
-
 -- | Finds all occurrences of a subterm in a term.
 findSubterm :: LNTerm -> LNTerm -> [Position]
 findSubterm lst r = findSubtermPrime lst r []
@@ -98,6 +101,10 @@ findAllSubterms _ (viewTerm -> Lit (Con _)) = Nothing
 ctxtStRuleToRRule :: CtxtStRule -> RRule LNTerm
 ctxtStRuleToRRule (CtxtStRule lhs (StRhs _ rhsterm)) = lhs `RRule` rhsterm
 
+-- | Checks if a list of CtxtStRule contains rules that are not subterm convergent.
+filterNonSubtermCtxtRule :: [CtxtStRule] -> [CtxtStRule]
+filterNonSubtermCtxtRule = filter (not . isSubtermConvergentCtxtRule)
+
 -- | Checks if RHS is a subterm of LHS in a specific rule.
 isSubtermConvergentCtxtRule :: CtxtStRule -> Bool
 isSubtermConvergentCtxtRule (CtxtStRule lhs (StRhs _ rhs))
@@ -117,4 +124,3 @@ prettyCtxtStRule :: HighlightDocument d => CtxtStRule -> d
 prettyCtxtStRule r = case ctxtStRuleToRRule r of
   (lhs `RRule` rhs) -> sep [ nest 2 $ prettyLNTerm lhs
                            , operator_ "=" <-> prettyLNTerm rhs ]
-

@@ -138,5 +138,5 @@ for listGoals in reversed(rank):
   for goal in listGoals:
     if debug:
       sys.stderr.write(goal)
-      print goal
+      print(goal)
 

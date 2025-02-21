@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternGuards #-}
 -- |
 -- Copyright   : (c) 2019 Charlie Jacomme <charlie.jacomme@lsv.fr>
 -- License     : GPL v3 (see LICENSE)
@@ -13,21 +12,18 @@
 -- efficient translation, as the adversary can never deduce then, and thus only
 -- a silent transition is possible.
 
-module Sapic.Report (
-    translateTermsReport
-    , reportInit
-) where
--- import           Control.Exception
--- import           Control.Monad.Catch
--- import           Control.Monad.Fresh
-import           Data.Set as S
-import           Data.List as L
-import           Sapic.Annotation
-import           Sapic.Facts
--- import           Sapic.Exceptions
-import           Theory
-import           Theory.Sapic
-import           Term.Builtin.Signature
+module Sapic.Report
+  ( translateTermsReport
+  , reportInit
+  ) where
+
+import Data.Set as S
+import Data.List as L
+import Sapic.Annotation
+import Sapic.Facts
+import Theory
+import Theory.Sapic
+import Term.Builtin.Signature
 
 reportInit ::  Monad m => LProcess ann -> ([AnnotatedRule ann], Set LVar) -> m ([AnnotatedRule ann], Set LVar)
 reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
@@ -42,7 +38,7 @@ reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
         x = var "x"
         loc = var "loc"
         -- protFact =  Syntactic . Pred $ (protoFact Linear "Report" [varTerm x, varTerm loc])
-        protFact =  Syntactic . Pred $ (protoFact Linear "Report" [varTerm (Free x), varTerm (Free loc)])
+        protFact =  Syntactic . Pred $ protoFact Linear "Report" [varTerm (Free x), varTerm (Free loc)]
 
 -- | This rules use the builtin restriction system to bind the Report predicate (which must be defined by the user), to this rule.
 opt_loc :: Maybe SapicTerm -> ProcessAnnotation v -> Maybe SapicTerm

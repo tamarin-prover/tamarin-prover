@@ -12,16 +12,15 @@
 -- Two rules can be merged if they do not merge obaservable actions.
 --
 
-module Sapic.Compression (
-    pathCompression
-) where
+module Sapic.Compression
+  ( pathCompression
+  ) where
+
 import Control.Monad.Catch
-import qualified Data.Set              as S
+import Data.List qualified as List
+import Data.Set qualified as S
 
-import qualified Data.List              as List
-import qualified Extension.Data.Label                as L
 import Theory
-
 import Sapic.Facts
 
 -- We compress as much as possible silent actions
@@ -44,11 +43,11 @@ sameName _ _ = False
 
 -- get all rules with premice the given fact
 getPremRules:: Fact LNTerm ->  [Rule ProtoRuleEInfo] -> ([Rule ProtoRuleEInfo],[Rule ProtoRuleEInfo])
-getPremRules fact = List.partition  (List.any (sameName fact) . L.get rPrems)
+getPremRules fact = List.partition  (List.any (sameName fact) . (._rPrems))
 
 -- get all rules producing the given fact
 getConcsRules:: Fact LNTerm ->  [Rule ProtoRuleEInfo] -> ([Rule ProtoRuleEInfo],[Rule ProtoRuleEInfo])
-getConcsRules fact = List.partition  (List.any (sameName fact) . L.get rConcs)
+getConcsRules fact = List.partition  (List.any (sameName fact) . (._rConcs))
 
 -- Get the list of all state facts produced by a rule
 getProducedFacts :: [Rule ProtoRuleEInfo] -> S.Set (Fact LNTerm)
@@ -68,6 +67,8 @@ mergeInfo (ProtoRuleEInfo (StandRule name) attr res) (ProtoRuleEInfo (StandRule 
        mergeAttr a a' =  let completeList = a ++ a' in
                             take 1 [i |  i@(RuleColor _) <- completeList]
                          ++ take 1 [i |  i@(Process   _) <- completeList]
+                         ++ take 1 [i |  i@IsSAPiCRule   <- completeList]
+
 mergeInfo _ _ = error "FreshRule(s) passed to mergeInfo"
 
 

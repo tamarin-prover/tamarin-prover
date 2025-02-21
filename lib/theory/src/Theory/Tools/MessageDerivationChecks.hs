@@ -5,7 +5,6 @@ module Theory.Tools.MessageDerivationChecks (
 
 import  Theory.Model.Formula
 import  qualified Data.Label as L
-import Theory (OpenTranslatedTheory, OpenDiffTheory, getLeftProtoRule, getRightProtoRule)
 import Items.RuleItem
 import TheoryObject
 import Theory.Model
@@ -19,6 +18,15 @@ import qualified Text.PrettyPrint.Class as Pretty
 import ClosedTheory
 import qualified Data.List as List
 import CloseRule (closeTheoryWithMaude,proveTheory)
+
+import Control.Basics
+import Control.Category
+
+import Prelude hiding (id, (.))
+
+import           Prelude                             hiding (id, (.))                 
+import OpenTheory
+
 
 -----------------------------------------------
 -- DerivationChecks
@@ -160,7 +168,7 @@ generateAction :: [LVar] ->Int -> LNFact
 generateAction vars idx = protoFact Persistent ("Generated_" ++ show idx) (map lvarToLnterm (deleteGlobals vars))
 
 generateSeparatedLemmas :: Int -> [LVar]-> [ProtoLemma (ProtoFormula Unit2 (String, LSort) Name LVar) (Proof ())]
-generateSeparatedLemmas idx vars = map (\v -> Lemma (show v) ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : [(lntermToKUFact (lvarToLnterm v))]) [] (unproven ())) vars
+generateSeparatedLemmas idx vars = map (\v -> Lemma (show v) "message_deriv" False ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : [(lntermToKUFact (lvarToLnterm v))]) [] (unproven ())) vars
 
 deleteGlobals :: [LVar] -> [LVar]
 deleteGlobals = filter (\v -> lvarSort v /= LSortPub)

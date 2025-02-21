@@ -667,7 +667,7 @@ lemma countervalue_uniqueness[reuse, use_induction]:
     "All id x #i #j.
         NewCounterValue( id, x ) @ i & NewCounterValue( id, x ) @ j ==> #i = #j"
 
-// Takes a while to do automatically, but can be solved by picking the goals with counter-related names
+// Takes a while to do automatically, but can be solved by picking the proof methods with counter-related names
 lemma CSQ_Uniqueness[reuse, use_induction]:
     "All id csq #i #j.
         CSQ( id, csq ) @ i & CSQ( id, csq ) @ j ==> #i = #j"

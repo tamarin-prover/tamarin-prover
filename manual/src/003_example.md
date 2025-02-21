@@ -111,7 +111,7 @@ incomparable subsorts `fresh`, `pub` and `nat` of that top sort. Timepoint
 variables of sort `temporal` are unconnected.
 
 The above rule can therefore be read as follows. First, generate
-a fresh name `~ltk` (of sort fresh), which is the new private key, and
+a fresh name `~ltk` (of sort fresh), which is the new private (long-term) key, and
 non-deterministically choose a public name `A`, for the agent for whom we
 are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
 (the exclamation mark `!` denotes that the fact is persistent, i.e., it
@@ -174,7 +174,7 @@ a protocol execution.
 
 We have two properties that we would like to evaluate. In the Tamarin framework,
 properties to be evaluated are denoted by lemmas. The first of these is on the
-secrecy of session key secrecy from the client point of view. The lemma
+secrecy of the session key from the client point of view. The lemma
 `Client_session_key_secrecy` says that it cannot be that a client has set up a
 session key `k` with a server `S` and the adversary learned that `k` unless the
 adversary performed a long-term key reveal on the server `S`. The second lemma
@@ -264,7 +264,7 @@ If you click on the 'FirstExample' entry in the table of loaded theories, you
 should see the following:
 
 ![FirstExample Theory 
-Overview](../images/tamarin-tutorial-overview.png "FirstExample Theory 
+Overview](../images/tamarin-tutorial-overview.jpeg "FirstExample Theory 
 Overview"){width=100%}\
 
 On the left hand side, you see the theory: links to the message theory
@@ -283,7 +283,7 @@ graph visualization (see below for examples).
 
 If you click on `Message theory` on the left, you should see the following:
 
-![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.png 
+![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.jpeg
  "FirstExample Message Theory"){width=100%}\
 
 On the right side, you can now see the message theory, starting with
@@ -326,7 +326,7 @@ only used to make the tool's reasoning more efficient.
 Now click on *Multiset rewriting rules* on the left.
 
 ![FirstExample Multiset Rewriting 
-Rules](../images/tamarin-tutorial-multiset-rules.png 
+Rules](../images/tamarin-tutorial-multiset-rules.jpeg
  "FirstExample Multiset Rewriting Rules"){width=100%}\
 
 On the right side of the screen are the protocol's 
@@ -352,7 +352,7 @@ those are the ones actually used in the proof, and 'raw' is just an
 uninteresting intermediate result. -->
 
 ![FirstExample Case Distinctions 
-Rules](../images/tamarin-tutorial-case-distinctions.png 
+Rules](../images/tamarin-tutorial-case-distinctions.jpeg
  "FirstExample Case Distinctions"){width=100%}\
  
 To improve the efficiency of its internal reasoning, Tamarin precomputes case 
@@ -396,7 +396,7 @@ Now we will see how to prove lemmas in the interactive mode. For that, click on
 `sorry` (indicating that the proof has not been started) after the first 
 lemma in the left frame to obtain the following screen:
 
-![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.png 
+![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.jpeg
  "FirstExample Lemma 1"){width=100%}\
 
 Tamarin proves lemmas using constraint solving.
@@ -414,7 +414,7 @@ generates the necessary constraints to prove the lemma using induction on the
 length of the trace. Here we use the default strategy, i.e., a simplification 
 step by clicking on `1. simplify`, to obtain the following screen:
  
-![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.png 
+![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpeg
  "FirstExample Lemma 1 Step 1"){width=100%}\
 
 Tamarin has now translated the lemma into a constraint system. Since
@@ -436,7 +436,7 @@ steps based on a heuristic. Here we have two constraints to resolve:
 `Client_1( S, k )` and `KU( k )`, both of which are premises for the rules in 
 the unfinished current constraint system.
 
-Note that that the proof methods in the GUI are sorted according to the same 
+Note that the proof methods in the GUI are sorted according to the same 
 heuristic as is used by the `autoprove` command. Any proof found by always 
 selecting the first proof method will be identical to the one constructed by 
 the `autoprove` command. However, because the general problem is
@@ -447,7 +447,7 @@ using the autoprover, we end with the following final state, where the construct
 graph leads to a contradiction as it contains `LtkReveal( S )`:
 
 ![FirstExample Lemma 1 
-Finished](../images/tamarin-tutorial-lemma-1-finished.png 
+Finished](../images/tamarin-tutorial-lemma-1-finished.jpeg
  "FirstExample Lemma 1 Finished"){width=100%}\
  
 The lemma is now colored in green as it was successfully proven. If we had 

@@ -343,7 +343,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ m #decrypt.
            (Decrypt( m ) @ #decrypt)
           ∧
@@ -7857,7 +7856,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ d c C #before #later.
            (DCtrIs( d, c ) @ #before) ∧ (DCtrIs( d, C ) @ #later)
           ⇒
@@ -10677,7 +10675,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ k l h #keyCreate #keyKU.
            (CreateKey( k, h, l ) @ #keyCreate) ∧ (!KU( k ) @ #keyKU))  ∥
          (∃ d k l h #keyImport.
@@ -12531,17 +12528,14 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -12549,13 +12543,13 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 74.89s
+  processing time: 51.54s
   
-  origin (all-traces): verified (2087 steps)
-  Counter_Monotonicity (all-traces): verified (876 steps)
+  origin (all-traces): verified (2086 steps)
+  Counter_Monotonicity (all-traces): verified (875 steps)
   IV_Uniqueness (all-traces): verified (12 steps)
   Key_UsageImpliesInitialization (all-traces): verified (86 steps)
-  Key_IntegrityAndConfidentiality (all-traces): verified (427 steps)
+  Key_IntegrityAndConfidentiality (all-traces): verified (426 steps)
   Key_UniqueLevelandHandle (all-traces): verified (170 steps)
 
 ==============================================================================

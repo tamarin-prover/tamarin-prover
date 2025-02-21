@@ -69,6 +69,7 @@ module Theory.Tools.Wellformedness (
   , formulaTerms
   ) where
 
+import Rule
 
 import           Prelude                     hiding (id, (.))
 
@@ -87,6 +88,7 @@ import           Control.Monad.Bind
 
 import           Extension.Prelude
 import           Term.LTerm
+
 import           Term.Maude.Signature
 import           Theory
 import           Theory.Text.Pretty
@@ -97,6 +99,9 @@ import           Items.OptionItem            (lemmasToProve)
 import           TheoryObject                (diffThyOptions, prettyVarList, theoryMacros, diffTheoryMacros)
 import           Utils.Misc
 import           Term.Macro
+
+import Term.SubtermRule ( CtxtStRule, prettyCtxtStRule, filterNonSubtermCtxtRule)
+
 
 ------------------------------------------------------------------------------
 -- Types for error reports
@@ -366,7 +371,7 @@ variantsCheck hnd macros info (OpenProtoRule ruE ruAC) =
 ruleVariantsReport :: SignatureWithMaude -> OpenTranslatedTheory -> WfErrorReport
 ruleVariantsReport sig thy = do
     ru <- [ ru | RuleItem ru <- get thyItems thy ]
-    variantsCheck hnd (theoryMacros thy) ("rule " ++ quote (showRuleCaseName (get oprRuleE ru)) ++
+    variantsCheck hnd (theoryMacros thy) ("Rule " ++ quote (showRuleCaseName (get oprRuleE ru)) ++
                      " cannot confirm manual variants:") ru
   where
     hnd = get sigmMaudeHandle sig
@@ -376,9 +381,9 @@ ruleVariantsReportDiff :: SignatureWithMaude -> OpenDiffTheory -> WfErrorReport
 ruleVariantsReportDiff sig thy = do
     lrRu <- [ get dprLeftRight ru | DiffRuleItem ru <- get diffThyItems thy ]
     case lrRu of
-      Just (lr, rr) -> (variantsCheck hnd (diffTheoryMacros thy) ("left rule " ++ quote (showRuleCaseName (get oprRuleE lr)) ++
+      Just (lr, rr) -> (variantsCheck hnd (diffTheoryMacros thy) ("Left rule " ++ quote (showRuleCaseName (get oprRuleE lr)) ++
                      " cannot confirm manual variants:") lr) ++
-                      (variantsCheck hnd (diffTheoryMacros thy) ("right rule " ++ quote (showRuleCaseName (get oprRuleE rr)) ++
+                      (variantsCheck hnd (diffTheoryMacros thy) ("Right rule " ++ quote (showRuleCaseName (get oprRuleE rr)) ++
                       " cannot confirm manual variants:") rr)
       Nothing -> []
   where
@@ -437,9 +442,9 @@ freshNamesReport' rules = do
     ru <- rules
     case filter ((LSortFresh ==) . sortOfName) $ universeBi ru of
       []    -> []
-      names -> return $ (,) (underlineTopic "Fresh names") $ fsep $
+      names -> return $ (,) (underlineTopic "Fresh public constants") $ fsep $
           text ( "rule " ++ quote (showRuleCaseName ru) ++ ": " ++
-                 "fresh names are not allowed in rule:" )
+                 "fresh public constants are not allowed:" )
         : punctuate comma (map (nest 2 . text . show) names)
 
 -- | Report on fresh names.
@@ -456,9 +461,9 @@ publicNamesReport' rules =
     case findClashes publicNames of
       []      -> []
       clashes -> return $ (,) (topic++notif) $ numbered' $
-          map (nest 2 .fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
+          map (nest 2 . fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
   where
-    topic       = underlineTopic "Public names with mismatching capitalization" ++ "\n"
+    topic       = underlineTopic "Public constants with mismatching capitalization" ++ "\n"
     notif       = "Identifiers are case-sensitive, "++
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
@@ -528,7 +533,7 @@ reservedFactNameRules' rules = do
                   || isKLogFact fa]
       check _   []  = mzero
       check msg fas = return $ (,) (underlineTopic "Reserved names") $
-            text ("rule " ++ quote (showRuleCaseName ru))
+            text ("Rule " ++ quote (showRuleCaseName ru))
             <-> text ("contains facts with reserved names"++msg) $-$
             nest 2 (fsep $ punctuate comma $ map prettyLNFact fas)
 
@@ -667,8 +672,8 @@ factReports thy = concat
             (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
-          else return $ (,) (underlineTopic "Inexistant lemma actions") $
-                 text ("lemma " ++ quote name ++ " references action ") $-$
+          else return $ (,) (underlineTopic "Inexistent lemma actions") $
+                 text ("Lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " (arity "++ show ari++
                  ", "++show mul++") ")) $-$
@@ -682,8 +687,8 @@ factReports thy = concat
             (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
-          else return $ (,) (underlineTopic "Restriction actions") $
-                 text ("restriction " ++ quote name ++ " references action ") $-$
+          else return $ (,) (underlineTopic "Inexistent restriction actions") $
+                 text ("Restriction " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " (arity "++ show ari++
                  ", "++show mul++") ")) $-$
@@ -753,7 +758,7 @@ factReportsDiff thy = concat
         (origin, fas) <- theoryDiffRuleFacts
         case mapMaybe reservedPrefixFactName fas of
           []   -> []
-          errs -> return $ (,) (underlineTopic "Reserved names") $ foldr1 ($--$) $
+          errs -> return $ (,) (underlineTopic "Reserved prefixes") $ foldr1 ($--$) $
               wrappedText ("The " ++ origin ++
                            " contains facts with reserved prefixes ('DiffIntr', 'DiffProto') inside names:")
             : map (nest 2) errs
@@ -882,8 +887,8 @@ lemmaAttributeReport thy = do
     lem <- theoryLemmas thy
     guard $    get lTraceQuantifier lem == ExistsTrace
             && ReuseLemma `elem` get lAttributes lem
-    return ( underlineTopic "Attributes"
-           , text "lemma" <-> (text $ quote $ get lName lem) <> colon <->
+    return ( underlineTopic "Lemma annotations"
+           , text "Lemma" <-> (text $ quote $ get lName lem) <> colon <->
              text "cannot reuse 'exists-trace' lemmas"
            )
 
@@ -894,8 +899,8 @@ lemmaAttributeReportDiff thy = do
     (s, lem) <- diffTheoryLemmas thy
     guard $    get lTraceQuantifier lem == ExistsTrace
             && ReuseLemma `elem` get lAttributes lem
-    return ( underlineTopic "Attributes"
-           , text ("lemma " ++ show s) <-> (text $ quote $ get lName lem) <> colon <->
+    return ( underlineTopic "Lemma annotations"
+           , text ("Lemma " ++ show s) <-> (text $ quote $ get lName lem) <> colon <->
              text "cannot reuse 'exists-trace' lemmas"
            )
 
@@ -922,7 +927,7 @@ checkTerms header maudeSig fm
         (punctuate comma $ map (nest 2 . text . quote . show) offenders)
       ) $--$
       wrappedText
-        "The only allowed terms are public names and bound node and message\
+        "The only allowed terms are public constants and bound node and message\
         \ variables. If you encounter free message variables, then you might\
         \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
         \ this is unambiguous. Moreover, reducible function symbols are\
@@ -961,11 +966,11 @@ formulaReports thy = do
          ]
   where
     annFormulas = do LemmaItem l <- get thyItems thy
-                     let header = "lemma " ++ quote (get lName l)
+                     let header = "Lemma " ++ quote (get lName l)
                          fm     = get lFormula l
                      return (header, fm)
               <|> do RestrictionItem rstr <- get thyItems thy
-                     let header = "restriction " ++ quote (get rstrName rstr)
+                     let header = "Restriction " ++ quote (get rstrName rstr)
                          fm     = get rstrFormula rstr
                      return (header, fm)
 
@@ -984,11 +989,11 @@ formulaReportsDiff thy = do
          ]
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
-                     let header = show s ++ " lemma " ++ quote (get lName l)
+                     let header = show s ++ " Lemma " ++ quote (get lName l)
                          fm     = get lFormula l
                      return (header, fm)
               <|> do EitherRestrictionItem (s, rstr) <- get diffThyItems thy
-                     let header = show s ++ " restriction " ++ quote (get rstrName rstr)
+                     let header = show s ++ " Restriction " ++ quote (get rstrName rstr)
                          fm     = get rstrFormula rstr
                      return (header, fm)
 
@@ -1121,7 +1126,7 @@ checkIfLemmasInTheory thy
             ])]
 
     where
-      lemmaArgsNames = get (lemmasToProve.thyOptions) thy
+      lemmaArgsNames = get (lemmasToProve . thyOptions) thy
       topic = underlineTopic "Check presence of the --prove/--lemma arguments in theory"
       lemmasInTheory = map _lName (theoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
@@ -1141,15 +1146,64 @@ checkIfLemmasInDiffTheory thy
             ])]
 
     where
-      lemmaArgsNames = get (lemmasToProve.diffThyOptions) thy
+      lemmaArgsNames = get (lemmasToProve . diffThyOptions) thy
       topic = underlineTopic "Check presence of the --prove/--lemma arguments in theory"
-      lemmasInTheory = map (_lName.snd) (diffTheoryLemmas thy)
+      lemmasInTheory = map (_lName . snd) (diffTheoryLemmas thy)
       notProvedLemmas = findNotProvedLemmas lemmaArgsNames lemmasInTheory
 
 
 ------------------------------------------------------------------------------
 -- Theory
 ------------------------------------------------------------------------------
+
+-- | All equations of an OpenTranslatedTheory.
+thyEquations :: OpenTranslatedTheory -> [CtxtStRule]
+thyEquations thy = S.toList $ stRules (sig thy)
+  where
+    sig = _sigMaudeInfo . _thySignature
+
+-- | All equations of an OpenDiffTheory.
+diffThyEquations :: OpenDiffTheory -> [CtxtStRule]
+diffThyEquations thy = S.toList $ stRules (sig thy)
+  where
+    sig = _sigMaudeInfo . _diffThySignature
+
+-- | Check if equations are marked as user-defined convergent in an OpenTranslatedTheory.
+isUserMarkedConvergent :: OpenTranslatedTheory -> Bool
+isUserMarkedConvergent thy = eqConvergent (sig thy)
+  where
+    sig = _sigMaudeInfo . _thySignature
+
+-- | Check if equations are marked as user-defined convergent in an OpenTranslatedTheory.
+isUserMarkedConvergentDiff :: OpenDiffTheory -> Bool
+isUserMarkedConvergentDiff thy = eqConvergent (sig thy)
+  where
+    sig = _sigMaudeInfo . _diffThySignature
+
+-- | Checks if all equations are subterm convergent.
+checkEquationsSubtermConvergence :: OpenTranslatedTheory -> WfErrorReport
+checkEquationsSubtermConvergence thy
+  | null nonSubtermEquations = []
+  | otherwise = [(topic, doc)]
+  where
+    equations = thyEquations thy
+    nonSubtermEquations = filterNonSubtermCtxtRule equations
+    topic = underlineTopic "Subterm Convergence Warning"
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations) $-$ text " \n For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html "
+
+-- | Checks if all equations are subterm convergent in a DiffTheory.
+checkDiffEquationsSubtermConvergence :: OpenDiffTheory -> WfErrorReport
+checkDiffEquationsSubtermConvergence thy
+  | null nonSubtermEquations = []
+  | otherwise = [(topic, doc)]
+  where
+    equations = diffThyEquations thy
+    nonSubtermEquations = filterNonSubtermCtxtRule equations
+    topic = underlineTopic "Subterm Convergence Warning"
+    doc = text "User-defined equations must be convergent and have the finite variant property. The following equations are not subterm convergent. If you are sure that the set of equations is nevertheless convergent and has the finite variant property, you can ignore this warning and continue \n"
+          $-$ vcat (map prettyCtxtStRule nonSubtermEquations) $-$ text " \n For more information, please refer to the manual : https://tamarin-prover.com/manual/master/book/010_modeling-issues.html "
+
 
 -- | Returns a list of errors, if there are any.
 checkWellformednessDiff :: OpenDiffTheory -> SignatureWithMaude
@@ -1169,12 +1223,10 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , lemmaAttributeReportDiff
     , multRestrictedReportDiff
     , natWellSortedReportDiff
-    ]
-
+    ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
 
 -- | Returns a list of errors, if there are any.
-checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude
-                    -> WfErrorReport
+checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
 checkWellformedness thy sig = concatMap ($ thy)
     [ checkIfLemmasInTheory
     , unboundReport
@@ -1187,5 +1239,9 @@ checkWellformedness thy sig = concatMap ($ thy)
     , lemmaAttributeReport
     , multRestrictedReport
     , natWellSortedReport
-    ]
-
+    ] ++ additionalChecks
+  where
+    userMarked = isUserMarkedConvergent thy
+    additionalChecks = if not userMarked 
+                       then checkEquationsSubtermConvergence thy
+                       else []

@@ -194,6 +194,7 @@ var ui = {
             65  : function() { mainDisplay.applyProver('characterization'); },          // A
             98  : function() { mainDisplay.applyProver('bounded-autoprove'); },         // b
             66  : function() { mainDisplay.applyProver('bounded-characterization'); },  // B
+            111 : function() { mainDisplay.applyProver('oracle-autoprove'); },
             115 : function() { mainDisplay.applyProver('autoprove-all'); },             // s
             83  : function() { mainDisplay.applyProver('characterization-all'); },      // S
             74  : function() { proofScript.jump('next/smart', null); },  // j
@@ -315,6 +316,19 @@ var ui = {
             $("a.active-link").click();
         });
 
+        // Click handler for clustering toggle
+        var agent_toggle = $('a#agent-toggle');
+        agent_toggle.click(function(ev) {
+            ev.preventDefault();
+            if ($.cookie("clustering")) {
+                $.cookie("clustering", null, { path: '/' });
+            } else {
+                $.cookie("clustering", true, { path: '/' });
+            }
+            $("a.active-link").click();
+            mainDisplay.toggleOption(agent_toggle);
+        });
+
 
 
         // Install event handlers
@@ -410,6 +424,11 @@ var ui = {
             $("a#auto-toggle").addClass("disabled-option");
         }
         
+        if ($.cookie("clustering") === "true") {
+            $("a#agent-toggle").addClass("active-option");
+        } else {
+            $("a#agent-toggle").addClass("disabled-option");
+        }
     },
 
     /**
@@ -669,7 +688,7 @@ var proofScript = {
     },
 
     /**
-     * Just jump to next open goal or case if no open goal.
+     * Just jump to next open proof methods or case if no open proof methods.
      * @param target Jump relative to this target.
      */
     jumpNextOpenGoal: function(target) {
@@ -677,7 +696,7 @@ var proofScript = {
         // Perform smart jump
         proofScript.jump('next/smart', function() {
             // If smart jump failed (e.g. there are
-            // no more open goals), perform normal jump
+            // no more open proof methods), perform normal jump
             proofScript.jump('next/normal', function() {
                 // If both failed, just jump to target
                 proofScript.jumpToTarget(target);
@@ -794,6 +813,13 @@ var mainDisplay = {
               { name: "no-auto-sources", value: ""}  
             );
         }
+
+        if ($.cookie("clustering") === "true") {
+            params = params.concat(
+                { name: "clustering", value: "true" }
+            );
+        }
+    
 
         // Rewrite image paths (if necessary)
         if(params.length > 0) {

@@ -68,8 +68,9 @@ defaultGraphOptions = GraphOptions
   { _goSimplificationLevel = SL2
   , _goShowAutoSource = False
   , _goClustering = False
-  , _goAbbreviate = False
-  , _goCompress = False }
+  , _goAbbreviate = True
+  , _goCompress = True 
+  }
 
 -- | An abstract graph to derive visualiations of a 'System'.
 data Graph = Graph 
@@ -156,7 +157,9 @@ systemToGraph se options =
                           if get goCompress options then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
-      repr = basicGraphRepr
+      repr = if get goClustering options 
+             then addIntelligentClusterUsingSimilarNames basicGraphRepr
+             else addClusterByRole basicGraphRepr
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
   in
     Graph se options repr abbrevs

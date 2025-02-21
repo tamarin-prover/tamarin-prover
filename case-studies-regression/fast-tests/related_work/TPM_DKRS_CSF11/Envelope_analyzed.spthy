@@ -115,7 +115,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (!KU( m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j. (Secret( m ) @ #j) ∧ ¬(last(#j))) )
@@ -160,7 +159,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥ (∃ #j. (PCR_Write( x ) @ #j) ∧ ¬(last(#j))) )
     case case_1
     solve( PCR_Read( x ) @ #i )
@@ -374,7 +372,7 @@ solve( Alice1( n ) ▶₀ #i )
           qed
         next
           case PCR_Unbind
-          solve( PCR_Write( h(<x.1, lock>) ) @ #j.1 )
+          solve( PCR_Write( h(<x.1, lock>) ) @ #j.2 )
             case Alice1
             solve( PCR_Write( x.1 ) @ #j.2 )
               case Alice1
@@ -6167,17 +6165,14 @@ Failed to derive Variable(s): pk
 
 /*
 Generated from:
-Tamarin version 1.8.0
-Maude version 3.2.1
-Git revision: 93c7165df1b26f607b8475e26d3a7e0d54f295cb, branch: master
-Compiled at: 2023-08-29 12:56:59.317473841 UTC
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
+Compiled at: 2025-02-20 12:12:04.473468 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.2.1. OK.
- checking installation: OK.
 
 ==============================================================================
 summary of summaries:
@@ -6185,13 +6180,13 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 18.76s
+  processing time: 10.38s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  types (all-traces): verified (13 steps)
-  PCR_Write_charn (all-traces): verified (60 steps)
+  types (all-traces): verified (12 steps)
+  PCR_Write_charn (all-traces): verified (59 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
 
 ==============================================================================

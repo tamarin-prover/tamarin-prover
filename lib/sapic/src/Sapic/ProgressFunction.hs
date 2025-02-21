@@ -1,6 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE TupleSections #-}
 -- Copyright   : (c) 2019-2021 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -9,22 +6,22 @@
 --
 -- Compute a functiont hat maps positions in a process to where they will need
 -- to move to ensure local progress whereever possible
-module Sapic.ProgressFunction (
-    pfFrom
-   ,pf
-   ,ProgressFunction
-   ,pfRange
-   ,pfInv
-) where
-import Data.Typeable
-import Control.Monad.Catch
-import Control.Monad
-import Theory.Sapic
-import Sapic.ProcessUtils
-import qualified Data.Set                   as S
-import qualified Data.List                   as L
-import qualified Data.Map.Strict as M
+module Sapic.ProgressFunction
+  ( pfFrom
+  , pf
+  , ProgressFunction
+  , pfRange
+  , pfInv
+  ) where
 
+import Control.Monad
+import Control.Monad.Catch
+import Data.Map.Strict qualified as M
+import Data.List qualified as L
+import Data.Set qualified as S
+import Data.Typeable
+import Sapic.ProcessUtils
+import Theory.Sapic
 
 type ProgressFunction = M.Map ProcessPosition (S.Set (S.Set ProcessPosition))
 

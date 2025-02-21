@@ -22,45 +22,26 @@ let p2 = 0||0
 
 let p3 = new test;((test||(0+test))||!test)
 
-
+process:
 /* (! 0) + 0 */
 /* !(0 | 0) */
-
 /* !!!!0 */
-
 /* 0+(0+0) */
-
 /* (0+0)+0 */
-
 /* 0+!(0|0) */
 /* 0+!(0|0) */
 /* 0||0 */
 /* 0||(0||0) */
 /* (0||0) || 0 */
 /* 0||0||0 */
-
 /* 0|0|0 */
-
-/* test */
-
 new  ~s; new ~t;
-/* insert x,y */
-
-/* new  s; new t; 0 */
-
-/* (new  ~s; new ~t) */
-
-/* in(<a,b>); 0 */
-
-
-/* event Oi(); 0 */
-
-/* if a = b then 0 else 0 */
-
-/* if equal(a = b) then 0 else 0 */
-
-/* test */
-/* test || test */
+insert x,y;
+new  s; new t;
+in(<a,b>); 
+event Oi(); 
+if a = b then 0 else 
+test || test
 
 end
 

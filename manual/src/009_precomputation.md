@@ -26,7 +26,18 @@ We now want to prove the following lemma:
 
 This proof attempt will not terminate due to there being `12 partial
 deconstructions left` when looking at this example in the GUI as
-described in detail below.
+described in detail below. The number of partial deconstructions
+is also visible without GUI when using the command line
+parameter `--precompute-only`.
+On this example, running Tamarin using `--precompute-only` results
+in the following output:
+
+```
+Multiset rewriting rules: 9
+Raw sources: 11 cases, 12 partial deconstructions left
+Refined sources: 11 cases, 12 partial deconstructions left
+```
+
 
 Partial deconstructions left {#sec:openchains}
 -----------
@@ -123,11 +134,11 @@ the raw sources.
 
 This lemma relates the point of instantiation to the point of sending by either
 the adversary or the communicating partner. In other words, it says that
-whenever the responder receives the first nonce, either the nonce was known to
-the adversary or the initiator sent the first message prior to that moment.
+whenever the responder receives the first nonce, then prior to that moment either
+the nonce was known to the adversary or the initiator had sent the first message.
 Similarly, the second part states that whenever the initiator receives the
-second message, either the adversary knew the corresponding nonce or the
-responder has sent the second message before.
+second message, then prior to that moment either the adversary knew the
+corresponding nonce or the responder had sent the second message.
 Generally, in a protocol with partial deconstructions left it is advisable to try if the problem
 can be solved by a sources lemma that considers where a term could be coming
 from.
@@ -222,7 +233,7 @@ Sometimes Tamarin's precomputations can take a long time, in particular if there
 
 In such a case two command line flags can be used to limit the precomputations:
 
-- `--open-chains=X` or `-c=X`, where `X` is a positive integer, limits the number of chain goals Tamarin will solve during precomputations. In particular, this value stops Tamarin from solving any deconstruction chains that are longer than the given value `X`. This is useful as some equational theories can cause loops when solving deconstruction chains. At the same time, some equational theories may need larger values (without looping), in which case it can be necessary to increase this value. However, a too small value can lead to sources that contain open deconstruction chains which would be easy to solve, rendering the precomputations inefficient.
+- `--open-chains=X` or `-c=X`, where `X` is a positive integer, limits the number of chain constraints Tamarin will solve during precomputations. In particular, this value stops Tamarin from solving any deconstruction chains that are longer than the given value `X`. This is useful as some equational theories can cause loops when solving deconstruction chains. At the same time, some equational theories may need larger values (without looping), in which case it can be necessary to increase this value. However, a too small value can lead to sources that contain open deconstruction chains which would be easy to solve, rendering the precomputations inefficient.
 Tamarin shows a warning on the command line when this limit is reached.
 Default value: `10`
 
@@ -231,3 +242,24 @@ Tamarin shows a warning on the command line when this limit is reached.
 Default value: `5`
 
 In case Tamarin's precomputations take too long, try fixing smaller values for both parameters, and analyze the sources shown in interactive mode to understand what exactly caused the problem.
+
+Loop breakers {#sec:loopbreakers}
+-----------
+During the precomputation phase, Tamarin determines a minimal set of 'loop-breakers',
+which are premises that can be excluded from the general precomputation of all premise goals 
+to prevent looping. Specifically, the set of loop breakers is a minimal set of premises
+that can be excluded to make the directed graph of rules, when connected from conclusions
+to premises, acyclic.
+
+It is important to note that there is often no unique minimal set of loop-breakers. The
+loop-breaker computation is deterministic for a given set of rules, but a change to
+the set of rules may result in different premises being considered loop-breakers. As such,
+you may find that a small change or addition of a rule to your model can result in changes
+to how some seemingly unrelated properties are solved.
+
+It is possible to manually break loops in particular places by annotating the relevant
+premise with the `no_precomp` annotation. These premises will then be excluded when computing
+loop-breakers over the rule set, and will not have their sources precomputed.
+For more on fact annotations, see 
+[Fact Annotations](011_advanced-features.html#sec:fact-annotations).
+

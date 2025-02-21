@@ -2,7 +2,16 @@
 Toolchains {#sec:tool-chains}
 ==========
 
-There are multiple tools that use Tamarin as a backend.
+There exist several tools that accept Tamarin files as input for further processing.
+
+Tree-sitter grammar
+------------------
+
+There exists a Tree-sitter grammar for Spthy files with support for SAPiC+:
+[tree-sitter-spthy](https://github.com/tamarin-prover/tamarin-prover/tree-sitter)
+
+The grammar allows generating parsers that can be used in third-party tools without
+dependencies to the Tamarin implementation.
 
 Alice&Bob input 
 ---------------

@@ -52,9 +52,8 @@ rule B_1_checksign:                             // ==> m=checksign( s, pkA )  bu
 
 
 
-restrictions:
+restriction name:
   " All x y #i. Eq(x,y)@i ==> x=y "
-
 
 //This lemma is true for the first three rules, but false for the two last rules  
 
