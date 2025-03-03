@@ -717,7 +717,7 @@ addMessageDeductionRuleVariants thy0
   | otherwise     = thy
   where
     msig         = thy0._thySignature._sigMaudeInfo --get (sigpMaudeSig . thySignature) thy0
-    rules0     = reader $ \hnd -> subtermIntruderRules hnd msig ++ specialIntruderRules False
+    rules0     = reader $ \hnd -> subtermIntruderRules False hnd msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
     rulesAC = (destructionRulesAC False (acUserFunSyms msig))
@@ -736,7 +736,7 @@ addMessageDeductionRuleVariantsWithoutMaude thy0
   | otherwise     = thy
   where
     msig         = thy0._thySignature._sigMaudeInfo
-    rules       = specialIntruderRules False -- subtermIntruderRules hnd msig ++ 
+    rules       = specialIntruderRules False -- subtermIntruderRules False hnd msig ++ 
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
     thy          = addIntrRuleACsAfterTranslate rules thy0
@@ -754,7 +754,7 @@ addMessageDeductionRuleVariantsDiff thy0
   | otherwise     = thy >>= \x -> return (addIntrRuleLabels x)
   where
     msig         = thy0._diffThySignature._sigMaudeInfo -- get (sigpMaudeSig . diffThySignature) thy0
-    rules0 diff'  = reader $ \hnd -> subtermIntruderRules hnd msig ++ specialIntruderRules diff'
+    rules0 diff'  = reader $ \hnd -> subtermIntruderRules diff' hnd msig ++ specialIntruderRules diff'
                     ++ (if enableMSet msig then multisetIntruderRules else [])
                     ++ (if enableXor msig then xorIntruderRules else [])
     rulesAC diff' = (destructionRulesAC diff' (acUserFunSyms msig))

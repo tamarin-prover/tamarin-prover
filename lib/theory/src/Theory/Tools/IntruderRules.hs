@@ -36,8 +36,6 @@ import           Data.ByteString.Char8 (ByteString, append, pack, empty)
 
 import           Extension.Data.Label
 
-import           Utils.Misc
-
 import           Term.Maude.Signature
 import           Term.Narrowing.Variants.Compute
 import           Term.Rewriting.Norm
@@ -202,15 +200,15 @@ privateConstructorRules rules = map createRule $ derivablePrivateConstants (priv
             concfact = kuFact m
 
 -- | Simple removal of subsumed rules for auto-generated subterm intruder rules.
-minimizeIntruderRules :: MaudeHandle -> [IntrRuleAC] -> [IntrRuleAC]
-minimizeIntruderRules hnd rules = 
+minimizeIntruderRules :: Bool -> MaudeHandle -> [IntrRuleAC] -> [IntrRuleAC]
+minimizeIntruderRules diff hnd rules = 
     filter (not . isDoublePremiseRule)
       $ go [] rules
   where
     go checked [] = reverse checked
     go checked (r:unchecked) = go checked' unchecked
       where
-        checked' = if any (\r' -> equalDuplicateRuleUpToRenaming r r' `runReader` hnd)
+        checked' = if any (\r' -> (equalDuplicateRuleUpToRenaming r r' `runReader` hnd) || ((not diff) && equalSubsetRuleUpToRenaming r r' `runReader` hnd))
                           (checked++unchecked)
                    then checked
                    else r:checked
@@ -233,9 +231,9 @@ minimizeIntruderRules hnd rules =
 
 -- | @subtermIntruderRules diff maudeSig@ returns the set of intruder rules for
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
-subtermIntruderRules :: MaudeHandle -> MaudeSig -> [IntrRuleAC]
-subtermIntruderRules hnd maudeSig =
-    minimizeIntruderRules hnd (constructionRules (userDefineSTFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
+subtermIntruderRules :: Bool -> MaudeHandle -> MaudeSig -> [IntrRuleAC]
+subtermIntruderRules diff hnd maudeSig =
+    minimizeIntruderRules diff hnd (constructionRules (userDefineSTFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
     -- concatMap  (destructionRules diff) (S.toList $ stRules maudeSig) ++ 
 
 -- | @constructionRules fSig@ returns the construction rules for the given
@@ -267,7 +265,7 @@ constructionRules fSig =
 --             concfact = kdFact mAC
 
 destructionRulesAC :: Bool -> ACfctFunSig -> WithMaude [IntrRuleAC]
-destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules hnd $
+destructionRulesAC diff fSig = reader $ \hnd -> minimizeIntruderRules diff hnd $
     concatMap (decomposeNotSubterm diff . variantsIntruderAux hnd id True diff) [ (AC (ACfct f),createRule s cnstr) | f@(s,(Public,cnstr)) <- S.toList fSig, s `notElem` builtInDestrRule ]
   where
     createRule s cnstr = Rule (DestrRule (append (pack "_") s) (-1) True True) [kdFact (varTerm (LVar "x"  LSortMsg 0)), kuFact (varTerm (LVar "x"  LSortMsg 1))] [concfact] [concfact] []
@@ -306,7 +304,7 @@ builtInDestrRule = [expSymString, invSymString, unionSymString, xorSymString, pm
 -- | @destructionRulesNoEq diff fSig@ returns the destruction rules for the given
 -- function signature @fSig@ (not AC cases)
 destructionRulesNoEq :: Bool -> NoEqFunSig -> WithMaude [IntrRuleAC]
-destructionRulesNoEq diff fSig = reader $ \hnd -> minimizeIntruderRules hnd $
+destructionRulesNoEq diff fSig = reader $ \hnd -> minimizeIntruderRules diff hnd $
     concatMap (decomposeNotSubterm diff . variantsIntruderAux hnd id True diff) [ (NoEq f,createRule s k cnstr) | f@(s,(k,Public,cnstr)) <- S.toList fSig, s `notElem` builtInDestrRule ]
   where
     createRule s k cnstr | k /= 0 = Rule (DestrRule (append (pack "_") s) (-1) True True) ((kdFact (varTerm (LVar "x"  LSortMsg (toInteger (k-1))))):(take (k-1) (map kuFact vars))) [concfact] [concfact] []
@@ -328,7 +326,7 @@ destructionRulesNoEq diff fSig = reader $ \hnd -> minimizeIntruderRules hnd $
 
 -- | @dhIntruderRules@ computes the intruder rules for DH
 dhIntruderRules :: Bool -> WithMaude [IntrRuleAC]
-dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules hnd $
+dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff hnd $
     [ expRule  (ConstrRule (append (pack "_") expSymString))  kuFact return
     , invRule  (ConstrRule (append (pack "_") invSymString))  kuFact return
     -- The constructors for one and mult are only necessary in diff mode.
@@ -481,7 +479,7 @@ mkCUnionRule terms =
 ------------------------------------------------------------------------------
 
 bpIntruderRules :: Bool -> WithMaude [IntrRuleAC]
-bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules hnd $
+bpIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff hnd $
     [ pmultRule (ConstrRule (append (pack "_") pmultSymString)) kuFact return
     , emapRule  (ConstrRule (append (pack "_") emapSymString))  kuFact return
     ]

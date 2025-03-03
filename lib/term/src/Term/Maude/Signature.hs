@@ -249,17 +249,17 @@ prettyMaudeSigExcept sig excl = P.vcat
     ppFunSymb (NoEqUser (f,(k,priv,constr))) = P.text $ BC.unpack f ++ "/" ++ show k
                                              ++ showAttrNoEq (priv,constr)
       where
-            showAttrNoEq (Public,Destructor) = " [destructor]"
-            showAttrNoEq (Private,Destructor) = " [private,destructor]"
-            showAttrNoEq (Private,Constructor) = " [private]"
+            showAttrNoEq (Public,Destructor) = "[destructor]"
+            showAttrNoEq (Private,Destructor) = "[private,destructor]"
+            showAttrNoEq (Private,Constructor) = "[private]"
             showAttrNoEq (Public,Constructor) = ""
 
     ppFunSymb (ACfctUser (f,(priv,constr))) = P.text $ BC.unpack f ++ "/2" ++ showAttrAC (priv,constr)
       where
-            showAttrAC (Public,Destructor) = " [destructor,AC]"
-            showAttrAC (Private,Destructor) = " [private,destructor,AC]"
-            showAttrAC (Private,Constructor) = " [private,AC]"
-            showAttrAC (Public,Constructor) = " [AC]"
+            showAttrAC (Public,Destructor) = "[destructor,AC]"
+            showAttrAC (Private,Destructor) = "[private,destructor,AC]"
+            showAttrAC (Private,Constructor) = "[private,AC]"
+            showAttrAC (Public,Constructor) = "[AC]"
 
 
     exclNoEq = S.fromList [ o | NoEqUser o <- S.toList excl ]

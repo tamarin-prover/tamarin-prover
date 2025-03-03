@@ -130,6 +130,7 @@ module Theory.Model.Rule (
   , unifiableRuleACInsts
   , equalRuleUpToRenaming
   , equalDuplicateRuleUpToRenaming
+  , equalSubsetRuleUpToRenaming
   , equalRuleUpToAnnotations
   , equalRuleUpToDiffAnnotation
   , equalRuleUpToDiffAnnotationSym
@@ -195,6 +196,7 @@ import           Theory.Text.Pretty
 import           Theory.Sapic
 import Data.Char (chr, isDigit)
 import Data.List.Split (splitOn)
+import           Utils.Misc
 
 import Debug.Trace
 
@@ -1062,6 +1064,28 @@ equalDuplicateRuleUpToRenaming r1@(Rule _ pr1 co1 ac1 nvs1) r2 = reader $ \hnd -
        matchFacts Nothing  _                                    = Nothing
        matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l)
                                                     | otherwise = Nothing
+
+
+-- | Are the premisses of the first rule subset of those of the second rule up to renaming of variables?
+equalSubsetRuleUpToRenaming :: (Show a, Eq a, HasFrees a, Apply LNSubst a) => Rule a -> Rule a -> WithMaude Bool
+equalSubsetRuleUpToRenaming r1@(Rule _ _ co1 _ _) r2@(Rule _ _ co2 _ _) = reader $ \hnd ->
+  case unifyLNFactEqs [Equal (head co2) (head co1)] `runReader` hnd of
+      [] -> False
+      subst -> any (\x -> isRenamingPerRule x && premSubst x) subst
+    where
+      isRenamingPerRule sub = isRenaming (restrictVFresh (vars r1) sub) && isRenaming (restrictVFresh (vars r2) sub)
+      vars ru = map fst $ varOccurences ru
+
+      premSubst :: LNSubstVFresh -> Bool
+      premSubst sub = srpr2 `subsetOf` spr1
+
+        where
+          (Rule _ spr1 _ _ _,Rule _ srpr2 _ _ _) = evalFreshAvoiding (appSubst sub r1 r2) (r1, r2)
+
+          appSubst x inst0 inst1 = do
+            s <- freshToFree x
+            let (instt0,instt1) = apply s (inst0,inst1)
+            return (instt0,instt1)
 
 -- | Are these two rule instances equal up to added annotations in @ac2@?
 equalRuleUpToAnnotations :: (Eq a) => Rule a -> Rule a -> Bool
