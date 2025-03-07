@@ -232,7 +232,6 @@ hasImpossibleChain ctxt sys = {-trace (show (L.get pcTrueSubterm ctxt)) $-}
         -- the possible root symbols after applying deconstruction
         -- rules to the chain-start if they can be determined
         poss_end_syms  <- possibleRootSyms t_start
-        -- traceM ("Subterm :" ++ show (L.get pcTrueSubterm ctxt))
         -- the chain is impossible if both the required root-symbol
         -- and the possible root-symbols for the chain-end can be
         -- determined and the required symbol is not possible.
@@ -240,14 +239,10 @@ hasImpossibleChain ctxt sys = {-trace (show (L.get pcTrueSubterm ctxt)) $-}
            then do
               -- the root symbol of the chain-end if it can be determined
               req_end_sym_subterm <- rootSym t_end
-              -- traceM ("req1 : " ++ show req_end_sym_subterm)
-              -- traceM ("poss1 : " ++ show poss_end_syms)
               return $ not  (req_end_sym_subterm `elem` poss_end_syms)
            else do
               -- the root symbols of the chain-end if they can be determined
               req_end_sym_gen     <- possibleEndSyms t_end
-              -- traceM ("req2 : " ++ show req_end_sym_gen)
-              -- traceM ("poss2 : " ++ show poss_end_syms)
               return $ null (req_end_sym_gen `intersect` poss_end_syms)
 
     rootSym :: LNTerm -> Maybe (Either LSort FunSym)

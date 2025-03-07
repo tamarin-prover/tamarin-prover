@@ -441,7 +441,7 @@ mkDUnionRule t_prems t_conc =
 
 xorIntruderRules ::  [IntrRuleAC]
 xorIntruderRules = [mkDXorRule [x_var, y_var] [y_var, z_var] x_xor_z,
-                    mkDXorRule [x_var, y_var] [y_var] x_var,
+                    mkDXorRuleSubterm [x_var, y_var] [y_var] x_var,
                     mkCXorRule x_var y_var x_xor_y,
                     zeroConstructor]
     where x_var   = varTerm (LVar "x"  LSortMsg   0)
@@ -452,6 +452,12 @@ xorIntruderRules = [mkDXorRule [x_var, y_var] [y_var, z_var] x_xor_z,
 
 mkDXorRule :: [LNTerm] -> [LNTerm] -> LNTerm -> IntrRuleAC
 mkDXorRule t_prems t_prems2 t_conc =
+    Rule (DestrRule (append (pack "_") xorSymString) 1 False False)
+         [kdFact $ fAppAC Xor t_prems, kuFact $ fAppAC Xor t_prems2]
+         [kdFact t_conc] [] []
+
+mkDXorRuleSubterm :: [LNTerm] -> [LNTerm] -> LNTerm -> IntrRuleAC
+mkDXorRuleSubterm t_prems t_prems2 t_conc =
     Rule (DestrRule (append (pack "_") xorSymString) 1 True False)
          [kdFact $ fAppAC Xor t_prems, kuFact $ fAppAC Xor t_prems2]
          [kdFact t_conc] [] []
