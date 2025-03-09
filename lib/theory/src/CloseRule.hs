@@ -380,6 +380,7 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
                               else 0) subterm constant) prems concs acts nvs
         where
            runMaude = (`runReader` hnd)
+closeIntrRule _ ir@(Rule (DestrRule name _ _ _) _ _ _ _) | any (`BC.isSuffixOf`name) builtInDestrRule = [ir]
 closeIntrRule _ (Rule (DestrRule _ _ False _) _ _ _ _) = error "closeIntrRule: This case should not happen, please report it on the github page" --variantsIntruder hnd id False False ir
 closeIntrRule _   ir                                        = [ir]
 
