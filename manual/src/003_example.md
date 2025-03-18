@@ -22,7 +22,7 @@ intercept messages on the network.
 
 The protocol's Tamarin model and its security properties are given in 
 the file [FirstExample.spthy](../code/FirstExample.spthy) (`.spthy` stands for 
-*security protocol theory*), which can be found in the folder `code` within the github repository of this tutorial (<https://github.com/tamarin-prover/manual>). The Tamarin file starts with `theory` followed by 
+*security protocol theory*), which can be found in the folder `manual/code` of the main repository (<https://github.com/tamarin-prover/tamarin-prover>). The Tamarin file starts with `theory` followed by 
 the theory's name, here `FirstExample`.  
 
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=12 upper=13}
