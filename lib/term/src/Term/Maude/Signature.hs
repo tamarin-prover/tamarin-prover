@@ -233,7 +233,7 @@ prettyMaudeSigExcept sig excl = P.vcat
       where
             showAttr (Public,Destructor) = "[destructor]"
             showAttr (Private,Destructor) = "[private,destructor]"
-            showAttr (Private,Constructor) = "[private,destructor]"
+            showAttr (Private,Constructor) = "[private,constructor]"
             showAttr (Public,Constructor) = ""
 
 prettyMaudeSig :: P.HighlightDocument d => MaudeSig -> d
