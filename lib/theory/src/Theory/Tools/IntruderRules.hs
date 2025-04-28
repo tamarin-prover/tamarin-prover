@@ -217,7 +217,7 @@ minimizeIntruderRules diff hnd rules =
     isDoublePremiseRule (Rule _ ((Fact KDFact _ [t]):prems) concs _ _) =
        (frees concs == []
          && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
-         && isMsgVar t && any (==(kuFact t)) prems) || isAntiCoerce concs prems || (nullIntersect [t] concs && frees concs /= [])
+         && isMsgVar t && any (==(kuFact t)) prems) -- || isAntiCoerce concs prems || (nullIntersect [t] concs && frees concs /= [])
     isDoublePremiseRule _                                               = False
 
     isAntiCoerce :: [LNFact] -> [LNFact] -> Bool

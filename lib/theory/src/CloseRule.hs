@@ -55,6 +55,7 @@ import Debug.Trace
 import Text.PrettyPrint.Class
 import GHC.IO (unsafePerformIO)
 
+import Text.Read
 
 -- | Close a theory given a maude signature. This signature must be valid for
 -- the given theory.
@@ -228,8 +229,8 @@ derivationTest sig intrR fact terms = checkProofd tabProof || checkProofd tabPro
     closedTheory1 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
     modifiedTheory1 = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0]) t) setD (repeat emptyThy)
  
-    tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimit prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
-    tabTheory [] = ""
+    -- tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimit prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
+    -- tabTheory [] = ""
 
     -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory)
 
@@ -273,31 +274,61 @@ builtInDestrRule = map (BC.append (BC.pack "_")) symBI
   where
     symBI = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString, fstSymString, sndSymString]
 
+
+constrNameFunc :: ByteString -> ByteString
+constrNameFunc name = case supprPos (name_decompose name) of
+  [s1] -> s1
+  s1:sq -> BC.intercalate (BC.pack "_") (s1:sq)
+  [] -> error "Destructor Boundedness Check: This case should not happen, please report it on the github page"
+
+  where
+    name_decompose = tail . BC.split '_'
+
+    supprPos :: [ByteString] -> [ByteString]
+    supprPos (n1:nq) = case readMaybe (BC.unpack n1) :: Maybe Int of
+      Just _ -> supprPos nq
+      Nothing -> n1:nq
+    supprPos [] = []
+
 checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> [IntrRuleAC] -> Bool
 checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) allR 
   | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
   case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
     [] -> False
     subst -> searchMatcheraux (auxMatcherFilter (auxMatcher subst r inst1))
+    
     -- trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\n\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1)))
   where
     hnd = L.get sigmMaudeHandle sig
+    msig = mhMaudeSig hnd
+    acsig = S.toList (acUserFunSyms msig)
     runMaude   = (`runReader` hnd)
     inst1 = r1 `renameAvoiding` r
 
     -- ppPair (x, y) = render (prettyIntrRuleAC x) ++ " \n " ++ render (prettyIntrRuleAC y)
 
     getPremsFactKD (Rule _ (fact:_) _ _ _) = fact
+    getPremsFactKD _ = error "Destructor Boundedness Check: This case should not happen, please report it on the github page" 
+
     getPremsFactTail (Rule _ ((Fact KDFact _ _):tls) _ _ _) = tls
+    getPremsFactTail _ = error "Destructor Boundedness Check: This case should not happen, please report it on the github page" 
+
     getConcFact (Rule _ _ [fact] _ _) = fact
+    getConcFact _ = error "Destructor Boundedness Check: This case should not happen, please report it on the github page" 
 
     f1 = getPremsFactKD inst1
+
+    name_func = constrNameFunc
+
+    isACfctDR n ((n1,(_,_)):l) = n == n1 || isACfctDR n l
+    isACfctDR _ [] = False 
+   
 
     auxMatcher :: [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> [(IntrRuleAC,IntrRuleAC)]
     auxMatcher s ru0 ru1 = evalFreshAvoiding (appSubst s ru0 ru1) (ru0, ru1)
 
-    auxMatcherFilter = filter nullIntersect
-    nullIntersect (i0,i1) = (frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= []
+    auxMatcherFilter = filter nullIntersectAC
+    nullIntersectAC (i0,i1) = isACfctDR (name_func name0) acsig && ((frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= [])
 
     searchMatcheraux ((s1,h1):sq)  = foldr (\ru -> (|| searchMatcher s1 h1 ru)) False allR && searchMatcheraux sq
     searchMatcheraux [] = True
@@ -387,10 +418,10 @@ closeIntrRule _   ir                                        = [ir]
 
 prettyChainReduction :: SignatureWithMaude -> String -> OpenRuleCache -> [[IntrRuleAC]] -> Bool -> [IntrRuleAC]
 prettyChainReduction s name o t b = unsafePerformIO $ do
-  traceM ("[Theory " ++ name ++ "] Chain reduction checks started")
+  traceM ("[Theory " ++ name ++ "] Destructor Boundedness checks started")
   rule <- evaluate . force $ applyChainReduction s o t b
   traceM ("Result : " ++ render (prettyOpenRuleCacheWithLimit rule))
-  traceM ("[Theory " ++ name ++ "] Chain reduction checks ended")
+  traceM ("[Theory " ++ name ++ "] Destructor Boundedness checks ended")
   return rule
 
 -- | Close a rule cache. Hower, note that the
