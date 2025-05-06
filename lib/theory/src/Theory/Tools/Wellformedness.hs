@@ -66,6 +66,7 @@ module Theory.Tools.Wellformedness (
   , prettyWfErrorReport
   , underlineTopic
 
+  , formulaFacts
   , formulaTerms
   ) where
 
@@ -173,7 +174,7 @@ underlineTopic topic = topic ++"\n" ++
 factInfo :: Fact t -> (FactTag, Int, Multiplicity)
 factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 
--- | To bind a list of premise facts with their most similar conclusion facts. The most similar fact 
+-- | To bind a list of premise facts with their most similar conclusion facts. The most similar fact
 -- | has the minimual editing distance and the value of the distance must be
 -- | between between 1 and 3. If no such fact exists, Nothing is returned.
 mostSimilarName :: [RuleAndFact]->[RuleAndFact]
@@ -195,13 +196,13 @@ mostSimilarName lhs rhs =
     isSimilar (rf, _)                      = (rf, Nothing)
 
     -- to get the fact in rhs which has the minimum editing distance
-    -- with a given fact and the distance between the two facts  
+    -- with a given fact and the distance between the two facts
     minimalEdFact :: RuleAndFact->[RuleAndFact]->(RuleAndFact, Maybe (RuleAndFact, Int))
     minimalEdFact lFact rFacts      =  (lFact, listToMaybe $ sortOn snd $ edDistances lFact rFacts)
 
-    -- Calculates the distance between a given fact and the facts of a list, 
+    -- Calculates the distance between a given fact and the facts of a list,
     -- also save each fact in the list and his editing distance to the given fact
-    -- as a tuple  
+    -- as a tuple
     edDistances :: RuleAndFact-> [RuleAndFact] -> [(RuleAndFact, Int)]
     edDistances s li = map (\x ->(,) x $ distance (snd s) x) li
       where
@@ -567,12 +568,12 @@ freshFactArguments' rules = do
         text ("rule " ++ quote (showRuleCaseName ru)) <->
         text "fact:" <-> prettyLNFact fa
 
--- | Report on facts usage.
-factReports :: OpenTranslatedTheory -> WfErrorReport
-factReports thy = concat
-    [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
-    , factUsage, factLhsOccurNoRhs, inexistentActions, inexistentActionsRestrictions
-    ]
+-- | Report on facts usage. Skip checks on non-existant actions if `incompleteMSRs` is True.
+factReports :: Bool -> OpenTranslatedTheory -> WfErrorReport
+factReports incompleteMSRs thy =
+    concat  [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
+    , factUsage, factLhsOccurNoRhs]
+    ++ concat [ inexistentActions ++ inexistentActionsRestrictions | incompleteMSRs ]
   where
     ruleFacts ru =
       ( "Rule " ++ quote (showRuleCaseName ru)
@@ -1101,7 +1102,7 @@ multRestrictedReportDiff thy = multRestrictedReport' irreducible (diffThyProtoRu
 findNotProvedLemmas :: [String] -> [String] -> [String]
 findNotProvedLemmas lemmaArgsNames lemmasInTheory = foldl (\acc x -> if not (argFilter x) then  x:acc else acc ) [] lemmaArgsNames
   where
-      -- Check a lemma against a prefix* pattern or the name of a lemma 
+      -- Check a lemma against a prefix* pattern or the name of a lemma
       lemmaChecker :: String -> String -> Bool
       lemmaChecker argLem lemFromThy
         | lastMay argLem == Just '*' = init argLem `isPrefixOf` lemFromThy
@@ -1225,23 +1226,23 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , natWellSortedReportDiff
     ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
 
--- | Returns a list of errors, if there are any.
-checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
-checkWellformedness thy sig = concatMap ($ thy)
+-- | Returns a list of errors, if there are any. `incompleteMSR`, if true, indicates
+-- that the MSRs are incomplete (e.g., when we export to ProVerif) and that
+-- checks that rely on that should not be performed.
+checkWellformedness :: Bool -> OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
+checkWellformedness incompleteMSRs thy sig = concatMap ($ thy) (
     [ checkIfLemmasInTheory
     , unboundReport
     , freshNamesReport
     , publicNamesReport
     , ruleSortsReport
     , ruleVariantsReport sig
-    , factReports
+    , factReports incompleteMSRs
     , formulaReports
     , lemmaAttributeReport
     , multRestrictedReport
     , natWellSortedReport
-    ] ++ additionalChecks
-  where
-    userMarked = isUserMarkedConvergent thy
-    additionalChecks = if not userMarked 
-                       then checkEquationsSubtermConvergence thy
-                       else []
+    ]
+    ++ -- additional checks
+    [checkEquationsSubtermConvergence |  not (isUserMarkedConvergent thy) ]
+    )

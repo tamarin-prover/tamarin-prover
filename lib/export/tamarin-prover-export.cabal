@@ -52,6 +52,7 @@ library
 
   other-modules:
     RuleTranslation
+    ProVerifHeader
 
   default-extensions:
     DuplicateRecordFields

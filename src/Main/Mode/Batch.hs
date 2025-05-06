@@ -13,14 +13,12 @@ import Control.Applicative ((<|>))
 import Control.Monad (guard, (<=<))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (MonadIO(liftIO))
-import Data.Bifunctor (bimap)
 import Data.List
 import Data.Maybe (isJust)
 import System.Console.CmdArgs.Explicit as CmdArgs
 import System.Exit (die)
 import System.FilePath
 import System.Timing (timedIO)
-import Extension.Data.Label
 import Data.Bitraversable (Bitraversable(bitraverse))
 
 import Text.PrettyPrint.Class qualified as Pretty
@@ -40,7 +38,6 @@ import Theory.Constraint.System.Dot
 import Text.Dot qualified as D
 import Theory.Constraint.System.Graph.Graph
 import Theory.Constraint.System.JSON (sequentsToJSONPretty)
-import Theory.Constraint.Solver (ProofMethod(Finished))
 
 import ClosedTheory (prettyPrecomputation,prettyDiffPrecomputation)
 
@@ -106,7 +103,14 @@ run thisMode as
       res <- mapM (processThy versionData) inFiles
       let (docs, _) = unzip res
 
-      mapM_ (putStrLn . renderDoc) docs
+      if writeOutput then do
+        let maybeOutFiles = mapM mkOutPath inFiles
+        outFiles <- case maybeOutFiles of
+          Just f -> pure f
+          Nothing -> die "Please specify a valid output file/directory"
+        mapM_ (\(o, d) -> writeFileWithDirs o (renderDoc d)) (zip outFiles docs)
+      else do
+        mapM_ (putStrLn . renderDoc) docs
   | otherwise = do
       versionData <- ensureMaudeAndGetVersion as
       resTimed <- mapM (timedIO . processThy versionData) inFiles
@@ -207,13 +211,14 @@ run thisMode as
       else if isTranslateOnlyMode then do
         (report, thy') <- translateAndCheckTheory versionData thyLoadOptions sig' thy
 
-        let thy'' = bimap (modify thyItems (++ (TextItem <$> formalComments thy')))
-                          (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
-                          thy'
+        -- comment: Not sure why this was needed. It just duplicates all comments in the theory.
+        -- let thy'' = bimap (modify thyItems (++ (TextItem <$> formalComments thy')))
+        --                   (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
+        --                   thy'
 
         (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule thyLoadOptions)
                                    (pure . prettyOpenDiffTheory)
-                                   thy''
+                                   thy'
 
       -- | Close and potentially prove theory.
       else do
@@ -225,9 +230,6 @@ run thisMode as
                  (\d -> (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
                  thy'
       where
-        formalComments =
-          filter (/= ("", "")) . either theoryFormalComments diffTheoryFormalComments
-
         isTranslateOnlyMode = isJust thyLoadOptions.outputModule
 
         handleError e@(ParserError _) = die $ show e
