@@ -32,29 +32,23 @@ import Theory.Text.Pretty
 import Control.Parallel.Strategies
 
 
--- remove Sapic items and convert other items to identical item but with unit type for sapic elements
+-- | map TranslationItems to () and keep other items as is
+removeTranslationElement :: TheoryItem r p TranslationElement -> TheoryItem r p ()
+removeTranslationElement (TranslationItem _) = TranslationItem ()
+removeTranslationElement (RuleItem r) = RuleItem r
+removeTranslationElement (LemmaItem l) = LemmaItem l
+removeTranslationElement (RestrictionItem rl) = RestrictionItem rl
+removeTranslationElement (TextItem t) = TextItem t
+removeTranslationElement (ConfigBlockItem b) = ConfigBlockItem b
+removeTranslationElement (PredicateItem predi) = PredicateItem predi
+removeTranslationElement (MacroItem macro) = MacroItem macro
+
+-- | remove TranslationItems from Theory and convert other items to identical item but with unit type for sapic elements
 removeTranslationItems :: OpenTheory -> OpenTranslatedTheory
 removeTranslationItems thy =
-  Theory {_thyName=(L.get thyName thy)
-          ,_thyInFile=(L.get thyInFile thy)
-          ,_thyHeuristic=(L.get thyHeuristic thy)
-          ,_thyTactic=(L.get thyTactic thy)
-          ,_thySignature=(L.get thySignature thy)
-          ,_thyCache=(L.get thyCache thy)
-          ,_thyItems = newThyItems
-          ,_thyOptions =(L.get thyOptions thy)
-          ,_thyIsSapic = (L.get thyIsSapic thy)}
-    where
-      newThyItems = map removeTranslationElement (L.get thyItems thy)
-      removeTranslationElement :: TheoryItem r p TranslationElement -> TheoryItem r p ()
-      removeTranslationElement (TranslationItem _) = TranslationItem ()
-      removeTranslationElement (RuleItem r) = RuleItem r
-      removeTranslationElement (LemmaItem l) = LemmaItem l
-      removeTranslationElement (RestrictionItem rl) = RestrictionItem rl
-      removeTranslationElement (TextItem t) = TextItem t
-      removeTranslationElement (ConfigBlockItem b) = ConfigBlockItem b
-      removeTranslationElement (PredicateItem predi) = PredicateItem predi
-      removeTranslationElement (MacroItem macro) = MacroItem macro
+  thy {_thyItems = newThyItems}
+  where
+    newThyItems = map removeTranslationElement (L.get thyItems thy)
 
 --open translated theory again
 openTranslatedTheory :: OpenTranslatedTheory -> OpenTheory
