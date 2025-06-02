@@ -364,8 +364,8 @@ variantsCheck hnd macros info (OpenProtoRule ruE ruAC) =
               (nest 2 $ (numbered' $ map prettyProtoRuleAC recomputedVariants))
             )
   where
-    recomputedVariants = map (get cprRuleAC) $ unfoldRuleVariants $
-      ClosedProtoRule ruE (variantsProtoRule hnd (applyMacroInRule macros ruE))
+    recomputedVariants = map (get cprRuleAC) $ concatMap unfoldRuleVariants $
+      ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
     sameVariantsUpToActions parsed computed = all (\x -> any (equalUpToAddedActions x) computed) parsed
 
 -- | Report on missing or different variants.
