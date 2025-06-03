@@ -85,9 +85,8 @@ ruleAttribute = asum
                         return Nothing
     ignore = return (Just IgnoreDerivChecks)
     parseRole = do
-        _ <- symbol "\""
-        role <- manyTill anyChar (try (symbol "\""))
-        return role
+      _ <- symbol "\'" <|> symbol "\""
+      manyTill anyChar (try (symbol "\'" <|> symbol "\""))
 
 ruleAttributesp :: Parser [RuleAttribute]
 ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute

@@ -664,7 +664,7 @@ isPubConstrRule :: HasRuleName r => r -> Bool
 isPubConstrRule ru = case ruleName ru of
   IntrInfo PubConstrRule   -> True
   _                        -> False
-  
+
 -- | True iff the rule is a construction rule.
 isNatConstrRule :: HasRuleName r => r -> Bool
 isNatConstrRule ru = case ruleName ru of
@@ -1000,12 +1000,12 @@ addAction (Rule info prems concs acts nvs) act =
 -- | Apply macros into a rule
 applyMacroInRule :: [Macro] -> Rule i -> Rule i
 applyMacroInRule mcs (Rule info ruPrems ruConcs ruActs _) = Rule info mRuPrems mRuConcs mRuActs mRuNewVars
-  where 
+  where
     mRuPrems   = map (applyMacroInFact mcs) ruPrems
     mRuConcs   = map (applyMacroInFact mcs) ruConcs
     mRuActs    = map (applyMacroInFact mcs) ruActs
     mRuNewVars = newVariables mRuPrems (mRuConcs ++ mRuActs)
-         
+
 
 -- Unification
 --------------
@@ -1138,7 +1138,7 @@ prettyProtoRuleName rn = text $ case rn of
 prettyDotProtoRuleName :: Document d => [RuleAttribute] -> ProtoRuleName -> d
 prettyDotProtoRuleName attrs rn = text $ case rn of
     FreshRule   -> "Fresh"
-    StandRule n -> if IsSAPiCRule `elem` attrs 
+    StandRule n -> if IsSAPiCRule `elem` attrs
                      then (if "new" `isPrefixOf` n then chr 957 : ' ' : drop 3 (trimSapicName n) else trimSapicName n)
                      else prefixIfReserved n
     where
@@ -1164,7 +1164,7 @@ prettyRuleAttribute attr = case attr of
               h = map toLFormula
     IgnoreDerivChecks -> text "derivchecks"
     IsSAPiCRule       -> text "issapicrule"
-    Role roleName -> text "role=" <> text roleName
+    Role roleName -> text "role=\'" <> text roleName <> text "\'"
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
