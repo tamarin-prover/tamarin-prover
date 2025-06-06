@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir -p ~/.local/bin
           export PATH=$HOME/.local/bin:$PATH
-          curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+          curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
           chmod a+x ~/.local/bin/stack
           stack --no-terminal setup
           curl -L https://github.com/maude-lang/Maude/releases/download/Maude3.4/Maude-linux.zip > maude.zip
