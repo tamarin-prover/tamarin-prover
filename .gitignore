@@ -24,33 +24,38 @@ cabal.sandbox.config
 *.un~
 *~
 
-*.cmi
-*.cmo
-plugins/sapic/lexer.ml
-plugins/sapic/sapic
-
 *.hpc
 unit.tix
 
 narrow
 unit
 
-client_session_key.aes
 
+# MacOS-garbage
 .DS_Store
-tags
+
+
+# temporary files
+client_session_key.aes
 stack.yaml.lock
 
+# proof files lying around
 *.iml
-.idea/
-.vscode/
-out/
-
 *.pv
 
+.idea/
+out/
+
+# editor-specific stuff
+.vscode/
+.zed/
+tags
 .worktree
+.direnv
+.envrc
 
 
 **/benchmark
 **/input
 **/diff
+
