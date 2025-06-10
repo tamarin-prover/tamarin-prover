@@ -381,12 +381,12 @@ introTpl = [whamlet|
       <p>
         Core team:
         \ <a href="https://www.inf.ethz.ch/personal/basin/">David Basin</a>,
-        \ <a href="https://www.cs.ox.ac.uk/people/cas.cremers/">Cas Cremers</a>,
+        \ <a href="https://cispa.saarland/group/cremers/">Cas Cremers</a>,
         \ <a href="https://www.jannikdreier.net">Jannik Dreier</a>,
         \ <a href="mailto:iridcode@gmail.com">Simon Meier</a>,
         \ <a href="https://people.inf.ethz.ch/rsasse/">Ralf Sasse</a>,
         \ <a href="https://beschmi.net">Benedikt Schmidt</a><br>
-        Tamarin is a collaborative effort: see the <a href="http://tamarin-prover.github.io/manual/index.html">manual</a> for a more extensive overview of its development and additional contributors.
+        Tamarin is a collaborative effort: see the <a href="https://tamarin-prover.com/manual/index.html">manual</a> for a more extensive overview of its development and additional contributors.
       <p>
         This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
         \ you are welcome to redistribute it according to its
@@ -394,7 +394,7 @@ introTpl = [whamlet|
       <p>
         More information about Tamarin and technical papers describing the underlying
         \ theory can be found on the
-        \ <a href="https://tamarin-prover.github.io"><span class="tamarin">Tamarin</span>
+        \ <a href="https://tamarin-prover.com"><span class="tamarin">Tamarin</span>
         \ webpage</a>.
   |]
 
