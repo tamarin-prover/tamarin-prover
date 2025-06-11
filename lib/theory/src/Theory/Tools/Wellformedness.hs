@@ -523,7 +523,7 @@ unboundReportDiff thy = do
 reservedFactNameRules' :: [ProtoRuleE] -> WfErrorReport
 reservedFactNameRules' rules = do
   ru <- rules
-  let lfact = [fa| fa <- get rPrems ru
+  let lfact = [fa | fa <- get rPrems ru
                   , factTag fa `elem` [KUFact,KDFact]
                   || isKLogFact fa]
       mfact = [fa | fa <- get rActs ru
@@ -630,22 +630,43 @@ factReports incompleteMSRs thy =
        clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
        let (_, (_, (factName, _, _))) = head clash
            name =quote ( map toLower $ factTagName factName  )
-       return $ (,) (topic++p1++p2) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
+           allCapsClash = sortednub[factTagName tag | (_,(_,(tag,_,_)))<-clash]
+           allArityClash = sortednub [arity | (_, (_, (_, arity, _))) <- clash]
+           allMultiplicityClash = sortednub [multip | (_,(_,(_,_,multip)))<-clash]
+           hasCapIssue = length allCapsClash > 1
+           hasArityIssue = length allArityClash > 1
+           hasMultipIssue = length allMultiplicityClash > 1
+           -- Determine which issues are present
+           issues = [(hasCapIssue, capIssueMsg), 
+                     (hasArityIssue, arityIssueMsg),
+                     (hasMultipIssue, multipIssueMsg)]
+           capIssueMsg = "Fact names are case-sensitive, different capitalizations are "++
+                        "considered as different facts, "++
+                        "i.e., Fact() is different from FAct(). \n"++
+                        "Check the capitalization of your fact names.\n"
+           arityIssueMsg = "Same fact is used with different arities, "++
+                        "i.e., Fact('A','B') is different from Fact('A'). \n"++
+                        "Check the arguments of your facts.\n"
+           multipIssueMsg = "Same fact is used with different multiplicities, "++
+                          "i.e., !Fact() (Persistent fact) exists along with Fact() (Linear) in your rules. \n"++
+                          "Check the multiplicity (persistence) of your facts.\n "
+                      -- Build explanation based on which issues are present
+           presentIssues = [msg | (isPresent, msg) <- issues, isPresent]         
+           explanation = case presentIssues of
+              [] -> "There is no known fact usage issue"
+              [m] -> m
+              ms -> "Possible reasons :\n"++
+                  concat [show (i::Int) ++ ". " ++ m | (i,m) <- zip [1..] ms]
+                      -- Custom message depending on the issue(s).
+           topic = (underlineTopic "Fact usage") ++ "\n"
+
+       return $ (,) (topic++"\n"++explanation) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
            (origin, (ppFa, (tag, arity, multipl))) <- clash
            return $ text (origin ++
                           ", capitalization  " ++ show (factTagName tag) ++
-                          ", " ++ show arity ++", " ++ show multipl)
+                          ", arity " ++ show arity ++", multiplicity (persistence) " ++ show multipl)
                     $-$ nest 2 ppFa
       where
-        topic = (underlineTopic "Fact usage") ++ "\n"
-        p1    = "Possible reasons: \n"++
-                "1. Fact names are case-sensitive, different capitalizations are "++
-                  "considered as different facts, "++
-                  "i.e., Fact() is different from FAct(). "++
-                  "Check the capitalization of your fact names.\n"
-        p2    = "2. Same fact is used with different arities, "++
-                "i.e., Fact('A','B') is different from Fact('A'). "++
-                "Check the arguments of your facts.\n "
         --showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
         theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
