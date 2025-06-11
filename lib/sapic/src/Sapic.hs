@@ -58,7 +58,7 @@ translate th =
         $ annotateSecretChannels
         $ propagateNames
         $ toAnProcess p
-      an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
+      an_proc <- annotateLocks an_proc_pre
       -- compute initial rules
       (initRules,initTx) <-
                   checkOps (._transReport) (reportInit an_proc)
@@ -69,7 +69,7 @@ translate th =
       protoRule <-  gen (trans an_proc) an_proc [] initTx
       -- apply path compression
       eProtoRule <- pathComp $ map toRule (initRules ++ protoRule)
-      -- add these rules
+      -- add rules we have produced to theory
       th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
       -- add restrictions
       rest <- checkOps (._transReliable) (RCT.reliableChannelRestr an_proc)

@@ -38,6 +38,7 @@ data WFerror = WFLock WFLockTag
                 | WFUnbound (Set LVar)
                 | WFReliable
                 | WFBoundTwice SapicLVar
+                | WFUnAnnotatedLock
                 | TypingErrorArgument SapicTerm [SapicType]
                 | TypingError SapicTerm SapicType SapicType
                 | TypingErrorFunctionMerge NoEqSym SapicFunType SapicFunType
@@ -60,6 +61,9 @@ data SapicException an = NotImplementedError String
                     | ReliableTransmissionButNoProcess
                     | CannotExpandPredicate FactTag SyntacticRestriction
     deriving (Typeable)
+
+
+
 
 data ExportException = UnsupportedBuiltinMS
                        | UnsupportedBuiltinBP
@@ -134,6 +138,7 @@ instance Show WFerror where
                               ++ prettySapicFunType t2
                               ++ "."
     show (FunctionNotDefined sym ) = "Function not defined " ++ show sym
+    show WFUnAnnotatedLock = "There is an unlock that cannot be matched with a lock."
 
 
 instance Exception WFerror
