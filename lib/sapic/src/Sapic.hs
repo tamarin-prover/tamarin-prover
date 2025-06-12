@@ -72,12 +72,12 @@ translate th =
       -- add these rules
       th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
       -- add restrictions
-      rest <- checkOps (._transReliable) (RCT.reliableChannelRestr an_proc)
-           =<<  checkOps (._transProgress) (PT.progressRestr an_proc)
-           =<<  BT.baseRestr an_proc needsInEvRes True []
-      th2 <- foldM liftedAddRestriction th1 rest
+      -- rest <- checkOps (._transReliable) (RCT.reliableChannelRestr an_proc)
+      --      =<<  checkOps (._transProgress) (PT.progressRestr an_proc)
+      --      =<<  BT.baseRestr an_proc needsInEvRes True []
+      -- th2 <- foldM liftedAddRestriction th1 rest
       -- add heuristic, if not already defined by user
-      let th3 = fromMaybe th2 (addHeuristic [SapicRanking] th2)
+      let th3 = fromMaybe th1 (addHeuristic [SapicRanking] th1)
       -- for state optimisation: force special facts  to be injective
       let th4 = checkOps' (._stateChannelOpt) (setforcedInjectiveFacts (S.fromList [pureStateFactTag, pureStateLockFactTag])) th3
       let th5 = th4 { _thyIsSapic = True }
