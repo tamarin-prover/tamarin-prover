@@ -36,9 +36,23 @@ checkVariableDeducability thy sig sources prover =
     reportVars (map checkProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = map (applyMacroInProtoRule (theoryMacros thy)) $ theoryRules thy
-        provenTheories =  map (proveTheory (const True) prover) closedTheories
-        closedTheories = map (\t -> closeTheoryWithMaude sig t sources False) modifiedTheories
-        modifiedTheories =  zipWith3 (\r l t -> (addRules [r] . addLemmas l ) t)  newRules newLemmas (repeat emptyPublicThy)
+        sapicRuleIndices = findIndices (\r -> elem IsSAPiCRule (ruleAttributes $ L.get oprRuleE r)) originalRules
+
+        isSapicRuleIndex idx = elem idx sapicRuleIndices
+        processedTheories = zipWith (\(idx, r) t -> 
+            let 
+            hasAttr = isSapicRuleIndex idx
+            processed = if hasAttr then removeRestrictions t else t
+            in
+            processed) (zip [0..] newRules) modifiedTheories
+
+        provenTheories = map (proveTheory (const True) prover) closedTheories
+        theoryParams = zip3 newRules newLemmas (repeat emptyPublicThy)
+        modifiedTheories = map (\(r, l, t) -> (addRules [r] . addLemmas l) t) theoryParams
+        closedTheories = map (\t -> closeTheoryWithMaude sig t sources False) processedTheories
+        removeRestrictions = L.modify thyItems (filter (not . isRestriction))
+        isRestriction (RestrictionItem _) = True
+        isRestriction _ = False
         emptyPublicThy = makeFunsPublic (toSignaturePure sig) $ deleteRulesAndLemmasFromTheory thy
         newRules = zipWith3 (\idx freevs prems -> generateRule freevs (premisesToOut prems) idx) [0..] freeVars premises
         newLemmas = zipWith3 (\idx freevs _-> generateSeparatedLemmas idx freevs) [0..] freeVars premises
@@ -50,9 +64,23 @@ diffCheckVariableDeducability thy sig sources prover diffprover =
     reportDiffVars (map checkDiffProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = diffTheoryDiffRules thy
-        provenTheories =  map (proveDiffTheory (const True) prover diffprover) closedTheories
-        closedTheories = map (\t -> closeDiffTheoryWithMaude sig t sources) modifiedTheories
-        modifiedTheories =  map (\(r,l,t) -> (addDiffRules [r] . addDiffLemmas l ) t) (zip3 newrules newlemmas (repeat emptyPublicThy))
+        sapicRuleIndices = findIndices (\r -> elem IsSAPiCRule (ruleAttributes $ L.get dprRule r)) originalRules
+        isSapicRuleIndex idx = elem idx sapicRuleIndices
+        diffProcessedTheories = zipWith (\(idx, r) t -> 
+            let 
+                hasAttr = isSapicRuleIndex idx
+                processed = if hasAttr then diffRemoveRestrictions t else t
+            in
+                processed) (zip [0..] diffRulesForChecking) diffModifiedTheories
+        provenTheories = map (proveDiffTheory (const True) prover diffprover) closedTheories
+        closedTheories = map (\t -> closeDiffTheoryWithMaude sig t sources) diffProcessedTheories
+        diffRulesForChecking = map toDiffRule newrules
+        toDiffRule r = DiffProtoRule (L.get oprRuleE r) Nothing
+        diffTheoryParams = (zip3 newrules newlemmas (repeat emptyPublicThy))
+        diffModifiedTheories = map (\(r, l, t) -> (addDiffRules [r] . addDiffLemmas l) t) diffTheoryParams
+        diffRemoveRestrictions = L.modify diffThyItems (filter (not . isDiffRestriction))
+        isDiffRestriction (EitherRestrictionItem _) = True
+        isDiffRestriction _ = False
         emptyPublicThy = diffmakeFunsPublic (toSignaturePure sig) $ diffdeleteRulesAndLemmasFromTheory thy
         newrules =  map (\(idx, freevs, prems )-> generateRule freevs (premisesToOut prems) idx) freesAndPrems
         newlemmas =  map (\(idx, freevs, _) -> generateSeparatedLemmas idx freevs) freesAndPrems
