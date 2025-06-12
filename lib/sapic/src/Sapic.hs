@@ -41,7 +41,7 @@ import Theory
 import Theory.Sapic
 import Theory.Text.Parser
 
--- | Translates the process (singular) into a set of rules and adds them to the theory
+-- | Translates the process (singular) into a set of rules and adds them to the theory.
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory -> m OpenTheory
 translate th =
@@ -58,7 +58,7 @@ translate th =
         $ annotateSecretChannels
         $ propagateNames
         $ toAnProcess p
-      an_proc <- evalFreshT (annotateLocks an_proc_pre) 0
+      an_proc <- annotateLocks an_proc_pre
       -- compute initial rules
       (initRules,initTx) <-
                   checkOps (._transReport) (reportInit an_proc)
@@ -68,8 +68,10 @@ translate th =
       -- generate protocol rules, starting from variables in initial tilde x
       protoRule <-  gen (trans an_proc) an_proc [] initTx
       -- apply path compression
-      eProtoRule <- pathComp $ map toRule (initRules ++ protoRule)
-      -- add these rules
+      let eProtoRules' = map toRule (initRules ++ protoRule)
+      eProtoRule <-  checkOps (._transProgress)
+                        (pathCompression ops._compressEvents) eProtoRules'
+      -- add rules we have produced to theory
       th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
       -- add restrictions
       rest <- checkOps (._transReliable) (RCT.reliableChannelRestr an_proc)
@@ -91,9 +93,6 @@ translate th =
     checkOps' l x
       | l ops = x
       | otherwise = id
-    pathComp r =
-      if ops._transProgress then return r
-      else pathCompression ops._compressEvents r
     sigRules =  stRules th._thySignature._sigMaudeInfo
     trans anP = checkOps' (._transProgress) (PT.progressTrans anP)
               $ checkOps' (._transReliable) RCT.reliableChannelTrans
@@ -169,7 +168,7 @@ isPosNegFormula fm = case fm of
       and2 (x, y) (p, q) = (x && p, y && q)
       swap (x, y) = (y, x)
 
--- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is needed.
+-- | Checks if the lemma is in the fragment of formulas for which the resInEv restriction is needed.
 lemmaNeedsInEvRes :: Lemma p -> Bool
 lemmaNeedsInEvRes lem = case (lem._lTraceQuantifier, isPosNegFormula lem._lFormula) of
   (AllTraces,   (_, True))     -> False -- L- for all-traces

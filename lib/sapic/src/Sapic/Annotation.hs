@@ -10,6 +10,7 @@
 module Sapic.Annotation
   ( ProcessAnnotation(..)
   , AnnotatedProcess
+  , AnnotatedSapicException
   , annLock
   , annSecretChannel
   , annDestructorEquation
@@ -30,6 +31,7 @@ import GHC.Generics (Generic)
 import Term.LTerm
 import Term.Substitution
 import Theory.Sapic
+import Sapic.Exceptions
 
 -- | Variables used to annotate locks. Encapsulated in newtype because of
 -- Semigroup instance below
@@ -98,6 +100,7 @@ newtype AnProcess ann = AnProcess (LProcess ann)
     deriving (Typeable, Show)
 
 type AnnotatedProcess = LProcess (ProcessAnnotation LVar)
+type AnnotatedSapicException = SapicException (ProcessAnnotation LVar)
 
 -- This instance is useful for modifying annotations, but not for much more.
 instance Functor AnProcess where

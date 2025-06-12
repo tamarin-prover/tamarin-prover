@@ -3,25 +3,30 @@ module Sapic.Warnings
   ) where
 
 import Control.Monad.Catch
-import Data.Foldable (traverse_)
+import Data.Foldable (toList, traverse_)
 
 import Theory
 import Theory.Sapic
 import Sapic.Exceptions
 import Sapic.Bindings
+import Sapic.Locks
 import Theory.Tools.Wellformedness (WfErrorReport)
 import Theory.Text.Pretty (text)
 
--- warnProcess :: [WFerror AnnotatedProcess]
-warnProcess :: GoodAnnotation a => Process a SapicLVar -> [WFerror]
-warnProcess p = map WFBoundTwice (capturedVariables p)
+-- | Checks process (after parsing, before annotation) for wellformedness.
+warnProcess :: Process ProcessParsedAnnotation SapicLVar -> [WFerror]
+warnProcess p =
+    map WFBoundTwice (capturedVariables p)
+    <>
+    toList (checkLocks p)
 
+-- | Checks process (after parsing, before annotation) for wellformedness and produces report.
 toWfErrorReport :: [WFerror] -> WfErrorReport
 toWfErrorReport = map f
     where
         f e = ("Wellformedness-error in Process", (text . show) e)
 
-throwWarningsProcess :: (GoodAnnotation a, MonadThrow m) => Process a SapicLVar -> m (Process a SapicLVar)
+throwWarningsProcess :: MonadThrow m => Process ProcessParsedAnnotation SapicLVar -> m (Process ProcessParsedAnnotation SapicLVar)
 throwWarningsProcess p = traverse_ throwM capture_warnings >> return p -- search for warnings, then return process
     where
         capture_warnings = warnProcess p

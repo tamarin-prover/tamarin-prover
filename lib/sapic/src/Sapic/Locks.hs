@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -7,13 +8,15 @@
 --
 -- Compute annotations for locks.
 module Sapic.Locks
-  ( annotateLocks
+  ( annotateLocks,
+    checkLocks
   ) where
 
 import Control.Exception
-import Control.Monad.Catch as Catch
+import Data.Monoid
 import Control.Monad.Fresh
-import Data.Typeable
+import Control.Monad.Except
+import Control.Monad.Catch
 import Sapic.Annotation
 import Sapic.Exceptions
 import Theory
@@ -27,13 +30,12 @@ newtype LocalException = LocalException WFLockTag deriving (Show)
 instance Exception LocalException
 
 
--- | Annotate the closes occurence of unlock that has term t with the
+-- | Annotate the closest occurence of unlock that has term t with the
 -- variable v output the exception above if we encounter rep or parallel
-annotateEachClosestUnlock :: (Eq v1, MonadThrow m) =>
-                             SapicNTerm v1
-                             -> AnVar v2
-                             -> Process (ProcessAnnotation v2) v1
-                             -> m (Process (ProcessAnnotation v2) v1)
+annotateEachClosestUnlock ::  SapicTerm
+                             -> AnVar LVar
+                             -> AnnotatedProcess
+                             -> Either LocalException AnnotatedProcess
 annotateEachClosestUnlock _ _ (ProcessNull a') = return $ ProcessNull a'
 annotateEachClosestUnlock t v (ProcessAction (Unlock t') a' p) =
             if t == t' then
@@ -45,8 +47,8 @@ annotateEachClosestUnlock t v (ProcessAction (Insert t1 t2) a' p) | t1==t =
                do
                 p' <- annotateEachClosestUnlock t v p
                 return $ ProcessAction (Insert t1 t2)  (a' <> annUnlock v) p'
-annotateEachClosestUnlock _ _ (ProcessAction Rep _ _) = throwM $ LocalException WFRep
-annotateEachClosestUnlock _ _ (ProcessComb Parallel _ _ _) = throwM $ LocalException WFPar
+annotateEachClosestUnlock _ _ (ProcessAction Rep _ _) = Left $ LocalException WFRep
+annotateEachClosestUnlock _ _ (ProcessComb Parallel _ _ _) = Left $ LocalException WFPar
 annotateEachClosestUnlock t v (ProcessAction ac a' p) = do p' <- annotateEachClosestUnlock t v p
                                                            return $ ProcessAction ac a' p'
 annotateEachClosestUnlock t v (ProcessComb (Lookup st vt) a' pl pr ) | st==t =
@@ -57,36 +59,57 @@ annotateEachClosestUnlock t v (ProcessComb c a' pl pr ) = do pl' <- annotateEach
                                                              pr' <- annotateEachClosestUnlock t v pr
                                                              return $ ProcessComb c a' pl' pr'
 
-annotateEachClosestUnlock' :: (MonadCatch m, Typeable v2) =>
-                             SapicNTerm SapicLVar
-                             -> AnVar v2
-                             -> Process (ProcessAnnotation v2) SapicLVar
-                             -> m (Process (ProcessAnnotation v2) SapicLVar)
-annotateEachClosestUnlock' t v p =
-        Catch.catch (annotateEachClosestUnlock t v p)
-        (\(LocalException tag)
-            -> throwM (ProcessNotWellformed (WFLock tag) (Just p))
-        )
+annotateEachClosestUnlock' :: SapicTerm
+                             -> AnVar LVar
+                             -> AnnotatedProcess
+                             -> Either AnnotatedSapicException AnnotatedProcess
+annotateEachClosestUnlock' t v p = case annotateEachClosestUnlock t v p of
+        Left (LocalException tag ) -> Left $  ProcessNotWellformed (WFLock tag) (Just p)
+        Right ok -> Right ok
 
--- | Annotate locks in a process: chose fresh lock variable and
--- annotateEachClosestUnlock.
-annotateLocks :: ( MonadThrow m,
-                   MonadCatch m,
-                   MonadFresh m
-                )
-                    => LProcess (ProcessAnnotation LVar) -> m (LProcess (ProcessAnnotation LVar))
-annotateLocks (ProcessAction (Lock t) a p) = do
+throwOnError :: MonadError e m => Either e a -> m a
+throwOnError (Left e)  = throwError e
+throwOnError (Right r) = return r
+
+-- | Annotate locks in a process: chose fresh lock variable and -- annotateEachClosestUnlock.
+annotateLocks' :: (
+    MonadError AnnotatedSapicException m,
+    MonadFresh m
+                ) => AnnotatedProcess -> m AnnotatedProcess
+annotateLocks' (ProcessAction (Lock t) a p) = do
             v <- freshLVar "lock" LSortMsg
-            p' <- annotateEachClosestUnlock' t (AnVar v) p
-            p'' <- annotateLocks p'
-            return (ProcessAction (Lock t) (a `mappend` annLock (AnVar v)) p'')
-            -- return (ProcessAction (Lock t) (annLock (AnLVar v)) p'')
-annotateLocks (ProcessAction ac an p) = do
-            p' <- annotateLocks p
-            return (ProcessAction ac an p')
-annotateLocks (ProcessNull an ) =
-            return (ProcessNull an)
-annotateLocks (ProcessComb comb an pl pr ) = do
-            pl' <- annotateLocks pl
-            pr' <- annotateLocks pr
-            return (ProcessComb comb an pl' pr')
+            p1 <- throwOnError $ annotateEachClosestUnlock' t (AnVar v) p
+            p2 <- annotateLocks' p1
+            return $ ProcessAction (Lock t) (a `mappend` annLock (AnVar v)) p2
+annotateLocks' (ProcessAction ac an p) = do
+            p1 <- annotateLocks' p
+            return $ ProcessAction ac an p1
+annotateLocks' (ProcessNull an ) =
+            return $ ProcessNull an
+annotateLocks' (ProcessComb comb an pl pr ) = do
+            pl' <- annotateLocks' pl
+            pr' <- annotateLocks' pr
+            return $ ProcessComb comb an pl' pr'
+
+-- | Annotate locks in a process: chose fresh lock variable and -- annotateEachClosestUnlock.
+annotateLocks :: MonadThrow m => AnnotatedProcess -> m AnnotatedProcess
+annotateLocks p = case run $ annotateLocks' p of
+    Left e -> throwM e
+    Right p' -> return p'
+    where
+        run a = runExcept $ evalFreshT a 0
+
+-- | Check if each unlock in p is matched by a lock or if the annotation process returned a different wellformedness error.
+-- checkLocks :: GoodAnnotation a => Process a SapicLVarAnnotatedProcess -> Maybe WFerror
+checkLocks :: PlainProcess -> Maybe WFerror
+checkLocks p = case run $ annotateLocks' $ toAnProcess p of
+        Left (ProcessNotWellformed wferror _) -> Just wferror
+        Left _  -> Nothing
+        (Right pAnnotated) | checkUnmatchedUnlock pAnnotated-> Just WFUnAnnotatedLock
+        (Right _ ) -> Nothing
+    where
+        run a = runExcept $ evalFreshT a 0
+        checkUnmatchedUnlock = getAny . pfoldMap (Any . isUnmatchedUnlock)
+        isUnmatchedUnlock (ProcessAction (Unlock _) annotation _)
+                | Nothing <- lock annotation = True
+        isUnmatchedUnlock _ = False
