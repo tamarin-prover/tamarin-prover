@@ -68,7 +68,9 @@ translate th =
       -- generate protocol rules, starting from variables in initial tilde x
       protoRule <-  gen (trans an_proc) an_proc [] initTx
       -- apply path compression
-      eProtoRule <- pathComp $ map toRule (initRules ++ protoRule)
+      let eProtoRules' = map toRule (initRules ++ protoRule)
+      eProtoRule <-  checkOps (._transProgress)
+                        (pathCompression ops._compressEvents) eProtoRules'
       -- add rules we have produced to theory
       th1 <- foldM liftedAddProtoRule th $ map (`OpenProtoRule` []) eProtoRule
       -- add restrictions
@@ -91,9 +93,6 @@ translate th =
     checkOps' l x
       | l ops = x
       | otherwise = id
-    pathComp r =
-      if ops._transProgress then return r
-      else pathCompression ops._compressEvents r
     sigRules =  stRules th._thySignature._sigMaudeInfo
     trans anP = checkOps' (._transProgress) (PT.progressTrans anP)
               $ checkOps' (._transReliable) RCT.reliableChannelTrans

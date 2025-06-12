@@ -47,10 +47,8 @@ data WFerror = WFLock WFLockTag
 
 -- | SapicExceptions see instance of show below for explanation.
 data SapicException an = NotImplementedError String
-                    -- SomethingBad
                     -- | VerdictNotWellFormed String
                     -- | InternalRepresentationError String
-                    -- | UnAnnotatedLock String
                     | ProcessNotWellformed WFerror (Maybe (LProcess an))
                     | InvalidPosition ProcessPosition
                     | ImplementationError String
