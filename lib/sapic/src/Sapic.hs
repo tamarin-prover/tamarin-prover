@@ -41,7 +41,7 @@ import Theory
 import Theory.Sapic
 import Theory.Text.Parser
 
--- | Translates the process (singular) into a set of rules and adds them to the theory
+-- | Translates the process (singular) into a set of rules and adds them to the theory.
 translate :: (Monad m, MonadThrow m, MonadCatch m) =>
              OpenTheory -> m OpenTheory
 translate th =
@@ -168,7 +168,7 @@ isPosNegFormula fm = case fm of
       and2 (x, y) (p, q) = (x && p, y && q)
       swap (x, y) = (y, x)
 
--- Checks if the lemma is in the fragment of formulas for which the resInEv restriction is needed.
+-- | Checks if the lemma is in the fragment of formulas for which the resInEv restriction is needed.
 lemmaNeedsInEvRes :: Lemma p -> Bool
 lemmaNeedsInEvRes lem = case (lem._lTraceQuantifier, isPosNegFormula lem._lFormula) of
   (AllTraces,   (_, True))     -> False -- L- for all-traces
