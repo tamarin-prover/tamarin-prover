@@ -36,17 +36,7 @@ checkVariableDeducability thy sig sources prover =
     reportVars (map checkProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = map (applyMacroInProtoRule (theoryMacros thy)) $ theoryRules thy
-        sapicRuleIndices = findIndices (\r -> elem IsSAPiCRule (ruleAttributes $ L.get oprRuleE r)) originalRules
-
-        isSapicRuleIndex idx = elem idx sapicRuleIndices
-        processedTheories = zipWith (\idx t -> 
-            let 
-                hasAttr = isSapicRuleIndex idx
-                processed = if hasAttr then removeRestrictions t else t
-            in
-                processed) 
-            [0..] modifiedTheories
-
+        processedTheories = map (\t -> removeRestrictions t) modifiedTheories
         provenTheories = map (proveTheory (const True) prover) closedTheories
         theoryParams = zip3 newRules newLemmas (repeat emptyPublicThy)
         modifiedTheories = map (\(r, l, t) -> (addRules [r] . addLemmas l) t) theoryParams
@@ -65,15 +55,7 @@ diffCheckVariableDeducability thy sig sources prover diffprover =
     reportDiffVars (map checkDiffProofStatuses provenTheories) originalRules freeVars
     where
         originalRules = diffTheoryDiffRules thy
-        sapicRuleIndices = findIndices (\r -> elem IsSAPiCRule (ruleAttributes $ L.get dprRule r)) originalRules
-        isSapicRuleIndex idx = elem idx sapicRuleIndices
-        diffProcessedTheories = zipWith (\idx t -> 
-            let 
-                hasAttr = isSapicRuleIndex idx
-                processed = if hasAttr then diffRemoveRestrictions t else t
-            in
-                processed)
-            [0..] diffModifiedTheories
+        diffProcessedTheories = map (\t -> diffRemoveRestrictions t) diffModifiedTheories
         provenTheories = map (proveDiffTheory (const True) prover diffprover) closedTheories
         closedTheories = map (\t -> closeDiffTheoryWithMaude sig t sources) diffProcessedTheories
         diffTheoryParams = (zip3 newrules newlemmas (repeat emptyPublicThy))
