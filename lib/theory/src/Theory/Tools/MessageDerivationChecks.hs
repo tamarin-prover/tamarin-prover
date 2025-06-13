@@ -39,12 +39,13 @@ checkVariableDeducability thy sig sources prover =
         sapicRuleIndices = findIndices (\r -> elem IsSAPiCRule (ruleAttributes $ L.get oprRuleE r)) originalRules
 
         isSapicRuleIndex idx = elem idx sapicRuleIndices
-        processedTheories = zipWith (\(idx, r) t -> 
+        processedTheories = zipWith (\idx t -> 
             let 
-            hasAttr = isSapicRuleIndex idx
-            processed = if hasAttr then removeRestrictions t else t
+                hasAttr = isSapicRuleIndex idx
+                processed = if hasAttr then removeRestrictions t else t
             in
-            processed) (zip [0..] newRules) modifiedTheories
+                processed) 
+            [0..] modifiedTheories
 
         provenTheories = map (proveTheory (const True) prover) closedTheories
         theoryParams = zip3 newRules newLemmas (repeat emptyPublicThy)
@@ -66,16 +67,15 @@ diffCheckVariableDeducability thy sig sources prover diffprover =
         originalRules = diffTheoryDiffRules thy
         sapicRuleIndices = findIndices (\r -> elem IsSAPiCRule (ruleAttributes $ L.get dprRule r)) originalRules
         isSapicRuleIndex idx = elem idx sapicRuleIndices
-        diffProcessedTheories = zipWith (\(idx, r) t -> 
+        diffProcessedTheories = zipWith (\idx t -> 
             let 
                 hasAttr = isSapicRuleIndex idx
                 processed = if hasAttr then diffRemoveRestrictions t else t
             in
-                processed) (zip [0..] diffRulesForChecking) diffModifiedTheories
+                processed)
+            [0..] diffModifiedTheories
         provenTheories = map (proveDiffTheory (const True) prover diffprover) closedTheories
         closedTheories = map (\t -> closeDiffTheoryWithMaude sig t sources) diffProcessedTheories
-        diffRulesForChecking = map toDiffRule newrules
-        toDiffRule r = DiffProtoRule (L.get oprRuleE r) Nothing
         diffTheoryParams = (zip3 newrules newlemmas (repeat emptyPublicThy))
         diffModifiedTheories = map (\(r, l, t) -> (addDiffRules [r] . addDiffLemmas l) t) diffTheoryParams
         diffRemoveRestrictions = L.modify diffThyItems (filter (not . isDiffRestriction))
