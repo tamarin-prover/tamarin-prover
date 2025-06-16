@@ -123,7 +123,6 @@ prettyWfErrorReport =
       text topic $-$
       (nest 2 . vcat . intersperse (text "") $ map snd errs)
 
-
 ------------------------------------------------------------------------------
 -- Utilities
 ------------------------------------------------------------------------------
@@ -626,50 +625,62 @@ factReports incompleteMSRs thy =
 
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
+    factUsage :: WfErrorReport
     factUsage = do
-       clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-       let (_, (_, (factName, _, _))) = head clash
-           name =quote ( map toLower $ factTagName factName  )
-           allCapsClash = sortednub[factTagName tag | (_,(_,(tag,_,_)))<-clash]
-           allArityClash = sortednub [arity | (_, (_, (_, arity, _))) <- clash]
-           allMultiplicityClash = sortednub [multip | (_,(_,(_,_,multip)))<-clash]
-           hasCapIssue = length allCapsClash > 1
-           hasArityIssue = length allArityClash > 1
-           hasMultipIssue = length allMultiplicityClash > 1
-           -- Determine which issues are present
-           issues = [(hasCapIssue, capIssueMsg), 
-                     (hasArityIssue, arityIssueMsg),
-                     (hasMultipIssue, multipIssueMsg)]
-           capIssueMsg = "Fact names are case-sensitive, different capitalizations are "++
-                        "considered as different facts, "++
-                        "i.e., Fact() is different from FAct(). \n"++
-                        "Check the capitalization of your fact names.\n"
-           arityIssueMsg = "Same fact is used with different arities, "++
-                        "i.e., Fact('A','B') is different from Fact('A'). \n"++
-                        "Check the arguments of your facts.\n"
-           multipIssueMsg = "Same fact is used with different multiplicities, "++
-                          "i.e., !Fact() (Persistent fact) exists along with Fact() (Linear) in your rules. \n"++
-                          "Check the multiplicity (persistence) of your facts.\n "
-                      -- Build explanation based on which issues are present
-           presentIssues = [msg | (isPresent, msg) <- issues, isPresent]         
-           explanation = case presentIssues of
-              [] -> "There is no known fact usage issue"
-              [m] -> m
-              ms -> "Possible reasons :\n"++
-                  concat [show (i::Int) ++ ". " ++ m | (i,m) <- zip [1..] ms]
-                      -- Custom message depending on the issue(s).
-           topic = (underlineTopic "Fact usage") ++ "\n"
-
-       return $ (,) (topic++"\n"++explanation) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
-           (origin, (ppFa, (tag, arity, multipl))) <- clash
-           return $ text (origin ++
-                          ", capitalization  " ++ show (factTagName tag) ++
-                          ", arity " ++ show arity ++", multiplicity (persistence) " ++ show multipl)
-                    $-$ nest 2 ppFa
+      clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
+      let (_, (_, (factName, _, _))) = head clash
+          name = quote (map toLower $ factTagName factName)
+          
+          allCapsClash = sortednub [factTagName tag | (_, (_, (tag, _, _))) <- clash]
+          allArityClash = sortednub [arity | (_, (_, (_, arity, _))) <- clash]
+          allMultiplicityClash = sortednub [multip | (_, (_, (_, _, multip))) <- clash]
+          
+          hasCapIssue = length allCapsClash > 1
+          hasArityIssue = length allArityClash > 1
+          hasMultipIssue = length allMultiplicityClash > 1
+          
+      concat $ catMaybes [
+        if hasCapIssue then Just [createCapReport name clash] else Nothing,
+        if hasArityIssue then Just [createArityReport name clash] else Nothing,
+        if hasMultipIssue then Just [createMultipReport name clash] else Nothing]
+      
       where
-        --showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
-        theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
+        capIssueMsg = "Fact names are case-sensitive, different capitalizations are " ++
+                    "considered as different facts, " ++
+                    "i.e., Fact() is different from FAct(). \n" ++
+                    "Check the capitalization of your fact names."
+        
+        arityIssueMsg = "Same fact is used with different arities, " ++
+                      "i.e., Fact('A','B') is different from Fact('A'). \n" ++
+                      "Check the arguments of your facts."
+        
+        multipIssueMsg = "Same fact is used with different multiplicities, " ++
+                        "i.e., !Fact() (Persistent fact) exists along with Fact() (Linear) in your rules. \n" ++
+                        "Check the multiplicity (persistence) of your facts."
+        
+        theoryFacts' = [(ru, fa) | (ru, fas) <- theoryFacts, fa <- fas]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
+        
+        createCapReport name clash = 
+          (underlineTopic "Fact capitalization issues" ++ "\n" ++ capIssueMsg,
+          (text ("\nFact " ++ name ++ ":\n") $-$) . numbered' $ do
+            (origin, (ppFa, (tag, _, _))) <- clash
+            return $ text (origin ++ ", capitalization " ++ show (factTagName tag))
+                    $-$ nest 2 ppFa)
+        
+        createArityReport name clash = 
+          (underlineTopic "Fact arity issues" ++ "\n" ++ arityIssueMsg,
+          (text ("\nFact " ++ name ++ ":\n") $-$) . numbered' $ do
+            (origin, (ppFa, (_, arity, _))) <- clash
+            return $ text (origin ++ ", arity " ++ show arity)
+                    $-$ nest 2 ppFa)
+        
+        createMultipReport name clash = 
+          (underlineTopic "Fact multiplicity issues" ++ "\n" ++ multipIssueMsg,
+          (text ("\nFact " ++ name ++ ":\n") $-$) . numbered' $ do
+            (origin, (ppFa, (_, _, multip))) <- clash
+            return $ text (origin ++ ", multiplicity (persistence) " ++ show multip)
+                    $-$ nest 2 ppFa)
 
 
     -- Check that every fact referenced in a formula is present as an action
