@@ -1,167 +1,160 @@
-name:               tamarin-prover-theory
+name: tamarin-prover-theory
+cabal-version: >= 1.8
+build-type: Simple
+version: 1.11.0
+license: GPL
+license-file: LICENSE
+category: Theorem Provers
+author:
+  Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
+  Simon Meier <simon.meier@inf.ethz.ch>,
+  Jannik Dreier <research@jannikdreier.net>,
+  Ralf Sasse <ralf.sasse@gmail.com>
 
-cabal-version:      >= 1.8
-build-type:         Simple
-version:            1.11.0
-license:            GPL
-license-file:       LICENSE
-category:           Theorem Provers
-author:             Benedikt Schmidt <benedikt.schmidt@inf.ethz.ch>,
-                    Simon Meier <simon.meier@inf.ethz.ch>,
-                    Jannik Dreier <research@jannikdreier.net>,
-                    Ralf Sasse <ralf.sasse@gmail.com>
-maintainer:         Jannik Dreier <research@jannikdreier.net>,
-                    Ralf Sasse <ralf.sasse@gmail.com>
-                    Cas Cremers <cremers@cispa.de>
-copyright:          Benedikt Schmidt, Simon Meier, Cas Cremers, Jannik Dreier, Ralf Sasse, 2010-2023
+maintainer:
+  Jannik Dreier <research@jannikdreier.net>,
+  Ralf Sasse <ralf.sasse@gmail.com>
+  Cas Cremers <cremers@cispa.de>
 
-synopsis:           Security protocol types and constraint solver library for the tamarin prover.
+copyright: Benedikt Schmidt, Simon Meier, Cas Cremers, Jannik Dreier, Ralf Sasse, 2010-2023
+synopsis: Security protocol types and constraint solver library for the tamarin prover.
+description:
+  This is an internal library of the Tamarin prover for
+  security protocol verification
+  (<hackage.haskell.org/package/tamarin-prover>).
+  .
+  This library provides the types to represent security
+  protocols, and it implements the constraint solver.
 
-description:        This is an internal library of the Tamarin prover for
-                    security protocol verification
-                    (<hackage.haskell.org/package/tamarin-prover>).
-                    .
-                    This library provides the types to represent security
-                    protocols, and it implements the constraint solver.
-
-homepage:           https://tamarin-prover.github.io/
-
+homepage: https://tamarin-prover.github.io/
 
 source-repository head
-  type:     git
+  type: git
   location: https://github.com/tamarin-prover/tamarin-prover.git
 
 ----------------------
 -- library stanzas
 ----------------------
-
 library
-    ghc-options:       -Wall -fwarn-tabs
+  ghc-options:
+    -Wall
+    -fwarn-tabs
 
-    ghc-prof-options:  -auto-all
+  ghc-prof-options: -auto-all
+  build-depends:
+    aeson,
+    aeson-pretty,
+    array,
+    attoparsec,
+    base,
+    binary,
+    bytestring,
+    containers,
+    deepseq,
+    directory,
+    dlist,
+    exceptions,
+    fclabels,
+    filepath,
+    mtl,
+    parallel,
+    parsec,
+    pretty,
+    process,
+    regex-pcre-builtin,
+    regex-posix,
+    safe,
+    split,
+    tamarin-prover-term,
+    tamarin-prover-utils,
+    text,
+    transformers,
+    uniplate
 
-    build-depends:
-        aeson
-      , aeson-pretty
-      , array
-      , attoparsec
-      , base
-      , binary
-      , bytestring
-      , containers
-      , deepseq
-      , directory
-      , dlist
-      , fclabels
-      , filepath
-      , mtl
-      , parallel
-      , parsec
-      , pretty
-      , process
-      , regex-pcre-builtin
-      , regex-posix
-      , safe
-      , split
-      , text
-      , transformers
-      , uniplate
-      , exceptions
+  hs-source-dirs: src
+  exposed-modules:
+    ClosedTheory
+    Items.AccLemmaItem
+    Items.CaseTestItem
+    Items.ExportInfo
+    Items.LemmaItem
+    Items.OpenTheoryItem
+    Items.OptionItem
+    Items.ProcessItem
+    Items.RuleItem
+    Items.TheoryItem
+    Lemma
+    OpenTheory
+    Pretty
+    Prover
+    Rule
+    Theory
+    Theory.Constraint.Solver
+    Theory.Constraint.Solver.AnnotatedGoals
+    Theory.Constraint.Solver.Contradictions
+    Theory.Constraint.Solver.Goals
+    Theory.Constraint.Solver.ProofMethod
+    Theory.Constraint.Solver.Reduction
+    Theory.Constraint.Solver.Simplify
+    Theory.Constraint.Solver.Sources
+    Theory.Constraint.System
+    Theory.Constraint.System.Constraints
+    Theory.Constraint.System.Dot
+    Theory.Constraint.System.Graph.Abbreviation
+    Theory.Constraint.System.Graph.Graph
+    Theory.Constraint.System.Graph.GraphRepr
+    Theory.Constraint.System.Graph.Simplification
+    Theory.Constraint.System.Guarded
+    Theory.Constraint.System.JSON
+    Theory.Model
+    Theory.Model.Atom
+    Theory.Model.Fact
+    Theory.Model.Formula
+    Theory.Model.Restriction
+    Theory.Model.Rule
+    Theory.Model.Signature
+    Theory.Module
+    Theory.Proof
+    Theory.ProofSkeleton
+    Theory.Sapic
+    Theory.Sapic.Annotation
+    Theory.Sapic.Pattern
+    Theory.Sapic.Position
+    Theory.Sapic.Print
+    Theory.Sapic.Process
+    Theory.Sapic.Term
+    Theory.Text.Parser
+    Theory.Text.Parser.Macro
+    Theory.Text.Parser.Restriction
+    Theory.Text.Parser.Signature
+    Theory.Text.Parser.Token
+    Theory.Text.Pretty
+    Theory.Tools.AbstractInterpretation
+    Theory.Tools.EquationStore
+    Theory.Tools.InjectiveFactInstances
+    Theory.Tools.IntruderRules
+    Theory.Tools.LoopBreakers
+    Theory.Tools.MessageDerivationChecks
+    Theory.Tools.RuleVariants
+    Theory.Tools.SubtermStore
+    Theory.Tools.Wellformedness
+    TheoryObject
 
-      , tamarin-prover-utils
-      , tamarin-prover-term
+  other-modules:
+    Theory.Sapic.PlainProcess
+    Theory.Sapic.Substitution
+    Theory.Syntactic.Predicate
+    Theory.Text.Parser.Accountability
+    Theory.Text.Parser.Exceptions
+    Theory.Text.Parser.Fact
+    Theory.Text.Parser.Formula
+    Theory.Text.Parser.Lemma
+    Theory.Text.Parser.Let
+    Theory.Text.Parser.Proof
+    Theory.Text.Parser.Rule
+    Theory.Text.Parser.Sapic
+    Theory.Text.Parser.Tactics
+    Theory.Text.Parser.Term
 
-
-    hs-source-dirs: src
-
-    exposed-modules:
-      Theory
-      Theory.Proof
-      Theory.ProofSkeleton
-
-      Theory.Constraint.Solver
-      Theory.Constraint.Solver.Sources
-      Theory.Constraint.Solver.Contradictions
-      Theory.Constraint.Solver.AnnotatedGoals
-      Theory.Constraint.Solver.Goals
-      Theory.Constraint.Solver.ProofMethod
-      Theory.Constraint.Solver.Reduction
-      Theory.Constraint.Solver.Simplify
-
-      Theory.Constraint.System
-      Theory.Constraint.System.Constraints
-      Theory.Constraint.System.Dot
-      Theory.Constraint.System.JSON
-      Theory.Constraint.System.Guarded
-      Theory.Constraint.System.Graph.GraphRepr
-      Theory.Constraint.System.Graph.Abbreviation
-      Theory.Constraint.System.Graph.Simplification
-      Theory.Constraint.System.Graph.Graph
-
-      Theory.Sapic.Term
-      Theory.Sapic.Pattern
-      Theory.Sapic.Process
-      Theory.Sapic.Position
-      Theory.Sapic.Annotation
-      Theory.Sapic
-      Theory.Sapic.Print
-
-      Theory.Model
-      Theory.Model.Atom
-      Theory.Model.Fact
-      Theory.Model.Formula
-      Theory.Model.Rule
-      Theory.Model.Signature
-      Theory.Model.Restriction
-
-      Theory.Module
-
-      Theory.Text.Pretty
-      Theory.Text.Parser
-      Theory.Text.Parser.Token
-      Theory.Text.Parser.Restriction
-      Theory.Text.Parser.Signature
-      Theory.Text.Parser.Macro 
-
-      Theory.Tools.MessageDerivationChecks
-      Theory.Tools.AbstractInterpretation
-      Theory.Tools.EquationStore
-      Theory.Tools.InjectiveFactInstances
-      Theory.Tools.IntruderRules
-      Theory.Tools.LoopBreakers
-      Theory.Tools.RuleVariants
-      Theory.Tools.SubtermStore
-      Theory.Tools.Wellformedness
-      TheoryObject
-      Lemma
-      OpenTheory
-      ClosedTheory
-      Rule
-      Prover
-      Items.LemmaItem
-      Items.OpenTheoryItem
-      Items.OptionItem
-      Items.RuleItem
-      Items.ProcessItem
-      Items.TheoryItem
-      Items.ExportInfo
-      Items.CaseTestItem
-      Items.AccLemmaItem
-      Pretty
-
-
-    other-modules:
-      Theory.Syntactic.Predicate
-      Theory.Text.Parser.Accountability
-      Theory.Text.Parser.Exceptions
-      Theory.Text.Parser.Fact
-      Theory.Text.Parser.Formula
-      Theory.Text.Parser.Lemma
-      Theory.Text.Parser.Let
-      Theory.Text.Parser.Proof
-      Theory.Text.Parser.Rule
-      Theory.Text.Parser.Sapic
-      Theory.Text.Parser.Tactics
-      Theory.Text.Parser.Term
-      Theory.Sapic.PlainProcess
-      Theory.Sapic.Substitution
+  default-extensions:
+    ImportQualifiedPost
