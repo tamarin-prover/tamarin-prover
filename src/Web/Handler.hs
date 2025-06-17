@@ -706,8 +706,11 @@ postRootR = do
                   _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
                 void $ either (putTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo))
                               (putDiffTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo)) thy wfErrors
-                setMessage $ toHtml $ "Loaded new theory!" ++
-                                      " WARNING: ignoring the following wellformedness errors: " ++
+                setMessage $ toHtml $ "Loaded new theory!" ++ warningMsg
+                  where
+                    warningMsg
+                      |null report = ""
+                      |otherwise = " WARNING: ignoring the following wellformedness errors: " ++
                                       renderDoc (prettyWfErrorReport report)
 
     theories <- getTheories
