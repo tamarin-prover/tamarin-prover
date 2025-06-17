@@ -78,33 +78,34 @@ Such a wellformedness warning appears in many different error messages at the
 bottom and indicates that there might be a problem. However, to get
 further information, one must scroll up in the command line to look at the more
 detailed error messages.
+```
+/*
+WARNING: the following wellformedness checks failed!
 
-	/*
-	WARNING: the following wellformedness checks failed!
+Fact arity issues
+=================
 
-	Fact arity issues
-	=================
+Same fact is used with different arities, i.e.,
+Fact('A','B') is different from Fact('A'). 
+Check the arguments of your facts.
 
-	Same fact is used with different arities, i.e., Fact('A','B') is different from Fact('A'). 
-	Check the arguments of your facts.
+
+Fact `agst':
+
+	1. Rule `setup', arity 3
+		AgSt( $I, ~k, ~m )
 	
-
-	Fact `agst':
-
-		1. Rule `setup', arity 3
-			AgSt( $I, ~k, ~m )
-		
-		2. Rule `setup', arity 2
-			AgSt( $R, ~k )
-		
-		3. Rule `I_1', arity 2
-			AgSt( $I, <~k, ~m> )
-		
-		4. Rule `R_1', arity 2
-			AgSt( $R, ~k )
+	2. Rule `setup', arity 2
+		AgSt( $R, ~k )
 	
-	*/
+	3. Rule `I_1', arity 2
+		AgSt( $I, <~k, ~m> )
+	
+	4. Rule `R_1', arity 2
+		AgSt( $R, ~k )
 
+*/
+```
 
 The problem lists all the fact usages issues of fact `AgSt`.
 Here, we are told that we are dealing with an `arity` issue and all the usages of fact `AgSt` are displayed under the explanation, along with their locations. For example, `1.Rule ``setup', arity 3` and `2. Rule ``setup', arity 2` indicate that `AgSt` is both used with 2 and 3 arguments in the `setup` rule.
@@ -124,7 +125,9 @@ Resulting in the following error message :
 	Fact capitalization issues
 	==========================
 
-	Fact names are case-sensitive, different capitalizations are considered as different facts, i.e., Fact() is different from FAct(). 
+	Fact names are case-sensitive, different capitalizations
+	are considered as different facts, i.e.,
+	Fact() is different from FAct(). 
 	Check the capitalization of your fact names.
 	
 
@@ -149,13 +152,16 @@ Or introducing `multiplicity` (i.e. `persistence`) issues (notice the `!AgSt`) :
 ~~~~ {.tamarin slice="code_ERRORexamples/FirstTimeUser_Error2_Multip.spthy" lower=16 upper=20}
 ~~~~
 Resulting in :
+
 	/*
 	WARNING: the following wellformedness checks failed!
 
 	Fact multiplicity issues
 	========================
 
-	Same fact is used with different multiplicities, i.e., !Fact() (Persistent fact) exists along with Fact() (Linear) in your rules. 
+	Same fact is used with different multiplicities, i.e., 
+	!Fact() (Persistent fact) exists along with Fact() (Linear)
+	in your rules. 
 	Check the multiplicity (persistence) of your facts.
 	
 
