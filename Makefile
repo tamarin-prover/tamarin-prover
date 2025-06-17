@@ -114,7 +114,7 @@ case-studies$(SUBDIR)%_analyzed-auto-sources.spthy:	examples/%.spthy $(TAMARIN)
 case-studies$(SUBDIR)%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf18-xor
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf18-xor/chaum_offline_anonymity.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -226,7 +226,7 @@ OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
 case-studies$(SUBDIR)%_analyzed-oracle-gcm-wrapping.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf19-wrapping
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf19-wrapping/gcm.spthy.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -239,7 +239,7 @@ case-studies$(SUBDIR)%_analyzed-oracle-gcm-wrapping.spthy: examples/%.spthy $(TA
 case-studies$(SUBDIR)%_analyzed-oracle-siv-wrapping.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf19-wrapping
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs --heuristic=O --oraclename=examples/csf19-wrapping/siv.spthy.oracle +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
