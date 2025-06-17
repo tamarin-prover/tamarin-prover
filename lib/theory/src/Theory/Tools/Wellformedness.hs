@@ -626,61 +626,59 @@ factReports incompleteMSRs thy =
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
     factUsage :: WfErrorReport
-    factUsage = do
-      clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-      let (_, (_, (factName, _, _))) = head clash
-          name = quote (map toLower $ factTagName factName)
-          
-          allCapsClash = sortednub [factTagName tag | (_, (_, (tag, _, _))) <- clash]
-          allArityClash = sortednub [arity | (_, (_, (_, arity, _))) <- clash]
-          allMultiplicityClash = sortednub [multip | (_, (_, (_, _, multip))) <- clash]
-          
-          hasCapIssue = length allCapsClash > 1
-          hasArityIssue = length allArityClash > 1
-          hasMultipIssue = length allMultiplicityClash > 1
-          
-      concat $ catMaybes [
-        if hasCapIssue then Just [createCapReport name clash] else Nothing,
-        if hasArityIssue then Just [createArityReport name clash] else Nothing,
-        if hasMultipIssue then Just [createMultipReport name clash] else Nothing]
-      
+    factUsage = capIssues ++ arityIssues ++ multipIssues
       where
+        theoryFacts' = [(ru, fa) | (ru, fas) <- theoryFacts, fa <- fas]
+        factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
+        allClashes = filter (\g -> length g > 1) $ 
+                    groupOn factIdentifier $ 
+                    sortOn factIdentifier theoryFacts'
+        capIssues = 
+          if any hasCapIssue allClashes then
+            [(underlineTopic "Fact capitalization issues" ++ "\n" ++ capIssueMsg, 
+              text "\n" $-$ vcat (map formatCapIssue $ filter hasCapIssue allClashes))]
+          else []
+        arityIssues = 
+          if any hasArityIssue allClashes then
+            [(underlineTopic "Fact arity issues" ++ "\n" ++ arityIssueMsg,
+              text "\n" $-$ vcat (map formatArityIssue $ filter hasArityIssue allClashes))]
+          else []
+        multipIssues = 
+          if any hasMultipIssue allClashes then
+            [(underlineTopic "Fact multiplicity issues" ++ "\n" ++ multipIssueMsg,
+              text "\n" $-$ vcat (map formatMultipIssue $ filter hasMultipIssue allClashes))]
+          else []
+        
+        formatCapIssue clash = 
+          text ("Fact `" ++ name clash ++ "':\n") $-$
+          nest 2 (numbered' $ 
+            [ text (origin ++ ", capitalization " ++ show (factTagName tag)) $-$ nest 2 ppFa 
+            | (origin, (ppFa, (tag, _, _))) <- clash ])$-$ text ""
+        formatArityIssue clash = 
+          text ("Fact `" ++ name clash ++ "':\n") $-$
+          nest 2 (numbered' $ 
+            [ text (origin ++ ", arity " ++ show arity) $-$ nest 2 ppFa 
+            | (origin, (ppFa, (_, arity, _))) <- clash ]) $-$ text ""
+        formatMultipIssue clash = 
+          text ("Fact `" ++ name clash ++ "':\n") $-$
+          nest 2 (numbered' $ 
+            [ text (origin ++ ", multiplicity (persistence) " ++ show multip) $-$ nest 2 ppFa 
+            | (origin, (ppFa, (_, _, multip))) <- clash ])$-$ text ""
+
+        hasCapIssue clash = length (sortednub [factTagName tag | (_, (_, (tag, _, _))) <- clash]) > 1
+        hasArityIssue clash = length (sortednub [arity | (_, (_, (_, arity, _))) <- clash]) > 1
+        hasMultipIssue clash = length (sortednub [multip | (_, (_, (_, _, multip))) <- clash]) > 1
+        name clash = map toLower $ factTagName $ let (_, (_, (tag, _, _))) = head clash in tag
         capIssueMsg = "Fact names are case-sensitive, different capitalizations are " ++
                     "considered as different facts, " ++
                     "i.e., Fact() is different from FAct(). \n" ++
                     "Check the capitalization of your fact names."
-        
         arityIssueMsg = "Same fact is used with different arities, " ++
                       "i.e., Fact('A','B') is different from Fact('A'). \n" ++
                       "Check the arguments of your facts."
-        
         multipIssueMsg = "Same fact is used with different multiplicities, " ++
                         "i.e., !Fact() (Persistent fact) exists along with Fact() (Linear) in your rules. \n" ++
                         "Check the multiplicity (persistence) of your facts."
-        
-        theoryFacts' = [(ru, fa) | (ru, fas) <- theoryFacts, fa <- fas]
-        factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
-        
-        createCapReport name clash = 
-          (underlineTopic "Fact capitalization issues" ++ "\n" ++ capIssueMsg,
-          (text ("\nFact " ++ name ++ ":\n") $-$) . numbered' $ do
-            (origin, (ppFa, (tag, _, _))) <- clash
-            return $ text (origin ++ ", capitalization " ++ show (factTagName tag))
-                    $-$ nest 2 ppFa)
-        
-        createArityReport name clash = 
-          (underlineTopic "Fact arity issues" ++ "\n" ++ arityIssueMsg,
-          (text ("\nFact " ++ name ++ ":\n") $-$) . numbered' $ do
-            (origin, (ppFa, (_, arity, _))) <- clash
-            return $ text (origin ++ ", arity " ++ show arity)
-                    $-$ nest 2 ppFa)
-        
-        createMultipReport name clash = 
-          (underlineTopic "Fact multiplicity issues" ++ "\n" ++ multipIssueMsg,
-          (text ("\nFact " ++ name ++ ":\n") $-$) . numbered' $ do
-            (origin, (ppFa, (_, _, multip))) <- clash
-            return $ text (origin ++ ", multiplicity (persistence) " ++ show multip)
-                    $-$ nest 2 ppFa)
 
 
     -- Check that every fact referenced in a formula is present as an action
