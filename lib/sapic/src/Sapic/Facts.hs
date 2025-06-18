@@ -354,10 +354,10 @@ interpolate (HSV h1 s1 v1) (HSV h2 s2 v2) a = HSV h' s' v'
     v' = (v2 - v1) * a + v1
 
 colorHash :: (Fractional t, Ord t) => String -> RGB t
-colorHash s = RGB r g b
+colorHash s = RGB (f 0) (f 1) (f 2)
   where
-    nthByte x n = (x `shiftR` (8 * n)) .&. 0xff
-    (r, g, b) = fmap ((/ 255) . fromIntegral . nthByte (crc32 s)) (0, 1, 2)
+    f = (/255) . fromIntegral . nthByte (crc32 s)
+    nthByte x n = (x `shiftR` (8*n)) .&. 0xff
 
 -- Computes a color for a list of strings by first computing
 -- the CRC32 checksum of each string and then interpolating the
