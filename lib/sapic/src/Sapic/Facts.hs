@@ -388,7 +388,8 @@ toRule AnnotatedRule {..} =
     attr =
       [ RuleColor $ colorForProcessName $ getTopLevelName process,
         Process $ toProcess process,
-        IsSAPiCRule
+        IsSAPiCRule,
+        Role $ head $ getTopLevelName process
       ]
         ++ ([IgnoreDerivChecks | isLookup process])
     l = map factToFact prems
