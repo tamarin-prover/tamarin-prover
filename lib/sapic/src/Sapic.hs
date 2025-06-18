@@ -88,8 +88,9 @@ translate th =
     checkOps l x
       | l ops = x
       | otherwise = return
-    checkOps' l x
-      | l ops = x
+    -- evaluate lens on options, if true, behave like f, otherwise, do nothing
+    checkOps' l f
+      | l ops = f
       | otherwise = id
     pathComp r =
       if ops._transProgress then return r

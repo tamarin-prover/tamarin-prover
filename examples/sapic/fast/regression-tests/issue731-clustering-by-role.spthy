@@ -1,0 +1,26 @@
+theory issue731
+
+begin
+
+let A = event Nothing(); event A()
+let B = event B()
+let C = event C()
+let D = event D()
+
+let Resp = C | D
+let Init = A | B
+
+process:
+    !Init | Resp
+
+lemma sanity:
+    exists-trace
+    "Ex #a #a2 #b #c #d.
+        A()@a &
+        A()@a2 &
+        B()@b &
+        C()@c &
+        D()@d "
+
+end
+

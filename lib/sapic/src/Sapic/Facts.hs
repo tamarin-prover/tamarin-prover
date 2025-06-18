@@ -128,7 +128,7 @@ data AnnotatedRule ann = AnnotatedRule
 data FactType = GET | IN | NEW | EVENT | INSERT | OUT
   deriving (Eq)
 
--- | applies function acting on rule taple on annotated rule.
+-- | applies function acting on rule tuple on annotated rule.
 mapAct ::
   ( ([TransFact], [TransAction], [TransFact], [SyntacticLNFormula]) ->
     ([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])
@@ -323,6 +323,7 @@ getTopLevelName (ProcessNull ann) = getProcessNames ann
 getTopLevelName (ProcessComb _ ann _ _) = getProcessNames ann
 getTopLevelName (ProcessAction _ ann _) = getProcessNames ann
 
+-- | propagate processNames downward.
 propagateNames :: (GoodAnnotation an) => Process an v -> Process an v
 propagateNames = propagate' []
   where
@@ -372,7 +373,7 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
     normalize (HSV h _ _) = HSV h 0.5 0.5
     f (acc, i) v = (interpolate acc v (2 ^^ (-i)), i + 1)
 
-toRule :: (GoodAnnotation ann) => AnnotatedRule ann -> Rule ProtoRuleEInfo
+toRule :: AnnotatedRule (ProcessAnnotation LVar) -> Rule ProtoRuleEInfo
 toRule AnnotatedRule {..} =
   -- this is a Record Wildcard
   Rule (ProtoRuleEInfo (StandRule name) attr restr) l r a (newVariables l r)
@@ -388,12 +389,15 @@ toRule AnnotatedRule {..} =
     attr =
       [ RuleColor $ colorForProcessName $ getTopLevelName process,
         Process $ toProcess process,
-        IsSAPiCRule
+        IsSAPiCRule,
+        Role $ roleFromProcessNameList $ getProcessNames $ processGetAnnotation process
       ]
         ++ ([IgnoreDerivChecks | isLookup process])
     l = map factToFact prems
     a = map actionToFact acts
     r = map factToFact concs
+    roleFromProcessNameList [] = "Process"
+    roleFromProcessNameList nameList = List.intercalate "_" nameList
     stripNonAlphanumerical = filter isAlpha
     unNull s = if null s then "p" else s
     isLookup (ProcessComb (Lookup _ _) _ _ _) = True
