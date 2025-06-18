@@ -87,7 +87,7 @@ getProcessNames :: GoodAnnotation ann => ann -> [String]
 getProcessNames = processnames . getProcessParsedAnnotation
 
 setProcessNames :: GoodAnnotation a => [String] -> a -> a
-setProcessNames pn = mappendProcessParsedAnnotation (mempty {processnames = pn})
+setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn})
 
 instance (Apply s SapicTerm) => (Apply s (ProcessAnnotation v)) where
     apply = applyAnn
