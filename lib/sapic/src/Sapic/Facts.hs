@@ -386,13 +386,13 @@ toRule AnnotatedRule {..} =
           ++ show index
           ++ "_"
           ++ prettyEitherPositionOrSpecial position
-    attr =
-      [ RuleColor $ colorForProcessName $ getTopLevelName process,
-        Process $ toProcess process,
-        IsSAPiCRule,
-        Role $ roleFromProcessNameList $ getProcessNames $ processGetAnnotation process
-      ]
-        ++ ([IgnoreDerivChecks | isLookup process])
+    attr = RuleAttributes
+        { ruleColor = Just $ colorForProcessName $ getTopLevelName process
+        , ruleProcess = Just $ toProcess process
+        , ignoreDerivChecks = isLookup process
+        , isSAPiCRule = True
+        , role = Just $ roleFromProcessNameList $ getProcessNames $ processGetAnnotation process
+        }
     l = map factToFact prems
     a = map actionToFact acts
     r = map factToFact concs
