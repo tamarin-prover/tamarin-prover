@@ -274,7 +274,7 @@ builtInDestrRule = map (BC.append (BC.pack "_")) symBI
   where
     symBI = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString, fstSymString, sndSymString]
 
-
+-- FIX-ME : It could be better to add the functions inside the deconstruction rules instead of parsing the rule name
 constrNameFunc :: ByteString -> ByteString
 constrNameFunc name = case supprPos (name_decompose name) of
   [s1] -> s1
@@ -294,7 +294,7 @@ checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> Intr
 checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _) allR 
   | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
   case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
-    [] -> False
+    [] -> True
     subst -> searchMatcheraux (auxMatcherFilter (auxMatcher subst r inst1))
     
     -- trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\n\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1)))
@@ -328,7 +328,7 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
     auxMatcher s ru0 ru1 = evalFreshAvoiding (appSubst s ru0 ru1) (ru0, ru1)
 
     auxMatcherFilter = filter nullIntersectAC
-    nullIntersectAC (i0,i1) = isACfctDR (name_func name0) acsig && ((frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= [])
+    nullIntersectAC (i0,i1) = not (isACfctDR (name_func name0) acsig) || ((frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= [])
 
     searchMatcheraux ((s1,h1):sq)  = foldr (\ru -> (|| searchMatcher s1 h1 ru)) False allR && searchMatcheraux sq
     searchMatcheraux [] = True
@@ -349,8 +349,8 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
         sigmaRHS1 = getConcFact inst1Sigma
         sigmaF = getPremsFactKD instSigma
 
-        auxDeducible (m1:mq) = checkDeducible m1 && auxDeducible mq
-        auxDeducible [] = True
+        auxDeducible (m1:mq) = checkDeducible m1 || auxDeducible mq
+        auxDeducible [] = False
 
         checkDeducible :: Subst Name LVar -> Bool
         checkDeducible m = aux prems
@@ -365,7 +365,9 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
 
           intrRmodified = map boundToOne intrR
           boundToOne rule@(Rule (DestrRule name _ subterm constant) premis concs acts nvs) | getRuleName rule == getRuleName r = Rule (DestrRule name 1 subterm constant) premis concs (acts ++ [factOnlyOnce]) nvs
-          boundToOne (Rule (DestrRule name _ subterm constant) premis concs acts nvs) = Rule (DestrRule name 1 subterm constant) premis concs acts nvs
+          boundToOne rule@(Rule (DestrRule name _ _ _) _ _ _ _) | any (`BC.isSuffixOf` name) builtInDestrRule = rule
+          boundToOne rule@(Rule (DestrRule name _ True _) _ _ _ _) | not (isACfctDR (name_func name) acsig) = rule
+          boundToOne (Rule (DestrRule name 0 subterm constant) premis concs acts nvs) = Rule (DestrRule name 1 subterm constant) premis concs acts nvs
           boundToOne rr = rr
 
           aux (fa@(Fact KUFact _ [f]):q) = (aux1 f || derivationTest sig intrRmodified fa terms) && aux q
