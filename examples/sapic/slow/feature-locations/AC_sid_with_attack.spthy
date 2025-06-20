@@ -43,7 +43,9 @@ let v =   // The verifier
 		insert state,<o,list(ip,ipo)>;
 		unlock state)
 	else
-		event Fail())
+		event Fail();
+                unlock state
+                )
 
 
 process:
