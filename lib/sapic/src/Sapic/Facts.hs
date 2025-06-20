@@ -323,7 +323,7 @@ getTopLevelName (ProcessNull ann) = getProcessNames ann
 getTopLevelName (ProcessComb _ ann _ _) = getProcessNames ann
 getTopLevelName (ProcessAction _ ann _) = getProcessNames ann
 
--- | propagate processNames downward.
+-- | Propagate the names of processes downward, i.e., from each parent's annotation to all of their children, so that each process is annotated with the list of names of their parent processes.
 propagateNames :: (GoodAnnotation an) => Process an v -> Process an v
 propagateNames = propagate' []
   where

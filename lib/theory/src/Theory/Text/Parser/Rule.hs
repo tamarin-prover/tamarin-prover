@@ -86,8 +86,8 @@ ruleAttribute = asum
                         return  mempty
     ignore = return mempty
     parseRole = do
-        _ <- symbol "\""
-        role <- manyTill anyChar (try (symbol "\""))
+        _ <- symbol "\'" <|> symbol "\""
+        role <- manyTill anyChar (try (symbol "\'" <|> symbol "\""))
         return $ mempty { role = Just role }
 
 ruleAttributesp :: Parser RuleAttributes

@@ -1170,6 +1170,7 @@ prettyDotProtoRuleName :: Document d => RuleAttributes -> ProtoRuleName -> d
 prettyDotProtoRuleName attrs rn = text $ case rn of
     FreshRule   -> "Fresh"
     StandRule n -> if isSAPiCRule attrs
+
                      then (if "new" `isPrefixOf` n then chr 957 : ' ' : drop 3 (trimSapicName n) else trimSapicName n)
                      else prefixIfReserved n
     where
@@ -1192,7 +1193,7 @@ prettyRuleAttribute a = fsep $ punctuate comma $ catMaybes [ -- Maybe types are 
     fmap ppProcess (ruleProcess a),
     boolToMaybe (ignoreDerivChecks a) $ text "derivchecks",
     boolToMaybe (isSAPiCRule a) $ text "issapicrule",
-    fmap (\r -> text "role=" <> text r) (role a)
+    fmap (\roleName -> text "role=\'" <> text roleName <> text "\'") (role a)
     ]
     where
 
@@ -1207,6 +1208,7 @@ prettyRuleAttributes ru =
         if ruleAttributes ru == mempty
         then  text ""
         else  hcat [text "[", prettyRuleAttribute (ruleAttributes ru), text "]"]
+
 
 -- | Pretty print the rule name such that it can be used as a case name
 showRuleCaseName :: HasRuleName (Rule i) => Rule i -> String
