@@ -1,0 +1,40 @@
+theory test_state begin
+
+// TODO this should
+// (a) not give out a warning when exporting to ProVerif
+// (b) very all lemmas
+
+let reader(state) = (
+  lock state;
+  lookup state as x in 
+  event Read(state, x);
+  insert state, 'newstate';
+  unlock state
+)
+
+process:(
+  new state;
+    in(~x);
+  insert state, 'oldstate';
+  (
+    !reader(state)
+  )
+    
+)
+
+lemma ExOld:
+  exists-trace
+  "Ex s #i. Read(s, 'oldstate')@i"
+
+lemma ExNew:
+  exists-trace
+  "Ex s #i. Read(s, 'newstate')@i"
+
+lemma AlwaysOldOrNew:
+  "All s x #i. Read(s, x)@i ==> x = 'oldstate' | x = 'newstate'"
+
+lemma OldThenNew:
+  "All s #i #j.
+   Read(s, 'newstate')@i & Read(s, 'oldstate')@j ==> j < i"
+
+end

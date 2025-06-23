@@ -45,7 +45,8 @@ module Theory.Sapic.Process (
     -- exception type for lets
     , LetExceptions (..)
     , prettyLetExceptions
-    ,traverseProcess) where
+    ,traverseProcess
+    ,processGetAnnotation) where
 
 import Data.Binary
 import Data.Data
@@ -428,6 +429,11 @@ processAddAnnotation :: Monoid ann => Process ann v -> ann -> Process ann v
 processAddAnnotation (ProcessNull ann) ann' = ProcessNull $ ann `mappend` ann'
 processAddAnnotation (ProcessComb c ann pl pr ) ann' = ProcessComb c (ann `mappend` ann')  pl pr
 processAddAnnotation (ProcessAction a ann p ) ann' = ProcessAction a (ann `mappend` ann')  p
+
+processGetAnnotation :: Process ann v -> ann
+processGetAnnotation (ProcessNull ann) = ann
+processGetAnnotation (ProcessComb _ ann _ _ ) = ann
+processGetAnnotation (ProcessAction _ ann _ )  = ann
 
 -------------------------
 -- Pretty-printing for exceptions etc. (see Theory.Sapic.Print for nicer printing)
