@@ -61,18 +61,36 @@ def parseFile(path):
 	"""
 
 	## open file ##
-	summary = ""
 	try:
-		with open(path) as f:
-			# strip everything before the summary part
-			allContent = f.read().split("summary of summaries")
-			summary = allContent[-1]
-			proof = allContent[0].split("------------------------------------------------------------------------------")[0]
+		with open(path,'r') as f:
+			fileContent = f.read()
+   
+
+		warningMarker = "WARNING: the following wellformedness checks failed!"
+		outputMarker = "/* Output"
+  
+		if warningMarker in fileContent:
+			# Separate the part before the wellformedness warnings and the rest
+			proof, output = fileContent.split(warningMarker, 1)
+			output = warningMarker + output
+		elif outputMarker in fileContent:
+			#If there is no warning, just split everything before the output part
+			proof, output = fileContent.split(outputMarker, 1)
+			output = outputMarker + output
+		else:
+			#fallback
+			proof = fileContent
+			output = ""
+   
+		if 'summary of summaries' in output:
+			summary = output.split('summary of summaries', 1)[-1]
+		else:
+			summary = ""
 	except Exception:
 		return f"There was an error while reading {path}"
 
 	## parse time ##
-	times = re.findall(r"processing time: (.*)s", summary)
+	times = re.findall(r"processing time: (.*)s", output)
 	if len(times) != 1:
 		return f"Parse error - time: {path}"
 	
@@ -133,7 +151,7 @@ def parseFile(path):
 	try:
 		warning = []
 		test = False
-		for line in proof.splitlines():
+		for line in output.splitlines():
 			if test and line != '':
 				warning.append(line)
 			if test and line.find("*/") != -1:
@@ -434,7 +452,12 @@ def main():
 	## stack install ##
 	if not settings.no_install:
 		logging.warning("running 'stack install' ...")
-		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
+		try:
+			output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
+		except subprocess.CalledProcessError as e:
+			logging.error(color(colors.RED + colors.BOLD, "There was an error while running 'stack install'!"))
+			logging.error(color(colors.RED + colors.BOLD, e.output.decode("utf-8")))
+			exit(1)
 		logging.debug(output)
 
 	## test the spthy parser
@@ -467,7 +490,7 @@ Parser test results:
 			logging.error(color(colors.RED + colors.BOLD, testResult.stderr))
 
 		finally:
-        # revert the working dir change s.t. the rest of the script can run correctly
+		# revert the working dir change s.t. the rest of the script can run correctly
 			os.chdir(working_dir)
 			
 	## repeat case-studies r times for higher confidence in time measurements ##
@@ -482,7 +505,7 @@ Parser test results:
 		## make case-studies ##
 		if not settings.no_make:
 			cases = "case-studies" if settings.slow else "fast-case-studies FAST=y"
-			command = f"make -j {settings.jobs} {cases} 2>/dev/null"
+			command = f"make -j {settings.jobs} {cases}"
 			logging.warning(f"running '{command}' ...")
 			output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 			logging.debug(output)
@@ -500,4 +523,3 @@ Parser test results:
 
 if __name__ == '__main__':
 	main()
-
