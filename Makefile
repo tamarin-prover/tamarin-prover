@@ -110,7 +110,7 @@ case-studies$(SUBDIR)%_analyzed-auto-sources.spthy:	examples/%.spthy $(TAMARIN)
 	mv $<.tmp $@
 	\rm -f $<.out
 
-# individual case studies, special case with oracle
+# individual case studies, special case with tactics
 case-studies$(SUBDIR)%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf18-xor
 	# Use -N3, as the fourth core is used by the OS and the console
@@ -222,7 +222,7 @@ TESTOBSEQ_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(
 OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
 
 
-# individual case studies, special case with oracle for csf19
+# individual case studies, special case with tactics for csf19
 case-studies$(SUBDIR)%_analyzed-oracle-gcm-wrapping.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf19-wrapping
 	# Use -N3, as the fourth core is used by the OS and the console
@@ -235,7 +235,7 @@ case-studies$(SUBDIR)%_analyzed-oracle-gcm-wrapping.spthy: examples/%.spthy $(TA
 	mv $<.tmp $@
 	\rm -f $<.out
 
-# individual case studies, special case with oracle for csf19
+# individual case studies, special case with tactics for csf19
 case-studies$(SUBDIR)%_analyzed-oracle-siv-wrapping.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf19-wrapping
 	# Use -N3, as the fourth core is used by the OS and the console
