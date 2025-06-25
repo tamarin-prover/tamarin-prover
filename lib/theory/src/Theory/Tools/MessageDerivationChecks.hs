@@ -23,7 +23,7 @@ import Control.Category
 
 import Prelude hiding (id, (.))
 
-import           Prelude                             hiding (id, (.))                 
+import           Prelude                             hiding (id, (.))
 import OpenTheory
 
 
@@ -125,7 +125,7 @@ reportVars analysisresults rules vars = case rulesAndVars of
     where
         rulesAndVars :: String
         rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars' ->
-            if List.any ( /= TraceFound) results && notElem IgnoreDerivChecks (ruleAttributes $ L.get oprRuleE rule)
+            if List.any ( /= TraceFound) results && not (ignoreDerivChecks (ruleAttributes $ L.get oprRuleE rule))
                 then Just $ generateError results rule vars'
                 else Nothing)
             analysisresults rules vars)
@@ -143,7 +143,7 @@ reportDiffVars analysisresults rules vars = case rulesAndVars of
     where
         rulesAndVars :: String
         rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars' ->
-            if List.any ( /= TraceFound) results && notElem IgnoreDerivChecks (ruleAttributes $ L.get dprRule rule)
+            if List.any ( /= TraceFound) results && not (ignoreDerivChecks (ruleAttributes $ L.get dprRule rule))
                 then Just $ generateError results rule vars'
                 else Nothing)
             analysisresults rules vars)
@@ -173,7 +173,7 @@ premsOfThyRules = map (L.get rPrems . L.get oprRuleE)
 ----------------------------------------------------
 
 generateRule ::  [LVar] -> [LNFact] -> Int -> OpenProtoRule
-generateRule freevars premises idx =  OpenProtoRule (Rule (ProtoRuleEInfo (StandRule (show idx)) [] []) (freesToFresh . deleteGlobals $ freevars) (premisesToOut premises ) ([generateAction (deleteGlobals freevars) idx]) ([])) []
+generateRule freevars premises idx =  OpenProtoRule (Rule (ProtoRuleEInfo (StandRule (show idx)) mempty []) (freesToFresh . deleteGlobals $ freevars) (premisesToOut premises ) ([generateAction (deleteGlobals freevars) idx]) ([])) []
 
 generateAction :: [LVar] ->Int -> LNFact
 generateAction vars idx = protoFact Persistent ("Generated_" ++ show idx) (map lvarToLnterm (deleteGlobals vars))
@@ -219,4 +219,3 @@ lvarToLnterm v                        = LIT $ Var v
 
 lntermToKUFact :: LNTerm -> LNFact
 lntermToKUFact = kuFact
-

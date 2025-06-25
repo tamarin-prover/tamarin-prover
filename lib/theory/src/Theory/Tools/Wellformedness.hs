@@ -495,8 +495,8 @@ unboundCheck info ru
         , text info $-$ nest 2 (prettyVarList unboundVars) )
   where
     boundVars   = S.fromList $ frees (get rPrems ru)
-    originatesFromLookup v = any (match v) $ get preAttributes $ get rInfo ru
-    match v (Process (ProcessComb (Lookup _ v') _ _ _))  = v == slvar v'
+    originatesFromLookup v = match v $ ruleProcess $ get preAttributes $ get rInfo ru
+    match v (Just (ProcessComb (Lookup _ v') _ _ _))  = v == slvar v'
     match _ _ = False
     unboundVars = do
         v <- frees (get rConcs ru, get rActs ru, get rInfo ru)
