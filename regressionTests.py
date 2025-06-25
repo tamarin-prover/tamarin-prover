@@ -452,12 +452,7 @@ def main():
 	## stack install ##
 	if not settings.no_install:
 		logging.warning("running 'stack install' ...")
-		try:
-			output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
-		except subprocess.CalledProcessError as e:
-			logging.error(color(colors.RED + colors.BOLD, "There was an error while running 'stack install'!"))
-			logging.error(color(colors.RED + colors.BOLD, e.output.decode("utf-8")))
-			exit(1)
+		output = subprocess.check_output("stack install", shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 		logging.debug(output)
 
 	## test the spthy parser
@@ -505,7 +500,7 @@ Parser test results:
 		## make case-studies ##
 		if not settings.no_make:
 			cases = "case-studies" if settings.slow else "fast-case-studies FAST=y"
-			command = f"make -j {settings.jobs} {cases}"
+			command = f"make -j {settings.jobs} {cases} 2>/dev/null"
 			logging.warning(f"running '{command}' ...")
 			output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8")
 			logging.debug(output)

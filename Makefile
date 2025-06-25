@@ -392,15 +392,15 @@ features-case-studies:	$(FEATURES_CS_TARGETS)
 ###############
 
 AUTO_SOURCES_CASE_STUDIES=CCITT_X509_1.spthy CCITT_X509_1c.spthy \
-				   CCITT_X509_3.spthy CCITT_X509_3_BAN.spthy \
-				   AS_Concrete_RPC.spthy Lowe_AS_Concrete_RPC.spthy \
-				   AS_Modified_RPC.spthy AS_RPC.spthy \
-				   Denning-Sacco-SK-Lowe.spthy Denning-Sacco-SK.spthy \
-				   Yahalom_BAN.spthy Yahalom-Lowe.spthy Yahalom.spthy \
-				   Nssk.spthy Nssk_amended.spthy Otway-Rees.spthy \
-				   Wide_Mouthed_Frog.spthy Wide_Mouthed_Frog_Lowe.spthy \
-				   SpliceAS.spthy SpliceAS_2.spthy SpliceAS_3.spthy \
-				   WooLam_Pi_f.spthy
+                   CCITT_X509_3.spthy CCITT_X509_3_BAN.spthy \
+                   AS_Concrete_RPC.spthy Lowe_AS_Concrete_RPC.spthy \
+                   AS_Modified_RPC.spthy AS_RPC.spthy \
+                   Denning-Sacco-SK-Lowe.spthy Denning-Sacco-SK.spthy \
+                   Yahalom_BAN.spthy Yahalom-Lowe.spthy Yahalom.spthy \
+                   Nssk.spthy Nssk_amended.spthy Otway-Rees.spthy \
+                   Wide_Mouthed_Frog.spthy Wide_Mouthed_Frog_Lowe.spthy \
+                   SpliceAS.spthy SpliceAS_2.spthy SpliceAS_3.spthy \
+                   WooLam_Pi_f.spthy
 
 AUTO_SOURCES_CS_TARGETS=$(subst .spthy,_analyzed-auto-sources.spthy,$(addprefix case-studies$(SUBDIR)features/auto-sources/spore/,$(AUTO_SOURCES_CASE_STUDIES)))
 
@@ -411,12 +411,10 @@ auto-sources-case-studies:	$(AUTO_SOURCES_CS_TARGETS)
 ## Accountability
 ################
 
-# Define files to exclude because of memory usage
-ACCOUNTABILITY_EXCLUDED=whodunit.spthy
-# Filter out the excluded files
-ACCOUNTABILITY_CASE_STUDIES_FILTERED=$(filter-out $(ACCOUNTABILITY_EXCLUDED),$(ACCOUNTABILITY_CASE_STUDIES))
-# Use filtered list instead
-ACCOUNTABILITY_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)accountability/csf21-acc-unbounded/previous/,$(ACCOUNTABILITY_CASE_STUDIES_FILTERED)))
+ACCOUNTABILITY_CASE_STUDIES=ct.spthy whodunit.spthy ocsps-msr.spthy ocsps-msr-untrusted.spthy
+
+ACCOUNTABILITY_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)accountability/csf21-acc-unbounded/previous/,$(ACCOUNTABILITY_CASE_STUDIES)))
+
 # case studies
 accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)accountability/csf21-acc-unbounded/previous/*.spthy
@@ -442,18 +440,6 @@ DEFAULTORACLE_CASE_TARGETS=$(subst .spthy,_analyzed-deforacle.spthy, $(addprefix
 regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)regression/trace/*.spthy
 
-# Focused testing of problematic diff regression files
-regression-diff-only:	case-studies$(SUBDIR)system.info $(REGRESSION_OBSEQ_TARGETS)
-	@echo "=== Running focused tests on regression diff files ==="
-	# Test existence of files first to catch build failures
-	@for file in $(REGRESSION_OBSEQ_TARGETS); do \
-		if [ ! -f $$file ]; then \
-			echo "ERROR: File $$file does not exist or failed to build"; \
-		fi \
-	done
-	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)regression/diff/*.spthy || true
-	-grep -i "warning\|error" case-studies$(SUBDIR)regression/diff/*.spthy
-
 ## SAPIC output in Tamarin
 ##########################
 
@@ -461,12 +447,10 @@ regression-diff-only:	case-studies$(SUBDIR)system.info $(REGRESSION_OBSEQ_TARGET
 SAPIC_CASE_STUDIES_FAST=$(subst examples/sapic/,,$(wildcard examples/sapic/fast/*/*.spthy))
 
 # SLOW <=> processing time more than 10sec on Robert's current computer, but less than a day
-SAPIC_EXCLUDED=$(subst examples/sapic/,,$(wildcard examples/sapic/slow/*/*.spthy))
-SAPIC_CASE_STUDIES_SLOW=$(filter-out $(SAPIC_EXCLUDED),$(subst examples/sapic/,,$(wildcard examples/sapic/slow/*/*.spthy)))
+SAPIC_CASE_STUDIES_SLOW=$(subst examples/sapic/,,$(wildcard examples/sapic/slow/*/*.spthy))
 
 # SUPER SLOW <=> processing time more than a day or take's more memory than Robert's computer can take
-SAPIC_EXCLUDED_SUPER_SLOW=$(subst examples/sapic/,,$(wildcard examples/sapic/super-slow/*/*.spthy))
-SAPIC_CASE_STUDIES_SUPER_SLOW=$(filter-out $(SAPIC_EXCLUDED_SUPER_SLOW),$(subst examples/sapic/,,$(wildcard examples/sapic/super-slow/*/*.spthy)))
+SAPIC_CASE_STUDIES_SUPER_SLOW=$(subst examples/sapic/,,$(wildcard examples/sapic/super-slow/*/*.spthy))
 
 SAPIC_CS_TARGETS_FAST=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)sapic/,$(SAPIC_CASE_STUDIES_FAST)))
 SAPIC_CS_TARGETS_SLOW=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)sapic/,$(SAPIC_CASE_STUDIES_SLOW)))
@@ -523,4 +507,3 @@ fast-case-studies: case-studies$(SUBDIR)system.info $(FAST_CS_TARGETS)
 ###############################################################################
 
 # outdated targets
-
