@@ -1,11 +1,4 @@
-{-# LANGUAGE CPP                  #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE PatternGuards        #-}
-{-# LANGUAGE QuasiQuotes          #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 {- |
 Module      :  Web.Hamlet
@@ -18,37 +11,26 @@ Stability   :  experimental
 Portability :  non-portable
 -}
 
-module Web.Hamlet (
-    rootTpl
+module Web.Hamlet
+  ( rootTpl
   , overviewTpl
---   , rootDiffTpl
   , overviewDiffTpl
   ) where
 
-import           Data.Label
-import           Text.PrettyPrint.Html
-import           Theory
-import           Web.Theory
-import           Web.Types
+import Text.PrettyPrint.Html
+import Theory
+import Web.Theory
+import Web.Types
 
-import           Yesod.Core
+import Yesod.Core
 
-import           Data.List
-import qualified Data.Map              as M
-import           Data.Ord
-import           Data.Time.Format
-import           Data.Version          (showVersion)
+import Data.List
+import Data.Map qualified as M
+import Data.Ord
+import Data.Time.Format
+import Data.Version (showVersion)
 
--- #if MIN_VERSION_time(1,5,0)
--- import           Data.Time.Format
--- #else
--- import           System.Locale
--- #endif
--- For GHC 7.10 comment line below
--- import           System.Locale
-
-import           Paths_tamarin_prover  (version)
-import           System.FilePath 
+import Paths_tamarin_prover (version)
 
 --
 -- Templates
@@ -122,14 +104,14 @@ theoriesTpl thmap = [whamlet|
       groupBy (\x y -> comparing tiName x y == EQ) .
       sortBy (comparing snd) . M.toList
 
-    tiName x = getEitherTheoryName $ snd(x)
+    tiName x = getEitherTheoryName $ snd x
 
     ntail _ [] = []
     ntail i (_:xs)
       | length xs <= i = xs
       | otherwise      = ntail i xs
-      
-      
+
+
 -- | Template for single line in table on root page.
 theoryTpl :: (TheoryIdx, EitherTheoryInfo) -> Widget
 theoryTpl th = [whamlet|
@@ -213,8 +195,8 @@ headerTpl info = [whamlet|
             -- <li><a class=edit-link href=@{EditTheoryR idx}>Edit theory</a>
             -- <li><a class=edit-link href=@{EditPathR idx (TheoryLemma "")}>Add lemma</a>
             --
-    idx = tiIndex info
-    filename = get thyName (tiTheory info) ++ ".spthy" 
+    idx = info.index
+    filename = info.theory._thyName ++ ".spthy"
 
       {- use this snipped to reactivate saving local theories
     localTheory (Local _) = True
@@ -250,7 +232,7 @@ headerDiffTpl info = [whamlet|
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
             <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
             <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
-           
+
   |]
   where
             -- <li><a id=debug-toggle href="#">Debug pane</a>
@@ -258,8 +240,8 @@ headerDiffTpl info = [whamlet|
             -- <li><a class=edit-link href=@{EditTheoryR idx}>Edit theory</a>
             -- <li><a class=edit-link href=@{EditPathR idx (TheoryLemma "")}>Add lemma</a>
             --
-    idx = dtiIndex info
-    filename = get diffThyName (dtiTheory info) ++ ".spthy"
+    idx = info.index
+    filename = info.theory._diffThyName ++ ".spthy"
 
     {- use this snipped to reactivate saving local theories
     localTheory (Local _) = True
@@ -273,18 +255,18 @@ headerDiffTpl info = [whamlet|
 -- | Template for proof state (tree) frame.
 proofStateTpl :: RenderUrl -> TheoryInfo -> IO Widget
 proofStateTpl renderUrl ti = do
-    let res = renderHtmlDoc $ theoryIndex renderUrl (tiIndex ti) (tiTheory ti)
-    return [whamlet|
-              $newline never
-              #{preEscapedToMarkup res} |]
+  let res = renderHtmlDoc $ theoryIndex renderUrl ti.index ti.theory
+  pure [whamlet|
+         $newline never
+         #{preEscapedToMarkup res} |]
 
 -- | Template for proof state (tree) frame.
 proofStateDiffTpl :: RenderUrl -> DiffTheoryInfo -> IO Widget
 proofStateDiffTpl renderUrl ti = do
-    let res = renderHtmlDoc $ diffTheoryIndex renderUrl (dtiIndex ti) (dtiTheory ti)
-    return [whamlet|
-              $newline never
-              #{preEscapedToMarkup res} |]
+  let res = renderHtmlDoc $ diffTheoryIndex renderUrl ti.index ti.theory
+  pure [whamlet|
+         $newline never
+         #{preEscapedToMarkup res} |]
 
 -- | Framing/UI-layout template (based on JavaScript/JQuery)
 overviewTpl :: RenderUrl
@@ -296,7 +278,7 @@ overviewTpl :: RenderUrl
 overviewTpl renderUrl renderImgUrl info path lptxt = do
   proofState <- proofStateTpl renderUrl info
   mainView <- pathTpl renderUrl renderImgUrl info path lptxt
-  return [whamlet|
+  pure [whamlet|
     $newline never
     <div .ui-layout-north>
       ^{headerTpl info}
@@ -324,7 +306,7 @@ overviewDiffTpl :: RenderUrl
 overviewDiffTpl renderUrl info path = do
   proofState <- proofStateDiffTpl renderUrl info
   mainView <- pathDiffTpl renderUrl info path
-  return [whamlet|
+  pure [whamlet|
     $newline never
     <div .ui-layout-north>
       ^{headerDiffTpl info}
@@ -344,7 +326,7 @@ overviewDiffTpl renderUrl info path = do
           \^{mainView}
   |]
 
-  
+
 -- | Theory path, displayed when loading main screen for first time.
 pathTpl :: RenderUrl
         -> RenderUrl      -- ^ URL renderer that includes GET parameters for the image.
@@ -353,9 +335,9 @@ pathTpl :: RenderUrl
         -> String         -- ^ plaintext of lemma for editing
         -> IO Widget
 pathTpl renderUrl renderImgUrl info path lptxt =
-    return $ [whamlet|
-                $newline never
-                #{htmlThyPath renderUrl renderImgUrl info path lptxt} |]
+  pure [whamlet|
+         $newline never
+         #{htmlThyPath renderUrl renderImgUrl info path lptxt} |]
 
 -- | Theory path, displayed when loading main screen for first time.
 pathDiffTpl :: RenderUrl
@@ -363,9 +345,9 @@ pathDiffTpl :: RenderUrl
             -> DiffTheoryPath   -- ^ Path to display on load
             -> IO Widget
 pathDiffTpl renderUrl info path =
-    return $ [whamlet|
-                $newline never
-                #{htmlDiffThyPath renderUrl info path} |]
+  pure [whamlet|
+         $newline never
+         #{htmlDiffThyPath renderUrl info path} |]
 
 -- | Template for introduction.
 introTpl :: Widget

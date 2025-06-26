@@ -12,7 +12,7 @@
 module Theory.Constraint.System.Dot (
     dotSystemCompact
   , BoringNodeStyle(..)
-  , DotOptions
+  , DotOptions(..)
   , doNodeStyle
   , defaultDotOptions
   , SeDot

@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes, MultiWayIf #-}
 {- |
 Module      :  Web.Handler
 Description :  Application-specific handler functions.
@@ -7,10 +8,6 @@ License     :  GPL-3
 Stability   :  experimental
 Portability :  non-portable
 -}
-
-{-# LANGUAGE
-    OverloadedStrings, QuasiQuotes, TypeFamilies, FlexibleContexts,
-    RankNTypes, TemplateHaskell, CPP, MultiWayIf #-}
 
 module Web.Handler
   ( getOverviewR
@@ -48,190 +45,159 @@ module Web.Handler
   , getDownloadTheoryR
   , getAppendNewLemmasR
   , getDownloadTheoryDiffR
-  -- , getEditTheoryR
-  -- , postEditTheoryR
-  -- , getEditPathR
-  -- , postEditPathR
   , getUnloadTheoryR
   , getUnloadTheoryDiffR
   )
 where
 
-import Theory (
-     ClosedTheory
-    ,ClosedDiffTheory
-    ,Side
-    ,thyName
-    ,thySignature
-    ,diffThyName
-    ,removeLemma
-    ,lookupLemmaIndex
-    ,addLemmaAtIndex
-    ,modifyLemma
-    ,removeLemmaDiff
-    ,removeDiffLemma
-    ,getLemmaPreItems
-    ,openTheory
-    ,sorryProver
-    ,runAutoProver
-    ,sorryDiffProver
-    ,runAutoDiffProver
-    ,prettyClosedTheory
-    ,prettyOpenTheory
-    ,openDiffTheory
-    ,prettyClosedDiffTheory
-    ,prettyOpenDiffTheory
-    ,getLemmas
-    ,getDiffLemmas
-    ,getEitherLemmas
-    ,diffThySignature
-    ,toSignatureWithMaude
-    ,lookupLemma
-    ,theoryLemmas
-    ,ProofSkeleton
-    ,getProofContext
-    ,IncrementalProof
-    ,formulaToGuarded
-    ,toSignaturePure
-    ,sigpMaudeSig
-    ,checkAndExtendProver
-    ,theoryRestrictions
-    ,Prover (runProver), unproven)
+import Theory
+  ( Theory(..), DiffTheory(..), ClosedTheory, ClosedDiffTheory, Side
+  , ClosedTheory, ClosedDiffTheory, Side, Signature(..)
+  , removeLemma
+  , lookupLemmaIndex
+  , addLemmaAtIndex
+  , modifyLemma
+  , removeLemmaDiff
+  , removeDiffLemma
+  , getLemmaPreItems
+  , openTheory
+  , sorryProver
+  , runAutoProver
+  , sorryDiffProver
+  , runAutoDiffProver
+  , prettyClosedTheory
+  , prettyOpenTheory
+  , openDiffTheory
+  , prettyClosedDiffTheory
+  , prettyOpenDiffTheory
+  , getLemmas
+  , getDiffLemmas
+  , getEitherLemmas
+  , toSignatureWithMaude
+  , lookupLemma
+  , theoryLemmas
+  , ProofSkeleton
+  , getProofContext
+  , formulaToGuarded
+  , toSignaturePure
+  , checkAndExtendProver
+  , theoryRestrictions
+  , Prover (runProver), unproven
+  )
 
-import Theory.Proof (
-    AutoProver(..)
-    ,SolutionExtractor(..)
-    ,DiffProver
-    ,LTree(..)
-    ,ProofStep(..)
-    ,ProofMethod(..))
+import Theory.Proof
+  ( AutoProver(..)
+  , SolutionExtractor(..)
+  , DiffProver
+  , LTree(..)
+  , ProofStep(..)
+  , ProofMethod(..)
+  )
 
-
-import Text.PrettyPrint.Html
-import Theory.Constraint.System.Dot
-import Theory.Constraint.System.JSON  -- for export of constraint system to JSON
 import Web.Hamlet
-import Web.Instances()
 import Web.Settings
 import Web.Theory
 import Web.Types
 
 import Yesod.Core
 
-import Control.Monad.Trans.Resource (runResourceT)
-import Data.Monoid ()
-
-import Data.Label as L
-import Data.Maybe
-import Data.String(fromString)
-import Data.List                    (intersperse)
-import Data.Conduit                 as C (runConduit,(.|))
-import Data.Conduit.List            (consume)
-
-import qualified Blaze.ByteString.Builder     as B
-import qualified Data.ByteString.Char8        as BS
-import qualified Data.Map                     as M
-import qualified Data.Text                    as T
-import qualified Data.Text.Encoding           as T (encodeUtf8, decodeUtf8)
-import qualified Data.Text.Lazy.Encoding      as TLE
-import qualified Data.Traversable             as Tr
-import           Network.HTTP.Types           ( urlDecode )
-
-
 import Control.Applicative
 import Control.Concurrent
-import qualified Control.Concurrent.Thread    as Thread ( forkIO )
+import Control.Concurrent.Thread qualified as Thread (forkIO)
 import Control.DeepSeq
-import Control.Exception.Base       as E
+import Control.Exception.Base as E
 import Control.Monad
-import qualified Data.Binary                  as Bin
+import Control.Monad.Except (runExceptT)
+import Control.Monad.Trans.Resource (runResourceT)
+
+import Data.Maybe
+import Data.String (fromString)
+import Data.List (intersperse)
+import Data.Conduit as C (runConduit,(.|))
+import Data.Conduit.List (consume)
+import Data.Binary qualified as Bin
+import Data.ByteString.Builder qualified as B
+import Data.ByteString.Char8 qualified as BS
+import Data.Map qualified as M
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as T (encodeUtf8, decodeUtf8)
+import Data.Text.Lazy.Encoding qualified as TLE
 import Data.Time.LocalTime
+import Network.HTTP.Types (urlDecode)
+
 import System.Directory
+import System.FilePath ((</>))
 
-import Debug.Trace                  (trace)
-import Control.Monad.Except         (runExceptT)
+import Debug.Trace (trace)
 import Main.TheoryLoader
-import Main.Console                 (renderDoc)
-import           Text.Read                    (readMaybe)
-import           Theory.Constraint.System.Graph.Graph
-import           Theory.Constraint.System.Dot (BoringNodeStyle, dotSystemCompact, doNodeStyle)
+import Main.Console (renderDoc)
+import Text.PrettyPrint.Html
+import Text.Read (readMaybe)
+import Theory.Constraint.System.Dot
+import Theory.Constraint.System.Graph.Graph
+import Theory.Constraint.System.JSON  -- for export of constraint system to JSON
+import Theory.Text.Parser (parsePlainLemma)
 import Theory.Tools.Wellformedness  (prettyWfErrorReport)
-import qualified Control.Monad()
-import Theory.Text.Parser           (parsePlainLemma)
 import Lemma
-import GHC.Conc()
-import OpenTheory()
-import Web.Types()
-import Prover                       (mkSystem)
-import Theory.Text.Parser.Token()
-import Language.Haskell.TH()
-
--- Quasi-quotation syntax changed from GHC 6 to 7,
--- so we need this switch in order to support both
-#if __GLASGOW_HASKELL__ >= 700
-#define HAMLET hamlet
-#else
-#define HAMLET $hamlet
-#endif
-
+import Prover (mkSystem)
 
 ------------------------------------------------------------------------------
 -- Manipulate the state
 ------------------------------------------------------------------------------
 
 -- | Store theory map in file if option enabled.
-storeTheory :: WebUI
-            -> EitherTheoryInfo
-            -> TheoryIdx
-            -> IO ()
+storeTheory
+  :: WebUI
+  -> EitherTheoryInfo
+  -> TheoryIdx
+  -> IO ()
 storeTheory yesod thy idx =
-    when (autosaveProofstate yesod) $ do
-      let f = workDir yesod++"/"++autosaveSubdir++"/"++show idx++".img"
-      Bin.encodeFile (f++".tmp") thy
-      renameFile (f++".tmp") f
+  when yesod.autosaveProofstate $ do
+    let f = yesod.workDir </> autosaveSubdir </> show idx <> ".img"
+    Bin.encodeFile (f++".tmp") thy
+    renameFile (f++".tmp") f
 
 -- | Load a theory given an index.
 getTheory :: TheoryIdx -> Handler (Maybe EitherTheoryInfo)
 getTheory idx = do
-    yesod <- getYesod
-    liftIO $ withMVar (theoryVar yesod) $ return. M.lookup idx
-
+  yesod <- getYesod
+  liftIO $ withMVar yesod.theoryVar $ pure . M.lookup idx
 
 getLemmaPlaintext :: Int -> TheoryPath -> Handler String
 getLemmaPlaintext nr path = do
-    let lname = case path of 
+    let lname = case path of
             (TheoryEdit n) -> Just n
-            _ -> Nothing 
-    eitherTheory <- getTheory nr
-    let lemmaItem = case eitherTheory of 
-            (Just (Trace thy)) -> (\n -> lookupLemma n (tiTheory thy)) =<< lname 
             _ -> Nothing
-    return $ fromMaybe "Enter your new Lemma" $ get lPlaintext <$> lemmaItem
+    eitherTheory <- getTheory nr
+    let lemmaItem = case eitherTheory of
+            (Just (Trace thy)) -> (\n -> lookupLemma n thy.theory) =<< lname
+            _ -> Nothing
+    pure $ maybe "Enter your new Lemma" ((._lPlaintext)) lemmaItem
 
 
 -- | modifies the proof of a lemma after editing (eg in the case of reuse lemmas)
 editProof :: Int -> String -> Handler (Either String TheoryIdx)
-editProof idx name = withTheory idx $ \ti -> do 
-    fromMaybe  (return (Left "Lemma not found")) $ editLemmaProof ti <$> lookupLemma name (tiTheory ti)
+editProof idx name = withTheory idx $ \ti -> do
+    maybe (pure (Left "Lemma not found")) (editLemmaProof ti) (lookupLemma name ti.theory)
 
-    where 
+    where
         editLemmaProof ti (Lemma n m pt tq f a olp) = do
-            let ctxt     = getProofContext (Lemma n m pt tq f a lp) (tiTheory ti)
-                preItems = getLemmaPreItems n (tiTheory ti)
-                gsys     = mkSystem ctxt (theoryRestrictions (tiTheory ti)) preItems f
+            let ctxt     = getProofContext (Lemma n m pt tq f a lp) ti.theory
+                preItems = getLemmaPreItems n ti.theory
+                gsys     = mkSystem ctxt (theoryRestrictions ti.theory) preItems f
                 lp       = newProof olp ctxt gsys
                 editf (Lemma n' pt' m' tq' f' a' lp') = if n'== n then Lemma n' pt' m' tq' f' a' lp else Lemma n' pt' m' tq' f' a' lp'
-                maybe_nthy =  modifyLemma editf (tiTheory ti)
+                maybe_nthy =  modifyLemma editf ti.theory
             case maybe_nthy of
-                Nothing -> return $ Left "Lemma editing failed"
+                Nothing -> pure $ Left "Lemma editing failed"
                 Just nthy -> do
-                    nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx 
-                    return $ Right nidx
+                    nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
+                    pure $ Right nidx
 
-        newProof olp ctxt gsys = 
+        newProof olp ctxt gsys =
             case olp of
-                (LNode (ProofStep Invalidated _) s ) -> 
-                    let old_lp = fromMaybe olp (M.lookup "" s ) 
+                (LNode (ProofStep Invalidated _) s ) ->
+                    let old_lp = fromMaybe olp (M.lookup "" s )
                     in fromMaybe old_lp $ runProver (checkAndExtendProver (sorryProver Nothing)) ctxt 0 gsys old_lp
                 _ -> fromMaybe olp $ runProver (checkAndExtendProver (sorryProver Nothing)) ctxt 0 gsys olp
 
@@ -240,31 +206,31 @@ editProof idx name = withTheory idx $ \ti -> do
 -- when deleting a reuse lemma it marks subsequent proofs as invalidated
 deleteLemma :: Int -> String -> Handler (Either String TheoryIdx)
 deleteLemma idx name = withTheory idx $ \ti -> do
-    let maybeLemma = lookupLemma name (tiTheory ti)
+    let maybeLemma = lookupLemma name ti.theory
     case maybeLemma of
-        Nothing -> return $ Left "Lemma not found"
+        Nothing -> pure $ Left "Lemma not found"
         Just (Lemma _ _ _ _ _ oa _) ->
-            if | SourceLemma `elem` oa -> return $ Left "Can't edit or remove source lemmas for now"
+            if | SourceLemma `elem` oa -> pure $ Left "Can't edit or remove source lemmas for now"
                | ReuseLemma `elem` oa -> reuseCase ti
                | otherwise -> normalCase ti
 
     where
         normalCase ti =
-            case removeLemma name (tiTheory ti) of
-                Nothing -> return $ Left "Lemma editing failed"
-                Just nthy -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx 
+            case removeLemma name ti.theory of
+                Nothing -> pure $ Left "Lemma editing failed"
+                Just nthy -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
 
         reuseCase ti =
-            case modifyLemma (lemmaFunc ti) (tiTheory ti) of
-                Nothing -> return $ Left "Lemma editing failed"
+            case modifyLemma (lemmaFunc ti) ti.theory of
+                Nothing -> pure $ Left "Lemma editing failed"
                 Just nthy -> do
                     nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
                     withTheory nidx $ \ti' -> normalCase ti'
 
         lemmaFunc ti (Lemma n pt m tq f a lp) =
-            let currIdx = fromMaybe (-1) (lookupLemmaIndex name (tiTheory ti))
-                lIdx = fromMaybe 0 (lookupLemmaIndex n (tiTheory ti))
-            in if lIdx > currIdx 
+            let currIdx = fromMaybe (-1) (lookupLemmaIndex name ti.theory)
+                lIdx = fromMaybe 0 (lookupLemmaIndex n ti.theory)
+            in if lIdx > currIdx
                 then case lp of
                     LNode (ProofStep (Sorry Nothing) _) _ -> Lemma n pt m tq f a lp
                     LNode (ProofStep Invalidated _) _ -> Lemma n pt m tq f a lp
@@ -272,51 +238,51 @@ deleteLemma idx name = withTheory idx $ \ti -> do
                 else Lemma n pt m tq f a lp
 
 -- | Adds a new Lemma in a theory at an index, used for theory editing
--- the new lemma is marked as modified to keep track of what whould be appended to the original file 
+-- the new lemma is marked as modified to keep track of what whould be appended to the original file
 -- when "Append modified lemmas to file" is clicked
 addLemma :: Int -> Maybe Int -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
 addLemma idx maybelemmaIndex (Lemma n pt _ tq f a lp) = withTheory idx $ \ti -> do
-    let ctxt = getProofContext (Lemma n pt True tq f a lp) (tiTheory ti)
-        preI = getLemmaPreItems n (tiTheory ti)
-        gsys = mkSystem ctxt (theoryRestrictions (tiTheory ti)) preI f
+    let ctxt = getProofContext (Lemma n pt True tq f a lp) ti.theory
+        preI = getLemmaPreItems n ti.theory
+        gsys = mkSystem ctxt (theoryRestrictions ti.theory) preI f
     case formulaToGuarded f of
-        Left d -> return $ Left $ render d
-        Right _ -> 
+        Left d -> pure $ Left $ render d
+        Right _ ->
             case maybelemmaIndex of
-                Nothing -> return $ Left "Lemma not found"
+                Nothing -> pure $ Left "Lemma not found"
                 Just lemmaIndex -> do
-                    let newThy = addLemmaAtIndex (Lemma n pt True tq f a $ unproven (Just gsys)) lemmaIndex (tiTheory ti)
+                    let newThy = addLemmaAtIndex (Lemma n pt True tq f a $ unproven (Just gsys)) lemmaIndex ti.theory
                     case newThy of
-                         Nothing -> return $ Left "lemma editing failed"
+                         Nothing -> pure $ Left "lemma editing failed"
                          (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
 
 -- | Deletes, adds or modifies a lemma depending on the path
 editLemma :: Int -> TheoryPath -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
 editLemma idx (TheoryEdit lemmaName) (Lemma n pt m tq f a lp) = do
     maybelemmaIndex <- withTheory idx $ \ti -> do
-                           return $ (\x -> x - 1) <$> lookupLemmaIndex lemmaName (tiTheory ti)
+                           pure $ (\x -> x - 1) <$> lookupLemmaIndex lemmaName ti.theory
     case formulaToGuarded f of
-        Left d -> return $ Left $ render d
+        Left d -> pure $ Left $ render d
         Right _ -> do
             idx' <- deleteLemma idx lemmaName
             case idx' of
-                Left e -> return $ Left e
+                Left e -> pure $ Left e
                 Right i -> Web.Handler.addLemma i maybelemmaIndex (Lemma n pt m tq f a lp)
 
 
 editLemma idx (TheoryAdd lemmaName) (Lemma n pt m tq f a lp)  = do
     maybelemmaIndex <- withTheory idx $ \ti -> do
-                            return $ case lemmaName of
+                            pure $ case lemmaName of
                                 "<first>" -> do
-                                            let (Lemma n' _ _ _ _ _ _ ) = head $ theoryLemmas $ tiTheory ti
-                                            (\x -> x - 1) <$> lookupLemmaIndex n' (tiTheory ti)
-                                _ -> lookupLemmaIndex lemmaName (tiTheory ti)
+                                            let (Lemma n' _ _ _ _ _ _ ) = head $ theoryLemmas ti.theory
+                                            (\x -> x - 1) <$> lookupLemmaIndex n' ti.theory
+                                _ -> lookupLemmaIndex lemmaName ti.theory
 
     if SourceLemma `elem` a
-        then return $ Left "Can't add source lemmas for now"
+        then pure $ Left "Can't add source lemmas for now"
         else Web.Handler.addLemma idx maybelemmaIndex (Lemma n pt m tq f a lp)
 
-editLemma _ _ _ = return $ Left "called editLemma with weird input"
+editLemma _ _ _ = pure $ Left "called editLemma with weird input"
 
 
 -- | Store a theory, return index.
@@ -328,74 +294,75 @@ replaceTheory :: Maybe TheoryInfo     -- ^ Index of parent theory
           -> Handler TheoryIdx
 replaceTheory parent origin thy rep idx = do
     yesod <- getYesod
-    liftIO $ modifyMVar (theoryVar yesod) $ \theories -> do
+    liftIO $ modifyMVar yesod.theoryVar $ \theories -> do
       time <- getZonedTime
-      let parentIdx    = tiIndex <$> parent
-          parentOrigin = tiOrigin <$> parent
-          newOrigin    = parentOrigin <|> origin <|> (Just Interactive)
+      let parentIdx    = (.index) <$> parent
+          parentOrigin = (.origin) <$> parent
+          newOrigin    = parentOrigin <|> origin <|> Just Interactive
           newThy       = Trace (
               TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
-                      (maybe (defaultAutoProver yesod) tiAutoProver parent) rep)
-      return (M.insert idx newThy theories, idx)
+                      (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
+      pure (M.insert idx newThy theories, idx)
 
 
 -- | Store a theory, return index.
-putTheory :: Maybe TheoryInfo     -- ^ Index of parent theory
-          -> Maybe TheoryOrigin         -- ^ Origin of this theory
-          -> ClosedTheory         -- ^ The new closed theory
-          -> String
-          -> Handler TheoryIdx
+putTheory
+  :: Maybe TheoryInfo     -- ^ Index of parent theory
+  -> Maybe TheoryOrigin   -- ^ Origin of this theory
+  -> ClosedTheory         -- ^ The new closed theory
+  -> String
+  -> Handler TheoryIdx
 putTheory parent origin thy rep = do
-    yesod <- getYesod
-    liftIO $ modifyMVar (theoryVar yesod) $ \theories -> do
-      time <- getZonedTime
-      let idx | M.null theories = 1
-              | otherwise       = fst (M.findMax theories) + 1
-          parentIdx    = tiIndex <$> parent
-          parentOrigin = tiOrigin <$> parent
-          newOrigin    = parentOrigin <|> origin <|> (Just Interactive)
-          newThy       = Trace (
-              TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
-                      (maybe (defaultAutoProver yesod) tiAutoProver parent) rep)
-      storeTheory yesod newThy idx
-      return (M.insert idx newThy theories, idx)
+  yesod <- getYesod
+  liftIO $ modifyMVar yesod.theoryVar $ \theories -> do
+    time <- getZonedTime
+    let idx | M.null theories = 1
+            | otherwise       = fst (M.findMax theories) + 1
+        parentIdx    = (.index) <$> parent
+        parentOrigin = (.origin) <$> parent
+        newOrigin    = parentOrigin <|> origin <|> Just Interactive
+        newThy       = Trace (
+            TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
+                    (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
+    storeTheory yesod newThy idx
+    pure (M.insert idx newThy theories, idx)
 
 -- | Store a theory, return index.
-putDiffTheory :: Maybe DiffTheoryInfo     -- ^ Index of parent theory
-              -> Maybe TheoryOrigin         -- ^ Origin of this theory
-              -> ClosedDiffTheory         -- ^ The new closed theory
-              -> String
-              -> Handler TheoryIdx
+putDiffTheory
+  :: Maybe DiffTheoryInfo  -- ^ Index of parent theory
+  -> Maybe TheoryOrigin    -- ^ Origin of this theory
+  -> ClosedDiffTheory      -- ^ The new closed theory
+  -> String
+  -> Handler TheoryIdx
 putDiffTheory parent origin thy rep = do
-    yesod <- getYesod
-    liftIO $ modifyMVar (theoryVar yesod) $ \theories -> do
-      time <- getZonedTime
-      let idx | M.null theories = 1
-              | otherwise       = fst (M.findMax theories) + 1
-          parentIdx    = dtiIndex <$> parent
-          parentOrigin = dtiOrigin <$> parent
-          newOrigin    = parentOrigin <|> origin <|> (Just Interactive)
-          newThy       = Diff (
-              DiffTheoryInfo idx thy time parentIdx False (fromJust newOrigin)
-                      (maybe (defaultAutoProver yesod) dtiAutoProver parent) rep)
-      storeTheory yesod newThy idx
-      return (M.insert idx newThy theories, idx)
-
+  yesod <- getYesod
+  liftIO $ modifyMVar yesod.theoryVar $ \theories -> do
+    time <- getZonedTime
+    let idx | M.null theories = 1
+            | otherwise       = fst (M.findMax theories) + 1
+        parentIdx    = (.index) <$> parent
+        parentOrigin = (.origin) <$> parent
+        newOrigin    = parentOrigin <|> origin <|> Just Interactive
+        newThy       = Diff (
+            TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
+                    (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
+    storeTheory yesod newThy idx
+    pure (M.insert idx newThy theories, idx)
 
 -- | Delete theory.
 delTheory :: TheoryIdx -> Handler ()
 delTheory idx = do
-    yesod <- getYesod
-    liftIO $ modifyMVar_ (theoryVar yesod) $ \theories -> do
-      let theories' = M.delete idx theories
-      -- FIXME: delete from autosave directory?
-      return theories'
+  yesod <- getYesod
+  liftIO $ modifyMVar_ yesod.theoryVar $ \theories -> do
+    let theories' = M.delete idx theories
+    -- FIXME: delete from autosave directory?
+    pure theories'
 
 -- | Get a map of all stored theories.
 getTheories :: Handler TheoryMap
 getTheories = do
-    yesod <- getYesod
-    liftIO $ withMVar (theoryVar yesod) return
+  yesod <- getYesod
+  liftIO $ withMVar yesod.theoryVar pure
 
 
 -- | Modify a theory in the map of theories.
@@ -411,23 +378,24 @@ getTheories = do
 --             Trace thy -> do
 --               let newThy =  f thy
 --               storeTheory yesod (Trace newThy) idx
---               return $ M.insert idx (Trace newThy) theories
+--               pure $ M.insert idx (Trace newThy) theories
 --             Diff _ -> error "adjTheory: found DiffTheory"
 --         Nothing -> error "adjTheory: invalid theory index"
 
 -- | Modify a theory in the map of theories.
-adjEitherTheory :: TheoryIdx
-                -> (EitherTheoryInfo -> EitherTheoryInfo)
-                -> Handler ()
+adjEitherTheory
+  :: TheoryIdx
+  -> (EitherTheoryInfo -> EitherTheoryInfo)
+  -> Handler ()
 adjEitherTheory idx f = do
-    yesod <- getYesod
-    liftIO $ modifyMVar_ (theoryVar yesod) $ \theories ->
-      case M.lookup idx theories of
-        Just thy -> do
-            let newThy =  f thy
-            storeTheory yesod newThy idx
-            return $ M.insert idx newThy theories
-        Nothing -> error "adjEitherTheory: invalid theory index"
+  yesod <- getYesod
+  liftIO $ modifyMVar_ yesod.theoryVar $ \theories ->
+    case M.lookup idx theories of
+      Just thy -> do
+        let newThy = f thy
+        storeTheory yesod newThy idx
+        pure $ M.insert idx newThy theories
+      Nothing -> error "adjEitherTheory: invalid theory index"
 
 -- -- | Modify a theory in the map of theories.
 -- adjDiffTheory :: TheoryIdx
@@ -442,45 +410,48 @@ adjEitherTheory idx f = do
 --             Diff thy -> do
 --               let newThy =  f thy
 --               storeTheory yesod (Diff newThy) idx
---               return $ M.insert idx (Diff newThy) theories
+--               pure $ M.insert idx (Diff newThy) theories
 --             Trace _ -> error "adjTheory: found normal Theory"
 --         Nothing -> error "adjTheory: invalid theory index"
 
 
 -- | Debug tracing.
 dtrace :: WebUI -> String -> a -> a
-dtrace yesod msg | debug yesod = trace msg
+dtrace yesod msg | yesod.debug = trace msg
                  | otherwise   = id
 
 -- | Register a thread for killing.
-putThread :: T.Text                      -- ^ Request path
-          -> ThreadId                    -- ^ Thread ID
-          -> Handler ()
+putThread
+  :: T.Text    -- ^ Request path
+  -> ThreadId  -- ^ Thread ID
+  -> Handler ()
 putThread str tid = do
-    yesod <- getYesod
-    liftIO $ dtrace yesod msg $
-      modifyMVar_ (threadVar yesod) $ return . (M.insert str tid)
+  yesod <- getYesod
+  liftIO $ dtrace yesod msg $
+    modifyMVar_ yesod.threadVar $ pure . M.insert str tid
   where
     msg = "Registering thread: " ++ T.unpack str
 
 -- | Unregister a thread for killing.
-delThread :: T.Text       -- ^ Request path
-          -> Handler ()
+delThread
+  :: T.Text  -- ^ Request path
+  -> Handler ()
 delThread str = do
-    yesod <- getYesod
-    liftIO $ dtrace yesod msg $
-      modifyMVar_ (threadVar yesod) $ return . (M.delete str)
+  yesod <- getYesod
+  liftIO $ dtrace yesod msg $
+    modifyMVar_ yesod.threadVar $ pure . M.delete str
   where
     msg = "Deleting thread: " ++ T.unpack str
 
 
 -- | Get a thread for the given request URL.
-getThread :: T.Text       -- ^ Request path
-          -> Handler (Maybe ThreadId)
+getThread
+  :: T.Text  -- ^ Request path
+  -> Handler (Maybe ThreadId)
 getThread str = do
     yesod <- getYesod
     liftIO $ dtrace yesod msg $
-      withMVar (threadVar yesod) $ return . M.lookup str
+      withMVar yesod.threadVar $ pure . M.lookup str
   where
     msg = "Retrieving thread id of: " ++ T.unpack str
 
@@ -490,7 +461,7 @@ getThread str = do
 --            => GenericHandler m [T.Text]
 getThreads = do
     yesod <- getYesod
-    liftIO $ withMVar (threadVar yesod) (return . M.keys)
+    liftIO $ withMVar (threadVar yesod) (pure . M.keys)
 -}
 
 ------------------------------------------------------------------------------
@@ -508,7 +479,7 @@ traceExceptions info =
 
 -- | Helper functions for generating JSON reponses.
 jsonResp :: JsonResponse -> Handler RepJson
-jsonResp = return . RepJson . toContent . responseToJson
+jsonResp = pure . RepJson . toContent . responseToJson
 
 responseToJson :: JsonResponse -> Value
 responseToJson = go
@@ -525,29 +496,31 @@ responseToJson = go
     contentToJson _ = error "Unsupported content format in json response!"
 
 -- | Fully evaluate a value in a thread that can be canceled.
-evalInThread :: NFData a
-             => IO a
-             -> Handler (Either E.SomeException a)
+evalInThread
+  :: NFData a
+  => IO a
+  -> Handler (Either E.SomeException a)
 evalInThread io = do
-    renderF <- getUrlRender
-    maybeRoute <- getCurrentRoute
-    case maybeRoute of
-      Just route -> do
-        let key = renderF route
-        (tid, wait) <- liftIO $ Thread.forkIO $ do x <- io
-                                                   evaluate (rnf x)
-                                                   return x
-        putThread key tid
-        res <- liftIO $ wait
-        delThread key
-        return res
-      Nothing -> Right `liftM` liftIO io
+  renderF <- getUrlRender
+  maybeRoute <- getCurrentRoute
+  case maybeRoute of
+    Just route -> do
+      let key = renderF route
+      (tid, wait) <- liftIO $ Thread.forkIO $ do x <- io
+                                                 evaluate (rnf x)
+                                                 pure x
+      putThread key tid
+      res <- liftIO wait
+      delThread key
+      pure res
+    Nothing -> Right <$> liftIO io
 
 -- | Evaluate a handler with a given theory specified by the index,
 -- return notFound if theory does not exist.
-withTheory :: TheoryIdx
-           -> (TheoryInfo -> Handler a)
-           -> Handler a
+withTheory
+  :: TheoryIdx
+  -> (TheoryInfo -> Handler a)
+  -> Handler a
 withTheory idx handler = do
   maybeThy <- getTheory idx
   case maybeThy of
@@ -558,10 +531,11 @@ withTheory idx handler = do
 
 -- | Evaluate a handler with a given theory specified by the index,
 -- return notFound if theory does not exist.
-withBothTheory :: TheoryIdx
-               -> (TheoryInfo -> Handler a)
-               -> (DiffTheoryInfo -> Handler a)
-               -> Handler a
+withBothTheory
+  :: TheoryIdx
+  -> (TheoryInfo -> Handler a)
+  -> (DiffTheoryInfo -> Handler a)
+  -> Handler a
 withBothTheory idx handler diffhandler = do
   maybeThy <- getTheory idx
   case maybeThy of
@@ -573,9 +547,10 @@ withBothTheory idx handler diffhandler = do
 
 -- | Evaluate a handler with a given theory specified by the index,
 -- return notFound if theory does not exist.
-withDiffTheory :: TheoryIdx
-               -> (DiffTheoryInfo -> Handler a)
-               -> Handler a
+withDiffTheory
+  :: TheoryIdx
+  -> (DiffTheoryInfo -> Handler a)
+  -> Handler a
 withDiffTheory idx handler = do
   maybeThy <- getTheory idx
   case maybeThy of
@@ -586,15 +561,13 @@ withDiffTheory idx handler = do
 
 -- | Evaluate a handler with a given theory specified by the index,
 -- return notFound if theory does not exist.
-withEitherTheory :: TheoryIdx
-                 -> (EitherTheoryInfo -> Handler a)
-                 -> Handler a
+withEitherTheory
+  :: TheoryIdx
+  -> (EitherTheoryInfo -> Handler a)
+  -> Handler a
 withEitherTheory idx handler = do
   maybeThy <- getTheory idx
-  case maybeThy of
-    Just ti  -> handler ti
-    Nothing -> notFound
-
+  maybe notFound handler maybeThy
 
 {-
 -- | Run a form and provide a JSON response.
@@ -618,44 +591,44 @@ formHandler title formlet template success = do
 
 
 -- | Modify a theory, redirect if successful.
-modifyTheory :: TheoryInfo                                -- ^ Theory to modify
-             -> (ClosedTheory -> IO (Maybe ClosedTheory)) -- ^ Function to apply
-             -> (ClosedTheory -> TheoryPath)              -- ^ Compute the new path
-             -> JsonResponse                              -- ^ Response on failure
-             -> Handler Value
+modifyTheory
+  :: TheoryInfo                                -- ^ Theory to modify
+  -> (ClosedTheory -> IO (Maybe ClosedTheory)) -- ^ Function to apply
+  -> (ClosedTheory -> TheoryPath)              -- ^ Compute the new path
+  -> JsonResponse                              -- ^ Response on failure
+  -> Handler Value
 modifyTheory ti f fpath errResponse = do
-    res <- evalInThread (liftIO $ f (tiTheory ti))
-    let rep = tiErrorsHtml ti
-    case res of
-      Left e           -> return (excResponse e)
-      Right Nothing    -> return (responseToJson errResponse)
-      Right (Just thy) -> do
-        newThyIdx <- putTheory (Just ti) Nothing thy rep
-        newUrl <- getUrlRender <*> pure (OverviewR newThyIdx (fpath thy))
-        return . responseToJson $ JsonRedirect newUrl
+  res <- evalInThread (liftIO $ f ti.theory)
+  case res of
+    Left e           -> pure (excResponse e)
+    Right Nothing    -> pure (responseToJson errResponse)
+    Right (Just thy) -> do
+      newThyIdx <- putTheory (Just ti) Nothing thy ti.errorsHtml
+      newUrl <- getUrlRender <*> pure (OverviewR newThyIdx (fpath thy))
+      pure . responseToJson $ JsonRedirect newUrl
   where
    excResponse e = responseToJson
-                     (JsonAlert $ "Last request failed with exception: " `T.append` (T.pack (show e)))
+                     (JsonAlert $ "Last request failed with exception: " <> T.pack (show e))
 
 -- | Modify a theory, redirect if successful.
-modifyDiffTheory :: DiffTheoryInfo                                    -- ^ Theory to modify
-                 -> (ClosedDiffTheory -> IO (Maybe ClosedDiffTheory)) -- ^ Function to apply
-                 -> (ClosedDiffTheory -> DiffTheoryPath)              -- ^ Compute the new path
-                 -> JsonResponse                                      -- ^ Response on failure
-                 -> Handler Value
+modifyDiffTheory
+  :: DiffTheoryInfo                                    -- ^ Theory to modify
+  -> (ClosedDiffTheory -> IO (Maybe ClosedDiffTheory)) -- ^ Function to apply
+  -> (ClosedDiffTheory -> DiffTheoryPath)              -- ^ Compute the new path
+  -> JsonResponse                                      -- ^ Response on failure
+  -> Handler Value
 modifyDiffTheory ti f fpath errResponse = do
-    res <- evalInThread (liftIO $ f (dtiTheory ti))
-    rep <- pure $ dtiErrorsHtml ti
-    case res of
-      Left e           -> return (excResponse e)
-      Right Nothing    -> return (responseToJson errResponse)
-      Right (Just thy) -> do
-        newThyIdx <- putDiffTheory (Just ti) Nothing thy rep
-        newUrl <- getUrlRender <*> pure (OverviewDiffR newThyIdx (fpath thy))
-        return . responseToJson $ JsonRedirect newUrl
+  res <- evalInThread (liftIO $ f ti.theory)
+  case res of
+    Left e           -> pure (excResponse e)
+    Right Nothing    -> pure (responseToJson errResponse)
+    Right (Just thy) -> do
+      newThyIdx <- putDiffTheory (Just ti) Nothing thy ti.errorsHtml
+      newUrl <- getUrlRender <*> pure (OverviewDiffR newThyIdx (fpath thy))
+      pure . responseToJson $ JsonRedirect newUrl
   where
    excResponse e = responseToJson
-                     (JsonAlert $ "Last request failed with exception: " `T.append` (T.pack (show e)))
+                     (JsonAlert $ "Last request failed with exception: " <> T.pack (show e))
 
  ------------------------------------------------------------------------------
 -- Handler functions
@@ -670,58 +643,60 @@ getRootR = do
       setTitle "Welcome to the Tamarin prover"
       rootTpl theories
 
-data File = File T.Text
+newtype File = File T.Text
   deriving Show
 
 postRootR :: Handler Html
 postRootR = do
-    result <- lookupFile "uploadedTheory"
-    case result of
-      Nothing ->
-        setMessage "Post request failed."
-      Just fileinfo -> do
-          -- content <- liftIO $ LBS.fromChunks <$> (fileSource fileinfo $$ consume)
-          -- content <- liftIO $ runResourceT (fileSource fileinfo C.$$ consume)
-          content <- liftIO $ runResourceT $ C.runConduit (fileSource fileinfo C..| consume)
-          if null content
-            then setMessage "No theory file given."
-          else do
-            yesod <- getYesod
-            thyWithRep <- liftIO $ runExceptT $ do
-              openThy <- loadThy yesod (T.unpack $ T.decodeUtf8 $ BS.concat content) (T.unpack $ fileName fileinfo)
+  result <- lookupFile "uploadedTheory"
+  case result of
+    Nothing ->
+      setMessage "Post request failed."
+    Just fileinfo -> do
+      -- content <- liftIO $ LBS.fromChunks <$> (fileSource fileinfo $$ consume)
+      -- content <- liftIO $ runResourceT (fileSource fileinfo C.$$ consume)
+      content <- liftIO $ runResourceT $ C.runConduit (fileSource fileinfo C..| consume)
+      if null content
+        then setMessage "No theory file given."
+      else do
+        yesod <- getYesod
+        thyWithRep <- liftIO $ runExceptT $ do
+          openThy <- yesod.loadThy
+                       (T.unpack $ T.decodeUtf8 $ BS.concat content)
+                       (T.unpack $ fileName fileinfo)
 
-              let sig = either (get thySignature) (get diffThySignature) openThy
-              sig'   <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
+          let sig = either (._thySignature) (._diffThySignature) openThy
+          sig'   <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
 
-              -- let tactic = get thyTactic openThy
-              --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
+          -- let tactic = get thyTactic openThy
+          --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
 
-              closeThy yesod sig' openThy
+          yesod.closeThy sig' openThy
 
-            case thyWithRep of
-              Left err -> setMessage $ "Theory loading failed:\n" <> toHtml (show err)
-              Right (report, thy) -> do
-                wfErrors <- case report of
-                  [] -> pure $ ""
-                  _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-                void $ either (putTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo))
-                              (putDiffTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo)) thy wfErrors
-                setMessage $ toHtml $ "Loaded new theory!" ++ warningMsg
-                  where
-                    warningMsg
-                      |null report = ""
-                      |otherwise = " WARNING: ignoring the following wellformedness errors: " ++
-                                      renderDoc (prettyWfErrorReport report)
+        case thyWithRep of
+          Left err -> setMessage $ "Theory loading failed:\n" <> toHtml (show err)
+          Right (report, thy) -> do
+            wfErrors <- case report of
+              [] -> pure ""
+              _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
+            void $ either (putTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo))
+                          (putDiffTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo)) thy wfErrors
+            setMessage $ toHtml $ "Loaded new theory!" ++ warningMsg
+              where
+                warningMsg
+                  |null report = ""
+                  |otherwise = " WARNING: ignoring the following wellformedness errors: " ++
+                                  renderDoc (prettyWfErrorReport report)
 
-    theories <- getTheories
-    defaultLayout $ do
-      setTitle "Welcome to the Tamarin prover"
-      rootTpl theories
+  theories <- getTheories
+  defaultLayout $ do
+    setTitle "Welcome to the Tamarin prover"
+    rootTpl theories
 
 
 -- | Show overview over theory (framed layout).
 getOverviewR :: TheoryIdx -> TheoryPath -> Handler Html
-getOverviewR idx path = withTheory idx ( \ti -> do
+getOverviewR idx path = withTheory idx $ \ti -> do
   renderF <- getUrlRender
   renderParamsF <- getUrlRenderParams
   lptxt <- getLemmaPlaintext idx path
@@ -729,20 +704,20 @@ getOverviewR idx path = withTheory idx ( \ti -> do
     getParams <- reqGetParams <$> getRequest
     let renderParamsF' route = renderParamsF route getParams
     overview <- liftIO $ overviewTpl renderF renderParamsF' ti path lptxt
-    setTitle (toHtml $ "Theory: " ++ get thyName (tiTheory ti))
-    overview )
+    setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
+    overview
 
 getTheoryVerifyR :: TheoryIdx -> TheoryPath -> Handler RepJson
 getTheoryVerifyR  idx (TheoryProof l path) = do
     idx' <- editProof idx l
     renderUrl <- getUrlRender
     case idx' of
-        Right i -> return $ RepJson $ toContent $ object ["redirect" .= (renderUrl $ OverviewR i (TheoryProof l path))]
+        Right i -> pure $ RepJson $ toContent $ object ["redirect" .= renderUrl (OverviewR i (TheoryProof l path))]
         Left _  -> getTheoryPathMR idx TheoryHelp
 
 getTheoryVerifyR idx _ = do getTheoryPathMR idx TheoryHelp
 
--- | Handles theory editing requests. 
+-- | Handles theory editing requests.
 -- Theory delete doesn't require parsing the lemma, and is thus handled separatly
 postTheoryEditR :: TheoryIdx -> TheoryPath -> Handler Html
 postTheoryEditR idx (TheoryDelete l) = do
@@ -754,16 +729,16 @@ postTheoryEditR idx (TheoryDelete l) = do
 
 
 postTheoryEditR idx path = do
-    mLemmaText <- lookupPostParam "lemma-text" 
+    mLemmaText <- lookupPostParam "lemma-text"
     let newlptxt = T.unpack $ fromMaybe "" mLemmaText
     renderParamsF <- getUrlRenderParams
-    maudeSig <- withTheory idx $ \ti -> return $ get sigpMaudeSig . toSignaturePure . get thySignature $ tiTheory ti
+    maudeSig <- withTheory idx $ \ti -> pure (toSignaturePure ti.theory._thySignature)._sigMaudeInfo
     idx' <- case parsePlainLemma maudeSig newlptxt of
-        Left err -> return $ Left $ show err 
+        Left err -> pure $ Left $ show err
         Right newl -> editLemma idx path newl
 
     case idx' of
-        Right i -> do 
+        Right i -> do
                     case mLemmaText of
                         Just _ ->  redirect (OverviewR i path)
                         Nothing -> defaultLayout $ do
@@ -771,7 +746,7 @@ postTheoryEditR idx path = do
                             [whamlet|<p>Failed to retrieve lemma-text from form data|]
         Left e -> withTheory idx $ \ti -> do
                     renderF <- getUrlRender
-                    let title = titleThyPath (tiTheory ti) path
+                    let title = titleThyPath ti.theory path
                     defaultLayout $ do
                       getParams <- reqGetParams <$> getRequest
                       let renderParamsF' route = renderParamsF route getParams
@@ -783,105 +758,106 @@ postTheoryEditR idx path = do
 
 -- | Show overview over diff theory (framed layout).
 getOverviewDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
-getOverviewDiffR idx path = withDiffTheory idx ( \ti -> do
+getOverviewDiffR idx path = withDiffTheory idx $ \ti -> do
   renderF <- getUrlRender
   defaultLayout $ do
     overview <- liftIO $ overviewDiffTpl renderF ti path
-    setTitle (toHtml $ "DiffTheory: " ++ get diffThyName (dtiTheory ti))
-    overview )
+    setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
+    overview
 
 -- | Show source (pretty-printed open theory).
 getTheorySourceR :: TheoryIdx -> Handler RepPlain
-getTheorySourceR idx = withBothTheory idx ( \ti ->
-  return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
-  return $ RepPlain $ toContent $ prettyRenderDiff ti)
+getTheorySourceR idx = withBothTheory idx
+  (pure . RepPlain . toContent . prettyRender)
+  (pure . RepPlain . toContent . prettyRenderDiff)
   where
-    prettyRender = render . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+    prettyRender = render . prettyClosedTheory . (.theory)
+    prettyRenderDiff = render . prettyClosedDiffTheory . (.theory)
 
 -- | Show source (pretty-printed open diff theory).
 getTheorySourceDiffR :: TheoryIdx -> Handler RepPlain
-getTheorySourceDiffR idx = withBothTheory idx ( \ti ->
-  return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
-  return $ RepPlain $ toContent $ prettyRenderDiff ti)
+getTheorySourceDiffR idx = withBothTheory idx
+  (pure . RepPlain . toContent . prettyRender)
+  (pure . RepPlain . toContent . prettyRenderDiff)
   where
-    prettyRender = render . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+    prettyRender = render . prettyClosedTheory . (.theory)
+    prettyRenderDiff = render . prettyClosedDiffTheory . (.theory)
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryVariantsR :: TheoryIdx -> Handler RepPlain
-getTheoryVariantsR idx = withBothTheory idx ( \ti ->
-  return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
-  return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+getTheoryVariantsR idx = withBothTheory idx
+  (pure . RepPlain . toContent . prettyRender)
+  (pure . RepPlain . toContent . prettyRenderDiff)
+  where prettyRender = render . prettyClosedTheory . (.theory)
+        prettyRenderDiff = render . prettyClosedDiffTheory . (.theory)
 
 -- | Show variants (pretty-printed closed diff theory).
 getTheoryVariantsDiffR :: TheoryIdx -> Handler RepPlain
-getTheoryVariantsDiffR idx = withBothTheory idx ( \ti ->
-  return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
-  return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+getTheoryVariantsDiffR idx = withBothTheory idx
+  (pure . RepPlain . toContent . prettyRender)
+  (pure . RepPlain . toContent . prettyRenderDiff)
+  where prettyRender = render . prettyClosedTheory . (.theory)
+        prettyRenderDiff = render . prettyClosedDiffTheory . (.theory)
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionR :: TheoryIdx -> Handler RepPlain
-getTheoryMessageDeductionR idx = withBothTheory idx ( \ti ->
-  return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
-  return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+getTheoryMessageDeductionR idx = withBothTheory idx
+  (pure . RepPlain . toContent . prettyRender)
+  (pure . RepPlain . toContent . prettyRenderDiff)
+  where prettyRender = render . prettyClosedTheory . (.theory)
+        prettyRenderDiff = render . prettyClosedDiffTheory . (.theory)
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionDiffR :: TheoryIdx -> Handler RepPlain
-getTheoryMessageDeductionDiffR idx = withBothTheory idx ( \ti ->
-  return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
-  return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+getTheoryMessageDeductionDiffR idx = withBothTheory idx
+  (pure . RepPlain . toContent . prettyRender )
+  (pure . RepPlain . toContent . prettyRenderDiff)
+  where prettyRender = render . prettyClosedTheory . (.theory)
+        prettyRenderDiff = render . prettyClosedDiffTheory . (.theory)
 
 
 
 -- | Show a given path within a theory (main view).
-getTheoryPathMR :: TheoryIdx
-                -> TheoryPath
-                -> Handler RepJson
+getTheoryPathMR
+  :: TheoryIdx
+  -> TheoryPath
+  -> Handler RepJson
 getTheoryPathMR idx path = do
     renderUrl <- getUrlRender
     jsonValue <- withTheory idx (go renderUrl path)
-    return $ RepJson $ toContent jsonValue
+    pure $ RepJson $ toContent jsonValue
     where
         go:: RenderUrl -> TheoryPath -> TheoryInfo -> HandlerFor WebUI Value
         go _ (TheoryMethod lemma proofPath i) ti = modifyTheory ti
-            (\thy -> return $ applyMethodAtPath thy lemma proofPath (tiAutoProver ti) i)
+            (\thy -> pure $ applyMethodAtPath thy lemma proofPath ti.autoProver i)
             (\thy -> nextSmartThyPath thy (TheoryProof lemma proofPath))
             (JsonAlert "Sorry, but the prover failed on the selected method!")
 
         go renderUrl curr_path ti = do
-          let title = T.pack $ titleThyPath (tiTheory ti) curr_path
-          lptxt <- getLemmaPlaintext (tiIndex ti) curr_path
+          let title = T.pack $ titleThyPath ti.theory curr_path
+          lptxt <- getLemmaPlaintext ti.index curr_path
           let html = htmlThyPath renderUrl renderUrl ti curr_path lptxt
-          return $ responseToJson (JsonHtml title $ toContent html)
+          pure $ responseToJson (JsonHtml title $ toContent html)
 
 -- | Show a given path within a diff theory (main view).
-getTheoryPathDiffMR :: TheoryIdx
-                    -> DiffTheoryPath
-                    -> Handler RepJson
+getTheoryPathDiffMR
+  :: TheoryIdx
+  -> DiffTheoryPath
+  -> Handler RepJson
 getTheoryPathDiffMR idx path = do
---     error ("failed in handler" ++ show path)
-    renderUrl <- getUrlRender
-    jsonValue <- withDiffTheory idx (goDiff renderUrl path)
-    return $ RepJson $ toContent jsonValue
+  renderUrl <- getUrlRender
+  jsonValue <- withDiffTheory idx (goDiff renderUrl path)
+  pure $ RepJson $ toContent jsonValue
   where
     --
     -- Handle method paths by trying to solve the given goal/method
     --
     goDiff _ (DiffTheoryMethod s lemma proofPath i) ti = modifyDiffTheory ti
-        (\thy -> return $ applyMethodAtPathDiff thy s lemma proofPath (dtiAutoProver ti) i)
+        (\thy -> pure $ applyMethodAtPathDiff thy s lemma proofPath ti.autoProver i)
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryProof s lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
     goDiff _ (DiffTheoryDiffMethod lemma proofPath i) ti = modifyDiffTheory ti
-        (\thy -> return $ applyDiffMethodAtPath thy lemma proofPath (dtiAutoProver ti) i)
+        (\thy -> pure $ applyDiffMethodAtPath thy lemma proofPath ti.autoProver i)
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof lemma proofPath))
         (JsonAlert "Sorry, but the prover failed on the selected method!")
 
@@ -889,111 +865,128 @@ getTheoryPathDiffMR idx path = do
     -- Handle generic paths by trying to render them
     --
     goDiff renderUrl _ ti = do
-      let title = T.pack $ titleDiffThyPath (dtiTheory ti) path
+      let title = T.pack $ titleDiffThyPath ti.theory path
       let html = htmlDiffThyPath renderUrl ti path
-      return $ responseToJson (JsonHtml title $ toContent html)
+      pure $ responseToJson (JsonHtml title $ toContent html)
 
 
 -- | Run the some prover on a given proof path.
-getProverR :: (T.Text, AutoProver -> Prover)
-           -> TheoryIdx -> TheoryPath -> Handler RepJson
+getProverR
+  :: (T.Text, AutoProver -> Prover)
+  -> TheoryIdx
+  -> TheoryPath
+  -> Handler RepJson
 getProverR (name, mkProver) idx path = do
-    jsonValue <- withTheory idx (go path)
-    return $ RepJson $ toContent jsonValue
+  jsonValue <- withTheory idx (go path)
+  pure $ RepJson $ toContent jsonValue
   where
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-        (\thy -> return $ applyProverAtPath thy lemma proofPath autoProver)
-        (\thy -> nextSmartThyPath thy path)
+        (\thy -> pure $ applyProverAtPath thy lemma proofPath autoProver)
+        (`nextSmartThyPath` path)
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
-        autoProver = mkProver (tiAutoProver ti)
+        autoProver = mkProver ti.autoProver
 
-    go _ _ = return $ responseToJson $ JsonAlert $
+    go _ _ = pure $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
 
 -- | Run the some prover on a given proof path.
-getProverAllR :: (T.Text, AutoProver -> Prover)
-           -> TheoryIdx -> Handler RepJson
+getProverAllR
+  :: (T.Text, AutoProver -> Prover)
+  -> TheoryIdx -> Handler RepJson
 getProverAllR (name, mkProver) idx = do
-    jsonValue <- withTheory idx go
-    return $ RepJson $ toContent jsonValue
+  jsonValue <- withTheory idx go
+  pure $ RepJson $ toContent jsonValue
   where
     go ti = modifyTheory ti
         proveAll
         (\thy -> nextSmartThyPath thy (TheoryProof (last $ names thy) []))
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
-        names thy = map (get lName) $ getLemmas thy
-        autoProver = mkProver (tiAutoProver ti)
-        proveAll thy = return $ foldM (\tha lemma -> applyProverAtPath tha lemma [] autoProver) thy $ names thy
+        names thy = (._lName) <$> getLemmas thy
+        autoProver = mkProver ti.autoProver
+        proveAll thy = pure $ foldM (\tha lemma -> applyProverAtPath tha lemma [] autoProver) thy $ names thy
 
 -- | Run the some prover on a given proof path.
-getProverDiffR :: (T.Text, AutoProver -> Prover)
-               -> TheoryIdx -> Side -> DiffTheoryPath -> Handler RepJson
+getProverDiffR
+  :: (T.Text, AutoProver -> Prover)
+  -> TheoryIdx
+  -> Side
+  -> DiffTheoryPath
+  -> Handler RepJson
 getProverDiffR (name, mkProver) idx s path = do
-    jsonValue <- withDiffTheory idx (goDiff s path)
-    return $ RepJson $ toContent jsonValue
+  jsonValue <- withDiffTheory idx (goDiff s path)
+  pure $ RepJson $ toContent jsonValue
   where
     goDiff s'' (DiffTheoryProof s' lemma proofPath) ti =
-        if s''==s'
+        if s'' == s'
            then modifyDiffTheory ti
-              (\thy -> return $ applyProverAtPathDiff thy s' lemma proofPath autoProver)
-              (\thy -> nextSmartDiffThyPath thy path)
+              (\thy -> pure $ applyProverAtPathDiff thy s' lemma proofPath autoProver)
+              (`nextSmartDiffThyPath` path)
               (JsonAlert $ "Sorry, but " <> name <> " failed!")
            else
-              return $ responseToJson $ JsonAlert $
+              pure $ responseToJson $ JsonAlert $
                 "Can't run " <> name <> " on the given theory path!"
       where
-        autoProver = mkProver (dtiAutoProver ti)
+        autoProver = mkProver ti.autoProver
 
-    goDiff _ _ _ = return $ responseToJson $ JsonAlert $
+    goDiff _ _ _ = pure $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
 
 -- | Run the some prover on a given proof path.
-getDiffProverR :: (T.Text, AutoProver -> DiffProver)
-               -> TheoryIdx -> DiffTheoryPath -> Handler RepJson
+getDiffProverR
+  :: (T.Text, AutoProver -> DiffProver)
+  -> TheoryIdx
+  -> DiffTheoryPath
+  -> Handler RepJson
 getDiffProverR (name, mkProver) idx path = do
-    jsonValue <- withDiffTheory idx (goDiff path)
-    return $ RepJson $ toContent jsonValue
+  jsonValue <- withDiffTheory idx (goDiff path)
+  pure $ RepJson $ toContent jsonValue
   where
     goDiff (DiffTheoryDiffProof lemma proofPath) ti =
         modifyDiffTheory ti
-              (\thy -> return $ applyDiffProverAtPath thy lemma proofPath autoProver)
-              (\thy -> nextSmartDiffThyPath thy path)
+              (\thy -> pure $ applyDiffProverAtPath thy lemma proofPath autoProver)
+              (`nextSmartDiffThyPath` path)
               (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
-        autoProver = mkProver (dtiAutoProver ti)
+        autoProver = mkProver ti.autoProver
 
-    goDiff _ _ = return $ responseToJson $ JsonAlert $
+    goDiff _ _ = pure $ responseToJson $ JsonAlert $
       "Can't run " <> name <> " on the given theory path!"
 
 -- | Run the some prover on a given proof path.
-getProverDiffAllR :: (T.Text, AutoProver -> Prover ,AutoProver -> DiffProver)
-           -> TheoryIdx -> Handler RepJson
+getProverDiffAllR
+  :: (T.Text, AutoProver -> Prover, AutoProver -> DiffProver)
+  -> TheoryIdx
+  -> Handler RepJson
 getProverDiffAllR (name, mkProver, mkDiffProver) idx  = do
-    jsonValue <- withDiffTheory idx goDiff
-    return $ RepJson $ toContent jsonValue
+  jsonValue <- withDiffTheory idx goDiff
+  pure $ RepJson $ toContent jsonValue
   where
     goDiff ti = modifyDiffTheory ti
         proveAllDiff
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof (last $ namesDiff thy) []))
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
-        namesDiff thy = map (get lDiffName) $ getDiffLemmas thy
-        autoDiffProver = mkDiffProver (dtiAutoProver ti)
-        names thy = map (\(x, y) -> (x, get lName y)) $ getEitherLemmas thy
-        autoProver = mkProver (dtiAutoProver ti)
+        namesDiff thy = (._lDiffName) <$> getDiffLemmas thy
+        autoDiffProver = mkDiffProver ti.autoProver
+        names thy = map (\(x, y) -> (x, y._lName)) $ getEitherLemmas thy
+        autoProver = mkProver ti.autoProver
         proveDiff thy = foldM (\tha lemma -> applyDiffProverAtPath tha lemma [] autoDiffProver) thy $ namesDiff thy
-        proveAllDiff thy = return $ (proveDiff thy) >>= (\thb -> foldM (\tha (s, lemma) -> applyProverAtPathDiff tha s lemma [] autoProver) thb $ names thb)
+        proveAllDiff thy = pure $ do
+          thb <- proveDiff thy
+          foldM (\tha (s, lemma) -> applyProverAtPathDiff tha s lemma [] autoProver) thb $ names thb
 
 -- | Run an autoprover on a given proof path.
-getAutoProverR :: TheoryIdx
-               -> SolutionExtractor
-               -> Int                             -- autoprover bound to use
-               -> Bool                            -- Quit on empty oracle
-               -> TheoryPath -> Handler RepJson
+getAutoProverR
+  :: TheoryIdx
+  -> SolutionExtractor
+  -> Int   -- autoprover bound to use
+  -> Bool  -- Quit on empty oracle
+  -> TheoryPath
+  -> Handler RepJson
 getAutoProverR idx extractor bound quitOnEmpty =
-    getProverR (fullName, runAutoProver . adapt) idx
+  getProverR (fullName, runAutoProver . adapt) idx
   where
     adapt autoProver = autoProver
       { apBound = actualBound
@@ -1015,12 +1008,14 @@ getAutoProverR idx extractor bound quitOnEmpty =
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
 
 -- | Run an autoprover on a given proof path.
-getAutoProverAllR :: TheoryIdx
-               -> SolutionExtractor
-               -> Int                             -- autoprover bound to use
-               -> TheoryPath -> Handler RepJson
+getAutoProverAllR
+  :: TheoryIdx
+  -> SolutionExtractor
+  -> Int  -- autoprover bound to use
+  -> TheoryPath
+  -> Handler RepJson
 getAutoProverAllR idx extractor bound _ =
-    getProverAllR (fullName, runAutoProver . adapt) idx
+  getProverAllR (fullName, runAutoProver . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
@@ -1040,12 +1035,15 @@ getAutoProverAllR idx extractor bound _ =
 
 
 -- | Run an autoprover on a given proof path.
-getAutoProverDiffR :: TheoryIdx
-                   -> SolutionExtractor
-                   -> Int                             -- autoprover bound to use
-                   -> Side -> DiffTheoryPath -> Handler RepJson
-getAutoProverDiffR idx extractor bound s =
-    getProverDiffR (fullName, runAutoProver . adapt) idx s
+getAutoProverDiffR
+  :: TheoryIdx
+  -> SolutionExtractor
+  -> Int  -- autoprover bound to use
+  -> Side
+  -> DiffTheoryPath
+  -> Handler RepJson
+getAutoProverDiffR idx extractor bound =
+  getProverDiffR (fullName, runAutoProver . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
@@ -1065,12 +1063,13 @@ getAutoProverDiffR idx extractor bound s =
 
 
 -- | Run an autoprover on a given proof path.
-getAutoProverAllDiffR :: TheoryIdx
-               -> SolutionExtractor
-               -> Int                             -- autoprover bound to use
-               -> Handler RepJson
+getAutoProverAllDiffR
+  :: TheoryIdx
+  -> SolutionExtractor
+  -> Int -- autoprover bound to use
+  -> Handler RepJson
 getAutoProverAllDiffR idx extractor bound =
-    getProverDiffAllR (fullName, runAutoProver . adapt, runAutoDiffProver . adapt) idx
+  getProverDiffAllR (fullName, runAutoProver . adapt, runAutoDiffProver . adapt) idx
   where
     adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
 
@@ -1090,10 +1089,12 @@ getAutoProverAllDiffR idx extractor bound =
 
 
 -- | Run an autoprover on a given proof path.
-getAutoDiffProverR :: TheoryIdx
-                   -> SolutionExtractor
-                   -> Int                             -- autoprover bound to use
-                   -> DiffTheoryPath -> Handler RepJson
+getAutoDiffProverR
+  :: TheoryIdx
+  -> SolutionExtractor
+  -> Int  -- autoprover bound to use
+  -> DiffTheoryPath
+  -> Handler RepJson
 getAutoDiffProverR idx extractor bound =
     getDiffProverR (fullName, runAutoDiffProver . adapt) idx
   where
@@ -1120,7 +1121,7 @@ getTheoryPathDR :: TheoryIdx -> TheoryPath -> Handler Html
 getTheoryPathDR idx path = withTheory idx $ \ti -> ajaxLayout $ do
   -- let maybeDebug = htmlThyDbgPath (tiTheory ti) path
   -- let maybeWidget = wrapHtmlDoc <$> maybeDebug
-  return [hamlet|
+  pure [hamlet|
     <h2>Theory information</h2>
     <ul>
       <li>Index = #{show (tiIndex ti)}
@@ -1150,33 +1151,34 @@ getOptions = do
   simpl <- lookupGetParam "simplification"
   showAutosource <- isNothing <$> lookupGetParam "no-auto-sources"
   clustering <- lookupGetParam "clustering"
-  let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack) 
-      graphOptions = L.set goSimplificationLevel simplificationLevel $
-                     L.set goCompress compress $
-                     L.set goShowAutoSource showAutosource $
-                     L.set goAbbreviate abbreviate $
-                     L.set goClustering (isJust clustering) $ 
-                     defaultGraphOptions
-  let dotOptions = L.set doNodeStyle nodeStyle defaultDotOptions
-  return (graphOptions, dotOptions)
+  let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack)
+      graphOptions = defaultGraphOptions
+        { _goSimplificationLevel = simplificationLevel
+        , _goCompress = compress
+        , _goShowAutoSource = showAutosource
+        , _goAbbreviate = abbreviate
+        , _goClustering = isJust clustering
+        }
+  let dotOptions = defaultDotOptions { _doNodeStyle = nodeStyle }
+  pure (graphOptions, dotOptions)
 
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphR :: TheoryIdx -> TheoryPath -> Handler ()
-getTheoryGraphR idx path = withTheory idx ( \ti -> do
-      yesod <- getYesod
-      (graphOptions, dotOptions) <- getOptions
-      img' <- liftIO $ traceExceptions "getTheoryGraphR" $
-        imgThyPath
-          (imageFormat yesod)
-          (outputCmd yesod)
-          (cacheDir yesod)
-          (dotSystemCompact graphOptions dotOptions)
-          (\label system -> sequentsToJSONPretty graphOptions [(label, system)])
-          (tiTheory ti) path
-      case img' of
-        Nothing -> notFound
-        Just img -> sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
+getTheoryGraphR idx path = withTheory idx $ \ti -> do
+  yesod <- getYesod
+  (graphOptions, dotOptions) <- getOptions
+  img' <- liftIO $ traceExceptions "getTheoryGraphR" $
+    imgThyPath
+      yesod.imageFormat
+      yesod.outputCmd
+      yesod.cacheDir
+      (dotSystemCompact graphOptions dotOptions)
+      (\label system -> sequentsToJSONPretty graphOptions [(label, system)])
+      ti.theory path
+  case img' of
+    Nothing -> notFound
+    Just img -> sendFile (fromString . imageFormatMIME $ yesod.imageFormat) img
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
@@ -1184,21 +1186,21 @@ getTheoryGraphDiffR idx path = getTheoryGraphDiffR' idx path False
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR' :: TheoryIdx -> DiffTheoryPath -> Bool -> Handler ()
-getTheoryGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
-      yesod <- getYesod
-      (graphOptions, dotOptions) <- getOptions
-      img' <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
-        imgDiffThyPath
-          (imageFormat yesod)
-          -- a.d. TODO should diff theories support JSON output?
-          (ocGraphCommand $ outputCmd yesod)
-          (cacheDir yesod)
-          (dotSystemCompact graphOptions dotOptions)
-          (dtiTheory ti) path
-          (mirror)
-      case img' of
-        Nothing -> notFound
-        Just img -> sendFile (fromString . imageFormatMIME $ imageFormat yesod) img)
+getTheoryGraphDiffR' idx path mirror = withDiffTheory idx $ \ti -> do
+  yesod <- getYesod
+  (graphOptions, dotOptions) <- getOptions
+  img' <- liftIO $ traceExceptions "getTheoryGraphDiffR" $
+    imgDiffThyPath
+      yesod.imageFormat
+      -- a.d. TODO should diff theories support JSON output?
+      yesod.outputCmd.ocGraphCommand
+      yesod.cacheDir
+      (dotSystemCompact graphOptions dotOptions)
+      ti.theory path
+      mirror
+  case img' of
+    Nothing -> notFound
+    Just img -> sendFile (fromString . imageFormatMIME $ yesod.imageFormat) img
 
 -- | Get rendered mirror graph for theory and given path.
 getTheoryMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
@@ -1207,32 +1209,33 @@ getTheoryMirrorDiffR idx path =  getTheoryGraphDiffR' idx path True
 -- | Kill a thread (aka 'cancel request').
 getKillThreadR :: Handler RepPlain
 getKillThreadR = do
-    maybeKey <- lookupGetParam "path"
-    case maybeKey of
-      Just key0 -> do
-        let key = T.decodeUtf8 . urlDecode True . T.encodeUtf8 $ key0
-        tryKillThread key
-        return $ RepPlain $ toContent ("Canceled request!" :: T.Text)
-      Nothing -> invalidArgs ["No path to kill specified!"]
+  maybeKey <- lookupGetParam "path"
+  case maybeKey of
+    Just key0 -> do
+      let key = T.decodeUtf8 . urlDecode True . T.encodeUtf8 $ key0
+      tryKillThread key
+      pure $ RepPlain $ toContent ("Canceled request!" :: T.Text)
+    Nothing -> invalidArgs ["No path to kill specified!"]
   where
     -- thread waiting for the result is responsible for
     -- updating the ThreadMap.
     tryKillThread k = do
       maybeTid <- getThread k
       case maybeTid of
-        Nothing  -> trace ("Killing failed: "++ T.unpack k) $ return ()
+        Nothing  -> trace ("Killing failed: "++ T.unpack k) $ pure ()
         Just tid -> trace ("Killing: " ++ T.unpack k)
                           (liftIO $ killThread tid)
 
 -- | Get the 'next' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
-getNextTheoryPathR :: TheoryIdx         -- ^ Theory index
-                   -> String            -- ^ Jumping mode (smart?)
-                   -> TheoryPath        -- ^ Current path
-                   -> Handler RepPlain
-getNextTheoryPathR idx md path = withTheory idx (\ti -> do
-    url <- getUrlRender <*> pure (TheoryPathMR idx $ next md (tiTheory ti) path)
-    return . RepPlain $ toContent url)
+getNextTheoryPathR
+  :: TheoryIdx   -- ^ Theory index
+  -> String      -- ^ Jumping mode (smart?)
+  -> TheoryPath  -- ^ Current path
+  -> Handler RepPlain
+getNextTheoryPathR idx md path = withTheory idx $ \ti -> do
+  url <- getUrlRender <*> pure (TheoryPathMR idx $ next md ti.theory path)
+  pure . RepPlain $ toContent url
   where
     next "normal" = nextThyPath
     next "smart"  = nextSmartThyPath
@@ -1240,13 +1243,14 @@ getNextTheoryPathR idx md path = withTheory idx (\ti -> do
 
 -- | Get the 'next' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
-getNextTheoryPathDiffR :: TheoryIdx         -- ^ Theory index
-                       -> String            -- ^ Jumping mode (smart?)
-                       -> DiffTheoryPath    -- ^ Current path
-                       -> Handler RepPlain
-getNextTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
-    url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ nextDiff md (dtiTheory ti) path)
-    return . RepPlain $ toContent url)
+getNextTheoryPathDiffR
+  :: TheoryIdx       -- ^ Theory index
+  -> String          -- ^ Jumping mode (smart?)
+  -> DiffTheoryPath  -- ^ Current path
+  -> Handler RepPlain
+getNextTheoryPathDiffR idx md path = withDiffTheory idx $ \ti -> do
+  url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ nextDiff md ti.theory path)
+  pure . RepPlain $ toContent url
   where
     nextDiff "normal" = nextDiffThyPath
     nextDiff "smart"  = nextSmartDiffThyPath
@@ -1255,9 +1259,9 @@ getNextTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
 -- | Get the 'prev' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
 getPrevTheoryPathR :: TheoryIdx -> String -> TheoryPath -> Handler RepPlain
-getPrevTheoryPathR idx md path = withTheory idx (\ti -> do
-    url <- getUrlRender <*> pure (TheoryPathMR idx $ prev md (tiTheory ti) path)
-    return $ RepPlain $ toContent url)
+getPrevTheoryPathR idx md path = withTheory idx $ \ti -> do
+  url <- getUrlRender <*> pure (TheoryPathMR idx $ prev md ti.theory path)
+  pure $ RepPlain $ toContent url
   where
     prev "normal" = prevThyPath
     prev "smart" = prevSmartThyPath
@@ -1266,9 +1270,9 @@ getPrevTheoryPathR idx md path = withTheory idx (\ti -> do
 -- | Get the 'prev' theory path for a given path.
 -- This function is used for implementing keyboard shortcuts.
 getPrevTheoryPathDiffR :: TheoryIdx -> String -> DiffTheoryPath -> Handler RepPlain
-getPrevTheoryPathDiffR idx md path = withDiffTheory idx  (\ti -> do
-    url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ prevDiff md (dtiTheory ti) path)
-    return $ RepPlain $ toContent url)
+getPrevTheoryPathDiffR idx md path = withDiffTheory idx $ \ti -> do
+  url <- getUrlRender <*> pure (TheoryPathDiffMR idx $ prevDiff md ti.theory path)
+  pure $ RepPlain $ toContent url
   where
     prevDiff "normal" = prevDiffThyPath
     prevDiff "smart" = prevSmartDiffThyPath
@@ -1305,7 +1309,7 @@ postEditTheoryR idx = withTheory idx $ \ti -> formHandler
       , "Parser returned the message:"
       , T.pack $ show err ]
 
-    name = T.pack . get thyName . tiTheory
+    name = T.pack tiTheory._thyName
     theoryFormTpl = formTpl (EditTheoryR idx) "Load as new theory"
 -}
 
@@ -1369,129 +1373,108 @@ postEditPathR _ _ =
 -- | Delete a given proof step.
 getDeleteStepR :: TheoryIdx -> TheoryPath -> Handler RepJson
 getDeleteStepR idx path = do
-    jsonValue <- withTheory idx (go path)
-    return $ RepJson $ toContent jsonValue
+  jsonValue <- withTheory idx (go path)
+  pure $ RepJson $ toContent jsonValue
   where
     go (TheoryLemma lemma) ti = modifyTheory ti
-      (return . removeLemma lemma)
+      (pure . removeLemma lemma)
       (const path)
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
     go (TheoryProof lemma proofPath) ti = modifyTheory ti
-      (\thy -> return $
+      (\thy -> pure $
           applyProverAtPath thy lemma proofPath (sorryProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
 
-    go _ _ = return . responseToJson $ JsonAlert
+    go _ _ = pure . responseToJson $ JsonAlert
       "Can't delete the given theory path!"
 
 -- | Delete a given proof step.
 getDeleteStepDiffR :: TheoryIdx -> DiffTheoryPath -> Handler RepJson
 getDeleteStepDiffR idx path = do
-    jsonValue <- withDiffTheory idx (goDiff path)
-    return $ RepJson $ toContent jsonValue
+  jsonValue <- withDiffTheory idx (goDiff path)
+  pure $ RepJson $ toContent jsonValue
   where
     goDiff (DiffTheoryLemma s lemma) ti = modifyDiffTheory ti
-      (return . removeLemmaDiff s lemma)
+      (pure . removeLemmaDiff s lemma)
       (const path)
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
     goDiff (DiffTheoryProof s lemma proofPath) ti = modifyDiffTheory ti
-      (\thy -> return $
+      (\thy -> pure $
           applyProverAtPathDiff thy s lemma proofPath (sorryProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
 
     goDiff (DiffTheoryDiffLemma lemma) ti = modifyDiffTheory ti
-      (return . removeDiffLemma lemma)
+      (pure . removeDiffLemma lemma)
       (const path)
       (JsonAlert "Sorry, but removing the selected lemma failed!")
 
     goDiff (DiffTheoryDiffProof lemma proofPath) ti = modifyDiffTheory ti
-      (\thy -> return $
+      (\thy -> pure $
           applyDiffProverAtPath thy lemma proofPath (sorryDiffProver (Just "removed")))
       (const path)
       (JsonAlert "Sorry, but removing the selected proof step failed!")
 
-    goDiff _ _ = return . responseToJson $ JsonAlert
+    goDiff _ _ = pure . responseToJson $ JsonAlert
       "Can't delete the given theory path!"
 
 -- | Save a theory to the working directory.
 getSaveTheoryR :: TheoryIdx -> Handler RepJson
-getSaveTheoryR idx = withEitherTheory idx $ \eti -> do
-    case eti of
-       Trace ti -> do
-          let origin = tiOrigin ti
-          case origin of
-            -- Saving interactive/uploaded files not supported yet.
-            Interactive -> notFound
-            Upload _ -> notFound
-            -- Saving of local files implemented.
-            Local file -> do
-              -- Save theory to disk
-              liftIO $ writeFile file (prettyRender ti)
-              -- Find original theorie(s) with same origin
-              -- Set original -> modified
-              thys <- M.filter (same origin) <$> getTheories
-              _ <- Tr.mapM (\t -> adjEitherTheory (getEitherTheoryIndex t) (setPrimary False)) thys
-              -- Find current theory
-              -- Set modified -> original
-              adjEitherTheory (tiIndex ti) (setPrimary True)
-              -- Return message
-              jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
-       Diff ti -> do
-          let origin = dtiOrigin ti
-          case origin of
-            -- Saving interactive/uploaded files not supported yet.
-            Interactive -> notFound
-            Upload _ -> notFound
-            -- Saving of local files implemented.
-            Local file -> do
-              -- Save theory to disk
-              liftIO $ writeFile file (prettyRenderD ti)
-              -- Find original theorie(s) with same origin
-              -- Set original -> modified
-              thys <- M.filter (same origin) <$> getTheories
-              _ <- Tr.mapM (\t -> adjEitherTheory (getEitherTheoryIndex t) (setPrimary False)) thys
-              -- Find current theory
-              -- Set modified -> original
-              adjEitherTheory (dtiIndex ti) (setPrimary True)
-              -- Return message
-              jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
+getSaveTheoryR idx = withEitherTheory idx $ \case
+  Trace ti -> handler ti (prettyOpenTheory . openTheory)
+  Diff ti  -> handler ti (prettyOpenDiffTheory . openDiffTheory)
   where
-    prettyRender ti  = render $ prettyOpenTheory $ openTheory $ tiTheory ti
-    prettyRenderD ti = render $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti
-    same origin (Trace ti) = tiPrimary ti  && (tiOrigin ti  == origin)
-    same origin (Diff ti)    = dtiPrimary ti && (dtiOrigin ti == origin)
-    setPrimary :: Bool -> EitherTheoryInfo -> EitherTheoryInfo
-    setPrimary bool (Trace ti)  = Trace (ti { tiPrimary  = bool })
-    setPrimary bool (Diff ti)     = Diff    (ti { dtiPrimary = bool })
+    handler ti prettyOpenTheoryF =
+      case ti.origin of
+       -- Saving interactive/uploaded files not supported yet.
+       Interactive -> notFound
+       Upload _ -> notFound
+       -- Saving of local files implemented.
+       Local file -> do
+         -- Save theory to disk
+         liftIO $ writeFile file (render $ prettyOpenTheoryF ti.theory)
+         -- Find original theorie(s) with same origin
+         -- Set original -> modified
+         thys <- M.filter (same ti.origin) <$> getTheories
+         mapM_ (\t -> adjEitherTheory (getEitherTheoryIndex t) (setPrimary False)) thys
+         -- Find current theory
+         -- Set modified -> original
+         adjEitherTheory ti.index (setPrimary True)
+         -- Return message
+         jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
 
+    same origin (Trace ti) = ti.primary && (ti.origin == origin)
+    same origin (Diff ti)  = ti.primary && (ti.origin == origin)
+    setPrimary :: Bool -> EitherTheoryInfo -> EitherTheoryInfo
+    setPrimary primary (Trace ti) = Trace (ti { primary })
+    setPrimary primary (Diff ti)  = Diff  (ti { primary })
 
 -- | Prompt downloading of theory.
 getDownloadTheoryR :: TheoryIdx -> String -> Handler (ContentType, Content)
 getDownloadTheoryR idx _ = do
-    RepPlain source <- getTheorySourceR idx
-    return (typeOctet, source)
+  RepPlain source <- getTheorySourceR idx
+  pure (typeOctet, source)
 
 -- | prompt appending of the current theory's lemmas to their source file
 getAppendNewLemmasR :: TheoryIdx -> String -> Handler Value
 getAppendNewLemmasR idx _ = withTheory idx $ \ti -> do
-    let maybePath = case tiOrigin ti of 
-                        Local path -> Just path 
-                        _ ->  Nothing 
-        srcThy = fromMaybe "" maybePath 
-        allptxts = foldl (\ p (Lemma _ pt modified _ _ _ _) -> if modified then p ++ "\n\n" ++ pt else p) "" (getLemmas (tiTheory ti))
+    let maybePath = case ti.origin of
+                        Local path -> Just path
+                        _ ->  Nothing
+        srcThy = fromMaybe "" maybePath
+        allptxts = foldl (\ p (Lemma _ pt modified _ _ _ _) -> if modified then p ++ "\n\n" ++ pt else p) "" (getLemmas ti.theory)
 
     liftIO $ when (allptxts /= "" && isJust maybePath) $ appendFile srcThy $ "\n/*" ++ allptxts ++ "\n*/"
 
-    if isNothing maybePath then return $ responseToJson (JsonAlert $ "No origin found for the current theory.")
-    else case modifyLemma (\(Lemma n pt _ tq f a lp)  -> Lemma n pt False tq f a lp ) (tiTheory ti) of
-            Nothing -> return $ responseToJson $ JsonAlert $ "Appended lemmas to " `T.append` T.pack srcThy
+    if isNothing maybePath then pure $ responseToJson (JsonAlert "No origin found for the current theory.")
+    else case modifyLemma (\(Lemma n pt _ tq f a lp)  -> Lemma n pt False tq f a lp ) ti.theory of
+            Nothing -> pure $ responseToJson $ JsonAlert $ "Appended lemmas to " `T.append` T.pack srcThy
             Just nthy -> do
                             nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
-                            return $ responseToJson $ JsonAlert $ "Appended lemmas to " `T.append` T.pack srcThy
+                            pure $ responseToJson $ JsonAlert $ "Appended lemmas to " `T.append` T.pack srcThy
 
 -- | Prompt downloading of theory.
 getDownloadTheoryDiffR :: TheoryIdx -> String -> Handler (ContentType, Content)
@@ -1500,8 +1483,8 @@ getDownloadTheoryDiffR = getDownloadTheoryR
 -- | Unload a theory from the interactive server.
 getUnloadTheoryR :: TheoryIdx -> Handler RepPlain
 getUnloadTheoryR idx = do
-    delTheory idx
-    redirect RootR
+  delTheory idx
+  redirect RootR
 
 -- | Unload a theory from the interactive server.
 getUnloadTheoryDiffR :: TheoryIdx -> Handler RepPlain

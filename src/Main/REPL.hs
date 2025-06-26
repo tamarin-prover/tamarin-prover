@@ -12,17 +12,16 @@ module Main.REPL
   , showWith
   ) where
 
+import Control.Monad (guard, void)
+import Data.Either (fromLeft)
+import Data.List (uncons)
+import Data.Map qualified as M
+import Data.Maybe (mapMaybe, fromMaybe)
 import Control.Monad.Trans.Except (runExceptT)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Reader
-import Data.Either (fromLeft)
-import qualified Data.Label as L
-import qualified Data.Map as M
 import Main.TheoryLoader as L (closeTheory, loadTheory, defaultTheoryLoadOptions, maudePath, TheoryLoadError)
 import Theory
-import Data.Maybe (mapMaybe, fromMaybe)
-import Data.List (uncons)
-import Control.Monad (guard, void)
 import Text.PrettyPrint.Class (render)
 
 type REPL = ReaderT ClosedTheory IO
@@ -41,8 +40,8 @@ loadThy inFile = either (error . show) id <$> errOrThy
       srcThy <- lift $ readFile inFile
       thy    <- fromLeft (error "diff theory") <$> loadTheory defaultTheoryLoadOptions srcThy inFile
 
-      let sig = L.get thySignature thy
-      sig'   <- lift $ toSignatureWithMaude (defaultTheoryLoadOptions.maudePath) sig
+      let sig = thy._thySignature
+      sig'   <- lift $ toSignatureWithMaude defaultTheoryLoadOptions.maudePath sig
 
       fromLeft (error "diff theory") . snd <$> L.closeTheory "" defaultTheoryLoadOptions sig' (Left thy)
 
@@ -55,9 +54,9 @@ data REPLProof = REPLProof
 
 rankMethods :: ProofContext -> System -> Int -> [ProofMethod]
 rankMethods ctxt sys depth =
-  let heuristic = fromMaybe (defaultHeuristic False) (L.get pcHeuristic ctxt)
+  let heuristic = fromMaybe (defaultHeuristic False) ctxt._pcHeuristic
       ranking = useHeuristic heuristic depth
-      tactic = fromMaybe [defaultTactic] (L.get pcTactic ctxt)
+      tactic = fromMaybe [defaultTactic] ctxt._pcTactic
   in map fst $ rankProofMethods ranking tactic ctxt sys
 
 collectPaths :: ProofContext -> IncrementalProof -> PathMap
@@ -76,22 +75,22 @@ collectPaths ctxt prf = M.fromList $ zip [0..] $ map (\p -> (p, getMethods p)) $
 getProofForLemma :: String -> REPL REPLProof
 getProofForLemma name = do
   thy <- ask
-  let lem = fmap fst $ uncons $ mapMaybe (matcher thy) (L.get thyItems thy)
+  let lem = fmap fst $ uncons $ mapMaybe (matcher thy) thy._thyItems
   maybeREPL "No such lemma" lem
   where
     matcher :: ClosedTheory -> TheoryItem ClosedProtoRule IncrementalProof () -> Maybe REPLProof
     matcher thy (LemmaItem l) = do
-      guard (L.get lName l == name)
-      let prf = L.get lProof l
+      guard (l._lName == name)
+      let prf = l._lProof
       let ctxt = getProofContext l thy
       return $ REPLProof prf ctxt (collectPaths ctxt prf)
     matcher _ _               = Nothing
 
 solve :: Int -> Int -> REPLProof -> REPL REPLProof
-solve pathIdx methodIdx prf = 
-  let mPath = M.lookup pathIdx $ rpPaths prf
-      iPrf = rpProof prf
-      ctxt = rpCtxt prf
+solve pathIdx methodIdx prf =
+  let mPath = M.lookup pathIdx prf.rpPaths
+      iPrf = prf.rpProof
+      ctxt = prf.rpCtxt
   in do
   (path, methods) <- maybeREPL "illegal path index" mPath
   method <- maybeREPL "illegal method index" (methods !?! methodIdx)
@@ -108,14 +107,14 @@ solve pathIdx methodIdx prf =
 
 systemAt :: Int -> REPLProof -> REPL System
 systemAt pathIdx prf =
-  let mPath = M.lookup pathIdx $ rpPaths prf
-      iPrf = rpProof prf
+  let mPath = M.lookup pathIdx prf.rpPaths
+      iPrf = prf.rpProof
   in do
     (path, _) <- maybeREPL "illegal path index" mPath
     maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root)
 
 getMethodsAt :: Int -> REPLProof -> REPL [ProofMethod]
-getMethodsAt i prf = maybe (fail "illegal index") (return . snd) (M.lookup i $ rpPaths prf)
+getMethodsAt i prf = maybe (fail "illegal index") (return . snd) (M.lookup i prf.rpPaths)
 
 showMethodsAt :: IO ClosedTheory -> Int -> REPL REPLProof -> IO ()
 showMethodsAt thy i m = do
@@ -128,7 +127,7 @@ showMethodsAt thy i m = do
 showPaths :: IO ClosedTheory -> REPL REPLProof -> IO ()
 showPaths thy m = do
   prf <- runREPL thy m
-  printTree $ rpProof prf
+  printTree prf.rpProof
 
 printTree :: IncrementalProof -> IO ()
 printTree p = do
