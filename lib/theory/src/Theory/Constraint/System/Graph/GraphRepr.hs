@@ -24,7 +24,6 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , cEdges
     , toEdgeList
     , extractRole
-    , isRoleAttribute
     , getNodeRole
     , getNodeName
     , groupNodesByRole
@@ -58,13 +57,13 @@ data Node = Node {
 -- | Different types of graph nodes.
 data NodeType =
     SystemNode Th.RuleACInst                    -- ^ Nodes from rule instances
-  | UnsolvedActionNode [Th.LNFact]             -- ^ Nodes from unsolved adversary actions. 
+  | UnsolvedActionNode [Th.LNFact]             -- ^ Nodes from unsolved adversary actions.
   | LastActionAtom                             -- ^ Nodes that are only used for induction.
   | MissingNode (Either Th.ConcIdx Th.PremIdx) -- ^ Nodes referenced by edges which don't exist elsewhere.
   deriving( Eq, Ord, Show )
 
 
--- | Different types of graph edges. 
+-- | Different types of graph edges.
 data Edge =
     SystemEdge (Sys.NodeConc, Sys.NodePrem)    -- ^ Edges that transport facts from premises to conclusions between rules.
   | LessEdge Th.LessAtom                       -- ^ Edges that represent a temporal-before relationship.
@@ -91,17 +90,17 @@ $(mkLabels [''GraphRepr, ''Node, ''Cluster])
 
 -- | Conversion function to a list of edges as used by Data.Graph.
 toEdgeList :: GraphRepr -> [(Node, M.NodeId, [M.NodeId])]
-toEdgeList repr = 
+toEdgeList repr =
   let allNodes = get grNodes repr ++ concatMap (get cNodes) (get grClusters repr)
       allEdges = get grEdges repr ++ concatMap (get cEdges) (get grClusters repr) in
   map (\node -> (node, get nNodeId node, findSinkIndices allEdges node)) allNodes
   where
     -- | For each node, find all connected nodes using allEdges and return their NodeId's.
     findSinkIndices :: [Edge] -> Node -> [M.NodeId]
-    findSinkIndices allEdges node = 
+    findSinkIndices allEdges node =
       let srcId = get nNodeId node in
       mapMaybe (findEdgeTarget srcId) allEdges
-    
+
     -- | For a given source node id and an edge, check if the edge belongs to the node and return the target node id.
     findEdgeTarget :: M.NodeId -> Edge -> Maybe M.NodeId
     findEdgeTarget srcId (SystemEdge ((srcId', _), (tgtId, _)))    | srcId == srcId' = Just tgtId
@@ -111,7 +110,7 @@ toEdgeList repr =
 
 
 ----------------------------------------------------
--- Clusturing 
+-- Clusturing
 ----------------------------------------------------
 
 -- Function to add clusters to a GraphRepr
@@ -121,7 +120,7 @@ addCluster repr nodesByGroup nameSuffix =
         createSubClusters name nodes =
             let connectedComponents = findConnectedComponents nodes (filterEdgesForCluster nodes edges)
             in zipWith (\i component -> createCluster (name ++ nameSuffix ++ show (i :: Integer)) component (filterEdgesForCluster component edges)) [1..] connectedComponents
-        subClusters = concatMap (\(name, nodes) -> createSubClusters name nodes) (Map.toList nodesByGroup)
+        subClusters = concatMap (uncurry createSubClusters) (Map.toList nodesByGroup)
         clusterEdges = concatMap (get cEdges) subClusters
         clusteredNodes = concatMap (get cNodes) subClusters
         remainingEdges = filter (`notElem` clusterEdges) edges
@@ -131,21 +130,14 @@ addCluster repr nodesByGroup nameSuffix =
        set grNodes remainingNodes repr
 
 ----------------------------------------------------
--- Clusturing by role name 
+-- Clusturing by role name
 ----------------------------------------------------
 
 extractRole :: Th.RuleACInst -> Maybe String
-extractRole ru = case find isRoleAttribute (Th.ruleAttributes ru) of
-  Just (Th.Role roleName) -> Just roleName
-  _                         -> Nothing
-
-isRoleAttribute :: Th.RuleAttribute -> Bool
-isRoleAttribute (Th.Role _) = True
-isRoleAttribute _            = False
-
+extractRole ru = Th.role (Th.ruleAttributes ru)
 
 groupNodesByRole :: [Node] -> Map.Map String [Node]
-groupNodesByRole nodes = foldr groupByRole Map.empty nodes
+groupNodesByRole = foldr groupByRole Map.empty
   where
     groupByRole node acc = case getNodeRole node of
       Just role     -> Map.insertWith (++) role [node] acc
@@ -214,7 +206,7 @@ addClusterByRole repr =
 
 -- Function to get the rule name from a node
 getRuleNameByNode :: Node -> Maybe String
-getRuleNameByNode node = 
+getRuleNameByNode node =
     case _nNodeType node of
         SystemNode ru -> case Th.ruleName ru of
                            Th.ProtoInfo _ -> Just (Th.showRuleCaseName ru)
@@ -223,21 +215,21 @@ getRuleNameByNode node =
 
 -- Function to extract the base name based on underscores
 extractBaseName :: String -> Maybe String
-extractBaseName name = 
+extractBaseName name =
     let parts = splitOn "_" name
         lastPart = last parts
         isNumber = all isDigit lastPart
-        baseName = if isNumber && length parts > 1 
+        baseName = if isNumber && length parts > 1
                    then Just (intercalate "_" (init parts))
                    else Nothing
     in baseName
 
 -- Function to group nodes by similar rule names
 groupBySimilarName :: [Node] -> Map.Map String [Node]
-groupBySimilarName nodes = 
-    let result = foldr (\node acc -> 
+groupBySimilarName nodes =
+    let result = foldr (\node acc ->
                     case getRuleNameByNode node >>= extractBaseName of
-                        Just baseName -> Map.insertWith (++) baseName [node] acc 
+                        Just baseName -> Map.insertWith (++) baseName [node] acc
                         Nothing       -> acc
                 ) Map.empty nodes
     in result

@@ -128,7 +128,7 @@ data AnnotatedRule ann = AnnotatedRule
 data FactType = GET | IN | NEW | EVENT | INSERT | OUT
   deriving (Eq)
 
--- | applies function acting on rule taple on annotated rule.
+-- | applies function acting on rule tuple on annotated rule.
 mapAct ::
   ( ([TransFact], [TransAction], [TransFact], [SyntacticLNFormula]) ->
     ([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])
@@ -323,6 +323,7 @@ getTopLevelName (ProcessNull ann) = getProcessNames ann
 getTopLevelName (ProcessComb _ ann _ _) = getProcessNames ann
 getTopLevelName (ProcessAction _ ann _) = getProcessNames ann
 
+-- | Propagate the names of processes downward, i.e., from each parent's annotation to all of their children, so that each process is annotated with the list of names of their parent processes.
 propagateNames :: (GoodAnnotation an) => Process an v -> Process an v
 propagateNames = propagate' []
   where
@@ -353,10 +354,10 @@ interpolate (HSV h1 s1 v1) (HSV h2 s2 v2) a = HSV h' s' v'
     v' = (v2 - v1) * a + v1
 
 colorHash :: (Fractional t, Ord t) => String -> RGB t
-colorHash s = RGB r g b
+colorHash s = RGB (f 0) (f 1) (f 2)
   where
-    nthByte x n = (x `shiftR` (8 * n)) .&. 0xff
-    (r, g, b) = fmap ((/ 255) . fromIntegral . nthByte (crc32 s)) (0, 1, 2)
+    f = (/255) . fromIntegral . nthByte (crc32 s)
+    nthByte x n = (x `shiftR` (8*n)) .&. 0xff
 
 -- Computes a color for a list of strings by first computing
 -- the CRC32 checksum of each string and then interpolating the
@@ -372,7 +373,7 @@ colorForProcessName names = hsvToRGB $ normalize $ fst $ foldl f (head palette, 
     normalize (HSV h _ _) = HSV h 0.5 0.5
     f (acc, i) v = (interpolate acc v (2 ^^ (-i)), i + 1)
 
-toRule :: (GoodAnnotation ann) => AnnotatedRule ann -> Rule ProtoRuleEInfo
+toRule :: AnnotatedRule (ProcessAnnotation LVar) -> Rule ProtoRuleEInfo
 toRule AnnotatedRule {..} =
   -- this is a Record Wildcard
   Rule (ProtoRuleEInfo (StandRule name) attr restr) l r a (newVariables l r)
@@ -385,15 +386,18 @@ toRule AnnotatedRule {..} =
           ++ show index
           ++ "_"
           ++ prettyEitherPositionOrSpecial position
-    attr =
-      [ RuleColor $ colorForProcessName $ getTopLevelName process,
-        Process $ toProcess process,
-        IsSAPiCRule
-      ]
-        ++ ([IgnoreDerivChecks | isLookup process])
+    attr = RuleAttributes
+        { ruleColor = Just $ colorForProcessName $ getTopLevelName process
+        , ruleProcess = Just $ toProcess process
+        , ignoreDerivChecks = isLookup process
+        , isSAPiCRule = True
+        , role = Just $ roleFromProcessNameList $ getProcessNames $ processGetAnnotation process
+        }
     l = map factToFact prems
     a = map actionToFact acts
     r = map factToFact concs
+    roleFromProcessNameList [] = "Process"
+    roleFromProcessNameList nameList = List.intercalate "_" nameList
     stripNonAlphanumerical = filter isAlpha
     unNull s = if null s then "p" else s
     isLookup (ProcessComb (Lookup _ _) _ _ _) = True
