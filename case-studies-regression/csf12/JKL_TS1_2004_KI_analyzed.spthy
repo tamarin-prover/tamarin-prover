@@ -195,8 +195,8 @@ Failed to derive Variable(s): ~lkI
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -208,7 +208,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2004_KI.spthy.tmp
-  processing time: 0.20s
+  processing time: 0.18s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

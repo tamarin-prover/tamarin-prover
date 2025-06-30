@@ -32,11 +32,11 @@ simplify
 solve( State_1211( ~prog_, s, x ) ▶₀ #t )
   case ifxHELLO_0_121
   solve( State_11( ~prog_, s ) ▶₀ #t.2 )
-    case p_0_1
+    case Init
     solve( (#t.2 < #t2)  ∥ (#t.2 = #t2)  ∥ (#vr.1 < #t.2) )
       case case_2
       solve( State_11( ~prog_, s ) ▶₀ #t.2 )
-        case p_0_1
+        case Init
         solve( (∃ #t. (ProgressTo_12111( ~prog_ ) @ #t))  ∥
                (∃ #t. (ProgressTo_12121( ~prog_ ) @ #t))  ∥
                (∃ #t. (ProgressTo_1221( ~prog_ ) @ #t)) )
@@ -76,9 +76,9 @@ simplify
 solve( State_122( ~prog_, s ) ▶₀ #t )
   case lookupsasx_1_12
   solve( State_11( ~prog_, s ) ▶₀ #t.2 )
-    case p_0_1
+    case Init
     solve( State_11( ~prog_, s ) ▶₀ #t.3 )
-      case p_0_1
+      case Init
       solve( (∃ #t. (ProgressTo_12111( ~prog_ ) @ #t))  ∥
              (∃ #t. (ProgressTo_12121( ~prog_ ) @ #t))  ∥
              (∃ #t. (ProgressTo_1221( ~prog_ ) @ #t)) )
@@ -109,180 +109,131 @@ qed
 
 
 rule (modulo E) MessageIDRule[color=#ffffff, process="new s.1;",
-                              issapicrule]:
+                              issapicrule, role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="new s.1;", issapicrule]:
-   [ Fr( ~prog_ ) ]
-  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
-   [ State_( ~prog_ ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) news_0_[color=#ffffff, process="new s.1;", issapicrule]:
-   [ State_( ~prog_ ), Fr( s.1 ) ] --> [ State_1( ~prog_, s.1 ) ]
+rule (modulo E) insertsHELLO_0_11[color=#ffffff, process="0",
+                                  issapicrule, role='Process']:
+   [ State_11( ~prog_, s.1 ) ]
+  --[ ProgressTo_111( ~prog_ ), Insert( s.1, 'HELLO' ) ]->
+   [ ]
 
   /*
-  rule (modulo AC) news_0_[color=#ffffff, process="new s.1;", issapicrule]:
-     [ State_( ~prog_ ), Fr( s ) ] --> [ State_1( ~prog_, s ) ]
+  rule (modulo AC) insertsHELLO_0_11[color=#ffffff, process="0",
+                                     issapicrule, role='Process']:
+     [ State_11( ~prog_, s ) ]
+    --[ ProgressTo_111( ~prog_ ), Insert( s, 'HELLO' ) ]->
+     [ ]
   */
 
-rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule]:
-   [ State_1( ~prog_, s.1 ) ]
-  -->
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ Fr( ~prog_ ), Fr( s.1 ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
    [ State_11( ~prog_, s.1 ), State_12( ~prog_, s.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1[color=#ffffff, process="|", issapicrule]:
-     [ State_1( ~prog_, s ) ]
-    -->
+  rule (modulo AC) Init[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+     [ Fr( ~prog_ ), Fr( s ) ]
+    --[ ProgressFrom_( ~prog_ ), Init( ) ]->
      [ State_11( ~prog_, s ), State_12( ~prog_, s ) ]
   */
 
-rule (modulo E) insertsHELLO_0_11[color=#ffffff,
-                                  process="insert s.1,'HELLO';", issapicrule]:
-   [ State_11( ~prog_, s.1 ) ]
-  --[ ProgressTo_111( ~prog_ ), Insert( s.1, 'HELLO' ) ]->
-   [ State_111( ~prog_, s.1 ) ]
-
-  /*
-  rule (modulo AC) insertsHELLO_0_11[color=#ffffff,
-                                     process="insert s.1,'HELLO';", issapicrule]:
-     [ State_11( ~prog_, s ) ]
-    --[ ProgressTo_111( ~prog_ ), Insert( s, 'HELLO' ) ]->
-     [ State_111( ~prog_, s ) ]
-  */
-
-rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule]:
-   [ State_111( ~prog_, s.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule]:
-     [ State_111( ~prog_, s ) ] --> [ ]
-  */
-
 rule (modulo E) lookupsasx_0_12[color=#ffffff,
-                                process="lookup s.1 as x.1", issapicrule, derivchecks]:
+                                process="lookup s.1 as x.1", derivchecks, issapicrule, role='Process']:
    [ State_12( ~prog_, s.1 ) ]
   --[ IsIn( s.1, x.1 ) ]->
    [ State_121( ~prog_, s.1, x.1 ) ]
 
   /*
   rule (modulo AC) lookupsasx_0_12[color=#ffffff,
-                                   process="lookup s.1 as x.1", issapicrule, derivchecks]:
+                                   process="lookup s.1 as x.1", derivchecks, issapicrule, role='Process']:
      [ State_12( ~prog_, s ) ]
     --[ IsIn( s, x ) ]->
      [ State_121( ~prog_, s, x ) ]
   */
 
-rule (modulo E) lookupsasx_1_12[color=#ffffff,
-                                process="lookup s.1 as x.1", issapicrule, derivchecks]:
-   [ State_12( ~prog_, s.1 ) ]
-  --[ IsNotSet( s.1 ) ]->
-   [ State_122( ~prog_, s.1 ) ]
-
-  /*
-  rule (modulo AC) lookupsasx_1_12[color=#ffffff,
-                                   process="lookup s.1 as x.1", issapicrule, derivchecks]:
-     [ State_12( ~prog_, s ) ]
-    --[ IsNotSet( s ) ]->
-     [ State_122( ~prog_, s ) ]
-  */
-
 rule (modulo E) ifxHELLO_0_121[color=#ffffff, process="if x.1='HELLO'",
-                               issapicrule]:
+                               issapicrule, role='Process']:
    [ State_121( ~prog_, s.1, x.1 ) ]
   --[ Pred_Eq( x.1, 'HELLO' ) ]->
    [ State_1211( ~prog_, s.1, x.1 ) ]
 
   /*
   rule (modulo AC) ifxHELLO_0_121[color=#ffffff, process="if x.1='HELLO'",
-                                  issapicrule]:
+                                  issapicrule, role='Process']:
      [ State_121( ~prog_, s, x ) ]
     --[ Pred_Eq( x, 'HELLO' ) ]->
      [ State_1211( ~prog_, s, x ) ]
   */
 
+rule (modulo E) eventA_0_1211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+   [ State_1211( ~prog_, s.1, x.1 ) ]
+  --[ ProgressTo_12111( ~prog_ ), A( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventA_0_1211[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
+     [ State_1211( ~prog_, s, x ) ]
+    --[ ProgressTo_12111( ~prog_ ), A( ) ]->
+     [ ]
+  */
+
 rule (modulo E) ifxHELLO_1_121[color=#ffffff, process="if x.1='HELLO'",
-                               issapicrule]:
+                               issapicrule, role='Process']:
    [ State_121( ~prog_, s.1, x.1 ) ]
   --[ Pred_Not_Eq( x.1, 'HELLO' ) ]->
    [ State_1212( ~prog_, s.1, x.1 ) ]
 
   /*
   rule (modulo AC) ifxHELLO_1_121[color=#ffffff, process="if x.1='HELLO'",
-                                  issapicrule]:
+                                  issapicrule, role='Process']:
      [ State_121( ~prog_, s, x ) ]
     --[ Pred_Not_Eq( x, 'HELLO' ) ]->
      [ State_1212( ~prog_, s, x ) ]
   */
 
-rule (modulo E) eventA_0_1211[color=#ffffff, process="event A( );",
-                              issapicrule]:
-   [ State_1211( ~prog_, s.1, x.1 ) ]
-  --[ ProgressTo_12111( ~prog_ ), A( ) ]->
-   [ State_12111( ~prog_, s.1, x.1 ) ]
-
-  /*
-  rule (modulo AC) eventA_0_1211[color=#ffffff, process="event A( );",
-                                 issapicrule]:
-     [ State_1211( ~prog_, s, x ) ]
-    --[ ProgressTo_12111( ~prog_ ), A( ) ]->
-     [ State_12111( ~prog_, s, x ) ]
-  */
-
-rule (modulo E) p_0_12111[color=#ffffff, process="0", issapicrule]:
-   [ State_12111( ~prog_, s.1, x.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_12111[color=#ffffff, process="0", issapicrule]:
-     [ State_12111( ~prog_, s, x ) ] --> [ ]
-  */
-
-rule (modulo E) eventB_0_1212[color=#ffffff, process="event B( );",
-                              issapicrule]:
+rule (modulo E) eventB_0_1212[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
    [ State_1212( ~prog_, s.1, x.1 ) ]
   --[ ProgressTo_12121( ~prog_ ), B( ) ]->
-   [ State_12121( ~prog_, s.1, x.1 ) ]
+   [ ]
 
   /*
-  rule (modulo AC) eventB_0_1212[color=#ffffff, process="event B( );",
-                                 issapicrule]:
+  rule (modulo AC) eventB_0_1212[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
      [ State_1212( ~prog_, s, x ) ]
     --[ ProgressTo_12121( ~prog_ ), B( ) ]->
-     [ State_12121( ~prog_, s, x ) ]
+     [ ]
   */
 
-rule (modulo E) p_0_12121[color=#ffffff, process="0", issapicrule]:
-   [ State_12121( ~prog_, s.1, x.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_12121[color=#ffffff, process="0", issapicrule]:
-     [ State_12121( ~prog_, s, x ) ] --> [ ]
-  */
-
-rule (modulo E) eventC_0_122[color=#ffffff, process="event C( );",
-                             issapicrule]:
+rule (modulo E) lookupsasx_1_12[color=#ffffff,
+                                process="lookup s.1 as x.1", derivchecks, issapicrule, role='Process']:
+   [ State_12( ~prog_, s.1 ) ]
+  --[ IsNotSet( s.1 ) ]->
    [ State_122( ~prog_, s.1 ) ]
-  --[ ProgressTo_1221( ~prog_ ), C( ) ]->
-   [ State_1221( ~prog_, s.1 ) ]
 
   /*
-  rule (modulo AC) eventC_0_122[color=#ffffff, process="event C( );",
-                                issapicrule]:
+  rule (modulo AC) lookupsasx_1_12[color=#ffffff,
+                                   process="lookup s.1 as x.1", derivchecks, issapicrule, role='Process']:
+     [ State_12( ~prog_, s ) ]
+    --[ IsNotSet( s ) ]->
      [ State_122( ~prog_, s ) ]
-    --[ ProgressTo_1221( ~prog_ ), C( ) ]->
-     [ State_1221( ~prog_, s ) ]
   */
 
-rule (modulo E) p_0_1221[color=#ffffff, process="0", issapicrule]:
-   [ State_1221( ~prog_, s.1 ) ] --> [ ]
+rule (modulo E) eventC_0_122[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_122( ~prog_, s.1 ) ] --[ ProgressTo_1221( ~prog_ ), C( ) ]-> [ ]
 
   /*
-  rule (modulo AC) p_0_1221[color=#ffffff, process="0", issapicrule]:
-     [ State_1221( ~prog_, s ) ] --> [ ]
+  rule (modulo AC) eventC_0_122[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_122( ~prog_, s ) ] --[ ProgressTo_1221( ~prog_ ), C( ) ]-> [ ]
   */
 
 restriction set_in:
@@ -324,63 +275,14 @@ restriction Progress__to_12111_or_12121_or_1221:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule MessageIDRule: 
-Failed to derive Variable(s): ~mid_
-
-Rule Init: 
-Failed to derive Variable(s): ~prog_
-
-Rule news_0_: 
-Failed to derive Variable(s): ~prog_, s.1
-
-Rule p_0_1: 
-Failed to derive Variable(s): ~prog_, s.1
-
-Rule insertsHELLO_0_11: 
-Failed to derive Variable(s): ~prog_, s.1
-
-Rule p_0_111: 
-Failed to derive Variable(s): ~prog_, s.1
-
-Rule ifxHELLO_0_121: 
-Failed to derive Variable(s): ~prog_, s.1, x.1
-
-Rule ifxHELLO_1_121: 
-Failed to derive Variable(s): ~prog_, s.1, x.1
-
-Rule eventA_0_1211: 
-Failed to derive Variable(s): ~prog_, s.1, x.1
-
-Rule p_0_12111: 
-Failed to derive Variable(s): ~prog_, s.1, x.1
-
-Rule eventB_0_1212: 
-Failed to derive Variable(s): ~prog_, s.1, x.1
-
-Rule p_0_12121: 
-Failed to derive Variable(s): ~prog_, s.1, x.1
-
-Rule eventC_0_122: 
-Failed to derive Variable(s): ~prog_, s.1
-
-Rule p_0_1221: 
-Failed to derive Variable(s): ~prog_, s.1
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -392,10 +294,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini5.spthy
 
   output:          examples/sapic/fast/feature-progress/mini5.spthy.tmp
-  processing time: 0.22s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.17s
   
   A_possible (exists-trace): verified (9 steps)
   B_impossible (all-traces): verified (3 steps)

@@ -20,10 +20,10 @@ guarded formula characterizing all satisfying traces:
 "∃ #i. (C( ) @ #i)"
 */
 simplify
-solve( State_12( a ) ▶₀ #i )
-  case Init
+solve( State_121( a ) ▶₀ #i )
+  case ifAddeda_0_12
   solve( State_11( ~n ) ▶₀ #a )
-    case Init
+    case p_0_1
     SOLVED // trace found
   qed
 qed
@@ -35,30 +35,61 @@ guarded formula characterizing all counter-examples:
 "∃ #c. (C( ) @ #c) ∧ ∀ #a a.1. (A( a.1 ) @ #a) ⇒ ⊥"
 */
 simplify
-by contradiction /* from formulas */
+solve( State_121( a ) ▶₀ #c )
+  case ifAddeda_0_12
+  by contradiction /* from formulas */
+qed
 
 
 
 
 
 
+
+rule (modulo E) Init[color=#ffffff, process="new a.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newa_0_[color=#ffffff, process="new a.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( a.1 ) ] --> [ State_1( a.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_[color=#ffffff, process="new a.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( a ) ] --> [ State_1( a ) ]
+  */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( a.1 ) ] --> [ State_11( a.1 ), State_12( a.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+     [ State_1( a ) ] --> [ State_11( a ), State_12( a ) ]
+  */
 
 rule (modulo E) eventAa_0_11[color=#ffffff, process="event A( a.1 );",
-                             issapicrule]:
-   [ State_11( a.1 ) ] --[ A( a.1 ) ]-> [ ]
+                             issapicrule, role='Process']:
+   [ State_11( a.1 ) ] --[ A( a.1 ) ]-> [ State_111( a.1 ) ]
 
   /*
   rule (modulo AC) eventAa_0_11[color=#ffffff, process="event A( a.1 );",
-                                issapicrule]:
-     [ State_11( a ) ] --[ A( a ) ]-> [ ]
+                                issapicrule, role='Process']:
+     [ State_11( a ) ] --[ A( a ) ]-> [ State_111( a ) ]
   */
 
-rule (modulo E) Init[color=#ffffff, process="new a.1;", issapicrule]:
-   [ Fr( a.1 ) ] --[ Init( ) ]-> [ State_11( a.1 ), State_12( a.1 ) ]
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_111( a.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new a.1;", issapicrule]:
-     [ Fr( a ) ] --[ Init( ) ]-> [ State_11( a ), State_12( a ) ]
+  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_111( a ) ] --> [ ]
   */
 
 restriction Restr_ifAddeda_0_12_1:
@@ -67,13 +98,63 @@ restriction Restr_ifAddeda_0_12_1:
     (∃ #a. (A( x ) @ #a) ∧ (#a < #NOW))"
 
 rule (modulo E) ifAddeda_0_12[color=#ffffff, process="if Added( a.1 )",
-                              issapicrule]:
-   [ State_12( a.1 ) ] --[ C( ), Restr_ifAddeda_0_12_1( a.1 ) ]-> [ ]
+                              issapicrule, role='Process']:
+   [ State_12( a.1 ) ]
+  --[ Restr_ifAddeda_0_12_1( a.1 ) ]->
+   [ State_121( a.1 ) ]
 
   /*
   rule (modulo AC) ifAddeda_0_12[color=#ffffff, process="if Added( a.1 )",
-                                 issapicrule]:
-     [ State_12( a ) ] --[ C( ), Restr_ifAddeda_0_12_1( a ) ]-> [ ]
+                                 issapicrule, role='Process']:
+     [ State_12( a ) ] --[ Restr_ifAddeda_0_12_1( a ) ]-> [ State_121( a ) ]
+  */
+
+restriction Restr_ifAddeda_1_12_1:
+  "∀ x #NOW.
+    (Restr_ifAddeda_1_12_1( x ) @ #NOW) ⇒
+    (¬(∃ #a. (A( x ) @ #a) ∧ (#a < #NOW)))"
+  // safety formula
+
+rule (modulo E) ifAddeda_1_12[color=#ffffff, process="if Added( a.1 )",
+                              issapicrule, role='Process']:
+   [ State_12( a.1 ) ]
+  --[ Restr_ifAddeda_1_12_1( a.1 ) ]->
+   [ State_122( a.1 ) ]
+
+  /*
+  rule (modulo AC) ifAddeda_1_12[color=#ffffff, process="if Added( a.1 )",
+                                 issapicrule, role='Process']:
+     [ State_12( a ) ] --[ Restr_ifAddeda_1_12_1( a ) ]-> [ State_122( a ) ]
+  */
+
+rule (modulo E) eventC_0_121[color=#ffffff, process="event C( );",
+                             issapicrule, role='Process']:
+   [ State_121( a.1 ) ] --[ C( ) ]-> [ State_1211( a.1 ) ]
+
+  /*
+  rule (modulo AC) eventC_0_121[color=#ffffff, process="event C( );",
+                                issapicrule, role='Process']:
+     [ State_121( a ) ] --[ C( ) ]-> [ State_1211( a ) ]
+  */
+
+rule (modulo E) p_0_1211[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1211( a.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1211[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1211( a ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_122[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_122( a.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_122[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_122( a ) ] --> [ ]
   */
 
 restriction single_session:
@@ -86,8 +167,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -99,10 +180,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/binding.spthy
 
   output:          examples/sapic/fast/feature-predicates/binding.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.09s
   
   C_exists (exists-trace): verified (4 steps)
-  A_before_C (all-traces): verified (2 steps)
+  A_before_C (all-traces): verified (3 steps)
 
 ==============================================================================
 */

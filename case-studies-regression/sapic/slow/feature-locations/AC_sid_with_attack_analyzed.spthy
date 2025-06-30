@@ -3,7 +3,7 @@ theory AC_sid begin
 // Function signature and definition of the equational theory E
 
 functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
-           pair/2, prog/3, rep/2[private,destructor], report/1, snd/1
+           pair/2, prog/3, rep/2[private,constructor], report/1, snd/1
 equations:
     check_rep(rep(x.1, x.2), x.2) = x.1,
     fst(<x.1, x.2>) = x.1,
@@ -34,133 +34,9 @@ guarded formula characterizing all satisfying traces:
   (Voutput( h ) @ #t1) ∧ ∀ #t2. (Poutput( h ) @ #t2) ⇒ ¬(#t2 < #t1)"
 */
 simplify
-solve( State_1121111111111111( init, lock, signedios, ip, ipo, o, r_sid,
-                               sid, state
-       ) ▶₀ #t1 )
-  case ifoipsidcheckrepsignediosl_0_112111111111111
-  solve( (#vr.5 < #t2)  ∥ (#vr.5 = #t2) )
-    case case_1
-    solve( (#vr.13 < #t2.1)  ∥ (#vr.13 = #t2.1) )
-      case case_1
-      solve( Insert( ~n.4, ipo.1 ) @ #t2 )
-        case insertstateolistipipo_0_11211111111111111
-        solve( State_11211111111111111( init, lock, signedios, ip.1, ipo.1, o,
-                                        r_sid, sid, ~n.4
-               ) ▶₀ #t2 )
-          case eventVoutputoipipo_0_1121111111111111
-          solve( ((#vr.2 < #vr.18) ∧
-                  (∃ #t2.
-                    (Unlock_1( '1', ~n.1, ~n.5 ) @ #t2)
-                   ∧
-                    (#vr.2 < #t2) ∧
-                    (#t2 < #vr.18) ∧
-                    (∀ #t0 pp. (Unlock( pp, ~n.1, ~n.5 ) @ #t0) ⇒ #t0 = #t2) ∧
-                    (∀ pp lpp #t0.
-                      (Lock( pp, lpp, ~n.5 ) @ #t0)
-                     ⇒
-                      ((#t0 < #vr.2) ∨ (#t0 = #vr.2) ∨ (#t2 < #t0))) ∧
-                    (∀ pp lpp #t0.
-                      (Unlock( pp, lpp, ~n.5 ) @ #t0)
-                     ⇒
-                      ((#t0 < #vr.2) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                 (#vr.18 < #vr.2)  ∥ (#vr.2 = #vr.18) )
-            case case_2
-            solve( (#vr.5 < #t2.3)  ∥ (#vr.5 = #t2.3) )
-              case case_2
-              solve( (#vr.25 < #t2.4)  ∥ (#vr.25 = #t2.4) )
-                case case_2
-                solve( State_112111111111111111( init, ~n.6, signedios, ip.2, ipo.3, o,
-                                                 r_sid, sid, ~n.5
-                       ) ▶₀ #t2.1 )
-                  case insertstateolistipipo_0_11211111111111111
-                  solve( (#t2.2 < #t2.5)  ∥ (#t2.2 = #t2.5) )
-                    case case_2
-                    solve( (#t2.3 < #t2.5)  ∥ (#t2.3 = #t2.5) )
-                      case case_2
-                      solve( Insert( ~n.10, ipo ) @ #t2.4 )
-                        case insertstateprogripipolistipipo_0_1111111111111111
-                        solve( State_1111111111111111( lock, init, ip.1, ipo, r, sid, ~n.9
-                               ) ▶₀ #t2.4 )
-                          case eventPoutputprogripipoipipo_0_11111111111111
-                          solve( ((#vr.10 < #vr.28) ∧
-                                  (∃ #t2.
-                                    (Unlock_0( '0', ~n.13, ~n.12 ) @ #t2)
-                                   ∧
-                                    (#vr.10 < #t2) ∧
-                                    (#t2 < #vr.28) ∧
-                                    (∀ #t0 pp. (Unlock( pp, ~n.13, ~n.12 ) @ #t0) ⇒ #t0 = #t2) ∧
-                                    (∀ pp lpp #t0.
-                                      (Lock( pp, lpp, ~n.12 ) @ #t0)
-                                     ⇒
-                                      ((#t0 < #vr.10) ∨ (#t0 = #vr.10) ∨ (#t2 < #t0))) ∧
-                                    (∀ pp lpp #t0.
-                                      (Unlock( pp, lpp, ~n.12 ) @ #t0)
-                                     ⇒
-                                      ((#t0 < #vr.10) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                                 (#vr.28 < #vr.10)  ∥ (#vr.10 = #vr.28) )
-                            case case_2
-                            solve( (#vr.12 < #t2.6)  ∥ (#vr.12 = #t2.6) )
-                              case case_2
-                              solve( State_11111111111111111( ~n.10, init, ip.3, ipo.3, r, sid, ~n.12
-                                     ) ▶₀ #t2.5 )
-                                case insertstateprogripipolistipipo_0_1111111111111111
-                                solve( (#t2.6 < #t2.7)  ∥ (#t2.6 = #t2.7) )
-                                  case case_2
-                                  solve( Insert( ~n.6, ipo.2 ) @ #t2.2 )
-                                    case p_1_112
-                                    solve( Insert( ~n.9, ipo.1 ) @ #t2.3 )
-                                      case newstate_0_111
-                                      solve( Insert( ~n.12, ipo ) @ #t2.6 )
-                                        case newstate_0_111
-                                        solve( !KU( rep(~n.4, 'l') ) @ #vk.8 )
-                                          case p_1_11111
-                                          solve( !KU( rep(~n.8, 'l') ) @ #vk.13 )
-                                            case p_1_11111
-                                            solve( !KU( prog(~n.2, ip, <prog(~n.3, ip.1, ~n), list(ip.1, ~n)>)
-                                                   ) @ #vk.8 )
-                                              case eventPoutputprogripipoipipo_0_11111111111111_case_1
-                                              solve( (#t2.6 < #t2.7)  ∥ (#t2.6 = #t2.7) )
-                                                case case_1
-                                                solve( (#t2.4 < #t2.7)  ∥ (#t2.4 = #t2.7) )
-                                                  case case_2
-                                                  solve( !KU( ~n.4 ) @ #vk.10 )
-                                                    case p_1_11111_case_1
-                                                    solve( !KU( prog(~n.5, ip.2, ~n) ) @ #vk.12 )
-                                                      case eventPoutputprogripipoipipo_0_11111111111111_case_1
-                                                      solve( (#t2.3 < #t2.7)  ∥ (#t2.3 = #t2.7) )
-                                                        case case_2
-                                                        solve( !KU( ~n.8 ) @ #vk.13 )
-                                                          case p_1_11111_case_1
-                                                          SOLVED // trace found
-                                                        qed
-                                                      qed
-                                                    qed
-                                                  qed
-                                                qed
-                                              qed
-                                            qed
-                                          qed
-                                        qed
-                                      qed
-                                    qed
-                                  qed
-                                qed
-                              qed
-                            qed
-                          qed
-                        qed
-                      qed
-                    qed
-                  qed
-                qed
-              qed
-            qed
-          qed
-        qed
-      qed
-    qed
-  qed
-qed
+by solve( State_1121111111111111( init, lock, signedios, ip, ipo, o,
+                                  r_sid, sid, state
+          ) ▶₀ #t1 )
 
 
 
@@ -185,108 +61,307 @@ restriction Restr_ReportRule_1:
   // safety formula
 
 rule (modulo E) ReportRule[color=#ffffff, process="new init.1;",
-                           issapicrule]:
+                           issapicrule, role='Process']:
    [ In( <x, loc> ) ]
   --[ Restr_ReportRule_1( loc ) ]->
    [ Out( rep(x, loc) ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="new init.1;", issapicrule]:
-   [ Fr( init.1 ) ] --[ Init( ) ]-> [ !Semistate_11( init.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="new init.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newinit_0_[color=#ffffff, process="new init.1;",
+                           issapicrule, role='Process']:
+   [ State_( ), Fr( init.1 ) ] --> [ State_1( init.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new init.1;", issapicrule]:
-     [ Fr( init ) ] --[ Init( ) ]-> [ !Semistate_11( init ) ]
+  rule (modulo AC) newinit_0_[color=#ffffff, process="new init.1;",
+                              issapicrule, role='Process']:
+     [ State_( ), Fr( init ) ] --> [ State_1( init ) ]
+  */
+
+rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
+   [ State_1( init.1 ) ] --> [ !Semistate_11( init.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1[color=#ffffff, process="!", issapicrule,
+                         role='Process']:
+     [ State_1( init ) ] --> [ !Semistate_11( init ) ]
+  */
+
+rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
+   [ !Semistate_11( init.1 ) ] --> [ State_11( init.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_1[color=#ffffff, process="!", issapicrule,
+                         role='Process']:
+     [ !Semistate_11( init ) ] --> [ State_11( init ) ]
+  */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( init.1 ) ] --> [ State_111( init.1 ), State_112( init.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11[color=#ffffff, process="|", issapicrule,
+                          role='Process']:
+     [ State_11( init ) ] --> [ State_111( init ), State_112( init ) ]
   */
 
 rule (modulo E) newstate_0_111[color=#ffffff, process="new state.1;",
-                               issapicrule]:
+                               issapicrule, role='Process']:
    [ State_111( init.1 ), Fr( state.1 ) ]
-  --[ Insert( state.1, init.1 ) ]->
-   [ !Semistate_111111( init.1, state.1 ) ]
+  -->
+   [ State_1111( init.1, state.1 ) ]
 
   /*
   rule (modulo AC) newstate_0_111[color=#ffffff, process="new state.1;",
-                                  issapicrule]:
-     [ State_111( init ), Fr( state ) ]
-    --[ Insert( state, init ) ]->
-     [ !Semistate_111111( init, state ) ]
+                                  issapicrule, role='Process']:
+     [ State_111( init ), Fr( state ) ] --> [ State_1111( init, state ) ]
   */
 
-rule (modulo E) p_1_11111[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_111111( init.1, state.1 ), Fr( sid.1 ) ]
+rule (modulo E) insertstateinit_0_1111[color=#ffffff,
+                                       process="insert state.1,init.1;", issapicrule, role='Process']:
+   [ State_1111( init.1, state.1 ) ]
+  --[ Insert( state.1, init.1 ) ]->
+   [ State_11111( init.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) insertstateinit_0_1111[color=#ffffff,
+                                          process="insert state.1,init.1;", issapicrule, role='Process']:
+     [ State_1111( init, state ) ]
+    --[ Insert( state, init ) ]->
+     [ State_11111( init, state ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="!", issapicrule,
+                          role='Process']:
+   [ State_11111( init.1, state.1 ) ]
+  -->
+   [ !Semistate_111111( init.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="!", issapicrule,
+                             role='Process']:
+     [ State_11111( init, state ) ] --> [ !Semistate_111111( init, state ) ]
+  */
+
+rule (modulo E) p_1_11111[color=#ffffff, process="!", issapicrule,
+                          role='Process']:
+   [ !Semistate_111111( init.1, state.1 ) ]
+  -->
+   [ State_111111( init.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_11111[color=#ffffff, process="!", issapicrule,
+                             role='Process']:
+     [ !Semistate_111111( init, state ) ] --> [ State_111111( init, state ) ]
+  */
+
+rule (modulo E) r_0_111111[color=#ffffff, process="r()", issapicrule,
+                           role='Process']:
+   [ State_111111( init.1, state.1 ) ]
+  -->
+   [ State_1111111( init.1, state.1 ), State_1111112( init.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) r_0_111111[color=#ffffff, process="r()", issapicrule,
+                              role='Process']:
+     [ State_111111( init, state ) ]
+    -->
+     [ State_1111111( init, state ), State_1111112( init, state ) ]
+  */
+
+rule (modulo E) newsid_0_1111111[color=#405280, process="new sid.1;",
+                                 issapicrule, role='r']:
+   [ State_1111111( init.1, state.1 ), Fr( sid.1 ) ]
+  -->
+   [ State_11111111( init.1, sid.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) newsid_0_1111111[color=#405280, process="new sid.1;",
+                                    issapicrule, role='r']:
+     [ State_1111111( init, state ), Fr( sid ) ]
+    -->
+     [ State_11111111( init, sid, state ) ]
+  */
+
+rule (modulo E) outsidreportsid_0_11111111[color=#405280,
+                                           process="out(<sid.1, report(sid.1)>);", issapicrule, role='r']:
+   [ State_11111111( init.1, sid.1, state.1 ) ]
   -->
    [
-   !Semistate_1111111111( init.1, sid.1, state.1 ),
-   Out( <sid.1, rep(sid.1, 'l')> )
+   State_111111111( init.1, sid.1, state.1 ), Out( <sid.1, report(sid.1)> )
    ]
 
   /*
-  rule (modulo AC) p_1_11111[color=#ffffff, process="!", issapicrule]:
-     [ !Semistate_111111( init, state ), Fr( sid ) ]
+  rule (modulo AC) outsidreportsid_0_11111111[color=#405280,
+                                              process="out(<sid.1, report(sid.1)>);", issapicrule, role='r']:
+     [ State_11111111( init, sid, state ) ]
     -->
-     [ !Semistate_1111111111( init, sid, state ), Out( <sid, rep(sid, 'l')> )
-     ]
+     [ State_111111111( init, sid, state ), Out( <sid, report(sid)> ) ]
   */
 
-rule (modulo E) p_1_111111111[color=#408067, process="!", issapicrule]:
-   [ !Semistate_1111111111( init.1, sid.1, state.1 ), Fr( lock ) ]
+rule (modulo E) p_0_111111111[color=#405280, process="!", issapicrule,
+                              role='r']:
+   [ State_111111111( init.1, sid.1, state.1 ) ]
+  -->
+   [ !Semistate_1111111111( init.1, sid.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_111111111[color=#405280, process="!", issapicrule,
+                                 role='r']:
+     [ State_111111111( init, sid, state ) ]
+    -->
+     [ !Semistate_1111111111( init, sid, state ) ]
+  */
+
+rule (modulo E) p_1_111111111[color=#405280, process="!", issapicrule,
+                              role='r']:
+   [ !Semistate_1111111111( init.1, sid.1, state.1 ) ]
+  -->
+   [ State_1111111111( init.1, sid.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_111111111[color=#405280, process="!", issapicrule,
+                                 role='r']:
+     [ !Semistate_1111111111( init, sid, state ) ]
+    -->
+     [ State_1111111111( init, sid, state ) ]
+  */
+
+rule (modulo E) lockstate_0_1111111111[color=#405280,
+                                       process="lock state.1;", issapicrule, role='r']:
+   [ State_1111111111( init.1, sid.1, state.1 ), Fr( lock ) ]
   --[ Lock_0( '0', lock, state.1 ), Lock( '0', lock, state.1 ) ]->
    [ State_11111111111( lock, init.1, sid.1, state.1 ) ]
 
   /*
-  rule (modulo AC) p_1_111111111[color=#408067, process="!", issapicrule]:
-     [ !Semistate_1111111111( init, sid, state ), Fr( lock ) ]
+  rule (modulo AC) lockstate_0_1111111111[color=#405280,
+                                          process="lock state.1;", issapicrule, role='r']:
+     [ State_1111111111( init, sid, state ), Fr( lock ) ]
     --[ Lock_0( '0', lock, state ), Lock( '0', lock, state ) ]->
      [ State_11111111111( lock, init, sid, state ) ]
   */
 
-rule (modulo E) lookupstateasipo_0_11111111111[color=#408067,
-                                               process="lookup state.1 as ipo.1", issapicrule]:
-   [
-   State_11111111111( lock, init.1, sid.1, state.1 ), In( ip.1 ), Fr( r.1 )
-   ]
+rule (modulo E) lookupstateasipo_0_11111111111[color=#405280,
+                                               process="lookup state.1 as ipo.1", derivchecks, issapicrule,
+                                               role='r']:
+   [ State_11111111111( lock, init.1, sid.1, state.1 ) ]
   --[ IsIn( state.1, ipo.1 ) ]->
+   [ State_111111111111( lock, init.1, ipo.1, sid.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) lookupstateasipo_0_11111111111[color=#405280,
+                                                  process="lookup state.1 as ipo.1", derivchecks, issapicrule,
+                                                  role='r']:
+     [ State_11111111111( lock, init, sid, state ) ]
+    --[ IsIn( state, ipo ) ]->
+     [ State_111111111111( lock, init, ipo, sid, state ) ]
+  */
+
+rule (modulo E) lookupstateasipo_1_11111111111[color=#405280,
+                                               process="lookup state.1 as ipo.1", derivchecks, issapicrule,
+                                               role='r']:
+   [ State_11111111111( lock, init.1, sid.1, state.1 ) ]
+  --[ IsNotSet( state.1 ) ]->
+   [ State_111111111112( lock, init.1, sid.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) lookupstateasipo_1_11111111111[color=#405280,
+                                                  process="lookup state.1 as ipo.1", derivchecks, issapicrule,
+                                                  role='r']:
+     [ State_11111111111( lock, init, sid, state ) ]
+    --[ IsNotSet( state ) ]->
+     [ State_111111111112( lock, init, sid, state ) ]
+  */
+
+rule (modulo E) inip_0_111111111111[color=#405280, process="in(ip.1);",
+                                    issapicrule, role='r']:
+   [ State_111111111111( lock, init.1, ipo.1, sid.1, state.1 ), In( ip.1 ) ]
+  -->
+   [ State_1111111111111( lock, init.1, ip.1, ipo.1, sid.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) inip_0_111111111111[color=#405280, process="in(ip.1);",
+                                       issapicrule, role='r']:
+     [ State_111111111111( lock, init, ipo, sid, state ), In( ip ) ]
+    -->
+     [ State_1111111111111( lock, init, ip, ipo, sid, state ) ]
+  */
+
+rule (modulo E) newr_0_1111111111111[color=#405280, process="new r.1;",
+                                     issapicrule, role='r']:
+   [
+   State_1111111111111( lock, init.1, ip.1, ipo.1, sid.1, state.1 ),
+   Fr( r.1 )
+   ]
+  -->
    [ State_11111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
    ]
 
   /*
-  rule (modulo AC) lookupstateasipo_0_11111111111[color=#408067,
-                                                  process="lookup state.1 as ipo.1", issapicrule]:
-     [ State_11111111111( lock, init, sid, state ), In( ip ), Fr( r ) ]
-    --[ IsIn( state, ipo ) ]->
+  rule (modulo AC) newr_0_1111111111111[color=#405280, process="new r.1;",
+                                        issapicrule, role='r']:
+     [ State_1111111111111( lock, init, ip, ipo, sid, state ), Fr( r ) ]
+    -->
      [ State_11111111111111( lock, init, ip, ipo, r, sid, state ) ]
   */
 
-rule (modulo E) eventPoutputprogripipoipipo_0_11111111111111[color=#408067,
+rule (modulo E) eventPoutputprogripipoipipo_0_11111111111111[color=#405280,
                                                              process="event Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> );",
-                                                             issapicrule]:
+                                                             issapicrule, role='r']:
    [ State_11111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
    ]
   --[ Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> ) ]->
+   [ State_111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
+   ]
+
+  /*
+  rule (modulo AC) eventPoutputprogripipoipipo_0_11111111111111[color=#405280,
+                                                                process="event Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> );",
+                                                                issapicrule, role='r']:
+     [ State_11111111111111( lock, init, ip, ipo, r, sid, state ) ]
+    --[ Poutput( <prog(r, ip, ipo), ip, ipo> ) ]->
+     [ State_111111111111111( lock, init, ip, ipo, r, sid, state ) ]
+  */
+
+rule (modulo E) outprogripiporeportprogripipoipsid_0_111111111111111[color=#405280,
+                                                                     process="out(<prog(r.1, ip.1, ipo.1), 
+ report(<prog(r.1, ip.1, ipo.1), ip.1, sid.1>)>);",
+                                                                     issapicrule, role='r']:
+   [ State_111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
+   ]
+  -->
    [
    State_1111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 ),
    Out( <prog(r.1, ip.1, ipo.1), 
-         rep(<prog(r.1, ip.1, ipo.1), ip.1, sid.1>, 'l')>
+         report(<prog(r.1, ip.1, ipo.1), ip.1, sid.1>)>
    )
    ]
 
   /*
-  rule (modulo AC) eventPoutputprogripipoipipo_0_11111111111111[color=#408067,
-                                                                process="event Poutput( <prog(r.1, ip.1, ipo.1), ip.1, ipo.1> );",
-                                                                issapicrule]:
-     [ State_11111111111111( lock, init, ip, ipo, r, sid, state ) ]
-    --[ Poutput( <prog(r, ip, ipo), ip, ipo> ) ]->
+  rule (modulo AC) outprogripiporeportprogripipoipsid_0_111111111111111[color=#405280,
+                                                                        process="out(<prog(r.1, ip.1, ipo.1), 
+ report(<prog(r.1, ip.1, ipo.1), ip.1, sid.1>)>);",
+                                                                        issapicrule, role='r']:
+     [ State_111111111111111( lock, init, ip, ipo, r, sid, state ) ]
+    -->
      [
      State_1111111111111111( lock, init, ip, ipo, r, sid, state ),
-     Out( <prog(r, ip, ipo), rep(<prog(r, ip, ipo), ip, sid>, 'l')> )
+     Out( <prog(r, ip, ipo), report(<prog(r, ip, ipo), ip, sid>)> )
      ]
   */
 
-rule (modulo E) insertstateprogripipolistipipo_0_1111111111111111[color=#408067,
+rule (modulo E) insertstateprogripipolistipipo_0_1111111111111111[color=#405280,
                                                                   process="insert state.1,<prog(r.1, ip.1, ipo.1), list(ip.1, ipo.1)>;",
-                                                                  issapicrule]:
+                                                                  issapicrule, role='r']:
    [
    State_1111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
    ]
@@ -296,92 +371,184 @@ rule (modulo E) insertstateprogripipolistipipo_0_1111111111111111[color=#408067,
    ]
 
   /*
-  rule (modulo AC) insertstateprogripipolistipipo_0_1111111111111111[color=#408067,
+  rule (modulo AC) insertstateprogripipolistipipo_0_1111111111111111[color=#405280,
                                                                      process="insert state.1,<prog(r.1, ip.1, ipo.1), list(ip.1, ipo.1)>;",
-                                                                     issapicrule]:
+                                                                     issapicrule, role='r']:
      [ State_1111111111111111( lock, init, ip, ipo, r, sid, state ) ]
     --[ Insert( state, <prog(r, ip, ipo), list(ip, ipo)> ) ]->
      [ State_11111111111111111( lock, init, ip, ipo, r, sid, state ) ]
   */
 
-rule (modulo E) unlockstate_0_11111111111111111[color=#408067,
-                                                process="unlock state.1;", issapicrule]:
+rule (modulo E) unlockstate_0_11111111111111111[color=#405280,
+                                                process="unlock state.1;", issapicrule, role='r']:
    [
    State_11111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1 )
    ]
   --[ Unlock_0( '0', lock, state.1 ), Unlock( '0', lock, state.1 ) ]->
-   [ ]
+   [
+   State_111111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1
+   )
+   ]
 
   /*
-  rule (modulo AC) unlockstate_0_11111111111111111[color=#408067,
-                                                   process="unlock state.1;", issapicrule]:
+  rule (modulo AC) unlockstate_0_11111111111111111[color=#405280,
+                                                   process="unlock state.1;", issapicrule, role='r']:
      [ State_11111111111111111( lock, init, ip, ipo, r, sid, state ) ]
     --[ Unlock_0( '0', lock, state ), Unlock( '0', lock, state ) ]->
-     [ ]
+     [ State_111111111111111111( lock, init, ip, ipo, r, sid, state ) ]
   */
 
-rule (modulo E) lookupstateasipo_1_11111111111[color=#408067,
-                                               process="lookup state.1 as ipo.1", issapicrule]:
-   [ State_11111111111( lock, init.1, sid.1, state.1 ) ]
-  --[ IsNotSet( state.1 ) ]->
+rule (modulo E) p_0_111111111111111111[color=#405280, process="0",
+                                       issapicrule, role='r']:
+   [
+   State_111111111111111111( lock, init.1, ip.1, ipo.1, r.1, sid.1, state.1
+   )
+   ]
+  -->
    [ ]
 
   /*
-  rule (modulo AC) lookupstateasipo_1_11111111111[color=#408067,
-                                                  process="lookup state.1 as ipo.1", issapicrule]:
-     [ State_11111111111( lock, init, sid, state ) ]
-    --[ IsNotSet( state ) ]->
+  rule (modulo AC) p_0_111111111111111111[color=#405280, process="0",
+                                          issapicrule, role='r']:
+     [ State_111111111111111111( lock, init, ip, ipo, r, sid, state ) ]
+    -->
      [ ]
   */
 
-rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_11( init.1 ) ]
-  -->
-   [ !Semistate_1121( init.1 ), State_111( init.1 ) ]
+rule (modulo E) p_0_111111111112[color=#405280, process="0", issapicrule,
+                                 role='r']:
+   [ State_111111111112( lock, init.1, sid.1, state.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_1_1[color=#ffffff, process="!", issapicrule]:
-     [ !Semistate_11( init ) ]
-    -->
-     [ !Semistate_1121( init ), State_111( init ) ]
+  rule (modulo AC) p_0_111111111112[color=#405280, process="0",
+                                    issapicrule, role='r']:
+     [ State_111111111112( lock, init, sid, state ) ] --> [ ]
   */
 
-rule (modulo E) p_1_112[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_1121( init.1 ), Fr( state.2 ) ]
+rule (modulo E) p_0_1111112[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1111112( init.1, state.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111112[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1111112( init, state ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_112[color=#ffffff, process="!", issapicrule,
+                        role='Process']:
+   [ State_112( init.1 ) ] --> [ !Semistate_1121( init.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_112[color=#ffffff, process="!", issapicrule,
+                           role='Process']:
+     [ State_112( init ) ] --> [ !Semistate_1121( init ) ]
+  */
+
+rule (modulo E) p_1_112[color=#ffffff, process="!", issapicrule,
+                        role='Process']:
+   [ !Semistate_1121( init.1 ) ] --> [ State_1121( init.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_112[color=#ffffff, process="!", issapicrule,
+                           role='Process']:
+     [ !Semistate_1121( init ) ] --> [ State_1121( init ) ]
+  */
+
+rule (modulo E) newstate_0_1121[color=#ffffff, process="new state.2;",
+                                issapicrule, role='Process']:
+   [ State_1121( init.1 ), Fr( state.2 ) ]
+  -->
+   [ State_11211( init.1, state.2 ) ]
+
+  /*
+  rule (modulo AC) newstate_0_1121[color=#ffffff, process="new state.2;",
+                                   issapicrule, role='Process']:
+     [ State_1121( init ), Fr( state ) ] --> [ State_11211( init, state ) ]
+  */
+
+rule (modulo E) insertstateinit_0_11211[color=#ffffff,
+                                        process="insert state.2,init.1;", issapicrule, role='Process']:
+   [ State_11211( init.1, state.2 ) ]
   --[ Insert( state.2, init.1 ) ]->
+   [ State_112111( init.1, state.2 ) ]
+
+  /*
+  rule (modulo AC) insertstateinit_0_11211[color=#ffffff,
+                                           process="insert state.2,init.1;", issapicrule, role='Process']:
+     [ State_11211( init, state ) ]
+    --[ Insert( state, init ) ]->
+     [ State_112111( init, state ) ]
+  */
+
+rule (modulo E) p_0_112111[color=#ffffff, process="!", issapicrule,
+                           role='Process']:
+   [ State_112111( init.1, state.2 ) ]
+  -->
    [ !Semistate_1121111( init.1, state.2 ) ]
 
   /*
-  rule (modulo AC) p_1_112[color=#ffffff, process="!", issapicrule]:
-     [ !Semistate_1121( init ), Fr( state ) ]
-    --[ Insert( state, init ) ]->
-     [ !Semistate_1121111( init, state ) ]
+  rule (modulo AC) p_0_112111[color=#ffffff, process="!", issapicrule,
+                              role='Process']:
+     [ State_112111( init, state ) ] --> [ !Semistate_1121111( init, state ) ]
   */
 
-rule (modulo E) p_1_112111[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_1121111( init.1, state.2 ), In( <sid.2, r_sid.2> ) ]
+rule (modulo E) p_1_112111[color=#ffffff, process="!", issapicrule,
+                           role='Process']:
+   [ !Semistate_1121111( init.1, state.2 ) ]
+  -->
+   [ State_1121111( init.1, state.2 ) ]
+
+  /*
+  rule (modulo AC) p_1_112111[color=#ffffff, process="!", issapicrule,
+                              role='Process']:
+     [ !Semistate_1121111( init, state ) ]
+    -->
+     [ State_1121111( init, state ) ]
+  */
+
+rule (modulo E) v_0_1121111[color=#ffffff, process="v()", issapicrule,
+                            role='Process']:
+   [ State_1121111( init.1, state.2 ) ]
+  -->
+   [ State_11211111( init.1, state.2 ), State_11211112( init.1, state.2 ) ]
+
+  /*
+  rule (modulo AC) v_0_1121111[color=#ffffff, process="v()", issapicrule,
+                               role='Process']:
+     [ State_1121111( init, state ) ]
+    -->
+     [ State_11211111( init, state ), State_11211112( init, state ) ]
+  */
+
+rule (modulo E) insidrsid_0_11211111[color=#658040,
+                                     process="in(<sid.2, r_sid.2>);", issapicrule, role='v']:
+   [ State_11211111( init.1, state.2 ), In( <sid.2, r_sid.2> ) ]
   -->
    [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
 
   /*
-  rule (modulo AC) p_1_112111[color=#ffffff, process="!", issapicrule]:
-     [ !Semistate_1121111( init, state ), In( <sid, r_sid> ) ]
+  rule (modulo AC) insidrsid_0_11211111[color=#658040,
+                                        process="in(<sid.2, r_sid.2>);", issapicrule, role='v']:
+     [ State_11211111( init, state ), In( <sid, r_sid> ) ]
     -->
      [ State_112111111( init, r_sid, sid, state ) ]
   */
 
-rule (modulo E) ifsidcheckreprsidl_0_112111111[color=#408052,
-                                               process="if sid.2=check_rep(r_sid.2, 'l')", issapicrule]:
+rule (modulo E) ifsidcheckreprsidl_0_112111111[color=#658040,
+                                               process="if sid.2=check_rep(r_sid.2, 'l')", issapicrule,
+                                               role='v']:
    [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
   --[ Pred_Eq( sid.2, check_rep(r_sid.2, 'l') ) ]->
-   [ !Semistate_11211111111( init.1, r_sid.2, sid.2, state.2 ) ]
+   [ State_1121111111( init.1, r_sid.2, sid.2, state.2 ) ]
 
   /*
-  rule (modulo AC) ifsidcheckreprsidl_0_112111111[color=#408052,
-                                                  process="if sid.2=check_rep(r_sid.2, 'l')", issapicrule]:
+  rule (modulo AC) ifsidcheckreprsidl_0_112111111[color=#658040,
+                                                  process="if sid.2=check_rep(r_sid.2, 'l')", issapicrule,
+                                                  role='v']:
      [ State_112111111( init, r_sid, sid, state ) ]
     --[ Pred_Eq( sid, z ) ]->
-     [ !Semistate_11211111111( init, r_sid, sid, state ) ]
+     [ State_1121111111( init, r_sid, sid, state ) ]
     variants (modulo AC)
     1. r_sid = r_sid.9
        z     = check_rep(r_sid.9, 'l')
@@ -390,26 +557,132 @@ rule (modulo E) ifsidcheckreprsidl_0_112111111[color=#408052,
        z     = x.8
   */
 
-rule (modulo E) p_1_1121111111[color=#408052, process="!", issapicrule]:
-   [ !Semistate_11211111111( init.1, r_sid.2, sid.2, state.2 ), Fr( lock.1 )
-   ]
+rule (modulo E) ifsidcheckreprsidl_1_112111111[color=#658040,
+                                               process="if sid.2=check_rep(r_sid.2, 'l')", issapicrule,
+                                               role='v']:
+   [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
+  --[ Pred_Not_Eq( sid.2, check_rep(r_sid.2, 'l') ) ]->
+   [ State_1121111112( init.1, r_sid.2, sid.2, state.2 ) ]
+
+  /*
+  rule (modulo AC) ifsidcheckreprsidl_1_112111111[color=#658040,
+                                                  process="if sid.2=check_rep(r_sid.2, 'l')", issapicrule,
+                                                  role='v']:
+     [ State_112111111( init, r_sid, sid, state ) ]
+    --[ Pred_Not_Eq( sid, z ) ]->
+     [ State_1121111112( init, r_sid, sid, state ) ]
+    variants (modulo AC)
+    1. r_sid = r_sid.9
+       z     = check_rep(r_sid.9, 'l')
+    
+    2. r_sid = rep(x.8, 'l')
+       z     = x.8
+  */
+
+rule (modulo E) p_0_1121111111[color=#658040, process="!", issapicrule,
+                               role='v']:
+   [ State_1121111111( init.1, r_sid.2, sid.2, state.2 ) ]
+  -->
+   [ !Semistate_11211111111( init.1, r_sid.2, sid.2, state.2 ) ]
+
+  /*
+  rule (modulo AC) p_0_1121111111[color=#658040, process="!", issapicrule,
+                                  role='v']:
+     [ State_1121111111( init, r_sid, sid, state ) ]
+    -->
+     [ !Semistate_11211111111( init, r_sid, sid, state ) ]
+  */
+
+rule (modulo E) p_1_1121111111[color=#658040, process="!", issapicrule,
+                               role='v']:
+   [ !Semistate_11211111111( init.1, r_sid.2, sid.2, state.2 ) ]
+  -->
+   [ State_11211111111( init.1, r_sid.2, sid.2, state.2 ) ]
+
+  /*
+  rule (modulo AC) p_1_1121111111[color=#658040, process="!", issapicrule,
+                                  role='v']:
+     [ !Semistate_11211111111( init, r_sid, sid, state ) ]
+    -->
+     [ State_11211111111( init, r_sid, sid, state ) ]
+  */
+
+rule (modulo E) lockstate_0_11211111111[color=#658040,
+                                        process="lock state.2;", issapicrule, role='v']:
+   [ State_11211111111( init.1, r_sid.2, sid.2, state.2 ), Fr( lock.1 ) ]
   --[ Lock_1( '1', lock.1, state.2 ), Lock( '1', lock.1, state.2 ) ]->
    [ State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
 
   /*
-  rule (modulo AC) p_1_1121111111[color=#408052, process="!", issapicrule]:
-     [ !Semistate_11211111111( init, r_sid, sid, state ), Fr( lock ) ]
+  rule (modulo AC) lockstate_0_11211111111[color=#658040,
+                                           process="lock state.2;", issapicrule, role='v']:
+     [ State_11211111111( init, r_sid, sid, state ), Fr( lock ) ]
     --[ Lock_1( '1', lock, state ), Lock( '1', lock, state ) ]->
      [ State_112111111111( init, lock, r_sid, sid, state ) ]
   */
 
-rule (modulo E) lookupstateasipo_0_112111111111[color=#408052,
-                                                process="lookup state.2 as ipo.2", issapicrule]:
-   [
-   State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ),
-   In( ip.2 ), In( <o.2, signedios.1> )
-   ]
+rule (modulo E) lookupstateasipo_0_112111111111[color=#658040,
+                                                process="lookup state.2 as ipo.2", derivchecks, issapicrule,
+                                                role='v']:
+   [ State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
   --[ IsIn( state.2, ipo.2 ) ]->
+   [ State_1121111111111( init.1, lock.1, ipo.2, r_sid.2, sid.2, state.2 ) ]
+
+  /*
+  rule (modulo AC) lookupstateasipo_0_112111111111[color=#658040,
+                                                   process="lookup state.2 as ipo.2", derivchecks,
+                                                   issapicrule, role='v']:
+     [ State_112111111111( init, lock, r_sid, sid, state ) ]
+    --[ IsIn( state, ipo ) ]->
+     [ State_1121111111111( init, lock, ipo, r_sid, sid, state ) ]
+  */
+
+rule (modulo E) lookupstateasipo_1_112111111111[color=#658040,
+                                                process="lookup state.2 as ipo.2", derivchecks, issapicrule,
+                                                role='v']:
+   [ State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
+  --[ IsNotSet( state.2 ) ]->
+   [ State_1121111111112( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
+
+  /*
+  rule (modulo AC) lookupstateasipo_1_112111111111[color=#658040,
+                                                   process="lookup state.2 as ipo.2", derivchecks,
+                                                   issapicrule, role='v']:
+     [ State_112111111111( init, lock, r_sid, sid, state ) ]
+    --[ IsNotSet( state ) ]->
+     [ State_1121111111112( init, lock, r_sid, sid, state ) ]
+  */
+
+rule (modulo E) inip_0_1121111111111[color=#658040, process="in(ip.2);",
+                                     issapicrule, role='v']:
+   [
+   State_1121111111111( init.1, lock.1, ipo.2, r_sid.2, sid.2, state.2 ),
+   In( ip.2 )
+   ]
+  -->
+   [
+   State_11211111111111( init.1, lock.1, ip.2, ipo.2, r_sid.2, sid.2,
+                         state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) inip_0_1121111111111[color=#658040, process="in(ip.2);",
+                                        issapicrule, role='v']:
+     [ State_1121111111111( init, lock, ipo, r_sid, sid, state ), In( ip ) ]
+    -->
+     [ State_11211111111111( init, lock, ip, ipo, r_sid, sid, state ) ]
+  */
+
+rule (modulo E) inosignedios_0_11211111111111[color=#658040,
+                                              process="in(<o.2, signedios.1>);", issapicrule, role='v']:
+   [
+   State_11211111111111( init.1, lock.1, ip.2, ipo.2, r_sid.2, sid.2,
+                         state.2
+   ),
+   In( <o.2, signedios.1> )
+   ]
+  -->
    [
    State_112111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
                           r_sid.2, sid.2, state.2
@@ -417,13 +690,13 @@ rule (modulo E) lookupstateasipo_0_112111111111[color=#408052,
    ]
 
   /*
-  rule (modulo AC) lookupstateasipo_0_112111111111[color=#408052,
-                                                   process="lookup state.2 as ipo.2", issapicrule]:
+  rule (modulo AC) inosignedios_0_11211111111111[color=#658040,
+                                                 process="in(<o.2, signedios.1>);", issapicrule, role='v']:
      [
-     State_112111111111( init, lock, r_sid, sid, state ), In( ip ),
+     State_11211111111111( init, lock, ip, ipo, r_sid, sid, state ),
      In( <o, signedios> )
      ]
-    --[ IsIn( state, ipo ) ]->
+    -->
      [
      State_112111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
                             state
@@ -431,9 +704,9 @@ rule (modulo E) lookupstateasipo_0_112111111111[color=#408052,
      ]
   */
 
-rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#408052,
+rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#658040,
                                                              process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')",
-                                                             issapicrule]:
+                                                             issapicrule, role='v']:
    [
    State_112111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
                           r_sid.2, sid.2, state.2
@@ -447,9 +720,9 @@ rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#408052,
    ]
 
   /*
-  rule (modulo AC) ifoipsidcheckrepsignediosl_0_112111111111111[color=#408052,
+  rule (modulo AC) ifoipsidcheckrepsignediosl_0_112111111111111[color=#658040,
                                                                 process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')",
-                                                                issapicrule]:
+                                                                issapicrule, role='v']:
      [
      State_112111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
                             state
@@ -471,95 +744,9 @@ rule (modulo E) ifoipsidcheckrepsignediosl_0_112111111111111[color=#408052,
        z     = x.13
   */
 
-rule (modulo E) eventVoutputoipipo_0_1121111111111111[color=#408052,
-                                                      process="event Voutput( <o.2, ip.2, ipo.2> );",
-                                                      issapicrule]:
-   [
-   State_1121111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
-                           r_sid.2, sid.2, state.2
-   )
-   ]
-  --[ Voutput( <o.2, ip.2, ipo.2> ) ]->
-   [
-   State_11211111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
-                            r_sid.2, sid.2, state.2
-   )
-   ]
-
-  /*
-  rule (modulo AC) eventVoutputoipipo_0_1121111111111111[color=#408052,
-                                                         process="event Voutput( <o.2, ip.2, ipo.2> );",
-                                                         issapicrule]:
-     [
-     State_1121111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
-                             state
-     )
-     ]
-    --[ Voutput( <o, ip, ipo> ) ]->
-     [
-     State_11211111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
-                              state
-     )
-     ]
-  */
-
-rule (modulo E) insertstateolistipipo_0_11211111111111111[color=#408052,
-                                                          process="insert state.2,<o.2, list(ip.2, ipo.2)>;",
-                                                          issapicrule]:
-   [
-   State_11211111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
-                            r_sid.2, sid.2, state.2
-   )
-   ]
-  --[ Insert( state.2, <o.2, list(ip.2, ipo.2)> ) ]->
-   [
-   State_112111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
-                             r_sid.2, sid.2, state.2
-   )
-   ]
-
-  /*
-  rule (modulo AC) insertstateolistipipo_0_11211111111111111[color=#408052,
-                                                             process="insert state.2,<o.2, list(ip.2, ipo.2)>;",
-                                                             issapicrule]:
-     [
-     State_11211111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
-                              state
-     )
-     ]
-    --[ Insert( state, <o, list(ip, ipo)> ) ]->
-     [
-     State_112111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
-                               state
-     )
-     ]
-  */
-
-rule (modulo E) unlockstate_0_112111111111111111[color=#408052,
-                                                 process="unlock state.2;", issapicrule]:
-   [
-   State_112111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
-                             r_sid.2, sid.2, state.2
-   )
-   ]
-  --[ Unlock_1( '1', lock.1, state.2 ), Unlock( '1', lock.1, state.2 ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) unlockstate_0_112111111111111111[color=#408052,
-                                                    process="unlock state.2;", issapicrule]:
-     [
-     State_112111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
-                               state
-     )
-     ]
-    --[ Unlock_1( '1', lock, state ), Unlock( '1', lock, state ) ]->
-     [ ]
-  */
-
-rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#408052,
+rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#658040,
                                                              process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')",
-                                                             issapicrule]:
+                                                             issapicrule, role='v']:
    [
    State_112111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
                           r_sid.2, sid.2, state.2
@@ -573,9 +760,9 @@ rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#408052,
    ]
 
   /*
-  rule (modulo AC) ifoipsidcheckrepsignediosl_1_112111111111111[color=#408052,
+  rule (modulo AC) ifoipsidcheckrepsignediosl_1_112111111111111[color=#658040,
                                                                 process="if <o.2, ip.2, sid.2>=check_rep(signedios.1, 'l')",
-                                                                issapicrule]:
+                                                                issapicrule, role='v']:
      [
      State_112111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
                             state
@@ -597,60 +784,234 @@ rule (modulo E) ifoipsidcheckrepsignediosl_1_112111111111111[color=#408052,
        z     = x.13
   */
 
-rule (modulo E) eventFail_0_1121111111111112[color=#408052,
-                                             process="event Fail( );", issapicrule]:
+rule (modulo E) eventVoutputoipipo_0_1121111111111111[color=#658040,
+                                                      process="event Voutput( <o.2, ip.2, ipo.2> );",
+                                                      issapicrule, role='v']:
+   [
+   State_1121111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                           r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Voutput( <o.2, ip.2, ipo.2> ) ]->
+   [
+   State_11211111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                            r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventVoutputoipipo_0_1121111111111111[color=#658040,
+                                                         process="event Voutput( <o.2, ip.2, ipo.2> );",
+                                                         issapicrule, role='v']:
+     [
+     State_1121111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                             state
+     )
+     ]
+    --[ Voutput( <o, ip, ipo> ) ]->
+     [
+     State_11211111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                              state
+     )
+     ]
+  */
+
+rule (modulo E) insertstateolistipipo_0_11211111111111111[color=#658040,
+                                                          process="insert state.2,<o.2, list(ip.2, ipo.2)>;",
+                                                          issapicrule, role='v']:
+   [
+   State_11211111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                            r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Insert( state.2, <o.2, list(ip.2, ipo.2)> ) ]->
+   [
+   State_112111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                             r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) insertstateolistipipo_0_11211111111111111[color=#658040,
+                                                             process="insert state.2,<o.2, list(ip.2, ipo.2)>;",
+                                                             issapicrule, role='v']:
+     [
+     State_11211111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                              state
+     )
+     ]
+    --[ Insert( state, <o, list(ip, ipo)> ) ]->
+     [
+     State_112111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                               state
+     )
+     ]
+  */
+
+rule (modulo E) unlockstate_0_112111111111111111[color=#658040,
+                                                 process="unlock state.2;", issapicrule, role='v']:
+   [
+   State_112111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                             r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Unlock_1( '1', lock.1, state.2 ), Unlock( '1', lock.1, state.2 ) ]->
+   [
+   State_1121111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                              r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) unlockstate_0_112111111111111111[color=#658040,
+                                                    process="unlock state.2;", issapicrule, role='v']:
+     [
+     State_112111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                               state
+     )
+     ]
+    --[ Unlock_1( '1', lock, state ), Unlock( '1', lock, state ) ]->
+     [
+     State_1121111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                                state
+     )
+     ]
+  */
+
+rule (modulo E) p_0_1121111111111111111[color=#658040, process="0",
+                                        issapicrule, role='v']:
+   [
+   State_1121111111111111111( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                              r_sid.2, sid.2, state.2
+   )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_1121111111111111111[color=#658040, process="0",
+                                           issapicrule, role='v']:
+     [
+     State_1121111111111111111( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                                state
+     )
+     ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) eventFail_0_1121111111111112[color=#658040,
+                                             process="event Fail( );", issapicrule, role='v']:
    [
    State_1121111111111112( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
                            r_sid.2, sid.2, state.2
    )
    ]
   --[ Fail( ) ]->
-   [ ]
+   [
+   State_11211111111111121( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                            r_sid.2, sid.2, state.2
+   )
+   ]
 
   /*
-  rule (modulo AC) eventFail_0_1121111111111112[color=#408052,
-                                                process="event Fail( );", issapicrule]:
+  rule (modulo AC) eventFail_0_1121111111111112[color=#658040,
+                                                process="event Fail( );", issapicrule, role='v']:
      [
      State_1121111111111112( init, lock, signedios, ip, ipo, o, r_sid, sid,
                              state
      )
      ]
     --[ Fail( ) ]->
-     [ ]
+     [
+     State_11211111111111121( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                              state
+     )
+     ]
   */
 
-rule (modulo E) lookupstateasipo_1_112111111111[color=#408052,
-                                                process="lookup state.2 as ipo.2", issapicrule]:
-   [ State_112111111111( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
-  --[ IsNotSet( state.2 ) ]->
+rule (modulo E) unlockstate_0_11211111111111121[color=#658040,
+                                                process="unlock state.2;", issapicrule, role='v']:
+   [
+   State_11211111111111121( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                            r_sid.2, sid.2, state.2
+   )
+   ]
+  --[ Unlock_1( '1', lock.1, state.2 ), Unlock( '1', lock.1, state.2 ) ]->
+   [
+   State_112111111111111211( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                             r_sid.2, sid.2, state.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) unlockstate_0_11211111111111121[color=#658040,
+                                                   process="unlock state.2;", issapicrule, role='v']:
+     [
+     State_11211111111111121( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                              state
+     )
+     ]
+    --[ Unlock_1( '1', lock, state ), Unlock( '1', lock, state ) ]->
+     [
+     State_112111111111111211( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                               state
+     )
+     ]
+  */
+
+rule (modulo E) p_0_112111111111111211[color=#658040, process="0",
+                                       issapicrule, role='v']:
+   [
+   State_112111111111111211( init.1, lock.1, signedios.1, ip.2, ipo.2, o.2,
+                             r_sid.2, sid.2, state.2
+   )
+   ]
+  -->
    [ ]
 
   /*
-  rule (modulo AC) lookupstateasipo_1_112111111111[color=#408052,
-                                                   process="lookup state.2 as ipo.2", issapicrule]:
-     [ State_112111111111( init, lock, r_sid, sid, state ) ]
-    --[ IsNotSet( state ) ]->
+  rule (modulo AC) p_0_112111111111111211[color=#658040, process="0",
+                                          issapicrule, role='v']:
+     [
+     State_112111111111111211( init, lock, signedios, ip, ipo, o, r_sid, sid,
+                               state
+     )
+     ]
+    -->
      [ ]
   */
 
-rule (modulo E) ifsidcheckreprsidl_1_112111111[color=#408052,
-                                               process="if sid.2=check_rep(r_sid.2, 'l')", issapicrule]:
-   [ State_112111111( init.1, r_sid.2, sid.2, state.2 ) ]
-  --[ Pred_Not_Eq( sid.2, check_rep(r_sid.2, 'l') ) ]->
+rule (modulo E) p_0_1121111111112[color=#658040, process="0",
+                                  issapicrule, role='v']:
+   [ State_1121111111112( init.1, lock.1, r_sid.2, sid.2, state.2 ) ]
+  -->
    [ ]
 
   /*
-  rule (modulo AC) ifsidcheckreprsidl_1_112111111[color=#408052,
-                                                  process="if sid.2=check_rep(r_sid.2, 'l')", issapicrule]:
-     [ State_112111111( init, r_sid, sid, state ) ]
-    --[ Pred_Not_Eq( sid, z ) ]->
-     [ ]
-    variants (modulo AC)
-    1. r_sid = r_sid.9
-       z     = check_rep(r_sid.9, 'l')
-    
-    2. r_sid = rep(x.8, 'l')
-       z     = x.8
+  rule (modulo AC) p_0_1121111111112[color=#658040, process="0",
+                                     issapicrule, role='v']:
+     [ State_1121111111112( init, lock, r_sid, sid, state ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1121111112[color=#658040, process="0", issapicrule,
+                               role='v']:
+   [ State_1121111112( init.1, r_sid.2, sid.2, state.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1121111112[color=#658040, process="0", issapicrule,
+                                  role='v']:
+     [ State_1121111112( init, r_sid, sid, state ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_11211112[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_11211112( init.1, state.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11211112[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_11211112( init, state ) ] --> [ ]
   */
 
 restriction set_in:
@@ -713,24 +1074,16 @@ restriction locking_1:
 /*
 WARNING: the following wellformedness checks failed!
 
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule lookupstateasipo_0_11111111111: 
-Failed to derive Variable(s): ipo.1
-
-Rule lookupstateasipo_0_112111111111: 
-Failed to derive Variable(s): ipo.2
+Wellformedness-error in Process
+  There is an unlock that cannot be matched with a lock.
 */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -742,12 +1095,12 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 15.98s
+  processing time: 2.50s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  attested_comput (exists-trace): verified (31 steps)
+  attested_comput (exists-trace): falsified - no trace found (2 steps)
 
 ==============================================================================
 */

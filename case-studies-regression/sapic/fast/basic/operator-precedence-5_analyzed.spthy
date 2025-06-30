@@ -21,13 +21,13 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 solve( E( x ) @ #e )
-  case in_0_11
+  case eventE_0_111
   by contradiction /* from formulas */
 next
-  case in_0_12
+  case eventE_0_121
   by contradiction /* from formulas */
 next
-  case in_0_2
+  case eventE_0_21
   by contradiction /* from formulas */
 qed
 
@@ -37,23 +37,75 @@ qed
 
 
 
-rule (modulo E) in_0_11[color=#ffffff, process="in('1');", issapicrule]:
-   [ State_11( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_0_12[color=#ffffff, process="in('1');", issapicrule]:
-   [ State_12( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="|", issapicrule]:
-   [ ] --[ Init( ) ]-> [ State_11( ), State_12( ), State_2( ) ]
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) in_0_2[color=#ffffff, process="in('1');", issapicrule]:
-   [ State_2( ), In( '1' ) ] --[ E( '1' ) ]-> [ ]
+rule (modulo E) in_0_11[color=#ffffff, process="in('1');", issapicrule,
+                        role='Process']:
+   [ State_11( ), In( '1' ) ] --> [ State_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventE_0_111[color=#ffffff, process="event E( '1' );",
+                             issapicrule, role='Process']:
+   [ State_111( ) ] --[ E( '1' ) ]-> [ State_1111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1111( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_0_12[color=#ffffff, process="in('1');", issapicrule,
+                        role='Process']:
+   [ State_12( ), In( '1' ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventE_0_121[color=#ffffff, process="event E( '1' );",
+                             issapicrule, role='Process']:
+   [ State_121( ) ] --[ E( '1' ) ]-> [ State_1211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1211[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1211( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_0_2[color=#ffffff, process="in('1');", issapicrule,
+                       role='Process']:
+   [ State_2( ), In( '1' ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventE_0_21[color=#ffffff, process="event E( '1' );",
+                            issapicrule, role='Process']:
+   [ State_21( ) ] --[ E( '1' ) ]-> [ State_211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_211[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_211( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -67,8 +119,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -80,7 +132,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-5.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-5.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.06s
   
   second_process_covered (all-traces): verified (5 steps)
 

@@ -59,16 +59,12 @@ getProducedFacts rules = facts
 
 mergeInfo :: ProtoRuleEInfo -> ProtoRuleEInfo -> ProtoRuleEInfo
 mergeInfo (ProtoRuleEInfo (StandRule name) attr res) (ProtoRuleEInfo (StandRule name2) attr2 res2) =
-  ProtoRuleEInfo (StandRule (mergeStand name name2)) (mergeAttr attr attr2) (res ++ res2)
+  ProtoRuleEInfo (StandRule (mergeStand name name2)) (mergeAttrs attr attr2) (res ++ res2)
  where
        mergeStand n _ = n  -- ++ "_" ++ n'
        -- NOTE: concatenating makes veryyyy big name rules, that completely make the the graphs unreadble
        -- NOTE: if we reintroduce Yavor's Dot output, recall 9e7e99fe070776172bd09cb977e8d3a83da3ed51
-       mergeAttr a a' =  let completeList = a ++ a' in
-                            take 1 [i |  i@(RuleColor _) <- completeList]
-                         ++ take 1 [i |  i@(Process   _) <- completeList]
-                         ++ take 1 [i |  i@IsSAPiCRule   <- completeList]
-
+       mergeAttrs a a' =  a <> a'
 mergeInfo _ _ = error "FreshRule(s) passed to mergeInfo"
 
 

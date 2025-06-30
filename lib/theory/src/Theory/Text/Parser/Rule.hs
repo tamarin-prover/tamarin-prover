@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Move brackets to avoid $" #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
@@ -23,6 +25,7 @@ import qualified Data.ByteString.Char8      as BC
 import           Data.Label
 import           Data.Either
 import           Data.Maybe
+import           Data.Foldable
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
@@ -62,36 +65,33 @@ typeAssertions = fmap TypingE $
     <|> pure []
 -}
 
--- | Parse a 'RuleAttribute'.
-ruleAttribute :: Parser (Maybe RuleAttribute)
+-- | Parse a single 'RuleAttribute'.
+ruleAttribute :: Parser RuleAttributes
 ruleAttribute = asum
-    [ symbol "colour=" *> (Just . RuleColor <$> parseColor)
-    , symbol "color="  *> (Just . RuleColor <$> parseColor)
+    [ symbol "colour=" *> parseColor
+    , symbol "color="  *> parseColor
     , symbol "process="  *> parseAndIgnore
-    , symbol "derivchecks" *> ignore
-    , symbol "no_derivcheck" *> ignore
-    , symbol "role=" *> (Just . Role <$> parseRole)
-    , symbol "issapicrule" *> return (Just IsSAPiCRule)
+    , symbol "no_derivcheck" *> return (mempty { ignoreDerivChecks = True })
+    , symbol "role=" *> parseRole
+    , symbol "issapicrule" *> return (mempty { isSAPiCRule = True })
     ]
   where
     parseColor = do
         hc <- hexColor
         case hexToRGB hc of
-            Just rgb  -> return rgb
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
+            Just rgb  -> return $ mempty { ruleColor = Just rgb }
     parseAndIgnore = do
-                        _ <-  symbol "\""
-                        _ <- manyTill anyChar (try (symbol "\""))
-                        return Nothing
-    ignore = return (Just IgnoreDerivChecks)
+                        _ <- try (symbol "\'") <|> symbol "\""
+                        _ <- manyTill anyChar (try (symbol "\"") <|> (try $ symbol "'"))
+                        return  mempty
     parseRole = do
-        _ <- symbol "\""
-        role <- manyTill anyChar (try (symbol "\""))
-        return role
+        _ <- symbol "\'" <|> symbol "\""
+        role <- manyTill anyChar (try (symbol "\'" <|> symbol "\""))
+        return $ mempty { role = Just role }
 
-ruleAttributesp :: Parser [RuleAttribute]
-ruleAttributesp = option [] $ catMaybes <$> list ruleAttribute
-
+ruleAttributesp :: Parser RuleAttributes
+ruleAttributesp = option mempty $ fold <$> list ruleAttribute
 -- | Parse RuleInfo
 protoRuleInfo :: Parser ProtoRuleEInfo
 protoRuleInfo = do
