@@ -1,0 +1,242 @@
+theory Destructors begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2[destructor], senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(k, senc(k, m)) = m,
+    snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+section{* Testing the pattern matching with let destructors *}
+
+
+
+lemma else:
+  exists-trace "∃ #t. Else( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (Else( ) @ #t)"
+*/
+simplify
+solve( State_1112( k, x ) ▶₀ #t )
+  case letysdeckx_2_111
+  SOLVED // trace found
+qed
+
+lemma main:
+  exists-trace "∃ m #t. Dec( m ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ m #t. (Dec( m ) @ #t)"
+*/
+simplify
+solve( State_1111( k, x, m ) ▶₀ #t )
+  case letysdeckx_1_111
+  solve( !KU( senc(~n, m) ) @ #vk )
+    case outsenck_0_1
+    SOLVED // trace found
+  qed
+qed
+
+lemma main2:
+  all-traces "∀ m #t. (Dec( m ) @ #t) ⇒ (m = '1')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ m #t. (Dec( m ) @ #t) ∧ ¬(m = '1')"
+*/
+simplify
+solve( State_1111( k, x, m ) ▶₀ #t )
+  case letysdeckx_1_111
+  solve( !KU( senc(~n, m) ) @ #vk )
+    case c_senc
+    solve( !KU( ~n ) @ #vk.1 )
+      case outy_0_11111
+      by contradiction /* cyclic */
+    qed
+  next
+    case outsenck_0_1
+    by contradiction /* from formulas */
+  next
+    case outy_0_11111
+    by contradiction /* cyclic */
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='new k.1;', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newk_0_[color=#ffffff, process='new k.1;', issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( k.1 ) ] --> [ State_1( k.1 ) ]
+
+  /*
+  rule (modulo AC) newk_0_[color=#ffffff, process='new k.1;', issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( k ) ] --> [ State_1( k ) ]
+  */
+
+rule (modulo E) outsenck_0_1[color=#ffffff,
+                             process='out(senc(k.1, '1'));', issapicrule, role='Process']:
+   [ State_1( k.1 ) ] --> [ State_11( k.1 ), Out( senc(k.1, '1') ) ]
+
+  /*
+  rule (modulo AC) outsenck_0_1[color=#ffffff,
+                                process='out(senc(k.1, '1'));', issapicrule, role='Process']:
+     [ State_1( k ) ] --> [ State_11( k ), Out( senc(k, '1') ) ]
+  */
+
+rule (modulo E) inx_0_11[color=#ffffff, process='in(x.1);', issapicrule,
+                         role='Process']:
+   [ State_11( k.1 ), In( x.1 ) ] --> [ State_111( k.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_11[color=#ffffff, process='in(x.1);', issapicrule,
+                            role='Process']:
+     [ State_11( k ), In( x ) ] --> [ State_111( k, x ) ]
+  */
+
+rule (modulo E) letysdeckx_0_111[color=#ffffff,
+                                 process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
+   [ State_111( k.1, x.1 ) ] --> [ Let_1111( <k.1, x.1>, k.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) letysdeckx_0_111[color=#ffffff,
+                                    process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
+     [ State_111( k, x ) ] --> [ Let_1111( <k, x>, k, x ) ]
+  */
+
+rule (modulo E) letysdeckx_1_111[color=#ffffff,
+                                 process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
+   [ Let_1111( <k, senc(k, y.1)>, k.1, x.1 ) ]
+  -->
+   [ State_1111( k.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) letysdeckx_1_111[color=#ffffff,
+                                    process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
+     [ Let_1111( <k, senc(k, y)>, k.1, x ) ] --> [ State_1111( k.1, x, y ) ]
+  */
+
+restriction Restr_letysdeckx_2_111_1:
+  "∀ x #NOW.
+    (Restr_letysdeckx_2_111_1( x ) @ #NOW) ⇒
+    (∀ k y. (<k, senc(k, y)> = x) ⇒ (⊥))"
+  // safety formula
+
+rule (modulo E) letysdeckx_2_111[color=#ffffff,
+                                 process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
+   [ Let_1111( <k.1, x.1>, k.1, x.1 ) ]
+  --[ Restr_letysdeckx_2_111_1( <k.1, x.1> ) ]->
+   [ State_1112( k.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) letysdeckx_2_111[color=#ffffff,
+                                    process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
+     [ Let_1111( <k, x>, k, x ) ]
+    --[ Restr_letysdeckx_2_111_1( <k, x> ) ]->
+     [ State_1112( k, x ) ]
+  */
+
+rule (modulo E) eventDecy_0_1111[color=#ffffff,
+                                 process='event Dec( y.1 );', issapicrule, role='Process']:
+   [ State_1111( k.1, x.1, y.1 ) ]
+  --[ Dec( y.1 ) ]->
+   [ State_11111( k.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventDecy_0_1111[color=#ffffff,
+                                    process='event Dec( y.1 );', issapicrule, role='Process']:
+     [ State_1111( k, x, y ) ] --[ Dec( y ) ]-> [ State_11111( k, x, y ) ]
+  */
+
+rule (modulo E) outy_0_11111[color=#ffffff, process='out(y.1);',
+                             issapicrule, role='Process']:
+   [ State_11111( k.1, x.1, y.1 ) ]
+  -->
+   [ State_111111( k.1, x.1, y.1 ), Out( y.1 ) ]
+
+  /*
+  rule (modulo AC) outy_0_11111[color=#ffffff, process='out(y.1);',
+                                issapicrule, role='Process']:
+     [ State_11111( k, x, y ) ] --> [ State_111111( k, x, y ), Out( y ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+   [ State_111111( k.1, x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+     [ State_111111( k, x, y ) ] --> [ ]
+  */
+
+rule (modulo E) eventElse_0_1112[color=#ffffff, process='event Else( );',
+                                 issapicrule, role='Process']:
+   [ State_1112( k.1, x.1 ) ] --[ Else( ) ]-> [ State_11121( k.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) eventElse_0_1112[color=#ffffff,
+                                    process='event Else( );', issapicrule, role='Process']:
+     [ State_1112( k, x ) ] --[ Else( ) ]-> [ State_11121( k, x ) ]
+  */
+
+rule (modulo E) p_0_11121[color=#ffffff, process='0', issapicrule,
+                          role='Process']:
+   [ State_11121( k.1, x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11121[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+     [ State_11121( k, x ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/destructors.spthy
+
+  output:          examples/sapic/fast/basic/destructors.spthy.tmp
+  processing time: 0.38s
+  
+  else (exists-trace): verified (3 steps)
+  main (exists-trace): verified (4 steps)
+  main2 (all-traces): verified (7 steps)
+
+==============================================================================
+*/

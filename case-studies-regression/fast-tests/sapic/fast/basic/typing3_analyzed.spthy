@@ -1,0 +1,128 @@
+theory Typing begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: f/1, fst/1, g/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newxlol_0_1[color=#ffffff, process='new x.1:lol;',
+                            issapicrule, role='Process']:
+   [ State_1( ), Fr( x.1 ) ] --> [ State_11( x.1 ) ]
+
+  /*
+  rule (modulo AC) newxlol_0_1[color=#ffffff, process='new x.1:lol;',
+                               issapicrule, role='Process']:
+     [ State_1( ), Fr( x ) ] --> [ State_11( x ) ]
+  */
+
+rule (modulo E) outxlol_0_11[color=#ffffff, process='out(x.1:lol);',
+                             issapicrule, role='Process']:
+   [ State_11( x.1 ) ] --> [ State_111( x.1 ), Out( x.1 ) ]
+
+  /*
+  rule (modulo AC) outxlol_0_11[color=#ffffff, process='out(x.1:lol);',
+                                issapicrule, role='Process']:
+     [ State_11( x ) ] --> [ State_111( x ), Out( x ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+     [ State_111( x ) ] --> [ ]
+  */
+
+rule (modulo E) newxlol_0_2[color=#ffffff, process='new x.2:lol;',
+                            issapicrule, role='Process']:
+   [ State_2( ), Fr( x.2 ) ] --> [ State_21( x.2 ) ]
+
+  /*
+  rule (modulo AC) newxlol_0_2[color=#ffffff, process='new x.2:lol;',
+                               issapicrule, role='Process']:
+     [ State_2( ), Fr( x ) ] --> [ State_21( x ) ]
+  */
+
+rule (modulo E) outxlol_0_21[color=#ffffff, process='out(x.2:lol);',
+                             issapicrule, role='Process']:
+   [ State_21( x.2 ) ] --> [ State_211( x.2 ), Out( x.2 ) ]
+
+  /*
+  rule (modulo AC) outxlol_0_21[color=#ffffff, process='out(x.2:lol);',
+                                issapicrule, role='Process']:
+     [ State_21( x ) ] --> [ State_211( x ), Out( x ) ]
+  */
+
+rule (modulo E) p_0_211[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_211( x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+     [ State_211( x ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/typing3.spthy
+
+  output:          examples/sapic/fast/basic/typing3.spthy.tmp
+  processing time: 0.11s
+  
+
+==============================================================================
+*/

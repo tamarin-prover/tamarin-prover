@@ -1,0 +1,179 @@
+theory mini4 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+heuristic: p
+
+section{* small example for progression function *}
+
+
+
+
+
+
+
+
+
+lemma A_possible:
+  exists-trace "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+solve( State_11( ~prog_, m ) ▶₀ #t )
+  case inrm_0_1
+  solve( (∃ #t. (ProgressTo_111( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t)) )
+    case case_1
+    solve( State_11( ~prog_, m.1 ) ▶₀ #t.2 )
+      case inrm_0_1
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma B_impossible:
+  all-traces "¬(∃ #t. B( ) @ #t)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+solve( State_211( ~prog_, n ) ▶₀ #t )
+  case newn_0_2
+  solve( MID_Receiver( ~mid_21 ) ▶₂ #j )
+    case MessageIDRule
+    by solve( State_( ~prog_ ) ▶₀ #j )
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) MessageIDRule[color=#ffffff, process='+', issapicrule,
+                              role='Process']:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
+                     role='Process']:
+   [ Fr( ~prog_ ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ State_( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inrm_0_1[color=#ffffff, process='in('r',m.1);',
+                         issapicrule, role='Process']:
+   [ State_( ~prog_ ), In( m.1 ), MID_Receiver( ~mid_1 ) ]
+  --[ Receive( ~mid_1, m.1 ) ]->
+   [ State_11( ~prog_, m.1 ) ]
+
+  /*
+  rule (modulo AC) inrm_0_1[color=#ffffff, process='in('r',m.1);',
+                            issapicrule, role='Process']:
+     [ State_( ~prog_ ), In( m ), MID_Receiver( ~mid_1 ) ]
+    --[ Receive( ~mid_1, m ) ]->
+     [ State_11( ~prog_, m ) ]
+  */
+
+rule (modulo E) eventA_0_11[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+   [ State_11( ~prog_, m.1 ) ] --[ ProgressTo_111( ~prog_ ), A( ) ]-> [ ]
+
+  /*
+  rule (modulo AC) eventA_0_11[color=#ffffff, process='0', issapicrule,
+                               role='Process']:
+     [ State_11( ~prog_, m ) ] --[ ProgressTo_111( ~prog_ ), A( ) ]-> [ ]
+  */
+
+rule (modulo E) newn_0_2[color=#ffffff, process='out('r',n.1);',
+                         issapicrule, role='Process']:
+   [ State_( ~prog_ ), Fr( n.1 ), MID_Sender( ~mid_21 ) ]
+  --[ Send( ~mid_21, n.1 ) ]->
+   [ Out( n.1 ), State_211( ~prog_, n.1 ) ]
+
+  /*
+  rule (modulo AC) newn_0_2[color=#ffffff, process='out('r',n.1);',
+                            issapicrule, role='Process']:
+     [ State_( ~prog_ ), Fr( n ), MID_Sender( ~mid_21 ) ]
+    --[ Send( ~mid_21, n ) ]->
+     [ Out( n ), State_211( ~prog_, n ) ]
+  */
+
+rule (modulo E) eventB_0_211[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+   [ State_211( ~prog_, n.1 ) ] --[ ProgressTo_2111( ~prog_ ), B( ) ]-> [ ]
+
+  /*
+  rule (modulo AC) eventB_0_211[color=#ffffff, process='0', issapicrule,
+                                role='Process']:
+     [ State_211( ~prog_, n ) ] --[ ProgressTo_2111( ~prog_ ), B( ) ]-> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress__to_111_or_2111:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_111( prog_ ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_2111( prog_ ) @ #t.1))"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+restriction reliable:
+  "∀ #i x y.
+    (Send( x, y ) @ #i) ⇒ (∃ #j. (Receive( x, y ) @ #j) ∧ (#i < #j))"
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-progress/mini4.spthy
+
+  output:          examples/sapic/fast/feature-progress/mini4.spthy.tmp
+  processing time: 0.19s
+  
+  A_possible (exists-trace): verified (5 steps)
+  B_impossible (all-traces): verified (4 steps)
+
+==============================================================================
+*/

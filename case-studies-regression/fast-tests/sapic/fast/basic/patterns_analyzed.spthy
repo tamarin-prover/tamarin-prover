@@ -1,0 +1,113 @@
+theory Patterns begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='in(x.1);', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_[color=#ffffff, process='in(x.1);', issapicrule,
+                       role='Process']:
+   [ State_( ), In( x.1 ) ] --> [ State_1( x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_[color=#ffffff, process='in(x.1);', issapicrule,
+                          role='Process']:
+     [ State_( ), In( x ) ] --> [ State_1( x ) ]
+  */
+
+rule (modulo E) inx_0_1[color=#ffffff, process='in(=x.1);', issapicrule,
+                        role='Process']:
+   [ State_1( x.1 ), In( x.1 ) ] --> [ State_11( x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_1[color=#ffffff, process='in(=x.1);', issapicrule,
+                           role='Process']:
+     [ State_1( x ), In( x ) ] --> [ State_11( x ) ]
+  */
+
+rule (modulo E) inxx_0_11[color=#ffffff, process='in(<=x.1, =x.1>);',
+                          issapicrule, role='Process']:
+   [ State_11( x.1 ), In( <x.1, x.1> ) ] --> [ State_111( x.1 ) ]
+
+  /*
+  rule (modulo AC) inxx_0_11[color=#ffffff, process='in(<=x.1, =x.1>);',
+                             issapicrule, role='Process']:
+     [ State_11( x ), In( <x, x> ) ] --> [ State_111( x ) ]
+  */
+
+rule (modulo E) Inz_0_111[color=#ffffff,
+                          process=' [ In( z.1 ) ] --> [ ];', issapicrule, role='Process']:
+   [ State_111( x.1 ), In( z.1 ) ] --> [ State_1111( x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) Inz_0_111[color=#ffffff,
+                             process=' [ In( z.1 ) ] --> [ ];', issapicrule, role='Process']:
+     [ State_111( x ), In( z ) ] --> [ State_1111( x, z ) ]
+  */
+
+rule (modulo E) Inz_0_1111[color=#ffffff,
+                           process=' [ In( z.1 ) ] --> [ ];', issapicrule, role='Process']:
+   [ State_1111( x.1, z.1 ), In( z.1 ) ] --> [ State_11111( x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) Inz_0_1111[color=#ffffff,
+                              process=' [ In( z.1 ) ] --> [ ];', issapicrule, role='Process']:
+     [ State_1111( x, z ), In( z ) ] --> [ State_11111( x, z ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process='0', issapicrule,
+                          role='Process']:
+   [ State_11111( x.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+     [ State_11111( x, z ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/patterns.spthy
+
+  output:          examples/sapic/fast/basic/patterns.spthy.tmp
+  processing time: 0.12s
+  
+
+==============================================================================
+*/

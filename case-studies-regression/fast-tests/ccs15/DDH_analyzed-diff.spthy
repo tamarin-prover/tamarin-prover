@@ -7561,8 +7561,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
 */
 
 end
@@ -7574,7 +7574,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 1.77s
+  processing time: 4.88s
   
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 

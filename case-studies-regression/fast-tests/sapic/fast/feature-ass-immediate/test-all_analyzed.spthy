@@ -1,0 +1,195 @@
+theory AssImmediateTestAll begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+lemma intuitiveTest:
+  all-traces
+  "∀ #a #b.
+    ((A( ) @ #a) ∧ (B( ) @ #b)) ⇒
+    (∃ #i x. ((K( x ) @ #i) ∧ (#a < #i)) ∧ (#i < #b))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #a #b.
+  (A( ) @ #a) ∧ (B( ) @ #b)
+ ∧
+  ∀ #i x. (K( x ) @ #i) ⇒ ((¬(#a < #i)) ∨ (¬(#i < #b)))"
+*/
+simplify
+solve( State_11( x ) ▶₀ #a )
+  case outx_0_1
+  solve( State_1111( x ) ▶₀ #b )
+    case inxx_1_111
+    by contradiction /* cyclic */
+  next
+    case inxx_3_111
+    by contradiction /* cyclic */
+  qed
+qed
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='new x.1;', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_[color=#ffffff, process='new x.1;', issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( x.1 ) ] --> [ State_1( x.1 ) ]
+
+  /*
+  rule (modulo AC) newx_0_[color=#ffffff, process='new x.1;', issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( x ) ] --> [ State_1( x ) ]
+  */
+
+rule (modulo E) outx_0_1[color=#ffffff, process='out(x.1);', issapicrule,
+                         role='Process']:
+   [ State_1( x.1 ) ] --> [ State_11( x.1 ), Out( x.1 ) ]
+
+  /*
+  rule (modulo AC) outx_0_1[color=#ffffff, process='out(x.1);',
+                            issapicrule, role='Process']:
+     [ State_1( x ) ] --> [ State_11( x ), Out( x ) ]
+  */
+
+rule (modulo E) eventA_0_11[color=#ffffff, process='event A( );',
+                            issapicrule, role='Process']:
+   [ State_11( x.1 ) ] --[ A( ), Event( ) ]-> [ State_111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventA_0_11[color=#ffffff, process='event A( );',
+                               issapicrule, role='Process']:
+     [ State_11( x ) ] --[ A( ), Event( ) ]-> [ State_111( x ) ]
+  */
+
+rule (modulo E) inxx_0_111[color=#ffffff, process='in(x.1,=x.1);',
+                           issapicrule, role='Process']:
+   [ State_111( x.1 ), Message( x.1, x.2 ) ]
+  -->
+   [ Let_1111( x.2, x.1 ), Ack( x.1, x.2 ) ]
+
+  /*
+  rule (modulo AC) inxx_0_111[color=#ffffff, process='in(x.1,=x.1);',
+                              issapicrule, role='Process']:
+     [ State_111( x ), Message( x, x.1 ) ]
+    -->
+     [ Let_1111( x.1, x ), Ack( x, x.1 ) ]
+  */
+
+rule (modulo E) inxx_1_111[color=#ffffff, process='in(x.1,=x.1);',
+                           issapicrule, role='Process']:
+   [ Let_1111( x.1, x.1 ) ] --> [ State_1111( x.1 ) ]
+
+  /*
+  rule (modulo AC) inxx_1_111[color=#ffffff, process='in(x.1,=x.1);',
+                              issapicrule, role='Process']:
+     [ Let_1111( x, x ) ] --> [ State_1111( x ) ]
+  */
+
+rule (modulo E) inxx_2_111[color=#ffffff, process='in(x.1,=x.1);',
+                           issapicrule, role='Process']:
+   [ State_111( x.1 ), In( <x.1, x.2> ) ]
+  --[ ChannelIn( <x.1, x.2> ) ]->
+   [ Let_1111( x.2, x.1 ) ]
+
+  /*
+  rule (modulo AC) inxx_2_111[color=#ffffff, process='in(x.1,=x.1);',
+                              issapicrule, role='Process']:
+     [ State_111( x ), In( <x, x.1> ) ]
+    --[ ChannelIn( <x, x.1> ) ]->
+     [ Let_1111( x.1, x ) ]
+  */
+
+rule (modulo E) inxx_3_111[color=#ffffff, process='in(x.1,=x.1);',
+                           issapicrule, role='Process']:
+   [ Let_1111( x.1, x.1 ) ] --> [ State_1111( x.1 ) ]
+
+  /*
+  rule (modulo AC) inxx_3_111[color=#ffffff, process='in(x.1,=x.1);',
+                              issapicrule, role='Process']:
+     [ Let_1111( x, x ) ] --> [ State_1111( x ) ]
+  */
+
+rule (modulo E) eventB_0_1111[color=#ffffff, process='event B( );',
+                              issapicrule, role='Process']:
+   [ State_1111( x.1 ) ] --[ B( ), Event( ) ]-> [ State_11111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventB_0_1111[color=#ffffff, process='event B( );',
+                                 issapicrule, role='Process']:
+     [ State_1111( x ) ] --[ B( ), Event( ) ]-> [ State_11111( x ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process='0', issapicrule,
+                          role='Process']:
+   [ State_11111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+     [ State_11111( x ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction in_event:
+  "∀ x #t3.
+    (ChannelIn( x ) @ #t3) ⇒
+    (∃ #t2.
+      (((K( x ) @ #t2) ∧ (#t2 < #t3)) ∧
+       (∀ #t1. (Event( ) @ #t1) ⇒ ((#t1 < #t2) ∨ (#t3 < #t1)))) ∧
+      (∀ #t1 xp.
+        (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "inxx_0_111":  factName `Message' arity: 2 multiplicity: Linear
+*/
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-ass-immediate/test-all.spthy
+
+  output:          examples/sapic/fast/feature-ass-immediate/test-all.spthy.tmp
+  processing time: 0.19s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  intuitiveTest (all-traces): verified (5 steps)
+
+==============================================================================
+*/
