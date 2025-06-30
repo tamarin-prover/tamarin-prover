@@ -294,7 +294,7 @@ baseTransComb c an p tildex
              , tx', tildex )
 -- Process Calls are currently made by a simple inlining of the process, where the parameters have already been substituded by the value of the caller inside the parser. Variants could be defined to optimize this behaviour.
     | ProcessCall {} <- c =
-       ([ ([def_state], [], [def_state1 tildex ], [])],
+       ([ ([def_state], [], [def_state1 tildex, def_state2 tildex ], [])], -- TODO remove second state def_state2 but make sure `gen` does not produce rule for it in this case, otherwise we get warnings.
         tildex,tildex)
 
     -- | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)

@@ -1187,17 +1187,18 @@ prettyDotProtoRuleName attrs rn = text $ case rn of
 prettyRuleName :: (HighlightDocument d, HasRuleName (Rule i)) => Rule i -> d
 prettyRuleName = ruleInfo prettyProtoRuleName prettyIntrRuleACInfo . ruleName
 
+-- | Pretty print the attributes of a rule. Omits values that are `Nothing :: Maybe a` or `False` by default.
 prettyRuleAttribute :: (HighlightDocument d) => RuleAttributes -> d
-prettyRuleAttribute a = fsep $ punctuate comma $ catMaybes [ -- Maybe types are only printed if they are (Just x). Hence fmap.
-    fmap (\c -> text "color=" <> text (rgbToHex c)) (ruleColor a),
-    fmap ppProcess (ruleProcess a),
-    boolToMaybe (ignoreDerivChecks a) $ text "derivchecks",
-    boolToMaybe (isSAPiCRule a) $ text "issapicrule",
-    fmap (\roleName -> text "role=\'" <> text roleName <> text "\'") (role a)
+prettyRuleAttribute attr = fsep $ punctuate comma $ catMaybes [ -- Maybe types are only printed if they are (Just x). Hence fmap.
+    fmap (\c -> text "color=" <> text (rgbToHex c)) (ruleColor attr),
+    fmap ppProcess (ruleProcess attr),
+    boolToMaybe (ignoreDerivChecks attr) $ text "no_derivcheck",
+    boolToMaybe (isSAPiCRule attr) $ text "issapicrule",
+    fmap (\roleName -> text "role=\'" <> text roleName <> text "\'") (role attr)
     ]
     where
 
-    ppProcess   p = text "process=" <> text ("\"" ++ prettySapicTopLevel' f p ++ "\"")
+    ppProcess   p = text "process=" <> text ("\'" ++ prettySapicTopLevel' f p ++ "\'")
         where f l a r rest _ = render $ prettyRuleRestr (g l) (g a) (g r) (h rest)
               g = map toLNFact
               h = map toLFormula

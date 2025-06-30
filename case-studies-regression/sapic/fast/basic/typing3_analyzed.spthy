@@ -26,29 +26,76 @@ heuristic: p
 
 
 
-rule (modulo E) newxlol_0_1[color=#ffffff, process="new x.1:lol;",
-                            issapicrule]:
-   [ State_1( ), Fr( x.1 ) ] --> [ Out( x.1 ) ]
-
-  /*
-  rule (modulo AC) newxlol_0_1[color=#ffffff, process="new x.1:lol;",
-                               issapicrule]:
-     [ State_1( ), Fr( x ) ] --> [ Out( x ) ]
-  */
-
-rule (modulo E) Init[color=#ffffff, process="|", issapicrule]:
-   [ ] --[ Init( ) ]-> [ State_1( ), State_2( ) ]
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newxlol_0_1[color=#ffffff, process="new x.1:lol;",
+                            issapicrule, role='Process']:
+   [ State_1( ), Fr( x.1 ) ] --> [ State_11( x.1 ) ]
+
+  /*
+  rule (modulo AC) newxlol_0_1[color=#ffffff, process="new x.1:lol;",
+                               issapicrule, role='Process']:
+     [ State_1( ), Fr( x ) ] --> [ State_11( x ) ]
+  */
+
+rule (modulo E) outxlol_0_11[color=#ffffff, process="out(x.1:lol);",
+                             issapicrule, role='Process']:
+   [ State_11( x.1 ) ] --> [ State_111( x.1 ), Out( x.1 ) ]
+
+  /*
+  rule (modulo AC) outxlol_0_11[color=#ffffff, process="out(x.1:lol);",
+                                issapicrule, role='Process']:
+     [ State_11( x ) ] --> [ State_111( x ), Out( x ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_111( x ) ] --> [ ]
+  */
+
 rule (modulo E) newxlol_0_2[color=#ffffff, process="new x.2:lol;",
-                            issapicrule]:
-   [ State_2( ), Fr( x.2 ) ] --> [ Out( x.2 ) ]
+                            issapicrule, role='Process']:
+   [ State_2( ), Fr( x.2 ) ] --> [ State_21( x.2 ) ]
 
   /*
   rule (modulo AC) newxlol_0_2[color=#ffffff, process="new x.2:lol;",
-                               issapicrule]:
-     [ State_2( ), Fr( x ) ] --> [ Out( x ) ]
+                               issapicrule, role='Process']:
+     [ State_2( ), Fr( x ) ] --> [ State_21( x ) ]
+  */
+
+rule (modulo E) outxlol_0_21[color=#ffffff, process="out(x.2:lol);",
+                             issapicrule, role='Process']:
+   [ State_21( x.2 ) ] --> [ State_211( x.2 ), Out( x.2 ) ]
+
+  /*
+  rule (modulo AC) outxlol_0_21[color=#ffffff, process="out(x.2:lol);",
+                                issapicrule, role='Process']:
+     [ State_21( x ) ] --> [ State_211( x ), Out( x ) ]
+  */
+
+rule (modulo E) p_0_211[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_211( x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_211( x ) ] --> [ ]
   */
 
 restriction single_session:
@@ -61,8 +108,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -74,7 +121,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing3.spthy
 
   output:          examples/sapic/fast/basic/typing3.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.08s
   
 
 ==============================================================================

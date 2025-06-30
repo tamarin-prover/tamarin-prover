@@ -46,64 +46,58 @@ solve( State_1111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
     solve( !KU( h(<~r1, ~k>) ) @ #vk.1 )
       case c_h
       solve( !KU( ~id ) @ #vk.2 )
-        case p_1_1112
+        case outidrrhrk_0_111211111
         by solve( !KU( ~k ) @ #vk.5 )
       qed
     next
-      case p_1_1112
+      case outidrrhrk_0_111211111
       by contradiction /* from formulas */
     qed
   next
     case coerce
     solve( !KD( (~id⊕h(<~r1, ~k>)) ) ▶₀ #vk )
-      case newr_0_11111
-      by contradiction /* impossible chain */
-    next
-      case p_1_1112
+      case outidrrhrk_0_111211111
       solve( (#vl, 0) ~~> (#vk, 0) )
         case d_0_fst
-        solve( !Semistate_11121( ~id.1, ~k.1 ) ▶₀ #vr.5 )
-          case p_1_11
+        solve( State_111211111( ~id.1, ~k.1, ~r2, r1.1 ) ▶₀ #vr.12 )
+          case eventResponsekTag_0_11121111
           solve( splitEqs(1) )
             case split
-            solve( (#vr.6, 0) ~~> (#vk, 0) )
+            solve( (#vr.13, 0) ~~> (#vk, 0) )
               case d_xor_case_1
-              solve( (#vr.8, 0) ~~> (#vk, 0) )
+              solve( (#vr.22, 0) ~~> (#vk, 0) )
                 case Xor
                 solve( !KU( (~r2⊕h(<~r1, ~k>)) ) @ #vk.2 )
                   case c_xor
                   solve( !KU( h(<~r1, ~k>) ) @ #vk.3 )
                     case c_h
                     solve( !KU( ~r2 ) @ #vk.4 )
-                      case p_1_1112_case_1
+                      case outidrrhrk_0_111211111_case_1
                       by solve( !KU( ~k ) @ #vk.7 )
                     next
-                      case p_1_1112_case_2
+                      case outidrrhrk_0_111211111_case_2
                       by solve( !KU( ~k ) @ #vk.7 )
                     qed
                   next
-                    case p_1_1112
+                    case outidrrhrk_0_111211111
                     by contradiction /* from formulas */
                   qed
                 next
                   case coerce
                   solve( !KD( (~r2⊕h(<~r1, ~k>)) ) ▶₀ #vk.1 )
-                    case newr_0_11111
-                    by contradiction /* impossible chain */
-                  next
-                    case p_1_1112
+                    case outidrrhrk_0_111211111
                     solve( (#vl.1, 0) ~~> (#vk.1, 0) )
                       case d_0_fst
-                      solve( !Semistate_11121( ~id.1, ~k.1 ) ▶₀ #vr.9 )
-                        case p_1_11
+                      solve( State_111211111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.23 )
+                        case eventResponsekTag_0_11121111
                         solve( splitEqs(7) )
                           case split
-                          solve( (#vr.10, 0) ~~> (#vk.1, 0) )
+                          solve( (#vr.24, 0) ~~> (#vk.1, 0) )
                             case d_xor_case_1
-                            by solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+                            by solve( (#vr.33, 0) ~~> (#vk.1, 0) )
                           next
                             case d_xor_case_2
-                            solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+                            solve( (#vr.33, 0) ~~> (#vk.1, 0) )
                               case Xor
                               by contradiction /* cyclic */
                             qed
@@ -118,191 +112,218 @@ solve( State_1111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
                       qed
                     next
                       case d_0_snd
-                      solve( (#vr.10, 0) ~~> (#vk.1, 0) )
+                      solve( (#vr.24, 0) ~~> (#vk.1, 0) )
                         case Xor
-                        by contradiction /* cyclic */
+                        solve( State_111211111( ~id.1, ~k, ~r2, ~r1 ) ▶₀ #vr.23 )
+                          case eventResponsekTag_0_11121111
+                          by contradiction /* cyclic */
+                        qed
                       next
                         case d_xor_case_1
-                        solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+                        solve( (#vr.25, 0) ~~> (#vk.1, 0) )
                           case Xor
-                          solve( !KU( (h(<~r1, ~k>)⊕h(<r1.1, ~k>)) ) @ #vk.3 )
-                            case c_xor
-                            solve( !KU( h(<r1.1, ~k>) ) @ #vk.4 )
-                              case c_h
-                              solve( !KU( h(<~r1, ~k>) ) @ #vk.6 )
+                          solve( State_111211111( ~id.1, ~k.1, ~r2, r1.2 ) ▶₀ #vr.23 )
+                            case eventResponsekTag_0_11121111
+                            solve( !KU( (h(<~r1, ~k>)⊕h(<r1.1, ~k>)) ) @ #vk.3 )
+                              case c_xor
+                              solve( !KU( h(<r1.1, ~k>) ) @ #vk.4 )
                                 case c_h
-                                by solve( !KU( ~k ) @ #vk.7 )
-                              next
-                                case p_1_1112
-                                by contradiction /* from formulas */
-                              qed
-                            next
-                              case p_1_1112
-                              solve( splitEqs(12) )
-                                case split
-                                solve( !KU( h(<~r1, ~k>) ) @ #vk.5 )
+                                solve( !KU( h(<~r1, ~k>) ) @ #vk.6 )
                                   case c_h
-                                  solve( !KU( ~r2.1 ) @ #vk.6 )
-                                    case p_1_1112_case_1
-                                    by solve( !KU( ~k ) @ #vk.9 )
-                                  next
-                                    case p_1_1112_case_2
-                                    by contradiction /* cyclic */
-                                  qed
+                                  by solve( !KU( ~k ) @ #vk.7 )
                                 next
-                                  case p_1_1112
+                                  case outidrrhrk_0_111211111
                                   by contradiction /* from formulas */
                                 qed
-                              qed
-                            qed
-                          next
-                            case coerce
-                            solve( !KD( (h(<~r1, ~k>)⊕h(<r1.1, ~k>)) ) ▶₀ #vk.2 )
-                              case newr_0_11111
-                              by contradiction /* impossible chain */
-                            next
-                              case p_1_1112
-                              solve( (#vl.1, 0) ~~> (#vk.2, 0) )
-                                case d_0_fst
-                                solve( !Semistate_11121( ~id.1, ~k.1 ) ▶₀ #vr.11 )
-                                  case p_1_11
-                                  solve( splitEqs(12) )
-                                    case split
-                                    solve( (#vr.12, 0) ~~> (#vk.2, 0) )
-                                      case d_xor_case_1
-                                      by solve( (#vr.14, 0) ~~> (#vk.2, 0) )
+                              next
+                                case outidrrhrk_0_111211111
+                                solve( splitEqs(12) )
+                                  case split
+                                  solve( !KU( h(<~r1, ~k>) ) @ #vk.5 )
+                                    case c_h
+                                    solve( !KU( ~r2.1 ) @ #vk.6 )
+                                      case outidrrhrk_0_111211111_case_1
+                                      by solve( !KU( ~k ) @ #vk.9 )
                                     next
-                                      case d_xor_case_2
-                                      by solve( (#vr.14, 0) ~~> (#vk.2, 0) )
-                                    next
-                                      case d_xor_case_3
-                                      by contradiction /* impossible chain */
-                                    next
-                                      case d_xor_case_4
-                                      by contradiction /* impossible chain */
+                                      case outidrrhrk_0_111211111_case_2
+                                      by contradiction /* cyclic */
                                     qed
+                                  next
+                                    case outidrrhrk_0_111211111
+                                    by contradiction /* from formulas */
                                   qed
                                 qed
-                              next
-                                case d_0_snd
-                                solve( (#vr.12, 0) ~~> (#vk.2, 0) )
-                                  case d_xor_case_1
-                                  by solve( (#vr.13, 0) ~~> (#vk.2, 0) )
+                              qed
+                            next
+                              case coerce
+                              solve( !KD( (h(<~r1, ~k>)⊕h(<r1.1, ~k>)) ) ▶₀ #vk.2 )
+                                case outidrrhrk_0_111211111
+                                solve( (#vl.1, 0) ~~> (#vk.2, 0) )
+                                  case d_0_fst
+                                  solve( State_111211111( ~id.1, ~k.1, ~r2.1, r1.2 ) ▶₀ #vr.25 )
+                                    case eventResponsekTag_0_11121111
+                                    solve( splitEqs(12) )
+                                      case split
+                                      solve( (#vr.26, 0) ~~> (#vk.2, 0) )
+                                        case d_xor_case_1
+                                        by solve( (#vr.35, 0) ~~> (#vk.2, 0) )
+                                      next
+                                        case d_xor_case_2
+                                        by solve( (#vr.35, 0) ~~> (#vk.2, 0) )
+                                      next
+                                        case d_xor_case_3
+                                        by contradiction /* impossible chain */
+                                      next
+                                        case d_xor_case_4
+                                        by contradiction /* impossible chain */
+                                      qed
+                                    qed
+                                  qed
                                 next
-                                  case d_xor_case_2
-                                  solve( (#vr.13, 0) ~~> (#vk.2, 0) )
-                                    case Xor_case_1
-                                    solve( !Semistate_11121( ~id.1, ~k ) ▶₀ #vr.11 )
-                                      case p_1_11
-                                      solve( splitEqs(12) )
-                                        case split
-                                        solve( !KU( (~r2.1⊕h(<~r1, ~k>)) ) @ #vk.4 )
-                                          case c_xor
-                                          solve( !KU( h(<~r1, ~k>) ) @ #vk.5 )
-                                            case c_h
-                                            solve( !KU( ~r2.1 ) @ #vk.6 )
-                                              case p_1_1112_case_1
-                                              by solve( !KU( ~k ) @ #vk.9 )
+                                  case d_0_snd
+                                  solve( (#vr.26, 0) ~~> (#vk.2, 0) )
+                                    case d_xor_case_1
+                                    by solve( (#vr.27, 0) ~~> (#vk.2, 0) )
+                                  next
+                                    case d_xor_case_2
+                                    solve( (#vr.27, 0) ~~> (#vk.2, 0) )
+                                      case Xor_case_1
+                                      solve( State_111211111( ~id.1, ~k, ~r2.1, r1.1 ) ▶₀ #vr.25 )
+                                        case eventResponsekTag_0_11121111
+                                        solve( splitEqs(12) )
+                                          case split
+                                          solve( !KU( (~r2.1⊕h(<~r1, ~k>)) ) @ #vk.4 )
+                                            case c_xor
+                                            solve( !KU( h(<~r1, ~k>) ) @ #vk.5 )
+                                              case c_h
+                                              solve( !KU( ~r2.1 ) @ #vk.6 )
+                                                case outidrrhrk_0_111211111_case_1
+                                                by solve( !KU( ~k ) @ #vk.9 )
+                                              next
+                                                case outidrrhrk_0_111211111_case_2
+                                                by solve( !KU( ~k ) @ #vk.9 )
+                                              qed
                                             next
-                                              case p_1_1112_case_2
-                                              by solve( !KU( ~k ) @ #vk.9 )
+                                              case outidrrhrk_0_111211111
+                                              by contradiction /* from formulas */
                                             qed
                                           next
-                                            case p_1_1112
-                                            by contradiction /* from formulas */
-                                          qed
-                                        next
-                                          case coerce
-                                          solve( !KD( (~r2.1⊕h(<~r1, ~k>)) ) ▶₀ #vk.3 )
-                                            case newr_0_11111
-                                            by contradiction /* impossible chain */
-                                          next
-                                            case p_1_1112
-                                            solve( (#vl.2, 0) ~~> (#vk.3, 0) )
-                                              case d_0_fst
-                                              solve( !Semistate_11121( ~id.1, ~k.1 ) ▶₀ #vr.15 )
-                                                case p_1_11
-                                                solve( splitEqs(18) )
-                                                  case split
-                                                  solve( (#vr.16, 0) ~~> (#vk.3, 0) )
-                                                    case d_xor_case_1
-                                                    by solve( (#vr.18, 0) ~~> (#vk.3, 0) )
-                                                  next
-                                                    case d_xor_case_2
-                                                    solve( (#vr.18, 0) ~~> (#vk.3, 0) )
-                                                      case Xor
+                                            case coerce
+                                            solve( !KD( (~r2.1⊕h(<~r1, ~k>)) ) ▶₀ #vk.3 )
+                                              case outidrrhrk_0_111211111
+                                              solve( (#vl.2, 0) ~~> (#vk.3, 0) )
+                                                case d_0_fst
+                                                solve( State_111211111( ~id.1, ~k.1, ~r2.2, r1.2 ) ▶₀ #vr.36 )
+                                                  case eventResponsekTag_0_11121111
+                                                  solve( splitEqs(18) )
+                                                    case split
+                                                    solve( (#vr.37, 0) ~~> (#vk.3, 0) )
+                                                      case d_xor_case_1
+                                                      by solve( (#vr.46, 0) ~~> (#vk.3, 0) )
+                                                    next
+                                                      case d_xor_case_2
+                                                      solve( (#vr.46, 0) ~~> (#vk.3, 0) )
+                                                        case Xor
+                                                        by contradiction /* cyclic */
+                                                      qed
+                                                    next
+                                                      case d_xor_case_3
+                                                      by contradiction /* impossible chain */
+                                                    next
+                                                      case d_xor_case_4
+                                                      by contradiction /* impossible chain */
+                                                    qed
+                                                  qed
+                                                qed
+                                              next
+                                                case d_0_snd
+                                                solve( (#vr.37, 0) ~~> (#vk.3, 0) )
+                                                  case Xor
+                                                  by solve( State_111211111( ~id.1, ~k, ~r2.1, ~r1
+                                                            ) ▶₀ #vr.36 )
+                                                next
+                                                  case d_xor_case_1
+                                                  solve( (#vr.38, 0) ~~> (#vk.3, 0) )
+                                                    case Xor
+                                                    solve( State_111211111( ~id.1, ~k.1, ~r2.1, r1.2
+                                                           ) ▶₀ #vr.36 )
+                                                      case eventResponsekTag_0_11121111
                                                       by contradiction /* cyclic */
                                                     qed
-                                                  next
-                                                    case d_xor_case_3
-                                                    by contradiction /* impossible chain */
-                                                  next
-                                                    case d_xor_case_4
-                                                    by contradiction /* impossible chain */
                                                   qed
+                                                next
+                                                  case d_xor_case_2
+                                                  solve( (#vr.38, 0) ~~> (#vk.3, 0) )
+                                                    case Xor
+                                                    solve( State_111211111( ~id.1, ~k, ~r2.2, ~r1
+                                                           ) ▶₀ #vr.36 )
+                                                      case eventResponsekTag_0_11121111
+                                                      by contradiction /* from formulas */
+                                                    qed
+                                                  qed
+                                                next
+                                                  case d_xor_case_3
+                                                  by contradiction /* impossible chain */
+                                                next
+                                                  case d_xor_case_4
+                                                  by solve( (#vr.38, 0) ~~> (#vk.3, 0) )
                                                 qed
                                               qed
                                             next
-                                              case d_0_snd
-                                              solve( (#vr.16, 0) ~~> (#vk.3, 0) )
-                                                case d_xor_case_1
-                                                solve( (#vr.17, 0) ~~> (#vk.3, 0) )
-                                                  case Xor
-                                                  by contradiction /* cyclic */
-                                                qed
-                                              next
-                                                case d_xor_case_2
-                                                solve( (#vr.17, 0) ~~> (#vk.3, 0) )
-                                                  case Xor
-                                                  by contradiction /* from formulas */
-                                                qed
-                                              next
-                                                case d_xor_case_3
-                                                by contradiction /* impossible chain */
-                                              next
-                                                case d_xor_case_4
-                                                by solve( (#vr.17, 0) ~~> (#vk.3, 0) )
-                                              qed
+                                              case outr_0_1111111
+                                              by contradiction /* impossible chain */
                                             qed
                                           qed
                                         qed
                                       qed
+                                    next
+                                      case Xor_case_2
+                                      solve( State_111211111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.25 )
+                                        case eventResponsekTag_0_11121111
+                                        by contradiction /* from formulas */
+                                      qed
                                     qed
                                   next
-                                    case Xor_case_2
-                                    by contradiction /* from formulas */
+                                    case d_xor_case_3
+                                    by contradiction /* impossible chain */
+                                  next
+                                    case d_xor_case_4
+                                    by solve( (#vr.27, 0) ~~> (#vk.2, 0) )
                                   qed
-                                next
-                                  case d_xor_case_3
-                                  by contradiction /* impossible chain */
-                                next
-                                  case d_xor_case_4
-                                  by solve( (#vr.13, 0) ~~> (#vk.2, 0) )
                                 qed
+                              next
+                                case outr_0_1111111
+                                by contradiction /* impossible chain */
                               qed
                             qed
                           qed
                         qed
                       next
                         case d_xor_case_2
-                        solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+                        solve( (#vr.25, 0) ~~> (#vk.1, 0) )
                           case Xor
-                          by contradiction /* from formulas */
+                          solve( State_111211111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.23 )
+                            case eventResponsekTag_0_11121111
+                            by contradiction /* from formulas */
+                          qed
                         qed
                       next
                         case d_xor_case_3
                         by contradiction /* impossible chain */
                       next
                         case d_xor_case_4
-                        by solve( (#vr.11, 0) ~~> (#vk.1, 0) )
+                        by solve( (#vr.25, 0) ~~> (#vk.1, 0) )
                       qed
                     qed
+                  next
+                    case outr_0_1111111
+                    by contradiction /* impossible chain */
                   qed
                 qed
               qed
             next
               case d_xor_case_2
-              by solve( (#vr.8, 0) ~~> (#vk, 0) )
+              by solve( (#vr.22, 0) ~~> (#vk, 0) )
             next
               case d_xor_case_3
               by contradiction /* impossible chain */
@@ -314,23 +335,35 @@ solve( State_1111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
         qed
       next
         case d_0_snd
-        solve( (#vr.6, 0) ~~> (#vk, 0) )
+        solve( (#vr.13, 0) ~~> (#vk, 0) )
+          case Xor
+          by solve( State_111211111( ~id.1, ~k, ~id, ~r1 ) ▶₀ #vr.12 )
+        next
           case d_xor_case_1
-          by solve( (#vr.7, 0) ~~> (#vk, 0) )
+          solve( (#vr.14, 0) ~~> (#vk, 0) )
+            case Xor
+            by solve( State_111211111( ~id.1, ~k.1, ~id, r1.1 ) ▶₀ #vr.12 )
+          qed
         next
           case d_xor_case_2
-          solve( (#vr.7, 0) ~~> (#vk, 0) )
+          solve( (#vr.14, 0) ~~> (#vk, 0) )
             case Xor
-            by contradiction /* from formulas */
+            solve( State_111211111( ~id.1, ~k, ~r2, ~r1 ) ▶₀ #vr.12 )
+              case eventResponsekTag_0_11121111
+              by contradiction /* from formulas */
+            qed
           qed
         next
           case d_xor_case_3
           by contradiction /* impossible chain */
         next
           case d_xor_case_4
-          by solve( (#vr.7, 0) ~~> (#vk, 0) )
+          by solve( (#vr.14, 0) ~~> (#vk, 0) )
         qed
       qed
+    next
+      case outr_0_1111111
+      by contradiction /* impossible chain */
     qed
   qed
 qed
@@ -350,32 +383,32 @@ guarded formula characterizing all satisfying traces:
 simplify
 solve( State_1111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
   case ifxoredhashidhrk_0_111111111
-  solve( !Semistate_11121( ~id.1, ~k ) ▶₀ #j )
-    case p_1_11
-    solve( splitEqs(1) )
-      case split
-      solve( !KU( (~id⊕h(<~r1, ~k>)) ) @ #vk.1 )
-        case coerce
-        solve( !KD( (~id⊕h(<~r1, ~k>)) ) ▶₀ #vk )
-          case p_1_1112
-          solve( (#vl, 0) ~~> (#vk, 0) )
-            case d_0_fst
-            solve( !Semistate_11121( ~id.1, ~k.1 ) ▶₀ #vr.6 )
-              case p_1_11
-              solve( (#vr.6, 0) ~~> (#vk, 0) )
-                case d_xor_case_1
-                solve( (#vr.7, 0) ~~> (#vk, 0) )
-                  case Xor
-                  solve( !KU( (~r2⊕h(<~r1, ~k>)) ) @ #vk.2 )
-                    case coerce
-                    solve( !KD( (~r2⊕h(<~r1, ~k>)) ) ▶₀ #vk.1 )
-                      case p_1_1112
-                      solve( (#vl.1, 0) ~~> (#vk.1, 0) )
-                        case d_0_snd
-                        solve( (#vr.9, 0) ~~> (#vk.1, 0) )
+  solve( State_11121111( ~id.1, ~k, ~r2, r1.1 ) ▶₀ #j )
+    case newr_0_1112111
+    solve( !KU( (~id⊕h(<~r1, ~k>)) ) @ #vk )
+      case coerce
+      solve( !KD( (~id⊕h(<~r1, ~k>)) ) ▶₀ #vk )
+        case outidrrhrk_0_111211111
+        solve( (#vl, 0) ~~> (#vk, 0) )
+          case d_0_snd
+          solve( (#vr.20, 0) ~~> (#vk, 0) )
+            case d_xor_case_2
+            solve( (#vr.21, 0) ~~> (#vk, 0) )
+              case Xor
+              solve( State_111211111( ~id.1, ~k, ~r2.1, ~r1 ) ▶₀ #vr.19 )
+                case eventResponsekTag_0_11121111
+                solve( !KU( (~id⊕~r2) ) @ #vk.2 )
+                  case coerce
+                  solve( !KD( (~id⊕~r2) ) ▶₀ #vk.1 )
+                    case outidrrhrk_0_111211111
+                    solve( (#vl.1, 0) ~~> (#vk.1, 0) )
+                      case d_0_fst
+                      solve( State_111211111( ~id.1, ~k.1, ~r2.1, r1.1 ) ▶₀ #vr.22 )
+                        case eventResponsekTag_0_11121111
+                        solve( (#vr.22, 0) ~~> (#vk.1, 0) )
                           case Xor
                           solve( !KU( ~r1 ) @ #vk.2 )
-                            case newr_0_11111
+                            case outr_0_1111111
                             SOLVED // trace found
                           qed
                         qed
@@ -400,118 +433,339 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new ~k.1;", issapicrule]:
-   [ Fr( ~k.1 ), Fr( ~id.1 ) ]
-  --[ Init( ) ]->
-   [ !Semistate_111( ~id.1, ~k.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="new ~k.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newk_0_[color=#ffffff, process="new ~k.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( ~k.1 ) ] --> [ State_1( ~k.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new ~k.1;", issapicrule]:
-     [ Fr( ~k ), Fr( ~id ) ] --[ Init( ) ]-> [ !Semistate_111( ~id, ~k ) ]
+  rule (modulo AC) newk_0_[color=#ffffff, process="new ~k.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( ~k ) ] --> [ State_1( ~k ) ]
   */
 
-rule (modulo E) newr_0_11111[color=#40805f, process="new ~r1.1;",
-                             issapicrule]:
+rule (modulo E) newid_0_1[color=#ffffff, process="new ~id.1;",
+                          issapicrule, role='Process']:
+   [ State_1( ~k.1 ), Fr( ~id.1 ) ] --> [ State_11( ~id.1, ~k.1 ) ]
+
+  /*
+  rule (modulo AC) newid_0_1[color=#ffffff, process="new ~id.1;",
+                             issapicrule, role='Process']:
+     [ State_1( ~k ), Fr( ~id ) ] --> [ State_11( ~id, ~k ) ]
+  */
+
+rule (modulo E) p_0_11[color=#ffffff, process="!", issapicrule,
+                       role='Process']:
+   [ State_11( ~id.1, ~k.1 ) ] --> [ !Semistate_111( ~id.1, ~k.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11[color=#ffffff, process="!", issapicrule,
+                          role='Process']:
+     [ State_11( ~id, ~k ) ] --> [ !Semistate_111( ~id, ~k ) ]
+  */
+
+rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule,
+                       role='Process']:
+   [ !Semistate_111( ~id.1, ~k.1 ) ] --> [ State_111( ~id.1, ~k.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_11[color=#ffffff, process="!", issapicrule,
+                          role='Process']:
+     [ !Semistate_111( ~id, ~k ) ] --> [ State_111( ~id, ~k ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( ~id.1, ~k.1 ) ]
+  -->
+   [ State_1111( ~id.1, ~k.1 ), State_1112( ~id.1, ~k.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+     [ State_111( ~id, ~k ) ]
+    -->
+     [ State_1111( ~id, ~k ), State_1112( ~id, ~k ) ]
+  */
+
+rule (modulo E) Reader_0_1111[color=#ffffff, process="Reader()",
+                              issapicrule, role='Process']:
+   [ State_1111( ~id.1, ~k.1 ) ]
+  -->
+   [ State_11111( ~id.1, ~k.1 ), State_11112( ~id.1, ~k.1 ) ]
+
+  /*
+  rule (modulo AC) Reader_0_1111[color=#ffffff, process="Reader()",
+                                 issapicrule, role='Process']:
+     [ State_1111( ~id, ~k ) ]
+    -->
+     [ State_11111( ~id, ~k ), State_11112( ~id, ~k ) ]
+  */
+
+rule (modulo E) newr_0_11111[color=#404480, process="new ~r1.1;",
+                             issapicrule, role='Reader']:
    [ State_11111( ~id.1, ~k.1 ), Fr( ~r1.1 ) ]
+  -->
+   [ State_111111( ~id.1, ~k.1, ~r1.1 ) ]
+
+  /*
+  rule (modulo AC) newr_0_11111[color=#404480, process="new ~r1.1;",
+                                issapicrule, role='Reader']:
+     [ State_11111( ~id, ~k ), Fr( ~r1 ) ]
+    -->
+     [ State_111111( ~id, ~k, ~r1 ) ]
+  */
+
+rule (modulo E) eventChallengerReader_0_111111[color=#404480,
+                                               process="event Challenge( ~r1.1, 'Reader' );", issapicrule,
+                                               role='Reader']:
+   [ State_111111( ~id.1, ~k.1, ~r1.1 ) ]
   --[ Challenge( ~r1.1, 'Reader' ) ]->
+   [ State_1111111( ~id.1, ~k.1, ~r1.1 ) ]
+
+  /*
+  rule (modulo AC) eventChallengerReader_0_111111[color=#404480,
+                                                  process="event Challenge( ~r1.1, 'Reader' );", issapicrule,
+                                                  role='Reader']:
+     [ State_111111( ~id, ~k, ~r1 ) ]
+    --[ Challenge( ~r1, 'Reader' ) ]->
+     [ State_1111111( ~id, ~k, ~r1 ) ]
+  */
+
+rule (modulo E) outr_0_1111111[color=#404480, process="out(~r1.1);",
+                               issapicrule, role='Reader']:
+   [ State_1111111( ~id.1, ~k.1, ~r1.1 ) ]
+  -->
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), Out( ~r1.1 ) ]
 
   /*
-  rule (modulo AC) newr_0_11111[color=#40805f, process="new ~r1.1;",
-                                issapicrule]:
-     [ State_11111( ~id, ~k ), Fr( ~r1 ) ]
-    --[ Challenge( ~r1, 'Reader' ) ]->
+  rule (modulo AC) outr_0_1111111[color=#404480, process="out(~r1.1);",
+                                  issapicrule, role='Reader']:
+     [ State_1111111( ~id, ~k, ~r1 ) ]
+    -->
      [ State_11111111( ~id, ~k, ~r1 ), Out( ~r1 ) ]
   */
 
-rule (modulo E) inxoredhash_0_11111111[color=#40805f,
-                                       process="in(xoredhash.1);", issapicrule]:
+rule (modulo E) inxoredhash_0_11111111[color=#404480,
+                                       process="in(xoredhash.1);", issapicrule, role='Reader']:
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), In( xoredhash.1 ) ]
   -->
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
-  rule (modulo AC) inxoredhash_0_11111111[color=#40805f,
-                                          process="in(xoredhash.1);", issapicrule]:
+  rule (modulo AC) inxoredhash_0_11111111[color=#404480,
+                                          process="in(xoredhash.1);", issapicrule, role='Reader']:
      [ State_11111111( ~id, ~k, ~r1 ), In( xoredhash ) ]
     -->
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
-rule (modulo E) ifxoredhashidhrk_0_111111111[color=#40805f,
-                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))", issapicrule]:
+rule (modulo E) ifxoredhashidhrk_0_111111111[color=#404480,
+                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))", issapicrule,
+                                             role='Reader']:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
-  rule (modulo AC) ifxoredhashidhrk_0_111111111[color=#40805f,
+  rule (modulo AC) ifxoredhashidhrk_0_111111111[color=#404480,
                                                 process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))",
-                                                issapicrule]:
+                                                issapicrule, role='Reader']:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
      [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
-rule (modulo E) eventAlivekTag_0_1111111111[color=#40805f,
-                                            process="event Alive( ~k.1, 'Tag' );", issapicrule]:
-   [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
-  --[ Alive( ~k.1, 'Tag' ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) eventAlivekTag_0_1111111111[color=#40805f,
-                                               process="event Alive( ~k.1, 'Tag' );", issapicrule]:
-     [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
-    --[ Alive( ~k, 'Tag' ) ]->
-     [ ]
-  */
-
-rule (modulo E) ifxoredhashidhrk_1_111111111[color=#40805f,
-                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))", issapicrule]:
+rule (modulo E) ifxoredhashidhrk_1_111111111[color=#404480,
+                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))", issapicrule,
+                                             role='Reader']:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Not_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
-   [ ]
+   [ State_1111111112( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
-  rule (modulo AC) ifxoredhashidhrk_1_111111111[color=#40805f,
+  rule (modulo AC) ifxoredhashidhrk_1_111111111[color=#404480,
                                                 process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))",
-                                                issapicrule]:
+                                                issapicrule, role='Reader']:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Not_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
-     [ ]
+     [ State_1111111112( ~id, ~k, ~r1, xoredhash ) ]
   */
 
-rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_111( ~id.1, ~k.1 ) ]
+rule (modulo E) eventAlivekTag_0_1111111111[color=#404480,
+                                            process="event Alive( ~k.1, 'Tag' );", issapicrule,
+                                            role='Reader']:
+   [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
+  --[ Alive( ~k.1, 'Tag' ) ]->
+   [ State_11111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
+
+  /*
+  rule (modulo AC) eventAlivekTag_0_1111111111[color=#404480,
+                                               process="event Alive( ~k.1, 'Tag' );", issapicrule,
+                                               role='Reader']:
+     [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
+    --[ Alive( ~k, 'Tag' ) ]->
+     [ State_11111111111( ~id, ~k, ~r1, xoredhash ) ]
+  */
+
+rule (modulo E) p_0_11111111111[color=#404480, process="0", issapicrule,
+                                role='Reader']:
+   [ State_11111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111111111[color=#404480, process="0", issapicrule,
+                                   role='Reader']:
+     [ State_11111111111( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1111111112[color=#404480, process="0", issapicrule,
+                               role='Reader']:
+   [ State_1111111112( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111112[color=#404480, process="0", issapicrule,
+                                  role='Reader']:
+     [ State_1111111112( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_11112[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11112( ~id.1, ~k.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11112[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11112( ~id, ~k ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1112[color=#ffffff, process="!", issapicrule,
+                         role='Process']:
+   [ State_1112( ~id.1, ~k.1 ) ] --> [ !Semistate_11121( ~id.1, ~k.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1112[color=#ffffff, process="!", issapicrule,
+                            role='Process']:
+     [ State_1112( ~id, ~k ) ] --> [ !Semistate_11121( ~id, ~k ) ]
+  */
+
+rule (modulo E) p_1_1112[color=#ffffff, process="!", issapicrule,
+                         role='Process']:
+   [ !Semistate_11121( ~id.1, ~k.1 ) ] --> [ State_11121( ~id.1, ~k.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_1112[color=#ffffff, process="!", issapicrule,
+                            role='Process']:
+     [ !Semistate_11121( ~id, ~k ) ] --> [ State_11121( ~id, ~k ) ]
+  */
+
+rule (modulo E) Tag_0_11121[color=#ffffff, process="Tag()", issapicrule,
+                            role='Process']:
+   [ State_11121( ~id.1, ~k.1 ) ]
   -->
-   [ !Semistate_11121( ~id.1, ~k.1 ), State_11111( ~id.1, ~k.1 ) ]
+   [ State_111211( ~id.1, ~k.1 ), State_111212( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11[color=#ffffff, process="!", issapicrule]:
-     [ !Semistate_111( ~id, ~k ) ]
+  rule (modulo AC) Tag_0_11121[color=#ffffff, process="Tag()", issapicrule,
+                               role='Process']:
+     [ State_11121( ~id, ~k ) ]
     -->
-     [ !Semistate_11121( ~id, ~k ), State_11111( ~id, ~k ) ]
+     [ State_111211( ~id, ~k ), State_111212( ~id, ~k ) ]
   */
 
-rule (modulo E) p_1_1112[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_11121( ~id.1, ~k.1 ), In( r1.2 ), Fr( ~r2.1 ) ]
-  --[ Response( ~k.1, 'Tag' ) ]->
-   [ Out( <(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))> ) ]
+rule (modulo E) inr_0_111211[color=#40807c, process="in(r1.2);",
+                             issapicrule, role='Tag']:
+   [ State_111211( ~id.1, ~k.1 ), In( r1.2 ) ]
+  -->
+   [ State_1112111( ~id.1, ~k.1, r1.2 ) ]
 
   /*
-  rule (modulo AC) p_1_1112[color=#ffffff, process="!", issapicrule]:
-     [ !Semistate_11121( ~id, ~k ), In( r1 ), Fr( ~r2 ) ]
+  rule (modulo AC) inr_0_111211[color=#40807c, process="in(r1.2);",
+                                issapicrule, role='Tag']:
+     [ State_111211( ~id, ~k ), In( r1 ) ]
+    -->
+     [ State_1112111( ~id, ~k, r1 ) ]
+  */
+
+rule (modulo E) newr_0_1112111[color=#40807c, process="new ~r2.1;",
+                               issapicrule, role='Tag']:
+   [ State_1112111( ~id.1, ~k.1, r1.2 ), Fr( ~r2.1 ) ]
+  -->
+   [ State_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ]
+
+  /*
+  rule (modulo AC) newr_0_1112111[color=#40807c, process="new ~r2.1;",
+                                  issapicrule, role='Tag']:
+     [ State_1112111( ~id, ~k, r1 ), Fr( ~r2 ) ]
+    -->
+     [ State_11121111( ~id, ~k, ~r2, r1 ) ]
+  */
+
+rule (modulo E) eventResponsekTag_0_11121111[color=#40807c,
+                                             process="event Response( ~k.1, 'Tag' );", issapicrule,
+                                             role='Tag']:
+   [ State_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ]
+  --[ Response( ~k.1, 'Tag' ) ]->
+   [ State_111211111( ~id.1, ~k.1, ~r2.1, r1.2 ) ]
+
+  /*
+  rule (modulo AC) eventResponsekTag_0_11121111[color=#40807c,
+                                                process="event Response( ~k.1, 'Tag' );", issapicrule,
+                                                role='Tag']:
+     [ State_11121111( ~id, ~k, ~r2, r1 ) ]
     --[ Response( ~k, 'Tag' ) ]->
-     [ Out( <z, (~r2⊕h(<r1, ~k>))> ) ]
+     [ State_111211111( ~id, ~k, ~r2, r1 ) ]
+  */
+
+rule (modulo E) outidrrhrk_0_111211111[color=#40807c,
+                                       process="out(<(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))>);", issapicrule,
+                                       role='Tag']:
+   [ State_111211111( ~id.1, ~k.1, ~r2.1, r1.2 ) ]
+  -->
+   [
+   State_1112111111( ~id.1, ~k.1, ~r2.1, r1.2 ),
+   Out( <(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))> )
+   ]
+
+  /*
+  rule (modulo AC) outidrrhrk_0_111211111[color=#40807c,
+                                          process="out(<(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))>);",
+                                          issapicrule, role='Tag']:
+     [ State_111211111( ~id, ~k, ~r2, r1 ) ]
+    -->
+     [ State_1112111111( ~id, ~k, ~r2, r1 ), Out( <z, (~r2⊕h(<r1, ~k>))> ) ]
     variants (modulo AC)
-    1. ~id   = ~id.19
-       ~r2   = ~id.19
+    1. ~id   = ~id.18
+       ~r2   = ~id.18
        z     = zero
     
-    2. ~id   = ~id.19
-       ~r2   = ~r2.21
-       z     = (~id.19⊕~r2.21)
+    2. ~id   = ~id.18
+       ~r2   = ~r2.20
+       z     = (~id.18⊕~r2.20)
+  */
+
+rule (modulo E) p_0_1112111111[color=#40807c, process="0", issapicrule,
+                               role='Tag']:
+   [ State_1112111111( ~id.1, ~k.1, ~r2.1, r1.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1112111111[color=#40807c, process="0", issapicrule,
+                                  role='Tag']:
+     [ State_1112111111( ~id, ~k, ~r2, r1 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_111212[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111212( ~id.1, ~k.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111212[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111212( ~id, ~k ) ] --> [ ]
   */
 
 restriction predicate_eq:
@@ -532,8 +786,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -545,9 +799,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 0.52s
+  processing time: 1.44s
   
-  recentalive_tag (all-traces): verified (100 steps)
+  recentalive_tag (all-traces): verified (110 steps)
   executable (exists-trace): verified (16 steps)
 
 ==============================================================================
