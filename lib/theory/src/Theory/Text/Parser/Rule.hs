@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Move brackets to avoid $" #-}
 -- |
 -- Copyright   : (c) 2010-2012 Simon Meier, Benedikt Schmidt
 --               contributing in 2019: Robert Künnemann, Johannes Wocker
@@ -69,8 +71,7 @@ ruleAttribute = asum
     [ symbol "colour=" *> parseColor
     , symbol "color="  *> parseColor
     , symbol "process="  *> parseAndIgnore
-    , symbol "derivchecks" *> ignore
-    , symbol "no_derivcheck" *> ignore
+    , symbol "no_derivcheck" *> return (mempty { ignoreDerivChecks = True })
     , symbol "role=" *> parseRole
     , symbol "issapicrule" *> return (mempty { isSAPiCRule = True })
     ]
@@ -81,10 +82,9 @@ ruleAttribute = asum
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
             Just rgb  -> return $ mempty { ruleColor = Just rgb }
     parseAndIgnore = do
-                        _ <-  symbol "\""
-                        _ <- manyTill anyChar (try (symbol "\""))
+                        _ <- try (symbol "\'") <|> symbol "\""
+                        _ <- manyTill anyChar (try (symbol "\"") <|> (try $ symbol "'"))
                         return  mempty
-    ignore = return mempty
     parseRole = do
         _ <- symbol "\'" <|> symbol "\""
         role <- manyTill anyChar (try (symbol "\'" <|> symbol "\""))
