@@ -25,12 +25,12 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
     case lookupvisitedasv_1_11
     solve( State_112( lock ) ▶₀ #t2 )
       case lookupvisitedasv_1_11
-      solve( ((#vr.1 < #vr.4) ∧
+      solve( ((#vr.1 < #vr.6) ∧
               (∃ #t2.
                 (Unlock_0( '0', ~n, 's' ) @ #t2)
                ∧
                 (#vr.1 < #t2) ∧
-                (#t2 < #vr.4) ∧
+                (#t2 < #vr.6) ∧
                 (∀ #t0 pp. (Unlock( pp, ~n, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
                 (∀ pp lpp #t0.
                   (Lock( pp, lpp, 's' ) @ #t0)
@@ -40,7 +40,7 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
                   (Unlock( pp, lpp, 's' ) @ #t0)
                  ⇒
                   ((#t0 < #vr.1) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-             (#vr.4 < #vr.1)  ∥ (#vr.1 = #vr.4) )
+             (#vr.6 < #vr.1)  ∥ (#vr.1 = #vr.6) )
         case case_1
         solve( Unlock_0( '0', ~n, 's' ) @ #t2.1 )
           case unlocks_0_111
@@ -73,12 +73,12 @@ next
     case lookupvisitedasv_1_11
     solve( State_112( lock ) ▶₀ #t2 )
       case lookupvisitedasv_1_11
-      solve( ((#vr.1 < #vr.4) ∧
+      solve( ((#vr.1 < #vr.6) ∧
               (∃ #t2.
                 (Unlock_0( '0', ~n, 's' ) @ #t2)
                ∧
                 (#vr.1 < #t2) ∧
-                (#t2 < #vr.4) ∧
+                (#t2 < #vr.6) ∧
                 (∀ #t0 pp. (Unlock( pp, ~n, 's' ) @ #t0) ⇒ #t0 = #t2) ∧
                 (∀ pp lpp #t0.
                   (Lock( pp, lpp, 's' ) @ #t0)
@@ -88,7 +88,7 @@ next
                   (Unlock( pp, lpp, 's' ) @ #t0)
                  ⇒
                   ((#t0 < #vr.1) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-             (#vr.4 < #vr.1)  ∥ (#vr.1 = #vr.4) )
+             (#vr.6 < #vr.1)  ∥ (#vr.1 = #vr.6) )
         case case_1
         solve( Unlock_0( '0', ~n, 's' ) @ #t2.1 )
           case unlocks_0_111
@@ -123,60 +123,87 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="!", issapicrule]:
-   [ ] --[ Init( ) ]-> [ !Semistate_1( ) ]
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_1( ), Fr( lock ) ]
+rule (modulo E) p_0_[color=#ffffff, process="!", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule,
+                     role='Process']:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) locks_0_1[color=#ffffff, process="lock 's';",
+                          issapicrule, role='Process']:
+   [ State_1( ), Fr( lock ) ]
   --[ Lock_0( '0', lock, 's' ), Lock( '0', lock, 's' ) ]->
    [ State_11( lock ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) lookupvisitedasv_0_11[color=#ffffff,
-                                      process="lookup 'visited' as v.1", issapicrule, derivchecks]:
+                                      process="lookup 'visited' as v.1", derivchecks, issapicrule,
+                                      role='Process']:
    [ State_11( lock ) ]
   --[ IsIn( 'visited', v.1 ) ]->
    [ State_111( lock, v.1 ) ]
 
   /*
   rule (modulo AC) lookupvisitedasv_0_11[color=#ffffff,
-                                         process="lookup 'visited' as v.1", issapicrule, derivchecks]:
+                                         process="lookup 'visited' as v.1", derivchecks, issapicrule,
+                                         role='Process']:
      [ State_11( lock ) ]
     --[ IsIn( 'visited', v ) ]->
      [ State_111( lock, v ) ]
   */
 
-rule (modulo E) unlocks_0_111[color=#ffffff, process="unlock 's';",
-                              issapicrule]:
-   [ State_111( lock, v.1 ) ]
-  --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) unlocks_0_111[color=#ffffff, process="unlock 's';",
-                                 issapicrule]:
-     [ State_111( lock, v ) ]
-    --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
-     [ ]
-  */
-
 rule (modulo E) lookupvisitedasv_1_11[color=#ffffff,
-                                      process="lookup 'visited' as v.1", issapicrule, derivchecks]:
+                                      process="lookup 'visited' as v.1", derivchecks, issapicrule,
+                                      role='Process']:
    [ State_11( lock ) ] --[ IsNotSet( 'visited' ) ]-> [ State_112( lock ) ]
 
   /* has exactly the trivial AC variant */
 
+rule (modulo E) unlocks_0_111[color=#ffffff, process="unlock 's';",
+                              issapicrule, role='Process']:
+   [ State_111( lock, v.1 ) ]
+  --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
+   [ State_1111( lock, v.1 ) ]
+
+  /*
+  rule (modulo AC) unlocks_0_111[color=#ffffff, process="unlock 's';",
+                                 issapicrule, role='Process']:
+     [ State_111( lock, v ) ]
+    --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
+     [ State_1111( lock, v ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1111( lock, v.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1111( lock, v ) ] --> [ ]
+  */
+
 rule (modulo E) eventVisit_0_112[color=#ffffff,
-                                 process="event Visit( );", issapicrule]:
+                                 process="event Visit( );", issapicrule, role='Process']:
    [ State_112( lock ) ] --[ Visit( ) ]-> [ State_1121( lock ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) insertvisiteds_0_1121[color=#ffffff,
-                                      process="insert 'visited','s';", issapicrule]:
+                                      process="insert 'visited','s';", issapicrule, role='Process']:
    [ State_1121( lock ) ]
   --[ Insert( 'visited', 's' ) ]->
    [ State_11211( lock ) ]
@@ -184,10 +211,16 @@ rule (modulo E) insertvisiteds_0_1121[color=#ffffff,
   /* has exactly the trivial AC variant */
 
 rule (modulo E) unlocks_0_11211[color=#ffffff, process="unlock 's';",
-                                issapicrule]:
+                                issapicrule, role='Process']:
    [ State_11211( lock ) ]
   --[ Unlock_0( '0', lock, 's' ), Unlock( '0', lock, 's' ) ]->
-   [ ]
+   [ State_112111( lock ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_112111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_112111( lock ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -224,14 +257,19 @@ restriction locking_0:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
-/* All wellformedness checks were successful. */
+/*
+WARNING: the following wellformedness checks failed!
+
+Wellformedness-error in Process
+  There is an unlock that cannot be matched with a lock.
+*/
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -243,7 +281,10 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/design-choices.spthy
 
   output:          examples/sapic/fast/basic/design-choices.spthy.tmp
-  processing time: 0.12s
+  processing time: 0.14s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
   
   visit_once (all-traces): verified (24 steps)
 

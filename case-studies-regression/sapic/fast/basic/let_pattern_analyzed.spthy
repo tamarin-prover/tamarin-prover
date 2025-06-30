@@ -20,8 +20,8 @@ guarded formula characterizing all counter-examples:
 "∃ #e x. (E( x ) @ #e) ∧ ¬(x = '1')"
 */
 simplify
-solve( State_1( x, y ) ▶₀ #e )
-  case letxy_1_
+solve( State_11( pat_x, x, y ) ▶₀ #e )
+  case inpatx_0_1
   by contradiction /* from formulas */
 qed
 
@@ -32,7 +32,7 @@ guarded formula characterizing all counter-examples:
 "∃ #e x. (Fail( x ) @ #e)"
 */
 simplify
-by solve( State_2( ) ▶₀ #e )
+by solve( State_21( x ) ▶₀ #e )
 
 
 
@@ -41,29 +41,25 @@ by solve( State_2( ) ▶₀ #e )
 
 
 rule (modulo E) Init[color=#ffffff, process="let <x.1, y.1>=<'1', '2'>",
-                     issapicrule]:
-   [ ] --[ Init( ) ]-> [ Let_1( <'1', '2'> ) ]
+                     issapicrule, role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) letxy_0_[color=#ffffff,
+                         process="let <x.1, y.1>=<'1', '2'>", issapicrule, role='Process']:
+   [ State_( ) ] --> [ Let_1( <'1', '2'> ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) letxy_1_[color=#ffffff,
-                         process="let <x.1, y.1>=<'1', '2'>", issapicrule]:
+                         process="let <x.1, y.1>=<'1', '2'>", issapicrule, role='Process']:
    [ Let_1( <x.1, y.1> ) ] --> [ State_1( x.1, y.1 ) ]
 
   /*
   rule (modulo AC) letxy_1_[color=#ffffff,
-                            process="let <x.1, y.1>=<'1', '2'>", issapicrule]:
+                            process="let <x.1, y.1>=<'1', '2'>", issapicrule, role='Process']:
      [ Let_1( <x, y> ) ] --> [ State_1( x, y ) ]
-  */
-
-rule (modulo E) inpatx_0_1[color=#ffffff, process="in(pat_x.1);",
-                           issapicrule]:
-   [ State_1( x.1, y.1 ), In( pat_x.1 ) ] --[ E( x.1 ) ]-> [ ]
-
-  /*
-  rule (modulo AC) inpatx_0_1[color=#ffffff, process="in(pat_x.1);",
-                              issapicrule]:
-     [ State_1( x, y ), In( pat_x ) ] --[ E( x ) ]-> [ ]
   */
 
 restriction Restr_letxy_2__1:
@@ -72,19 +68,73 @@ restriction Restr_letxy_2__1:
   // safety formula
 
 rule (modulo E) letxy_2_[color=#ffffff,
-                         process="let <x.1, y.1>=<'1', '2'>", issapicrule]:
+                         process="let <x.1, y.1>=<'1', '2'>", issapicrule, role='Process']:
    [ Let_1( <'1', '2'> ) ] --[ Restr_letxy_2__1( ) ]-> [ State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
+rule (modulo E) inpatx_0_1[color=#ffffff, process="in(pat_x.1);",
+                           issapicrule, role='Process']:
+   [ State_1( x.1, y.1 ), In( pat_x.1 ) ]
+  -->
+   [ State_11( pat_x.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) inpatx_0_1[color=#ffffff, process="in(pat_x.1);",
+                              issapicrule, role='Process']:
+     [ State_1( x, y ), In( pat_x ) ] --> [ State_11( pat_x, x, y ) ]
+  */
+
+rule (modulo E) eventEx_0_11[color=#ffffff, process="event E( x.1 );",
+                             issapicrule, role='Process']:
+   [ State_11( pat_x.1, x.1, y.1 ) ]
+  --[ E( x.1 ) ]->
+   [ State_111( pat_x.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventEx_0_11[color=#ffffff, process="event E( x.1 );",
+                                issapicrule, role='Process']:
+     [ State_11( pat_x, x, y ) ] --[ E( x ) ]-> [ State_111( pat_x, x, y ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_111( pat_x.1, x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_111( pat_x, x, y ) ] --> [ ]
+  */
+
 rule (modulo E) inpatx_0_2[color=#ffffff, process="in(pat_x.2);",
-                           issapicrule]:
-   [ State_2( ), In( pat_x.2 ) ] --[ Fail( pat_x.2 ) ]-> [ ]
+                           issapicrule, role='Process']:
+   [ State_2( ), In( pat_x.2 ) ] --> [ State_21( pat_x.2 ) ]
 
   /*
   rule (modulo AC) inpatx_0_2[color=#ffffff, process="in(pat_x.2);",
-                              issapicrule]:
-     [ State_2( ), In( pat_x ) ] --[ Fail( pat_x ) ]-> [ ]
+                              issapicrule, role='Process']:
+     [ State_2( ), In( pat_x ) ] --> [ State_21( pat_x ) ]
+  */
+
+rule (modulo E) eventFailpatx_0_21[color=#ffffff,
+                                   process="event Fail( pat_x.2 );", issapicrule, role='Process']:
+   [ State_21( pat_x.2 ) ] --[ Fail( pat_x.2 ) ]-> [ State_211( pat_x.2 ) ]
+
+  /*
+  rule (modulo AC) eventFailpatx_0_21[color=#ffffff,
+                                      process="event Fail( pat_x.2 );", issapicrule, role='Process']:
+     [ State_21( pat_x ) ] --[ Fail( pat_x ) ]-> [ State_211( pat_x ) ]
+  */
+
+rule (modulo E) p_0_211[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_211( pat_x.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_211( pat_x ) ] --> [ ]
   */
 
 restriction single_session:
@@ -97,8 +147,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -110,7 +160,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let_pattern.spthy
 
   output:          examples/sapic/fast/basic/let_pattern.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.10s
   
   first (all-traces): verified (3 steps)
   first2 (all-traces): verified (2 steps)

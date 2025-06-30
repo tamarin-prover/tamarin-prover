@@ -17,14 +17,70 @@ heuristic: p
 
 
 
-rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule]:
-   [ In( x.1 ), In( x.1 ), In( <x.1, x.1> ), In( z.1 ), In( z.1 ) ]
-  --[ Init( ) ]->
-   [ ]
+rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
+                       role='Process']:
+   [ State_( ), In( x.1 ) ] --> [ State_1( x.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="in(x.1);", issapicrule]:
-     [ In( x ), In( x ), In( <x, x> ), In( z ), In( z ) ] --[ Init( ) ]-> [ ]
+  rule (modulo AC) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
+                          role='Process']:
+     [ State_( ), In( x ) ] --> [ State_1( x ) ]
+  */
+
+rule (modulo E) inx_0_1[color=#ffffff, process="in(=x.1);", issapicrule,
+                        role='Process']:
+   [ State_1( x.1 ), In( x.1 ) ] --> [ State_11( x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_1[color=#ffffff, process="in(=x.1);", issapicrule,
+                           role='Process']:
+     [ State_1( x ), In( x ) ] --> [ State_11( x ) ]
+  */
+
+rule (modulo E) inxx_0_11[color=#ffffff, process="in(<=x.1, =x.1>);",
+                          issapicrule, role='Process']:
+   [ State_11( x.1 ), In( <x.1, x.1> ) ] --> [ State_111( x.1 ) ]
+
+  /*
+  rule (modulo AC) inxx_0_11[color=#ffffff, process="in(<=x.1, =x.1>);",
+                             issapicrule, role='Process']:
+     [ State_11( x ), In( <x, x> ) ] --> [ State_111( x ) ]
+  */
+
+rule (modulo E) Inz_0_111[color=#ffffff,
+                          process=" [ In( z.1 ) ] --> [ ];", issapicrule, role='Process']:
+   [ State_111( x.1 ), In( z.1 ) ] --> [ State_1111( x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) Inz_0_111[color=#ffffff,
+                             process=" [ In( z.1 ) ] --> [ ];", issapicrule, role='Process']:
+     [ State_111( x ), In( z ) ] --> [ State_1111( x, z ) ]
+  */
+
+rule (modulo E) Inz_0_1111[color=#ffffff,
+                           process=" [ In( z.1 ) ] --> [ ];", issapicrule, role='Process']:
+   [ State_1111( x.1, z.1 ), In( z.1 ) ] --> [ State_11111( x.1, z.1 ) ]
+
+  /*
+  rule (modulo AC) Inz_0_1111[color=#ffffff,
+                              process=" [ In( z.1 ) ] --> [ ];", issapicrule, role='Process']:
+     [ State_1111( x, z ), In( z ) ] --> [ State_11111( x, z ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11111( x.1, z.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11111( x, z ) ] --> [ ]
   */
 
 restriction single_session:
@@ -37,8 +93,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -50,7 +106,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/patterns.spthy
 
   output:          examples/sapic/fast/basic/patterns.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.08s
   
 
 ==============================================================================
