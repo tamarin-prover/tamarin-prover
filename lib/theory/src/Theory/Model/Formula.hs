@@ -319,30 +319,29 @@ applyMacrosInFormula macros fm = mapAtoms (const (fmap (handleTerms macros))) fm
       case viewTerm term of
         FApp f args -> 
           let newArgs = map (handleTerms mcs) args
-              isMacroApp = any (\(op, _, _) -> 
-                  NoEq (op, (length args, Private, Destructor)) == f) mcs
+              isMacroApp = any (\m -> 
+                  (macroToFunSym m) == f) mcs
           in if isMacroApp
              then convertFreeTermToBound $ applyMacros mcs $ convertBoundToFreeTerm term
              else fApp f newArgs
         Lit l -> lit l
 
-    -- Convert a term with bound variables to a term with only free variables
+    -- Convert a term with bound variables to a term with only free variables (LNTerm) Msg context to be as wide as possible.
     convertBoundToFreeTerm :: VTerm Name (BVar LVar) -> LNTerm
     convertBoundToFreeTerm = fmapTerm (fmap convertToFree)
       where
         convertToFree :: BVar LVar -> LVar
-        convertToFree (Bound i) = LVar ("_bound_" ++ show i) LSortMsg i
+        convertToFree (Bound i) = LVar "_bound_" LSortMsg i
         convertToFree (Free v)  = v
 
-    -- Convert a term with free variables back to a term with bound variables
+    -- Convert a term with free variables back to a term with bound variables.
     convertFreeTermToBound :: LNTerm -> VTerm Name (BVar LVar)
     convertFreeTermToBound = fmapTerm (fmap convertToBound)
       where
         convertToBound :: LVar -> BVar LVar
-        convertToBound (LVar n _ i) 
-          | "_bound_" `isPrefixOf` n, 
-            Just idx <- readMaybe $ drop 7 n = Bound idx
-          | otherwise = Free (LVar n LSortMsg i)
+        convertToBound (LVar name sort idx)
+          | name == "_bound_" = Bound idx
+          | otherwise         = Free (LVar name sort idx)
 
 -- Instances
 ------------

@@ -7,6 +7,7 @@
 
 module Term.Macro (
     Macro
+    , macroToFunSym
     , applyMacros
 ) where
 
