@@ -188,14 +188,14 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
           let theoryInfo t = TheoryInfo idx t time Nothing True (Local path) autoProver wfErrors
           pure $ Just (idx, either (Trace . theoryInfo) (Diff . theoryInfo) thy)
       where
-        reportFailure err inFile = Pretty.vcat
-          [ Pretty.text $ replicate 78 '-'
-          , Pretty.text $ "Unable to load theory file `" ++ inFile ++ "'"
-          , Pretty.text $ replicate 78 '-'
-          , Pretty.text ""
-          , Pretty.text $ show err
-          , Pretty.text $ replicate 78 '-'
-          , Pretty.text "" ]
+        reportFailure err inFile = Pretty.vcat $ Pretty.text <$>
+          [ replicate 78 '-'
+          , "Unable to load theory file `" ++ inFile ++ "'"
+          , replicate 78 '-'
+          , ""
+          , show err
+          , replicate 78 '-'
+          , "" ]
 
         ppInteractive report inFile = Pretty.vcat
           [ Pretty.text $ replicate 78 '-'
