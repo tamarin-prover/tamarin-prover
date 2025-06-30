@@ -1,0 +1,208 @@
+theory nestedNDC3 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+heuristic: p
+
+section{* small example for progression function *}
+
+
+
+
+
+
+
+
+
+lemma A_possible:
+  exists-trace "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+solve( State_( ~prog_ ) ▶₀ #t )
+  case Init
+  solve( (∃ #t. (ProgressTo_11( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2211( ~prog_ ) @ #t)) )
+    case case_1
+    solve( State_( ~prog_ ) ▶₀ #t.2 )
+      case Init
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma B_possible:
+  exists-trace "∃ #t. B( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+solve( !Semistate_211( ~prog_ ) ▶₀ #t )
+  case p_0_21
+  solve( (∃ #t. (ProgressTo_11( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2211( ~prog_ ) @ #t)) )
+    case case_2
+    solve( !Semistate_211( ~prog_ ) ▶₀ #t.2 )
+      case p_0_21
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma C_possible:
+  exists-trace "∃ #t. C( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (C( ) @ #t)"
+*/
+simplify
+solve( !Semistate_221( ~prog_ ) ▶₀ #t )
+  case p_0_22
+  solve( (∃ #t. (ProgressTo_11( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
+         (∃ #t. (ProgressTo_2211( ~prog_ ) @ #t)) )
+    case case_3
+    solve( !Semistate_221( ~prog_ ) ▶₀ #t.2 )
+      case p_0_22
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+lemma oneEventAlways:
+  all-traces "((∃ #t. A( ) @ #t) ∨ (∃ #t. B( ) @ #t)) ∨ (∃ #t. C( ) @ #t)"
+/*
+guarded formula characterizing all counter-examples:
+"(∀ #t. (A( ) @ #t) ⇒ ⊥) ∧
+ (∀ #t. (B( ) @ #t) ⇒ ⊥) ∧
+ (∀ #t. (C( ) @ #t) ⇒ ⊥)"
+*/
+simplify
+solve( (∃ #t. (ProgressTo_11( ~prog_ ) @ #t))  ∥
+       (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
+       (∃ #t. (ProgressTo_2211( ~prog_ ) @ #t)) )
+  case case_1
+  by contradiction /* from formulas */
+next
+  case case_2
+  by contradiction /* from formulas */
+next
+  case case_3
+  by contradiction /* from formulas */
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) MessageIDRule[color=#ffffff, process='+', issapicrule,
+                              role='Process']:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_21[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ !Semistate_211( ~prog_ ) ] --[ ProgressTo_2111( ~prog_ ), B( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_22[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ !Semistate_221( ~prog_ ) ] --[ ProgressTo_2211( ~prog_ ), C( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
+                     role='Process']:
+   [ Fr( ~prog_ ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ State_( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_21[color=#ffffff, process='!', issapicrule,
+                       role='Process']:
+   [ State_( ~prog_ ) ] --> [ !Semistate_211( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_22[color=#ffffff, process='!', issapicrule,
+                       role='Process']:
+   [ State_( ~prog_ ) ] --> [ !Semistate_221( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventA_0_1[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+   [ State_( ~prog_ ) ] --[ ProgressTo_11( ~prog_ ), A( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress__to_11_or_2111_or_2211:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_11( prog_ ) @ #t.1) ∨
+     ((∃ #t.1. ProgressTo_2111( prog_ ) @ #t.1) ∨
+      (∃ #t.1. ProgressTo_2211( prog_ ) @ #t.1)))"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/ndc-nested-4.spthy
+
+  output:          examples/sapic/fast/basic/ndc-nested-4.spthy.tmp
+  processing time: 0.15s
+  
+  A_possible (exists-trace): verified (5 steps)
+  B_possible (exists-trace): verified (5 steps)
+  C_possible (exists-trace): verified (5 steps)
+  oneEventAlways (all-traces): verified (5 steps)
+
+==============================================================================
+*/

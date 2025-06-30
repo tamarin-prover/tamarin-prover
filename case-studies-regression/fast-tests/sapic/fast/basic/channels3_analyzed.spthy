@@ -1,0 +1,236 @@
+theory ChannelsTestThree begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+lemma not_secret:
+  exists-trace "∃ #i #j x. (Received( x ) @ #i) ∧ (!KU( x ) @ #j)"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i #j x. (Received( x ) @ #i) ∧ (!KU( x ) @ #j)"
+*/
+simplify
+solve( State_211( x ) ▶₀ #i )
+  case incx_1_21_case_2
+  solve( (#vf < #t2)  ∥ (#vf = #t2) )
+    case case_1
+    SOLVED // trace found
+  qed
+qed
+
+lemma internal_comm:
+  exists-trace
+  "∃ x #i. (Received( x ) @ #i) ∧ (∀ y #j. (K( y ) @ #j) ⇒ (¬(x = y)))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Received( x ) @ #i) ∧ ∀ y #j. (K( y ) @ #j) ⇒ ¬(x = y)"
+*/
+simplify
+solve( State_211( x ) ▶₀ #i )
+  case incx_1_21_case_1
+  SOLVED // trace found
+qed
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) P_0_1[color=#ffffff, process='P()', issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newa_0_11[color=#6c8040, process='new a.1;', issapicrule,
+                          role='P']:
+   [ State_11( ), Fr( a.1 ) ] --> [ State_111( a.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_11[color=#6c8040, process='new a.1;',
+                             issapicrule, role='P']:
+     [ State_11( ), Fr( a ) ] --> [ State_111( a ) ]
+  */
+
+rule (modulo E) outca_0_111[color=#6c8040, process='out('c',a.1);',
+                            issapicrule, role='P']:
+   [ State_111( a.1 ), In( 'c' ) ]
+  --[ ChannelIn( 'c' ) ]->
+   [ Out( a.1 ), State_1111( a.1 ) ]
+
+  /*
+  rule (modulo AC) outca_0_111[color=#6c8040, process='out('c',a.1);',
+                               issapicrule, role='P']:
+     [ State_111( a ), In( 'c' ) ]
+    --[ ChannelIn( 'c' ) ]->
+     [ Out( a ), State_1111( a ) ]
+  */
+
+rule (modulo E) outca_1_111[color=#6c8040, process='out('c',a.1);',
+                            issapicrule, role='P']:
+   [ State_111( a.1 ) ] --> [ Message( 'c', a.1 ), Semistate_1111( a.1 ) ]
+
+  /*
+  rule (modulo AC) outca_1_111[color=#6c8040, process='out('c',a.1);',
+                               issapicrule, role='P']:
+     [ State_111( a ) ] --> [ Message( 'c', a ), Semistate_1111( a ) ]
+  */
+
+rule (modulo E) outca_2_111[color=#6c8040, process='out('c',a.1);',
+                            issapicrule, role='P']:
+   [ Semistate_1111( a.1 ), Ack( 'c', a.1 ) ] --> [ State_1111( a.1 ) ]
+
+  /*
+  rule (modulo AC) outca_2_111[color=#6c8040, process='out('c',a.1);',
+                               issapicrule, role='P']:
+     [ Semistate_1111( a ), Ack( 'c', a ) ] --> [ State_1111( a ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#6c8040, process='0', issapicrule,
+                         role='P']:
+   [ State_1111( a.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#6c8040, process='0', issapicrule,
+                            role='P']:
+     [ State_1111( a ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ State_12( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Q_0_2[color=#ffffff, process='Q()', issapicrule,
+                      role='Process']:
+   [ State_2( ) ] --> [ State_21( ), State_22( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incx_0_21[color=#807140, process='in('c',x.1);',
+                          issapicrule, role='Q']:
+   [ State_21( ), Message( 'c', x ) ] --> [ Let_211( x ), Ack( 'c', x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incx_1_21[color=#807140, process='in('c',x.1);',
+                          issapicrule, role='Q']:
+   [ Let_211( x.1 ) ] --> [ State_211( x.1 ) ]
+
+  /*
+  rule (modulo AC) incx_1_21[color=#807140, process='in('c',x.1);',
+                             issapicrule, role='Q']:
+     [ Let_211( x ) ] --> [ State_211( x ) ]
+  */
+
+rule (modulo E) incx_2_21[color=#807140, process='in('c',x.1);',
+                          issapicrule, role='Q']:
+   [ State_21( ), In( <'c', x> ) ]
+  --[ ChannelIn( <'c', x> ) ]->
+   [ Let_211( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) incx_3_21[color=#807140, process='in('c',x.1);',
+                          issapicrule, role='Q']:
+   [ Let_211( x.1 ) ] --> [ State_211( x.1 ) ]
+
+  /*
+  rule (modulo AC) incx_3_21[color=#807140, process='in('c',x.1);',
+                             issapicrule, role='Q']:
+     [ Let_211( x ) ] --> [ State_211( x ) ]
+  */
+
+rule (modulo E) eventReceivedx_0_211[color=#807140,
+                                     process='event Received( x.1 );', issapicrule, role='Q']:
+   [ State_211( x.1 ) ]
+  --[ Received( x.1 ), Event( ) ]->
+   [ State_2111( x.1 ) ]
+
+  /*
+  rule (modulo AC) eventReceivedx_0_211[color=#807140,
+                                        process='event Received( x.1 );', issapicrule, role='Q']:
+     [ State_211( x ) ] --[ Received( x ), Event( ) ]-> [ State_2111( x ) ]
+  */
+
+rule (modulo E) p_0_2111[color=#807140, process='0', issapicrule,
+                         role='Q']:
+   [ State_2111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2111[color=#807140, process='0', issapicrule,
+                            role='Q']:
+     [ State_2111( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_22[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ State_22( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction in_event:
+  "∀ x #t3.
+    (ChannelIn( x ) @ #t3) ⇒
+    (∃ #t2.
+      (((K( x ) @ #t2) ∧ (#t2 < #t3)) ∧
+       (∀ #t1. (Event( ) @ #t1) ⇒ ((#t1 < #t2) ∨ (#t3 < #t1)))) ∧
+      (∀ #t1 xp.
+        (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/channels3.spthy
+
+  output:          examples/sapic/fast/basic/channels3.spthy.tmp
+  processing time: 0.26s
+  
+  not_secret (exists-trace): verified (4 steps)
+  internal_comm (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

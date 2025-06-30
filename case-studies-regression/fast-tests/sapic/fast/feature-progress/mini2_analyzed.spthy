@@ -1,0 +1,241 @@
+theory mini2 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+heuristic: p
+
+section{* small example for progression function *}
+
+
+
+
+
+
+
+
+
+lemma A_impossible:
+  all-traces "¬(∃ #t. A( ) @ #t)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+by solve( State_111( ~prog_, ~prog_111, k, m ) ▶₀ #t )
+
+lemma B_possible:
+  exists-trace "∃ #t. B( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+solve( State_1211( ~prog_, ~prog_121, k, m ) ▶₀ #t )
+  case outcm_0_121
+  solve( State_( ~prog_ ) ▶₀ #t.2 )
+    case Init
+    solve( State_( ~prog_ ) ▶₀ #t.3 )
+      case Init
+      solve( State_1211( ~prog_.1, ~prog_121, k, m.1 ) ▶₀ #t.3 )
+        case outcm_0_121
+        solve( State_( ~prog_ ) ▶₀ #t.3 )
+          case Init
+          SOLVED // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) MessageIDRule[color=#ffffff, process='new k.1;',
+                              issapicrule, role='Process']:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process='new k.1;', issapicrule,
+                     role='Process']:
+   [ Fr( ~prog_ ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ State_( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newk_0_[color=#ffffff, process='new k.1;', issapicrule,
+                        role='Process']:
+   [ State_( ~prog_ ), Fr( k.1 ) ]
+  --[ ProgressTo_1( ~prog_ ) ]->
+   [ State_1( ~prog_, k.1 ) ]
+
+  /*
+  rule (modulo AC) newk_0_[color=#ffffff, process='new k.1;', issapicrule,
+                           role='Process']:
+     [ State_( ~prog_ ), Fr( k ) ]
+    --[ ProgressTo_1( ~prog_ ) ]->
+     [ State_1( ~prog_, k ) ]
+  */
+
+rule (modulo E) inrsignmk_0_11[color=#ffffff,
+                               process='in('r',sign(m.1, =k.1));', issapicrule, role='Process']:
+   [
+   Fr( ~prog_111 ), State_1( ~prog_, k.1 ), In( sign(m.1, k.1) ),
+   MID_Receiver( ~mid_11 )
+   ]
+  --[ ProgressFrom_111( ~prog_111 ), Receive( ~mid_11, sign(m.1, k.1) ) ]->
+   [ State_111( ~prog_, ~prog_111, k.1, m.1 ) ]
+
+  /*
+  rule (modulo AC) inrsignmk_0_11[color=#ffffff,
+                                  process='in('r',sign(m.1, =k.1));', issapicrule, role='Process']:
+     [
+     Fr( ~prog_111 ), State_1( ~prog_, k ), In( sign(m, k) ),
+     MID_Receiver( ~mid_11 )
+     ]
+    --[ ProgressFrom_111( ~prog_111 ), Receive( ~mid_11, sign(m, k) ) ]->
+     [ State_111( ~prog_, ~prog_111, k, m ) ]
+  */
+
+rule (modulo E) eventA_0_111[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+   [ State_111( ~prog_, ~prog_111, k.1, m.1 ) ]
+  --[ ProgressTo_1111( ~prog_111 ), A( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventA_0_111[color=#ffffff, process='0', issapicrule,
+                                role='Process']:
+     [ State_111( ~prog_, ~prog_111, k, m ) ]
+    --[ ProgressTo_1111( ~prog_111 ), A( ) ]->
+     [ ]
+  */
+
+rule (modulo E) inrm_0_12[color=#ffffff, process='in('r',m.2);',
+                          issapicrule, role='Process']:
+   [
+   Fr( ~prog_121 ), State_1( ~prog_, k.1 ), In( m.2 ),
+   MID_Receiver( ~mid_12 )
+   ]
+  --[ ProgressFrom_121( ~prog_121 ), Receive( ~mid_12, m.2 ) ]->
+   [ State_121( ~prog_, ~prog_121, k.1, m.2 ) ]
+
+  /*
+  rule (modulo AC) inrm_0_12[color=#ffffff, process='in('r',m.2);',
+                             issapicrule, role='Process']:
+     [ Fr( ~prog_121 ), State_1( ~prog_, k ), In( m ), MID_Receiver( ~mid_12 )
+     ]
+    --[ ProgressFrom_121( ~prog_121 ), Receive( ~mid_12, m ) ]->
+     [ State_121( ~prog_, ~prog_121, k, m ) ]
+  */
+
+rule (modulo E) outcm_0_121[color=#ffffff, process='out('c',m.2);',
+                            issapicrule, role='Process']:
+   [ State_121( ~prog_, ~prog_121, k.1, m.2 ), In( 'c' ) ]
+  --[ ChannelIn( 'c' ) ]->
+   [ State_1211( ~prog_, ~prog_121, k.1, m.2 ), Out( m.2 ) ]
+
+  /*
+  rule (modulo AC) outcm_0_121[color=#ffffff, process='out('c',m.2);',
+                               issapicrule, role='Process']:
+     [ State_121( ~prog_, ~prog_121, k, m ), In( 'c' ) ]
+    --[ ChannelIn( 'c' ) ]->
+     [ State_1211( ~prog_, ~prog_121, k, m ), Out( m ) ]
+  */
+
+rule (modulo E) eventB_0_1211[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+   [ State_1211( ~prog_, ~prog_121, k.1, m.2 ) ]
+  --[ ProgressTo_12111( ~prog_121 ), B( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventB_0_1211[color=#ffffff, process='0', issapicrule,
+                                 role='Process']:
+     [ State_1211( ~prog_, ~prog_121, k, m ) ]
+    --[ ProgressTo_12111( ~prog_121 ), B( ) ]->
+     [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress__to_1:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
+
+restriction Progress_111_to_1111:
+  "∀ prog_111 #t.
+    (ProgressFrom_111( prog_111 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_1111( prog_111 ) @ #t.1)"
+
+restriction Progress_121_to_12111:
+  "∀ prog_121 #t.
+    (ProgressFrom_121( prog_121 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_12111( prog_121 ) @ #t.1)"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule inrsignmk_0_11: 
+Failed to derive Variable(s): m.1
+*/
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-progress/mini2.spthy
+
+  output:          examples/sapic/fast/feature-progress/mini2.spthy.tmp
+  processing time: 0.37s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  A_impossible (all-traces): verified (2 steps)
+  B_possible (exists-trace): verified (7 steps)
+
+==============================================================================
+*/

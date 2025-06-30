@@ -1,0 +1,257 @@
+theory mini6 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+heuristic: p
+
+section{* small example for progression function *}
+
+
+
+
+
+
+
+
+
+lemma A_possible:
+  exists-trace "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+solve( State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ▶₀ #t )
+  case inrm_0_111
+  solve( State_( ~prog_ ) ▶₀ #t.2 )
+    case Init
+    solve( State_( ~prog_ ) ▶₀ #t.3 )
+      case Init
+      solve( State_1111( ~prog_.1, ~prog_11.1, ~prog_1111, a, m.1 ) ▶₀ #t.3 )
+        case inrm_0_111
+        solve( State_( ~prog_ ) ▶₀ #t.3 )
+          case Init
+          solve( (∃ #t. (ProgressTo_111( ~prog_11 ) @ #t))  ∥
+                 (∃ #t. (ProgressTo_1121( ~prog_11 ) @ #t)) )
+            case case_1
+            solve( State_11( ~prog_.1, ~prog_11, a ) ▶₀ #t.3 )
+              case p_1_1
+              solve( State_( ~prog_ ) ▶₀ #t.3 )
+                case Init
+                SOLVED // trace found
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma B_impossible:
+  all-traces "¬(∃ #t. B( ) @ #t)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+by solve( State_112( ~prog_, ~prog_11, a ) ▶₀ #t )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) MessageIDRule[color=#ffffff, process='new a.1;',
+                              issapicrule, role='Process']:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process='new a.1;', issapicrule,
+                     role='Process']:
+   [ Fr( ~prog_ ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ State_( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newa_0_[color=#ffffff, process='!', issapicrule,
+                        role='Process']:
+   [ State_( ~prog_ ), Fr( a.1 ) ]
+  --[ ProgressTo_1( ~prog_ ) ]->
+   [ !Semistate_11( ~prog_, a.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_[color=#ffffff, process='!', issapicrule,
+                           role='Process']:
+     [ State_( ~prog_ ), Fr( a ) ]
+    --[ ProgressTo_1( ~prog_ ) ]->
+     [ !Semistate_11( ~prog_, a ) ]
+  */
+
+rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ Fr( ~prog_11 ), !Semistate_11( ~prog_, a.1 ) ]
+  --[ ProgressFrom_11( ~prog_11 ) ]->
+   [ State_11( ~prog_, ~prog_11, a.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_1[color=#ffffff, process='!', issapicrule,
+                         role='Process']:
+     [ Fr( ~prog_11 ), !Semistate_11( ~prog_, a ) ]
+    --[ ProgressFrom_11( ~prog_11 ) ]->
+     [ State_11( ~prog_, ~prog_11, a ) ]
+  */
+
+rule (modulo E) ifaa_0_11[color=#ffffff, process='if a.1=a.1',
+                          issapicrule, role='Process']:
+   [ State_11( ~prog_, ~prog_11, a.1 ) ]
+  --[ ProgressTo_111( ~prog_11 ), Pred_Eq( a.1, a.1 ) ]->
+   [ State_111( ~prog_, ~prog_11, a.1 ) ]
+
+  /*
+  rule (modulo AC) ifaa_0_11[color=#ffffff, process='if a.1=a.1',
+                             issapicrule, role='Process']:
+     [ State_11( ~prog_, ~prog_11, a ) ]
+    --[ ProgressTo_111( ~prog_11 ), Pred_Eq( a, a ) ]->
+     [ State_111( ~prog_, ~prog_11, a ) ]
+  */
+
+rule (modulo E) inrm_0_111[color=#ffffff, process='in('r',m.1);',
+                           issapicrule, role='Process']:
+   [
+   Fr( ~prog_1111 ), State_111( ~prog_, ~prog_11, a.1 ), In( m.1 ),
+   MID_Receiver( ~mid_111 )
+   ]
+  --[ ProgressFrom_1111( ~prog_1111 ), Receive( ~mid_111, m.1 ) ]->
+   [ State_1111( ~prog_, ~prog_11, ~prog_1111, a.1, m.1 ) ]
+
+  /*
+  rule (modulo AC) inrm_0_111[color=#ffffff, process='in('r',m.1);',
+                              issapicrule, role='Process']:
+     [
+     Fr( ~prog_1111 ), State_111( ~prog_, ~prog_11, a ), In( m ),
+     MID_Receiver( ~mid_111 )
+     ]
+    --[ ProgressFrom_1111( ~prog_1111 ), Receive( ~mid_111, m ) ]->
+     [ State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
+  */
+
+rule (modulo E) eventA_0_1111[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+   [ State_1111( ~prog_, ~prog_11, ~prog_1111, a.1, m.1 ) ]
+  --[ ProgressTo_11111( ~prog_1111 ), A( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventA_0_1111[color=#ffffff, process='0', issapicrule,
+                                 role='Process']:
+     [ State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
+    --[ ProgressTo_11111( ~prog_1111 ), A( ) ]->
+     [ ]
+  */
+
+rule (modulo E) ifaa_1_11[color=#ffffff, process='if a.1=a.1',
+                          issapicrule, role='Process']:
+   [ State_11( ~prog_, ~prog_11, a.1 ) ]
+  --[ Pred_Not_Eq( a.1, a.1 ) ]->
+   [ State_112( ~prog_, ~prog_11, a.1 ) ]
+
+  /*
+  rule (modulo AC) ifaa_1_11[color=#ffffff, process='if a.1=a.1',
+                             issapicrule, role='Process']:
+     [ State_11( ~prog_, ~prog_11, a ) ]
+    --[ Pred_Not_Eq( a, a ) ]->
+     [ State_112( ~prog_, ~prog_11, a ) ]
+  */
+
+rule (modulo E) eventB_0_112[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+   [ State_112( ~prog_, ~prog_11, a.1 ) ]
+  --[ ProgressTo_1121( ~prog_11 ), B( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventB_0_112[color=#ffffff, process='0', issapicrule,
+                                role='Process']:
+     [ State_112( ~prog_, ~prog_11, a ) ]
+    --[ ProgressTo_1121( ~prog_11 ), B( ) ]->
+     [ ]
+  */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress__to_1:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
+
+restriction Progress_11_to_111_or_1121:
+  "∀ prog_11 #t.
+    (ProgressFrom_11( prog_11 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_1121( prog_11 ) @ #t.1))"
+
+restriction Progress_1111_to_11111:
+  "∀ prog_1111 #t.
+    (ProgressFrom_1111( prog_1111 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_11111( prog_1111 ) @ #t.1)"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-progress/mini6.spthy
+
+  output:          examples/sapic/fast/feature-progress/mini6.spthy.tmp
+  processing time: 0.41s
+  
+  A_possible (exists-trace): verified (10 steps)
+  B_impossible (all-traces): verified (2 steps)
+
+==============================================================================
+*/

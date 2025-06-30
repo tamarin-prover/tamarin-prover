@@ -1,0 +1,140 @@
+theory SimpleIf begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+predicate: Equal( h1, h2 )<=>h1 = h2
+
+
+
+lemma bogus_exists:
+  exists-trace "∃ #i. Bogus( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (Bogus( ) @ #i)"
+*/
+simplify
+solve( State_11( h ) ▶₀ #i )
+  case ifEqualhh_0_1
+  SOLVED // trace found
+qed
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='new h.1;', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newh_0_[color=#ffffff, process='new h.1;', issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( h.1 ) ] --> [ State_1( h.1 ) ]
+
+  /*
+  rule (modulo AC) newh_0_[color=#ffffff, process='new h.1;', issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( h ) ] --> [ State_1( h ) ]
+  */
+
+restriction Restr_ifEqualhh_0_1_1:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_0_1_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  // safety formula
+
+rule (modulo E) ifEqualhh_0_1[color=#ffffff,
+                              process='if Equal( h.1, h.1 )', issapicrule, role='Process']:
+   [ State_1( h.1 ) ]
+  --[ Restr_ifEqualhh_0_1_1( h.1, h.1 ) ]->
+   [ State_11( h.1 ) ]
+
+  /*
+  rule (modulo AC) ifEqualhh_0_1[color=#ffffff,
+                                 process='if Equal( h.1, h.1 )', issapicrule, role='Process']:
+     [ State_1( h ) ] --[ Restr_ifEqualhh_0_1_1( h, h ) ]-> [ State_11( h ) ]
+  */
+
+restriction Restr_ifEqualhh_1_1_1:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_1_1_1( x, x.1 ) @ #NOW) ⇒ (¬(x = x.1))"
+  // safety formula
+
+rule (modulo E) ifEqualhh_1_1[color=#ffffff,
+                              process='if Equal( h.1, h.1 )', issapicrule, role='Process']:
+   [ State_1( h.1 ) ]
+  --[ Restr_ifEqualhh_1_1_1( h.1, h.1 ) ]->
+   [ State_12( h.1 ) ]
+
+  /*
+  rule (modulo AC) ifEqualhh_1_1[color=#ffffff,
+                                 process='if Equal( h.1, h.1 )', issapicrule, role='Process']:
+     [ State_1( h ) ] --[ Restr_ifEqualhh_1_1_1( h, h ) ]-> [ State_12( h ) ]
+  */
+
+rule (modulo E) eventBogus_0_11[color=#ffffff, process='event Bogus( );',
+                                issapicrule, role='Process']:
+   [ State_11( h.1 ) ] --[ Bogus( ) ]-> [ State_111( h.1 ) ]
+
+  /*
+  rule (modulo AC) eventBogus_0_11[color=#ffffff,
+                                   process='event Bogus( );', issapicrule, role='Process']:
+     [ State_11( h ) ] --[ Bogus( ) ]-> [ State_111( h ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_111( h.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+     [ State_111( h ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ State_12( h.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12[color=#ffffff, process='0', issapicrule,
+                          role='Process']:
+     [ State_12( h ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
+
+  output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
+  processing time: 0.10s
+  
+  bogus_exists (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

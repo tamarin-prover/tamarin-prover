@@ -1,0 +1,231 @@
+theory reliableChannels begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+
+
+lemma A_possible:
+  exists-trace "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+solve( State_11( m ) ▶₀ #t )
+  case inrm_0_1
+  SOLVED // trace found
+qed
+
+lemma B_possible:
+  exists-trace "∃ #t. B( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+solve( State_211( m ) ▶₀ #t )
+  case inrm_0_21
+  SOLVED // trace found
+qed
+
+lemma A_once:
+  all-traces "¬(∃ #t1 #t2. ((A( ) @ #t1) ∧ (A( ) @ #t2)) ∧ (¬(#t1 = #t2)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t1 #t2. (A( ) @ #t1) ∧ (A( ) @ #t2) ∧ ¬(#t1 = #t2)"
+*/
+simplify
+solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
+  case case_1
+  solve( State_11( m ) ▶₀ #t1 )
+    case inrm_0_1
+    solve( State_11( m.1 ) ▶₀ #t2 )
+      case inrm_0_1
+      by contradiction /* cyclic */
+    qed
+  qed
+next
+  case case_2
+  solve( State_11( m ) ▶₀ #t1 )
+    case inrm_0_1
+    solve( State_11( m.1 ) ▶₀ #t2 )
+      case inrm_0_1
+      by contradiction /* cyclic */
+    qed
+  qed
+qed
+
+lemma B_multiple:
+  exists-trace "∃ #t1 #t2. ((B( ) @ #t1) ∧ (B( ) @ #t2)) ∧ (¬(#t1 = #t2))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t1 #t2. (B( ) @ #t1) ∧ (B( ) @ #t2) ∧ ¬(#t1 = #t2)"
+*/
+simplify
+solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
+  case case_1
+  solve( State_211( m ) ▶₀ #t1 )
+    case inrm_0_21
+    solve( State_211( m.1 ) ▶₀ #t2 )
+      case inrm_0_21
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) MessageIDRule[color=#ffffff, process='+', issapicrule,
+                              role='Process']:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inrm_0_1[color=#ffffff, process='in('r',m.1);',
+                         issapicrule, role='Process']:
+   [ State_( ), In( m.1 ), MID_Receiver( ~mid_1 ) ]
+  --[ Receive( ~mid_1, m.1 ) ]->
+   [ State_11( m.1 ) ]
+
+  /*
+  rule (modulo AC) inrm_0_1[color=#ffffff, process='in('r',m.1);',
+                            issapicrule, role='Process']:
+     [ State_( ), In( m ), MID_Receiver( ~mid_1 ) ]
+    --[ Receive( ~mid_1, m ) ]->
+     [ State_11( m ) ]
+  */
+
+rule (modulo E) eventA_0_11[color=#ffffff, process='event A( );',
+                            issapicrule, role='Process']:
+   [ State_11( m.1 ) ] --[ A( ) ]-> [ State_111( m.1 ) ]
+
+  /*
+  rule (modulo AC) eventA_0_11[color=#ffffff, process='event A( );',
+                               issapicrule, role='Process']:
+     [ State_11( m ) ] --[ A( ) ]-> [ State_111( m ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_111( m.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+     [ State_111( m ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_2[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ State_( ) ] --> [ !Semistate_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_2[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ !Semistate_21( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inrm_0_21[color=#ffffff, process='in('r',m.2);',
+                          issapicrule, role='Process']:
+   [ State_21( ), In( m.2 ), MID_Receiver( ~mid_21 ) ]
+  --[ Receive( ~mid_21, m.2 ) ]->
+   [ State_211( m.2 ) ]
+
+  /*
+  rule (modulo AC) inrm_0_21[color=#ffffff, process='in('r',m.2);',
+                             issapicrule, role='Process']:
+     [ State_21( ), In( m ), MID_Receiver( ~mid_21 ) ]
+    --[ Receive( ~mid_21, m ) ]->
+     [ State_211( m ) ]
+  */
+
+rule (modulo E) eventB_0_211[color=#ffffff, process='event B( );',
+                             issapicrule, role='Process']:
+   [ State_211( m.2 ) ] --[ B( ) ]-> [ State_2111( m.2 ) ]
+
+  /*
+  rule (modulo AC) eventB_0_211[color=#ffffff, process='event B( );',
+                                issapicrule, role='Process']:
+     [ State_211( m ) ] --[ B( ) ]-> [ State_2111( m ) ]
+  */
+
+rule (modulo E) p_0_2111[color=#ffffff, process='0', issapicrule,
+                         role='Process']:
+   [ State_2111( m.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_2111[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+     [ State_2111( m ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/reliable-channel.spthy
+
+  output:          examples/sapic/fast/basic/reliable-channel.spthy.tmp
+  processing time: 0.17s
+  
+  A_possible (exists-trace): verified (3 steps)
+  B_possible (exists-trace): verified (3 steps)
+  A_once (all-traces): verified (8 steps)
+  B_multiple (exists-trace): verified (5 steps)
+
+==============================================================================
+*/

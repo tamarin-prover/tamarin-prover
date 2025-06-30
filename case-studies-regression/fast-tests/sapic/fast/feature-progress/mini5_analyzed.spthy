@@ -1,0 +1,304 @@
+theory mini5 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+heuristic: p
+
+section{* small example for progression function *}
+
+
+
+
+
+
+
+
+
+lemma A_possible:
+  exists-trace "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+solve( State_1211( ~prog_, s, x ) ▶₀ #t )
+  case ifxHELLO_0_121
+  solve( State_11( ~prog_, s ) ▶₀ #t.2 )
+    case Init
+    solve( (#t.2 < #t2)  ∥ (#t.2 = #t2)  ∥ (#vr.1 < #t.2) )
+      case case_2
+      solve( State_11( ~prog_, s ) ▶₀ #t.2 )
+        case Init
+        solve( (∃ #t. (ProgressTo_12111( ~prog_ ) @ #t))  ∥
+               (∃ #t. (ProgressTo_12121( ~prog_ ) @ #t))  ∥
+               (∃ #t. (ProgressTo_1221( ~prog_ ) @ #t)) )
+          case case_1
+          solve( State_1211( ~prog_, s, x ) ▶₀ #t.2 )
+            case ifxHELLO_0_121
+            solve( (#t2 < #t2.1)  ∥ (#t2 = #t2.1) )
+              case case_2
+              SOLVED // trace found
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma B_impossible:
+  all-traces "¬(∃ #t. B( ) @ #t)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+solve( State_1212( ~prog_, s, x ) ▶₀ #t )
+  case ifxHELLO_1_121
+  by contradiction /* from formulas */
+qed
+
+lemma C_possible:
+  exists-trace "∃ #t. C( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (C( ) @ #t)"
+*/
+simplify
+solve( State_122( ~prog_, s ) ▶₀ #t )
+  case lookupsasx_1_12
+  solve( State_11( ~prog_, s ) ▶₀ #t.2 )
+    case Init
+    solve( State_11( ~prog_, s ) ▶₀ #t.3 )
+      case Init
+      solve( (∃ #t. (ProgressTo_12111( ~prog_ ) @ #t))  ∥
+             (∃ #t. (ProgressTo_12121( ~prog_ ) @ #t))  ∥
+             (∃ #t. (ProgressTo_1221( ~prog_ ) @ #t)) )
+        case case_3
+        solve( State_122( ~prog_, s ) ▶₀ #t.3 )
+          case lookupsasx_1_12
+          SOLVED // trace found
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) MessageIDRule[color=#ffffff, process='new s.1;',
+                              issapicrule, role='Process']:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) insertsHELLO_0_11[color=#ffffff, process='0',
+                                  issapicrule, role='Process']:
+   [ State_11( ~prog_, s.1 ) ]
+  --[ ProgressTo_111( ~prog_ ), Insert( s.1, 'HELLO' ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) insertsHELLO_0_11[color=#ffffff, process='0',
+                                     issapicrule, role='Process']:
+     [ State_11( ~prog_, s ) ]
+    --[ ProgressTo_111( ~prog_ ), Insert( s, 'HELLO' ) ]->
+     [ ]
+  */
+
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ Fr( ~prog_ ), Fr( s.1 ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ State_11( ~prog_, s.1 ), State_12( ~prog_, s.1 ) ]
+
+  /*
+  rule (modulo AC) Init[color=#ffffff, process='|', issapicrule,
+                        role='Process']:
+     [ Fr( ~prog_ ), Fr( s ) ]
+    --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+     [ State_11( ~prog_, s ), State_12( ~prog_, s ) ]
+  */
+
+rule (modulo E) lookupsasx_0_12[color=#ffffff,
+                                process='lookup s.1 as x.1', no_derivcheck, issapicrule, role='Process']:
+   [ State_12( ~prog_, s.1 ) ]
+  --[ IsIn( s.1, x.1 ) ]->
+   [ State_121( ~prog_, s.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) lookupsasx_0_12[color=#ffffff,
+                                   process='lookup s.1 as x.1', no_derivcheck, issapicrule, role='Process']:
+     [ State_12( ~prog_, s ) ]
+    --[ IsIn( s, x ) ]->
+     [ State_121( ~prog_, s, x ) ]
+  */
+
+rule (modulo E) ifxHELLO_0_121[color=#ffffff, process='if x.1='HELLO'',
+                               issapicrule, role='Process']:
+   [ State_121( ~prog_, s.1, x.1 ) ]
+  --[ Pred_Eq( x.1, 'HELLO' ) ]->
+   [ State_1211( ~prog_, s.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) ifxHELLO_0_121[color=#ffffff, process='if x.1='HELLO'',
+                                  issapicrule, role='Process']:
+     [ State_121( ~prog_, s, x ) ]
+    --[ Pred_Eq( x, 'HELLO' ) ]->
+     [ State_1211( ~prog_, s, x ) ]
+  */
+
+rule (modulo E) eventA_0_1211[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+   [ State_1211( ~prog_, s.1, x.1 ) ]
+  --[ ProgressTo_12111( ~prog_ ), A( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventA_0_1211[color=#ffffff, process='0', issapicrule,
+                                 role='Process']:
+     [ State_1211( ~prog_, s, x ) ]
+    --[ ProgressTo_12111( ~prog_ ), A( ) ]->
+     [ ]
+  */
+
+rule (modulo E) ifxHELLO_1_121[color=#ffffff, process='if x.1='HELLO'',
+                               issapicrule, role='Process']:
+   [ State_121( ~prog_, s.1, x.1 ) ]
+  --[ Pred_Not_Eq( x.1, 'HELLO' ) ]->
+   [ State_1212( ~prog_, s.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) ifxHELLO_1_121[color=#ffffff, process='if x.1='HELLO'',
+                                  issapicrule, role='Process']:
+     [ State_121( ~prog_, s, x ) ]
+    --[ Pred_Not_Eq( x, 'HELLO' ) ]->
+     [ State_1212( ~prog_, s, x ) ]
+  */
+
+rule (modulo E) eventB_0_1212[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+   [ State_1212( ~prog_, s.1, x.1 ) ]
+  --[ ProgressTo_12121( ~prog_ ), B( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventB_0_1212[color=#ffffff, process='0', issapicrule,
+                                 role='Process']:
+     [ State_1212( ~prog_, s, x ) ]
+    --[ ProgressTo_12121( ~prog_ ), B( ) ]->
+     [ ]
+  */
+
+rule (modulo E) lookupsasx_1_12[color=#ffffff,
+                                process='lookup s.1 as x.1', no_derivcheck, issapicrule, role='Process']:
+   [ State_12( ~prog_, s.1 ) ]
+  --[ IsNotSet( s.1 ) ]->
+   [ State_122( ~prog_, s.1 ) ]
+
+  /*
+  rule (modulo AC) lookupsasx_1_12[color=#ffffff,
+                                   process='lookup s.1 as x.1', no_derivcheck, issapicrule, role='Process']:
+     [ State_12( ~prog_, s ) ]
+    --[ IsNotSet( s ) ]->
+     [ State_122( ~prog_, s ) ]
+  */
+
+rule (modulo E) eventC_0_122[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+   [ State_122( ~prog_, s.1 ) ] --[ ProgressTo_1221( ~prog_ ), C( ) ]-> [ ]
+
+  /*
+  rule (modulo AC) eventC_0_122[color=#ffffff, process='0', issapicrule,
+                                role='Process']:
+     [ State_122( ~prog_, s ) ] --[ ProgressTo_1221( ~prog_ ), C( ) ]-> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress__to_111:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_111( prog_ ) @ #t.1)"
+
+restriction Progress__to_12111_or_12121_or_1221:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_12111( prog_ ) @ #t.1) ∨
+     ((∃ #t.1. ProgressTo_12121( prog_ ) @ #t.1) ∨
+      (∃ #t.1. ProgressTo_1221( prog_ ) @ #t.1)))"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-progress/mini5.spthy
+
+  output:          examples/sapic/fast/feature-progress/mini5.spthy.tmp
+  processing time: 0.35s
+  
+  A_possible (exists-trace): verified (9 steps)
+  B_impossible (all-traces): verified (3 steps)
+  C_possible (exists-trace): verified (7 steps)
+
+==============================================================================
+*/
