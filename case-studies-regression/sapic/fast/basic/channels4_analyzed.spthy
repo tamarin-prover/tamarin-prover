@@ -22,9 +22,9 @@ guarded formula characterizing all counter-examples:
 "∃ x #i. (Secret( x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
 */
 simplify
-solve( State_111( c ) ▶₀ #i )
-  case Init
-  by solve( !KU( ~n.1 ) @ #vk )
+solve( State_1111( x, c ) ▶₀ #i )
+  case newa_0_111
+  by solve( !KU( ~n ) @ #vk )
 qed
 
 lemma received:
@@ -45,58 +45,170 @@ qed
 
 
 
-rule (modulo E) newa_0_111[color=#408051, process="new a.1;",
-                           issapicrule]:
-   [ State_111( c.1 ), Fr( a.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="new c.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newc_0_[color=#ffffff, process="new c.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( c.1 ) ] --> [ State_1( c.1 ) ]
+
+  /*
+  rule (modulo AC) newc_0_[color=#ffffff, process="new c.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( c ) ] --> [ State_1( c ) ]
+  */
+
+rule (modulo E) p_0_1[color=#ffffff, process="|", issapicrule,
+                      role='Process']:
+   [ State_1( c.1 ) ] --> [ State_11( c.1 ), State_12( c.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+     [ State_1( c ) ] --> [ State_11( c ), State_12( c ) ]
+  */
+
+rule (modulo E) P_0_11[color=#ffffff, process="P()", issapicrule,
+                       role='Process']:
+   [ State_11( c.1 ) ] --> [ State_111( c.1 ), State_112( c.1 ) ]
+
+  /*
+  rule (modulo AC) P_0_11[color=#ffffff, process="P()", issapicrule,
+                          role='Process']:
+     [ State_11( c ) ] --> [ State_111( c ), State_112( c ) ]
+  */
+
+rule (modulo E) newa_0_111[color=#6c8040, process="new a.1;",
+                           issapicrule, role='P']:
+   [ State_111( c.1 ), Fr( a.1 ) ] --> [ State_1111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_111[color=#6c8040, process="new a.1;",
+                              issapicrule, role='P']:
+     [ State_111( c ), Fr( a ) ] --> [ State_1111( a, c ) ]
+  */
+
+rule (modulo E) eventSecreta_0_1111[color=#6c8040,
+                                    process="event Secret( a.1 );", issapicrule, role='P']:
+   [ State_1111( a.1, c.1 ) ]
   --[ Secret( a.1 ) ]->
+   [ State_11111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) eventSecreta_0_1111[color=#6c8040,
+                                       process="event Secret( a.1 );", issapicrule, role='P']:
+     [ State_1111( a, c ) ] --[ Secret( a ) ]-> [ State_11111( a, c ) ]
+  */
+
+rule (modulo E) outca_0_11111[color=#6c8040, process="out(c.1,a.1);",
+                              issapicrule, role='P']:
+   [ State_11111( a.1, c.1 ) ]
+  -->
    [ Message( c.1, a.1 ), Semistate_111111( a.1, c.1 ) ]
 
   /*
-  rule (modulo AC) newa_0_111[color=#408051, process="new a.1;",
-                              issapicrule]:
-     [ State_111( c ), Fr( a ) ]
-    --[ Secret( a ) ]->
-     [ Message( c, a ), Semistate_111111( a, c ) ]
+  rule (modulo AC) outca_0_11111[color=#6c8040, process="out(c.1,a.1);",
+                                 issapicrule, role='P']:
+     [ State_11111( a, c ) ] --> [ Message( c, a ), Semistate_111111( a, c ) ]
   */
 
-rule (modulo E) Init[color=#ffffff, process="new c.1;", issapicrule]:
-   [ Fr( c.1 ) ] --[ Init( ) ]-> [ State_121( c.1 ), State_111( c.1 ) ]
+rule (modulo E) outca_1_11111[color=#6c8040, process="out(c.1,a.1);",
+                              issapicrule, role='P']:
+   [ Semistate_111111( a.1, c.1 ), Ack( c.1, a.1 ) ]
+  -->
+   [ State_111111( a.1, c.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new c.1;", issapicrule]:
-     [ Fr( c ) ] --[ Init( ) ]-> [ State_121( c ), State_111( c ) ]
+  rule (modulo AC) outca_1_11111[color=#6c8040, process="out(c.1,a.1);",
+                                 issapicrule, role='P']:
+     [ Semistate_111111( a, c ), Ack( c, a ) ] --> [ State_111111( a, c ) ]
   */
 
-rule (modulo E) incx_0_121[color=#408065, process="in(c.1,x.1);",
-                           issapicrule]:
+rule (modulo E) p_0_111111[color=#6c8040, process="0", issapicrule,
+                           role='P']:
+   [ State_111111( a.1, c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#6c8040, process="0", issapicrule,
+                              role='P']:
+     [ State_111111( a, c ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_112[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_112( c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_112( c ) ] --> [ ]
+  */
+
+rule (modulo E) Q_0_12[color=#ffffff, process="Q()", issapicrule,
+                       role='Process']:
+   [ State_12( c.1 ) ] --> [ State_121( c.1 ), State_122( c.1 ) ]
+
+  /*
+  rule (modulo AC) Q_0_12[color=#ffffff, process="Q()", issapicrule,
+                          role='Process']:
+     [ State_12( c ) ] --> [ State_121( c ), State_122( c ) ]
+  */
+
+rule (modulo E) incx_0_121[color=#807140, process="in(c.1,x.1);",
+                           issapicrule, role='Q']:
    [ State_121( c.1 ), Message( c.1, x.2 ) ]
   -->
    [ Let_1211( x.2, c.1 ), Ack( c.1, x.2 ) ]
 
   /*
-  rule (modulo AC) incx_0_121[color=#408065, process="in(c.1,x.1);",
-                              issapicrule]:
+  rule (modulo AC) incx_0_121[color=#807140, process="in(c.1,x.1);",
+                              issapicrule, role='Q']:
      [ State_121( c ), Message( c, x ) ] --> [ Let_1211( x, c ), Ack( c, x ) ]
   */
 
-rule (modulo E) incx_1_121[color=#408065, process="in(c.1,x.1);",
-                           issapicrule]:
+rule (modulo E) incx_1_121[color=#807140, process="in(c.1,x.1);",
+                           issapicrule, role='Q']:
    [ Let_1211( x.1, c.1 ) ] --> [ State_1211( c.1, x.1 ) ]
 
   /*
-  rule (modulo AC) incx_1_121[color=#408065, process="in(c.1,x.1);",
-                              issapicrule]:
+  rule (modulo AC) incx_1_121[color=#807140, process="in(c.1,x.1);",
+                              issapicrule, role='Q']:
      [ Let_1211( x, c ) ] --> [ State_1211( c, x ) ]
   */
 
-rule (modulo E) eventReceivedx_0_1211[color=#408065,
-                                      process="event Received( x.1 );", issapicrule]:
-   [ State_1211( c.1, x.1 ) ] --[ Received( x.1 ) ]-> [ ]
+rule (modulo E) eventReceivedx_0_1211[color=#807140,
+                                      process="event Received( x.1 );", issapicrule, role='Q']:
+   [ State_1211( c.1, x.1 ) ]
+  --[ Received( x.1 ) ]->
+   [ State_12111( c.1, x.1 ) ]
 
   /*
-  rule (modulo AC) eventReceivedx_0_1211[color=#408065,
-                                         process="event Received( x.1 );", issapicrule]:
-     [ State_1211( c, x ) ] --[ Received( x ) ]-> [ ]
+  rule (modulo AC) eventReceivedx_0_1211[color=#807140,
+                                         process="event Received( x.1 );", issapicrule, role='Q']:
+     [ State_1211( c, x ) ] --[ Received( x ) ]-> [ State_12111( c, x ) ]
+  */
+
+rule (modulo E) p_0_12111[color=#807140, process="0", issapicrule,
+                          role='Q']:
+   [ State_12111( c.1, x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12111[color=#807140, process="0", issapicrule,
+                             role='Q']:
+     [ State_12111( c, x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_122[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_122( c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_122[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_122( c ) ] --> [ ]
   */
 
 restriction single_session:
@@ -109,8 +221,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -122,7 +234,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels4.spthy
 
   output:          examples/sapic/fast/basic/channels4.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.16s
   
   secret (all-traces): verified (3 steps)
   received (exists-trace): verified (3 steps)

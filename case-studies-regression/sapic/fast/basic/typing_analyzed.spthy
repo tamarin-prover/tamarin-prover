@@ -30,176 +30,424 @@ heuristic: p
 
 
 
+rule (modulo E) Init[color=#ffffff, process="in(a.1:lol);", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inalol_0_[color=#ffffff, process="in(a.1:lol);",
+                          issapicrule, role='Process']:
+   [ State_( ), In( a.1 ) ] --> [ State_1( a.1 ) ]
+
+  /*
+  rule (modulo AC) inalol_0_[color=#ffffff, process="in(a.1:lol);",
+                             issapicrule, role='Process']:
+     [ State_( ), In( a ) ] --> [ State_1( a ) ]
+  */
+
+rule (modulo E) newntruc_0_1[color=#ffffff, process="new n.1:truc;",
+                             issapicrule, role='Process']:
+   [ State_1( a.1 ), Fr( n.1 ) ] --> [ State_11( a.1, n.1 ) ]
+
+  /*
+  rule (modulo AC) newntruc_0_1[color=#ffffff, process="new n.1:truc;",
+                                issapicrule, role='Process']:
+     [ State_1( a ), Fr( n ) ] --> [ State_11( a, n ) ]
+  */
+
+rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_11( a.1, n.1 ) ]
+  -->
+   [ State_111( a.1, n.1 ), State_112( a.1, n.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11[color=#ffffff, process="|", issapicrule,
+                          role='Process']:
+     [ State_11( a, n ) ] --> [ State_111( a, n ), State_112( a, n ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
+                        role='Process']:
+   [ State_111( a.1, n.1 ) ]
+  -->
+   [ State_1111( a.1, n.1 ), State_1112( a.1, n.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="|", issapicrule,
+                           role='Process']:
+     [ State_111( a, n ) ] --> [ State_1111( a, n ), State_1112( a, n ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
+                         role='Process']:
+   [ State_1111( a.1, n.1 ) ]
+  -->
+   [ State_11111( a.1, n.1 ), State_11112( a.1, n.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#ffffff, process="|", issapicrule,
+                            role='Process']:
+     [ State_1111( a, n ) ] --> [ State_11111( a, n ), State_11112( a, n ) ]
+  */
+
 rule (modulo E) newnlol_0_11111[color=#ffffff, process="new n.2:lol;",
-                                issapicrule]:
-   [ State_11111( a.1, n.1 ), Fr( n.2 ) ] --> [ Out( n.2 ) ]
+                                issapicrule, role='Process']:
+   [ State_11111( a.1, n.1 ), Fr( n.2 ) ]
+  -->
+   [ State_111111( a.1, n.1, n.2 ) ]
 
   /*
   rule (modulo AC) newnlol_0_11111[color=#ffffff, process="new n.2:lol;",
-                                   issapicrule]:
-     [ State_11111( a, n ), Fr( n.1 ) ] --> [ Out( n.1 ) ]
+                                   issapicrule, role='Process']:
+     [ State_11111( a, n ), Fr( n.1 ) ] --> [ State_111111( a, n, n.1 ) ]
+  */
+
+rule (modulo E) outnlol_0_111111[color=#ffffff, process="out(n.2:lol);",
+                                 issapicrule, role='Process']:
+   [ State_111111( a.1, n.1, n.2 ) ]
+  -->
+   [ State_1111111( a.1, n.1, n.2 ), Out( n.2 ) ]
+
+  /*
+  rule (modulo AC) outnlol_0_111111[color=#ffffff, process="out(n.2:lol);",
+                                    issapicrule, role='Process']:
+     [ State_111111( a, n, n.1 ) ]
+    -->
+     [ State_1111111( a, n, n.1 ), Out( n.1 ) ]
+  */
+
+rule (modulo E) p_0_1111111[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1111111( a.1, n.1, n.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1111111( a, n, n.1 ) ] --> [ ]
   */
 
 rule (modulo E) newnrofl_0_11112[color=#ffffff, process="new n.3:rofl;",
-                                 issapicrule]:
-   [ State_11112( a.1, n.1 ), Fr( n.3 ) ] --> [ Out( n.3 ) ]
+                                 issapicrule, role='Process']:
+   [ State_11112( a.1, n.1 ), Fr( n.3 ) ]
+  -->
+   [ State_111121( a.1, n.1, n.3 ) ]
 
   /*
   rule (modulo AC) newnrofl_0_11112[color=#ffffff, process="new n.3:rofl;",
-                                    issapicrule]:
-     [ State_11112( a, n ), Fr( n.1 ) ] --> [ Out( n.1 ) ]
+                                    issapicrule, role='Process']:
+     [ State_11112( a, n ), Fr( n.1 ) ] --> [ State_111121( a, n, n.1 ) ]
   */
 
-rule (modulo E) newxlol_0_11121[color=#408051, process="new x.1:lol;",
-                                issapicrule]:
-   [ State_11121( a.1, n.1 ), Fr( x.1 ), Fr( y.1 ) ]
+rule (modulo E) outnrofl_0_111121[color=#ffffff,
+                                  process="out(n.3:rofl);", issapicrule, role='Process']:
+   [ State_111121( a.1, n.1, n.3 ) ]
+  -->
+   [ State_1111211( a.1, n.1, n.3 ), Out( n.3 ) ]
+
+  /*
+  rule (modulo AC) outnrofl_0_111121[color=#ffffff,
+                                     process="out(n.3:rofl);", issapicrule, role='Process']:
+     [ State_111121( a, n, n.1 ) ]
+    -->
+     [ State_1111211( a, n, n.1 ), Out( n.1 ) ]
+  */
+
+rule (modulo E) p_0_1111211[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1111211( a.1, n.1, n.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111211[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1111211( a, n, n.1 ) ] --> [ ]
+  */
+
+rule (modulo E) Palol_0_1112[color=#ffffff, process="P(a.1:lol)",
+                             issapicrule, role='Process']:
+   [ State_1112( a.1, n.1 ) ]
+  -->
+   [ State_11121( a.1, n.1 ), State_11122( a.1, n.1 ) ]
+
+  /*
+  rule (modulo AC) Palol_0_1112[color=#ffffff, process="P(a.1:lol)",
+                                issapicrule, role='Process']:
+     [ State_1112( a, n ) ] --> [ State_11121( a, n ), State_11122( a, n ) ]
+  */
+
+rule (modulo E) newxlol_0_11121[color=#6c8040, process="new x.1:lol;",
+                                issapicrule, role='P']:
+   [ State_11121( a.1, n.1 ), Fr( x.1 ) ]
+  -->
+   [ State_111211( a.1, n.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) newxlol_0_11121[color=#6c8040, process="new x.1:lol;",
+                                   issapicrule, role='P']:
+     [ State_11121( a, n ), Fr( x ) ] --> [ State_111211( a, n, x ) ]
+  */
+
+rule (modulo E) newy_0_111211[color=#6c8040, process="new y.1;",
+                              issapicrule, role='P']:
+   [ State_111211( a.1, n.1, x.1 ), Fr( y.1 ) ]
+  -->
+   [ State_1112111( a.1, n.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) newy_0_111211[color=#6c8040, process="new y.1;",
+                                 issapicrule, role='P']:
+     [ State_111211( a, n, x ), Fr( y ) ] --> [ State_1112111( a, n, x, y ) ]
+  */
+
+rule (modulo E) outxlol_0_1112111[color=#6c8040, process="out(x.1:lol);",
+                                  issapicrule, role='P']:
+   [ State_1112111( a.1, n.1, x.1, y.1 ) ]
   -->
    [ State_11121111( a.1, n.1, x.1, y.1 ), Out( x.1 ) ]
 
   /*
-  rule (modulo AC) newxlol_0_11121[color=#408051, process="new x.1:lol;",
-                                   issapicrule]:
-     [ State_11121( a, n ), Fr( x ), Fr( y ) ]
+  rule (modulo AC) outxlol_0_1112111[color=#6c8040,
+                                     process="out(x.1:lol);", issapicrule, role='P']:
+     [ State_1112111( a, n, x, y ) ]
     -->
      [ State_11121111( a, n, x, y ), Out( x ) ]
   */
 
-rule (modulo E) outybitstring_0_11121111[color=#408051,
-                                         process="out(y.1:bitstring);", issapicrule]:
+rule (modulo E) outybitstring_0_11121111[color=#6c8040,
+                                         process="out(y.1:bitstring);", issapicrule, role='P']:
    [ State_11121111( a.1, n.1, x.1, y.1 ) ]
   -->
    [ State_111211111( a.1, n.1, x.1, y.1 ), Out( y.1 ) ]
 
   /*
-  rule (modulo AC) outybitstring_0_11121111[color=#408051,
-                                            process="out(y.1:bitstring);", issapicrule]:
+  rule (modulo AC) outybitstring_0_11121111[color=#6c8040,
+                                            process="out(y.1:bitstring);", issapicrule, role='P']:
      [ State_11121111( a, n, x, y ) ]
     -->
      [ State_111211111( a, n, x, y ), Out( y ) ]
   */
 
-rule (modulo E) outfybitstring_0_111211111[color=#408051,
-                                           process="out(f(y.1:bitstring));", issapicrule]:
+rule (modulo E) outfybitstring_0_111211111[color=#6c8040,
+                                           process="out(f(y.1:bitstring));", issapicrule, role='P']:
    [ State_111211111( a.1, n.1, x.1, y.1 ) ]
   -->
    [ State_1112111111( a.1, n.1, x.1, y.1 ), Out( f(y.1) ) ]
 
   /*
-  rule (modulo AC) outfybitstring_0_111211111[color=#408051,
-                                              process="out(f(y.1:bitstring));", issapicrule]:
+  rule (modulo AC) outfybitstring_0_111211111[color=#6c8040,
+                                              process="out(f(y.1:bitstring));", issapicrule, role='P']:
      [ State_111211111( a, n, x, y ) ]
     -->
      [ State_1112111111( a, n, x, y ), Out( f(y) ) ]
   */
 
-rule (modulo E) outxloly_0_1112111111[color=#408051,
-                                      process="out(<x.1:lol, y.1>);", issapicrule]:
+rule (modulo E) outxloly_0_1112111111[color=#6c8040,
+                                      process="out(<x.1:lol, y.1>);", issapicrule, role='P']:
    [ State_1112111111( a.1, n.1, x.1, y.1 ) ]
   -->
    [ State_11121111111( a.1, n.1, x.1, y.1 ), Out( <x.1, y.1> ) ]
 
   /*
-  rule (modulo AC) outxloly_0_1112111111[color=#408051,
-                                         process="out(<x.1:lol, y.1>);", issapicrule]:
+  rule (modulo AC) outxloly_0_1112111111[color=#6c8040,
+                                         process="out(<x.1:lol, y.1>);", issapicrule, role='P']:
      [ State_1112111111( a, n, x, y ) ]
     -->
      [ State_11121111111( a, n, x, y ), Out( <x, y> ) ]
   */
 
-rule (modulo E) outxloly_0_11121111111[color=#408051,
-                                       process="out((x.1:lol++y.1));", issapicrule]:
+rule (modulo E) outxloly_0_11121111111[color=#6c8040,
+                                       process="out((x.1:lol++y.1));", issapicrule, role='P']:
    [ State_11121111111( a.1, n.1, x.1, y.1 ) ]
   -->
    [ State_111211111111( a.1, n.1, x.1, y.1 ), Out( (x.1++y.1) ) ]
 
   /*
-  rule (modulo AC) outxloly_0_11121111111[color=#408051,
-                                          process="out((x.1:lol++y.1));", issapicrule]:
+  rule (modulo AC) outxloly_0_11121111111[color=#6c8040,
+                                          process="out((x.1:lol++y.1));", issapicrule, role='P']:
      [ State_11121111111( a, n, x, y ) ]
     -->
      [ State_111211111111( a, n, x, y ), Out( (x++y) ) ]
   */
 
-rule (modulo E) outfxloly_0_111211111111[color=#408051,
-                                         process="out(f(<x.1:lol, y.1>));", issapicrule]:
+rule (modulo E) outfxloly_0_111211111111[color=#6c8040,
+                                         process="out(f(<x.1:lol, y.1>));", issapicrule, role='P']:
    [ State_111211111111( a.1, n.1, x.1, y.1 ) ]
   -->
    [ State_1112111111111( a.1, n.1, x.1, y.1 ), Out( f(<x.1, y.1>) ) ]
 
   /*
-  rule (modulo AC) outfxloly_0_111211111111[color=#408051,
-                                            process="out(f(<x.1:lol, y.1>));", issapicrule]:
+  rule (modulo AC) outfxloly_0_111211111111[color=#6c8040,
+                                            process="out(f(<x.1:lol, y.1>));", issapicrule, role='P']:
      [ State_111211111111( a, n, x, y ) ]
     -->
      [ State_1112111111111( a, n, x, y ), Out( f(<x, y>) ) ]
   */
 
-rule (modulo E) outhxlol_0_1112111111111[color=#408051,
-                                         process="out(h(x.1:lol));", issapicrule]:
+rule (modulo E) outhxlol_0_1112111111111[color=#6c8040,
+                                         process="out(h(x.1:lol));", issapicrule, role='P']:
    [ State_1112111111111( a.1, n.1, x.1, y.1 ) ]
   -->
    [ State_11121111111111( a.1, n.1, x.1, y.1 ), Out( h(x.1) ) ]
 
   /*
-  rule (modulo AC) outhxlol_0_1112111111111[color=#408051,
-                                            process="out(h(x.1:lol));", issapicrule]:
+  rule (modulo AC) outhxlol_0_1112111111111[color=#6c8040,
+                                            process="out(h(x.1:lol));", issapicrule, role='P']:
      [ State_1112111111111( a, n, x, y ) ]
     -->
      [ State_11121111111111( a, n, x, y ), Out( h(x) ) ]
   */
 
-rule (modulo E) outhhxlol_0_11121111111111[color=#408051,
-                                           process="out(h(h(x.1:lol)));", issapicrule]:
+rule (modulo E) outhhxlol_0_11121111111111[color=#6c8040,
+                                           process="out(h(h(x.1:lol)));", issapicrule, role='P']:
    [ State_11121111111111( a.1, n.1, x.1, y.1 ) ]
   -->
    [ State_111211111111111( a.1, n.1, x.1, y.1 ), Out( h(h(x.1)) ) ]
 
   /*
-  rule (modulo AC) outhhxlol_0_11121111111111[color=#408051,
-                                              process="out(h(h(x.1:lol)));", issapicrule]:
+  rule (modulo AC) outhhxlol_0_11121111111111[color=#6c8040,
+                                              process="out(h(h(x.1:lol)));", issapicrule, role='P']:
      [ State_11121111111111( a, n, x, y ) ]
     -->
      [ State_111211111111111( a, n, x, y ), Out( h(h(x)) ) ]
   */
 
-rule (modulo E) eventTestxlolalol_0_111211111111111[color=#408051,
-                                                    process="event Test( x.1:lol, a.1:lol );", issapicrule]:
+rule (modulo E) eventTestxlolalol_0_111211111111111[color=#6c8040,
+                                                    process="event Test( x.1:lol, a.1:lol );", issapicrule,
+                                                    role='P']:
    [ State_111211111111111( a.1, n.1, x.1, y.1 ) ]
   --[ Test( x.1, a.1 ) ]->
+   [ State_1112111111111111( a.1, n.1, x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventTestxlolalol_0_111211111111111[color=#6c8040,
+                                                       process="event Test( x.1:lol, a.1:lol );", issapicrule,
+                                                       role='P']:
+     [ State_111211111111111( a, n, x, y ) ]
+    --[ Test( x, a ) ]->
+     [ State_1112111111111111( a, n, x, y ) ]
+  */
+
+rule (modulo E) p_0_1112111111111111[color=#6c8040, process="|",
+                                     issapicrule, role='P']:
+   [ State_1112111111111111( a.1, n.1, x.1, y.1 ) ]
+  -->
    [
    State_11121111111111111( a.1, n.1, x.1, y.1 ),
    State_11121111111111112( a.1, n.1, x.1, y.1 )
    ]
 
   /*
-  rule (modulo AC) eventTestxlolalol_0_111211111111111[color=#408051,
-                                                       process="event Test( x.1:lol, a.1:lol );",
-                                                       issapicrule]:
-     [ State_111211111111111( a, n, x, y ) ]
-    --[ Test( x, a ) ]->
+  rule (modulo AC) p_0_1112111111111111[color=#6c8040, process="|",
+                                        issapicrule, role='P']:
+     [ State_1112111111111111( a, n, x, y ) ]
+    -->
      [
      State_11121111111111111( a, n, x, y ),
      State_11121111111111112( a, n, x, y )
      ]
   */
 
-rule (modulo E) Init[color=#ffffff, process="in(a.1:lol);", issapicrule]:
-   [ In( a.1 ), Fr( n.1 ) ]
-  --[ Init( ) ]->
-   [
-   State_1121( a.1, n.1 ), State_11121( a.1, n.1 ), State_11111( a.1, n.1 ),
-   State_11112( a.1, n.1 )
-   ]
+rule (modulo E) newblol_0_11121111111111111[color=#6c8040,
+                                            process="new b.1:lol;", issapicrule, role='P']:
+   [ State_11121111111111111( a.1, n.1, x.1, y.1 ), Fr( b.1 ) ]
+  -->
+   [ State_111211111111111111( a.1, b.1, n.1, x.1, y.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="in(a.1:lol);",
-                        issapicrule]:
-     [ In( a ), Fr( n ) ]
-    --[ Init( ) ]->
-     [
-     State_1121( a, n ), State_11121( a, n ), State_11111( a, n ),
-     State_11112( a, n )
-     ]
+  rule (modulo AC) newblol_0_11121111111111111[color=#6c8040,
+                                               process="new b.1:lol;", issapicrule, role='P']:
+     [ State_11121111111111111( a, n, x, y ), Fr( b ) ]
+    -->
+     [ State_111211111111111111( a, b, n, x, y ) ]
+  */
+
+rule (modulo E) p_0_111211111111111111[color=#6c8040, process="0",
+                                       issapicrule, role='P']:
+   [ State_111211111111111111( a.1, b.1, n.1, x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111211111111111111[color=#6c8040, process="0",
+                                          issapicrule, role='P']:
+     [ State_111211111111111111( a, b, n, x, y ) ] --> [ ]
+  */
+
+rule (modulo E) newbrofl_0_11121111111111112[color=#6c8040,
+                                             process="new b.2:rofl;", issapicrule, role='P']:
+   [ State_11121111111111112( a.1, n.1, x.1, y.1 ), Fr( b.2 ) ]
+  -->
+   [ State_111211111111111121( a.1, n.1, x.1, y.1, b.2 ) ]
+
+  /*
+  rule (modulo AC) newbrofl_0_11121111111111112[color=#6c8040,
+                                                process="new b.2:rofl;", issapicrule, role='P']:
+     [ State_11121111111111112( a, n, x, y ), Fr( b ) ]
+    -->
+     [ State_111211111111111121( a, n, x, y, b ) ]
+  */
+
+rule (modulo E) p_0_111211111111111121[color=#6c8040, process="0",
+                                       issapicrule, role='P']:
+   [ State_111211111111111121( a.1, n.1, x.1, y.1, b.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111211111111111121[color=#6c8040, process="0",
+                                          issapicrule, role='P']:
+     [ State_111211111111111121( a, n, x, y, b ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_11122[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11122( a.1, n.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11122[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11122( a, n ) ] --> [ ]
+  */
+
+rule (modulo E) Qhalol_0_112[color=#ffffff, process="Q(h(a.1:lol))",
+                             issapicrule, role='Process']:
+   [ State_112( a.1, n.1 ) ]
+  -->
+   [ State_1121( a.1, n.1 ), State_1122( a.1, n.1 ) ]
+
+  /*
+  rule (modulo AC) Qhalol_0_112[color=#ffffff, process="Q(h(a.1:lol))",
+                                issapicrule, role='Process']:
+     [ State_112( a, n ) ] --> [ State_1121( a, n ), State_1122( a, n ) ]
+  */
+
+rule (modulo E) inyhalol_0_1121[color=#807140,
+                                process="in(<y.2, h(a.1:lol)>);", issapicrule, role='Q']:
+   [ State_1121( a.1, n.1 ), In( <y.2, h(a.1)> ) ]
+  -->
+   [ State_11211( a.1, n.1, y.2 ) ]
+
+  /*
+  rule (modulo AC) inyhalol_0_1121[color=#807140,
+                                   process="in(<y.2, h(a.1:lol)>);", issapicrule, role='Q']:
+     [ State_1121( a, n ), In( <y, h(a)> ) ] --> [ State_11211( a, n, y ) ]
+  */
+
+rule (modulo E) p_0_11211[color=#807140, process="0", issapicrule,
+                          role='Q']:
+   [ State_11211( a.1, n.1, y.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11211[color=#807140, process="0", issapicrule,
+                             role='Q']:
+     [ State_11211( a, n, y ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1122[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1122( a.1, n.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1122[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1122( a, n ) ] --> [ ]
   */
 
 restriction single_session:
@@ -212,8 +460,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -225,7 +473,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing.spthy
 
   output:          examples/sapic/fast/basic/typing.spthy.tmp
-  processing time: 0.32s
+  processing time: 0.52s
   
 
 ==============================================================================

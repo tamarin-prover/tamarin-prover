@@ -1,0 +1,142 @@
+theory Issue331 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, g/2, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+rule (modulo E) R:
+   [ Fr( ~k ), Fr( ~p ), Fr( ~n ) ]
+  --[ A( ~k ) ]->
+   [ Out( diff(g(~k, ~p), ~n) ) ]
+
+restriction secrecy [right]:
+  "¬(∃ #i1 #i2 k. (A( k ) @ #i1) ∧ (!KU( k ) @ #i2))"
+  // safety formula
+
+restriction secrecy [left]:
+  "¬(∃ #i1 #i2 k. (A( k ) @ #i1) ∧ (!KU( k ) @ #i2))"
+  // safety formula
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* impossible chain */ )
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+      case R
+      by step( contradiction /* impossible chain */ )
+    qed
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case R
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case g
+        step( solve( !KU( g(~k, ~p) ) @ #vk ) )
+          case R
+          MIRRORED
+        next
+          case c_g
+          by step( contradiction /* from formulas */ )
+        qed
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case R
+      step( solve( (#vl, 0) ~~> (#i, 1) ) )
+        case Var_fresh_n
+        step( solve( !KU( ~n ) @ #vk ) )
+          case R
+          MIRRORED
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_R
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/diff/issue331.spthy
+
+  output:          examples/regression/diff/issue331.spthy.tmp
+  processing time: 0.08s
+  
+  DiffLemma:  Observational_equivalence : verified (37 steps)
+
+==============================================================================
+*/

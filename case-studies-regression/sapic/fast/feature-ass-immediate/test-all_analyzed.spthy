@@ -25,13 +25,13 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 solve( State_11( x ) ▶₀ #a )
-  case Init
+  case outx_0_1
   solve( State_1111( x ) ▶₀ #b )
     case inxx_1_111
-    by contradiction /* from formulas */
+    by contradiction /* cyclic */
   next
     case inxx_3_111
-    by contradiction /* from formulas */
+    by contradiction /* cyclic */
   qed
 qed
 
@@ -41,80 +41,108 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new x.1;", issapicrule]:
-   [ Fr( x.1 ) ] --[ Init( ) ]-> [ State_11( x.1 ), Out( x.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="new x.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newx_0_[color=#ffffff, process="new x.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( x.1 ) ] --> [ State_1( x.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new x.1;", issapicrule]:
-     [ Fr( x ) ] --[ Init( ) ]-> [ State_11( x ), Out( x ) ]
+  rule (modulo AC) newx_0_[color=#ffffff, process="new x.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( x ) ] --> [ State_1( x ) ]
+  */
+
+rule (modulo E) outx_0_1[color=#ffffff, process="out(x.1);", issapicrule,
+                         role='Process']:
+   [ State_1( x.1 ) ] --> [ State_11( x.1 ), Out( x.1 ) ]
+
+  /*
+  rule (modulo AC) outx_0_1[color=#ffffff, process="out(x.1);",
+                            issapicrule, role='Process']:
+     [ State_1( x ) ] --> [ State_11( x ), Out( x ) ]
   */
 
 rule (modulo E) eventA_0_11[color=#ffffff, process="event A( );",
-                            issapicrule]:
+                            issapicrule, role='Process']:
    [ State_11( x.1 ) ] --[ A( ), Event( ) ]-> [ State_111( x.1 ) ]
 
   /*
   rule (modulo AC) eventA_0_11[color=#ffffff, process="event A( );",
-                               issapicrule]:
+                               issapicrule, role='Process']:
      [ State_11( x ) ] --[ A( ), Event( ) ]-> [ State_111( x ) ]
   */
 
 rule (modulo E) inxx_0_111[color=#ffffff, process="in(x.1,=x.1);",
-                           issapicrule]:
+                           issapicrule, role='Process']:
    [ State_111( x.1 ), Message( x.1, x.2 ) ]
   -->
    [ Let_1111( x.2, x.1 ), Ack( x.1, x.2 ) ]
 
   /*
   rule (modulo AC) inxx_0_111[color=#ffffff, process="in(x.1,=x.1);",
-                              issapicrule]:
+                              issapicrule, role='Process']:
      [ State_111( x ), Message( x, x.1 ) ]
     -->
      [ Let_1111( x.1, x ), Ack( x, x.1 ) ]
   */
 
+rule (modulo E) inxx_1_111[color=#ffffff, process="in(x.1,=x.1);",
+                           issapicrule, role='Process']:
+   [ Let_1111( x.1, x.1 ) ] --> [ State_1111( x.1 ) ]
+
+  /*
+  rule (modulo AC) inxx_1_111[color=#ffffff, process="in(x.1,=x.1);",
+                              issapicrule, role='Process']:
+     [ Let_1111( x, x ) ] --> [ State_1111( x ) ]
+  */
+
 rule (modulo E) inxx_2_111[color=#ffffff, process="in(x.1,=x.1);",
-                           issapicrule]:
+                           issapicrule, role='Process']:
    [ State_111( x.1 ), In( <x.1, x.2> ) ]
   --[ ChannelIn( <x.1, x.2> ) ]->
    [ Let_1111( x.2, x.1 ) ]
 
   /*
   rule (modulo AC) inxx_2_111[color=#ffffff, process="in(x.1,=x.1);",
-                              issapicrule]:
+                              issapicrule, role='Process']:
      [ State_111( x ), In( <x, x.1> ) ]
     --[ ChannelIn( <x, x.1> ) ]->
      [ Let_1111( x.1, x ) ]
   */
 
-rule (modulo E) inxx_1_111[color=#ffffff, process="in(x.1,=x.1);",
-                           issapicrule]:
-   [ Let_1111( x.1, x.1 ) ] --> [ State_1111( x.1 ) ]
-
-  /*
-  rule (modulo AC) inxx_1_111[color=#ffffff, process="in(x.1,=x.1);",
-                              issapicrule]:
-     [ Let_1111( x, x ) ] --> [ State_1111( x ) ]
-  */
-
 rule (modulo E) inxx_3_111[color=#ffffff, process="in(x.1,=x.1);",
-                           issapicrule]:
+                           issapicrule, role='Process']:
    [ Let_1111( x.1, x.1 ) ] --> [ State_1111( x.1 ) ]
 
   /*
   rule (modulo AC) inxx_3_111[color=#ffffff, process="in(x.1,=x.1);",
-                              issapicrule]:
+                              issapicrule, role='Process']:
      [ Let_1111( x, x ) ] --> [ State_1111( x ) ]
   */
 
 rule (modulo E) eventB_0_1111[color=#ffffff, process="event B( );",
-                              issapicrule]:
-   [ State_1111( x.1 ) ] --[ B( ), Event( ) ]-> [ ]
+                              issapicrule, role='Process']:
+   [ State_1111( x.1 ) ] --[ B( ), Event( ) ]-> [ State_11111( x.1 ) ]
 
   /*
   rule (modulo AC) eventB_0_1111[color=#ffffff, process="event B( );",
-                                 issapicrule]:
-     [ State_1111( x ) ] --[ B( ), Event( ) ]-> [ ]
+                                 issapicrule, role='Process']:
+     [ State_1111( x ) ] --[ B( ), Event( ) ]-> [ State_11111( x ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11111( x ) ] --> [ ]
   */
 
 restriction single_session:
@@ -143,8 +171,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -156,7 +184,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-ass-immediate/test-all.spthy
 
   output:          examples/sapic/fast/feature-ass-immediate/test-all.spthy.tmp
-  processing time: 0.13s
+  processing time: 0.11s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -3,7 +3,7 @@ theory NAXOS_eCK begin
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1, h1/1, h2/1, pair/2, sk/1[private,destructor], snd/1
+functions: fst/1, h1/1, h2/1, pair/2, sk/1[private,constructor], snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
@@ -605,8 +605,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -618,7 +618,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 0.70s
+  processing time: 0.61s
   
   eCK_key_secrecy (all-traces): verified (89 steps)
 
