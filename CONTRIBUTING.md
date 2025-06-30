@@ -106,6 +106,13 @@ rm -rf case-studies
 python3 regressionTests.py
 ```
 
+If you have changes that pertain to SAPIC+, run
+
+```
+rm -rf case-studies
+python3 regressionTests.py -s
+```
+
 This first removes any existing case-study runs you may have, then runs all the case studies, and finally compares the resulting output to the stored expected output. The script shows any differences between the outputs, and also compares the runtimes. It is expected that the runtime of the analyses changes every time (but on the order of 1% or so, possibly more depending on the machine you run it on), hence the times are shown using a color code: green for small changes, yellow for bigger changes, and red for significant changes. If small runtime changes are only differences, everything is fine. If some proof steps get reordered, but the number of steps stays constant that is ok, but should be noted. If that number changes or runtimes change significantly that must be discussed in a pull request.
 
 If you are running the regression on a server you can run multiple case studies in parallel by adding the "-j #" parameter where # is the number of parallel runs. Note that your machine should have 16GB of memory per run, and each run uses 3 threads already. For example:

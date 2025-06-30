@@ -22,7 +22,7 @@ guarded formula characterizing all counter-examples:
 "∃ #i. (AcceptP( ) @ #i)"
 */
 simplify
-by contradiction /* cyclic */
+by solve( State_11111( a, c ) ▶₀ #i )
 
 lemma acceptQ:
   exists-trace "∃ #i. AcceptQ( ) @ #i"
@@ -31,8 +31,8 @@ guarded formula characterizing all satisfying traces:
 "∃ #i. (AcceptQ( ) @ #i)"
 */
 simplify
-solve( State_21( ) ▶₀ #i )
-  case Init
+solve( State_2111( c ) ▶₀ #i )
+  case inctesttoto_0_211
   SOLVED // trace found
 qed
 
@@ -42,36 +42,139 @@ qed
 
 
 
-rule (modulo E) inc_0_11[color=#408051, process="in(c.1);", issapicrule]:
-   [ State_11( ), In( c.1 ), Fr( a.1 ), In( <<a.1, 'test'>, 'toto'> ) ]
-  --[ AcceptP( ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) inc_0_11[color=#408051, process="in(c.1);",
-                            issapicrule]:
-     [ State_11( ), In( c ), Fr( a ), In( <<a, 'test'>, 'toto'> ) ]
-    --[ AcceptP( ) ]->
-     [ ]
-  */
-
-rule (modulo E) Init[color=#ffffff, process="|", issapicrule]:
-   [ ] --[ Init( ) ]-> [ State_21( ), State_11( ) ]
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inc_0_21[color=#408065, process="in(c.2);", issapicrule]:
-   [ State_21( ), In( c.2 ), In( <<c.2, 'test'>, 'toto'> ) ]
-  --[ AcceptQ( ) ]->
-   [ ]
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) P_0_1[color=#ffffff, process="P()", issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inc_0_11[color=#6c8040, process="in(c.1);", issapicrule,
+                         role='P']:
+   [ State_11( ), In( c.1 ) ] --> [ State_111( c.1 ) ]
 
   /*
-  rule (modulo AC) inc_0_21[color=#408065, process="in(c.2);",
-                            issapicrule]:
-     [ State_21( ), In( c ), In( <<c, 'test'>, 'toto'> ) ]
-    --[ AcceptQ( ) ]->
-     [ ]
+  rule (modulo AC) inc_0_11[color=#6c8040, process="in(c.1);", issapicrule,
+                            role='P']:
+     [ State_11( ), In( c ) ] --> [ State_111( c ) ]
   */
+
+rule (modulo E) newa_0_111[color=#6c8040, process="new a.1;",
+                           issapicrule, role='P']:
+   [ State_111( c.1 ), Fr( a.1 ) ] --> [ State_1111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_111[color=#6c8040, process="new a.1;",
+                              issapicrule, role='P']:
+     [ State_111( c ), Fr( a ) ] --> [ State_1111( a, c ) ]
+  */
+
+rule (modulo E) inatesttoto_0_1111[color=#6c8040,
+                                   process="in(<<=a.1, 'test'>, 'toto'>);", issapicrule, role='P']:
+   [ State_1111( a.1, c.1 ), In( <<a.1, 'test'>, 'toto'> ) ]
+  -->
+   [ State_11111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) inatesttoto_0_1111[color=#6c8040,
+                                      process="in(<<=a.1, 'test'>, 'toto'>);", issapicrule, role='P']:
+     [ State_1111( a, c ), In( <<a, 'test'>, 'toto'> ) ]
+    -->
+     [ State_11111( a, c ) ]
+  */
+
+rule (modulo E) eventAcceptP_0_11111[color=#6c8040,
+                                     process="event AcceptP( );", issapicrule, role='P']:
+   [ State_11111( a.1, c.1 ) ]
+  --[ AcceptP( ) ]->
+   [ State_111111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) eventAcceptP_0_11111[color=#6c8040,
+                                        process="event AcceptP( );", issapicrule, role='P']:
+     [ State_11111( a, c ) ] --[ AcceptP( ) ]-> [ State_111111( a, c ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#6c8040, process="0", issapicrule,
+                           role='P']:
+   [ State_111111( a.1, c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#6c8040, process="0", issapicrule,
+                              role='P']:
+     [ State_111111( a, c ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_12( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Q_0_2[color=#ffffff, process="Q()", issapicrule,
+                      role='Process']:
+   [ State_2( ) ] --> [ State_21( ), State_22( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inc_0_21[color=#807140, process="in(c.2);", issapicrule,
+                         role='Q']:
+   [ State_21( ), In( c.2 ) ] --> [ State_211( c.2 ) ]
+
+  /*
+  rule (modulo AC) inc_0_21[color=#807140, process="in(c.2);", issapicrule,
+                            role='Q']:
+     [ State_21( ), In( c ) ] --> [ State_211( c ) ]
+  */
+
+rule (modulo E) inctesttoto_0_211[color=#807140,
+                                  process="in(<<=c.2, 'test'>, 'toto'>);", issapicrule, role='Q']:
+   [ State_211( c.2 ), In( <<c.2, 'test'>, 'toto'> ) ]
+  -->
+   [ State_2111( c.2 ) ]
+
+  /*
+  rule (modulo AC) inctesttoto_0_211[color=#807140,
+                                     process="in(<<=c.2, 'test'>, 'toto'>);", issapicrule, role='Q']:
+     [ State_211( c ), In( <<c, 'test'>, 'toto'> ) ] --> [ State_2111( c ) ]
+  */
+
+rule (modulo E) eventAcceptQ_0_2111[color=#807140,
+                                    process="event AcceptQ( );", issapicrule, role='Q']:
+   [ State_2111( c.2 ) ] --[ AcceptQ( ) ]-> [ State_21111( c.2 ) ]
+
+  /*
+  rule (modulo AC) eventAcceptQ_0_2111[color=#807140,
+                                       process="event AcceptQ( );", issapicrule, role='Q']:
+     [ State_2111( c ) ] --[ AcceptQ( ) ]-> [ State_21111( c ) ]
+  */
+
+rule (modulo E) p_0_21111[color=#807140, process="0", issapicrule,
+                          role='Q']:
+   [ State_21111( c.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21111[color=#807140, process="0", issapicrule,
+                             role='Q']:
+     [ State_21111( c ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_22[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_22( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
@@ -83,8 +186,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -96,7 +199,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/match_new.spthy
 
   output:          examples/sapic/fast/basic/match_new.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.11s
   
   no_acceptP (all-traces): verified (2 steps)
   acceptQ (exists-trace): verified (3 steps)

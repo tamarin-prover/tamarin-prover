@@ -190,17 +190,6 @@ Facts occur in the left-hand-side but not in any right-hand-side
   
   2. in rule "test":  factName `K' arity: 1 multiplicity: Linear. Perhaps you want to use the fact in rule "Test_1":  factName `F' arity: 1 multiplicity: Linear
 
-Inexistent lemma actions
-========================
-
-  Lemma `AB_key_honst' references action 
-    fact "Register_pk" (arity 1, Linear) 
-  but no rule has such an action.
-  
-  Lemma `AB_key_honst' references action 
-    fact "Register_pk" (arity 1, Linear) 
-  but no rule has such an action.
-
 Message Derivation Checks
 =========================
 
@@ -223,8 +212,8 @@ Failed to derive Variable(s): m1
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -236,9 +225,9 @@ summary of summaries:
 analyzed: examples/regression/trace/issue527.spthy
 
   output:          examples/regression/trace/issue527.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.09s
   
-  WARNING: 17 wellformedness check failed!
+  WARNING: 15 wellformedness check failed!
            The analysis results might be wrong!
   
   AB_key_honst (exists-trace): verified (2 steps)

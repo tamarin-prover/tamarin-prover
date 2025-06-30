@@ -41,46 +41,53 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="event A( );", issapicrule]:
+rule (modulo E) Init[color=#ffffff, process="event A( );", issapicrule,
+                     role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) eventA_0_[color=#ffffff, process="event A( );",
-                          issapicrule]:
+                          issapicrule, role='Process']:
    [ State_( ) ] --[ A( ), Event( ) ]-> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) inca_0_1[color=#ffffff, process="in('c','a');",
-                         issapicrule]:
+                         issapicrule, role='Process']:
    [ State_1( ), Message( 'c', x ) ] --> [ Let_11( x ), Ack( 'c', x ) ]
 
   /* has exactly the trivial AC variant */
 
+rule (modulo E) inca_1_1[color=#ffffff, process="in('c','a');",
+                         issapicrule, role='Process']:
+   [ Let_11( 'a' ) ] --> [ State_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
 rule (modulo E) inca_2_1[color=#ffffff, process="in('c','a');",
-                         issapicrule]:
+                         issapicrule, role='Process']:
    [ State_1( ), In( <'c', x> ) ]
   --[ ChannelIn( <'c', x> ) ]->
    [ Let_11( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inca_1_1[color=#ffffff, process="in('c','a');",
-                         issapicrule]:
-   [ Let_11( 'a' ) ] --> [ State_11( ) ]
-
-  /* has exactly the trivial AC variant */
-
 rule (modulo E) inca_3_1[color=#ffffff, process="in('c','a');",
-                         issapicrule]:
+                         issapicrule, role='Process']:
    [ Let_11( 'a' ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );",
-                            issapicrule]:
-   [ State_11( ) ] --[ B( ), Event( ) ]-> [ ]
+                            issapicrule, role='Process']:
+   [ State_11( ) ] --[ B( ), Event( ) ]-> [ State_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_111( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -110,8 +117,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -123,7 +130,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.07s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
