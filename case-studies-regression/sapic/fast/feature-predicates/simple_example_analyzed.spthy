@@ -20,8 +20,8 @@ guarded formula characterizing all satisfying traces:
 "∃ #i. (Bogus( ) @ #i)"
 */
 simplify
-solve( State_1( h ) ▶₀ #i )
-  case Init
+solve( State_11( h ) ▶₀ #i )
+  case ifEqualhh_0_1
   SOLVED // trace found
 qed
 
@@ -31,12 +31,20 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new h.1;", issapicrule]:
-   [ Fr( h.1 ) ] --[ Init( ) ]-> [ State_1( h.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="new h.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newh_0_[color=#ffffff, process="new h.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( h.1 ) ] --> [ State_1( h.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new h.1;", issapicrule]:
-     [ Fr( h ) ] --[ Init( ) ]-> [ State_1( h ) ]
+  rule (modulo AC) newh_0_[color=#ffffff, process="new h.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( h ) ] --> [ State_1( h ) ]
   */
 
 restriction Restr_ifEqualhh_0_1_1:
@@ -44,15 +52,61 @@ restriction Restr_ifEqualhh_0_1_1:
   // safety formula
 
 rule (modulo E) ifEqualhh_0_1[color=#ffffff,
-                              process="if Equal( h.1, h.1 )", issapicrule]:
+                              process="if Equal( h.1, h.1 )", issapicrule, role='Process']:
    [ State_1( h.1 ) ]
-  --[ Bogus( ), Restr_ifEqualhh_0_1_1( h.1, h.1 ) ]->
-   [ ]
+  --[ Restr_ifEqualhh_0_1_1( h.1, h.1 ) ]->
+   [ State_11( h.1 ) ]
 
   /*
   rule (modulo AC) ifEqualhh_0_1[color=#ffffff,
-                                 process="if Equal( h.1, h.1 )", issapicrule]:
-     [ State_1( h ) ] --[ Bogus( ), Restr_ifEqualhh_0_1_1( h, h ) ]-> [ ]
+                                 process="if Equal( h.1, h.1 )", issapicrule, role='Process']:
+     [ State_1( h ) ] --[ Restr_ifEqualhh_0_1_1( h, h ) ]-> [ State_11( h ) ]
+  */
+
+restriction Restr_ifEqualhh_1_1_1:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_1_1_1( x, x.1 ) @ #NOW) ⇒ (¬(x = x.1))"
+  // safety formula
+
+rule (modulo E) ifEqualhh_1_1[color=#ffffff,
+                              process="if Equal( h.1, h.1 )", issapicrule, role='Process']:
+   [ State_1( h.1 ) ]
+  --[ Restr_ifEqualhh_1_1_1( h.1, h.1 ) ]->
+   [ State_12( h.1 ) ]
+
+  /*
+  rule (modulo AC) ifEqualhh_1_1[color=#ffffff,
+                                 process="if Equal( h.1, h.1 )", issapicrule, role='Process']:
+     [ State_1( h ) ] --[ Restr_ifEqualhh_1_1_1( h, h ) ]-> [ State_12( h ) ]
+  */
+
+rule (modulo E) eventBogus_0_11[color=#ffffff, process="event Bogus( );",
+                                issapicrule, role='Process']:
+   [ State_11( h.1 ) ] --[ Bogus( ) ]-> [ State_111( h.1 ) ]
+
+  /*
+  rule (modulo AC) eventBogus_0_11[color=#ffffff,
+                                   process="event Bogus( );", issapicrule, role='Process']:
+     [ State_11( h ) ] --[ Bogus( ) ]-> [ State_111( h ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_111( h.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_111( h ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_12( h.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+     [ State_12( h ) ] --> [ ]
   */
 
 restriction single_session:
@@ -65,8 +119,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -78,7 +132,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.07s
   
   bogus_exists (exists-trace): verified (3 steps)
 

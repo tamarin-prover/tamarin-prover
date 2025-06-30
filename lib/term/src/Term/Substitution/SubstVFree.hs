@@ -73,6 +73,7 @@ import           Data.Binary
 
 -- import           Control.Applicative
 import           Control.DeepSeq
+import Data.Data (Data)
 
 ----------------------------------------------------------------------
 -- Substitutions
@@ -81,7 +82,9 @@ import           Control.DeepSeq
 -- | We use the data type @Subst c v@ of substitutions. @c@ is the type of constants
 --   and @v@ the type of variables.
 newtype Subst c v = Subst { sMap :: Map v (VTerm c v) }
-    deriving ( Eq, Ord, NFData, Binary )
+    deriving ( Eq, Ord, NFData, Binary)
+
+
 
 -- | A substitution for logical variables.
 type LSubst c = Subst c LVar

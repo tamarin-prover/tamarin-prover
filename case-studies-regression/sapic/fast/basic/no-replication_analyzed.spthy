@@ -20,9 +20,9 @@ guarded formula characterizing all counter-examples:
 */
 simplify
 solve( State_1( x ) ▶₀ #i )
-  case Init
+  case news_0_
   solve( State_1( y ) ▶₀ #j )
-    case Init
+    case news_0_
     by contradiction /* from formulas */
   qed
 qed
@@ -33,22 +33,50 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new s.1;", issapicrule]:
-   [ Fr( s.1 ) ] --[ Init( ) ]-> [ State_1( s.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="new s.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_[color=#ffffff, process="new s.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( s.1 ) ] --> [ State_1( s.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new s.1;", issapicrule]:
-     [ Fr( s ) ] --[ Init( ) ]-> [ State_1( s ) ]
+  rule (modulo AC) news_0_[color=#ffffff, process="new s.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
   */
 
 rule (modulo E) eventSecrets_0_1[color=#ffffff,
-                                 process="event Secret( s.1 );", issapicrule]:
-   [ State_1( s.1 ) ] --[ Secret( s.1 ) ]-> [ Out( s.1 ) ]
+                                 process="event Secret( s.1 );", issapicrule, role='Process']:
+   [ State_1( s.1 ) ] --[ Secret( s.1 ) ]-> [ State_11( s.1 ) ]
 
   /*
   rule (modulo AC) eventSecrets_0_1[color=#ffffff,
-                                    process="event Secret( s.1 );", issapicrule]:
-     [ State_1( s ) ] --[ Secret( s ) ]-> [ Out( s ) ]
+                                    process="event Secret( s.1 );", issapicrule, role='Process']:
+     [ State_1( s ) ] --[ Secret( s ) ]-> [ State_11( s ) ]
+  */
+
+rule (modulo E) outs_0_11[color=#ffffff, process="out(s.1);",
+                          issapicrule, role='Process']:
+   [ State_11( s.1 ) ] --> [ State_111( s.1 ), Out( s.1 ) ]
+
+  /*
+  rule (modulo AC) outs_0_11[color=#ffffff, process="out(s.1);",
+                             issapicrule, role='Process']:
+     [ State_11( s ) ] --> [ State_111( s ), Out( s ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_111( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_111( s ) ] --> [ ]
   */
 
 restriction single_session:
@@ -61,8 +89,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -74,7 +102,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/no-replication.spthy
 
   output:          examples/sapic/fast/basic/no-replication.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.07s
   
   onlyOneSecret (all-traces): verified (4 steps)
 
