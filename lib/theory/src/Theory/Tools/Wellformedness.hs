@@ -523,7 +523,7 @@ unboundReportDiff thy = do
 reservedFactNameRules' :: [ProtoRuleE] -> WfErrorReport
 reservedFactNameRules' rules = do
   ru <- rules
-  let lfact = [fa| fa <- get rPrems ru
+  let lfact = [fa |fa <- get rPrems ru
                   , factTag fa `elem` [KUFact,KDFact]
                   || isKLogFact fa]
       mfact = [fa | fa <- get rActs ru
@@ -968,7 +968,7 @@ formulaReports thy = do
   where
     annFormulas = do LemmaItem l <- get thyItems thy
                      let header = "Lemma " ++ quote (get lName l)
-                         fm     = get lFormula l
+                         fm     = applyMacrosInFormula (theoryMacros thy) (get lFormula l)
                      return (header, fm)
               <|> do RestrictionItem rstr <- get thyItems thy
                      let header = "Restriction " ++ quote (get rstrName rstr)
@@ -991,7 +991,7 @@ formulaReportsDiff thy = do
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
                      let header = show s ++ " Lemma " ++ quote (get lName l)
-                         fm     = get lFormula l
+                         fm     = applyMacrosInFormula (diffTheoryMacros thy) (get lFormula l)
                      return (header, fm)
               <|> do EitherRestrictionItem (s, rstr) <- get diffThyItems thy
                      let header = show s ++ " Restriction " ++ quote (get rstrName rstr)

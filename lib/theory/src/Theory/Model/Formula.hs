@@ -57,6 +57,7 @@ module Theory.Model.Formula (
   , mapAtoms
   , foldFormula
   , traverseFormulaAtom
+  , applyMacrosInFormula
 
   -- ** Normal forms / simplification
   , simplifyFormula
@@ -78,6 +79,8 @@ import           GHC.Generics (Generic)
 import           Data.Binary
 -- import           Data.Foldable                    (Foldable, foldMap)
 import           Data.Data
+import Data.List (isPrefixOf)
+import Text.Read (readMaybe)
 -- import           Data.Monoid                      hiding (All)
 -- import           Data.Traversable
 
@@ -92,6 +95,7 @@ import           Text.PrettyPrint.Highlight
 import           Theory.Text.Pretty
 
 import           Term.LTerm
+import           Term.Macro
 import           Term.Substitution
 
 ------------------------------------------------------------------------------
@@ -303,6 +307,42 @@ openFormulaPrefix f0 = case openFormula f0 of
         -- no further quantifier of the same kind => return result
         _ -> return (reverse xs, q, f)
 
+
+
+-- | Apply macros to a formula
+applyMacrosInFormula :: [Macro] -> LNFormula -> LNFormula
+applyMacrosInFormula [] fm = fm
+applyMacrosInFormula macros fm = mapAtoms (const (fmap (handleTerms macros))) fm
+  where
+    handleTerms :: [Macro] -> VTerm Name (BVar LVar) -> VTerm Name (BVar LVar)
+    handleTerms mcs term = 
+      case viewTerm term of
+        FApp f args -> 
+          let newArgs = map (handleTerms mcs) args
+              isMacroApp = any (\(op, _, _) -> 
+                  NoEq (op, (length args, Private, Destructor)) == f) mcs
+          in if isMacroApp
+             then convertFreeTermToBound $ applyMacros mcs $ convertBoundToFreeTerm term
+             else fApp f newArgs
+        Lit l -> lit l
+
+    -- Convert a term with bound variables to a term with only free variables
+    convertBoundToFreeTerm :: VTerm Name (BVar LVar) -> LNTerm
+    convertBoundToFreeTerm = fmapTerm (fmap convertToFree)
+      where
+        convertToFree :: BVar LVar -> LVar
+        convertToFree (Bound i) = LVar ("_bound_" ++ show i) LSortMsg i
+        convertToFree (Free v)  = v
+
+    -- Convert a term with free variables back to a term with bound variables
+    convertFreeTermToBound :: LNTerm -> VTerm Name (BVar LVar)
+    convertFreeTermToBound = fmapTerm (fmap convertToBound)
+      where
+        convertToBound :: LVar -> BVar LVar
+        convertToBound (LVar n _ i) 
+          | "_bound_" `isPrefixOf` n, 
+            Just idx <- readMaybe $ drop 7 n = Bound idx
+          | otherwise = Free (LVar n LSortMsg i)
 
 -- Instances
 ------------

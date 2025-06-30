@@ -4,6 +4,7 @@ module Lemma (
   , ProtoLemma(..)
   , DiffLemma(..)
   , lemmaSourceKind
+  , applyMacroInLemma
   , addLeftLemma
   , addRightLemma
   , toSystemTraceQuantifier
@@ -25,6 +26,7 @@ import Items.LemmaItem
 
 
 import Text.PrettyPrint.Highlight
+import Term.Macro
 import Theory.Text.Pretty
 import Theory.Model
 --import Theory.Constraint.Solver
@@ -75,6 +77,11 @@ isRightLemma lem =
 -- isBothLemma :: Lemma p -> Bool
 -- isBothLemma lem =
 --      (BothLemma `elem` L.get lAttributes lem)
+
+-- | Apply macros to a lemma
+applyMacroInLemma :: [Macro] -> Lemma p -> Lemma p
+applyMacroInLemma mcs (Lemma name plaintext modified tq formula attrs proof) =
+    Lemma name plaintext modified tq (applyMacrosInFormula mcs formula) attrs proof
 
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d
