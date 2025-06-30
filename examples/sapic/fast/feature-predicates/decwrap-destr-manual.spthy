@@ -19,7 +19,7 @@ process:
 	  lookup <'att',h> as a in 
 			if a='dec' then lookup <'key',h> as k in
 				event IsTrue(encSucc(c,k));
-				event DecUsing(k,sdec(c,k)); out(sdec(c,k)) 
+				event DecUsing(k,sdec(c,k)); out(sdec(c,k))
 	)
   || //Wrap
 	( in(<h1,h2>); lookup <'att',h1> as a1 in 

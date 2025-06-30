@@ -31,6 +31,7 @@ import OpenTheory
 -- DerivationChecks
 -----------------------------------------------
 
+
 checkVariableDeducability :: OpenTranslatedTheory -> SignatureWithMaude -> Bool -> Prover -> WfErrorReport
 checkVariableDeducability thy sig sources prover =
     reportVars (map checkProofStatuses provenTheories) originalRules freeVars
@@ -39,7 +40,7 @@ checkVariableDeducability thy sig sources prover =
         provenTheories =  map (proveTheory (const True) prover) closedTheories
         closedTheories = map (\t -> closeTheoryWithMaude sig t sources False) modifiedTheories
         modifiedTheories =  zipWith3 (\r l t -> (addRules [r] . addLemmas l ) t)  newRules newLemmas (repeat emptyPublicThy)
-        emptyPublicThy = makeFunsPublic (toSignaturePure sig) $ deleteRulesAndLemmasFromTheory thy
+        emptyPublicThy = makeFunsPublic (toSignaturePure sig) $ deleteRulesAndLemmasAndRestrictionsFromTheory thy
         newRules = zipWith3 (\idx freevs prems -> generateRule freevs (premisesToOut prems) idx) [0..] freeVars premises
         newLemmas = zipWith3 (\idx freevs _-> generateSeparatedLemmas idx freevs) [0..] freeVars premises
         premises = map (map (fmap replacePrivate)) $ premsOfThyRules originalRules
@@ -53,7 +54,7 @@ diffCheckVariableDeducability thy sig sources prover diffprover =
         provenTheories =  map (proveDiffTheory (const True) prover diffprover) closedTheories
         closedTheories = map (\t -> closeDiffTheoryWithMaude sig t sources) modifiedTheories
         modifiedTheories =  map (\(r,l,t) -> (addDiffRules [r] . addDiffLemmas l ) t) (zip3 newrules newlemmas (repeat emptyPublicThy))
-        emptyPublicThy = diffmakeFunsPublic (toSignaturePure sig) $ diffdeleteRulesAndLemmasFromTheory thy
+        emptyPublicThy = diffmakeFunsPublic (toSignaturePure sig) $ diffdeleteRulesAndLemmasAndRestrictionsFromTheory thy
         newrules =  map (\(idx, freevs, prems )-> generateRule freevs (premisesToOut prems) idx) freesAndPrems
         newlemmas =  map (\(idx, freevs, _) -> generateSeparatedLemmas idx freevs) freesAndPrems
         freesAndPrems = freesAndPremsLHS ++ freesAndPremsRHS
@@ -70,22 +71,24 @@ diffCheckVariableDeducability thy sig sources prover diffprover =
 -- Manipulating Theories
 -----------------------------------------------
 
-diffdeleteRulesAndLemmasFromTheory :: DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
-diffdeleteRulesAndLemmasFromTheory = L.modify diffThyItems deleteDiffRules
+diffdeleteRulesAndLemmasAndRestrictionsFromTheory :: DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
+diffdeleteRulesAndLemmasAndRestrictionsFromTheory = L.modify diffThyItems deleteDiffRules
     where
         deleteDiffRules = mapMaybe delRules
         delRules (DiffRuleItem _) = Nothing
         delRules (EitherRuleItem _) = Nothing
         delRules (DiffLemmaItem _ ) = Nothing
         delRules (EitherLemmaItem _) = Nothing
+        delRules (EitherRestrictionItem _) = Nothing
         delRules sth = Just sth
 
-deleteRulesAndLemmasFromTheory :: Theory sig c r p s -> Theory sig c r p s
-deleteRulesAndLemmasFromTheory = L.modify thyItems deleteRules
+deleteRulesAndLemmasAndRestrictionsFromTheory :: Theory sig c r p s -> Theory sig c r p s
+deleteRulesAndLemmasAndRestrictionsFromTheory = L.modify thyItems deleteRules
     where
         deleteRules = mapMaybe delRules
         delRules (RuleItem _) = Nothing
         delRules (LemmaItem _) = Nothing
+        delRules (RestrictionItem _) = Nothing
         delRules sth = Just sth
 
 replacePrivate :: Term t -> Term t
