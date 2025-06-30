@@ -972,7 +972,7 @@ formulaReports thy = do
                      return (header, fm)
               <|> do RestrictionItem rstr <- get thyItems thy
                      let header = "Restriction " ++ quote (get rstrName rstr)
-                         fm     = get rstrFormula rstr
+                         fm     = applyMacrosInFormula (theoryMacros thy) (get rstrFormula rstr)
                      return (header, fm)
 
 
@@ -995,7 +995,7 @@ formulaReportsDiff thy = do
                      return (header, fm)
               <|> do EitherRestrictionItem (s, rstr) <- get diffThyItems thy
                      let header = show s ++ " Restriction " ++ quote (get rstrName rstr)
-                         fm     = get rstrFormula rstr
+                         fm     = applyMacrosInFormula (diffTheoryMacros thy) (get rstrFormula rstr)
                      return (header, fm)
 
 -- | Check that all rules are multipliation restricted. Compared

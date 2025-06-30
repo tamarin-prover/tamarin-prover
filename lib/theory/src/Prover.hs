@@ -195,7 +195,7 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
        ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem
        (RuleItem . closeProtoRule hnd (theoryMacros thy0))
-       RestrictionItem
+       (\rest -> RestrictionItem (applyMacroInRestriction (theoryMacros thy0) rest))
        (\lem -> LemmaItem (fmap skeletonToIncrementalProof (applyMacroInLemma (theoryMacros thy0) lem)))
        TextItem
        ConfigBlockItem

@@ -25,6 +25,7 @@ module Theory.Model.Restriction (
   , rstrFormula
   , varNow
   , fromRuleRestriction
+  , applyMacroInRestriction
 ) where
 
 import           Control.DeepSeq
@@ -38,6 +39,7 @@ import qualified Data.List                     as L
 import qualified Data.Map                      as M
 import qualified Data.Set                      as S
 import           Term.LTerm
+import           Term.Macro
 -- import           Term.Unification
 import           Term.Substitution
 import           Data.Binary
@@ -155,3 +157,7 @@ fromRuleRestriction rname f =
                 getVarTerms subst =   map (apply subst . varTerm) . L.delete varNow . freesList
                 -- produce fact from set of terms
                 mkFact = protoFactAnn Linear (restrPrefix ++ rname) S.empty
+
+applyMacroInRestriction :: [Macro] -> Restriction -> Restriction
+applyMacroInRestriction macros (Restriction name f) = 
+    Restriction name (applyMacrosInFormula macros f)
