@@ -1,0 +1,356 @@
+theory Typing begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='new sk.1;', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newsk_0_[color=#ffffff, process='new sk.1;', issapicrule,
+                         role='Process']:
+   [ State_( ), Fr( sk.1 ) ] --> [ State_1( sk.1 ) ]
+
+  /*
+  rule (modulo AC) newsk_0_[color=#ffffff, process='new sk.1;',
+                            issapicrule, role='Process']:
+     [ State_( ), Fr( sk ) ] --> [ State_1( sk ) ]
+  */
+
+rule (modulo E) Clientsk_0_1[color=#ffffff, process='Client(sk.1)',
+                             issapicrule, role='Process']:
+   [ State_1( sk.1 ) ] --> [ State_11( sk.1 ), State_12( sk.1 ) ]
+
+  /*
+  rule (modulo AC) Clientsk_0_1[color=#ffffff, process='Client(sk.1)',
+                                issapicrule, role='Process']:
+     [ State_1( sk ) ] --> [ State_11( sk ), State_12( sk ) ]
+  */
+
+rule (modulo E) newa_0_11[color=#518040, process='new a.1;', issapicrule,
+                          role='Client']:
+   [ State_11( sk.1 ), Fr( a.1 ) ] --> [ State_111( a.1, sk.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_11[color=#518040, process='new a.1;',
+                             issapicrule, role='Client']:
+     [ State_11( sk ), Fr( a ) ] --> [ State_111( a, sk ) ]
+  */
+
+rule (modulo E) outhelloClientga_0_111[color=#518040,
+                                       process='out(<'helloClient', 'g'^a.1>);', issapicrule, role='Client']:
+   [ State_111( a.1, sk.1 ) ]
+  -->
+   [ State_1111( a.1, sk.1 ), Out( <'helloClient', 'g'^a.1> ) ]
+
+  /*
+  rule (modulo AC) outhelloClientga_0_111[color=#518040,
+                                          process='out(<'helloClient', 'g'^a.1>);', issapicrule,
+                                          role='Client']:
+     [ State_111( a, sk ) ]
+    -->
+     [ State_1111( a, sk ), Out( <'helloClient', z> ) ]
+    variants (modulo AC)
+    1. a     = a.7
+       z     = 'g'^a.7
+    
+    2. a     = one
+       z     = 'g'
+  */
+
+rule (modulo E) inhelloServergagB_0_1111[color=#518040,
+                                         process='in(<'helloServer', 'g'^=a.1, gB.1>);', issapicrule,
+                                         role='Client']:
+   [ State_1111( a.1, sk.1 ), In( <'helloServer', 'g'^a.1, gB.1> ) ]
+  -->
+   [ State_11111( a.1, gB.1, sk.1 ) ]
+
+  /*
+  rule (modulo AC) inhelloServergagB_0_1111[color=#518040,
+                                            process='in(<'helloServer', 'g'^=a.1, gB.1>);', issapicrule,
+                                            role='Client']:
+     [ State_1111( a, sk ), In( <'helloServer', z, gB> ) ]
+    -->
+     [ State_11111( a, gB, sk ) ]
+    variants (modulo AC)
+    1. a     = a.8
+       z     = 'g'^a.8
+    
+    2. a     = one
+       z     = 'g'
+  */
+
+rule (modulo E) eventKeygBa_0_11111[color=#518040,
+                                    process='event Key( gB.1^a.1 );', issapicrule, role='Client']:
+   [ State_11111( a.1, gB.1, sk.1 ) ]
+  --[ Key( gB.1^a.1 ) ]->
+   [ State_111111( a.1, gB.1, sk.1 ) ]
+
+  /*
+  rule (modulo AC) eventKeygBa_0_11111[color=#518040,
+                                       process='event Key( gB.1^a.1 );', issapicrule, role='Client']:
+     [ State_11111( a, gB, sk ) ]
+    --[ Key( z ) ]->
+     [ State_111111( a, gB, sk ) ]
+    variants (modulo AC)
+     1. a     = a.6
+        gB    = gB.6
+        z     = gB.6^a.6
+    
+     2. a     = x.6
+        gB    = x.7^inv(x.6)
+        z     = x.7
+    
+     3. a     = x.6
+        gB    = x.7^inv((x.6*x.8))
+        z     = x.7^inv(x.8)
+    
+     4. a     = x.6
+        gB    = x.7^(x.8*inv(x.6))
+        z     = x.7^x.8
+    
+     5. a     = x.6
+        gB    = x.7^(x.8*inv((x.6*x.9)))
+        z     = x.7^(x.8*inv(x.9))
+    
+     6. a     = a.8
+        gB    = x.6^x.7
+        z     = x.6^(x.7*a.8)
+    
+     7. a     = inv(x.6)
+        gB    = x.7^x.6
+        z     = x.7
+    
+     8. a     = inv(x.6)
+        gB    = x.7^inv(x.8)
+        z     = x.7^inv((x.6*x.8))
+    
+     9. a     = inv(x.6)
+        gB    = x.7^(x.6*x.8)
+        z     = x.7^x.8
+    
+    10. a     = inv(x.6)
+        gB    = x.7^(x.8*inv(x.9))
+        z     = x.7^(x.8*inv((x.6*x.9)))
+    
+    11. a     = inv((x.6*x.7))
+        gB    = x.8^x.7
+        z     = x.8^inv(x.6)
+    
+    12. a     = inv((x.6*x.7))
+        gB    = x.8^(x.6*x.9)
+        z     = x.8^(x.9*inv(x.7))
+    
+    13. a     = inv((x.6*x.7))
+        gB    = x.8^(x.6*x.9*inv(x.10))
+        z     = x.8^(x.9*inv((x.7*x.10)))
+    
+    14. a     = inv((x.6*x.7))
+        gB    = x.8^(x.6*inv(x.9))
+        z     = x.8^inv((x.7*x.9))
+    
+    15. a     = one
+        gB    = gB.6
+        z     = gB.6
+    
+    16. a     = (x.6*x.7)
+        gB    = x.8^inv(x.6)
+        z     = x.8^x.7
+    
+    17. a     = (x.6*x.7)
+        gB    = x.8^inv((x.6*x.9))
+        z     = x.8^(x.7*inv(x.9))
+    
+    18. a     = (x.6*x.7)
+        gB    = x.8^(x.9*inv(x.6))
+        z     = x.8^(x.7*x.9)
+    
+    19. a     = (x.6*x.7)
+        gB    = x.8^(x.9*inv((x.6*x.10)))
+        z     = x.8^(x.7*x.9*inv(x.10))
+    
+    20. a     = (x.6*x.7*inv(x.8))
+        gB    = x.9^inv((x.7*x.10))
+        z     = x.9^(x.6*inv((x.8*x.10)))
+    
+    21. a     = (x.6*x.7*inv(x.8))
+        gB    = x.9^(x.8*x.10*inv(x.6))
+        z     = x.9^(x.7*x.10)
+    
+    22. a     = (x.6*x.7*inv(x.8))
+        gB    = x.9^(x.8*x.10*inv((x.6*x.11)))
+        z     = x.9^(x.7*x.10*inv(x.11))
+    
+    23. a     = (x.6*x.7*inv(x.8))
+        gB    = x.9^(x.8*inv(x.6))
+        z     = x.9^x.7
+    
+    24. a     = (x.6*x.7*inv(x.8))
+        gB    = x.9^(x.8*inv((x.6*x.10)))
+        z     = x.9^(x.7*inv(x.10))
+    
+    25. a     = (x.6*x.7*inv(x.8))
+        gB    = x.9^(x.10*inv((x.6*x.11)))
+        z     = x.9^(x.7*x.10*inv((x.8*x.11)))
+    
+    26. a     = (x.6*x.7*inv((x.8*x.9)))
+        gB    = x.10^(x.8*x.11*inv(x.6))
+        z     = x.10^(x.7*x.11*inv(x.9))
+    
+    27. a     = (x.6*x.7*inv((x.8*x.9)))
+        gB    = x.10^(x.8*x.11*inv((x.6*x.12)))
+        z     = x.10^(x.7*x.11*inv((x.9*x.12)))
+    
+    28. a     = (x.6*x.7*inv((x.8*x.9)))
+        gB    = x.10^(x.8*inv((x.6*x.11)))
+        z     = x.10^(x.7*inv((x.9*x.11)))
+    
+    29. a     = (x.6*x.7*inv((x.8*x.9)))
+        gB    = x.10^(x.9*inv(x.7))
+        z     = x.10^(x.6*inv(x.8))
+    
+    30. a     = (x.6*inv(x.7))
+        gB    = x.8^x.7
+        z     = x.8^x.6
+    
+    31. a     = (x.6*inv(x.7))
+        gB    = x.8^inv(x.9)
+        z     = x.8^(x.6*inv((x.7*x.9)))
+    
+    32. a     = (x.6*inv(x.7))
+        gB    = x.8^inv((x.6*x.9))
+        z     = x.8^inv((x.7*x.9))
+    
+    33. a     = (x.6*inv(x.7))
+        gB    = x.8^(x.7*x.9)
+        z     = x.8^(x.6*x.9)
+    
+    34. a     = (x.6*inv(x.7))
+        gB    = x.8^(x.7*x.9*inv(x.6))
+        z     = x.8^x.9
+    
+    35. a     = (x.6*inv(x.7))
+        gB    = x.8^(x.7*x.9*inv((x.6*x.10)))
+        z     = x.8^(x.9*inv(x.10))
+    
+    36. a     = (x.6*inv(x.7))
+        gB    = x.8^(x.7*inv(x.6))
+        z     = x.8
+    
+    37. a     = (x.6*inv(x.7))
+        gB    = x.8^(x.7*inv((x.6*x.9)))
+        z     = x.8^inv(x.9)
+    
+    38. a     = (x.6*inv(x.7))
+        gB    = x.8^(x.9*inv(x.10))
+        z     = x.8^(x.6*x.9*inv((x.7*x.10)))
+    
+    39. a     = (x.6*inv(x.7))
+        gB    = x.8^(x.9*inv((x.6*x.10)))
+        z     = x.8^(x.9*inv((x.7*x.10)))
+    
+    40. a     = (x.6*inv((x.7*x.8)))
+        gB    = x.9^x.8
+        z     = x.9^(x.6*inv(x.7))
+    
+    41. a     = (x.6*inv((x.7*x.8)))
+        gB    = x.9^(x.7*x.10)
+        z     = x.9^(x.6*x.10*inv(x.8))
+    
+    42. a     = (x.6*inv((x.7*x.8)))
+        gB    = x.9^(x.7*x.10*inv(x.6))
+        z     = x.9^(x.10*inv(x.8))
+    
+    43. a     = (x.6*inv((x.7*x.8)))
+        gB    = x.9^(x.7*x.10*inv(x.11))
+        z     = x.9^(x.6*x.10*inv((x.8*x.11)))
+    
+    44. a     = (x.6*inv((x.7*x.8)))
+        gB    = x.9^(x.7*x.10*inv((x.6*x.11)))
+        z     = x.9^(x.10*inv((x.8*x.11)))
+    
+    45. a     = (x.6*inv((x.7*x.8)))
+        gB    = x.9^(x.7*inv(x.10))
+        z     = x.9^(x.6*inv((x.8*x.10)))
+    
+    46. a     = (x.6*inv((x.7*x.8)))
+        gB    = x.9^(x.7*inv((x.6*x.10)))
+        z     = x.9^inv((x.8*x.10))
+    
+    47. a     = (x.6*inv((x.7*x.8)))
+        gB    = x.9^(x.8*inv(x.6))
+        z     = x.9^inv(x.7)
+    
+    48. gB    = DH_neutral
+        z     = DH_neutral
+  */
+
+rule (modulo E) p_0_111111[color=#518040, process='0', issapicrule,
+                           role='Client']:
+   [ State_111111( a.1, gB.1, sk.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#518040, process='0', issapicrule,
+                              role='Client']:
+     [ State_111111( a, gB, sk ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ State_12( sk.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12[color=#ffffff, process='0', issapicrule,
+                          role='Process']:
+     [ State_12( sk ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/regression-tests/issueX-translation-crash.spthy
+
+  output:          examples/sapic/fast/regression-tests/issueX-translation-crash.spthy.tmp
+  processing time: 0.57s
+  
+
+==============================================================================
+*/

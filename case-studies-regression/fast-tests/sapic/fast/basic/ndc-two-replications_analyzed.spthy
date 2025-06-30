@@ -1,0 +1,201 @@
+theory NDCTwoReplications begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+heuristic: p
+
+section{* small example for progression function *}
+
+
+
+
+
+
+
+
+
+lemma A_possible:
+  exists-trace "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (A( ) @ #t)"
+*/
+simplify
+solve( State_11( ~prog_11 ) ▶₀ #t )
+  case p_1_1
+  solve( State_11( ~prog_11 ) ▶₀ #t.2 )
+    case p_1_1
+    SOLVED // trace found
+  qed
+qed
+
+lemma B_possible:
+  exists-trace "∃ #t. B( ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t. (B( ) @ #t)"
+*/
+simplify
+solve( State_21( ~prog_21 ) ▶₀ #t )
+  case p_1_2
+  solve( State_21( ~prog_21 ) ▶₀ #t.2 )
+    case p_1_2
+    SOLVED // trace found
+  qed
+qed
+
+lemma no_progress_possible:
+  exists-trace "(¬(∃ #t. A( ) @ #t)) ∧ (¬(∃ #t. B( ) @ #t))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∀ #t. (A( ) @ #t) ⇒ ⊥) ∧ (∀ #t. (B( ) @ #t) ⇒ ⊥)"
+*/
+simplify
+SOLVED // trace found
+
+lemma A_exclusive:
+  all-traces "(∃ #t. A( ) @ #t) ⇒ (¬(∃ #t2. B( ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"(∃ #t. (A( ) @ #t)) ∧ (∃ #t2. (B( ) @ #t2))"
+*/
+simplify
+solve( State_11( ~prog_11 ) ▶₀ #t )
+  case p_1_1
+  by solve( State_21( ~prog_21 ) ▶₀ #t2 )
+qed
+
+lemma B_exclusive:
+  all-traces "(∃ #t. B( ) @ #t) ⇒ (¬(∃ #t2. A( ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"(∃ #t. (B( ) @ #t)) ∧ (∃ #t2. (A( ) @ #t2))"
+*/
+simplify
+solve( State_21( ~prog_21 ) ▶₀ #t )
+  case p_1_2
+  by solve( State_11( ~prog_11 ) ▶₀ #t2 )
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) MessageIDRule[color=#ffffff, process='+', issapicrule,
+                              role='Process']:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ State_( ) ] --> [ !Semistate_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_2[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ State_( ) ] --> [ !Semistate_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ Fr( ~prog_11 ), !Semistate_11( ) ]
+  --[ ProgressFrom_11( ~prog_11 ) ]->
+   [ State_11( ~prog_11 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventA_0_11[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+   [ State_11( ~prog_11 ) ] --[ ProgressTo_111( ~prog_11 ), A( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_2[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ Fr( ~prog_21 ), !Semistate_21( ) ]
+  --[ ProgressFrom_21( ~prog_21 ) ]->
+   [ State_21( ~prog_21 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventB_0_21[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+   [ State_21( ~prog_21 ) ] --[ ProgressTo_211( ~prog_21 ), B( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress_11_to_111:
+  "∀ prog_11 #t.
+    (ProgressFrom_11( prog_11 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+
+restriction Progress_21_to_211:
+  "∀ prog_21 #t.
+    (ProgressFrom_21( prog_21 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_211( prog_21 ) @ #t.1)"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/ndc-two-replications.spthy
+
+  output:          examples/sapic/fast/basic/ndc-two-replications.spthy.tmp
+  processing time: 0.13s
+  
+  A_possible (exists-trace): verified (4 steps)
+  B_possible (exists-trace): verified (4 steps)
+  no_progress_possible (exists-trace): verified (2 steps)
+  A_exclusive (all-traces): verified (3 steps)
+  B_exclusive (all-traces): verified (3 steps)
+
+==============================================================================
+*/

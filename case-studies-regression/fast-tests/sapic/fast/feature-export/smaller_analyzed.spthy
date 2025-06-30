@@ -1,0 +1,156 @@
+theory SmallerSyntax begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+lemma Ahappens:
+  exists-trace "∃ #i. A( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (A( ) @ #i)"
+*/
+simplify
+solve( State_111( x, y ) ▶₀ #i )
+  case ifSmallerxy_0_11
+  SOLVED // trace found
+qed
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='in(x.1);', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_[color=#ffffff, process='in(x.1);', issapicrule,
+                       role='Process']:
+   [ State_( ), In( x.1 ) ] --> [ State_1( x.1 ) ]
+
+  /*
+  rule (modulo AC) inx_0_[color=#ffffff, process='in(x.1);', issapicrule,
+                          role='Process']:
+     [ State_( ), In( x ) ] --> [ State_1( x ) ]
+  */
+
+rule (modulo E) iny_0_1[color=#ffffff, process='in(y.1);', issapicrule,
+                        role='Process']:
+   [ State_1( x.1 ), In( y.1 ) ] --> [ State_11( x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) iny_0_1[color=#ffffff, process='in(y.1);', issapicrule,
+                           role='Process']:
+     [ State_1( x ), In( y ) ] --> [ State_11( x, y ) ]
+  */
+
+restriction Restr_ifSmallerxy_0_11_1:
+  "∀ x #NOW x.1.
+    (Restr_ifSmallerxy_0_11_1( x, x.1 ) @ #NOW) ⇒ (∃ z. x = (z++x.1))"
+
+rule (modulo E) ifSmallerxy_0_11[color=#ffffff,
+                                 process='if Smaller( x.1, y.1 )', issapicrule, role='Process']:
+   [ State_11( x.1, y.1 ) ]
+  --[ Restr_ifSmallerxy_0_11_1( y.1, x.1 ) ]->
+   [ State_111( x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) ifSmallerxy_0_11[color=#ffffff,
+                                    process='if Smaller( x.1, y.1 )', issapicrule, role='Process']:
+     [ State_11( x, y ) ]
+    --[ Restr_ifSmallerxy_0_11_1( y, x ) ]->
+     [ State_111( x, y ) ]
+  */
+
+restriction Restr_ifSmallerxy_1_11_1:
+  "∀ x #NOW x.1.
+    (Restr_ifSmallerxy_1_11_1( x, x.1 ) @ #NOW) ⇒ (¬(∃ z. x = (z++x.1)))"
+  // safety formula
+
+rule (modulo E) ifSmallerxy_1_11[color=#ffffff,
+                                 process='if Smaller( x.1, y.1 )', issapicrule, role='Process']:
+   [ State_11( x.1, y.1 ) ]
+  --[ Restr_ifSmallerxy_1_11_1( y.1, x.1 ) ]->
+   [ State_112( x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) ifSmallerxy_1_11[color=#ffffff,
+                                    process='if Smaller( x.1, y.1 )', issapicrule, role='Process']:
+     [ State_11( x, y ) ]
+    --[ Restr_ifSmallerxy_1_11_1( y, x ) ]->
+     [ State_112( x, y ) ]
+  */
+
+rule (modulo E) eventA_0_111[color=#ffffff, process='event A( );',
+                             issapicrule, role='Process']:
+   [ State_111( x.1, y.1 ) ] --[ A( ) ]-> [ State_1111( x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventA_0_111[color=#ffffff, process='event A( );',
+                                issapicrule, role='Process']:
+     [ State_111( x, y ) ] --[ A( ) ]-> [ State_1111( x, y ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#ffffff, process='0', issapicrule,
+                         role='Process']:
+   [ State_1111( x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+     [ State_1111( x, y ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_112[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_112( x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+     [ State_112( x, y ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-export/smaller.spthy
+
+  output:          examples/sapic/fast/feature-export/smaller.spthy.tmp
+  processing time: 0.15s
+  
+  Ahappens (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

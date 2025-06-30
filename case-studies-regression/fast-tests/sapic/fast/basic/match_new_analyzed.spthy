@@ -1,0 +1,208 @@
+theory Test begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+lemma no_acceptP:
+  all-traces "¬(∃ #i. AcceptP( ) @ #i)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (AcceptP( ) @ #i)"
+*/
+simplify
+by solve( State_11111( a, c ) ▶₀ #i )
+
+lemma acceptQ:
+  exists-trace "∃ #i. AcceptQ( ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i. (AcceptQ( ) @ #i)"
+*/
+simplify
+solve( State_2111( c ) ▶₀ #i )
+  case inctesttoto_0_211
+  SOLVED // trace found
+qed
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) P_0_1[color=#ffffff, process='P()', issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inc_0_11[color=#6c8040, process='in(c.1);', issapicrule,
+                         role='P']:
+   [ State_11( ), In( c.1 ) ] --> [ State_111( c.1 ) ]
+
+  /*
+  rule (modulo AC) inc_0_11[color=#6c8040, process='in(c.1);', issapicrule,
+                            role='P']:
+     [ State_11( ), In( c ) ] --> [ State_111( c ) ]
+  */
+
+rule (modulo E) newa_0_111[color=#6c8040, process='new a.1;',
+                           issapicrule, role='P']:
+   [ State_111( c.1 ), Fr( a.1 ) ] --> [ State_1111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_111[color=#6c8040, process='new a.1;',
+                              issapicrule, role='P']:
+     [ State_111( c ), Fr( a ) ] --> [ State_1111( a, c ) ]
+  */
+
+rule (modulo E) inatesttoto_0_1111[color=#6c8040,
+                                   process='in(<<=a.1, 'test'>, 'toto'>);', issapicrule, role='P']:
+   [ State_1111( a.1, c.1 ), In( <<a.1, 'test'>, 'toto'> ) ]
+  -->
+   [ State_11111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) inatesttoto_0_1111[color=#6c8040,
+                                      process='in(<<=a.1, 'test'>, 'toto'>);', issapicrule, role='P']:
+     [ State_1111( a, c ), In( <<a, 'test'>, 'toto'> ) ]
+    -->
+     [ State_11111( a, c ) ]
+  */
+
+rule (modulo E) eventAcceptP_0_11111[color=#6c8040,
+                                     process='event AcceptP( );', issapicrule, role='P']:
+   [ State_11111( a.1, c.1 ) ]
+  --[ AcceptP( ) ]->
+   [ State_111111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) eventAcceptP_0_11111[color=#6c8040,
+                                        process='event AcceptP( );', issapicrule, role='P']:
+     [ State_11111( a, c ) ] --[ AcceptP( ) ]-> [ State_111111( a, c ) ]
+  */
+
+rule (modulo E) p_0_111111[color=#6c8040, process='0', issapicrule,
+                           role='P']:
+   [ State_111111( a.1, c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111[color=#6c8040, process='0', issapicrule,
+                              role='P']:
+     [ State_111111( a, c ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ State_12( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Q_0_2[color=#ffffff, process='Q()', issapicrule,
+                      role='Process']:
+   [ State_2( ) ] --> [ State_21( ), State_22( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inc_0_21[color=#807140, process='in(c.2);', issapicrule,
+                         role='Q']:
+   [ State_21( ), In( c.2 ) ] --> [ State_211( c.2 ) ]
+
+  /*
+  rule (modulo AC) inc_0_21[color=#807140, process='in(c.2);', issapicrule,
+                            role='Q']:
+     [ State_21( ), In( c ) ] --> [ State_211( c ) ]
+  */
+
+rule (modulo E) inctesttoto_0_211[color=#807140,
+                                  process='in(<<=c.2, 'test'>, 'toto'>);', issapicrule, role='Q']:
+   [ State_211( c.2 ), In( <<c.2, 'test'>, 'toto'> ) ]
+  -->
+   [ State_2111( c.2 ) ]
+
+  /*
+  rule (modulo AC) inctesttoto_0_211[color=#807140,
+                                     process='in(<<=c.2, 'test'>, 'toto'>);', issapicrule, role='Q']:
+     [ State_211( c ), In( <<c, 'test'>, 'toto'> ) ] --> [ State_2111( c ) ]
+  */
+
+rule (modulo E) eventAcceptQ_0_2111[color=#807140,
+                                    process='event AcceptQ( );', issapicrule, role='Q']:
+   [ State_2111( c.2 ) ] --[ AcceptQ( ) ]-> [ State_21111( c.2 ) ]
+
+  /*
+  rule (modulo AC) eventAcceptQ_0_2111[color=#807140,
+                                       process='event AcceptQ( );', issapicrule, role='Q']:
+     [ State_2111( c ) ] --[ AcceptQ( ) ]-> [ State_21111( c ) ]
+  */
+
+rule (modulo E) p_0_21111[color=#807140, process='0', issapicrule,
+                          role='Q']:
+   [ State_21111( c.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21111[color=#807140, process='0', issapicrule,
+                             role='Q']:
+     [ State_21111( c ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_22[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ State_22( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/match_new.spthy
+
+  output:          examples/sapic/fast/basic/match_new.spthy.tmp
+  processing time: 0.19s
+  
+  no_acceptP (all-traces): verified (2 steps)
+  acceptQ (exists-trace): verified (3 steps)
+
+==============================================================================
+*/
