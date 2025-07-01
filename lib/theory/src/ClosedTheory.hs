@@ -378,24 +378,26 @@ prettyClosedProtoRule cru =
 --       | otherwise                        = multiComment $ prettyProtoRuleAC ruAC
 
 -- | Pretty print a closed theory.
-prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
-prettyClosedTheory thy = if containsManualRuleVariants mergedRules
+prettyClosedTheory :: HighlightDocument d => Bool -> ClosedTheory -> d
+prettyClosedTheory preserveMacros thy = if containsManualRuleVariants mergedRules
     then
       prettyTheory prettySignatureWithMaude
-                       ppInjectiveFactInsts
-                       -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
-                       prettyOpenProtoRuleAsClosedRule
-                       prettyIncrementalProof
-                       emptyString
-                       thy'
+                  ppInjectiveFactInsts
+                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                  prettyOpenProtoRuleAsClosedRule
+                  prettyIncrementalProof
+                  emptyString
+                  preserveMacros
+                  thy'
     else
       prettyTheory prettySignatureWithMaude
-               ppInjectiveFactInsts
-               -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
-               prettyClosedProtoRule
-               prettyIncrementalProof
-               emptyString
-               thy
+                  ppInjectiveFactInsts
+                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                  prettyClosedProtoRule
+                  prettyIncrementalProof
+                  emptyString
+                  preserveMacros
+                  thy
   where
     items = L.get thyItems thy
     mergedRules = mergeOpenProtoRules $ map (mapTheoryItem openProtoRule id) items
@@ -417,8 +419,8 @@ prettyClosedTheory thy = if containsManualRuleVariants mergedRules
                       , nest 2 $ fsepList (text . showFactTagArity) (map fst tags) ]
 
 -- | Pretty print a closed diff theory.
-prettyClosedDiffTheory :: HighlightDocument d => ClosedDiffTheory -> d
-prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
+prettyClosedDiffTheory :: HighlightDocument d => Bool -> ClosedDiffTheory -> d
+prettyClosedDiffTheory preserveMacros thy = if containsManualRuleVariantsDiff mergedRules
     then
       prettyDiffTheory prettySignatureWithMaude
                  ppInjectiveFactInsts
@@ -426,6 +428,7 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
                  (\_ -> emptyDoc) --prettyClosedEitherRule
                  prettyIncrementalDiffProof
                  prettyIncrementalProof
+                 preserveMacros
                  thy'
     else
         prettyDiffTheory prettySignatureWithMaude
@@ -434,6 +437,7 @@ prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
                    (\_ -> emptyDoc) --prettyClosedEitherRule
                    prettyIncrementalDiffProof
                    prettyIncrementalProof
+                   preserveMacros
                    thy
   where
     items = L.get diffThyItems thy

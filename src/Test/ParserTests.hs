@@ -36,18 +36,18 @@ testParseFile optionalProver inpFile = TestLabel inpFile $ TestCase $ do
     -- add proofs and pretty print closed theory, if desired
     (thy, thyPretty) <- case optionalProver of
         Nothing                  ->
-            return  (thy0, prettyOpenTheory thy0)
+            return  (thy0, prettyOpenTheory True thy0)
         Just (maudePath, prover) -> do
             closedThy <- proveTheory (const True) prover <$> closeTheory maudePath (removeTranslationItems thy0) False
             return $ ( normalizeTheory $ openTheory closedThy
-                     , prettyClosedTheory closedThy)
+                     , prettyClosedTheory True closedThy)
     thy' <- parse "pretty printed theory:" (render thyPretty)
     unless (thy == thy') $ do
         let (diff1, diff2) =
                 unzip $ dropWhile (uncurry (==)) $ zip (show thy) (show thy')
         assertFailure $ unlines
-          [ "Original theory",            "",  render (prettyOpenTheory thy), ""
-          , "Pretty printed and parsed" , "", render (prettyOpenTheory thy'), ""
+          [ "Original theory",            "",  render (prettyOpenTheory True thy), ""
+          , "Pretty printed and parsed" , "", render (prettyOpenTheory True thy'), ""
           , "Original theory (diff)",            "", indent diff1, ""
           , "Pretty printed and parsed (diff)" , "", indent diff2, "", "DIFFER"
           ]

@@ -437,7 +437,10 @@ expandLemma ::
   Theory sig c r p1 s ->
   ProtoLemma SyntacticLNFormula p2 ->
   Either FactTag (ProtoLemma LNFormula p2)
-expandLemma thy (Lemma n u m tq f a p) = (\f' -> Lemma n u m tq f' a p) <$> expandFormula (theoryPredicates thy) f
+expandLemma thy (Lemma n u m tq f ofm a p) = do
+  f' <- expandFormula (theoryPredicates thy) f
+  ofm' <- mapM (expandFormula (theoryPredicates thy)) ofm
+  return $ Lemma n u m tq f' ofm' a p
 
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -730,9 +733,10 @@ prettyTheory ::
   (r -> d) ->
   (p -> d) ->
   (s -> d) ->
+  Bool ->
   Theory sig c r p s ->
   d
-prettyTheory ppSig ppCache ppRule ppPrf ppSap thy =
+prettyTheory ppSig ppCache ppRule ppPrf ppSap preserveMacros thy =
   vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy,
       lineComment_ "Function signature and definition of the equational theory E",
@@ -748,7 +752,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy =
       foldTheoryItem
         ppRule
         prettyRestriction
-        (prettyLemma ppPrf)
+        (prettyLemma ppPrf preserveMacros)
         (uncurry prettyFormalComment)
         prettyConfigBlock
         prettyPredicate

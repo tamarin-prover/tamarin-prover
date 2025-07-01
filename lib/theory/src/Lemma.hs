@@ -80,8 +80,11 @@ isRightLemma lem =
 
 -- | Apply macros to a lemma
 applyMacroInLemma :: [Macro] -> Lemma p -> Lemma p
-applyMacroInLemma mcs (Lemma name plaintext modified tq formula attrs proof) =
-    Lemma name plaintext modified tq (applyMacrosInFormula mcs formula) attrs proof
+applyMacroInLemma macros lemma = 
+  let originalFormula = L.get lFormula lemma
+      expandedFormula = applyMacrosInFormula macros originalFormula
+  in L.set lOriginalFormula (Just originalFormula) $ 
+     L.set lFormula expandedFormula lemma
 
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d
@@ -108,20 +111,24 @@ prettyLemmaAttribute _                  = emptyDoc
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
 prettyDiffLemmaName l = text ((L.get lDiffName l))
 
--- | Pretty print a lemma.
-prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d
-prettyLemma ppPrf lem =
+prettyLemma :: HighlightDocument d => (p -> d) -> Bool -> Lemma p -> d
+prettyLemma ppPrf preserveMacros lem =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
-          , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
+          , doubleQuotes $ prettyLNFormula formula
           ]
     )
     $-$
-    ppLNFormulaGuarded (L.get lFormula lem)
+    ppLNFormulaGuarded formula
     $-$
     ppPrf (L.get lProof lem)
   where
+    -- Select formula based on preserveMacros flag
+    formula = case (preserveMacros, L.get lOriginalFormula lem) of
+                (True, Just origForm) -> origForm
+                _ -> L.get lFormula lem
+    
     ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$
@@ -135,19 +142,24 @@ prettyLemma ppPrf lem =
               doubleQuotes (prettyGuarded gf) )
 
 -- | Pretty print an Either lemma.
-prettyEitherLemma :: HighlightDocument d => (p -> d) -> (Side, Lemma p) -> d
-prettyEitherLemma ppPrf (_, lem) =
+prettyEitherLemma :: HighlightDocument d => (p -> d) -> Bool -> (Side, Lemma p) -> d
+prettyEitherLemma ppPrf preserveMacros (_, lem) =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
-          , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
+          , doubleQuotes $ prettyLNFormula formula
           ]
     )
     $-$
-    ppLNFormulaGuarded (L.get lFormula lem)
+    ppLNFormulaGuarded formula
     $-$
     ppPrf (L.get lProof lem)
   where
+    -- Select formula based on preserveMacros flag
+    formula = case (preserveMacros, L.get lOriginalFormula lem) of
+                (True, Just origForm) -> origForm
+                _ -> L.get lFormula lem
+    
     ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$

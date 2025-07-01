@@ -150,7 +150,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     runMaude = (`runReader` hnd)
 
     -- searching for the lemma
-    lemma (LemmaItem (Lemma name _ _ _ _ _ _)) | name == lemmaName = True
+    lemma (LemmaItem (Lemma name _ _ _ _ _ _ _)) | name == lemmaName = True
     lemma _ = False
 
     -- build the lemma
@@ -867,14 +867,15 @@ prettyEitherRule :: (HighlightDocument d) => (Side, OpenProtoRule) -> d
 prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
 
 -- | Pretty print an open theory.
-prettyOpenTheory :: (HighlightDocument d) => OpenTheory -> d
-prettyOpenTheory thy =
+prettyOpenTheory :: (HighlightDocument d) => Bool -> OpenTheory -> d
+prettyOpenTheory preserveMacros thy =
   prettyTheory
     prettySignaturePure
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     prettyTranslationElement
+    preserveMacros
     thy
   where
     -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
@@ -884,26 +885,28 @@ prettyOpenTheory thy =
     fst' (a, _, _) = a
 
 -- | Pretty print an open theory.
-prettyOpenDiffTheory :: (HighlightDocument d) => OpenDiffTheory -> d
-prettyOpenDiffTheory =
+prettyOpenDiffTheory :: (HighlightDocument d) => Bool -> OpenDiffTheory -> d
+prettyOpenDiffTheory preserveMacros =
   prettyDiffTheory
     prettySignaturePure
     (const emptyDoc)
     prettyEitherRule
     prettyDiffProof
     prettyProof
+    preserveMacros
 
 -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
 -- | Pretty print a translated Open Theory
-prettyOpenTranslatedTheory :: (HighlightDocument d) => OpenTranslatedTheory -> d
-prettyOpenTranslatedTheory =
+prettyOpenTranslatedTheory :: (HighlightDocument d) => Bool-> OpenTranslatedTheory -> d
+prettyOpenTranslatedTheory preserveMacros =
   prettyTheory
     prettySignaturePure
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     emptyString
+    preserveMacros
 
 -- | Pretty print a diff theory.
 prettyDiffTheory ::
@@ -913,9 +916,10 @@ prettyDiffTheory ::
   ((Side, r2) -> d) ->
   (p -> d) ->
   (p2 -> d) ->
+  Bool ->
   DiffTheory sig c DiffProtoRule r2 p p2 ->
   d
-prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy =
+prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf preserveMacros thy =
   vsep $
     [ kwTheoryHeader $ text $ L.get diffThyName thy,
       lineComment_ "Function signature and definition of the equational theory E",
@@ -936,7 +940,7 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy =
         prettyDiffRule
         ppRule
         (prettyDiffLemma ppDiffPrf)
-        (prettyEitherLemma ppPrf)
+        (\l -> prettyEitherLemma ppPrf preserveMacros l)
         prettyEitherRestriction
         (const emptyDoc)
         (uncurry prettyFormalComment)

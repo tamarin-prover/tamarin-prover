@@ -668,12 +668,12 @@ translateAndCheckTheory version thyOpts sign srcThy = do
   pure (preReport ++ postReport, finalThy)
 
 -- | Pretty print an open theory based on the specified output module.
-prettyOpenTheoryByModule :: TheoryLoadOptions -> OpenTheory -> IO Pretty.Doc
-prettyOpenTheoryByModule thyOpts = case  thyOpts.outputModule of
-  Nothing {- Same as ModuleMsr -} -> pure . prettyOpenTranslatedTheory . removeTranslationItems
-  Just ModuleSpthy -> pure . prettyOpenTheory
-  Just ModuleSpthyTyped -> pure . prettyOpenTheory
-  Just ModuleMsr -> pure . prettyOpenTranslatedTheory . removeTranslationItems
+prettyOpenTheoryByModule :: Bool -> TheoryLoadOptions -> OpenTheory -> IO Pretty.Doc
+prettyOpenTheoryByModule preserveMacros thyOpts = case  thyOpts.outputModule of
+  Nothing {- Same as ModuleMsr -} -> pure . (prettyOpenTranslatedTheory preserveMacros) . removeTranslationItems
+  Just ModuleSpthy -> pure . (prettyOpenTheory preserveMacros)
+  Just ModuleSpthyTyped -> pure . (prettyOpenTheory preserveMacros)
+  Just ModuleMsr -> pure . (prettyOpenTranslatedTheory preserveMacros) . removeTranslationItems
   Just ModuleProVerifEquivalence -> Export.prettyProVerifEquivTheory <=< Sapic.typeTheoryEnv
   Just ModuleProVerif -> Export.prettyProVerifTheory ModuleProVerif noReuse noRestrictions lemmas <=< Sapic.typeTheoryEnv
   Just ModuleDeepSec -> Export.prettyDeepSecTheory replicationBound

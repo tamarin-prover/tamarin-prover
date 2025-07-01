@@ -215,12 +215,12 @@ editProof idx name = withTheory idx $ \ti -> do
     fromMaybe  (return (Left "Lemma not found")) $ editLemmaProof ti <$> lookupLemma name (tiTheory ti)
 
     where 
-        editLemmaProof ti (Lemma n m pt tq f a olp) = do
-            let ctxt     = getProofContext (Lemma n m pt tq f a lp) (tiTheory ti)
+        editLemmaProof ti (Lemma n m pt tq f ofm a olp) = do
+            let ctxt     = getProofContext (Lemma n m pt tq f ofm a lp) (tiTheory ti)
                 preItems = getLemmaPreItems n (tiTheory ti)
                 gsys     = mkSystem ctxt (theoryRestrictions (tiTheory ti)) preItems f
                 lp       = newProof olp ctxt gsys
-                editf (Lemma n' pt' m' tq' f' a' lp') = if n'== n then Lemma n' pt' m' tq' f' a' lp else Lemma n' pt' m' tq' f' a' lp'
+                editf (Lemma n' pt' m' tq' f' ofm' a' lp') = if n'== n then Lemma n' pt' m' tq' f' ofm' a' lp else Lemma n' pt' m' tq' f' ofm' a' lp'
                 maybe_nthy =  modifyLemma editf (tiTheory ti)
             case maybe_nthy of
                 Nothing -> return $ Left "Lemma editing failed"
@@ -243,7 +243,7 @@ deleteLemma idx name = withTheory idx $ \ti -> do
     let maybeLemma = lookupLemma name (tiTheory ti)
     case maybeLemma of
         Nothing -> return $ Left "Lemma not found"
-        Just (Lemma _ _ _ _ _ oa _) ->
+        Just (Lemma _ _ _ _ _ _ oa _) ->
             if | SourceLemma `elem` oa -> return $ Left "Can't edit or remove source lemmas for now"
                | ReuseLemma `elem` oa -> reuseCase ti
                | otherwise -> normalCase ti
@@ -261,22 +261,22 @@ deleteLemma idx name = withTheory idx $ \ti -> do
                     nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
                     withTheory nidx $ \ti' -> normalCase ti'
 
-        lemmaFunc ti (Lemma n pt m tq f a lp) =
+        lemmaFunc ti (Lemma n pt m tq f ofm a lp) =
             let currIdx = fromMaybe (-1) (lookupLemmaIndex name (tiTheory ti))
                 lIdx = fromMaybe 0 (lookupLemmaIndex n (tiTheory ti))
             in if lIdx > currIdx 
                 then case lp of
-                    LNode (ProofStep (Sorry Nothing) _) _ -> Lemma n pt m tq f a lp
-                    LNode (ProofStep Invalidated _) _ -> Lemma n pt m tq f a lp
-                    LNode (ProofStep _ info) _ -> Lemma n pt m tq f a (LNode (ProofStep Invalidated info) (M.singleton "" lp))
-                else Lemma n pt m tq f a lp
+                    LNode (ProofStep (Sorry Nothing) _) _ -> Lemma n pt m tq f ofm a lp
+                    LNode (ProofStep Invalidated _) _ -> Lemma n pt m tq f ofm a lp
+                    LNode (ProofStep _ info) _ -> Lemma n pt m tq f ofm a (LNode (ProofStep Invalidated info) (M.singleton "" lp))
+                else Lemma n pt m tq f ofm a lp
 
 -- | Adds a new Lemma in a theory at an index, used for theory editing
 -- the new lemma is marked as modified to keep track of what whould be appended to the original file 
 -- when "Append modified lemmas to file" is clicked
 addLemma :: Int -> Maybe Int -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
-addLemma idx maybelemmaIndex (Lemma n pt _ tq f a lp) = withTheory idx $ \ti -> do
-    let ctxt = getProofContext (Lemma n pt True tq f a lp) (tiTheory ti)
+addLemma idx maybelemmaIndex (Lemma n pt _ tq f ofm a lp) = withTheory idx $ \ti -> do
+    let ctxt = getProofContext (Lemma n pt True tq f ofm a lp) (tiTheory ti)
         preI = getLemmaPreItems n (tiTheory ti)
         gsys = mkSystem ctxt (theoryRestrictions (tiTheory ti)) preI f
     case formulaToGuarded f of
@@ -285,14 +285,14 @@ addLemma idx maybelemmaIndex (Lemma n pt _ tq f a lp) = withTheory idx $ \ti -> 
             case maybelemmaIndex of
                 Nothing -> return $ Left "Lemma not found"
                 Just lemmaIndex -> do
-                    let newThy = addLemmaAtIndex (Lemma n pt True tq f a $ unproven (Just gsys)) lemmaIndex (tiTheory ti)
+                    let newThy = addLemmaAtIndex (Lemma n pt True tq f ofm a $ unproven (Just gsys)) lemmaIndex (tiTheory ti)
                     case newThy of
                          Nothing -> return $ Left "lemma editing failed"
                          (Just nthy) -> Right <$> replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
 
 -- | Deletes, adds or modifies a lemma depending on the path
 editLemma :: Int -> TheoryPath -> Lemma ProofSkeleton -> Handler (Either String TheoryIdx)
-editLemma idx (TheoryEdit lemmaName) (Lemma n pt m tq f a lp) = do
+editLemma idx (TheoryEdit lemmaName) (Lemma n pt m tq f ofm a lp) = do
     maybelemmaIndex <- withTheory idx $ \ti -> do
                            return $ (\x -> x - 1) <$> lookupLemmaIndex lemmaName (tiTheory ti)
     case formulaToGuarded f of
@@ -301,20 +301,20 @@ editLemma idx (TheoryEdit lemmaName) (Lemma n pt m tq f a lp) = do
             idx' <- deleteLemma idx lemmaName
             case idx' of
                 Left e -> return $ Left e
-                Right i -> Web.Handler.addLemma i maybelemmaIndex (Lemma n pt m tq f a lp)
+                Right i -> Web.Handler.addLemma i maybelemmaIndex (Lemma n pt m tq f ofm a lp)
 
 
-editLemma idx (TheoryAdd lemmaName) (Lemma n pt m tq f a lp)  = do
+editLemma idx (TheoryAdd lemmaName) (Lemma n pt m tq f ofm a lp)  = do
     maybelemmaIndex <- withTheory idx $ \ti -> do
                             return $ case lemmaName of
                                 "<first>" -> do
-                                            let (Lemma n' _ _ _ _ _ _ ) = head $ theoryLemmas $ tiTheory ti
+                                            let (Lemma n' _ _ _ _ _ _ _ ) = head $ theoryLemmas $ tiTheory ti
                                             (\x -> x - 1) <$> lookupLemmaIndex n' (tiTheory ti)
                                 _ -> lookupLemmaIndex lemmaName (tiTheory ti)
 
     if SourceLemma `elem` a
         then return $ Left "Can't add source lemmas for now"
-        else Web.Handler.addLemma idx maybelemmaIndex (Lemma n pt m tq f a lp)
+        else Web.Handler.addLemma idx maybelemmaIndex (Lemma n pt m tq f ofm a lp)
 
 editLemma _ _ _ = return $ Left "called editLemma with weird input"
 
@@ -796,8 +796,9 @@ getTheorySourceR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
-    prettyRender = render . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+    -- True because macros are preserved when exporting
+    prettyRender = render . prettyClosedTheory True . tiTheory
+    prettyRenderDiff = render . prettyClosedDiffTheory True . dtiTheory
 
 -- | Show source (pretty-printed open diff theory).
 getTheorySourceDiffR :: TheoryIdx -> Handler RepPlain
@@ -805,40 +806,40 @@ getTheorySourceDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti)
   where
-    prettyRender = render . prettyClosedTheory . tiTheory
-    prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+    prettyRender = render . prettyClosedTheory True . tiTheory
+    prettyRenderDiff = render . prettyClosedDiffTheory True . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryVariantsR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory True . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory True . dtiTheory
 
 -- | Show variants (pretty-printed closed diff theory).
 getTheoryVariantsDiffR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory True . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory True . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory True . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory True . dtiTheory
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionDiffR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionDiffR idx = withBothTheory idx ( \ti ->
   return $ RepPlain $ toContent $ prettyRender ti ) ( \ti ->
   return $ RepPlain $ toContent $ prettyRenderDiff ti )
-  where prettyRender = render . prettyClosedTheory . tiTheory
-        prettyRenderDiff = render . prettyClosedDiffTheory . dtiTheory
+  where prettyRender = render . prettyClosedTheory True . tiTheory
+        prettyRenderDiff = render . prettyClosedDiffTheory True . dtiTheory
 
 
 
@@ -1460,8 +1461,8 @@ getSaveTheoryR idx = withEitherTheory idx $ \eti -> do
               -- Return message
               jsonResp (JsonAlert $ T.pack $ "Saved theory to file: " ++ file)
   where
-    prettyRender ti  = render $ prettyOpenTheory $ openTheory $ tiTheory ti
-    prettyRenderD ti = render $ prettyOpenDiffTheory $ openDiffTheory $ dtiTheory ti
+    prettyRender ti  = render $ prettyOpenTheory True $ openTheory $ tiTheory ti
+    prettyRenderD ti = render $ prettyOpenDiffTheory True $ openDiffTheory $ dtiTheory ti
     same origin (Trace ti) = tiPrimary ti  && (tiOrigin ti  == origin)
     same origin (Diff ti)    = dtiPrimary ti && (dtiOrigin ti == origin)
     setPrimary :: Bool -> EitherTheoryInfo -> EitherTheoryInfo
@@ -1482,12 +1483,12 @@ getAppendNewLemmasR idx _ = withTheory idx $ \ti -> do
                         Local path -> Just path 
                         _ ->  Nothing 
         srcThy = fromMaybe "" maybePath 
-        allptxts = foldl (\ p (Lemma _ pt modified _ _ _ _) -> if modified then p ++ "\n\n" ++ pt else p) "" (getLemmas (tiTheory ti))
+        allptxts = foldl (\ p (Lemma _ pt modified _ _ _ _ _) -> if modified then p ++ "\n\n" ++ pt else p) "" (getLemmas (tiTheory ti))
 
     liftIO $ when (allptxts /= "" && isJust maybePath) $ appendFile srcThy $ "\n/*" ++ allptxts ++ "\n*/"
 
     if isNothing maybePath then return $ responseToJson (JsonAlert $ "No origin found for the current theory.")
-    else case modifyLemma (\(Lemma n pt _ tq f a lp)  -> Lemma n pt False tq f a lp ) (tiTheory ti) of
+    else case modifyLemma (\(Lemma n pt _ tq f ofm a lp)  -> Lemma n pt False tq f ofm a lp ) (tiTheory ti) of
             Nothing -> return $ responseToJson $ JsonAlert $ "Appended lemmas to " `T.append` T.pack srcThy
             Just nthy -> do
                             nidx <- replaceTheory (Just ti) Nothing nthy ("modified" ++ show idx) idx
