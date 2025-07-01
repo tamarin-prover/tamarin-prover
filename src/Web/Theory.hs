@@ -884,7 +884,7 @@ rulesSnippet thy = vcat
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
-        vsep $ map prettyRestriction $ theoryRestrictions thy
+        (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map (prettyRestriction False) $ theoryRestrictions thy)
     ]
   where
     msrRules   = get crProtocol $ getClassifiedRules thy
@@ -950,7 +950,7 @@ rulesDiffSnippetSide s isdiff thy = vcat
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null(diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
-        vsep $ map prettyRestriction $ diffTheorySideRestrictions s thy
+        (if null(diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map (prettyRestriction False) $ diffTheorySideRestrictions s thy)
     ]
   where
     msrRules = get crProtocol $ getDiffClassifiedRules s isdiff thy

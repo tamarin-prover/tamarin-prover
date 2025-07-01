@@ -431,7 +431,10 @@ expandRestriction ::
   Theory sig c r p s ->
   ProtoRestriction SyntacticLNFormula ->
   Either FactTag (ProtoRestriction LNFormula)
-expandRestriction thy (Restriction n f) = Restriction n <$> expandFormula (theoryPredicates thy) f
+expandRestriction thy (Restriction n f ofm) = do
+  f' <- expandFormula (theoryPredicates thy) f
+  ofm' <- mapM (expandFormula (theoryPredicates thy)) ofm
+  return $ Restriction n f' ofm'
 
 expandLemma ::
   Theory sig c r p1 s ->
@@ -751,7 +754,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap preserveMacros thy =
     ppItem =
       foldTheoryItem
         ppRule
-        prettyRestriction
+        (prettyRestriction preserveMacros)
         (prettyLemma ppPrf preserveMacros)
         (uncurry prettyFormalComment)
         prettyConfigBlock
@@ -831,23 +834,31 @@ prettyMacro (op, args, out) =
 -- "\t" ++ BC.unpack op ++ "(" ++ show (args) ++ ") = " ++ show(out) ++ "\n"
 
 -- | Pretty print a restriction.
-prettyRestriction :: (HighlightDocument d) => Restriction -> d
-prettyRestriction rstr =
+prettyRestriction :: (HighlightDocument d) => Bool -> Restriction -> d
+prettyRestriction preserveMacros rstr =
   kwRestriction <-> text (L.get rstrName rstr)
     <> colon
-      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr)
+      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula formula)
       $-$ (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
+    Restriction _ _ originalFormula = rstr
+    formula = case (preserveMacros, originalFormula) of
+            (True, Just origForm) -> origForm
+            _ -> L.get rstrFormula rstr
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
 -- | Pretty print an either restriction.
-prettyEitherRestriction :: (HighlightDocument d) => (Side, Restriction) -> d
-prettyEitherRestriction (s, rstr) =
+prettyEitherRestriction :: (HighlightDocument d) => Bool -> (Side, Restriction) -> d
+prettyEitherRestriction preserveMacros (s, rstr) =
   kwRestriction <-> text (L.get rstrName rstr) <-> prettySide s
     <> colon
-      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr)
+      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula formula)
       $-$ (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
   where
+    Restriction _ _ originalFormula = rstr
+    formula = case (preserveMacros, originalFormula) of
+            (True, Just origForm) -> origForm
+            _ -> L.get rstrFormula rstr
     safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
 
 -- | Pretty print a configuration block.

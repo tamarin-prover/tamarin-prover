@@ -33,7 +33,7 @@ import qualified Control.Monad.State           as State
 import           Control.Monad.Trans.FastFresh (evalFreshT)
 import           Extension.Data.Label          hiding (get)
 import           GHC.Generics                  (Generic)
-import           Prelude                       hiding (id)
+import           Prelude                       
 -- import qualified Extension.Data.Label                as L
 import qualified Data.List                     as L
 import qualified Data.Map                      as M
@@ -62,6 +62,7 @@ data RestrictionAttribute = LHSRestriction
 data ProtoRestriction f = Restriction
     { _rstrName    :: String
     , _rstrFormula :: f
+    , _rstrOriginalFormula :: Maybe f
     }
     deriving (Generic)
 
@@ -146,6 +147,7 @@ fromRuleRestriction rname f =
                 mkRestriction f' = Restriction
                                         (restrPrefix ++ rname)
                                         (foldr (hinted forAll) f'' (frees f''))
+                                        Nothing
                                         where
                                             f'' = Ato (Action timepoint fact) .==>. f'
                                             timepoint = varTerm $ Free varNow
@@ -159,5 +161,5 @@ fromRuleRestriction rname f =
                 mkFact = protoFactAnn Linear (restrPrefix ++ rname) S.empty
 
 applyMacroInRestriction :: [Macro] -> Restriction -> Restriction
-applyMacroInRestriction macros (Restriction name f) = 
-    Restriction name (applyMacrosInFormula macros f)
+applyMacroInRestriction macros (Restriction name f ofm) = 
+    Restriction name (applyMacrosInFormula macros f) (Just $ maybe f id ofm)
