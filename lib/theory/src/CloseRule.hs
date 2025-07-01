@@ -206,10 +206,22 @@ appSubst (x:xs) inst0 inst1 = do
 landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
 landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map (fmap (fmap (fmap Free))) facts))
 
-derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-derivationTest sig intrR fact terms = checkProofd tabProof || checkProofd tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
+dedNaive :: LNTerm -> [LNTerm] -> Bool
+dedNaive fact termsT = aux1 fact
+
   where
-    setD = decompose terms
+    aux1 f | f `elem` termsT    = True
+    aux1 (FAPP (NoEq (_,(_,Private,_))) _) = False
+    aux1 (FAPP (AC (ACfct (_,(Private,_)))) _) = False
+    aux1 (FAPP _ p) = foldr (\x1 -> (&& aux1 x1)) True p
+    aux1 _                     = False
+
+derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
+derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof || checkProofd tabProof1 -- trace ("\ntabProof : " ++ show tabProof) 
+  where
+    tInf (Fact _ _ [f]) = f
+    tInListf = foldMap getFactTerms
+    setD = filter (not . (dedNaive (tInf fact) . tInListf)) (decompose terms)
 
     decompose ((Fact KUFact annot [FAPP (NoEq (b,(n,Private,c))) p]):l) = map ([Fact KDFact annot [FAPP (NoEq (b,(n,Private,c))) p]] ++) (decompose l)
     decompose ((Fact KUFact annot [FAPP (AC (ACfct (b,(Private,c)))) p]):l) = map ([Fact KDFact annot [FAPP (AC (ACfct (b,(Private,c)))) p]] ++) (decompose l)
@@ -234,7 +246,7 @@ derivationTest sig intrR fact terms = checkProofd tabProof || checkProofd tabPro
 
     -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory)
 
-    newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "0") [] []) (pre s) (co s) (a s) []) []]
+    newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "Out0") [] []) (pre s) (co s) (a s) []) []]
     varD s = frees $ concatMap factTerms s
     varFresh s = map msgToFreshVars (varD s)
     pre = freesToFresh . varFresh
@@ -328,7 +340,8 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
     auxMatcher s ru0 ru1 = evalFreshAvoiding (appSubst s ru0 ru1) (ru0, ru1)
 
     auxMatcherFilter = filter nullIntersectAC
-    nullIntersectAC (i0,i1) = not (isACfctDR (name_func name0) acsig) || ((frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= [])
+    nullIntersectAC (i0@(Rule (DestrRule ni0 _ _ _) premsi0 _ _ _),i1@(Rule (DestrRule _ _ _ _) premsi1 _ _ _)) = not (isACfctDR (name_func ni0) acsig) || (length premsi0 /= 2 && length premsi1 /= 2 ) || ((frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= [])
+    nullIntersectAC _ = True
 
     searchMatcheraux ((s1,h1):sq)  = foldr (\ru -> (|| searchMatcher s1 h1 ru)) False allR && searchMatcheraux sq
     searchMatcheraux [] = True
@@ -370,16 +383,10 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
           boundToOne (Rule (DestrRule name 0 subterm constant) premis concs acts nvs) = Rule (DestrRule name 1 subterm constant) premis concs acts nvs
           boundToOne rr = rr
 
-          aux (fa@(Fact KUFact _ [f]):q) = (aux1 f || derivationTest sig intrRmodified fa terms) && aux q
-          aux ((Fact KDFact _ _):_) = False
+          aux (fa@(Fact KUFact _ [f]):q) = (dedNaive f termsT || derivationTest sig intrRmodified fa terms) && aux q
+          aux ((Fact KDFact _ _):_) = error "Destructor Boundedness Check: This case should not happen, please report it on the github page" 
           aux []                    = True
-          aux _                     = False
-
-          aux1 f | f `elem` termsT    = True
-          aux1 (FAPP (NoEq (_,(_,Private,_))) _) = False
-          aux1 (FAPP (AC (ACfct (_,(Private,_)))) _) = False
-          aux1 (FAPP _ p) = foldr (\x1 -> (&& aux1 x1)) True p
-          aux1 _                     = False
+          aux _                     = error "Destructor Boundedness Check: This case should not happen, please report it on the github page" 
 
 
 
