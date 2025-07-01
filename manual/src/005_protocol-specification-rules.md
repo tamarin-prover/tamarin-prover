@@ -160,8 +160,8 @@ as `innerMacro` is not yet defined when `hashMacro` is defined.
 
 Macros applied to rules are shown in interactive mode together with the
 protocol rules.
-When exporting a theory, Tamarin will export the original rules (before the
-macros were applied) and the macros, but not the original lemmas and restrictions, only the processed versions.
+When exporting a theory, Tamarin will export the original rules, lemmas and restrictions (before the
+macros were applied) and the macros.
 
 Facts
 -----
