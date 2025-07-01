@@ -1,10 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE Rank2Types        #-}
-{-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE ViewPatterns      #-}
-{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE DeriveAnyClass    #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -24,8 +20,9 @@ module Web.Types
   ( WebUI(..)
   , Route (..)
   , resourcesWebUI
-  , TheoryInfo(..)
-  , DiffTheoryInfo(..)
+  , GenericTheoryInfo(..)
+  , TheoryInfo
+  , DiffTheoryInfo
   , EitherTheoryInfo(..)
   , isTheoryInfo
   , isDiffTheoryInfo
@@ -34,6 +31,7 @@ module Web.Types
   , getEitherTheoryPrimary
   , getEitherTheoryOrigin
   , getEitherTheoryIndex
+  , getStatic
   , TheoryPath(..)
   , DiffTheoryPath(..)
   , TheoryOrigin(..)
@@ -55,33 +53,27 @@ module Web.Types
   )
 where
 
-
--- import           Control.Applicative
-import           Control.Concurrent
-import           Data.Label
-import qualified Data.Map            as M
-import           Data.Maybe          (listToMaybe)
--- import           Data.Monoid         (mconcat)
-import           Data.Ord            (comparing)
-import qualified Data.Text           as T
-import           Data.Time.LocalTime
-import qualified Data.Binary         as Bin
-import           Data.Binary.Orphans()
-import           Data.Binary.Instances()
-
-import           Control.DeepSeq
-import           GHC.Generics (Generic)
-
-import           Text.Hamlet
-import           Yesod.Core
-import           Yesod.Static
-
-import           Theory
+import Control.Concurrent
+import Control.DeepSeq
 import Control.Monad.Except (ExceptT)
-import Main.TheoryLoader
+import Data.Binary qualified as Bin
+import Data.Binary.Orphans()
+import Data.Binary.Instances()
+import Data.Map qualified as M
+import Data.Maybe (listToMaybe)
+import Data.Ord (comparing)
+import Data.Text qualified as T
+import Data.Time.LocalTime
+
+import GHC.Generics (Generic)
+
+import Text.Hamlet
+import Yesod.Core
+import Yesod.Static
+
+import Theory
 import Theory.Tools.Wellformedness (WfErrorReport)
-import Data.Tree (flatten)
-import Debug.Trace (trace, traceM)
+import Main.TheoryLoader
 
 
 ------------------------------------------------------------------------------
@@ -100,7 +92,7 @@ import Debug.Trace (trace, traceM)
 type TheoryIdx = Int
 
 -- | Type synonym representing a map of theories.
-type TheoryMap = M.Map TheoryIdx (EitherTheoryInfo)
+type TheoryMap = M.Map TheoryIdx EitherTheoryInfo
 
 -- | Type synonym representing a map of threads.
 type ThreadMap = M.Map T.Text ThreadId
@@ -109,17 +101,17 @@ type ThreadMap = M.Map T.Text ThreadId
 data ImageFormat = PNG | SVG
 
 -- | The output format for serializing a graph.
-data OutputFormat = OutJSON | OutDot 
+data OutputFormat = OutJSON | OutDot
 
--- | Describes how a constraint system should be converted to an image. 
-data OutputCommand = OutputCommand 
-  { ocFormat       :: OutputFormat 
-  , ocGraphCommand :: FilePath 
+-- | Describes how a constraint system should be converted to an image.
+data OutputCommand = OutputCommand
+  { ocFormat       :: OutputFormat
+  , ocGraphCommand :: FilePath
   }
 
 instance Show ImageFormat where
-    show PNG = "png"
-    show SVG = "svg"
+  show PNG = "png"
+  show SVG = "svg"
 
 instance Show OutputFormat where
     show OutJSON = "json"
@@ -146,7 +138,7 @@ data WebUI = WebUI
     -- ^ Load a theory according to command-line arguments.
   , closeThy           :: SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> ExceptT TheoryLoadError IO (WfErrorReport, Either ClosedTheory ClosedDiffTheory)
     -- ^ Close an open theory according to command-line arguments.
-  , theoryVar          :: MVar (TheoryMap)
+  , theoryVar          :: MVar TheoryMap
     -- ^ MVar that holds the theory map
   , threadVar          :: MVar ThreadMap
     -- ^ MVar that holds the thread map
@@ -173,36 +165,24 @@ data JsonResponse
 -- Command line with file path, upload with filename (not path),
 -- or created by interactive mode (e.g. through editing).
 data TheoryOrigin = Local FilePath | Upload String | Interactive
-     deriving (Show, Eq, Ord, Generic, Bin.Binary, NFData)
+  deriving (Show, Eq, Ord, Generic, Bin.Binary, NFData)
 
 -- | Data type containg both the theory and it's index, making it easier to
 -- pass the two around (since they are always tied to each other). We also
 -- keep some extra bookkeeping information.
-data TheoryInfo = TheoryInfo
-  { tiIndex      :: TheoryIdx       -- ^ Index of theory.
-  , tiTheory     :: ClosedTheory    -- ^ The closed theory.
-  , tiTime       :: ZonedTime       -- ^ Time theory was loaded.
-  , tiParent     :: Maybe TheoryIdx -- ^ Prev theory in history
-  , tiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
-  , tiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
-  , tiAutoProver :: AutoProver      -- ^ The automatic prover to use.
-  , tiErrorsHtml :: String
+data GenericTheoryInfo theory = TheoryInfo
+  { index      :: TheoryIdx       -- ^ Index of theory.
+  , theory     :: theory          -- ^ The closed theory.
+  , time       :: ZonedTime       -- ^ Time theory was loaded.
+  , parent     :: Maybe TheoryIdx -- ^ Prev theory in history
+  , primary    :: Bool            -- ^ This is the orginally loaded theory.
+  , origin     :: TheoryOrigin    -- ^ Origin of theory.
+  , autoProver :: AutoProver      -- ^ The automatic prover to use.
+  , errorsHtml :: String
   } deriving (Generic, Bin.Binary)
 
--- | Data type containg both the theory and it's index, making it easier to
--- pass the two around (since they are always tied to each other). We also
--- keep some extra bookkeeping information.
-data DiffTheoryInfo = DiffTheoryInfo
-  { dtiIndex      :: TheoryIdx       -- ^ Index of theory.
-  , dtiTheory     :: ClosedDiffTheory -- ^ The closed theory.
-  , dtiTime       :: ZonedTime       -- ^ Time theory was loaded.
-  , dtiParent     :: Maybe TheoryIdx -- ^ Prev theory in history
-  , dtiPrimary    :: Bool            -- ^ This is the orginally loaded theory.
-  , dtiOrigin     :: TheoryOrigin    -- ^ Origin of theory.
-  , dtiAutoProver :: AutoProver      -- ^ The automatic prover to use.
-  , dtiErrorsHtml :: String
-  } deriving (Generic, Bin.Binary)
-
+type TheoryInfo = GenericTheoryInfo ClosedTheory
+type DiffTheoryInfo = GenericTheoryInfo ClosedDiffTheory
 
 -- | We use the ordering in order to display loaded theories to the user.
 -- We first compare by name, then by time loaded, and then by source: Theories
@@ -211,7 +191,7 @@ data DiffTheoryInfo = DiffTheoryInfo
 compareTI :: TheoryInfo -> TheoryInfo -> Ordering
 compareTI (TheoryInfo _ i1 t1 p1 a1 o1 _ _) (TheoryInfo _ i2 t2 p2 a2 o2 _ _) =
   mconcat
-    [ comparing (get thyName) i1 i2
+    [ comparing (._thyName) i1 i2
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
@@ -223,16 +203,19 @@ compareTI (TheoryInfo _ i1 t1 p1 a1 o1 _ _) (TheoryInfo _ i2 t2 p2 a2 o2 _ _) =
 -- that were loaded from the command-line are displayed earlier then
 -- interactively loaded ones.
 compareDTI :: DiffTheoryInfo -> DiffTheoryInfo -> Ordering
-compareDTI (DiffTheoryInfo _ i1 t1 p1 a1 o1 _ _) (DiffTheoryInfo _ i2 t2 p2 a2 o2 _ _) =
+compareDTI (TheoryInfo _ i1 t1 p1 a1 o1 _ _) (TheoryInfo _ i2 t2 p2 a2 o2 _ _) =
   mconcat
-    [ comparing (get diffThyName) i1 i2
+    [ comparing (._diffThyName) i1 i2
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
     , compare o1 o2
     ]
 
-data EitherTheoryInfo = Trace TheoryInfo | Diff DiffTheoryInfo deriving (Generic, Bin.Binary)
+data EitherTheoryInfo
+  = Trace TheoryInfo
+  | Diff DiffTheoryInfo
+  deriving (Generic, Bin.Binary)
 
 -- instance Bin.Binary TheoryInfo
 -- instance Bin.Binary DiffTheoryInfo
@@ -246,9 +229,9 @@ data EitherTheoryInfo = Trace TheoryInfo | Diff DiffTheoryInfo deriving (Generic
 {-       get = do t <- get :: Bin.Get Bin.Word8
                 case t of
                            0 -> do i <- Bin.get
-                                   return (Trace i)
+                                   pure (Trace i)
                            1 -> do i <- Bin.get
-                           return (Diff i) -}
+                           pure (Diff i) -}
 {-       get = do tag <- Bin.getWord8
                 case tag of
                     0 -> liftM Trace get
@@ -256,8 +239,8 @@ data EitherTheoryInfo = Trace TheoryInfo | Diff DiffTheoryInfo deriving (Generic
 
 -- Direct access functionf for Either Theory Type
 getEitherTheoryName :: EitherTheoryInfo -> String
-getEitherTheoryName (Trace i)  = get thyName (tiTheory i)
-getEitherTheoryName (Diff i) = get diffThyName (dtiTheory i)
+getEitherTheoryName (Trace i) = i.theory._thyName
+getEitherTheoryName (Diff i) = i.theory._diffThyName
 
 isTheoryInfo :: EitherTheoryInfo -> Bool
 isTheoryInfo (Trace _) = True
@@ -268,20 +251,20 @@ isDiffTheoryInfo (Trace _) = False
 isDiffTheoryInfo (Diff  _) = True
 
 getEitherTheoryTime :: EitherTheoryInfo -> ZonedTime
-getEitherTheoryTime (Trace i)  = (tiTime i)
-getEitherTheoryTime (Diff i) = (dtiTime i)
+getEitherTheoryTime (Trace i) = i.time
+getEitherTheoryTime (Diff i) = i.time
 
 getEitherTheoryPrimary :: EitherTheoryInfo -> Bool
-getEitherTheoryPrimary (Trace i)  = (tiPrimary i)
-getEitherTheoryPrimary (Diff i) = (dtiPrimary i)
+getEitherTheoryPrimary (Trace i) = i.primary
+getEitherTheoryPrimary (Diff i) = i.primary
 
 getEitherTheoryOrigin :: EitherTheoryInfo -> TheoryOrigin
-getEitherTheoryOrigin (Trace i)  = (tiOrigin i)
-getEitherTheoryOrigin (Diff i) = (dtiOrigin i)
+getEitherTheoryOrigin (Trace i) = i.origin
+getEitherTheoryOrigin (Diff i) = i.origin
 
 getEitherTheoryIndex :: EitherTheoryInfo -> TheoryIdx
-getEitherTheoryIndex (Trace i)  = (tiIndex i)
-getEitherTheoryIndex (Diff i) = (dtiIndex i)
+getEitherTheoryIndex (Trace i) = i.index
+getEitherTheoryIndex (Diff i) = i.index
 
 -- | We use the ordering in order to display loaded theories to the user.
 -- We first compare by name, then by time loaded, and then by source: Theories
@@ -290,31 +273,31 @@ getEitherTheoryIndex (Diff i) = (dtiIndex i)
 compareEDTI :: EitherTheoryInfo -> EitherTheoryInfo -> Ordering
 compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
   mconcat
-    [ comparing (get thyName) i1 i2
+    [ comparing (._thyName) i1 i2
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
     , compare o1 o2
     ]
-compareEDTI (Diff (DiffTheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Diff (DiffTheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
+compareEDTI (Diff (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Diff (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
   mconcat
-    [ comparing (get diffThyName) i1 i2
+    [ comparing (._diffThyName) i1 i2
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
     , compare o1 o2
     ]
-compareEDTI (Diff (DiffTheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
+compareEDTI (Diff (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Trace (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
   mconcat
-    [ compare ((get diffThyName) i1) ((get thyName) i2)
+    [ compare i1._diffThyName i2._thyName
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
     , compare o1 o2
     ]
-compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Diff (DiffTheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
+compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Diff (TheoryInfo _ i2 t2 p2 a2 o2 _ _)) =
   mconcat
-    [ compare ((get thyName) i1) ((get diffThyName) i2)
+    [ compare i1._thyName i2._diffThyName
     , comparing zonedTimeToUTC t1 t2
     , compare a1 a2
     , compare p1 p2
@@ -322,23 +305,23 @@ compareEDTI (Trace (TheoryInfo _ i1 t1 p1 a1 o1 _ _)) (Diff (DiffTheoryInfo _ i2
     ]
 
 
-instance Eq (TheoryInfo) where
+instance Eq TheoryInfo where
   (==) t1 t2 = compareTI t1 t2 == EQ
 
-instance Ord (TheoryInfo) where
+instance Ord TheoryInfo where
   compare = compareTI
 
-instance Eq (DiffTheoryInfo) where
+instance Eq DiffTheoryInfo where
   (==) t1 t2 = compareDTI t1 t2 == EQ
 
-instance Ord (DiffTheoryInfo) where
+instance Ord DiffTheoryInfo where
   compare = compareDTI
 
 
-instance Eq (EitherTheoryInfo) where
+instance Eq EitherTheoryInfo where
   (==) t1 t2 = compareEDTI t1 t2 == EQ
 
-instance Ord (EitherTheoryInfo) where
+instance Ord EitherTheoryInfo where
   compare = compareEDTI
 
 -- | Simple data type for specifying a path to a specific
@@ -353,7 +336,7 @@ data TheoryPath
   | TheoryMessage                       -- ^ Theory message deduction
   | TheoryTactic                        -- ^ Theory tactic
   | TheoryEdit  String                  -- ^ edit lemma at runtime
-  | TheoryDelete String                 -- ^ remove lemma at runtime 
+  | TheoryDelete String                 -- ^ remove lemma at runtime
   | TheoryAdd String                    -- ^ add new lemma at index at runtime
   deriving (Eq, Show, Read)
 
@@ -379,19 +362,18 @@ data DiffTheoryPath
 -- Yesod.
 renderTheoryPath :: TheoryPath -> [String]
 renderTheoryPath =
-    map prefixWithUnderscore . go
-  where
-    go TheoryHelp = ["help"]
-    go TheoryRules = ["rules"]
-    go TheoryMessage = ["message"]
-    go (TheoryLemma name) = ["lemma", name]
-    go (TheorySource k i j) = ["cases", show k, show i, show j]
-    go (TheoryProof lemma path) = "proof" : lemma : path
-    go (TheoryMethod lemma path idx) = "method" : lemma : show idx : path
-    go TheoryTactic = ["tactic"]
-    go (TheoryEdit name) = ["edit", name]
-    go (TheoryAdd name) = ["add", name]
-    go (TheoryDelete name) = ["delete", name]
+  map prefixWithUnderscore . \case
+    TheoryHelp -> ["help"]
+    TheoryRules -> ["rules"]
+    TheoryMessage -> ["message"]
+    TheoryLemma name -> ["lemma", name]
+    TheorySource k i j -> ["cases", show k, show i, show j]
+    TheoryProof lemma path -> "proof" : lemma : path
+    TheoryMethod lemma path idx -> "method" : lemma : show idx : path
+    TheoryTactic -> ["tactic"]
+    TheoryEdit name -> ["edit", name]
+    TheoryAdd name -> ["add", name]
+    TheoryDelete name -> ["delete", name]
 
 -- | Render a theory path to a list of strings. Note that we prefix an
 -- underscore to the empty string and strings starting with an underscore.
@@ -399,19 +381,18 @@ renderTheoryPath =
 -- Yesod.
 renderDiffTheoryPath :: DiffTheoryPath -> [String]
 renderDiffTheoryPath =
-    map prefixWithUnderscore . go
-  where
-    go DiffTheoryHelp = ["help"]
-    go (DiffTheoryLemma s name) = ["lemma", show s, name]
-    go (DiffTheoryDiffLemma name) = ["difflemma", name]
-    go (DiffTheorySource s k i j d) = ["cases", show s, show k, show i, show j, show d]
-    go (DiffTheoryProof s lemma path) = "proof" : show s : lemma : path
-    go (DiffTheoryDiffProof lemma path) = "diffProof" : lemma : path
-    go (DiffTheoryMethod s lemma path idx) = "method" : show s : lemma : show idx : path
-    go (DiffTheoryDiffMethod lemma path idx) = "diffMethod" : lemma : show idx : path
-    go (DiffTheoryRules s d) = ["rules", show s, show d]
-    go (DiffTheoryDiffRules) = ["diffrules"]
-    go (DiffTheoryMessage s d) = ["message", show s, show d]
+  map prefixWithUnderscore . \case
+    DiffTheoryHelp -> ["help"]
+    DiffTheoryLemma s name -> ["lemma", show s, name]
+    DiffTheoryDiffLemma name -> ["difflemma", name]
+    DiffTheorySource s k i j d -> ["cases", show s, show k, show i, show j, show d]
+    DiffTheoryProof s lemma path -> "proof" : show s : lemma : path
+    DiffTheoryDiffProof lemma path -> "diffProof" : lemma : path
+    DiffTheoryMethod s lemma path idx -> "method" : show s : lemma : show idx : path
+    DiffTheoryDiffMethod lemma path idx -> "diffMethod" : lemma : show idx : path
+    DiffTheoryRules s d -> ["rules", show s, show d]
+    DiffTheoryDiffRules -> ["diffrules"]
+    DiffTheoryMessage s d -> ["message", show s, show d]
 
 -- | Prefix an underscore to the empty string and strings starting with an
 -- underscore.
@@ -434,7 +415,7 @@ unprefixUnderscore cs               = cs
 -- | Parse a list of strings into a theory path.
 parseTheoryPath :: [String] -> Maybe TheoryPath
 parseTheoryPath =
-    parse . map unprefixUnderscore
+  parse . map unprefixUnderscore
   where
     parse []     = Nothing
     parse (x:xs) = case x of
@@ -452,7 +433,7 @@ parseTheoryPath =
       _         -> Nothing
 
     safeRead = listToMaybe . map fst . reads
-    
+
     -- parseAdd (y:_) = TheoryAdd <$> safeRead y
     -- parseAdd _ = Nothing
 
@@ -465,18 +446,18 @@ parseTheoryPath =
     parseMethod _        = Nothing
 
     parseCases (kind:y:z:_) = do
-      k <- case kind of "refined" -> return RefinedSource
-                        "raw"     -> return RawSource
+      k <- case kind of "refined" -> pure RefinedSource
+                        "raw"     -> pure RawSource
                         _         -> Nothing
       m <- safeRead y
       n <- safeRead z
-      return (TheorySource k m n)
+      pure (TheorySource k m n)
     parseCases _       = Nothing
 
 -- | Parse a list of strings into a theory path.
 parseDiffTheoryPath :: [String] -> Maybe DiffTheoryPath
 parseDiffTheoryPath =
-    parse . map unprefixUnderscore
+  parse . map unprefixUnderscore
   where
     parse []     = Nothing
     parse (x:xs) = case x of
@@ -498,32 +479,32 @@ parseDiffTheoryPath =
 
     parseRules :: [String] -> Maybe DiffTheoryPath
     parseRules (y:z:_) = do
-      s <- case y of "LHS" -> return LHS
-                     "RHS" -> return RHS
+      s <- case y of "LHS" -> pure LHS
+                     "RHS" -> pure RHS
                      _     -> Nothing
-      d <- case z of "True"  -> return True
-                     "False" -> return False
+      d <- case z of "True"  -> pure True
+                     "False" -> pure False
                      _       -> Nothing
-      return (DiffTheoryRules s d)
+      pure (DiffTheoryRules s d)
     parseRules _         = Nothing
 
     parseMessage :: [String] -> Maybe DiffTheoryPath
     parseMessage (y:z:_) = do
-      s <- case y of "LHS" -> return LHS
-                     "RHS" -> return RHS
+      s <- case y of "LHS" -> pure LHS
+                     "RHS" -> pure RHS
                      _     -> Nothing
-      d <- case z of "True"  -> return True
-                     "False" -> return False
+      d <- case z of "True"  -> pure True
+                     "False" -> pure False
                      _       -> Nothing
-      return (DiffTheoryMessage s d)
+      pure (DiffTheoryMessage s d)
     parseMessage _         = Nothing
 
     parseLemma :: [String] -> Maybe DiffTheoryPath
     parseLemma (y:ys) = do
-      s <- case y of "LHS" -> return LHS
-                     "RHS" -> return RHS
+      s <- case y of "LHS" -> pure LHS
+                     "RHS" -> pure RHS
                      _     -> Nothing
-      return (DiffTheoryLemma s (head ys))
+      pure (DiffTheoryLemma s (head ys))
     parseLemma _         = Nothing
 
     parseDiffLemma :: [String] -> Maybe DiffTheoryPath
@@ -531,53 +512,56 @@ parseDiffTheoryPath =
 
     parseProof :: [String] -> Maybe DiffTheoryPath
     parseProof (y:z:zs) = do
-      s <- case y of "LHS" -> return LHS
-                     "RHS" -> return RHS
+      s <- case y of "LHS" -> pure LHS
+                     "RHS" -> pure RHS
                      _     -> Nothing
-      return (DiffTheoryProof s z zs)
+      pure (DiffTheoryProof s z zs)
     parseProof _         = Nothing
 
     parseDiffProof :: [String] -> Maybe DiffTheoryPath
     parseDiffProof (z:zs) = do
-      return (DiffTheoryDiffProof z zs)
+      pure (DiffTheoryDiffProof z zs)
     parseDiffProof _         = Nothing
 
     parseMethod :: [String] -> Maybe DiffTheoryPath
     parseMethod (x:y:z:zs) = do
-      s <- case x of "LHS" -> return LHS
-                     "RHS" -> return RHS
+      s <- case x of "LHS" -> pure LHS
+                     "RHS" -> pure RHS
                      _     -> Nothing
       i <- safeRead z
-      return (DiffTheoryMethod s y zs i)
+      pure (DiffTheoryMethod s y zs i)
     parseMethod _        = Nothing
 
     parseDiffMethod :: [String] -> Maybe DiffTheoryPath
     parseDiffMethod (y:z:zs) = do
       i <- safeRead z
-      return (DiffTheoryDiffMethod y zs i)
+      pure (DiffTheoryDiffMethod y zs i)
     parseDiffMethod _        = Nothing
 
     parseCases :: [String] -> Maybe DiffTheoryPath
     parseCases (x:kind:pd:y:z:_) = do
-      s <- case x of "LHS" -> return LHS
-                     "RHS" -> return RHS
+      s <- case x of "LHS" -> pure LHS
+                     "RHS" -> pure RHS
                      _     -> Nothing
-      k <- case kind of "refined" -> return RefinedSource
-                        "raw"     -> return RawSource
+      k <- case kind of "refined" -> pure RefinedSource
+                        "raw"     -> pure RawSource
                         _         -> Nothing
-      d <- case pd of "True"  -> return True
-                      "False" -> return False
+      d <- case pd of "True"  -> pure True
+                      "False" -> pure False
                       _       -> Nothing
       m <- safeRead y
       n <- safeRead z
-      return (DiffTheorySource s k d m n)
+      pure (DiffTheorySource s k d m n)
     parseCases _       = Nothing
 
-type RenderUrl = Route (WebUI) -> T.Text
+type RenderUrl = Route WebUI -> T.Text
 
 ------------------------------------------------------------------------------
 -- Routing
 ------------------------------------------------------------------------------
+
+getStatic :: WebUI -> Static
+getStatic = (.getStatic)
 
 -- | Static routing for our application.
 -- Note that handlers ending in R are general handlers,
@@ -722,4 +706,3 @@ defaultLayout' w = do
   |]
           -- <li.delstep>
             -- <a href="#del/path">Remove step</a>
-

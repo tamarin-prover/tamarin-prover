@@ -1,13 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TupleSections         #-}
-{-# LANGUAGE ViewPatterns          #-}
-
--- FIXME: See how we can get rid of the Template Haskell induced warning, such
--- that we have the warning again for our code.
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 {- |
@@ -26,43 +17,39 @@ module Web.Dispatch
   )
 where
 
-import           Theory
-import           Web.Handler
-import           Web.Settings
-import           Web.Types
+import Web.Handler
+import Web.Settings
+import Web.Types
 
-import           Network.Wai
-import           Yesod.Core
-import qualified Yesod.Static
+import Network.Wai
+import Yesod.Core
+import Yesod.Static qualified
 
-import qualified Control.Exception      as E
-import qualified Data.Binary            as Bin
-import qualified Data.ByteString        as B
-import qualified Data.Map               as M
-import qualified Data.Text              as T
-
--- import           Control.Applicative
-import           Control.Concurrent
-import           Control.Monad
-import           Data.List
-import           Data.Maybe
-import           Data.Time.LocalTime
-
-import           System.Directory
-import           System.FilePath
+import Control.Concurrent
+import Control.Exception qualified as E
+import Control.Monad
 import Control.Monad.Except (ExceptT, runExceptT)
-import Main.TheoryLoader (TheoryLoadError (ParserError, WarningError), TheoryLoadOptions(..))
-import Theory.Tools.Wellformedness
-import qualified Data.Label as L
-import Main.Console (renderDoc)
-import qualified Text.PrettyPrint.Class          as Pretty
+import Data.Binary qualified as Bin
+import Data.ByteString qualified as B
+import Data.List
+import Data.Map qualified as M
+import Data.Maybe
+import Data.Text qualified as T
+import Data.Time.LocalTime
+
+import System.Directory
 import System.Exit
+import System.FilePath
+import Main.Console (renderDoc)
+import Main.TheoryLoader (TheoryLoadError(ParserError, WarningError), TheoryLoadOptions(..))
+import Theory
+import Theory.Tools.Wellformedness
+import Text.PrettyPrint.Class qualified as Pretty
 import Text.PrettyPrint.Html
--- import           System.Process
 
 -- | Create YesodDispatch instance for the interface.
 -- mkYesodDispatch "WebUIDiff" resourcesWebUI
-mkYesodDispatch "WebUI"     resourcesWebUI
+mkYesodDispatch "WebUI" resourcesWebUI
 
 -- | Static route for favicon file.
 faviconRoute :: Yesod.Static.StaticRoute
@@ -74,7 +61,7 @@ getFaviconR = redirect (StaticR faviconRoute)
 
 -- | Robots file handler function (robots.txt).
 getRobotsR :: Handler RepPlain
-getRobotsR = return $ RepPlain $ toContent ("User-agent: *" :: B.ByteString)
+getRobotsR = pure $ RepPlain $ toContent ("User-agent: *" :: B.ByteString)
 
 -- | NOTE (SM): See the note on 'staticFiles' below on how to enable dynamic
 -- reloading.
@@ -82,140 +69,141 @@ staticFiles :: Yesod.Static.Static
 staticFiles = $(Yesod.Static.embed "data")
 
 -- | Initialization function for the web application.
-withWebUI :: String                          -- ^ Message to output once the sever is ready.
-          -> FilePath                        -- ^ Cache directory.
-          -> FilePath                        -- ^ Working directory.
-          -> Bool                            -- ^ Enable server logging.
-          -> Bool                            -- ^ Load last proof state if present
-          -> Bool                            -- ^ Automatically save proof state
-          -> TheoryLoadOptions               -- ^ Options for loading theories
-          -> (String -> FilePath -> ExceptT TheoryLoadError IO (Either OpenTheory OpenDiffTheory))
-          -- ^ Theory loader (from string).
-          -> (SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> ExceptT TheoryLoadError IO (WfErrorReport, Either ClosedTheory ClosedDiffTheory))
-          -- ^ Theory closer.
-          -> Bool                            -- ^ Show debugging messages?
-          -> OutputCommand                   -- ^ Path to graph rendering binary (dot or json)
-                                             -- ^ together with indication of choice "dot", "json", ...
-          -> ImageFormat                     -- ^ The preferred image format
-          -> AutoProver                      -- ^ The default autoprover.
-          -> (Application -> IO b)           -- ^ Function to execute
-          -> IO b
-withWebUI readyMsg cacheDir_ thDir enableLogging loadState autosave thOpts thLoad thClose debug'
-          outputCmd' imgFormat' defaultAutoProver' f
-  = do
-    thy    <- getTheos
-    thrVar <- newMVar M.empty
-    thyVar <- newMVar thy
-    -- NOTE (SM): uncomment this line to load the assets dynamically.
-    -- staticFiles     <- Yesod.Static.static "data"
-    when autosave $ createDirectoryIfMissing False autosaveDir
-    -- Don't create parent dirs, as temp-dir should be created by OS.
-    createDirectoryIfMissing False cacheDir_
-    (`E.finally` shutdownThreads thrVar) $
-      f =<< app thrVar thyVar
+withWebUI
+  :: String                -- ^ Message to output once the sever is ready.
+  -> FilePath              -- ^ Cache directory.
+  -> FilePath              -- ^ Working directory.
+  -> Bool                  -- ^ Enable server logging.
+  -> Bool                  -- ^ Load last proof state if present
+  -> Bool                  -- ^ Automatically save proof state
+  -> TheoryLoadOptions     -- ^ Options for loading theories
+  -> (String -> FilePath -> ExceptT TheoryLoadError IO (Either OpenTheory OpenDiffTheory))
+  -- ^ Theory loader (from string).
+  -> (SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> ExceptT TheoryLoadError IO (WfErrorReport, Either ClosedTheory ClosedDiffTheory))
+  -- ^ Theory closer.
+  -> Bool                  -- ^ Show debugging messages?
+  -> OutputCommand         -- ^ Path to graph rendering binary (dot or json)
+  -- ^ together with indication of choice "dot", "json", ...
+  -> ImageFormat           -- ^ The preferred image format
+  -> AutoProver            -- ^ The default autoprover.
+  -> (Application -> IO b) -- ^ Function to execute
+  -> IO b
+withWebUI readyMsg cacheDir workDir enableLogging loadState autosave thyOpts
+          loadThy closeThy debug outputCmd imageFormat defaultAutoProver f = do
+  thy <- getTheos
+  threadVar <- newMVar M.empty
+  theoryVar <- newMVar thy
+  -- NOTE (SM): uncomment this line to load the assets dynamically.
+  -- staticFiles     <- Yesod.Static.static "data"
+  when autosave $ createDirectoryIfMissing False autosaveDir
+  -- Don't create parent dirs, as temp-dir should be created by OS.
+  createDirectoryIfMissing False cacheDir
+  (`E.finally` shutdownThreads threadVar) $
+    f =<< app threadVar theoryVar
   where
-    app thrVar thyVar =
+    app threadVar theoryVar =
       let webUI = WebUI
-                  { workDir            = thDir
-                  , cacheDir           = cacheDir_
-                  , thyOpts            = thOpts
-                  , loadThy            = thLoad
-                  , closeThy           = thClose
-                  , getStatic          = staticFiles
-                  , theoryVar          = thyVar
-                  , threadVar          = thrVar
-                  , autosaveProofstate = autosave
-                  , outputCmd           = outputCmd'
-                  , imageFormat        = imgFormat'
-                  , defaultAutoProver  = defaultAutoProver'
-                  , debug              = debug'
-                  } in
-      if enableLogging
-      then toWaiApp webUI
+                    { workDir
+                    , cacheDir
+                    , thyOpts
+                    , loadThy
+                    , closeThy
+                    , getStatic = staticFiles
+                    , theoryVar
+                    , threadVar
+                    , autosaveProofstate = autosave
+                    , outputCmd
+                    , imageFormat
+                    , defaultAutoProver
+                    , debug
+                    }
+      in if enableLogging then
+        toWaiApp webUI
       else do
         plain <- toWaiAppPlain webUI
-        return $ defaultMiddlewaresNoLogging plain
-          
-    autosaveDir = thDir++"/"++autosaveSubdir
+        pure $ defaultMiddlewaresNoLogging plain
+    autosaveDir = workDir </> autosaveSubdir
     getTheos = do
       existsAutosave <- doesDirectoryExist autosaveDir
-      if loadState && existsAutosave
-       then do
-         putStrLn "Using persistent server state ... server ready."
-         files <- getDirectoryContents autosaveDir
-         thys <- (`mapM` files) $ \fn ->
-                   case break (`notElem` ['0'..'9']) fn of
-                     (idx,".img") -> do
-                       let file = thDir++"/"++autosaveSubdir++fn
-                       Just . (read idx,) <$> Bin.decodeFile file
-                     _            -> return Nothing
-         return $ M.fromList $ catMaybes thys
+      if loadState && existsAutosave then do
+        putStrLn "Using persistent server state ... server ready."
+        files <- getDirectoryContents autosaveDir
+        thys <- forM files $ \fn ->
+          case break (`notElem` ['0'..'9']) fn of
+            (idx,".img") -> do
+              let file = workDir </> autosaveSubdir </> fn
+              Just . (read idx,) <$> Bin.decodeFile file
+            _            -> pure Nothing
+        pure $ M.fromList $ catMaybes thys
 
-       else loadTheories thOpts readyMsg thDir thLoad thClose defaultAutoProver'
+      else loadTheories thyOpts readyMsg workDir loadThy closeThy defaultAutoProver
 
     shutdownThreads thrVar = do
-      m <- modifyMVar thrVar $ \m -> return (M.empty, m)
+      m <- modifyMVar thrVar $ \m -> pure (M.empty, m)
       putStrLn $ "Server shutdown: " ++ show (M.size m) ++ " threads still running"
       forM (M.toList m) $ \(str, tid) -> do
-         putStrLn $ "killing: " ++ T.unpack str
-         killThread tid
+        putStrLn $ "killing: " ++ T.unpack str
+        killThread tid
 
 -- | Load theories from the current directory, generate map.
-loadTheories :: TheoryLoadOptions
-             -> String
-             -> FilePath
-             -> (String -> FilePath -> ExceptT TheoryLoadError IO (Either OpenTheory OpenDiffTheory))
-             -> (SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> ExceptT TheoryLoadError IO (WfErrorReport, Either ClosedTheory ClosedDiffTheory))
-             -> AutoProver
-             -> IO TheoryMap
+loadTheories
+  :: TheoryLoadOptions
+  -> String
+  -> FilePath
+  -> (String -> FilePath -> ExceptT TheoryLoadError IO (Either OpenTheory OpenDiffTheory))
+  -> (SignatureWithMaude -> Either OpenTheory OpenDiffTheory -> ExceptT TheoryLoadError IO (WfErrorReport, Either ClosedTheory ClosedDiffTheory))
+  -> AutoProver
+  -> IO TheoryMap
 loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
-    thPaths <- filter (\n -> (".spthy" `isSuffixOf` n) || (".sapic" `isSuffixOf` n)) <$> getDirectoryContents thDir
-    theories <- catMaybes <$> mapM loadThy (zip [1..] (map (thDir </>) thPaths))
-    putStrLn readyMsg
-    return $ M.fromList theories
+  thPaths <- filter (\n -> any (`isSuffixOf` n) [".spthy", ".sapic"]) <$> getDirectoryContents thDir
+  theories <- catMaybes <$> mapM loadThy (zip [1..] (map (thDir </>) thPaths))
+  putStrLn readyMsg
+  pure $ M.fromList theories
   where
     loadThy (idx, path) = do
       srcThy <- readFile path
 
       result <- runExceptT $ do
         openThy <- thLoad srcThy path
-        let sig = either (L.get thySignature) (L.get diffThySignature) openThy
+        let sig = either (._thySignature) (._diffThySignature) openThy
         sig' <- liftIO $ toSignatureWithMaude thOpts.maudePath sig
         thClose sig' openThy
 
       case result of
         Left (ParserError e) -> do
           putStrLn $ renderDoc $ reportFailure e path
-          return Nothing
+          pure Nothing
         Left (WarningError report) -> do
           putStrLn $ renderDoc $ ppInteractive report path
           die "quit-on-warning mode selected - aborting on wellformedness errors."
         Right (report, thy) -> do
           time <- getZonedTime
-          wfErrors <- case report of
-                  [] -> pure $ ""
-                  _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
+          let wfErrors = if null report
+                then ""
+                else "<div class=\"wf-warning\">"
+                     <> "\nWARNING: the following wellformedness checks failed!<br /><br />"
+                     <> "\n" <> (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report)
+                     <> "\n</div>"
           unless (null report) $ putStrLn $ renderDoc $ ppInteractive report path
-          return $ Just
-             ( idx
-             , either (\t -> Trace $ TheoryInfo idx t time Nothing True (Local path) autoProver wfErrors)
-                      (\t -> Diff $ DiffTheoryInfo idx t time Nothing True (Local path) autoProver wfErrors) thy
-             )
+          let theoryInfo t = TheoryInfo idx t time Nothing True (Local path) autoProver wfErrors
+          pure $ Just (idx, either (Trace . theoryInfo) (Diff . theoryInfo) thy)
       where
-        reportFailure error inFile = Pretty.vcat [ Pretty.text $ replicate 78 '-'
-                                                 , Pretty.text $ "Unable to load theory file `" ++ inFile ++ "'"
-                                                 , Pretty.text $ replicate 78 '-'
-                                                 , Pretty.text $ ""
-                                                 , Pretty.text $ show error
-                                                 , Pretty.text $ replicate 78 '-'
-                                                 , Pretty.text $ "" ]
+        reportFailure err inFile = Pretty.vcat $ Pretty.text <$>
+          [ replicate 78 '-'
+          , "Unable to load theory file `" ++ inFile ++ "'"
+          , replicate 78 '-'
+          , ""
+          , show err
+          , replicate 78 '-'
+          , "" ]
 
-        ppInteractive report inFile = Pretty.vcat [ Pretty.text $ replicate 78 '-'
-                                                  , Pretty.text $ "Theory file '" ++ inFile ++ "'"
-                                                  , Pretty.text $ replicate 78 '-'
-                                                  , Pretty.text $ ""
-                                                  , Pretty.text $ "WARNING: ignoring the following wellformedness errors"
-                                                  , Pretty.text $ ""
-                                                  , prettyWfErrorReport report
-                                                  , Pretty.text $ replicate 78 '-'
-                                                  , Pretty.text $ "" ]
+        ppInteractive report inFile = Pretty.vcat
+          [ Pretty.text $ replicate 78 '-'
+          , Pretty.text $ "Theory file '" ++ inFile ++ "'"
+          , Pretty.text $ replicate 78 '-'
+          , Pretty.text ""
+          , Pretty.text "WARNING: ignoring the following wellformedness errors"
+          , Pretty.text ""
+          , prettyWfErrorReport report
+          , Pretty.text $ replicate 78 '-'
+          , Pretty.text "" ]
