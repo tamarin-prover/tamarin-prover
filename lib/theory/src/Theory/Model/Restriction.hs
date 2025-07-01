@@ -162,4 +162,4 @@ fromRuleRestriction rname f =
 
 applyMacroInRestriction :: [Macro] -> Restriction -> Restriction
 applyMacroInRestriction macros (Restriction name f ofm) = 
-    Restriction name (applyMacrosInFormula macros f) (Just $ maybe f id ofm)
+    Restriction name (applyMacroInFormula macros f) (Just $ maybe f id ofm)

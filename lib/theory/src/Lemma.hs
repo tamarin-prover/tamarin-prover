@@ -82,7 +82,7 @@ isRightLemma lem =
 applyMacroInLemma :: [Macro] -> Lemma p -> Lemma p
 applyMacroInLemma macros lemma = 
   let originalFormula = L.get lFormula lemma
-      expandedFormula = applyMacrosInFormula macros originalFormula
+      expandedFormula = applyMacroInFormula macros originalFormula
   in L.set lOriginalFormula (Just originalFormula) $ 
      L.set lFormula expandedFormula lemma
 
@@ -111,6 +111,7 @@ prettyLemmaAttribute _                  = emptyDoc
 prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
 prettyDiffLemmaName l = text ((L.get lDiffName l))
 
+-- | Pretty print a lemma.
 prettyLemma :: HighlightDocument d => (p -> d) -> Bool -> Lemma p -> d
 prettyLemma ppPrf preserveMacros lem =
     kwLemma <-> prettyLemmaName lem <> colon $-$

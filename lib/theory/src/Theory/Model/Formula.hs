@@ -57,7 +57,7 @@ module Theory.Model.Formula (
   , mapAtoms
   , foldFormula
   , traverseFormulaAtom
-  , applyMacrosInFormula
+  , applyMacroInFormula
 
   -- ** Normal forms / simplification
   , simplifyFormula
@@ -79,8 +79,6 @@ import           GHC.Generics (Generic)
 import           Data.Binary
 -- import           Data.Foldable                    (Foldable, foldMap)
 import           Data.Data
-import Data.List (isPrefixOf)
-import Text.Read (readMaybe)
 -- import           Data.Monoid                      hiding (All)
 -- import           Data.Traversable
 
@@ -310,9 +308,9 @@ openFormulaPrefix f0 = case openFormula f0 of
 
 
 -- | Apply macros to a formula
-applyMacrosInFormula :: [Macro] -> LNFormula -> LNFormula
-applyMacrosInFormula [] fm = fm
-applyMacrosInFormula macros fm = mapAtoms (const (fmap (handleTerms macros))) fm
+applyMacroInFormula :: [Macro] -> LNFormula -> LNFormula
+applyMacroInFormula [] fm = fm
+applyMacroInFormula macros fm = mapAtoms (const (fmap (handleTerms macros))) fm
   where
     handleTerms :: [Macro] -> VTerm Name (BVar LVar) -> VTerm Name (BVar LVar)
     handleTerms mcs term = 
