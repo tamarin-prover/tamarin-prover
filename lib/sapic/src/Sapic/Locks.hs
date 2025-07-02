@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
 -- |
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -111,5 +110,5 @@ checkLocks p = case run $ annotateLocks' $ toAnProcess p of
         run a = runExcept $ evalFreshT a 0
         checkUnmatchedUnlock = getAny . pfoldMap (Any . isUnmatchedUnlock)
         isUnmatchedUnlock (ProcessAction (Unlock _) annotation _)
-                | Nothing <- lock annotation = True
+                | Nothing <- annotation.lock = True
         isUnmatchedUnlock _ = False

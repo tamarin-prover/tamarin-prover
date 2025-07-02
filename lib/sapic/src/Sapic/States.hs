@@ -211,7 +211,7 @@ annotateEachPureStates (ProcessComb comb an pl pr ) pureStates
               pl' = annotateEachPureStates pl pureStates
               pr' = annotateEachPureStates pr pureStates
 annotateEachPureStates (ProcessAction ac an p) pureStates
-  | New _ <- ac, Just cid <- isStateChannel an =
+  | New _ <- ac, Just cid <- an.isStateChannel =
       if fst $ isPureState p cid False then
         ProcessAction ac an{pureState=True, isStateChannel = Just cid} (annotateEachPureStates p (cid `S.insert` pureStates))
       else
