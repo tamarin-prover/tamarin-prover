@@ -117,19 +117,16 @@ prettyLemma ppPrf preserveMacros lem =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
-          , doubleQuotes $ prettyLNFormula formula
+          , doubleQuotes $ prettyLNFormula (maybe expandedFormula id ogFormula)
           ]
     )
     $-$
-    ppLNFormulaGuarded formula
+    ppLNFormulaGuarded expandedFormula
     $-$
     ppPrf (L.get lProof lem)
   where
-    -- Select formula based on preserveMacros flag
-    formula = case (preserveMacros, L.get lOriginalFormula lem) of
-                (True, Just origForm) -> origForm
-                _ -> L.get lFormula lem
-    
+    expandedFormula = L.get lFormula lem
+    ogFormula = L.get lOriginalFormula lem    
     ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$
