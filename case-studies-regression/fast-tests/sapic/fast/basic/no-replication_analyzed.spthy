@@ -1,0 +1,110 @@
+theory NoReplication begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+lemma onlyOneSecret:
+  all-traces
+  "∀ #i #j x y. ((Secret( x ) @ #i) ∧ (Secret( y ) @ #j)) ⇒ (x = y)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j x y. (Secret( x ) @ #i) ∧ (Secret( y ) @ #j) ∧ ¬(x = y)"
+*/
+simplify
+solve( State_1( x ) ▶₀ #i )
+  case news_0_
+  solve( State_1( y ) ▶₀ #j )
+    case news_0_
+    by contradiction /* from formulas */
+  qed
+qed
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='new s.1;', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) news_0_[color=#ffffff, process='new s.1;', issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( s.1 ) ] --> [ State_1( s.1 ) ]
+
+  /*
+  rule (modulo AC) news_0_[color=#ffffff, process='new s.1;', issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( s ) ] --> [ State_1( s ) ]
+  */
+
+rule (modulo E) eventSecrets_0_1[color=#ffffff,
+                                 process='event Secret( s.1 );', issapicrule, role='Process']:
+   [ State_1( s.1 ) ] --[ Secret( s.1 ) ]-> [ State_11( s.1 ) ]
+
+  /*
+  rule (modulo AC) eventSecrets_0_1[color=#ffffff,
+                                    process='event Secret( s.1 );', issapicrule, role='Process']:
+     [ State_1( s ) ] --[ Secret( s ) ]-> [ State_11( s ) ]
+  */
+
+rule (modulo E) outs_0_11[color=#ffffff, process='out(s.1);',
+                          issapicrule, role='Process']:
+   [ State_11( s.1 ) ] --> [ State_111( s.1 ), Out( s.1 ) ]
+
+  /*
+  rule (modulo AC) outs_0_11[color=#ffffff, process='out(s.1);',
+                             issapicrule, role='Process']:
+     [ State_11( s ) ] --> [ State_111( s ), Out( s ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_111( s.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+     [ State_111( s ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/no-replication.spthy
+
+  output:          examples/sapic/fast/basic/no-replication.spthy.tmp
+  processing time: 0.09s
+  
+  onlyOneSecret (all-traces): verified (4 steps)
+
+==============================================================================
+*/

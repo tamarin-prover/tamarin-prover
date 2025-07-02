@@ -1,5 +1,3 @@
-{-# LANGUAGE NoFieldSelectors #-}
-
 -- |
 -- Copyright   : (c) 2010, 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -248,9 +246,9 @@ defaultTheoryLoadOptions =
 toParserFlags :: TheoryLoadOptions -> [String]
 toParserFlags thyOpts =
   concat
-    [ ["diff" | thyOpts.diffMode],
-      thyOpts.defines,
-      ["quit-on-warning" | thyOpts.quitOnWarning]
+    [ ["diff" | thyOpts.diffMode]
+    , thyOpts.defines
+    , ["quit-on-warning" | thyOpts.quitOnWarning]
     ]
 
 newtype ArgumentError = ArgumentError String
@@ -513,10 +511,10 @@ checkTranslatedTheory thyOpts sign thy = do
     maudePublicSig s =
       Signature $
         s._sigMaudeInfo
-          { stFunSyms = makepublic (stFunSyms s._sigMaudeInfo),
-            funSyms = makepublicsym (funSyms s._sigMaudeInfo),
-            irreducibleFunSyms = makepublicsym (irreducibleFunSyms s._sigMaudeInfo),
-            reducibleFunSyms = makepublicsym (reducibleFunSyms s._sigMaudeInfo)
+          { stFunSyms = makepublic (stFunSyms s._sigMaudeInfo)
+          , funSyms = makepublicsym (funSyms s._sigMaudeInfo)
+          , irreducibleFunSyms = makepublicsym (irreducibleFunSyms s._sigMaudeInfo)
+          , reducibleFunSyms = makepublicsym (reducibleFunSyms s._sigMaudeInfo)
           }
     makepublic = Data.Set.map (\(name, (int, _, construct)) -> (name, (int, Public, construct)))
     makepublicsym = Data.Set.map $ \case
@@ -559,7 +557,12 @@ withVersionAndReport version thyOpts report thy = do
             ]
 
 -- | Close a translated theory.
-closeTranslatedTheory :: (MonadError TheoryLoadError m) => TheoryLoadOptions -> SignatureWithMaude -> Either OpenTranslatedTheory OpenDiffTheory -> m (Either ClosedTheory ClosedDiffTheory)
+closeTranslatedTheory
+  :: (MonadError TheoryLoadError m)
+  => TheoryLoadOptions
+  -> SignatureWithMaude
+  -> Either OpenTranslatedTheory OpenDiffTheory
+  -> m (Either ClosedTheory ClosedDiffTheory)
 closeTranslatedTheory thyOpts sign srcThy = do
   diffLemThy <- withDiffTheory (pure . addDefaultDiffLemma) srcThy
   let closedThy =
@@ -631,7 +634,7 @@ closeTheory version loadedThyOpts sign srcThy = do
 
     -- Set the oraclename to theory_filename.oracle (if none was supplied).
     thyHeurDefOracle opts =
-      opts {heuristic = (\(Heuristic grl) -> Just $ Heuristic $ defaultOracleNames srcThyInFileName grl) =<< loadedHeuristic}
+      opts { heuristic = (\(Heuristic grl) -> Heuristic $ defaultOracleNames srcThyInFileName grl) <$> loadedHeuristic }
 
     -- Read and process the arguments from the theory's config block.
     srcThyConfigBlockArgs = argsConfigString $ either theoryConfigBlock diffTheoryConfigBlock srcThy

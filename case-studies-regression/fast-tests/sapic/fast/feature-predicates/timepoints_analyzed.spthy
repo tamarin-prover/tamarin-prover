@@ -1,0 +1,70 @@
+theory TestPredicate begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+rule (modulo E) ActionRule:
+   [ ] --[ Action( 'hi' ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+predicate: Exists( #time )<=>∃ val. Action( val ) @ #time
+
+predicate: ExistsVal( val )<=>∃ #time. Action( val ) @ #time
+
+lemma hi:
+  exists-trace "∃ #t val. Action( val ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t val. (Action( val ) @ #t)"
+*/
+simplify
+SOLVED // trace found
+
+lemma ho:
+  exists-trace "∃ a #time. Action( a ) @ #time"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ a #time. (Action( a ) @ #time)"
+*/
+simplify
+SOLVED // trace found
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-predicates/timepoints.spthy
+
+  output:          examples/sapic/fast/feature-predicates/timepoints.spthy.tmp
+  processing time: 0.05s
+  
+  hi (exists-trace): verified (2 steps)
+  ho (exists-trace): verified (2 steps)
+
+==============================================================================
+*/

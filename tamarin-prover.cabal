@@ -127,7 +127,6 @@ executable tamarin-prover
       , binary
       , binary-orphans
       , binary-instances
-      , blaze-builder
       , blaze-html
       , bytestring
       , cmdargs
@@ -136,7 +135,6 @@ executable tamarin-prover
       , deepseq
       , directory
       , exceptions
-      , fclabels
       , file-embed
       , filepath
       , gitrev
@@ -181,7 +179,6 @@ executable tamarin-prover
       Web.Dispatch
       Web.Hamlet
       Web.Handler
-      Web.Instances
       Web.Settings
       Web.Theory
       Web.Types
@@ -191,7 +188,9 @@ executable tamarin-prover
     default-extensions:
       DuplicateRecordFields
       LambdaCase
+      NoFieldSelectors
       OverloadedRecordDot
+      OverloadedStrings
       TemplateHaskell
 
 

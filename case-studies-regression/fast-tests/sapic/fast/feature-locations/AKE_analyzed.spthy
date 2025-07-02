@@ -1,0 +1,609 @@
+theory AKE begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, check_rep/2[destructor], first/1, fst/1,
+           get_rep/1[destructor], pair/2, pk/1, rep/2[private,constructor],
+           report/1, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    first(<x, y>) = x,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+predicate: Report( x, y )<=>¬(first(y) = 'loc')
+
+
+
+
+
+
+
+lemma can_run_p:
+  exists-trace "∃ #t h1 h2. Poutput( h1, h2 ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t h1 h2. (Poutput( h1, h2 ) @ #t)"
+*/
+simplify
+solve( State_1111111( k, pkV ) ▶₀ #t )
+  case eventSessionPpkVk_0_111111
+  SOLVED // trace found
+qed
+
+lemma can_run_v:
+  exists-trace "∃ #t h1 h2. Voutput( h1, h2 ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t h1 h2. (Voutput( h1, h2 ) @ #t)"
+*/
+simplify
+solve( State_211111111( cypher, skV, h2 ) ▶₀ #t )
+  case ifcyphercheckrepsignedlocpkskVskey_0_21111111
+  solve( splitEqs(0) )
+    case split_case_1
+    solve( splitEqs(1) )
+      case split_case_1
+      solve( !KU( rep(cypher, <'loc', pk(~n)>) ) @ #vk.2 )
+        case ReportRule
+        by contradiction /* from formulas */
+      qed
+    next
+      case split_case_2
+      by solve( !KU( check_rep(h2, <'loc', pk(~n)>) ) @ #vk.1 )
+    qed
+  next
+    case split_case_2
+    solve( !KU( rep(aenc(z, pk(~n)), <'loc', pk(~n)>) ) @ #vk.2 )
+      case ReportRule
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma sanity1:
+  exists-trace "∃ pka k #t1. SessionP( pka, k ) @ #t1"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ pka k #t1. (SessionP( pka, k ) @ #t1)"
+*/
+simplify
+solve( State_111111( k, pka ) ▶₀ #t1 )
+  case newk_0_11111
+  SOLVED // trace found
+qed
+
+lemma sanity2:
+  exists-trace "∃ pka k #t1. SessionV( pka, k ) @ #t1"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ pka k #t1. (SessionV( pka, k ) @ #t1)"
+*/
+simplify
+solve( State_2111111111( cypher, skV, signed ) ▶₀ #t1 )
+  case eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111
+  solve( splitEqs(0) )
+    case split_case_1
+    solve( splitEqs(1) )
+      case split_case_1
+      solve( !KU( rep(cypher, <'loc', pk(~n)>) ) @ #vk.2 )
+        case ReportRule
+        by contradiction /* from formulas */
+      qed
+    next
+      case split_case_2
+      by solve( !KU( check_rep(signed, <'loc', pk(~n)>) ) @ #vk.1 )
+    qed
+  next
+    case split_case_2
+    solve( !KU( rep(aenc(z, pk(~n)), <'loc', pk(~n)>) ) @ #vk.2 )
+      case ReportRule
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma sanity3 [reuse]:
+  all-traces
+  "∀ pka k #t1.
+    (SessionV( pka, k ) @ #t1) ⇒
+    (∃ #t2. (SessionP( pka, k ) @ #t2) ∧ (#t2 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pka k #t1.
+  (SessionV( pka, k ) @ #t1)
+ ∧
+  ∀ #t2. (SessionP( pka, k ) @ #t2) ⇒ ¬(#t2 < #t1)"
+*/
+simplify
+solve( State_2111111111( cypher, skV, signed ) ▶₀ #t1 )
+  case eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111
+  solve( splitEqs(0) )
+    case split_case_1
+    solve( splitEqs(1) )
+      case split_case_1
+      solve( !KU( rep(cypher, <'loc', pk(~n)>) ) @ #vk.2 )
+        case ReportRule
+        by contradiction /* from formulas */
+      qed
+    next
+      case split_case_2
+      by solve( !KU( check_rep(signed, <'loc', pk(~n)>) ) @ #vk.1 )
+    qed
+  next
+    case split_case_2
+    solve( !KU( rep(aenc(z, pk(~n)), <'loc', pk(~n)>) ) @ #vk.2 )
+      case ReportRule
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma secrecy [reuse]:
+  all-traces
+  "¬(∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ pka k #t1 #t2. (SessionV( pka, k ) @ #t1) ∧ (!KU( k ) @ #t2)"
+*/
+simplify
+solve( State_2111111111( cypher, skV, signed ) ▶₀ #t1 )
+  case eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111
+  solve( State_111111( k, pk(~n) ) ▶₀ #t2 )
+    case newk_0_11111
+    solve( State_111111( ~z, pk(~n) ) ▶₀ #t2.1 )
+      case newk_0_11111
+      solve( !KU( rep(aenc(~z, pk(~n)), <'loc', pk(~n)>) ) @ #vk.2 )
+        case ReportRule
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
+  // safety formula
+
+rule (modulo E) ReportRule[color=#ffffff, process='|', issapicrule,
+                           role='Process']:
+   [ In( <x, loc> ) ]
+  --[ Restr_ReportRule_1( first(loc) ) ]->
+   [ Out( rep(x, loc) ) ]
+
+  /*
+  rule (modulo AC) ReportRule[color=#ffffff, process='|', issapicrule,
+                              role='Process']:
+     [ In( <x, loc> ) ] --[ Restr_ReportRule_1( z ) ]-> [ Out( rep(x, loc) ) ]
+    variants (modulo AC)
+    1. loc   = loc.4
+       z     = first(loc.4)
+    
+    2. loc   = <x.4, x.5>
+       z     = x.4
+  */
+
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ !Semistate_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ !Semistate_11( ) ] --> [ State_11( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) r_0_11[color=#ffffff, process='r()', issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inpkV_0_111[color=#405280, process='in(pkV.1);',
+                            issapicrule, role='r']:
+   [ State_111( ), In( pkV.1 ) ] --> [ State_1111( pkV.1 ) ]
+
+  /*
+  rule (modulo AC) inpkV_0_111[color=#405280, process='in(pkV.1);',
+                               issapicrule, role='r']:
+     [ State_111( ), In( pkV ) ] --> [ State_1111( pkV ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#405280, process='!', issapicrule,
+                         role='r']:
+   [ State_1111( pkV.1 ) ] --> [ !Semistate_11111( pkV.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#405280, process='!', issapicrule,
+                            role='r']:
+     [ State_1111( pkV ) ] --> [ !Semistate_11111( pkV ) ]
+  */
+
+rule (modulo E) p_1_1111[color=#405280, process='!', issapicrule,
+                         role='r']:
+   [ !Semistate_11111( pkV.1 ) ] --> [ State_11111( pkV.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_1111[color=#405280, process='!', issapicrule,
+                            role='r']:
+     [ !Semistate_11111( pkV ) ] --> [ State_11111( pkV ) ]
+  */
+
+rule (modulo E) newk_0_11111[color=#405280, process='new k.1;',
+                             issapicrule, role='r']:
+   [ State_11111( pkV.1 ), Fr( k.1 ) ] --> [ State_111111( k.1, pkV.1 ) ]
+
+  /*
+  rule (modulo AC) newk_0_11111[color=#405280, process='new k.1;',
+                                issapicrule, role='r']:
+     [ State_11111( pkV ), Fr( k ) ] --> [ State_111111( k, pkV ) ]
+  */
+
+rule (modulo E) eventSessionPpkVk_0_111111[color=#405280,
+                                           process='event SessionP( pkV.1, k.1 );', issapicrule, role='r']:
+   [ State_111111( k.1, pkV.1 ) ]
+  --[ SessionP( pkV.1, k.1 ) ]->
+   [ State_1111111( k.1, pkV.1 ) ]
+
+  /*
+  rule (modulo AC) eventSessionPpkVk_0_111111[color=#405280,
+                                              process='event SessionP( pkV.1, k.1 );', issapicrule, role='r']:
+     [ State_111111( k, pkV ) ]
+    --[ SessionP( pkV, k ) ]->
+     [ State_1111111( k, pkV ) ]
+  */
+
+rule (modulo E) eventPoutputaenckpkVreportaenckpkV_0_1111111[color=#405280,
+                                                             process='event Poutput( aenc(k.1, pkV.1), report(aenc(k.1, pkV.1)) );',
+                                                             issapicrule, role='r']:
+   [ State_1111111( k.1, pkV.1 ) ]
+  --[ Poutput( aenc(k.1, pkV.1), report(aenc(k.1, pkV.1)) ) ]->
+   [ State_11111111( k.1, pkV.1 ) ]
+
+  /*
+  rule (modulo AC) eventPoutputaenckpkVreportaenckpkV_0_1111111[color=#405280,
+                                                                process='event Poutput( aenc(k.1, pkV.1), report(aenc(k.1, pkV.1)) );',
+                                                                issapicrule, role='r']:
+     [ State_1111111( k, pkV ) ]
+    --[ Poutput( aenc(k, pkV), report(aenc(k, pkV)) ) ]->
+     [ State_11111111( k, pkV ) ]
+  */
+
+rule (modulo E) outaenckpkVreportaenckpkV_0_11111111[color=#405280,
+                                                     process='out(<aenc(k.1, pkV.1), report(aenc(k.1, pkV.1))>);',
+                                                     issapicrule, role='r']:
+   [ State_11111111( k.1, pkV.1 ) ]
+  -->
+   [
+   State_111111111( k.1, pkV.1 ),
+   Out( <aenc(k.1, pkV.1), report(aenc(k.1, pkV.1))> )
+   ]
+
+  /*
+  rule (modulo AC) outaenckpkVreportaenckpkV_0_11111111[color=#405280,
+                                                        process='out(<aenc(k.1, pkV.1), report(aenc(k.1, pkV.1))>);',
+                                                        issapicrule, role='r']:
+     [ State_11111111( k, pkV ) ]
+    -->
+     [ State_111111111( k, pkV ), Out( <aenc(k, pkV), report(aenc(k, pkV))> )
+     ]
+  */
+
+rule (modulo E) p_0_111111111[color=#405280, process='0', issapicrule,
+                              role='r']:
+   [ State_111111111( k.1, pkV.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111111[color=#405280, process='0', issapicrule,
+                                 role='r']:
+     [ State_111111111( k, pkV ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_112[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_112( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_2[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ State_2( ) ] --> [ !Semistate_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_2[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ !Semistate_21( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) v_0_21[color=#ffffff, process='v()', issapicrule,
+                       role='Process']:
+   [ State_21( ) ] --> [ State_211( ), State_212( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newskVskey_0_211[color=#658040,
+                                 process='new skV.1:skey;', issapicrule, role='v']:
+   [ State_211( ), Fr( skV.1 ) ] --> [ State_2111( skV.1 ) ]
+
+  /*
+  rule (modulo AC) newskVskey_0_211[color=#658040,
+                                    process='new skV.1:skey;', issapicrule, role='v']:
+     [ State_211( ), Fr( skV ) ] --> [ State_2111( skV ) ]
+  */
+
+rule (modulo E) eventHonestPpkskVskeypubkey_0_2111[color=#658040,
+                                                   process='event HonestP( pk(skV.1:skey), 'pubkey' );',
+                                                   issapicrule, role='v']:
+   [ State_2111( skV.1 ) ]
+  --[ HonestP( pk(skV.1), 'pubkey' ) ]->
+   [ State_21111( skV.1 ) ]
+
+  /*
+  rule (modulo AC) eventHonestPpkskVskeypubkey_0_2111[color=#658040,
+                                                      process='event HonestP( pk(skV.1:skey), 'pubkey' );',
+                                                      issapicrule, role='v']:
+     [ State_2111( skV ) ]
+    --[ HonestP( pk(skV), 'pubkey' ) ]->
+     [ State_21111( skV ) ]
+  */
+
+rule (modulo E) outpkskVskey_0_21111[color=#658040,
+                                     process='out(pk(skV.1:skey));', issapicrule, role='v']:
+   [ State_21111( skV.1 ) ] --> [ State_211111( skV.1 ), Out( pk(skV.1) ) ]
+
+  /*
+  rule (modulo AC) outpkskVskey_0_21111[color=#658040,
+                                        process='out(pk(skV.1:skey));', issapicrule, role='v']:
+     [ State_21111( skV ) ] --> [ State_211111( skV ), Out( pk(skV) ) ]
+  */
+
+rule (modulo E) incyphersigned_0_211111[color=#658040,
+                                        process='in(<cypher.1, signed.2>);', issapicrule, role='v']:
+   [ State_211111( skV.1 ), In( <cypher.1, signed.2> ) ]
+  -->
+   [ State_2111111( cypher.1, skV.1, signed.2 ) ]
+
+  /*
+  rule (modulo AC) incyphersigned_0_211111[color=#658040,
+                                           process='in(<cypher.1, signed.2>);', issapicrule, role='v']:
+     [ State_211111( skV ), In( <cypher, signed> ) ]
+    -->
+     [ State_2111111( cypher, skV, signed ) ]
+  */
+
+rule (modulo E) eventTest_0_2111111[color=#658040,
+                                    process='event Test( );', issapicrule, role='v']:
+   [ State_2111111( cypher.1, skV.1, signed.2 ) ]
+  --[ Test( ) ]->
+   [ State_21111111( cypher.1, skV.1, signed.2 ) ]
+
+  /*
+  rule (modulo AC) eventTest_0_2111111[color=#658040,
+                                       process='event Test( );', issapicrule, role='v']:
+     [ State_2111111( cypher, skV, signed ) ]
+    --[ Test( ) ]->
+     [ State_21111111( cypher, skV, signed ) ]
+  */
+
+rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
+                                                              process='if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)',
+                                                              issapicrule, role='v']:
+   [ State_21111111( cypher.1, skV.1, signed.2 ) ]
+  --[ Pred_Eq( cypher.1, check_rep(signed.2, <'loc', pk(skV.1)>) ) ]->
+   [ State_211111111( cypher.1, skV.1, signed.2 ) ]
+
+  /*
+  rule (modulo AC) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
+                                                                 process='if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)',
+                                                                 issapicrule, role='v']:
+     [ State_21111111( cypher, skV, signed ) ]
+    --[ Pred_Eq( cypher, z ) ]->
+     [ State_211111111( cypher, skV, signed ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.8
+       skV   = skV.7
+       z     = check_rep(signed.8, <'loc', pk(skV.7)>)
+    
+    2. signed
+             = rep(x.8, <'loc', pk(x.7)>)
+       skV   = x.7
+       z     = x.8
+  */
+
+rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#658040,
+                                                              process='if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)',
+                                                              issapicrule, role='v']:
+   [ State_21111111( cypher.1, skV.1, signed.2 ) ]
+  --[ Pred_Not_Eq( cypher.1, check_rep(signed.2, <'loc', pk(skV.1)>) ) ]->
+   [ State_211111112( cypher.1, skV.1, signed.2 ) ]
+
+  /*
+  rule (modulo AC) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#658040,
+                                                                 process='if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)',
+                                                                 issapicrule, role='v']:
+     [ State_21111111( cypher, skV, signed ) ]
+    --[ Pred_Not_Eq( cypher, z ) ]->
+     [ State_211111112( cypher, skV, signed ) ]
+    variants (modulo AC)
+    1. signed
+             = signed.8
+       skV   = skV.7
+       z     = check_rep(signed.8, <'loc', pk(skV.7)>)
+    
+    2. signed
+             = rep(x.8, <'loc', pk(x.7)>)
+       skV   = x.7
+       z     = x.8
+  */
+
+rule (modulo E) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[color=#658040,
+                                                                             process='event Voutput( aenc(adec(cypher.1, skV.1:skey), pk(skV.1:skey)), signed.2
+);',
+                                                                             issapicrule, role='v']:
+   [ State_211111111( cypher.1, skV.1, signed.2 ) ]
+  --[ Voutput( aenc(adec(cypher.1, skV.1), pk(skV.1)), signed.2 ) ]->
+   [ State_2111111111( cypher.1, skV.1, signed.2 ) ]
+
+  /*
+  rule (modulo AC) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[color=#658040,
+                                                                                process='event Voutput( aenc(adec(cypher.1, skV.1:skey), pk(skV.1:skey)), signed.2
+);',
+                                                                                issapicrule, role='v']:
+     [ State_211111111( cypher, skV, signed ) ]
+    --[ Voutput( aenc(z, pk(skV)), signed ) ]->
+     [ State_2111111111( cypher, skV, signed ) ]
+    variants (modulo AC)
+    1. cypher
+             = cypher.7
+       skV   = skV.7
+       z     = adec(cypher.7, skV.7)
+    
+    2. cypher
+             = aenc(x.7, pk(x.8))
+       skV   = x.8
+       z     = x.7
+  */
+
+rule (modulo E) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#658040,
+                                                                     process='event SessionV( pk(skV.1:skey), adec(cypher.1, skV.1:skey) );',
+                                                                     issapicrule, role='v']:
+   [ State_2111111111( cypher.1, skV.1, signed.2 ) ]
+  --[ SessionV( pk(skV.1), adec(cypher.1, skV.1) ) ]->
+   [ State_21111111111( cypher.1, skV.1, signed.2 ) ]
+
+  /*
+  rule (modulo AC) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#658040,
+                                                                        process='event SessionV( pk(skV.1:skey), adec(cypher.1, skV.1:skey) );',
+                                                                        issapicrule, role='v']:
+     [ State_2111111111( cypher, skV, signed ) ]
+    --[ SessionV( pk(skV), z ) ]->
+     [ State_21111111111( cypher, skV, signed ) ]
+    variants (modulo AC)
+    1. cypher
+             = cypher.7
+       skV   = skV.7
+       z     = adec(cypher.7, skV.7)
+    
+    2. cypher
+             = aenc(x.7, pk(x.8))
+       skV   = x.8
+       z     = x.7
+  */
+
+rule (modulo E) p_0_21111111111[color=#658040, process='0', issapicrule,
+                                role='v']:
+   [ State_21111111111( cypher.1, skV.1, signed.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_21111111111[color=#658040, process='0', issapicrule,
+                                   role='v']:
+     [ State_21111111111( cypher, skV, signed ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_211111112[color=#658040, process='0', issapicrule,
+                              role='v']:
+   [ State_211111112( cypher.1, skV.1, signed.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211111112[color=#658040, process='0', issapicrule,
+                                 role='v']:
+     [ State_211111112( cypher, skV, signed ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_212[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_212( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/AKE.spthy
+
+  output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
+  processing time: 1.04s
+  
+  can_run_p (exists-trace): verified (3 steps)
+  can_run_v (exists-trace): falsified - no trace found (9 steps)
+  sanity1 (exists-trace): verified (3 steps)
+  sanity2 (exists-trace): falsified - no trace found (9 steps)
+  sanity3 (all-traces): verified (9 steps)
+  secrecy (all-traces): verified (6 steps)
+
+==============================================================================
+*/

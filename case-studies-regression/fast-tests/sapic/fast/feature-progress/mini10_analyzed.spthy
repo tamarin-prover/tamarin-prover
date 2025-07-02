@@ -1,0 +1,159 @@
+theory mini10 begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+heuristic: p
+
+section{* small example for progression function *}
+
+
+
+
+
+
+
+
+
+lemma A_enforced:
+  all-traces "∃ #t. A( ) @ #t"
+/*
+guarded formula characterizing all counter-examples:
+"∀ #t. (A( ) @ #t) ⇒ ⊥"
+*/
+simplify
+by contradiction /* from formulas */
+
+lemma B_not_enforced:
+  exists-trace "(∃ #t0. A( ) @ #t0) ∧ (¬(∃ #t. B( ) @ #t))"
+/*
+guarded formula characterizing all satisfying traces:
+"(∃ #t0. (A( ) @ #t0)) ∧ (∀ #t. (B( ) @ #t) ⇒ ⊥)"
+*/
+simplify
+solve( State_( ~prog_ ) ▶₀ #t0 )
+  case Init
+  solve( State_( ~prog_ ) ▶₀ #t.1 )
+    case Init
+    solve( State_( ~prog_ ) ▶₀ #t.1 )
+      case Init
+      SOLVED // trace found
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) MessageIDRule[color=#ffffff, process='event A( );',
+                              issapicrule, role='Process']:
+   [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process='event A( );', issapicrule,
+                     role='Process']:
+   [ Fr( ~prog_ ) ]
+  --[ ProgressFrom_( ~prog_ ), Init( ) ]->
+   [ State_( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventA_0_[color=#ffffff, process='event A( );',
+                          issapicrule, role='Process']:
+   [ State_( ~prog_ ) ]
+  --[ ProgressTo_1( ~prog_ ), A( ) ]->
+   [ State_1( ~prog_ ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inrm_0_1[color=#ffffff, process='in('r',m.1);',
+                         issapicrule, role='Process']:
+   [ Fr( ~prog_11 ), State_1( ~prog_ ), In( m.1 ), MID_Receiver( ~mid_1 ) ]
+  --[ ProgressFrom_11( ~prog_11 ), Receive( ~mid_1, m.1 ) ]->
+   [ State_11( ~prog_, ~prog_11, m.1 ) ]
+
+  /*
+  rule (modulo AC) inrm_0_1[color=#ffffff, process='in('r',m.1);',
+                            issapicrule, role='Process']:
+     [ Fr( ~prog_11 ), State_1( ~prog_ ), In( m ), MID_Receiver( ~mid_1 ) ]
+    --[ ProgressFrom_11( ~prog_11 ), Receive( ~mid_1, m ) ]->
+     [ State_11( ~prog_, ~prog_11, m ) ]
+  */
+
+rule (modulo E) eventB_0_11[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+   [ State_11( ~prog_, ~prog_11, m.1 ) ]
+  --[ ProgressTo_111( ~prog_11 ), B( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventB_0_11[color=#ffffff, process='0', issapicrule,
+                               role='Process']:
+     [ State_11( ~prog_, ~prog_11, m ) ]
+    --[ ProgressTo_111( ~prog_11 ), B( ) ]->
+     [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction Progress__to_1:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
+
+restriction Progress_11_to_111:
+  "∀ prog_11 #t.
+    (ProgressFrom_11( prog_11 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+
+restriction progressInit:
+  "∃ #t. Init( ) @ #t"
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-progress/mini10.spthy
+
+  output:          examples/sapic/fast/feature-progress/mini10.spthy.tmp
+  processing time: 0.17s
+  
+  A_enforced (all-traces): verified (2 steps)
+  B_not_enforced (exists-trace): verified (5 steps)
+
+==============================================================================
+*/

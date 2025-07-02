@@ -1,0 +1,159 @@
+theory ChannelTestTwo begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+lemma received:
+  all-traces "¬(∃ #i. Reached( ) @ #i)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i. (Reached( ) @ #i)"
+*/
+simplify
+by solve( State_1111( a, c ) ▶₀ #i )
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='new c.1;', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newc_0_[color=#ffffff, process='new c.1;', issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( c.1 ) ] --> [ State_1( c.1 ) ]
+
+  /*
+  rule (modulo AC) newc_0_[color=#ffffff, process='new c.1;', issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( c ) ] --> [ State_1( c ) ]
+  */
+
+rule (modulo E) P_0_1[color=#ffffff, process='P()', issapicrule,
+                      role='Process']:
+   [ State_1( c.1 ) ] --> [ State_11( c.1 ), State_12( c.1 ) ]
+
+  /*
+  rule (modulo AC) P_0_1[color=#ffffff, process='P()', issapicrule,
+                         role='Process']:
+     [ State_1( c ) ] --> [ State_11( c ), State_12( c ) ]
+  */
+
+rule (modulo E) newa_0_11[color=#6c8040, process='new a.1;', issapicrule,
+                          role='P']:
+   [ State_11( c.1 ), Fr( a.1 ) ] --> [ State_111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_11[color=#6c8040, process='new a.1;',
+                             issapicrule, role='P']:
+     [ State_11( c ), Fr( a ) ] --> [ State_111( a, c ) ]
+  */
+
+rule (modulo E) outca_0_111[color=#6c8040, process='out(c.1,a.1);',
+                            issapicrule, role='P']:
+   [ State_111( a.1, c.1 ) ]
+  -->
+   [ Message( c.1, a.1 ), Semistate_1111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) outca_0_111[color=#6c8040, process='out(c.1,a.1);',
+                               issapicrule, role='P']:
+     [ State_111( a, c ) ] --> [ Message( c, a ), Semistate_1111( a, c ) ]
+  */
+
+rule (modulo E) outca_1_111[color=#6c8040, process='out(c.1,a.1);',
+                            issapicrule, role='P']:
+   [ Semistate_1111( a.1, c.1 ), Ack( c.1, a.1 ) ]
+  -->
+   [ State_1111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) outca_1_111[color=#6c8040, process='out(c.1,a.1);',
+                               issapicrule, role='P']:
+     [ Semistate_1111( a, c ), Ack( c, a ) ] --> [ State_1111( a, c ) ]
+  */
+
+rule (modulo E) eventReached_0_1111[color=#6c8040,
+                                    process='event Reached( );', issapicrule, role='P']:
+   [ State_1111( a.1, c.1 ) ] --[ Reached( ) ]-> [ State_11111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) eventReached_0_1111[color=#6c8040,
+                                       process='event Reached( );', issapicrule, role='P']:
+     [ State_1111( a, c ) ] --[ Reached( ) ]-> [ State_11111( a, c ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#6c8040, process='0', issapicrule,
+                          role='P']:
+   [ State_11111( a.1, c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#6c8040, process='0', issapicrule,
+                             role='P']:
+     [ State_11111( a, c ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
+                       role='Process']:
+   [ State_12( c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12[color=#ffffff, process='0', issapicrule,
+                          role='Process']:
+     [ State_12( c ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "outca_1_111":  factName `Ack' arity: 2 multiplicity: Linear
+*/
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/channels2.spthy
+
+  output:          examples/sapic/fast/basic/channels2.spthy.tmp
+  processing time: 0.16s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  received (all-traces): verified (2 steps)
+
+==============================================================================
+*/

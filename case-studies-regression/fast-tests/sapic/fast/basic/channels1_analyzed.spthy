@@ -1,0 +1,290 @@
+theory ChannelsTestOne begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+lemma secret:
+  all-traces "∀ x #i. (Secret( x ) @ #i) ⇒ (¬(∃ #j. K( x ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i. (Secret( x ) @ #i) ∧ ∃ #j. (K( x ) @ #j)"
+*/
+simplify
+solve( State_1111( x, c ) ▶₀ #i )
+  case newa_0_111
+  solve( !KU( ~n ) @ #vk )
+    case outca_0_11111
+    by solve( !KU( ~n.1 ) @ #vk.1 )
+  qed
+qed
+
+lemma received:
+  exists-trace "∃ x #i. Received( x ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (Received( x ) @ #i)"
+*/
+simplify
+solve( State_1211( c, x ) ▶₀ #i )
+  case incx_1_121_case_1
+  SOLVED // trace found
+qed
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='new c.1;', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newc_0_[color=#ffffff, process='new c.1;', issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( c.1 ) ] --> [ State_1( c.1 ) ]
+
+  /*
+  rule (modulo AC) newc_0_[color=#ffffff, process='new c.1;', issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( c ) ] --> [ State_1( c ) ]
+  */
+
+rule (modulo E) p_0_1[color=#ffffff, process='|', issapicrule,
+                      role='Process']:
+   [ State_1( c.1 ) ] --> [ State_11( c.1 ), State_12( c.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1[color=#ffffff, process='|', issapicrule,
+                         role='Process']:
+     [ State_1( c ) ] --> [ State_11( c ), State_12( c ) ]
+  */
+
+rule (modulo E) P_0_11[color=#ffffff, process='P()', issapicrule,
+                       role='Process']:
+   [ State_11( c.1 ) ] --> [ State_111( c.1 ), State_112( c.1 ) ]
+
+  /*
+  rule (modulo AC) P_0_11[color=#ffffff, process='P()', issapicrule,
+                          role='Process']:
+     [ State_11( c ) ] --> [ State_111( c ), State_112( c ) ]
+  */
+
+rule (modulo E) newa_0_111[color=#6c8040, process='new a.1;',
+                           issapicrule, role='P']:
+   [ State_111( c.1 ), Fr( a.1 ) ] --> [ State_1111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) newa_0_111[color=#6c8040, process='new a.1;',
+                              issapicrule, role='P']:
+     [ State_111( c ), Fr( a ) ] --> [ State_1111( a, c ) ]
+  */
+
+rule (modulo E) eventSecreta_0_1111[color=#6c8040,
+                                    process='event Secret( a.1 );', issapicrule, role='P']:
+   [ State_1111( a.1, c.1 ) ]
+  --[ Secret( a.1 ) ]->
+   [ State_11111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) eventSecreta_0_1111[color=#6c8040,
+                                       process='event Secret( a.1 );', issapicrule, role='P']:
+     [ State_1111( a, c ) ] --[ Secret( a ) ]-> [ State_11111( a, c ) ]
+  */
+
+rule (modulo E) outca_0_11111[color=#6c8040, process='out(c.1,a.1);',
+                              issapicrule, role='P']:
+   [ State_11111( a.1, c.1 ), In( c.1 ) ]
+  -->
+   [ Out( a.1 ), State_111111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) outca_0_11111[color=#6c8040, process='out(c.1,a.1);',
+                                 issapicrule, role='P']:
+     [ State_11111( a, c ), In( c ) ] --> [ Out( a ), State_111111( a, c ) ]
+  */
+
+rule (modulo E) outca_1_11111[color=#6c8040, process='out(c.1,a.1);',
+                              issapicrule, role='P']:
+   [ State_11111( a.1, c.1 ) ]
+  -->
+   [ Message( c.1, a.1 ), Semistate_111111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) outca_1_11111[color=#6c8040, process='out(c.1,a.1);',
+                                 issapicrule, role='P']:
+     [ State_11111( a, c ) ] --> [ Message( c, a ), Semistate_111111( a, c ) ]
+  */
+
+rule (modulo E) outca_2_11111[color=#6c8040, process='out(c.1,a.1);',
+                              issapicrule, role='P']:
+   [ Semistate_111111( a.1, c.1 ), Ack( c.1, a.1 ) ]
+  -->
+   [ State_111111( a.1, c.1 ) ]
+
+  /*
+  rule (modulo AC) outca_2_11111[color=#6c8040, process='out(c.1,a.1);',
+                                 issapicrule, role='P']:
+     [ Semistate_111111( a, c ), Ack( c, a ) ] --> [ State_111111( a, c ) ]
+  */
+
+rule (modulo E) outc_0_111111[color=#6c8040, process='out(c.1);',
+                              issapicrule, role='P']:
+   [ State_111111( a.1, c.1 ) ]
+  -->
+   [ State_1111111( a.1, c.1 ), Out( c.1 ) ]
+
+  /*
+  rule (modulo AC) outc_0_111111[color=#6c8040, process='out(c.1);',
+                                 issapicrule, role='P']:
+     [ State_111111( a, c ) ] --> [ State_1111111( a, c ), Out( c ) ]
+  */
+
+rule (modulo E) p_0_1111111[color=#6c8040, process='0', issapicrule,
+                            role='P']:
+   [ State_1111111( a.1, c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111[color=#6c8040, process='0', issapicrule,
+                               role='P']:
+     [ State_1111111( a, c ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_112[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_112( c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+     [ State_112( c ) ] --> [ ]
+  */
+
+rule (modulo E) Q_0_12[color=#ffffff, process='Q()', issapicrule,
+                       role='Process']:
+   [ State_12( c.1 ) ] --> [ State_121( c.1 ), State_122( c.1 ) ]
+
+  /*
+  rule (modulo AC) Q_0_12[color=#ffffff, process='Q()', issapicrule,
+                          role='Process']:
+     [ State_12( c ) ] --> [ State_121( c ), State_122( c ) ]
+  */
+
+rule (modulo E) incx_0_121[color=#807140, process='in(c.1,x.1);',
+                           issapicrule, role='Q']:
+   [ State_121( c.1 ), Message( c.1, x.2 ) ]
+  -->
+   [ Let_1211( x.2, c.1 ), Ack( c.1, x.2 ) ]
+
+  /*
+  rule (modulo AC) incx_0_121[color=#807140, process='in(c.1,x.1);',
+                              issapicrule, role='Q']:
+     [ State_121( c ), Message( c, x ) ] --> [ Let_1211( x, c ), Ack( c, x ) ]
+  */
+
+rule (modulo E) incx_1_121[color=#807140, process='in(c.1,x.1);',
+                           issapicrule, role='Q']:
+   [ Let_1211( x.1, c.1 ) ] --> [ State_1211( c.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) incx_1_121[color=#807140, process='in(c.1,x.1);',
+                              issapicrule, role='Q']:
+     [ Let_1211( x, c ) ] --> [ State_1211( c, x ) ]
+  */
+
+rule (modulo E) incx_2_121[color=#807140, process='in(c.1,x.1);',
+                           issapicrule, role='Q']:
+   [ State_121( c.1 ), In( <c.1, x.2> ) ] --> [ Let_1211( x.2, c.1 ) ]
+
+  /*
+  rule (modulo AC) incx_2_121[color=#807140, process='in(c.1,x.1);',
+                              issapicrule, role='Q']:
+     [ State_121( c ), In( <c, x> ) ] --> [ Let_1211( x, c ) ]
+  */
+
+rule (modulo E) incx_3_121[color=#807140, process='in(c.1,x.1);',
+                           issapicrule, role='Q']:
+   [ Let_1211( x.1, c.1 ) ] --> [ State_1211( c.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) incx_3_121[color=#807140, process='in(c.1,x.1);',
+                              issapicrule, role='Q']:
+     [ Let_1211( x, c ) ] --> [ State_1211( c, x ) ]
+  */
+
+rule (modulo E) eventReceivedx_0_1211[color=#807140,
+                                      process='event Received( x.1 );', issapicrule, role='Q']:
+   [ State_1211( c.1, x.1 ) ]
+  --[ Received( x.1 ) ]->
+   [ State_12111( c.1, x.1 ) ]
+
+  /*
+  rule (modulo AC) eventReceivedx_0_1211[color=#807140,
+                                         process='event Received( x.1 );', issapicrule, role='Q']:
+     [ State_1211( c, x ) ] --[ Received( x ) ]-> [ State_12111( c, x ) ]
+  */
+
+rule (modulo E) p_0_12111[color=#807140, process='0', issapicrule,
+                          role='Q']:
+   [ State_12111( c.1, x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12111[color=#807140, process='0', issapicrule,
+                             role='Q']:
+     [ State_12111( c, x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_122[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_122( c.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_122[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+     [ State_122( c ) ] --> [ ]
+  */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/channels1.spthy
+
+  output:          examples/sapic/fast/basic/channels1.spthy.tmp
+  processing time: 0.54s
+  
+  secret (all-traces): verified (4 steps)
+  received (exists-trace): verified (3 steps)
+
+==============================================================================
+*/

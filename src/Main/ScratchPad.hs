@@ -1,8 +1,6 @@
 module Main.ScratchPad where
 
-import qualified Data.Label as L
 import qualified Data.Map as M
-import qualified Data.Set as S
 import Debug.Trace
 import Main.REPL
 import Theory
@@ -53,12 +51,13 @@ debug = showWith thy debugM debugInput
 --   arguments to @debugM@.
 debugInput = do
   prf <- steps
-  let ctxt = rpCtxt prf
-  let hnd = L.get pcMaudeHandle ctxt
+  let ctxt = prf.rpCtxt
+  let hnd = ctxt._pcSignature._sigMaudeInfo
+
   s <- systemAt 0 prf
   return (ctxt, hnd, prf, s)
 
 -- | Use the values returned above to perform debugging.
 debugM (_, _, _, s) = do
   putStrLn "The constraint system contains the following annotated nodes"
-  mapM_ print (M.keys $ L.get sNodes s)
+  mapM_ print (M.keys s._sNodes)

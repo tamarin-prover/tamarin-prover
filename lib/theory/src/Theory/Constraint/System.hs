@@ -119,9 +119,9 @@ module Theory.Constraint.System (
   , opposite
 
   -- * Constraint systems
-  , System
+  , System(..)
   , DiffProofType(..)
-  , DiffSystem
+  , DiffSystem(..)
 
   -- ** Construction
   , emptySystem
@@ -282,7 +282,7 @@ import           GHC.IO                               (unsafePerformIO)
 
 import           Logic.Connectives
 import           Theory.Constraint.Solver.AnnotatedGoals
-import           Theory.Constraint.System.Constraints 
+import           Theory.Constraint.System.Constraints
 --import           Theory.Constraint.Solver.Heuristics
 import           Theory.Model
 import           Theory.Text.Pretty
@@ -293,7 +293,7 @@ import           Theory.Tools.InjectiveFactInstances
 import           System.Directory                     (doesFileExist)
 import           System.FilePath
 import           Text.Show.Functions()
-import           Utils.Misc 
+import           Utils.Misc
 
 ----------------------------------------------------------------------
 -- ClassifiedRules
@@ -427,13 +427,13 @@ data Oracle = Oracle {
   deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 ------------------------------------------------------------------------------
--- Tactics 
+-- Tactics
 ------------------------------------------------------------------------------
 
 
--- | Prio keeps a list of function that aim at recognizing some goals based on the state of the 
--- | System, the ProofContext and the Annotated Goal considered. If one of the function returns 
--- | True for a goal, it is considered recognized by the all priority. Prio also holds an other 
+-- | Prio keeps a list of function that aim at recognizing some goals based on the state of the
+-- | System, the ProofContext and the Annotated Goal considered. If one of the function returns
+-- | True for a goal, it is considered recognized by the all priority. Prio also holds an other
 -- | function that will order the recognized goals based on some arbitrary criteria such as size...
 -- | The goals recognized by a Prio will be treated earlier than the others.
 data Prio a = Prio {
@@ -460,11 +460,11 @@ instance NFData (Prio a) where
 
 instance Binary (Prio a) where
     put p = put $ show p
-    get = return (Prio Nothing "" [] []) 
+    get = return (Prio Nothing "" [] [])
 
--- | Derio keeps a list of function that aim at recognizing some goals based on the state of the 
--- | System, the ProofContext and the Annotated Goal considered. If one of the function returns 
--- | True for a goal, it is considered recognized by the all priority. Prio also holds an other 
+-- | Derio keeps a list of function that aim at recognizing some goals based on the state of the
+-- | System, the ProofContext and the Annotated Goal considered. If one of the function returns
+-- | True for a goal, it is considered recognized by the all priority. Prio also holds an other
 -- | function that will order the recognized goals based on some arbitrary criteria such as size...
 -- | Deprio works as Prio but the goals it recognizes will be treated later than the others.
 data Deprio a = Deprio {
@@ -493,12 +493,12 @@ instance Binary (Deprio a) where
     get = return (Deprio Nothing "" [] [])
 
 
--- | The object that record a user written tactic. 
+-- | The object that record a user written tactic.
 data Tactic a = Tactic{
       _name :: String,                  -- The name of the tactic
-      _presort :: GoalRanking a,        -- The default strategy to order recognized goals in a tactic 
+      _presort :: GoalRanking a,        -- The default strategy to order recognized goals in a tactic
       _prios :: [Prio a],               -- The list of priorities, the higher in the list the priority, the earlier its recognized goals will be treated
-      _deprios :: [Deprio a]            -- The list of depriorities, the higher in the list the priority, the earlier its recognized goals will be treated 
+      _deprios :: [Deprio a]            -- The list of depriorities, the higher in the list the priority, the earlier its recognized goals will be treated
                                         -- (but still after all the goals recognized by the priorities and not recognized has been treated).
     }
     deriving (Eq, Ord, Show, Generic, NFData, Binary )
@@ -661,7 +661,7 @@ stringToGoalRankingDiff :: Bool -> String -> GoalRanking ProofContext
 stringToGoalRankingDiff noOracle s = fromMaybe
     (error $ render $ sep $ map text $ lines $ "Unknown proof method ranking '" ++ s
         ++ "'. Use one of the following:\n" ++ listGoalRankingsDiff noOracle)
-    $ stringToGoalRankingDiffMay noOracle s  
+    $ stringToGoalRankingDiffMay noOracle s
 
 listGoalRankings :: Bool -> String
 listGoalRankings noOracle = M.foldMapWithKey
@@ -700,7 +700,7 @@ goalRankingName ranking =
    where
      loopStatus b = " (loop breakers " ++ (if b then "allowed" else "delayed") ++ ")"
      printOracle o@(Oracle workDir relPath) =
-      if isNothing relPath 
+      if isNothing relPath
         then fromMaybe "" workDir </> "theory_filename.oracle"
         else oraclePath o
 
@@ -1217,7 +1217,7 @@ data Trivalent = TTrue | TFalse | TUnknown deriving (Show, Eq)
 -- | Computes the mirror dependency graph and evaluates whether the restrictions hold.
 -- Returns Just True and a list of mirrors if all hold, Just False and a list of attacks (if found) if at least one does not hold and Nothing otherwise.
 getMirrorDGandEvaluateRestrictions :: DiffProofContext -> DiffSystem -> Bool -> (Trivalent, [System])
-getMirrorDGandEvaluateRestrictions dctxt dsys isSolved = 
+getMirrorDGandEvaluateRestrictions dctxt dsys isSolved =
     case (L.get dsSide dsys, L.get dsSystem dsys) of
           (Nothing,   _       ) -> (TFalse, [])
           (Just _ , Nothing   ) -> (TFalse, [])
