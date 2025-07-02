@@ -340,8 +340,11 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
     auxMatcher s ru0 ru1 = evalFreshAvoiding (appSubst s ru0 ru1) (ru0, ru1)
 
     auxMatcherFilter = filter nullIntersectAC
-    nullIntersectAC (i0@(Rule (DestrRule ni0 _ _ _) premsi0 _ _ _),i1@(Rule (DestrRule _ _ _ _) premsi1 _ _ _)) = not (isACfctDR (name_func ni0) acsig) || (length premsi0 /= 2 && length premsi1 /= 2 ) || ((frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= [])
+    nullIntersectAC (i0@(Rule (DestrRule ni0 _ _ _) _ _ _ _),i1) = not (isACfctDR (name_func ni0) acsig) || not (all has2prems allR) || ((frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= [])
     nullIntersectAC _ = True
+
+    has2prems (Rule (DestrRule _ _ _ _) prems _ _ _) = length prems == 2
+    has2prems _ = False
 
     searchMatcheraux ((s1,h1):sq)  = foldr (\ru -> (|| searchMatcher s1 h1 ru)) False allR && searchMatcheraux sq
     searchMatcheraux [] = True
