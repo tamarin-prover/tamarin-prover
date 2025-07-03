@@ -108,7 +108,7 @@ module Theory.Text.Parser.Token (
   -- * Parsing State
   , ParserState(..)
   , mkStateSig
-  , mkState
+  , mkMacroStateSig
   , modifyStateSig
   , modifyStateFlag
 
@@ -170,11 +170,8 @@ instance Monoid ParserState where
 mkStateSig :: MaudeSig -> ParserState
 mkStateSig sign = mempty {sig=sign}
 
-mkState :: OpenTheory -> ParserState
-mkState thy = PState
-    { sig = addMacrosToSignature (theoryMacros thy) (get sigpMaudeSig $ get thySignature thy)
-    , flags = setMacroStateFlags thy
-    }
+mkMacroStateSig :: OpenTheory -> ParserState
+mkMacroStateSig thy = mkStateSig (addMacrosToSignature (theoryMacros thy) (get sigpMaudeSig $ get thySignature thy))
 
 modifyStateSig ::  Monad m => (MaudeSig -> MaudeSig) -> ParsecT s ParserState m ()
 modifyStateSig modifier = do
@@ -185,14 +182,6 @@ modifyStateFlag ::  Monad m => (S.Set String -> S.Set String) -> ParsecT s Parse
 modifyStateFlag modifier = do
    st <- getState
    setState (st {flags = modifier $ flags st})
-
--- Helper function to create flags for proper macro parsing
-setMacroStateFlags :: OpenTheory -> S.Set String
-setMacroStateFlags thy = 
-    let baseFlags = if get thyIsSapic thy then S.singleton "diff" else S.empty
-        withFunctions = S.insert "functions" baseFlags
-        builtinFlags = map (\b -> "builtins_" ++ show b) (theoryBuiltins thy)
-    in foldl (flip S.insert) withFunctions builtinFlags
 
 -- | Add macros to the signature so they're recognized as function symbols
 addMacrosToSignature :: [(B.ByteString, [LVar], Term (Lit Name LVar))] -> MaudeSig -> MaudeSig

@@ -97,7 +97,7 @@ parseLemma = parseString [] "<unknown source>" (lemma Nothing)
 -- | Parse a lemma with a given signature, on the model of plainLemma, while also expanding macros.
 parseLemmaWithMacros :: OpenTheory -> String -> Either ParseError (Lemma ProofSkeleton)
 parseLemmaWithMacros thy input = do
-     case parseStringWState (mkState thy) "<unknown source>" (lemma Nothing) input of
+     case parseStringWState (mkMacroStateSig thy) "<unknown source>" (lemma Nothing) input of
        Left err -> Left err
        Right synLemma -> 
          case expandLemma thy synLemma of
