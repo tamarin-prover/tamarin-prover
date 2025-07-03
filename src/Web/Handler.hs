@@ -136,7 +136,7 @@ import Text.Read (readMaybe)
 import Theory.Constraint.System.Dot
 import Theory.Constraint.System.Graph.Graph
 import Theory.Constraint.System.JSON  -- for export of constraint system to JSON
-import Theory.Text.Parser (parsePlainLemma)
+import Theory.Text.Parser (parseLemmaWithMacros)
 import Theory.Tools.Wellformedness  (prettyWfErrorReport)
 import Lemma
 import Prover (mkSystem)
@@ -732,10 +732,11 @@ postTheoryEditR idx path = do
     mLemmaText <- lookupPostParam "lemma-text"
     let newlptxt = T.unpack $ fromMaybe "" mLemmaText
     renderParamsF <- getUrlRenderParams
-    maudeSig <- withTheory idx $ \ti -> pure (toSignaturePure ti.theory._thySignature)._sigMaudeInfo
-    idx' <- case parsePlainLemma maudeSig newlptxt of
-        Left err -> pure $ Left $ show err
-        Right newl -> editLemma idx path newl
+    -- maudeSig <- withTheory idx $ \ti -> pure (toSignaturePure ti.theory._thySignature)._sigMaudeInfo
+    idx' <- withTheory idx $ \ti -> 
+        case parseLemmaWithMacros (openTheory ti.theory) newlptxt of
+            Left err -> pure $ Left $ show err
+            Right newl -> editLemma idx path newl
 
     case idx' of
         Right i -> do
