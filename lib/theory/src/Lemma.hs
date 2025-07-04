@@ -112,8 +112,8 @@ prettyDiffLemmaName :: HighlightDocument d => DiffLemma p -> d
 prettyDiffLemmaName l = text ((L.get lDiffName l))
 
 -- | Pretty print a lemma.
-prettyLemma :: HighlightDocument d => (p -> d) -> Bool -> Lemma p -> d
-prettyLemma ppPrf preserveMacros lem =
+prettyLemma :: HighlightDocument d => (p -> d) -> Lemma p -> d
+prettyLemma ppPrf lem =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
@@ -140,24 +140,21 @@ prettyLemma ppPrf preserveMacros lem =
               doubleQuotes (prettyGuarded gf) )
 
 -- | Pretty print an Either lemma.
-prettyEitherLemma :: HighlightDocument d => (p -> d) -> Bool -> (Side, Lemma p) -> d
-prettyEitherLemma ppPrf preserveMacros (_, lem) =
+prettyEitherLemma :: HighlightDocument d => (p -> d) -> (Side, Lemma p) -> d
+prettyEitherLemma ppPrf (_, lem) =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
-          , doubleQuotes $ prettyLNFormula formula
+          , doubleQuotes $ prettyLNFormula (maybe expandedFormula id ogFormula)
           ]
     )
     $-$
-    ppLNFormulaGuarded formula
+    ppLNFormulaGuarded expandedFormula
     $-$
     ppPrf (L.get lProof lem)
   where
-    -- Select formula based on preserveMacros flag
-    formula = case (preserveMacros, L.get lOriginalFormula lem) of
-                (True, Just origForm) -> origForm
-                _ -> L.get lFormula lem
-    
+    expandedFormula = L.get lFormula lem
+    ogFormula = L.get lOriginalFormula lem
     ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$

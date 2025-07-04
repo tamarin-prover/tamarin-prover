@@ -940,7 +940,7 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf preserveMacros thy =
         prettyDiffRule
         ppRule
         (prettyDiffLemma ppDiffPrf)
-        (prettyEitherLemma ppPrf preserveMacros)
+        (prettyEitherLemma ppPrf)
         (prettyEitherRestriction preserveMacros)
         (const emptyDoc)
         (uncurry prettyFormalComment)

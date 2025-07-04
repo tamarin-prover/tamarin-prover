@@ -755,7 +755,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap preserveMacros thy =
       foldTheoryItem
         ppRule
         (prettyRestriction preserveMacros)
-        (prettyLemma ppPrf preserveMacros)
+        (prettyLemma ppPrf)
         (uncurry prettyFormalComment)
         prettyConfigBlock
         prettyPredicate
