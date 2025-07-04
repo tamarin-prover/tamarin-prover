@@ -1,0 +1,12 @@
+theory EncryptionComparison
+begin
+
+// Builtin symmetric encryption
+builtins: symmetric-encryption
+
+rule builtin_encrypt_decrypt:
+  [ In(senc(x,k)), In(k) ]
+  --[ BuiltinDecrypted(x) ]->
+  [ Out(x) ]
+
+end

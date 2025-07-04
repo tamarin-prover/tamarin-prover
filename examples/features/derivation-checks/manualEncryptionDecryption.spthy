@@ -1,0 +1,12 @@
+theory ManualEncryptionDecryption
+begin
+
+functions: enc/2, dec/2
+equations: dec(enc(x,k),k) = x
+
+rule encrypt_decrypt:
+  [ In(enc(x,k)), In(k) ]
+  --[ Decrypted(x) ]->
+  [ Out(x) ]
+
+end

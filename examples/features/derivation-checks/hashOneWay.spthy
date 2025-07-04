@@ -1,0 +1,13 @@
+theory HashOneWay
+begin
+
+builtins: hashing
+
+// This rule attempts to derive x from h(x), which is impossible.
+//It should generate a warning.
+rule attempt_hash_inversion:
+  [ In(h(x)) ]
+  -->
+  [ Out(x) ]
+
+end
