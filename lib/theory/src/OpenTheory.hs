@@ -868,14 +868,14 @@ prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
 
 -- | Pretty print an open theory.
 prettyOpenTheory :: (HighlightDocument d) => Bool -> OpenTheory -> d
-prettyOpenTheory preserveMacros thy =
+prettyOpenTheory interactiveMode thy =
   prettyTheory
     prettySignaturePure
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     prettyTranslationElement
-    preserveMacros
+    interactiveMode
     thy
   where
     -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
@@ -886,27 +886,27 @@ prettyOpenTheory preserveMacros thy =
 
 -- | Pretty print an open theory.
 prettyOpenDiffTheory :: (HighlightDocument d) => Bool -> OpenDiffTheory -> d
-prettyOpenDiffTheory preserveMacros =
+prettyOpenDiffTheory interactiveMode =
   prettyDiffTheory
     prettySignaturePure
     (const emptyDoc)
     prettyEitherRule
     prettyDiffProof
     prettyProof
-    preserveMacros
+    interactiveMode
 
 -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
 -- | Pretty print a translated Open Theory
 prettyOpenTranslatedTheory :: (HighlightDocument d) => Bool-> OpenTranslatedTheory -> d
-prettyOpenTranslatedTheory preserveMacros =
+prettyOpenTranslatedTheory interactiveMode =
   prettyTheory
     prettySignaturePure
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     emptyString
-    preserveMacros
+    interactiveMode
 
 -- | Pretty print a diff theory.
 prettyDiffTheory ::
@@ -919,7 +919,7 @@ prettyDiffTheory ::
   Bool ->
   DiffTheory sig c DiffProtoRule r2 p p2 ->
   d
-prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf preserveMacros thy =
+prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf interactiveMode thy =
   vsep $
     [ kwTheoryHeader $ text $ L.get diffThyName thy,
       lineComment_ "Function signature and definition of the equational theory E",
@@ -941,7 +941,7 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf preserveMacros thy =
         ppRule
         (prettyDiffLemma ppDiffPrf)
         (prettyEitherLemma ppPrf)
-        (prettyEitherRestriction preserveMacros)
+        (prettyEitherRestriction interactiveMode)
         (const emptyDoc)
         (uncurry prettyFormalComment)
         prettyConfigBlock

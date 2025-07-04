@@ -869,7 +869,7 @@ rulesSnippet thy = vcat
     , ppWithHeader "Multiset Rewriting Rules" $
         (if null (theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
     , ppWithHeader "Restrictions of the Set of Traces" $
-        (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map (prettyRestriction False) $ theoryRestrictions thy)
+        (if null(theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map (prettyRestriction True) $ theoryRestrictions thy)
     ]
   where
     msrRules   = (getClassifiedRules thy)._crProtocol

@@ -215,8 +215,8 @@ run thisMode as
         --                   (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
         --                   thy'
 
-        (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule preserveMacros thyLoadOptions)
-                                   (pure . prettyOpenDiffTheory preserveMacros)
+        (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule interactiveMode thyLoadOptions)
+                                   (pure . prettyOpenDiffTheory interactiveMode)
                                    thy'
 
       -- | Close and potentially prove theory.
@@ -225,11 +225,14 @@ run thisMode as
         _ <- liftIO $ bitraverse outputTraces (const $ return ()) thy'
 
         pure $
-          either (\t -> (prettyClosedTheory preserveMacros t,     ppWf report Pretty.$--$ prettyClosedSummary t))
-                 (\d -> (prettyClosedDiffTheory preserveMacros d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
+          either (\t -> (prettyClosedTheory interactiveMode t,     ppWf report Pretty.$--$ prettyClosedSummary t))
+                 (\d -> (prettyClosedDiffTheory interactiveMode d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
                  thy'
       where
-        preserveMacros = writeOutput
+        interactiveMode = 
+          case findArg "interactive" as of
+            Just _  -> True
+            Nothing -> False
         isTranslateOnlyMode = isJust thyLoadOptions.outputModule
 
         handleError e@(ParserError _) = die $ show e

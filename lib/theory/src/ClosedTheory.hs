@@ -379,7 +379,7 @@ prettyClosedProtoRule cru =
 
 -- | Pretty print a closed theory.
 prettyClosedTheory :: HighlightDocument d => Bool -> ClosedTheory -> d
-prettyClosedTheory preserveMacros thy = if containsManualRuleVariants mergedRules
+prettyClosedTheory interactiveMode thy = if containsManualRuleVariants mergedRules
     then
       prettyTheory prettySignatureWithMaude
                   ppInjectiveFactInsts
@@ -387,7 +387,7 @@ prettyClosedTheory preserveMacros thy = if containsManualRuleVariants mergedRule
                   prettyOpenProtoRuleAsClosedRule
                   prettyIncrementalProof
                   emptyString
-                  preserveMacros
+                  interactiveMode
                   thy'
     else
       prettyTheory prettySignatureWithMaude
@@ -396,7 +396,7 @@ prettyClosedTheory preserveMacros thy = if containsManualRuleVariants mergedRule
                   prettyClosedProtoRule
                   prettyIncrementalProof
                   emptyString
-                  preserveMacros
+                  interactiveMode
                   thy
   where
     items = L.get thyItems thy
@@ -420,7 +420,7 @@ prettyClosedTheory preserveMacros thy = if containsManualRuleVariants mergedRule
 
 -- | Pretty print a closed diff theory.
 prettyClosedDiffTheory :: HighlightDocument d => Bool -> ClosedDiffTheory -> d
-prettyClosedDiffTheory preserveMacros thy = if containsManualRuleVariantsDiff mergedRules
+prettyClosedDiffTheory interactiveMode thy = if containsManualRuleVariantsDiff mergedRules
     then
       prettyDiffTheory prettySignatureWithMaude
                  ppInjectiveFactInsts
@@ -428,7 +428,7 @@ prettyClosedDiffTheory preserveMacros thy = if containsManualRuleVariantsDiff me
                  (\_ -> emptyDoc) --prettyClosedEitherRule
                  prettyIncrementalDiffProof
                  prettyIncrementalProof
-                 preserveMacros
+                 interactiveMode
                  thy'
     else
         prettyDiffTheory prettySignatureWithMaude
@@ -437,7 +437,7 @@ prettyClosedDiffTheory preserveMacros thy = if containsManualRuleVariantsDiff me
                    (\_ -> emptyDoc) --prettyClosedEitherRule
                    prettyIncrementalDiffProof
                    prettyIncrementalProof
-                   preserveMacros
+                   interactiveMode
                    thy
   where
     items = L.get diffThyItems thy
