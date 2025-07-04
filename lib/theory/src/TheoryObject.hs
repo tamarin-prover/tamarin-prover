@@ -840,9 +840,9 @@ prettyRestriction interactiveMode rstr =
     <> colon
       $-$ (nest 2 $ doubleQuotes $ prettyLNFormula (if (not interactiveMode) then (maybe expandedFormula id ogFormula) else expandedFormula))
       $-$ (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
-      $-$ (case (interactiveMode, ogFormula) of
-            (False, Just _) -> multiComment $ text "expanded formula:" $-$ 
-                             doubleQuotes (prettyLNFormula expandedFormula)
+      $--$ (case (interactiveMode, ogFormula) of
+            (False, Just _) -> (nest 2 $ multiComment $ text "expanded formula:" $-$ 
+                             doubleQuotes (prettyLNFormula expandedFormula))
             _ -> emptyDoc)
   where
     Restriction _ expandedFormula ogFormula = rstr
@@ -855,9 +855,9 @@ prettyEitherRestriction interactiveMode (s, rstr) =
     <> colon
       $-$ (nest 2 $ doubleQuotes $ prettyLNFormula (if (not interactiveMode) then (maybe expandedFormula id ogFormula) else expandedFormula))
       $-$ (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
-      $-$ (case (interactiveMode, ogFormula) of
-            (False, Just _) -> multiComment $ text "expanded formula:" $-$ 
-                             doubleQuotes (prettyLNFormula expandedFormula)
+      $--$ (case (interactiveMode, ogFormula) of
+            (False, Just _) -> (nest 2 $ multiComment $ text "expanded formula:" $-$ 
+                             doubleQuotes (prettyLNFormula expandedFormula))
             _ -> emptyDoc)
   where
     Restriction _ expandedFormula ogFormula = rstr
