@@ -973,25 +973,14 @@ WARNING: the following wellformedness checks failed!
 
 Wellformedness-error in Process
   There is an unlock that cannot be matched with a lock.
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule inrenewuserpknsk_0_111112: 
-Failed to derive Variable(s): nsk.1
-
-Rule insignrenewuserpknsksk_0_1111121: 
-Failed to derive Variable(s): sk.2
 */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Git revision: 0a44c79dec0eccbe1e51aa85da3c6ac96fdf5bd5 (with uncommited changes), branch: HEAD
+Compiled at: 2025-07-01 09:22:11.756606439 UTC
 */
 
 end
@@ -1003,9 +992,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr-lookup.spthy.tmp
-  processing time: 4.29s
+  processing time: 2.02s
   
-  WARNING: 2 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   Knows_Honest_Key_imp_Revoked (all-traces): verified (11 steps)

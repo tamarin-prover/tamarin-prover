@@ -1064,33 +1064,14 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule inpkskV_0_11111: 
-Failed to derive Variable(s): skV.1
-
-Rule insencprgprogsharedkey_0_111111111: 
-Failed to derive Variable(s): prog2.1
-
-Rule insenctkntokensharedkey_0_111111111111: 
-Failed to derive Variable(s): token.1
-
-Rule insencaskxtkntokensharedkey_0_1121111111111111: 
-Failed to derive Variable(s): token2.1, x.2
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Git revision: 0a44c79dec0eccbe1e51aa85da3c6ac96fdf5bd5 (with uncommited changes), branch: HEAD
+Compiled at: 2025-07-01 09:22:11.756606439 UTC
 */
 
 end
@@ -1102,10 +1083,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 5.70s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 2.47s
   
   attested_comput (all-traces): verified (6 steps)
   unique (all-traces): verified (7 steps)
