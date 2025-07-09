@@ -848,7 +848,7 @@ prettyEitherRestriction (s, rstr) =
 
 -- | Pretty print a configuration block.
 prettyConfigBlock :: (HighlightDocument d) => ConfigBlock -> d
-prettyConfigBlock cb = text "configuration: " <> doubleQuotes (text cb)
+prettyConfigBlock cb = lineComment $ text "configuration: " <> doubleQuotes (text cb)
 
 prettyTactic :: (HighlightDocument d) => Tactic ProofContext -> d
 prettyTactic tactic =
