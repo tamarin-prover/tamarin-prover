@@ -269,7 +269,7 @@ testsSimple _hnd =
 -- | All unification infrastructure unit tests.
 tests :: FilePath -> IO Test
 tests maudePath = do
-    mhnd <- startMaude maudePath allMaudeSig
+    mhnd <- startMaude maudePath allMaudeSig 4
     return $ TestList [ testsVariant mhnd
                       , tcompare mhnd
                       , testsSubs mhnd
@@ -307,7 +307,7 @@ tevs = frees te
 
 runTest :: WithMaude a -> IO a
 runTest m = do
-    hnd <- startMaude "maude" allMaudeSig
+    hnd <- startMaude "maude" allMaudeSig 4
     return $ m `runReader` hnd
 
 {-

@@ -103,7 +103,7 @@ flag build-tests
 -- executables stanzas
 ----------------------
 
-executable tamarin-prover
+executable tamarin-prover-pool
     default-language: GHC2021
 
     if flag(threaded)
