@@ -734,16 +734,20 @@ prettyTheory ::
   d
 prettyTheory ppSig ppCache ppRule ppPrf ppSap thy =
   vsep $
-    [ kwTheoryHeader $ text $ L.get thyName thy,
+    [ kwTheoryName $ text $ L.get thyName thy]
+    ++ parMap rdeepseq ppItem (filter isConfigBlock (L.get thyItems thy))
+    ++ [kwTheoryBegin,
       lineComment_ "Function signature and definition of the equational theory E",
       ppSig $ L.get thySignature thy,
       if thyT == [] then text "" else vcat $ map prettyTactic thyT,
       if null thyH then text "" else text "heuristic: " <> text (prettyGoalRankings thyH),
       ppCache $ L.get thyCache thy
     ]
-      ++ parMap rdeepseq ppItem (L.get thyItems thy)
+      ++ parMap rdeepseq ppItem (filter (not . isConfigBlock) (L.get thyItems thy))
       ++ [kwEnd]
   where
+    isConfigBlock (ConfigBlockItem _) = True
+    isConfigBlock _ = False
     ppItem =
       foldTheoryItem
         ppRule
@@ -848,7 +852,7 @@ prettyEitherRestriction (s, rstr) =
 
 -- | Pretty print a configuration block.
 prettyConfigBlock :: (HighlightDocument d) => ConfigBlock -> d
-prettyConfigBlock cb = lineComment $ text "configuration: " <> doubleQuotes (text cb)
+prettyConfigBlock cb = text "configuration: " <> doubleQuotes (text cb)
 
 prettyTactic :: (HighlightDocument d) => Tactic ProofContext -> d
 prettyTactic tactic =
