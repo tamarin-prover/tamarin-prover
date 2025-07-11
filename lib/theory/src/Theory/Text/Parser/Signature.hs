@@ -28,6 +28,7 @@ import qualified Data.ByteString.Char8      as BC
 import           Data.Either
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
+import           Data.Maybe                 (fromMaybe)
 --import           Data.Char
 --import qualified Data.Map                   as M
 import           Control.Applicative        hiding (empty, many, optional)
@@ -96,7 +97,23 @@ builtins thy0 =do
     setOption' thy (Just l, name) = setOption l (setName thy name)
     extendSig (name, Just msig, opt) = do
         _ <- symbol name
+        currSig <- sig <$> getState
+        let builtinFuncs = getReservedNames msig
+        let existingFuncs = map (BC.unpack . fst) (S.toList $ stFunSyms currSig)
+        
+        -- Find conflicts between this builtin and existing functions
+        let conflicts = [f | f <- builtinFuncs, f `elem` existingFuncs]
+        unless (null conflicts) $ do
+            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s): " ++ 
+                  show conflicts ++ ". Please remove these function definitions or use different names."
+        
+        -- If no conflicts, add the signature
         modifyStateSig (`mappend` msig)
+        
+        -- Also add the reserved names for this builtin to the parser state
+        modifyState (\st -> st { reservedBuiltinNames = 
+                                reservedBuiltinNames st ++ 
+                                fromMaybe [] (lookup name builtinReservedNames) })
         return (opt, name)
     extendSig (name, Nothing, opt) = do
         _ <- symbol name
@@ -133,11 +150,33 @@ functionAttribute = asum
   , symbol "destructor" Data.Functor.$> Right Destructor
   ]
 
+getReservedNames :: MaudeSig -> [String]
+getReservedNames msig = 
+  -- Extract function names from the signature's function symbols
+  map (BC.unpack . fst) (S.toList $ stFunSyms msig)
+
+builtinReservedNames :: [(String, [String])]
+builtinReservedNames = 
+  -- For each builtin with a Maude signature
+  [(name, getReservedNames msig) | (name, Just msig, _) <- builtinsNames]
+
 function :: Parser SapicFunSym
-function =  do
-        f   <- BC.pack <$> identifier
+function = do
+        f <- BC.pack <$> identifier
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
+        
+        -- Get the current list of reserved function names from all enabled builtins
+        st <- getState
+        let allReservedNames = reservedBuiltinNames st
+        
+        -- Check if the function name conflicts with any builtin
+        when (BC.unpack f `elem` allReservedNames) $ do
+            -- Find which builtin this function name belongs to
+            let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, 
+                                        BC.unpack f `elem` names]
+            fail $ "`" ++ BC.unpack f ++ "` is a reserved function name from " ++ 
+                   "the following builtins: " ++ show conflictingBuiltins
         when (BC.unpack f `elem` reservedBuiltins) $ fail $ "`" ++ BC.unpack f ++ "` is a reserved function name for builtins."
         sign <- sig <$> getState
         let k = length argTypes
