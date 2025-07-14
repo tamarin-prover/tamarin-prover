@@ -269,7 +269,7 @@ testsSimple _hnd =
 -- | All unification infrastructure unit tests.
 tests :: FilePath -> IO Test
 tests maudePath = do
-    mhnd <- startMaude maudePath allMaudeSig 4
+    mhnd <- startMaude maudePath allMaudeSig 8
     return $ TestList [ testsVariant mhnd
                       , tcompare mhnd
                       , testsSubs mhnd
