@@ -43,8 +43,8 @@ intruderMode = tamarinMode
 run :: TamarinMode -> Arguments -> IO ()
 run _thisMode as = do
   _ <- ensureMaude as
-  dhHnd <- startMaude (maudePath as) dhMaudeSig 1
-  bpHnd <- startMaude (maudePath as) bpMaudeSig 1
+  dhHnd <- startMaude (maudePath as) dhMaudeSig 4
+  bpHnd <- startMaude (maudePath as) bpMaudeSig 4
   let dhRules = dhIntruderRules False `runReader` dhHnd
       bpRules = bpIntruderRules False `runReader` bpHnd
       dhS = renderDoc . prettyIntruderVariants $ dhRules

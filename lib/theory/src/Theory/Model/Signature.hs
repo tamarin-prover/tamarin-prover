@@ -104,7 +104,7 @@ toSignatureWithMaude ::
   SignaturePure ->
   IO (SignatureWithMaude)
 toSignatureWithMaude maudePath sig = do
-  hnd <- startMaude maudePath (L.get sigMaudeInfo sig) 8
+  hnd <- startMaude maudePath (L.get sigMaudeInfo sig) 4
   return $ sig {_sigMaudeInfo = hnd}
 
 -- | The pure signature of a 'SignatureWithMaude'.
