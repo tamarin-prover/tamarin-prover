@@ -313,7 +313,7 @@ checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> Intr
 checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _)
   | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
   case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
-    [] -> True
+    [] -> trace ("False to true : " ++ show r) True
     subst -> dedAux (auxMatcher subst r inst1)
     
     -- trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\n\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1)))
