@@ -811,7 +811,12 @@ prettyVarList = fsep . punctuate comma . map prettyLVar
 
 -- |  Pretty print all macros
 prettyMacros :: (HighlightDocument d) => [Macro] -> d
-prettyMacros m = if m == [] then text empty else vcat (keyword_ "macros:" : map prettyMacro m)
+prettyMacros [] = text empty
+prettyMacros m = keyword_ "macros:" $$ nest 4 
+  (vcat [if i == length m - 1 
+          then prettyMacro macro 
+          else prettyMacro macro <> comma 
+        | (i, macro) <- zip [0..] m])
 
 -- |  Pretty print a macro.
 prettyMacro :: (HighlightDocument d) => Macro -> d
