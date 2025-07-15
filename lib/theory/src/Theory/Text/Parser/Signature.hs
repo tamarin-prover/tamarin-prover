@@ -101,16 +101,13 @@ builtins thy0 =do
         let builtinFuncs = getReservedNames msig
         let existingFuncs = map (BC.unpack . fst) (S.toList $ stFunSyms currSig)
         
-        -- Find conflicts between this builtin and existing functions
+        -- Find conflicts between builtins and existing functions
         let conflicts = [f | f <- builtinFuncs, f `elem` existingFuncs]
         unless (null conflicts) $ do
             fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s): " ++ 
                   show conflicts ++ ". Please remove these function definitions or use different names."
         
-        -- If no conflicts, add the signature
         modifyStateSig (`mappend` msig)
-        
-        -- Also add the reserved names for this builtin to the parser state
         modifyState (\st -> st { reservedBuiltinNames = 
                                 reservedBuiltinNames st ++ 
                                 fromMaybe [] (lookup name builtinReservedNames) })
@@ -152,12 +149,11 @@ functionAttribute = asum
 
 getReservedNames :: MaudeSig -> [String]
 getReservedNames msig = 
-  -- Extract function names from the signature's function symbols
   map (BC.unpack . fst) (S.toList $ stFunSyms msig)
 
+-- Map builtin names to their reserved function names
 builtinReservedNames :: [(String, [String])]
 builtinReservedNames = 
-  -- For each builtin with a Maude signature
   [(name, getReservedNames msig) | (name, Just msig, _) <- builtinsNames]
 
 function :: Parser SapicFunSym
@@ -165,14 +161,9 @@ function = do
         f <- BC.pack <$> identifier
         (argTypes,outType) <- functionType
         atts <- option [] $ list functionAttribute
-        
-        -- Get the current list of reserved function names from all enabled builtins
         st <- getState
         let allReservedNames = reservedBuiltinNames st
-        
-        -- Check if the function name conflicts with any builtin
         when (BC.unpack f `elem` allReservedNames) $ do
-            -- Find which builtin this function name belongs to
             let conflictingBuiltins = [b | (b, names) <- builtinReservedNames, 
                                         BC.unpack f `elem` names]
             fail $ "`" ++ BC.unpack f ++ "` is a reserved function name from " ++ 
