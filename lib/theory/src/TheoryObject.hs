@@ -827,7 +827,8 @@ prettyMacro (op, args, out) =
         text
         ([BC.unpack op ++ "("])
         <-> prettyVarList args
-        <-> text (") = " ++ show (out))
+        <-> text (") = ")
+        <-> prettyTerm (text . show) out
     ]
   where
     ppNonEmptyList _ _ [] = emptyDoc
