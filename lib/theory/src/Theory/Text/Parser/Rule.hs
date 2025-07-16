@@ -74,6 +74,7 @@ ruleAttribute = asum
     , symbol "no_derivcheck" *> return (mempty { ignoreDerivChecks = True })
     , symbol "role=" *> parseRole
     , symbol "issapicrule" *> return (mempty { isSAPiCRule = True })
+    , identitfierStartingWithX *> opEqual *> parseAndIgnore
     ]
   where
     parseColor = do
@@ -81,10 +82,9 @@ ruleAttribute = asum
         case hexToRGB hc of
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
             Just rgb  -> return $ mempty { ruleColor = Just rgb }
-    parseAndIgnore = do
-                        _ <- try (symbol "\'") <|> symbol "\""
-                        _ <- manyTill anyChar (try (symbol "\"") <|> (try $ symbol "'"))
-                        return  mempty
+
+    parseAndIgnore = betweenMatching (\(l,r)->  manyCharsExcept [l,r] *> return mempty)
+
     parseRole = do
         _ <- symbol "\'" <|> symbol "\""
         role <- manyTill anyChar (try (symbol "\'" <|> symbol "\""))
