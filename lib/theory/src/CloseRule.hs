@@ -217,7 +217,7 @@ dedNaive fact termsT = aux1 fact
     aux1 _                     = False
 
 derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof || checkProofd tabProof1 || checkProofd tabProof2 -- trace ("\ntabProof : " ++ show tabProof) 
+derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof1 || checkProofd tabProof2 -- trace ("\ntabProof : " ++ show tabProof) 
   where
     tInf (Fact _ _ [f]) = f
     tInListf = foldMap getFactTerms
@@ -231,10 +231,10 @@ derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof || chec
 
     emptyThy = Theory "checkReduction" "checkReduction" [] [] (toSignaturePure sig) intrR [] (Option False False False False False False False False False False S.empty [] 10 5) False
 
-    tabProof = concatMap checkProofStatuses provenTheory
-    provenTheory = map (proveTheory (const True) defaultProver) closedTheory
-    closedTheory = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory -- no AutoSources
-    modifiedTheory = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction1]) t) setD (repeat emptyThy)
+    -- tabProof = concatMap checkProofStatuses provenTheory
+    -- provenTheory = map (proveTheory (const True) defaultProver) closedTheory
+    -- closedTheory = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory -- no AutoSources
+    -- modifiedTheory = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction1]) t) setD (repeat emptyThy)
 
     tabProof1 = concatMap checkProofStatuses provenTheory1
     provenTheory1 = map (proveTheory (const True) defaultProver) closedTheory1
@@ -266,7 +266,7 @@ derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof || chec
     factEq x y = Ato (EqE (LIT (Var (Free (LVar x LSortNode 0)))) (LIT (Var (Free (LVar y LSortNode 0)))))
     factOnlyOnce = protoFact Linear "OnlyOnce" []
 
-    newRestriction1 = Restriction "OnlyOnceD" (forAllFormula (factAndD "i" .&&. factAndD "j" .==>. factEq "i" "j"))
+    -- newRestriction1 = Restriction "OnlyOnceD" (forAllFormula (factAndD "i" .&&. factAndD "j" .==>. factEq "i" "j"))
     factAndD x = Ato (Action (LIT (Var (Free (LVar x LSortNode 0)))) factOnlyOnceD)
     factOnlyOnceD = protoFact Linear "OnlyOnceD" []
 
@@ -313,7 +313,7 @@ checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> Intr
 checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _)
   | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
   case runMaude $ unifyLNFactEqs [Equal (head conc) f1] of
-    [] -> trace ("False to true : " ++ show r) True
+    [] -> True
     subst -> dedAux (auxMatcher subst r inst1)
     
     -- trace ("\nsigma instance : " ++ concatMap ppPair (auxMatcher subst r inst1) ++ "\n\nsigma instance filtered : " ++ concatMap ppPair (auxMatcherFilter (auxMatcher subst r inst1)))
