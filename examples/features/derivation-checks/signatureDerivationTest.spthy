@@ -1,6 +1,8 @@
 theory SignatureDerivationTests
 begin
 
+// Only the "invalid" rules should generate a warning. Everything else should be derived properly.
+
 builtins: signing
 
 // ====== Standard Signing Tests ======
@@ -17,23 +19,15 @@ rule Sign_Message:
   --[ Signed(A, m) ]->
     [ Out(sign(m, sk)) ]
 
-// Valid Verification - using the right connection between keys
-rule Verify_Signature_warning:
+/* Valid Verification - using the right connection between keys. Should generate a warning since sk is not derivable.
+Rule Invalid_Verify_Signature: 
+Failed to derive Variable(s): sk
+*/
+rule Invalid_Verify_Signature:
     [ In(sign(m, sk)), In(m), In(pk(sk)) ]
   --[ ValidSignature(m) ]->
     [ Out(verify(sign(m, sk), m, pk(sk))) ]
 
-// // Valid Verification - using the right connection between keys
-// rule Verify_Signature_b:
-//     [ In(sign(m, sk)), In(m), In(k) ]
-//   --[ ValidSignature(m) ]->
-//     [ Out(verify(sign(m, sk), m, k)) ]
-
-// // Valid Verification - using the right connection between keys
-// rule Verify_Signature_bis:
-//     [ In(s), In(m), In(pk(sk)) ]
-//   --[ ValidSignature(m) ]->
-//     [ Out(verify(s, m, pk(sk))) ]
 
 // Valid Verification - using the right connection between keys
 rule Verify_Signature_Well_Derived:
@@ -41,8 +35,11 @@ rule Verify_Signature_Well_Derived:
   --[ ValidSignature(m) ]->
     [ Out(verify(s, m, k)) ]
 
-// Using stored keys (note we match the actual key pattern here)
-rule Verify_With_Stored_Key_warning:
+/* Using stored keys (note we match the actual key pattern here but it should generate a warning since skA is not derivable.)
+Rule Invalid_Verify_With_Stored_Key: 
+Failed to derive Variable(s): skA
+*/
+rule Invalid_Verify_With_Stored_Key:
     [ In(sign(m, skA)), In(m), !VerifyKey(A, pkA) ]
   --[ ValidSignatureAttempt(A, m) ]->
     [ Out(verify(sign(m, skA), m, pkA)) ]
@@ -54,21 +51,31 @@ rule Verify_With_Stored_Key_WD:
 
 // ====== Invalid Derivation Attempts (all should fail) ======
 
-// These rules should all trigger derivation errors - which is correct! (since there is no reveal rule)
+// These rules should all trigger derivation errors - which is correct!
 
-// Attempt to extract message from standard signature (should fail)
+/* Attempt to extract message from standard signature (should fail):
+Rule Invalid_Extract_From_Sign: 
+Failed to derive Variable(s): m, sk
+*/
+
 rule Invalid_Extract_From_Sign:
     [ In(sign(m, sk)) ]
   -->
     [ Out(m) ]
 
-// Attempt to extract private key from signature (should fail)
+/* Attempt to extract private key from signature (should fail)
+Rule Invalid_Extract_Key_From_Sign: 
+Failed to derive Variable(s): m, sk
+*/
 rule Invalid_Extract_Key_From_Sign:
     [ In(sign(m, sk)) ]
   -->
     [ Out(sk) ]
 
-// Attempt to forge signature without key (should fail)
+/* Attempt to forge signature without key (should fail)
+Rule Invalid_Forge_Signature: 
+Failed to derive Variable(s): sk
+*/
 rule Invalid_Forge_Signature:
     [ In(m), In(pk(sk)) ]
   -->

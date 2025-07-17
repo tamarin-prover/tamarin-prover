@@ -1,6 +1,8 @@
 theory RevealSignatureDerivationTests
 begin
 
+// Only the "invalid" rules should generate a warning. Everything else should be derived properly.
+
 builtins: revealing-signing
 
 // ====== Key Generation ======
@@ -31,13 +33,19 @@ rule Verify_RevealSignature:
 
 // ====== Invalid Derivation Attempts ======
 
-// Attempt to extract private key from revealing signature (should fail)
+/* Attempt to extract private key from revealing signature. Should generate a warning :
+Rule Invalid_Extract_Key_From_RevealSign: 
+Failed to derive Variable(s): sk
+*/
 rule Invalid_Extract_Key_From_RevealSign:
     [ In(revealSign(m, sk)) ]
   -->
     [ Out(sk) ]
 
-// Attempt to forge revealing signature without key (should fail)
+/* Attempt to forge revealing signature without key, should generate a warning :
+Rule Invalid_Forge_RevealSignature: 
+Failed to derive Variable(s): sk
+*/
 rule Invalid_Forge_RevealSignature:
     [ In(m), In(pk(sk)) ]
   -->

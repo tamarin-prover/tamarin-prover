@@ -1,7 +1,7 @@
 theory EncryptionComparison
 begin
 
-// Builtin symmetric encryption
+// Test builtin symmetric encryption. Should derive properly without any warnings.
 builtins: symmetric-encryption
 
 rule builtin_encrypt_decrypt:

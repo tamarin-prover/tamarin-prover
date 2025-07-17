@@ -3,9 +3,12 @@ begin
 
 builtins: hashing
 
-// This rule attempts to derive x from h(x), which is impossible.
-//It should generate a warning.
-rule attempt_hash_inversion:
+/* This rule attempts to derive x from h(x), which is impossible.
+ It should generate a warning :
+ Rule invalid_hash_inversion_attempt: 
+ Failed to derive Variable(s): x
+*/
+rule invalid_hash_inversion_attempt:
   [ In(h(x)) ]
   -->
   [ Out(x) ]

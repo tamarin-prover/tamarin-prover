@@ -1,6 +1,8 @@
 theory EncryptionDerivationTests
 begin
 
+// Only the "invalid" rules should generate a warning. Everything else should be derived properly.
+
 // ====== Builtins for symmetric and asymmetric encryption ======
 builtins: symmetric-encryption, asymmetric-encryption
 
@@ -21,13 +23,19 @@ rule test_symmetric_encryption:
   [ Out(x) ]
 
 // ====== Invalid derivation attempts for manual and symmetric encryption ======
-// Attempt to decrypt without key
+/* Attempt to decrypt without key, should generate a warning :
+Rule invalid_manual_decrypt: 
+Failed to derive Variable(s): k, x
+*/
 rule invalid_manual_decrypt:
   [ In(myenc(x,k)) ]
   -->
   [ Out(x) ]
 
-// Attempt to decrypt symmetric encryption without key
+/* Attempt to decrypt symmetric encryption without key, should generate a warning.
+Rule invalid_sym_decrypt: 
+Failed to derive Variable(s): k, x
+*/
 rule invalid_sym_decrypt:
   [ In(senc(x,k)) ]
   -->
@@ -76,20 +84,30 @@ rule Decrypt_with_input_sk:
 --[ SkDecryption(msg) ]->
   [ Out(msg) ]
 
-// Invalid derivation attempts for asymmetric encryption
-// Attempt to decrypt without knowing the private key
+/*Invalid derivation attempts for asymmetric encryption
+Attempt to decrypt without knowing the private key, should generate a warning :
+Rule Invalid_decrypt_without_sk: 
+Failed to derive Variable(s): msg, pubkey
+*/
 rule Invalid_decrypt_without_sk:
   [ In(aenc(msg, pubkey)) ]
 -->
   [ Out(msg) ]
 
-// Attempt to extract public key from message
+/* Attempt to extract public key from message, should generate a warning :
+Rule Invalid_extract_pubkey: 
+Failed to derive Variable(s): msg, pubkey
+*/
+
 rule Invalid_extract_pubkey:
   [ In(aenc(msg, pubkey)) ]
 -->
   [ Out(pubkey) ]
 
-// Attempt to derive private key from public key
+/* Attempt to derive private key from public key, should generate a warning :
+Rule Invalid_derive_sk_from_pk: 
+Failed to derive Variable(s): ltk
+*/
 rule Invalid_derive_sk_from_pk:
   [ In(pk(ltk)) ]
 -->
