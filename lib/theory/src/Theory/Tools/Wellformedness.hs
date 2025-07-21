@@ -350,7 +350,7 @@ natWellSortedReportDiff thy = natSortErrors itemsTerms
 
 
 --- | Check that the protocol rule variants are correct.
-variantsCheck :: MaudeHandle -> [Macro] -> String -> OpenProtoRule -> WfErrorReport
+variantsCheck :: MaudeHandle -> [LNMacro] -> String -> OpenProtoRule -> WfErrorReport
 variantsCheck _   _      _    (OpenProtoRule _ [])     = []
 variantsCheck hnd macros info (OpenProtoRule ruE ruAC) =
   if sameVariantsUpToActions ruAC recomputedVariants then

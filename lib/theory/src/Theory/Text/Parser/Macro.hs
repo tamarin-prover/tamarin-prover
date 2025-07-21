@@ -26,7 +26,7 @@ import           Theory
 import           Theory.Text.Parser.Token
 import           Theory.Text.Parser.Term
  
-macros :: Parser ([Macro])
+macros :: Parser ([LNMacro])
 macros = do 
     mcs <- (symbol "macros" *> colon *> commaSep macro)
     return mcs
@@ -48,5 +48,5 @@ macros = do
                 modifyStateSig $ addFunSym (op,(k,Private,Destructor)) 
                 return (mc)
 
-getMacroName :: Macro -> String
+getMacroName :: LNMacro -> String
 getMacroName (op, _, _) = BC.unpack op

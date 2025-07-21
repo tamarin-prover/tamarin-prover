@@ -314,11 +314,11 @@ closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, [ClosedPr
 closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd [] ruE)
 
 -- | Apply macro to a diff protocol rule.
-applyMacroInDiffProtoRule :: [Macro]-> DiffProtoRule -> DiffProtoRule
+applyMacroInDiffProtoRule :: [LNMacro]-> DiffProtoRule -> DiffProtoRule
 applyMacroInDiffProtoRule mcs (DiffProtoRule ruE sides) = DiffProtoRule (applyMacroInRule mcs ruE) sides
 
 -- | Apply macro to an open protocol rule.
-applyMacroInProtoRule :: [Macro]-> OpenProtoRule -> OpenProtoRule
+applyMacroInProtoRule :: [LNMacro]-> OpenProtoRule -> OpenProtoRule
 applyMacroInProtoRule mcs (OpenProtoRule ruE variants) = OpenProtoRule (applyMacroInRule mcs ruE) variants
 
 

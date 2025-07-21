@@ -206,12 +206,6 @@ freesToFresh = map (freshFact . lvarToLnterm)
 premisesToOut :: [LNFact] -> [LNFact]
 premisesToOut =  map (outFact . natToFreshVars) . concatMap factTerms
 
--- Convenience functions for converting vars/terms
-freeLNTerm :: LVar -> BVar LVar
-freeLNTerm = Free
-
-freeTerm :: LNTerm -> Term (Lit Name (BVar LVar))
-freeTerm =  fmap (fmap freeLNTerm)
 
 freeFact :: LNFact ->  Fact (Term (Lit Name (BVar LVar)))
 freeFact = fmap freeTerm

@@ -60,7 +60,7 @@ data TheoryItem r p s =
      | TextItem FormalComment
      | ConfigBlockItem ConfigBlock
      | PredicateItem Predicate
-     | MacroItem [Macro]
+     | MacroItem [LNMacro]
      | TranslationItem s
      deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )
 
@@ -77,7 +77,7 @@ data DiffTheoryItem r r2 p p2 =
      | DiffLemmaItem (DiffLemma p)
      | EitherLemmaItem (Side, Lemma p2)
      | EitherRestrictionItem (Side, Restriction)
-     | DiffMacroItem [Macro]
+     | DiffMacroItem [LNMacro]
      | DiffTextItem FormalComment
      | DiffConfigBlockItem ConfigBlock
      deriving( Show, Eq, Ord, Functor, Generic, NFData, Binary )

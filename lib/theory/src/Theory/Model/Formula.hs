@@ -308,38 +308,9 @@ openFormulaPrefix f0 = case openFormula f0 of
 
 
 -- | Apply macros to a formula
-applyMacroInFormula :: [Macro] -> LNFormula -> LNFormula
+applyMacroInFormula :: [LNMacro] -> LNFormula -> LNFormula
 applyMacroInFormula [] fm = fm
-applyMacroInFormula macros fm = mapAtoms (const (fmap (handleTerms macros))) fm
-  where
-    handleTerms :: [Macro] -> VTerm Name (BVar LVar) -> VTerm Name (BVar LVar)
-    handleTerms mcs term = 
-      case viewTerm term of
-        FApp f args -> 
-          let newArgs = map (handleTerms mcs) args
-              isMacroApp = any (\m -> 
-                  (macroToFunSym m) == f) mcs
-          in if isMacroApp
-             then convertFreeTermToBound $ applyMacros mcs $ convertBoundToFreeTerm term
-             else fApp f newArgs
-        Lit l -> lit l
-
-    -- Convert a term with bound variables to a term with only free variables (LNTerm) Msg context to be as wide as possible.
-    convertBoundToFreeTerm :: VTerm Name (BVar LVar) -> LNTerm
-    convertBoundToFreeTerm = fmapTerm (fmap convertToFree)
-      where
-        convertToFree :: BVar LVar -> LVar
-        convertToFree (Bound i) = LVar "_bound_" LSortMsg i
-        convertToFree (Free v)  = v
-
-    -- Convert a term with free variables back to a term with bound variables.
-    convertFreeTermToBound :: LNTerm -> VTerm Name (BVar LVar)
-    convertFreeTermToBound = fmapTerm (fmap convertToBound)
-      where
-        convertToBound :: LVar -> BVar LVar
-        convertToBound (LVar name sort idx)
-          | name == "_bound_" = Bound idx
-          | otherwise         = Free (LVar name sort idx)
+applyMacroInFormula macros fm = mapAtoms (const (fmap (applyMacros (lnMacrosToBNMacros macros)))) fm
 
 -- Instances
 ------------

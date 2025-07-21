@@ -79,7 +79,7 @@ isRightLemma lem =
 --      (BothLemma `elem` L.get lAttributes lem)
 
 -- | Apply macros to a lemma
-applyMacroInLemma :: [Macro] -> Lemma p -> Lemma p
+applyMacroInLemma :: [LNMacro] -> Lemma p -> Lemma p
 applyMacroInLemma macros lemma = 
   let originalFormula = L.get lFormula lemma
       expandedFormula = applyMacroInFormula macros originalFormula

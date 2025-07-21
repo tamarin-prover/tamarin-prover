@@ -40,7 +40,7 @@ import           Control.Applicative        hiding (empty, many, optional)
 import qualified Control.Monad.Catch        as Catch
 import System.IO.Unsafe (unsafePerformIO)
 import           Text.Parsec                hiding ((<|>))
-import           Text.Parsec.Error          (ParseError, newErrorMessage, Message(..))
+import           Text.Parsec.Error          (newErrorMessage, Message(..))
 import           Text.Parsec.Pos            (initialPos)
 import           Text.PrettyPrint.Class     (render)
 import           TheoryObject               (theoryMacros)
@@ -57,7 +57,6 @@ import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
 import Lemma (applyMacroInLemma)
-import Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods

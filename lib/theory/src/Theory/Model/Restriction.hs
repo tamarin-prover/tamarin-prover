@@ -160,6 +160,6 @@ fromRuleRestriction rname f =
                 -- produce fact from set of terms
                 mkFact = protoFactAnn Linear (restrPrefix ++ rname) S.empty
 
-applyMacroInRestriction :: [Macro] -> Restriction -> Restriction
+applyMacroInRestriction :: [LNMacro] -> Restriction -> Restriction
 applyMacroInRestriction macros (Restriction name f ofm) = 
     Restriction name (applyMacroInFormula macros f) (Just $ maybe f id ofm)

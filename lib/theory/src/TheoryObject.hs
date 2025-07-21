@@ -225,7 +225,7 @@ foldTheoryItem ::
   (FormalComment -> a) ->
   (ConfigBlock -> a) ->
   (Predicate -> a) ->
-  ([Macro] -> a) ->
+  ([LNMacro] -> a) ->
   (s -> a) ->
   TheoryItem r p s ->
   a
@@ -246,7 +246,7 @@ foldDiffTheoryItem ::
   (DiffLemma p -> a) ->
   ((Side, Lemma p2) -> a) ->
   ((Side, Restriction) -> a) ->
-  ([Macro] -> a) ->
+  ([LNMacro] -> a) ->
   (FormalComment -> a) ->
   (ConfigBlock -> a) ->
   DiffTheoryItem r r2 p p2 ->
@@ -322,7 +322,7 @@ rightTheoryRules =
   foldDiffTheoryItem (const []) (\(x, y) -> if (x == RHS) then [y] else []) (const []) (const []) (const []) (const []) (const []) (const []) <=< L.get diffThyItems
 
 -- |  All macros of a theory.
-theoryMacros :: Theory sig c r p s -> [Macro]
+theoryMacros :: Theory sig c r p s -> [LNMacro]
 theoryMacros =
   foldTheoryItem (const []) (const []) (const []) (const []) (const []) (const []) (\m -> m) (const []) <=< L.get thyItems
 
@@ -390,7 +390,7 @@ diffTheoryRestrictions =
   foldDiffTheoryItem (const []) (const []) (const []) (const []) return (const []) (const []) (const []) <=< L.get diffThyItems
 
 -- |  All macros of a diff theory.
-diffTheoryMacros :: DiffTheory sig c r r2 p p2 -> [Macro]
+diffTheoryMacros :: DiffTheory sig c r r2 p p2 -> [LNMacro]
 diffTheoryMacros =
   foldDiffTheoryItem (const []) (const []) (const []) (const []) (const []) (\m -> m) (const []) (const []) <=< L.get diffThyItems
 
@@ -481,11 +481,11 @@ addFunctionTypingInfo :: SapicFunSym -> Theory sig c r p TranslationElement -> T
 addFunctionTypingInfo l = modify thyItems (++ [TranslationItem $ FunctionTypingInfo l])
 
 -- | Add new Macros.
-addMacros :: [Macro] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addMacros :: [LNMacro] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addMacros m thy = return $ modify thyItems (++ [MacroItem m]) thy
 
 -- | Add new Macros.
-addDiffMacros :: [Macro] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffMacros :: [LNMacro] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addDiffMacros m thy = return $ modify diffThyItems (++ [DiffMacroItem m]) thy
 
 -- | Remove all Function Typing information in Theory
@@ -813,11 +813,11 @@ prettyVarList :: (Document d) => [LVar] -> d
 prettyVarList = fsep . punctuate comma . map prettyLVar
 
 -- |  Pretty print all macros
-prettyMacros :: (HighlightDocument d) => [Macro] -> d
-prettyMacros m = if m == [] then text empty else vcat (keyword_ "macros:" : map prettyMacro m)
+prettyMacros :: (HighlightDocument d) => [LNMacro] -> d
+prettyMacros m = if null m then text empty else vcat (keyword_ "macros:" : map prettyMacro m)
 
 -- |  Pretty print a macro.
-prettyMacro :: (HighlightDocument d) => Macro -> d
+prettyMacro :: (HighlightDocument d) => LNMacro -> d
 prettyMacro (op, args, out) =
   vcat
     [ ppNonEmptyList
