@@ -392,15 +392,15 @@ features-case-studies:	$(FEATURES_CS_TARGETS)
 ###############
 
 AUTO_SOURCES_CASE_STUDIES=CCITT_X509_1.spthy CCITT_X509_1c.spthy \
-                   CCITT_X509_3.spthy CCITT_X509_3_BAN.spthy \
-                   AS_Concrete_RPC.spthy Lowe_AS_Concrete_RPC.spthy \
-                   AS_Modified_RPC.spthy AS_RPC.spthy \
-                   Denning-Sacco-SK-Lowe.spthy Denning-Sacco-SK.spthy \
-                   Yahalom_BAN.spthy Yahalom-Lowe.spthy Yahalom.spthy \
-                   Nssk.spthy Nssk_amended.spthy Otway-Rees.spthy \
-                   Wide_Mouthed_Frog.spthy Wide_Mouthed_Frog_Lowe.spthy \
-                   SpliceAS.spthy SpliceAS_2.spthy SpliceAS_3.spthy \
-                   WooLam_Pi_f.spthy
+				   CCITT_X509_3.spthy CCITT_X509_3_BAN.spthy \
+				   AS_Concrete_RPC.spthy Lowe_AS_Concrete_RPC.spthy \
+				   AS_Modified_RPC.spthy AS_RPC.spthy \
+				   Denning-Sacco-SK-Lowe.spthy Denning-Sacco-SK.spthy \
+				   Yahalom_BAN.spthy Yahalom-Lowe.spthy Yahalom.spthy \
+				   Nssk.spthy Nssk_amended.spthy Otway-Rees.spthy \
+				   Wide_Mouthed_Frog.spthy Wide_Mouthed_Frog_Lowe.spthy \
+				   SpliceAS.spthy SpliceAS_2.spthy SpliceAS_3.spthy \
+				   WooLam_Pi_f.spthy
 
 AUTO_SOURCES_CS_TARGETS=$(subst .spthy,_analyzed-auto-sources.spthy,$(addprefix case-studies$(SUBDIR)features/auto-sources/spore/,$(AUTO_SOURCES_CASE_STUDIES)))
 
@@ -467,6 +467,22 @@ sapic-case-studies-fast:	$(SAPIC_CS_TARGETS_FAST) # used for quick checks during
 sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in winter
 	grep "verified\|falsified\|processing time" $^
 
+
+## Derivation checks
+##########################
+DERIVATION_CHECK_CASE_STUDIES=$(notdir $(wildcard examples/features/derivation-checks/*.spthy))
+DERIVATION_CHECK_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)features/derivation-checks/,$(DERIVATION_CHECK_CASE_STUDIES)))
+
+# Special rule for derivation-check files to not bypass derivation checks.
+case-studies$(SUBDIR)features/derivation-checks/%_analyzed.spthy: examples/features/derivation-checks/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out 2>&1
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
 ## All case studies
 ###################
 
@@ -485,7 +501,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS)
+CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS) $(DERIVATION_CHECK_CS_TARGETS)
 
 case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies$(SUBDIR)
@@ -494,7 +510,7 @@ case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 ## Fast case studies
 ####################
 
-FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS)
+FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(DERIVATION_CHECK_CS_TARGETS)
 
 fast-case-studies: case-studies$(SUBDIR)system.info $(FAST_CS_TARGETS)
 	mkdir -p case-studies$(SUBDIR)
