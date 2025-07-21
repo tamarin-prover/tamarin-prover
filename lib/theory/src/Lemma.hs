@@ -31,6 +31,7 @@ import Theory.Text.Pretty
 import Theory.Model
 --import Theory.Constraint.Solver
 import Data.List (intercalate)
+import Data.Maybe(fromMaybe)
 
 
 -- | The source kind allowed for a lemma.
@@ -117,7 +118,7 @@ prettyLemma ppPrf lem =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
-          , doubleQuotes $ prettyLNFormula (maybe expandedFormula id ogFormula)
+          , doubleQuotes $ prettyLNFormula (fromMaybe expandedFormula ogFormula)
           ]
     )
     $-$
@@ -145,7 +146,7 @@ prettyEitherLemma ppPrf (_, lem) =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
-          , doubleQuotes $ prettyLNFormula (maybe expandedFormula id ogFormula)
+          , doubleQuotes $ prettyLNFormula (fromMaybe expandedFormula ogFormula)
           ]
     )
     $-$
