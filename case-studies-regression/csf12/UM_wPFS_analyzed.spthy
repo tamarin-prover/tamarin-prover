@@ -422,27 +422,14 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Init_2: 
-Failed to derive Variable(s): ~lkR
-
-Rule Resp_1: 
-Failed to derive Variable(s): ~lkI
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
+Compiled at: 2025-07-16 14:37:22.227009318 UTC
 */
 
 end
@@ -454,10 +441,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          examples/csf12/UM_wPFS.spthy.tmp
-  processing time: 0.34s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 1.10s
   
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (37 steps)
