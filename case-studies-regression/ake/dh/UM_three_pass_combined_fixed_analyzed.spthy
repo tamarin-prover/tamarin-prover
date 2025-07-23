@@ -1348,6 +1348,12 @@ solve( (∃ #l matchingComm.
                           case R_Complete_case_1
                           solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
                             case R_Activate
+                            by contradiction /* from formulas */
+                          qed
+                        next
+                          case R_Complete_case_2
+                          solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
+                            case R_Activate
                             solve( !KU( second(h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 
                                                   'g'^~ey, 'UM3'>))
                                    ) @ #vk )
@@ -1392,12 +1398,6 @@ solve( (∃ #l matchingComm.
                                 qed
                               qed
                             qed
-                          qed
-                        next
-                          case R_Complete_case_2
-                          solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
-                            case R_Activate
-                            by contradiction /* from formulas */
                           qed
                         qed
                       qed
@@ -1866,81 +1866,18 @@ next
                   case case_1
                   solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
                     case R_Activate
-                    solve( !Ltk( $B, ~x ) ▶₂ #v )
+                    solve( !Ltk( $B, ~ea ) ▶₂ #v )
                       case Register_key_honest
-                      solve( !Pk( $A, 'g'^~ea ) ▶₃ #v )
-                        case Register_key_honest
-                        by solve( SidUpdated( <'UM3', $B, $A, 
-                                               (<'1', 'g'^~ex>++
-                                                <'2', 'g'^~ey, 
-                                                 MAC(first(h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 
-                                                              'g'^~ey, 'UM3'>)),
-                                                     <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                >++
-                                                <'3', 
-                                                 MAC(first(h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 
-                                                              'g'^~ey, 'UM3'>)),
-                                                     <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                >
-                                               )
-                                              >
-                                  ) @ #v.1 )
-                      qed
+                      by contradiction /* from formulas */
                     qed
                   qed
                 next
                   case case_2
                   solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
                     case R_Activate
-                    solve( !Ltk( $B, ~x ) ▶₂ #v )
+                    solve( !Ltk( $B, ~ea ) ▶₂ #v )
                       case Register_key_honest
-                      solve( !Pk( $A, 'g'^~ea ) ▶₃ #v )
-                        case Register_key_honest
-                        solve( !KU( second(h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 
-                                              'g'^~ey, 'UM3'>))
-                               ) @ #vk.2 )
-                          case Corrupt_SessionKey_case_1
-                          by contradiction /* cyclic */
-                        next
-                          case Corrupt_SessionKey_case_2
-                          by contradiction /* cyclic */
-                        next
-                          case Corrupt_SessionKey_case_3
-                          by contradiction /* cyclic */
-                        next
-                          case Corrupt_SessionKey_case_4
-                          by contradiction /* cyclic */
-                        next
-                          case Reveal_SessionKey_case_1
-                          by contradiction /* from formulas */
-                        next
-                          case Reveal_SessionKey_case_2
-                          by contradiction /* from formulas */
-                        next
-                          case Reveal_SessionKey_case_3
-                          by contradiction /* from formulas */
-                        next
-                          case Reveal_SessionKey_case_4
-                          by contradiction /* from formulas */
-                        next
-                          case c_second
-                          solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                         'UM3'>)
-                                 ) @ #vk.6 )
-                            case c_h
-                            solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
-                              case I_Activate
-                              by solve( !KU( ~ey ) @ #vk.18 )
-                            next
-                              case R_Activate
-                              by solve( !KU( ~ex ) @ #vk.18 )
-                            next
-                              case c_exp
-                              by solve( !KU( ~ex ) @ #vk.20 )
-                            qed
-                          qed
-                        qed
-                      qed
+                      by contradiction /* from formulas */
                     qed
                   qed
                 qed
@@ -2022,18 +1959,81 @@ next
                   case case_1
                   solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
                     case R_Activate
-                    solve( !Ltk( $B, ~ea ) ▶₂ #v )
+                    solve( !Ltk( $B, ~x ) ▶₂ #v )
                       case Register_key_honest
-                      by contradiction /* from formulas */
+                      solve( !Pk( $A, 'g'^~ea ) ▶₃ #v )
+                        case Register_key_honest
+                        by solve( SidUpdated( <'UM3', $B, $A, 
+                                               (<'1', 'g'^~ex>++
+                                                <'2', 'g'^~ey, 
+                                                 MAC(first(h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 
+                                                              'g'^~ey, 'UM3'>)),
+                                                     <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                >++
+                                                <'3', 
+                                                 MAC(first(h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 
+                                                              'g'^~ey, 'UM3'>)),
+                                                     <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                >
+                                               )
+                                              >
+                                  ) @ #v.1 )
+                      qed
                     qed
                   qed
                 next
                   case case_2
                   solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
                     case R_Activate
-                    solve( !Ltk( $B, ~ea ) ▶₂ #v )
+                    solve( !Ltk( $B, ~x ) ▶₂ #v )
                       case Register_key_honest
-                      by contradiction /* from formulas */
+                      solve( !Pk( $A, 'g'^~ea ) ▶₃ #v )
+                        case Register_key_honest
+                        solve( !KU( second(h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 
+                                              'g'^~ey, 'UM3'>))
+                               ) @ #vk.2 )
+                          case Corrupt_SessionKey_case_1
+                          by contradiction /* cyclic */
+                        next
+                          case Corrupt_SessionKey_case_2
+                          by contradiction /* cyclic */
+                        next
+                          case Corrupt_SessionKey_case_3
+                          by contradiction /* cyclic */
+                        next
+                          case Corrupt_SessionKey_case_4
+                          by contradiction /* cyclic */
+                        next
+                          case Reveal_SessionKey_case_1
+                          by contradiction /* from formulas */
+                        next
+                          case Reveal_SessionKey_case_2
+                          by contradiction /* from formulas */
+                        next
+                          case Reveal_SessionKey_case_3
+                          by contradiction /* from formulas */
+                        next
+                          case Reveal_SessionKey_case_4
+                          by contradiction /* from formulas */
+                        next
+                          case c_second
+                          solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~ea*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                         'UM3'>)
+                                 ) @ #vk.6 )
+                            case c_h
+                            solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
+                              case I_Activate
+                              by solve( !KU( ~ey ) @ #vk.18 )
+                            next
+                              case R_Activate
+                              by solve( !KU( ~ex ) @ #vk.18 )
+                            next
+                              case c_exp
+                              by solve( !KU( ~ex ) @ #vk.20 )
+                            qed
+                          qed
+                        qed
+                      qed
                     qed
                   qed
                 qed
@@ -2560,6 +2560,12 @@ next
                           case R_Complete_case_1
                           solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
                             case R_Activate
+                            by contradiction /* cyclic */
+                          qed
+                        next
+                          case R_Complete_case_2
+                          solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
+                            case R_Activate
                             by solve( SidUpdated( <'UM3', $B, $A, 
                                                    (<'1', 'g'^~ex>++
                                                     <'2', 'g'^~ey, 
@@ -2575,12 +2581,6 @@ next
                                                    )
                                                   >
                                       ) @ #v.1 )
-                          qed
-                        next
-                          case R_Complete_case_2
-                          solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
-                            case R_Activate
-                            by contradiction /* cyclic */
                           qed
                         qed
                       next
@@ -2961,6 +2961,12 @@ next
                       case R_Complete_case_1
                       solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
                         case R_Activate
+                        by contradiction /* from formulas */
+                      qed
+                    next
+                      case R_Complete_case_2
+                      solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
+                        case R_Activate
                         by solve( SidUpdated( <'UM3', $B, $A, 
                                                (<'1', 'g'^~ex>++
                                                 <'2', 'g'^~ey, 
@@ -2976,12 +2982,6 @@ next
                                                )
                                               >
                                   ) @ #v.1 )
-                      qed
-                    next
-                      case R_Complete_case_2
-                      solve( R_Act( ~ey, $B, $A, 'g'^~ex ) ▶₀ #v )
-                        case R_Activate
-                        by contradiction /* from formulas */
                       qed
                     qed
                   next
@@ -5155,36 +5155,14 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule I_Complete: 
-Failed to derive Variable(s): ~eb
-
-Rule R_Activate: 
-Failed to derive Variable(s): ~ea
-
-Rule R_Complete: 
-Failed to derive Variable(s): ~ea
-
-Rule UM1_I_Complete: 
-Failed to derive Variable(s): ~eb
-
-Rule UM1_R_Complete: 
-Failed to derive Variable(s): ~ea
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
+Compiled at: 2025-07-16 14:37:22.227009318 UTC
 */
 
 end
@@ -5196,10 +5174,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 10.08s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 41.30s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): verified (417 steps)
