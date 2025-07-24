@@ -46,10 +46,68 @@ def parseTest(lines, tester):
 	try:
 		for key in keywords:
 			if(tester != key):
-				lines = lines.split(key)[0]					
+				lines = lines.split(key)[0]
+		#print("final lines :", lines)
 		return lines.replace('\t', '')
 	except Exception:
 		return f"There was an error while parsing {tester}"
+
+def extractSection(lines, section):
+	"""
+	Extracts the block for a given section (e.g. 'equations', 'functions', 'macros')
+	from the input text. Returns the block as a string.
+	"""
+	#print(f"Extracting section: {section}")
+	headers = [
+		"rule", "lemma", "restriction", "section", "text", "equations", "builtins",
+		"configuration", "functions", "end", "heuristic", "predicate", "options",
+		"process", "macros"
+	]
+	# Remove the current section from the list
+	other_headers = [h for h in headers if h != section]
+	# Build regex for section start and next header
+	pattern = rf"^\s*{section}\b.*?(.*?)(?=^\s*({'|'.join(other_headers)})\b|\Z)"
+	match = re.search(pattern, lines, re.DOTALL | re.MULTILINE)
+	if match:
+		#print(f"Found section: {section}")
+		#print(f"Section content: {match.group(1).strip()}")
+		return match.group(1).strip()
+	return ""
+
+def stripWarningAndFooter(lines):
+    """
+    Removes the wellformedness block (success or warning) and everything after it from the text.
+    Returns the main content only.
+    """
+    # Regex to match either the success or warning wellformedness block
+    match = re.search(
+        r'(/\*\s*All wellformedness checks were successful\.\s*\*/|WARNING: the following wellformedness checks failed!)',
+        lines,
+        re.DOTALL
+    )
+    if match:
+        return lines[:match.start()], lines[match.start():]
+    return lines, ""
+
+def extractRules(lines):
+    """
+    Extracts the rules from the proof and returns them as a list.
+    """
+    keywords = [
+        "rule", "lemma", "diffLemma", "restriction", "section", "text", "equations", "builtins",
+        "configuration", "functions", "end", "heuristic", "predicate", "options",
+        "process", "macros"
+    ]
+    # Regex for all headers except 'rule'
+    keyword_regex_no_rule = r'^\s*(?:' + '|'.join(re.escape(k) for k in keywords if k != "rule") + r')\b'
+    # Robust rule header regex
+    rule_header_regex = r'^\s*rule(?:\s*\([^)]+\))?(?:\s+\w+)?\s*:'
+    # Match from a rule header up to the next header or rule or end of file
+    rule_pattern = re.compile(
+        rule_header_regex + r'[^\n]*\n(?:.*?\n)*?(?=' + keyword_regex_no_rule + r'|' + rule_header_regex + r'|\Z)',
+        re.MULTILINE
+    )
+    return [r.strip() for r in rule_pattern.findall(lines)]
 
 def parseFile(path):
 	"""
@@ -88,43 +146,58 @@ def parseFile(path):
 			summary = ""
 	except Exception:
 		return f"There was an error while reading {path}"
-
+	#print("###### File : ", path)
 	## parse time ##
 	times = re.findall(r"processing time: (.*)s", output)
 	if len(times) != 1:
 		return f"Parse error - time: {path}"
-	
+	proof, warningFooter = stripWarningAndFooter(proof)
 	## parse equations ##
 	try:
-		splitEq = proof.split("equations:")[-1]
-		equations = parseTest(splitEq, "equations")
-		equations = equations.splitlines()
+		# splitEq = proof.split("equations:")[-1]
+		# equations = parseTest(splitEq, "equations")
+		# equations = equations.splitlines()
+		# equations = list(filter(None, equations))
+		equations = extractSection(proof, "equations").splitlines()
+		#print("################ EQUATIONS ARE ################")
+		equations = [line.lstrip() for line in equations if line.strip()]
 		equations = list(filter(None, equations))
+		#print(equations)
 	except Exception as ex:
 		return f"Parse error - equations: {path}"
 
 	## parse macros ##
 	try:
-		splitEq = proof.split("macros:")[-1]
-		macros = parseTest(splitEq, "macros")
-		macros = macros.splitlines()
+		# splitEq = proof.split("macros:")[-1]
+		# macros = parseTest(splitEq, "macros")
+		# macros = macros.splitlines()
+		# macros = list(filter(None, macros))
+		macros = extractSection(proof, "macros").splitlines()
 		macros = list(filter(None, macros))
 	except Exception as ex:
 		return f"Parse error - macros: {path}"
 	
 	## parse functions ##
 	try:
-		splitFunc = proof.split("functions:")
-		func = parseTest(splitFunc, "functions").replace(' ', '').replace('\n', '')
+		# splitFunc = proof.split("functions:")
+		# func = parseTest(splitFunc, "functions").replace(' ', '').replace('\n', '')
+		# func = func.split(',')
+		func = extractSection(proof, "functions").replace(' ', '').replace('\n', '')
 		func = func.split(',')
+		#print("################ FUNCTIONS ARE ################")
+		#print(func)
+
 	except Exception as ex:
 		return f"Parse error - functions: {path}"
 
 	## parse builtins ##
 	try: 
 		splitBuilt = proof.split("builtins:")
-		builtins = parseTest(splitBuilt, "builtins").replace(' ', '').replace('\n', '')
-		builtins = builtins.split(',')
+		builtins = parseTest(splitBuilt, "builtins")
+		if(builtins != "There was an error while parsing builtins"):
+			builtins = builtins.replace(' ', '').replace('\n', '').split(',')
+		#print("################ BUILTINS ARE ################")
+		#print(builtins)
 	except Exception as ex:
 		return f"Parse error - builtins: {path}"
 
@@ -133,16 +206,17 @@ def parseFile(path):
 		splitConfigBlock = proof.split("configuration:")[-1]
 		configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
 		configblock = configblock.split(' ')
+		configblock = list(filter(None, configblock))  # Remove empty strings
+		#print("################ CONFIG BLOCKS ARE ################")
+		#print(configblock)
 	except Exception as ex:
 		return f"Parse error - config block: {path}"
 	
 	## parse rules ##
 	try:
-		getRules = proof.split("rule")
-		getRules.pop(0)
-		rules = []
-		for rule in getRules: 
-			rules.append(parseTest(rule, "rule"))
+		rules = extractRules(proof)
+		#print("################ RULES ARE ################")
+		#print(rules)
 	except Exception as ex:
 		return f"Parse error - rules: {path}"
 	
