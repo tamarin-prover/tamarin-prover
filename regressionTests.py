@@ -89,25 +89,33 @@ def stripWarningAndFooter(lines):
         return lines[:match.start()], lines[match.start():]
     return lines, ""
 
-def extractRules(lines):
+def extractRules(text):
     """
-    Extracts the rules from the proof and returns them as a list.
+    Extracts all rule blocks and their attributes from the file text.
+    Returns a list of dicts: {'header': ..., 'body': ..., 'attributes': {...}}
     """
-    keywords = [
-        "rule", "lemma", "diffLemma", "restriction", "section", "text", "equations", "builtins",
-        "configuration", "functions", "end", "heuristic", "predicate", "options",
-        "process", "macros"
-    ]
-    # Regex for all headers except 'rule'
-    keyword_regex_no_rule = r'^\s*(?:' + '|'.join(re.escape(k) for k in keywords if k != "rule") + r')\b'
-    # Robust rule header regex
-    rule_header_regex = r'^\s*rule(?:\s*\([^)]+\))?(?:\s+\w+)?\s*:'
-    # Match from a rule header up to the next header or rule or end of file
+    # Match 'rule' at the start of a line, then any lines until a colon, then the rule body, up to the next header or end
     rule_pattern = re.compile(
-        rule_header_regex + r'[^\n]*\n(?:.*?\n)*?(?=' + keyword_regex_no_rule + r'|' + rule_header_regex + r'|\Z)',
-        re.MULTILINE
+        r'(?m)^rule[\s\S]+?:\n([\s\S]*?)(?=^\s*(rule\b|restriction\b|lemma\b|section\b|end\b|\Z))'
     )
-    return [r.strip() for r in rule_pattern.findall(lines)]
+    rules = []
+    for match in rule_pattern.finditer(text):
+        # The header is everything before the first colon
+        header = text[match.start():text.find(':', match.start())].strip()
+        body = match.group(1).strip()
+        # Extract attributes from header (handles both 'key="value"' and 'key=value')
+        attr_pattern = re.compile(r'(\w+)\s*=\s*([\'"][^\'"]*[\'"]|[^\s,\]]+)')
+        attributes = dict((k, v.strip('\'"')) for k, v in attr_pattern.findall(header))
+        # Extract rule name
+        name_match = re.search(r'rule\s*(?:\([^)]+\))?\s*([^\[\(:]+)', header)
+        name = name_match.group(1).strip() if name_match else ""
+        rules.append({
+            'header': header,
+            'body': body,
+            'attributes': attributes,
+            'name': name
+        })
+    return rules
 
 def parseFile(path):
 	"""
@@ -215,8 +223,12 @@ def parseFile(path):
 	## parse rules ##
 	try:
 		rules = extractRules(proof)
-		#print("################ RULES ARE ################")
-		#print(rules)
+		# for rule in rules:
+		# 	print("Rule name:", rule['name'])
+		# 	print("Attributes:", rule['attributes'])
+		# 	print("Body:", rule['body'])
+		# print("################ RULES ARE ################")
+		# print(rules)
 	except Exception as ex:
 		return f"Parse error - rules: {path}"
 	
@@ -342,18 +354,29 @@ def compare():
 				majorDifferences = True
 
 			## Rules differ ##
-			if rulesA != rulesB:
-				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
-				if len(rulesB) != len(rulesA):
-					logging.error(color(colors.RED + colors.BOLD, f"The number of rules are not equal!"))
-				else:
-					if settings.verbose >= 6:
-						for i in range(len(rulesA)):
-							if rulesA[i] != rulesB[i]:
-								logging.error(color(colors.RED + colors.BOLD, f"The rule changed from rule{rulesA[i]} \nto rule{rulesB[i]}"))
-					else:
-						logging.error(color(colors.RED + colors.BOLD, f"One or multiple rules do not match!"))
+			if len(rulesA) != len(rulesB):
+				logging.error(color(colors.RED + colors.BOLD, f"The number of rules are not equal!"))
 				majorDifferences = True
+			else:
+				for i in range(len(rulesA)):
+					ruleA = rulesA[i]
+					ruleB = rulesB[i]
+					logs = []
+					# Compare rule names
+					if ruleA['name'] != ruleB['name']:
+						logs.append(color(colors.RED + colors.BOLD, f"Rule name changed from '{ruleA['name']}' to '{ruleB['name']}'"))
+					# Compare rule attributes
+					if ruleA['attributes'] != ruleB['attributes']:
+						logs.append(color(colors.RED + colors.BOLD, f"Attributes for rule '{ruleA['name']}' changed from {ruleA['attributes']} to {ruleB['attributes']}"))
+					# Compare rule bodies
+					if ruleA['body'] != ruleB['body']:
+						logs.append(color(colors.RED + colors.BOLD, f"Body for rule '{ruleA['name']}' changed from {ruleA['body']} to {ruleB['body']}"))
+					if logs:
+						if settings.verbose >= 6:
+							logging.error("\n".join(logs))
+						else:
+							logging.error(color(colors.RED + colors.BOLD, f"One or multiple rules do not match!"))
+						majorDifferences = True
 
 			## warnings differ ##
 			if warningB != warningA:
