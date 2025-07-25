@@ -47,7 +47,6 @@ def parseTest(lines, tester):
 		for key in keywords:
 			if(tester != key):
 				lines = lines.split(key)[0]
-		#print("final lines :", lines)
 		return lines.replace('\t', '')
 	except Exception:
 		return f"There was an error while parsing {tester}"
@@ -57,7 +56,6 @@ def extractSection(lines, section):
 	Extracts the block for a given section (e.g. 'equations', 'functions', 'macros')
 	from the input text. Returns the block as a string.
 	"""
-	#print(f"Extracting section: {section}")
 	headers = [
 		"rule", "lemma", "restriction", "section", "text", "equations", "builtins",
 		"configuration", "functions", "end", "heuristic", "predicate", "options",
@@ -69,8 +67,6 @@ def extractSection(lines, section):
 	pattern = rf"^\s*{section}\b.*?(.*?)(?=^\s*({'|'.join(other_headers)})\b|\Z)"
 	match = re.search(pattern, lines, re.DOTALL | re.MULTILINE)
 	if match:
-		#print(f"Found section: {section}")
-		#print(f"Section content: {match.group(1).strip()}")
 		return match.group(1).strip()
 	return ""
 
@@ -92,18 +88,21 @@ def stripWarningAndFooter(lines):
 def extractRules(text):
     """
     Extracts all rule blocks and their attributes from the file text.
-    Returns a list of dicts: {'header': ..., 'body': ..., 'attributes': {...}}
+    Returns a dict: {'header': String, 'body': String, 'attributes': {<key:String>: <value:String>}, 'name': String}
     """
     # Match 'rule' at the start of a line, then any lines until a colon, then the rule body, up to the next header or end
+    # Multiline = allow matching across multiple lines (^ starts at the start of a line)
+    # Dotall = allow . to match newlines
     rule_pattern = re.compile(
-        r'(?m)^rule[\s\S]+?:\n([\s\S]*?)(?=^\s*(rule\b|restriction\b|lemma\b|section\b|end\b|\Z))'
+        r'^rule.+?:\n(.*?)(?=^\s*(rule\b|restriction\b|lemma\b|section\b|end\b|\Z))',
+        re.MULTILINE | re.DOTALL
     )
     rules = []
     for match in rule_pattern.finditer(text):
         # The header is everything before the first colon
         header = text[match.start():text.find(':', match.start())].strip()
         body = match.group(1).strip()
-        # Extract attributes from header (handles both 'key="value"' and 'key=value')
+        # Extract attributes from header (handles both key="value" and key='value')
         attr_pattern = re.compile(r'(\w+)\s*=\s*([\'"][^\'"]*[\'"]|[^\s,\]]+)')
         attributes = dict((k, v.strip('\'"')) for k, v in attr_pattern.findall(header))
         # Extract rule name
@@ -154,7 +153,6 @@ def parseFile(path):
 			summary = ""
 	except Exception:
 		return f"There was an error while reading {path}"
-	#print("###### File : ", path)
 	## parse time ##
 	times = re.findall(r"processing time: (.*)s", output)
 	if len(times) != 1:
@@ -162,15 +160,9 @@ def parseFile(path):
 	proof, warningFooter = stripWarningAndFooter(proof)
 	## parse equations ##
 	try:
-		# splitEq = proof.split("equations:")[-1]
-		# equations = parseTest(splitEq, "equations")
-		# equations = equations.splitlines()
-		# equations = list(filter(None, equations))
 		equations = extractSection(proof, "equations").splitlines()
-		#print("################ EQUATIONS ARE ################")
 		equations = [line.lstrip() for line in equations if line.strip()]
 		equations = list(filter(None, equations))
-		#print(equations)
 	except Exception as ex:
 		return f"Parse error - equations: {path}"
 
@@ -187,13 +179,8 @@ def parseFile(path):
 	
 	## parse functions ##
 	try:
-		# splitFunc = proof.split("functions:")
-		# func = parseTest(splitFunc, "functions").replace(' ', '').replace('\n', '')
-		# func = func.split(',')
 		func = extractSection(proof, "functions").replace(' ', '').replace('\n', '')
 		func = func.split(',')
-		#print("################ FUNCTIONS ARE ################")
-		#print(func)
 
 	except Exception as ex:
 		return f"Parse error - functions: {path}"
@@ -204,8 +191,6 @@ def parseFile(path):
 		builtins = parseTest(splitBuilt, "builtins")
 		if(builtins != "There was an error while parsing builtins"):
 			builtins = builtins.replace(' ', '').replace('\n', '').split(',')
-		#print("################ BUILTINS ARE ################")
-		#print(builtins)
 	except Exception as ex:
 		return f"Parse error - builtins: {path}"
 
@@ -215,20 +200,12 @@ def parseFile(path):
 		configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
 		configblock = configblock.split(' ')
 		configblock = list(filter(None, configblock))  # Remove empty strings
-		#print("################ CONFIG BLOCKS ARE ################")
-		#print(configblock)
 	except Exception as ex:
 		return f"Parse error - config block: {path}"
 	
 	## parse rules ##
 	try:
 		rules = extractRules(proof)
-		# for rule in rules:
-		# 	print("Rule name:", rule['name'])
-		# 	print("Attributes:", rule['attributes'])
-		# 	print("Body:", rule['body'])
-		# print("################ RULES ARE ################")
-		# print(rules)
 	except Exception as ex:
 		return f"Parse error - rules: {path}"
 	
