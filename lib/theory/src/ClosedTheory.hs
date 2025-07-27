@@ -1,5 +1,6 @@
 module ClosedTheory (
     module ClosedTheory
+    , prettyClosedProtoRule
 ) where
 
 import Control.Basics
@@ -378,8 +379,8 @@ prettyClosedProtoRule cru =
 --       | otherwise                        = multiComment $ prettyProtoRuleAC ruAC
 
 -- | Pretty print a closed theory.
-prettyClosedTheory :: HighlightDocument d => Bool -> ClosedTheory -> d
-prettyClosedTheory interactiveMode thy = if containsManualRuleVariants mergedRules
+prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
+prettyClosedTheory thy = if containsManualRuleVariants mergedRules
     then
       prettyTheory prettySignatureWithMaude
                   ppInjectiveFactInsts
@@ -387,7 +388,6 @@ prettyClosedTheory interactiveMode thy = if containsManualRuleVariants mergedRul
                   prettyOpenProtoRuleAsClosedRule
                   prettyIncrementalProof
                   emptyString
-                  interactiveMode
                   thy'
     else
       prettyTheory prettySignatureWithMaude
@@ -396,7 +396,6 @@ prettyClosedTheory interactiveMode thy = if containsManualRuleVariants mergedRul
                   prettyClosedProtoRule
                   prettyIncrementalProof
                   emptyString
-                  interactiveMode
                   thy
   where
     items = L.get thyItems thy
@@ -419,8 +418,8 @@ prettyClosedTheory interactiveMode thy = if containsManualRuleVariants mergedRul
                       , nest 2 $ fsepList (text . showFactTagArity) (map fst tags) ]
 
 -- | Pretty print a closed diff theory.
-prettyClosedDiffTheory :: HighlightDocument d => Bool -> ClosedDiffTheory -> d
-prettyClosedDiffTheory interactiveMode thy = if containsManualRuleVariantsDiff mergedRules
+prettyClosedDiffTheory :: HighlightDocument d => ClosedDiffTheory -> d
+prettyClosedDiffTheory thy = if containsManualRuleVariantsDiff mergedRules
     then
       prettyDiffTheory prettySignatureWithMaude
                  ppInjectiveFactInsts
@@ -428,7 +427,6 @@ prettyClosedDiffTheory interactiveMode thy = if containsManualRuleVariantsDiff m
                  (\_ -> emptyDoc) --prettyClosedEitherRule
                  prettyIncrementalDiffProof
                  prettyIncrementalProof
-                 interactiveMode
                  thy'
     else
         prettyDiffTheory prettySignatureWithMaude
@@ -437,7 +435,6 @@ prettyClosedDiffTheory interactiveMode thy = if containsManualRuleVariantsDiff m
                    (\_ -> emptyDoc) --prettyClosedEitherRule
                    prettyIncrementalDiffProof
                    prettyIncrementalProof
-                   interactiveMode
                    thy
   where
     items = L.get diffThyItems thy

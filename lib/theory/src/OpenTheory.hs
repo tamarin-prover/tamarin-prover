@@ -867,15 +867,14 @@ prettyEitherRule :: (HighlightDocument d) => (Side, OpenProtoRule) -> d
 prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
 
 -- | Pretty print an open theory.
-prettyOpenTheory :: (HighlightDocument d) => Bool -> OpenTheory -> d
-prettyOpenTheory interactiveMode thy =
+prettyOpenTheory :: (HighlightDocument d) => OpenTheory -> d
+prettyOpenTheory thy =
   prettyTheory
     prettySignaturePure
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     prettyTranslationElement
-    interactiveMode
     thy
   where
     -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
@@ -885,28 +884,26 @@ prettyOpenTheory interactiveMode thy =
     fst' (a, _, _) = a
 
 -- | Pretty print an open theory.
-prettyOpenDiffTheory :: (HighlightDocument d) => Bool -> OpenDiffTheory -> d
-prettyOpenDiffTheory interactiveMode =
+prettyOpenDiffTheory :: (HighlightDocument d) => OpenDiffTheory -> d
+prettyOpenDiffTheory =
   prettyDiffTheory
     prettySignaturePure
     (const emptyDoc)
     prettyEitherRule
     prettyDiffProof
     prettyProof
-    interactiveMode
 
 -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
 
 -- | Pretty print a translated Open Theory
-prettyOpenTranslatedTheory :: (HighlightDocument d) => Bool-> OpenTranslatedTheory -> d
-prettyOpenTranslatedTheory interactiveMode =
+prettyOpenTranslatedTheory :: (HighlightDocument d) => OpenTranslatedTheory -> d
+prettyOpenTranslatedTheory =
   prettyTheory
     prettySignaturePure
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     emptyString
-    interactiveMode
 
 -- | Pretty print a diff theory.
 prettyDiffTheory ::
@@ -916,10 +913,9 @@ prettyDiffTheory ::
   ((Side, r2) -> d) ->
   (p -> d) ->
   (p2 -> d) ->
-  Bool ->
   DiffTheory sig c DiffProtoRule r2 p p2 ->
   d
-prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf interactiveMode thy =
+prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy =
   vsep $
     [ kwTheoryHeader $ text $ L.get diffThyName thy,
       lineComment_ "Function signature and definition of the equational theory E",
@@ -941,7 +937,7 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf interactiveMode thy =
         ppRule
         (prettyDiffLemma ppDiffPrf)
         (prettyEitherLemma ppPrf)
-        (prettyEitherRestriction interactiveMode)
+        prettyEitherRestriction
         (const emptyDoc)
         (uncurry prettyFormalComment)
         prettyConfigBlock

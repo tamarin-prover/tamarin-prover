@@ -736,10 +736,9 @@ prettyTheory ::
   (r -> d) ->
   (p -> d) ->
   (s -> d) ->
-  Bool ->
   Theory sig c r p s ->
   d
-prettyTheory ppSig ppCache ppRule ppPrf ppSap interactiveMode thy =
+prettyTheory ppSig ppCache ppRule ppPrf ppSap thy =
   vsep $
     [ kwTheoryHeader $ text $ L.get thyName thy,
       lineComment_ "Function signature and definition of the equational theory E",
@@ -754,7 +753,7 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap interactiveMode thy =
     ppItem =
       foldTheoryItem
         ppRule
-        (prettyRestriction interactiveMode)
+        prettyRestriction
         (prettyLemma ppPrf)
         (uncurry prettyFormalComment)
         prettyConfigBlock
@@ -834,31 +833,31 @@ prettyMacro (op, args, out) =
 -- "\t" ++ BC.unpack op ++ "(" ++ show (args) ++ ") = " ++ show(out) ++ "\n"
 
 -- | Pretty print a restriction.
-prettyRestriction :: (HighlightDocument d) => Bool -> Restriction -> d
-prettyRestriction interactiveMode rstr =
+prettyRestriction :: (HighlightDocument d) => Restriction -> d
+prettyRestriction rstr =
   kwRestriction <-> text (L.get rstrName rstr)
     <> colon
-      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula (if (not interactiveMode) then (maybe expandedFormula id ogFormula) else expandedFormula))
+      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula (fromMaybe expandedFormula ogFormula))
       $-$ (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
-      $--$ (case (interactiveMode, ogFormula) of
-            (False, Just _) -> (nest 2 $ multiComment $ text "expanded formula:" $-$ 
-                             doubleQuotes (prettyLNFormula expandedFormula))
+      $--$ (case ogFormula of
+            Just _ -> nest 2 $ multiComment $ text "expanded formula:" $-$ 
+                             doubleQuotes (prettyLNFormula expandedFormula)
             _ -> emptyDoc)
   where
     Restriction _ expandedFormula ogFormula = rstr
     safety = isSafetyFormula $ formulaToGuarded_ $ expandedFormula
 
 -- | Pretty print an either restriction.
-prettyEitherRestriction :: (HighlightDocument d) => Bool -> (Side, Restriction) -> d
-prettyEitherRestriction interactiveMode (s, rstr) =
+prettyEitherRestriction :: (HighlightDocument d) => (Side, Restriction) -> d
+prettyEitherRestriction (s, rstr) =
   kwRestriction <-> text (L.get rstrName rstr) <-> prettySide s
     <> colon
-      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula (if (not interactiveMode) then (maybe expandedFormula id ogFormula) else expandedFormula))
+      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula (fromMaybe expandedFormula ogFormula))
       $-$ (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
-      $--$ (case (interactiveMode, ogFormula) of
-            (False, Just _) -> (nest 2 $ multiComment $ text "expanded formula:" $-$ 
-                             doubleQuotes (prettyLNFormula expandedFormula))
-            _ -> emptyDoc)
+      $--$ case ogFormula of
+            Just _ -> nest 2 $ multiComment $ text "expanded formula:" $-$ 
+                             doubleQuotes (prettyLNFormula expandedFormula)
+            _ -> emptyDoc
   where
     Restriction _ expandedFormula ogFormula = rstr
     safety = isSafetyFormula $ formulaToGuarded_ $ expandedFormula

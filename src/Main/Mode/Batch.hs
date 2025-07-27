@@ -195,7 +195,7 @@ run thisMode as
 
       -- | Pretty print the theory as is without performing any checks.
       if thyLoadOptions.parseOnlyMode then
-        pure $ (, Pretty.emptyDoc) $ either (prettyOpenTheory True) (prettyOpenDiffTheory True) thy
+        pure $ (, Pretty.emptyDoc) $ either prettyOpenTheory prettyOpenDiffTheory thy
 
       -- | Execute precomputation steps and print the partial deconstructions
       else if thyLoadOptions.precomputeOnlyMode then do
@@ -215,8 +215,8 @@ run thisMode as
         --                   (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
         --                   thy'
 
-        (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule interactiveMode thyLoadOptions)
-                                   (pure . prettyOpenDiffTheory interactiveMode)
+        (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule thyLoadOptions)
+                                   (pure . prettyOpenDiffTheory)
                                    thy'
 
       -- | Close and potentially prove theory.
@@ -225,14 +225,10 @@ run thisMode as
         _ <- liftIO $ bitraverse outputTraces (const $ return ()) thy'
 
         pure $
-          either (\t -> (prettyClosedTheory interactiveMode t,     ppWf report Pretty.$--$ prettyClosedSummary t))
-                 (\d -> (prettyClosedDiffTheory interactiveMode d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
+          either (\t -> (prettyClosedTheory t,     ppWf report Pretty.$--$ prettyClosedSummary t))
+                 (\d -> (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
                  thy'
       where
-        interactiveMode = 
-          case findArg "interactive" as of
-            Just _  -> True
-            Nothing -> False
         isTranslateOnlyMode = isJust thyLoadOptions.outputModule
 
         handleError e@(ParserError _) = die $ show e

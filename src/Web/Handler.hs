@@ -773,8 +773,8 @@ getTheorySourceR idx = withBothTheory idx
   (pure . RepPlain . toContent . prettyRenderDiff)
   where
     -- False because we don't want to print formulas as in interactive mode but we want to preserve macros.
-    prettyRender = render . prettyClosedTheory False . (.theory)
-    prettyRenderDiff = render . prettyClosedDiffTheory False . (.theory)
+    prettyRender = render . prettyClosedTheory . (.theory)
+    prettyRenderDiff = render . prettyClosedDiffTheory . (.theory)
 
 -- | Show source (pretty-printed open diff theory).
 getTheorySourceDiffR :: TheoryIdx -> Handler RepPlain
@@ -782,40 +782,40 @@ getTheorySourceDiffR idx = withBothTheory idx
   (pure . RepPlain . toContent . prettyRender)
   (pure . RepPlain . toContent . prettyRenderDiff)
   where
-    prettyRender = render . prettyClosedTheory False . (.theory)
-    prettyRenderDiff = render . prettyClosedDiffTheory False . (.theory)
+    prettyRender = render . prettyClosedTheory . (.theory)
+    prettyRenderDiff = render . prettyClosedDiffTheory . (.theory)
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryVariantsR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsR idx = withBothTheory idx
   (pure . RepPlain . toContent . prettyRender)
   (pure . RepPlain . toContent . prettyRenderDiff)
-  where prettyRender = render . prettyClosedTheory False . (.theory)
-        prettyRenderDiff = render . prettyClosedDiffTheory False . (.theory)
+  where prettyRender = render . prettyClosedTheory  . (.theory)
+        prettyRenderDiff = render . prettyClosedDiffTheory  . (.theory)
 
 -- | Show variants (pretty-printed closed diff theory).
 getTheoryVariantsDiffR :: TheoryIdx -> Handler RepPlain
 getTheoryVariantsDiffR idx = withBothTheory idx
   (pure . RepPlain . toContent . prettyRender)
   (pure . RepPlain . toContent . prettyRenderDiff)
-  where prettyRender = render . prettyClosedTheory False . (.theory)
-        prettyRenderDiff = render . prettyClosedDiffTheory False . (.theory)
+  where prettyRender = render . prettyClosedTheory  . (.theory)
+        prettyRenderDiff = render . prettyClosedDiffTheory  . (.theory)
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionR idx = withBothTheory idx
   (pure . RepPlain . toContent . prettyRender)
   (pure . RepPlain . toContent . prettyRenderDiff)
-  where prettyRender = render . prettyClosedTheory False . (.theory)
-        prettyRenderDiff = render . prettyClosedDiffTheory False . (.theory)
+  where prettyRender = render . prettyClosedTheory  . (.theory)
+        prettyRenderDiff = render . prettyClosedDiffTheory  . (.theory)
 
 -- | Show variants (pretty-printed closed theory).
 getTheoryMessageDeductionDiffR :: TheoryIdx -> Handler RepPlain
 getTheoryMessageDeductionDiffR idx = withBothTheory idx
   (pure . RepPlain . toContent . prettyRender )
   (pure . RepPlain . toContent . prettyRenderDiff)
-  where prettyRender = render . prettyClosedTheory False . (.theory)
-        prettyRenderDiff = render . prettyClosedDiffTheory False . (.theory)
+  where prettyRender = render . prettyClosedTheory  . (.theory)
+        prettyRenderDiff = render . prettyClosedDiffTheory  . (.theory)
 
 
 
@@ -1426,8 +1426,8 @@ getDeleteStepDiffR idx path = do
 -- | Save a theory to the working directory.
 getSaveTheoryR :: TheoryIdx -> Handler RepJson
 getSaveTheoryR idx = withEitherTheory idx $ \case
-  Trace ti -> handler ti (prettyOpenTheory True . openTheory)
-  Diff ti  -> handler ti (prettyOpenDiffTheory True . openDiffTheory)
+  Trace ti -> handler ti (prettyOpenTheory . openTheory)
+  Diff ti  -> handler ti (prettyOpenDiffTheory . openDiffTheory)
   where
     handler ti prettyOpenTheoryF =
       case ti.origin of
