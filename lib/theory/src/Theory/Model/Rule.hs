@@ -1198,9 +1198,8 @@ prettyRuleAttribute attr = fsep $ punctuate comma $ catMaybes [ -- Maybe types a
     ]
     where
 
-    ppProcess   p = text "process=" <> text ("\'" ++ removeQuotes (prettySapicTopLevel' f p) ++ "\'")
-        where removeQuotes = filter (/= '\'')
-              f l a r rest _ = render $ prettyRuleRestr (g l) (g a) (g r) (h rest)
+    ppProcess   p = text "process=" <> text ("\'" ++ prettySapicTopLevel' f p ++ "\'")
+        where f l a r rest _ = render $ prettyRuleRestr (g l) (g a) (g r) (h rest)
               g = map toLNFact
               h = map toLFormula
     boolToMaybe condition value = if condition then Just value else Nothing
