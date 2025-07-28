@@ -2,7 +2,7 @@ theory RevealingSignatures begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, getMessage/1, h/1, h/7, pair/2, pk/1, revealSign/2,
+functions: fst/1, getMessage/1, h/1, pair/2, pk/1, revealSign/2,
            revealVerify/3, snd/1, true/0
 equations:
     fst(<x.1, x.2>) = x.1,

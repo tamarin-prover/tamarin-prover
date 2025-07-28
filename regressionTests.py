@@ -46,10 +46,75 @@ def parseTest(lines, tester):
 	try:
 		for key in keywords:
 			if(tester != key):
-				lines = lines.split(key)[0]					
+				lines = lines.split(key)[0]
 		return lines.replace('\t', '')
 	except Exception:
 		return f"There was an error while parsing {tester}"
+
+def extractSection(lines, section):
+	"""
+	Extracts the block for a given section (e.g. 'equations', 'functions', 'macros')
+	from the input text. Returns the block as a string.
+	"""
+	headers = [
+		"rule", "lemma", "restriction", "section", "text", "equations", "builtins",
+		"configuration", "functions", "end", "heuristic", "predicate", "options",
+		"process", "macros"
+	]
+	# Remove the current section from the list
+	other_headers = [h for h in headers if h != section]
+	# Build regex for section start and next header
+	pattern = rf"^\s*{section}\b.*?(.*?)(?=^\s*({'|'.join(other_headers)})\b|\Z)"
+	match = re.search(pattern, lines, re.DOTALL | re.MULTILINE)
+	if match:
+		return match.group(1).strip()
+	return ""
+
+def stripWarningAndFooter(lines):
+    """
+    Removes the wellformedness block (success or warning) and everything after it from the text.
+    Returns the main content only.
+    """
+    # Regex to match either the success or warning wellformedness block
+    match = re.search(
+        r'(/\*\s*All wellformedness checks were successful\.\s*\*/|WARNING: the following wellformedness checks failed!)',
+        lines,
+        re.DOTALL
+    )
+    if match:
+        return lines[:match.start()], lines[match.start():]
+    return lines, ""
+
+def extractRules(text):
+    """
+    Extracts all rule blocks and their attributes from the file text.
+    Returns a dict: {'header': String, 'body': String, 'attributes': {<key:String>: <value:String>}, 'name': String}
+    """
+    # Match 'rule' at the start of a line, then any lines until a colon, then the rule body, up to the next header or end
+    # Multiline = allow matching across multiple lines (^ starts at the start of a line)
+    # Dotall = allow . to match newlines
+    rule_pattern = re.compile(
+        r'^rule.+?:\n(.*?)(?=^\s*(rule\b|restriction\b|lemma\b|section\b|end\b|\Z))',
+        re.MULTILINE | re.DOTALL
+    )
+    rules = []
+    for match in rule_pattern.finditer(text):
+        # The header is everything before the first colon
+        header = text[match.start():text.find(':', match.start())].strip()
+        body = match.group(1).strip()
+        # Extract attributes from header (handles both key="value" and key='value')
+        attr_pattern = re.compile(r'(\w+)\s*=\s*([\'"][^\'"]*[\'"]|[^\s,\]]+)')
+        attributes = dict((k, v.strip('\'"')) for k, v in attr_pattern.findall(header))
+        # Extract rule name
+        name_match = re.search(r'rule\s*(?:\([^)]+\))?\s*([^\[\(:]+)', header)
+        name = name_match.group(1).strip() if name_match else ""
+        rules.append({
+            'header': header,
+            'body': body,
+            'attributes': attributes,
+            'name': name
+        })
+    return rules
 
 def parseFile(path):
 	"""
@@ -61,52 +126,71 @@ def parseFile(path):
 	"""
 
 	## open file ##
-	summary = ""
 	try:
-		with open(path) as f:
-			# strip everything before the summary part
-			allContent = f.read().split("summary of summaries")
-			summary = allContent[-1]
-			proof = allContent[0].split("------------------------------------------------------------------------------")[0]
+		with open(path,'r') as f:
+			fileContent = f.read()
+   
+
+		warningMarker = "WARNING: the following wellformedness checks failed!"
+		outputMarker = "/* Output"
+  
+		if warningMarker in fileContent:
+			# Separate the part before the wellformedness warnings and the rest
+			proof, output = fileContent.split(warningMarker, 1)
+			output = warningMarker + output
+		elif outputMarker in fileContent:
+			#If there is no warning, just split everything before the output part
+			proof, output = fileContent.split(outputMarker, 1)
+			output = outputMarker + output
+		else:
+			#fallback
+			proof = fileContent
+			output = ""
+   
+		if 'summary of summaries' in output:
+			summary = output.split('summary of summaries', 1)[-1]
+		else:
+			summary = ""
 	except Exception:
 		return f"There was an error while reading {path}"
-
 	## parse time ##
-	times = re.findall(r"processing time: (.*)s", summary)
+	times = re.findall(r"processing time: (.*)s", output)
 	if len(times) != 1:
 		return f"Parse error - time: {path}"
-	
+	proof, warningFooter = stripWarningAndFooter(proof)
 	## parse equations ##
 	try:
-		splitEq = proof.split("equations:")[-1]
-		equations = parseTest(splitEq, "equations")
-		equations = equations.splitlines()
+		equations = extractSection(proof, "equations").splitlines()
+		equations = [line.lstrip() for line in equations if line.strip()]
 		equations = list(filter(None, equations))
 	except Exception as ex:
 		return f"Parse error - equations: {path}"
 
 	## parse macros ##
 	try:
-		splitEq = proof.split("macros:")[-1]
-		macros = parseTest(splitEq, "macros")
-		macros = macros.splitlines()
+		# splitEq = proof.split("macros:")[-1]
+		# macros = parseTest(splitEq, "macros")
+		# macros = macros.splitlines()
+		# macros = list(filter(None, macros))
+		macros = extractSection(proof, "macros").splitlines()
 		macros = list(filter(None, macros))
 	except Exception as ex:
 		return f"Parse error - macros: {path}"
 	
 	## parse functions ##
 	try:
-		splitFunc = proof.split("functions:")
-		func = parseTest(splitFunc, "functions").replace(' ', '').replace('\n', '')
+		func = extractSection(proof, "functions").replace(' ', '').replace('\n', '')
 		func = func.split(',')
+
 	except Exception as ex:
 		return f"Parse error - functions: {path}"
 
 	## parse builtins ##
 	try: 
 		splitBuilt = proof.split("builtins:")
-		builtins = parseTest(splitBuilt, "builtins").replace(' ', '').replace('\n', '')
-		builtins = builtins.split(',')
+		builtins = parseTest(splitBuilt, "builtins")
+		if(builtins != "There was an error while parsing builtins"):
+			builtins = builtins.replace(' ', '').replace('\n', '').split(',')
 	except Exception as ex:
 		return f"Parse error - builtins: {path}"
 
@@ -115,16 +199,13 @@ def parseFile(path):
 		splitConfigBlock = proof.split("configuration:")[-1]
 		configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
 		configblock = configblock.split(' ')
+		configblock = list(filter(None, configblock))  # Remove empty strings
 	except Exception as ex:
 		return f"Parse error - config block: {path}"
 	
 	## parse rules ##
 	try:
-		getRules = proof.split("rule")
-		getRules.pop(0)
-		rules = []
-		for rule in getRules: 
-			rules.append(parseTest(rule, "rule"))
+		rules = extractRules(proof)
 	except Exception as ex:
 		return f"Parse error - rules: {path}"
 	
@@ -133,7 +214,7 @@ def parseFile(path):
 	try:
 		warning = []
 		test = False
-		for line in proof.splitlines():
+		for line in output.splitlines():
 			if test and line != '':
 				warning.append(line)
 			if test and line.find("*/") != -1:
@@ -282,18 +363,29 @@ def compare():
 				majorDifferences = True
 
 			## Rules differ ##
-			if rulesA != rulesB:
-				logging.error(color(colors.RED, pathB.split(settings.folderB, 1)[-1]))
-				if len(rulesB) != len(rulesA):
-					logging.error(color(colors.RED + colors.BOLD, f"The number of rules are not equal!"))
-				else:
-					if settings.verbose >= 6:
-						for i in range(len(rulesA)):
-							if rulesA[i] != rulesB[i]:
-								logging.error(color(colors.RED + colors.BOLD, f"The rule changed from rule{rulesA[i]} \nto rule{rulesB[i]}"))
-					else:
-						logging.error(color(colors.RED + colors.BOLD, f"One or multiple rules do not match!"))
+			if len(rulesA) != len(rulesB):
+				logging.error(color(colors.RED + colors.BOLD, f"The number of rules are not equal!"))
 				majorDifferences = True
+			else:
+				for i in range(len(rulesA)):
+					ruleA = rulesA[i]
+					ruleB = rulesB[i]
+					logs = []
+					# Compare rule names
+					if ruleA['name'] != ruleB['name']:
+						logs.append(color(colors.RED + colors.BOLD, f"Rule name changed from '{ruleA['name']}' to '{ruleB['name']}'"))
+					# Compare rule attributes
+					if ruleA['attributes'] != ruleB['attributes']:
+						logs.append(color(colors.RED + colors.BOLD, f"Attributes for rule '{ruleA['name']}' changed from {ruleA['attributes']} to {ruleB['attributes']}"))
+					# Compare rule bodies
+					if ruleA['body'] != ruleB['body']:
+						logs.append(color(colors.RED + colors.BOLD, f"Body for rule '{ruleA['name']}' changed from {ruleA['body']} to {ruleB['body']}"))
+					if logs:
+						if settings.verbose >= 6:
+							logging.error("\n".join(logs))
+						else:
+							logging.error(color(colors.RED + colors.BOLD, f"One or multiple rules do not match!"))
+						majorDifferences = True
 
 			## warnings differ ##
 			if warningB != warningA:
@@ -538,4 +630,3 @@ Parser test results:
 
 if __name__ == '__main__':
 	main()
-

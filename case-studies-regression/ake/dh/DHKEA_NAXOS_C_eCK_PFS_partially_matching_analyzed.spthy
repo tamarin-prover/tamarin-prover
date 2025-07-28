@@ -5212,23 +5212,14 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Derivation Checks
-=================
-
-  Derivation checks timed out.
-  Use --derivcheck-timeout=INT to configure timeout.
-  Set to 0 to deactivate for no timeout.
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
+Compiled at: 2025-07-16 14:37:22.227009318 UTC
 */
 
 end
@@ -5240,10 +5231,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy.tmp
-  processing time: 30.22s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 87.93s
   
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)

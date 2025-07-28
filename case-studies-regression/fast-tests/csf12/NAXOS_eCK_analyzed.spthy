@@ -741,27 +741,14 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Init_2: 
-Failed to derive Variable(s): ~lkR
-
-Rule Resp_1: 
-Failed to derive Variable(s): ~lkI
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Git revision: 0a44c79dec0eccbe1e51aa85da3c6ac96fdf5bd5 (with uncommited changes), branch: HEAD
+Compiled at: 2025-07-01 09:22:11.756606439 UTC
 */
 
 end
@@ -773,10 +760,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 2.39s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 2.22s
   
   eCK_key_secrecy (all-traces): verified (134 steps)
 
