@@ -168,10 +168,6 @@ def parseFile(path):
 
 	## parse macros ##
 	try:
-		# splitEq = proof.split("macros:")[-1]
-		# macros = parseTest(splitEq, "macros")
-		# macros = macros.splitlines()
-		# macros = list(filter(None, macros))
 		macros = extractSection(proof, "macros").splitlines()
 		macros = list(filter(None, macros))
 	except Exception as ex:
