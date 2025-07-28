@@ -168,10 +168,6 @@ def parseFile(path):
 
 	## parse macros ##
 	try:
-		# splitEq = proof.split("macros:")[-1]
-		# macros = parseTest(splitEq, "macros")
-		# macros = macros.splitlines()
-		# macros = list(filter(None, macros))
 		macros = extractSection(proof, "macros").splitlines()
 		macros = list(filter(None, macros))
 	except Exception as ex:
@@ -196,10 +192,13 @@ def parseFile(path):
 
 	## parse config blocks ##
 	try:
-		splitConfigBlock = proof.split("configuration:")[-1]
-		configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
-		configblock = configblock.split(' ')
-		configblock = list(filter(None, configblock))  # Remove empty strings
+		if "configuration:" in proof:
+			splitConfigBlock = proof.split("configuration:")[-1]
+			configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
+			configblock = configblock.split(' ')
+			configblock = list(filter(None, configblock))  # Remove empty strings
+		else:
+			configblock = []
 	except Exception as ex:
 		return f"Parse error - config block: {path}"
 	
