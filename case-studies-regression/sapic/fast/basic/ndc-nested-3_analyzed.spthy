@@ -29,14 +29,14 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (A( ) @ #t)"
 */
 simplify
-solve( State_11( ~prog_ ) ▶₀ #t )
-  case p_1_1
+solve( !Semistate_11( ~prog_ ) ▶₀ #t )
+  case p_0_1
   solve( (∃ #t. (ProgressTo_111( ~prog_ ) @ #t))  ∥
          (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
          (∃ #t. (ProgressTo_221( ~prog_ ) @ #t)) )
     case case_1
-    solve( State_11( ~prog_ ) ▶₀ #t.2 )
-      case p_1_1
+    solve( !Semistate_11( ~prog_ ) ▶₀ #t.2 )
+      case p_0_1
       SOLVED // trace found
     qed
   qed
@@ -49,14 +49,14 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (B( ) @ #t)"
 */
 simplify
-solve( State_211( ~prog_ ) ▶₀ #t )
-  case p_1_21
+solve( !Semistate_211( ~prog_ ) ▶₀ #t )
+  case p_0_21
   solve( (∃ #t. (ProgressTo_111( ~prog_ ) @ #t))  ∥
          (∃ #t. (ProgressTo_2111( ~prog_ ) @ #t))  ∥
          (∃ #t. (ProgressTo_221( ~prog_ ) @ #t)) )
     case case_2
-    solve( State_211( ~prog_ ) ▶₀ #t.2 )
-      case p_1_21
+    solve( !Semistate_211( ~prog_ ) ▶₀ #t.2 )
+      case p_0_21
       SOLVED // trace found
     qed
   qed
@@ -120,74 +120,47 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule,
+                              role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="+", issapicrule]:
+rule (modulo E) p_1_1[color=#ffffff, process="0", issapicrule,
+                      role='Process']:
+   [ !Semistate_11( ~prog_ ) ] --[ ProgressTo_111( ~prog_ ), A( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_21[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ !Semistate_211( ~prog_ ) ] --[ ProgressTo_2111( ~prog_ ), B( ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
+                     role='Process']:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
    [ State_( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule]:
+rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
    [ State_( ~prog_ ) ] --> [ !Semistate_11( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_11( ~prog_ ) ] --> [ State_11( ~prog_ ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventA_0_11[color=#ffffff, process="event A( );",
-                            issapicrule]:
-   [ State_11( ~prog_ ) ]
-  --[ ProgressTo_111( ~prog_ ), A( ) ]->
-   [ State_111( ~prog_ ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule]:
-   [ State_111( ~prog_ ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_21[color=#ffffff, process="!", issapicrule]:
+rule (modulo E) p_0_21[color=#ffffff, process="!", issapicrule,
+                       role='Process']:
    [ State_( ~prog_ ) ] --> [ !Semistate_211( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_21[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_211( ~prog_ ) ] --> [ State_211( ~prog_ ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventB_0_211[color=#ffffff, process="event B( );",
-                             issapicrule]:
-   [ State_211( ~prog_ ) ]
-  --[ ProgressTo_2111( ~prog_ ), B( ) ]->
-   [ State_2111( ~prog_ ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_2111[color=#ffffff, process="0", issapicrule]:
-   [ State_2111( ~prog_ ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventC_0_22[color=#ffffff, process="event C( );",
-                            issapicrule]:
-   [ State_( ~prog_ ) ]
-  --[ ProgressTo_221( ~prog_ ), C( ) ]->
-   [ State_221( ~prog_ ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_221[color=#ffffff, process="0", issapicrule]:
-   [ State_221( ~prog_ ) ] --> [ ]
+rule (modulo E) eventC_0_22[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_( ~prog_ ) ] --[ ProgressTo_221( ~prog_ ), C( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -205,57 +178,14 @@ restriction Progress__to_111_or_2111_or_221:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule MessageIDRule: 
-Failed to derive Variable(s): ~mid_
-
-Rule Init: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_0_1: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_1_1: 
-Failed to derive Variable(s): ~prog_
-
-Rule eventA_0_11: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_0_111: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_0_21: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_1_21: 
-Failed to derive Variable(s): ~prog_
-
-Rule eventB_0_211: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_0_2111: 
-Failed to derive Variable(s): ~prog_
-
-Rule eventC_0_22: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_0_221: 
-Failed to derive Variable(s): ~prog_
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -267,10 +197,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-3.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-3.spthy.tmp
-  processing time: 0.11s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.10s
   
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)

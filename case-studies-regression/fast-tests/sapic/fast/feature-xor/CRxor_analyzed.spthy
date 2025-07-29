@@ -1,0 +1,945 @@
+theory CRXOR begin
+
+// Function signature and definition of the equational theory E
+
+builtins: xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+
+
+
+
+
+
+
+
+lemma alive:
+  all-traces "∀ x y #i. (Alive( x, y ) @ #i) ⇒ (∃ #j. Response( y ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x y #i. (Alive( x, y ) @ #i) ∧ ∀ #j. (Response( y ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( State_111111111( ~k, ~na, m, nb ) ▶₀ #i )
+  case ifhknanbm_0_11111111
+  solve( splitEqs(1) )
+    case split_case_1
+    solve( !KU( h(~na) ) @ #vk.1 )
+      case c_h
+      by solve( !KU( ~k ) @ #vk.2 )
+    next
+      case outhknbnanb_0_112111211
+      by contradiction /* from formulas */
+    qed
+  next
+    case split_case_2
+    solve( !KU( h(~k) ) @ #vk.1 )
+      case c_h
+      by solve( !KU( ~k ) @ #vk.3 )
+    next
+      case outhknbnanb_0_112111211
+      by contradiction /* cyclic */
+    qed
+  next
+    case split_case_3
+    solve( !KU( h((~k⊕~na⊕nb)) ) @ #vk.1 )
+      case c_h
+      solve( !KU( (~k⊕~na⊕nb) ) @ #vk.3 )
+        case c_xor_case_1
+        solve( !KU( (~k⊕nb) ) @ #vk.4 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.6 )
+        next
+          case coerce
+          solve( !KD( (~k⊕nb) ) ▶₀ #vk.2 )
+            case outhknbnanb_0_112111211
+            solve( (#vl, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( (#vr.12, 0) ~~> (#vk.2, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          next
+            case outna_0_111111
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case c_xor_case_2
+        solve( !KU( (~na⊕nb) ) @ #vk.4 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case coerce
+          solve( !KD( (~na⊕nb) ) ▶₀ #vk.2 )
+            case outhknbnanb_0_112111211
+            solve( (#vl, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( (#vr.12, 0) ~~> (#vk.2, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          next
+            case outna_0_111111
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case c_xor_case_3
+        solve( !KU( (~k⊕~na) ) @ #vk.4 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.6 )
+        next
+          case coerce
+          solve( !KD( (~k⊕~na) ) ▶₀ #vk.2 )
+            case outhknbnanb_0_112111211
+            solve( (#vl, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( (#vr.12, 0) ~~> (#vk.2, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          next
+            case outna_0_111111
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case coerce
+        solve( !KD( (~k⊕~na⊕nb) ) ▶₀ #vk.1 )
+          case outhknbnanb_0_112111211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case outna_0_111111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case outhknbnanb_0_112111211
+      by contradiction /* from formulas */
+    qed
+  next
+    case split_case_4
+    solve( !KU( h((~k⊕~na)) ) @ #vk.1 )
+      case c_h
+      solve( !KU( (~k⊕~na) ) @ #vk.3 )
+        case c_xor
+        by solve( !KU( ~k ) @ #vk.5 )
+      next
+        case coerce
+        solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
+          case outhknbnanb_0_112111211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case outna_0_111111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case outhknbnanb_0_112111211
+      by contradiction /* from formulas */
+    qed
+  next
+    case split_case_5
+    solve( !KU( (~k⊕~na) ) @ #vk.2 )
+      case c_xor
+      by solve( !KU( ~k ) @ #vk.4 )
+    next
+      case coerce
+      solve( !KD( (~k⊕~na) ) ▶₀ #vk )
+        case outhknbnanb_0_112111211
+        solve( (#vl, 0) ~~> (#vk, 0) )
+          case d_0_fst
+          by solve( (#vr.12, 0) ~~> (#vk, 0) )
+        next
+          case d_0_snd
+          by contradiction /* impossible chain */
+        qed
+      next
+        case outna_0_111111
+        by contradiction /* impossible chain */
+      qed
+    qed
+  next
+    case split_case_6
+    solve( !KU( (~k⊕~na⊕z) ) @ #vk.2 )
+      case c_xor_case_1
+      solve( !KU( (~k⊕z) ) @ #vk.3 )
+        case c_xor
+        by solve( !KU( ~k ) @ #vk.6 )
+      next
+        case coerce
+        solve( !KD( (~k⊕z) ) ▶₀ #vk.1 )
+          case outhknbnanb_0_112111211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case outna_0_111111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case c_xor_case_2
+      solve( !KU( (~na⊕z) ) @ #vk.3 )
+        case c_xor
+        by solve( !KU( ~k ) @ #vk.4 )
+      next
+        case coerce
+        solve( !KD( (~na⊕z) ) ▶₀ #vk.1 )
+          case outhknbnanb_0_112111211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case outna_0_111111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case c_xor_case_3
+      solve( !KU( (~k⊕~na) ) @ #vk.4 )
+        case c_xor
+        by solve( !KU( ~k ) @ #vk.6 )
+      next
+        case coerce
+        solve( !KD( (~k⊕~na) ) ▶₀ #vk.1 )
+          case outhknbnanb_0_112111211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case outna_0_111111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case coerce
+      solve( !KD( (~k⊕~na⊕z) ) ▶₀ #vk )
+        case outhknbnanb_0_112111211
+        solve( (#vl, 0) ~~> (#vk, 0) )
+          case d_0_fst
+          by solve( (#vr.12, 0) ~~> (#vk, 0) )
+        next
+          case d_0_snd
+          by contradiction /* impossible chain */
+        qed
+      next
+        case outna_0_111111
+        by contradiction /* impossible chain */
+      qed
+    qed
+  next
+    case split_case_7
+    solve( !KU( h((~k⊕x)) ) @ #vk.1 )
+      case c_h
+      solve( !KU( (~na⊕x) ) @ #vk.2 )
+        case c_xor
+        solve( !KU( (~k⊕x) ) @ #vk.3 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.6 )
+        next
+          case coerce
+          solve( !KD( (~k⊕x) ) ▶₀ #vk.2 )
+            case outhknbnanb_0_112111211
+            solve( (#vl, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( (#vr.12, 0) ~~> (#vk.2, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          next
+            case outna_0_111111
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case coerce
+        solve( !KD( (~na⊕x) ) ▶₀ #vk.1 )
+          case outhknbnanb_0_112111211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case outna_0_111111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case outhknbnanb_0_112111211
+      by contradiction /* from formulas */
+    qed
+  next
+    case split_case_8
+    solve( !KU( h((~na⊕x)) ) @ #vk.1 )
+      case c_h
+      solve( !KU( (~k⊕x) ) @ #vk.2 )
+        case c_xor
+        solve( !KU( (~na⊕x) ) @ #vk.3 )
+          case c_xor
+          by solve( !KU( ~k ) @ #vk.5 )
+        next
+          case coerce
+          solve( !KD( (~na⊕x) ) ▶₀ #vk.2 )
+            case outhknbnanb_0_112111211
+            solve( (#vl, 0) ~~> (#vk.2, 0) )
+              case d_0_fst
+              by solve( (#vr.12, 0) ~~> (#vk.2, 0) )
+            next
+              case d_0_snd
+              by contradiction /* impossible chain */
+            qed
+          next
+            case outna_0_111111
+            by contradiction /* impossible chain */
+          qed
+        qed
+      next
+        case coerce
+        solve( !KD( (~k⊕x) ) ▶₀ #vk.1 )
+          case outhknbnanb_0_112111211
+          solve( (#vl, 0) ~~> (#vk.1, 0) )
+            case d_0_fst
+            by solve( (#vr.12, 0) ~~> (#vk.1, 0) )
+          next
+            case d_0_snd
+            by contradiction /* impossible chain */
+          qed
+        next
+          case outna_0_111111
+          by contradiction /* impossible chain */
+        qed
+      qed
+    next
+      case outhknbnanb_0_112111211
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma recentalive_tag:
+  exists-trace
+  "¬(∀ x y #i.
+      (Alive( x, y ) @ #i) ⇒
+      (∃ #j #k.
+        (((Challenge( x ) @ #k) ∧ (Response( y ) @ #j)) ∧ (#k < #j)) ∧
+        (#j < #i)))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i.
+  (Alive( x, y ) @ #i)
+ ∧
+  ∀ #j #k.
+   (Challenge( x ) @ #k) ∧ (Response( y ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+simplify
+solve( State_111111111( ~k, ~na, m, nb ) ▶₀ #i )
+  case ifhknanbm_0_11111111
+  solve( splitEqs(1) )
+    case split_case_7
+    solve( !KU( h((~k⊕x)) ) @ #vk.1 )
+      case outhknbnanb_0_112111211
+      solve( !KU( (~na⊕x) ) @ #vk.2 )
+        case c_xor
+        solve( splitEqs(3) )
+          case split_case_2
+          solve( !KU( (~nb⊕na.1) ) @ #vk.4 )
+            case c_xor
+            solve( !KU( ~na ) @ #vk.5 )
+              case outna_0_111111
+              solve( !KU( ~nb ) @ #vk.6 )
+                case outhknbnanb_0_112111211
+                SOLVED // trace found
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma executable:
+  exists-trace
+  "∃ x y #i #j.
+    (((Alive( x, y ) @ #i) ∧ (Response( y ) @ #j)) ∧
+     (¬(∃ #k. (Response( y ) @ #k) ∧ (¬(#j = #k))))) ∧
+    (¬(∃ #l. NeqForExec( x, x ) @ #l))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x y #i #j.
+  (Alive( x, y ) @ #i) ∧ (Response( y ) @ #j)
+ ∧
+  (∀ #k. (Response( y ) @ #k) ⇒ #j = #k) ∧
+  (∀ #l. (NeqForExec( x, x ) @ #l) ⇒ ⊥)"
+*/
+simplify
+solve( State_111111111( ~k, ~na, m, nb ) ▶₀ #i )
+  case ifhknanbm_0_11111111
+  solve( State_11211121( ~k, ~nb.1, na.1 ) ▶₀ #j )
+    case eventNeqForExecnazero_0_1121112
+    solve( splitEqs(2) )
+      case split_case_3
+      solve( !KU( h((~k⊕~na⊕nb)) ) @ #vk.1 )
+        case outhknbnanb_0_112111211
+        solve( splitEqs(4) )
+          case split_case_2
+          solve( !KU( ~nb ) @ #vk.2 )
+            case outhknbnanb_0_112111211
+            solve( !KU( ~na ) @ #vk.3 )
+              case outna_0_111111
+              SOLVED // trace found
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='new ~k.1;', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newk_0_[color=#ffffff, process='new ~k.1;', issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( ~k.1 ) ] --> [ State_1( ~k.1 ) ]
+
+  /*
+  rule (modulo AC) newk_0_[color=#ffffff, process='new ~k.1;', issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( ~k ) ] --> [ State_1( ~k ) ]
+  */
+
+rule (modulo E) p_0_1[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ State_1( ~k.1 ) ] --> [ !Semistate_11( ~k.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1[color=#ffffff, process='!', issapicrule,
+                         role='Process']:
+     [ State_1( ~k ) ] --> [ !Semistate_11( ~k ) ]
+  */
+
+rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
+                      role='Process']:
+   [ !Semistate_11( ~k.1 ) ] --> [ State_11( ~k.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_1[color=#ffffff, process='!', issapicrule,
+                         role='Process']:
+     [ !Semistate_11( ~k ) ] --> [ State_11( ~k ) ]
+  */
+
+rule (modulo E) p_0_11[color=#ffffff, process='|', issapicrule,
+                       role='Process']:
+   [ State_11( ~k.1 ) ] --> [ State_111( ~k.1 ), State_112( ~k.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11[color=#ffffff, process='|', issapicrule,
+                          role='Process']:
+     [ State_11( ~k ) ] --> [ State_111( ~k ), State_112( ~k ) ]
+  */
+
+rule (modulo E) Initiator_0_111[color=#ffffff, process='Initiator()',
+                                issapicrule, role='Process']:
+   [ State_111( ~k.1 ) ] --> [ State_1111( ~k.1 ), State_1112( ~k.1 ) ]
+
+  /*
+  rule (modulo AC) Initiator_0_111[color=#ffffff, process='Initiator()',
+                                   issapicrule, role='Process']:
+     [ State_111( ~k ) ] --> [ State_1111( ~k ), State_1112( ~k ) ]
+  */
+
+rule (modulo E) newna_0_1111[color=#80404f, process='new ~na.1;',
+                             issapicrule, role='Initiator']:
+   [ State_1111( ~k.1 ), Fr( ~na.1 ) ] --> [ State_11111( ~k.1, ~na.1 ) ]
+
+  /*
+  rule (modulo AC) newna_0_1111[color=#80404f, process='new ~na.1;',
+                                issapicrule, role='Initiator']:
+     [ State_1111( ~k ), Fr( ~na ) ] --> [ State_11111( ~k, ~na ) ]
+  */
+
+rule (modulo E) eventChallengena_0_11111[color=#80404f,
+                                         process='event Challenge( ~na.1 );', issapicrule, role='Initiator']:
+   [ State_11111( ~k.1, ~na.1 ) ]
+  --[ Challenge( ~na.1 ) ]->
+   [ State_111111( ~k.1, ~na.1 ) ]
+
+  /*
+  rule (modulo AC) eventChallengena_0_11111[color=#80404f,
+                                            process='event Challenge( ~na.1 );', issapicrule,
+                                            role='Initiator']:
+     [ State_11111( ~k, ~na ) ]
+    --[ Challenge( ~na ) ]->
+     [ State_111111( ~k, ~na ) ]
+  */
+
+rule (modulo E) outna_0_111111[color=#80404f, process='out(~na.1);',
+                               issapicrule, role='Initiator']:
+   [ State_111111( ~k.1, ~na.1 ) ]
+  -->
+   [ State_1111111( ~k.1, ~na.1 ), Out( ~na.1 ) ]
+
+  /*
+  rule (modulo AC) outna_0_111111[color=#80404f, process='out(~na.1);',
+                                  issapicrule, role='Initiator']:
+     [ State_111111( ~k, ~na ) ] --> [ State_1111111( ~k, ~na ), Out( ~na ) ]
+  */
+
+rule (modulo E) inmnb_0_1111111[color=#80404f,
+                                process='in(<m.1, nb.1>);', issapicrule, role='Initiator']:
+   [ State_1111111( ~k.1, ~na.1 ), In( <m.1, nb.1> ) ]
+  -->
+   [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
+
+  /*
+  rule (modulo AC) inmnb_0_1111111[color=#80404f,
+                                   process='in(<m.1, nb.1>);', issapicrule, role='Initiator']:
+     [ State_1111111( ~k, ~na ), In( <m, nb> ) ]
+    -->
+     [ State_11111111( ~k, ~na, m, nb ) ]
+  */
+
+rule (modulo E) ifhknanbm_0_11111111[color=#80404f,
+                                     process='if h((~k.1⊕~na.1⊕nb.1))=m.1', issapicrule, role='Initiator']:
+   [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
+  --[ Pred_Eq( h((~k.1⊕~na.1⊕nb.1)), m.1 ) ]->
+   [ State_111111111( ~k.1, ~na.1, m.1, nb.1 ) ]
+
+  /*
+  rule (modulo AC) ifhknanbm_0_11111111[color=#80404f,
+                                        process='if h((~k.1⊕~na.1⊕nb.1))=m.1', issapicrule, role='Initiator']:
+     [ State_11111111( ~k, ~na, m, nb ) ]
+    --[ Pred_Eq( h(z), m ) ]->
+     [ State_111111111( ~k, ~na, m, nb ) ]
+    variants (modulo AC)
+    1. ~k    = ~k.7
+       ~na   = ~na.7
+       nb    = nb.7
+       z     = (~k.7⊕~na.7⊕nb.7)
+    
+    2. ~k    = ~k.7
+       ~na   = ~na.7
+       nb    = zero
+       z     = (~k.7⊕~na.7)
+    
+    3. ~k    = ~x.7
+       ~na   = ~x.7
+       nb    = nb.8
+       z     = nb.8
+    
+    4. ~k    = ~x.7
+       ~na   = ~na.8
+       nb    = ~x.7
+       z     = ~na.8
+    
+    5. ~k    = ~x.7
+       ~na   = ~x.8
+       nb    = (~x.7⊕~x.8)
+       z     = zero
+    
+    6. ~k    = ~x.7
+       ~na   = ~x.8
+       nb    = (~x.7⊕~x.8⊕x.10)
+       z     = x.10
+    
+    7. ~k    = ~x.7
+       ~na   = ~na.11
+       nb    = (~x.7⊕x.10)
+       z     = (x.10⊕~na.11)
+    
+    8. ~k    = ~k.8
+       ~na   = ~x.7
+       nb    = ~x.7
+       z     = ~k.8
+    
+    9. ~k    = ~k.10
+       ~na   = ~x.7
+       nb    = (~x.7⊕x.9)
+       z     = (x.9⊕~k.10)
+  */
+
+rule (modulo E) ifhknanbm_1_11111111[color=#80404f,
+                                     process='if h((~k.1⊕~na.1⊕nb.1))=m.1', issapicrule, role='Initiator']:
+   [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
+  --[ Pred_Not_Eq( h((~k.1⊕~na.1⊕nb.1)), m.1 ) ]->
+   [ State_111111112( ~k.1, ~na.1, m.1, nb.1 ) ]
+
+  /*
+  rule (modulo AC) ifhknanbm_1_11111111[color=#80404f,
+                                        process='if h((~k.1⊕~na.1⊕nb.1))=m.1', issapicrule, role='Initiator']:
+     [ State_11111111( ~k, ~na, m, nb ) ]
+    --[ Pred_Not_Eq( h(z), m ) ]->
+     [ State_111111112( ~k, ~na, m, nb ) ]
+    variants (modulo AC)
+    1. ~k    = ~k.7
+       ~na   = ~na.7
+       nb    = nb.7
+       z     = (~k.7⊕~na.7⊕nb.7)
+    
+    2. ~k    = ~k.7
+       ~na   = ~na.7
+       nb    = zero
+       z     = (~k.7⊕~na.7)
+    
+    3. ~k    = ~x.7
+       ~na   = ~x.7
+       nb    = nb.8
+       z     = nb.8
+    
+    4. ~k    = ~x.7
+       ~na   = ~na.8
+       nb    = ~x.7
+       z     = ~na.8
+    
+    5. ~k    = ~x.7
+       ~na   = ~x.8
+       nb    = (~x.7⊕~x.8)
+       z     = zero
+    
+    6. ~k    = ~x.7
+       ~na   = ~x.8
+       nb    = (~x.7⊕~x.8⊕x.10)
+       z     = x.10
+    
+    7. ~k    = ~x.7
+       ~na   = ~na.11
+       nb    = (~x.7⊕x.10)
+       z     = (x.10⊕~na.11)
+    
+    8. ~k    = ~k.8
+       ~na   = ~x.7
+       nb    = ~x.7
+       z     = ~k.8
+    
+    9. ~k    = ~k.10
+       ~na   = ~x.7
+       nb    = (~x.7⊕x.9)
+       z     = (x.9⊕~k.10)
+  */
+
+rule (modulo E) eventAlivenak_0_111111111[color=#80404f,
+                                          process='event Alive( ~na.1, ~k.1 );', issapicrule,
+                                          role='Initiator']:
+   [ State_111111111( ~k.1, ~na.1, m.1, nb.1 ) ]
+  --[ Alive( ~na.1, ~k.1 ) ]->
+   [ State_1111111111( ~k.1, ~na.1, m.1, nb.1 ) ]
+
+  /*
+  rule (modulo AC) eventAlivenak_0_111111111[color=#80404f,
+                                             process='event Alive( ~na.1, ~k.1 );', issapicrule,
+                                             role='Initiator']:
+     [ State_111111111( ~k, ~na, m, nb ) ]
+    --[ Alive( ~na, ~k ) ]->
+     [ State_1111111111( ~k, ~na, m, nb ) ]
+  */
+
+rule (modulo E) p_0_1111111111[color=#80404f, process='0', issapicrule,
+                               role='Initiator']:
+   [ State_1111111111( ~k.1, ~na.1, m.1, nb.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111111[color=#80404f, process='0', issapicrule,
+                                  role='Initiator']:
+     [ State_1111111111( ~k, ~na, m, nb ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_111111112[color=#80404f, process='0', issapicrule,
+                              role='Initiator']:
+   [ State_111111112( ~k.1, ~na.1, m.1, nb.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111112[color=#80404f, process='0', issapicrule,
+                                 role='Initiator']:
+     [ State_111111112( ~k, ~na, m, nb ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1112[color=#ffffff, process='0', issapicrule,
+                         role='Process']:
+   [ State_1112( ~k.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1112[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+     [ State_1112( ~k ) ] --> [ ]
+  */
+
+rule (modulo E) Responder_0_112[color=#ffffff, process='Responder()',
+                                issapicrule, role='Process']:
+   [ State_112( ~k.1 ) ] --> [ State_1121( ~k.1 ), State_1122( ~k.1 ) ]
+
+  /*
+  rule (modulo AC) Responder_0_112[color=#ffffff, process='Responder()',
+                                   issapicrule, role='Process']:
+     [ State_112( ~k ) ] --> [ State_1121( ~k ), State_1122( ~k ) ]
+  */
+
+rule (modulo E) inna_0_1121[color=#805d40, process='in(na.2);',
+                            issapicrule, role='Responder']:
+   [ State_1121( ~k.1 ), In( na.2 ) ] --> [ State_11211( ~k.1, na.2 ) ]
+
+  /*
+  rule (modulo AC) inna_0_1121[color=#805d40, process='in(na.2);',
+                               issapicrule, role='Responder']:
+     [ State_1121( ~k ), In( na ) ] --> [ State_11211( ~k, na ) ]
+  */
+
+rule (modulo E) newnb_0_11211[color=#805d40, process='new ~nb.2;',
+                              issapicrule, role='Responder']:
+   [ State_11211( ~k.1, na.2 ), Fr( ~nb.2 ) ]
+  -->
+   [ State_112111( ~k.1, ~nb.2, na.2 ) ]
+
+  /*
+  rule (modulo AC) newnb_0_11211[color=#805d40, process='new ~nb.2;',
+                                 issapicrule, role='Responder']:
+     [ State_11211( ~k, na ), Fr( ~nb ) ] --> [ State_112111( ~k, ~nb, na ) ]
+  */
+
+rule (modulo E) ifnazero_0_112111[color=#805d40, process='if na.2=zero',
+                                  issapicrule, role='Responder']:
+   [ State_112111( ~k.1, ~nb.2, na.2 ) ]
+  --[ Pred_Eq( na.2, zero ) ]->
+   [ State_1121111( ~k.1, ~nb.2, na.2 ) ]
+
+  /*
+  rule (modulo AC) ifnazero_0_112111[color=#805d40, process='if na.2=zero',
+                                     issapicrule, role='Responder']:
+     [ State_112111( ~k, ~nb, na ) ]
+    --[ Pred_Eq( na, zero ) ]->
+     [ State_1121111( ~k, ~nb, na ) ]
+  */
+
+rule (modulo E) ifnazero_1_112111[color=#805d40, process='if na.2=zero',
+                                  issapicrule, role='Responder']:
+   [ State_112111( ~k.1, ~nb.2, na.2 ) ]
+  --[ Pred_Not_Eq( na.2, zero ) ]->
+   [ State_1121112( ~k.1, ~nb.2, na.2 ) ]
+
+  /*
+  rule (modulo AC) ifnazero_1_112111[color=#805d40, process='if na.2=zero',
+                                     issapicrule, role='Responder']:
+     [ State_112111( ~k, ~nb, na ) ]
+    --[ Pred_Not_Eq( na, zero ) ]->
+     [ State_1121112( ~k, ~nb, na ) ]
+  */
+
+rule (modulo E) p_0_1121111[color=#805d40, process='0', issapicrule,
+                            role='Responder']:
+   [ State_1121111( ~k.1, ~nb.2, na.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1121111[color=#805d40, process='0', issapicrule,
+                               role='Responder']:
+     [ State_1121111( ~k, ~nb, na ) ] --> [ ]
+  */
+
+rule (modulo E) eventNeqForExecnazero_0_1121112[color=#805d40,
+                                                process='event NeqForExec( na.2, zero );', issapicrule,
+                                                role='Responder']:
+   [ State_1121112( ~k.1, ~nb.2, na.2 ) ]
+  --[ NeqForExec( na.2, zero ) ]->
+   [ State_11211121( ~k.1, ~nb.2, na.2 ) ]
+
+  /*
+  rule (modulo AC) eventNeqForExecnazero_0_1121112[color=#805d40,
+                                                   process='event NeqForExec( na.2, zero );', issapicrule,
+                                                   role='Responder']:
+     [ State_1121112( ~k, ~nb, na ) ]
+    --[ NeqForExec( na, zero ) ]->
+     [ State_11211121( ~k, ~nb, na ) ]
+  */
+
+rule (modulo E) eventResponsek_0_11211121[color=#805d40,
+                                          process='event Response( ~k.1 );', issapicrule, role='Responder']:
+   [ State_11211121( ~k.1, ~nb.2, na.2 ) ]
+  --[ Response( ~k.1 ) ]->
+   [ State_112111211( ~k.1, ~nb.2, na.2 ) ]
+
+  /*
+  rule (modulo AC) eventResponsek_0_11211121[color=#805d40,
+                                             process='event Response( ~k.1 );', issapicrule,
+                                             role='Responder']:
+     [ State_11211121( ~k, ~nb, na ) ]
+    --[ Response( ~k ) ]->
+     [ State_112111211( ~k, ~nb, na ) ]
+  */
+
+rule (modulo E) outhknbnanb_0_112111211[color=#805d40,
+                                        process='out(<h((~k.1⊕~nb.2⊕na.2)), ~nb.2>);', issapicrule,
+                                        role='Responder']:
+   [ State_112111211( ~k.1, ~nb.2, na.2 ) ]
+  -->
+   [
+   State_1121112111( ~k.1, ~nb.2, na.2 ),
+   Out( <h((~k.1⊕~nb.2⊕na.2)), ~nb.2> )
+   ]
+
+  /*
+  rule (modulo AC) outhknbnanb_0_112111211[color=#805d40,
+                                           process='out(<h((~k.1⊕~nb.2⊕na.2)), ~nb.2>);', issapicrule,
+                                           role='Responder']:
+     [ State_112111211( ~k, ~nb, na ) ]
+    -->
+     [ State_1121112111( ~k, ~nb, na ), Out( <h(z), ~nb> ) ]
+    variants (modulo AC)
+    1. ~k    = ~k.7
+       ~nb   = ~nb.8
+       na    = na.8
+       z     = (~k.7⊕~nb.8⊕na.8)
+    
+    2. ~k    = ~k.7
+       ~nb   = ~nb.8
+       na    = zero
+       z     = (~k.7⊕~nb.8)
+    
+    3. ~k    = ~x.7
+       ~nb   = ~x.7
+       na    = na.8
+       z     = na.8
+    
+    4. ~k    = ~x.7
+       ~nb   = ~nb.8
+       na    = ~x.7
+       z     = ~nb.8
+    
+    5. ~k    = ~x.7
+       ~nb   = ~x.8
+       na    = (~x.7⊕~x.8)
+       z     = zero
+    
+    6. ~k    = ~x.7
+       ~nb   = ~x.8
+       na    = (~x.7⊕~x.8⊕x.9)
+       z     = x.9
+    
+    7. ~k    = ~x.7
+       ~nb   = ~nb.10
+       na    = (~x.7⊕x.9)
+       z     = (x.9⊕~nb.10)
+    
+    8. ~k    = ~k.8
+       ~nb   = ~x.7
+       na    = ~x.7
+       z     = ~k.8
+    
+    9. ~k    = ~k.9
+       ~nb   = ~x.7
+       na    = (~x.7⊕x.8)
+       z     = (x.8⊕~k.9)
+  */
+
+rule (modulo E) p_0_1121112111[color=#805d40, process='0', issapicrule,
+                               role='Responder']:
+   [ State_1121112111( ~k.1, ~nb.2, na.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1121112111[color=#805d40, process='0', issapicrule,
+                                  role='Responder']:
+     [ State_1121112111( ~k, ~nb, na ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1122[color=#ffffff, process='0', issapicrule,
+                         role='Process']:
+   [ State_1122( ~k.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1122[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+     [ State_1122( ~k ) ] --> [ ]
+  */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
+
+  output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
+  processing time: 2.65s
+  
+  alive (all-traces): verified (111 steps)
+  recentalive_tag (exists-trace): verified (10 steps)
+  executable (exists-trace): verified (9 steps)
+
+==============================================================================
+*/

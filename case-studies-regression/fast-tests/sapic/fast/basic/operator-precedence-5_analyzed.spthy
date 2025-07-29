@@ -1,0 +1,140 @@
+theory OperatorPrecedenceLetTriple begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+section{* A few test cases for operator precedence *}
+
+
+
+lemma second_process_covered:
+  all-traces "∀ #e x. (E( x ) @ #e) ⇒ (x = '1')"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #e x. (E( x ) @ #e) ∧ ¬(x = '1')"
+*/
+simplify
+solve( E( x ) @ #e )
+  case eventE_0_111
+  by contradiction /* from formulas */
+next
+  case eventE_0_121
+  by contradiction /* from formulas */
+next
+  case eventE_0_21
+  by contradiction /* from formulas */
+qed
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process='|', issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process='|', issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_0_11[color=#ffffff, process='in('1');', issapicrule,
+                        role='Process']:
+   [ State_11( ), In( '1' ) ] --> [ State_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventE_0_111[color=#ffffff, process='event E( '1' );',
+                             issapicrule, role='Process']:
+   [ State_111( ) ] --[ E( '1' ) ]-> [ State_1111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#ffffff, process='0', issapicrule,
+                         role='Process']:
+   [ State_1111( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_0_12[color=#ffffff, process='in('1');', issapicrule,
+                        role='Process']:
+   [ State_12( ), In( '1' ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventE_0_121[color=#ffffff, process='event E( '1' );',
+                             issapicrule, role='Process']:
+   [ State_121( ) ] --[ E( '1' ) ]-> [ State_1211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1211[color=#ffffff, process='0', issapicrule,
+                         role='Process']:
+   [ State_1211( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) in_0_2[color=#ffffff, process='in('1');', issapicrule,
+                       role='Process']:
+   [ State_2( ), In( '1' ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventE_0_21[color=#ffffff, process='event E( '1' );',
+                            issapicrule, role='Process']:
+   [ State_21( ) ] --[ E( '1' ) ]-> [ State_211( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_211[color=#ffffff, process='0', issapicrule,
+                        role='Process']:
+   [ State_211( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/operator-precedence-5.spthy
+
+  output:          examples/sapic/fast/basic/operator-precedence-5.spthy.tmp
+  processing time: 0.08s
+  
+  second_process_covered (all-traces): verified (5 steps)
+
+==============================================================================
+*/

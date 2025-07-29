@@ -43,12 +43,20 @@ rule (modulo E) testB:
 
 
 
-rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule]:
-   [ In( x.1 ) ] --[ Init( ) ]-> [ State_1( x.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
+                       role='Process']:
+   [ State_( ), In( x.1 ) ] --> [ State_1( x.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="in(x.1);", issapicrule]:
-     [ In( x ) ] --[ Init( ) ]-> [ State_1( x ) ]
+  rule (modulo AC) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
+                          role='Process']:
+     [ State_( ), In( x ) ] --> [ State_1( x ) ]
   */
 
 restriction Restr_ifTruex_0_1_1:
@@ -56,13 +64,27 @@ restriction Restr_ifTruex_0_1_1:
   // safety formula
 
 rule (modulo E) ifTruex_0_1[color=#ffffff, process="if True( x.1 )",
-                            issapicrule]:
+                            issapicrule, role='Process']:
    [ State_1( x.1 ) ] --[ Restr_ifTruex_0_1_1( x.1 ) ]-> [ State_11( x.1 ) ]
 
   /*
   rule (modulo AC) ifTruex_0_1[color=#ffffff, process="if True( x.1 )",
-                               issapicrule]:
+                               issapicrule, role='Process']:
      [ State_1( x ) ] --[ Restr_ifTruex_0_1_1( x ) ]-> [ State_11( x ) ]
+  */
+
+restriction Restr_ifTruex_1_1_1:
+  "∀ x #NOW. (Restr_ifTruex_1_1_1( x ) @ #NOW) ⇒ (¬(x = true))"
+  // safety formula
+
+rule (modulo E) ifTruex_1_1[color=#ffffff, process="if True( x.1 )",
+                            issapicrule, role='Process']:
+   [ State_1( x.1 ) ] --[ Restr_ifTruex_1_1_1( x.1 ) ]-> [ State_12( x.1 ) ]
+
+  /*
+  rule (modulo AC) ifTruex_1_1[color=#ffffff, process="if True( x.1 )",
+                               issapicrule, role='Process']:
+     [ State_1( x ) ] --[ Restr_ifTruex_1_1_1( x ) ]-> [ State_12( x ) ]
   */
 
 restriction Restr_ifTruetrue_0_11_1:
@@ -70,15 +92,31 @@ restriction Restr_ifTruetrue_0_11_1:
   // safety formula
 
 rule (modulo E) ifTruetrue_0_11[color=#ffffff, process="if True( true )",
-                                issapicrule]:
+                                issapicrule, role='Process']:
    [ State_11( x.1 ) ]
   --[ Restr_ifTruetrue_0_11_1( ) ]->
    [ State_111( x.1 ) ]
 
   /*
   rule (modulo AC) ifTruetrue_0_11[color=#ffffff,
-                                   process="if True( true )", issapicrule]:
+                                   process="if True( true )", issapicrule, role='Process']:
      [ State_11( x ) ] --[ Restr_ifTruetrue_0_11_1( ) ]-> [ State_111( x ) ]
+  */
+
+restriction Restr_ifTruetrue_1_11_1:
+  "∀ #NOW. (Restr_ifTruetrue_1_11_1( ) @ #NOW) ⇒ (¬(true = true))"
+  // safety formula
+
+rule (modulo E) ifTruetrue_1_11[color=#ffffff, process="if True( true )",
+                                issapicrule, role='Process']:
+   [ State_11( x.1 ) ]
+  --[ Restr_ifTruetrue_1_11_1( ) ]->
+   [ State_112( x.1 ) ]
+
+  /*
+  rule (modulo AC) ifTruetrue_1_11[color=#ffffff,
+                                   process="if True( true )", issapicrule, role='Process']:
+     [ State_11( x ) ] --[ Restr_ifTruetrue_1_11_1( ) ]-> [ State_112( x ) ]
   */
 
 restriction Restr_ifTrueeqxx_0_111_1:
@@ -86,17 +124,35 @@ restriction Restr_ifTrueeqxx_0_111_1:
   // safety formula
 
 rule (modulo E) ifTrueeqxx_0_111[color=#ffffff,
-                                 process="if True( eq(x.1, x.1) )", issapicrule]:
+                                 process="if True( eq(x.1, x.1) )", issapicrule, role='Process']:
    [ State_111( x.1 ) ]
   --[ Restr_ifTrueeqxx_0_111_1( eq(x.1, x.1) ) ]->
    [ State_1111( x.1 ) ]
 
   /*
   rule (modulo AC) ifTrueeqxx_0_111[color=#ffffff,
-                                    process="if True( eq(x.1, x.1) )", issapicrule]:
+                                    process="if True( eq(x.1, x.1) )", issapicrule, role='Process']:
      [ State_111( x ) ]
     --[ Restr_ifTrueeqxx_0_111_1( true ) ]->
      [ State_1111( x ) ]
+  */
+
+restriction Restr_ifTrueeqxx_1_111_1:
+  "∀ x #NOW. (Restr_ifTrueeqxx_1_111_1( x ) @ #NOW) ⇒ (¬(x = true))"
+  // safety formula
+
+rule (modulo E) ifTrueeqxx_1_111[color=#ffffff,
+                                 process="if True( eq(x.1, x.1) )", issapicrule, role='Process']:
+   [ State_111( x.1 ) ]
+  --[ Restr_ifTrueeqxx_1_111_1( eq(x.1, x.1) ) ]->
+   [ State_1112( x.1 ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxx_1_111[color=#ffffff,
+                                    process="if True( eq(x.1, x.1) )", issapicrule, role='Process']:
+     [ State_111( x ) ]
+    --[ Restr_ifTrueeqxx_1_111_1( true ) ]->
+     [ State_1112( x ) ]
   */
 
 restriction Restr_ifTrueeqxtest_0_1111_1:
@@ -104,17 +160,41 @@ restriction Restr_ifTrueeqxtest_0_1111_1:
   // safety formula
 
 rule (modulo E) ifTrueeqxtest_0_1111[color=#ffffff,
-                                     process="if True( eq(x.1, 'test') )", issapicrule]:
+                                     process="if True( eq(x.1, 'test') )", issapicrule, role='Process']:
    [ State_1111( x.1 ) ]
   --[ Restr_ifTrueeqxtest_0_1111_1( eq(x.1, 'test') ) ]->
    [ State_11111( x.1 ) ]
 
   /*
   rule (modulo AC) ifTrueeqxtest_0_1111[color=#ffffff,
-                                        process="if True( eq(x.1, 'test') )", issapicrule]:
+                                        process="if True( eq(x.1, 'test') )", issapicrule, role='Process']:
      [ State_1111( x ) ]
     --[ Restr_ifTrueeqxtest_0_1111_1( z ) ]->
      [ State_11111( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.4
+       z     = eq(x.4, 'test')
+  */
+
+restriction Restr_ifTrueeqxtest_1_1111_1:
+  "∀ x #NOW. (Restr_ifTrueeqxtest_1_1111_1( x ) @ #NOW) ⇒ (¬(x = true))"
+  // safety formula
+
+rule (modulo E) ifTrueeqxtest_1_1111[color=#ffffff,
+                                     process="if True( eq(x.1, 'test') )", issapicrule, role='Process']:
+   [ State_1111( x.1 ) ]
+  --[ Restr_ifTrueeqxtest_1_1111_1( eq(x.1, 'test') ) ]->
+   [ State_11112( x.1 ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxtest_1_1111[color=#ffffff,
+                                        process="if True( eq(x.1, 'test') )", issapicrule, role='Process']:
+     [ State_1111( x ) ]
+    --[ Restr_ifTrueeqxtest_1_1111_1( z ) ]->
+     [ State_11112( x ) ]
     variants (modulo AC)
     1. x     = 'test'
        z     = true
@@ -130,14 +210,16 @@ restriction Restr_ifAndeqxtesttrue_0_11111_1:
   // safety formula
 
 rule (modulo E) ifAndeqxtesttrue_0_11111[color=#ffffff,
-                                         process="if And2( eq(x.1, 'test'), true )", issapicrule]:
+                                         process="if And2( eq(x.1, 'test'), true )", issapicrule,
+                                         role='Process']:
    [ State_11111( x.1 ) ]
   --[ Restr_ifAndeqxtesttrue_0_11111_1( eq(x.1, 'test') ) ]->
    [ State_111111( x.1 ) ]
 
   /*
   rule (modulo AC) ifAndeqxtesttrue_0_11111[color=#ffffff,
-                                            process="if And2( eq(x.1, 'test'), true )", issapicrule]:
+                                            process="if And2( eq(x.1, 'test'), true )", issapicrule,
+                                            role='Process']:
      [ State_11111( x ) ]
     --[ Restr_ifAndeqxtesttrue_0_11111_1( z ) ]->
      [ State_111111( x ) ]
@@ -147,6 +229,152 @@ rule (modulo E) ifAndeqxtesttrue_0_11111[color=#ffffff,
     
     2. x     = x.4
        z     = eq(x.4, 'test')
+  */
+
+restriction Restr_ifAndeqxtesttrue_1_11111_1:
+  "∀ x #NOW.
+    (Restr_ifAndeqxtesttrue_1_11111_1( x ) @ #NOW) ⇒
+    (¬((x = true) ∧ (true = true)))"
+  // safety formula
+
+rule (modulo E) ifAndeqxtesttrue_1_11111[color=#ffffff,
+                                         process="if And2( eq(x.1, 'test'), true )", issapicrule,
+                                         role='Process']:
+   [ State_11111( x.1 ) ]
+  --[ Restr_ifAndeqxtesttrue_1_11111_1( eq(x.1, 'test') ) ]->
+   [ State_111112( x.1 ) ]
+
+  /*
+  rule (modulo AC) ifAndeqxtesttrue_1_11111[color=#ffffff,
+                                            process="if And2( eq(x.1, 'test'), true )", issapicrule,
+                                            role='Process']:
+     [ State_11111( x ) ]
+    --[ Restr_ifAndeqxtesttrue_1_11111_1( z ) ]->
+     [ State_111112( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.4
+       z     = eq(x.4, 'test')
+  */
+
+restriction Restr_ifTrueeqxtest_0_111111_1:
+  "∀ x #NOW. (Restr_ifTrueeqxtest_0_111111_1( x ) @ #NOW) ⇒ (x = true)"
+  // safety formula
+
+rule (modulo E) ifTrueeqxtest_0_111111[color=#ffffff,
+                                       process="if True( eq(x.1, 'test') )", issapicrule, role='Process']:
+   [ State_111111( x.1 ) ]
+  --[ Restr_ifTrueeqxtest_0_111111_1( eq(x.1, 'test') ) ]->
+   [ State_1111111( x.1 ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxtest_0_111111[color=#ffffff,
+                                          process="if True( eq(x.1, 'test') )", issapicrule, role='Process']:
+     [ State_111111( x ) ]
+    --[ Restr_ifTrueeqxtest_0_111111_1( z ) ]->
+     [ State_1111111( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.4
+       z     = eq(x.4, 'test')
+  */
+
+restriction Restr_ifTrueeqxtest_1_111111_1:
+  "∀ x #NOW. (Restr_ifTrueeqxtest_1_111111_1( x ) @ #NOW) ⇒ (¬(x = true))"
+  // safety formula
+
+rule (modulo E) ifTrueeqxtest_1_111111[color=#ffffff,
+                                       process="if True( eq(x.1, 'test') )", issapicrule, role='Process']:
+   [ State_111111( x.1 ) ]
+  --[ Restr_ifTrueeqxtest_1_111111_1( eq(x.1, 'test') ) ]->
+   [ State_1111112( x.1 ) ]
+
+  /*
+  rule (modulo AC) ifTrueeqxtest_1_111111[color=#ffffff,
+                                          process="if True( eq(x.1, 'test') )", issapicrule, role='Process']:
+     [ State_111111( x ) ]
+    --[ Restr_ifTrueeqxtest_1_111111_1( z ) ]->
+     [ State_1111112( x ) ]
+    variants (modulo AC)
+    1. x     = 'test'
+       z     = true
+    
+    2. x     = x.4
+       z     = eq(x.4, 'test')
+  */
+
+rule (modulo E) p_0_1111111[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1111111( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1111111( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1111112[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_1111112( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111112[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_1111112( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_111112[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_111112( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111112[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_111112( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_11112[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+   [ State_11112( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11112[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+     [ State_11112( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1112[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1112( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1112[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1112( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_112[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_112( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_112( x ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_12( x.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+     [ State_12( x ) ] --> [ ]
   */
 
 restriction single_session:
@@ -159,8 +387,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -172,7 +400,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/pub.spthy
 
   output:          examples/sapic/fast/feature-predicates/pub.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.12s
   
 
 ==============================================================================

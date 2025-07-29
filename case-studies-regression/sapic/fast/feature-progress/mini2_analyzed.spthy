@@ -72,32 +72,35 @@ qed
 
 
 rule (modulo E) MessageIDRule[color=#ffffff, process="new k.1;",
-                              issapicrule]:
+                              issapicrule, role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="new k.1;", issapicrule]:
+rule (modulo E) Init[color=#ffffff, process="new k.1;", issapicrule,
+                     role='Process']:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
    [ State_( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_[color=#ffffff, process="new k.1;", issapicrule]:
+rule (modulo E) newk_0_[color=#ffffff, process="new k.1;", issapicrule,
+                        role='Process']:
    [ State_( ~prog_ ), Fr( k.1 ) ]
   --[ ProgressTo_1( ~prog_ ) ]->
    [ State_1( ~prog_, k.1 ) ]
 
   /*
-  rule (modulo AC) newk_0_[color=#ffffff, process="new k.1;", issapicrule]:
+  rule (modulo AC) newk_0_[color=#ffffff, process="new k.1;", issapicrule,
+                           role='Process']:
      [ State_( ~prog_ ), Fr( k ) ]
     --[ ProgressTo_1( ~prog_ ) ]->
      [ State_1( ~prog_, k ) ]
   */
 
 rule (modulo E) inrsignmk_0_11[color=#ffffff,
-                               process="in('r',sign(m.1, =k.1));", issapicrule]:
+                               process="in('r',sign(m.1, =k.1));", issapicrule, role='Process']:
    [
    Fr( ~prog_111 ), State_1( ~prog_, k.1 ), In( sign(m.1, k.1) ),
    MID_Receiver( ~mid_11 )
@@ -107,7 +110,7 @@ rule (modulo E) inrsignmk_0_11[color=#ffffff,
 
   /*
   rule (modulo AC) inrsignmk_0_11[color=#ffffff,
-                                  process="in('r',sign(m.1, =k.1));", issapicrule]:
+                                  process="in('r',sign(m.1, =k.1));", issapicrule, role='Process']:
      [
      Fr( ~prog_111 ), State_1( ~prog_, k ), In( sign(m, k) ),
      MID_Receiver( ~mid_11 )
@@ -116,30 +119,22 @@ rule (modulo E) inrsignmk_0_11[color=#ffffff,
      [ State_111( ~prog_, ~prog_111, k, m ) ]
   */
 
-rule (modulo E) eventA_0_111[color=#ffffff, process="event A( );",
-                             issapicrule]:
+rule (modulo E) eventA_0_111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
    [ State_111( ~prog_, ~prog_111, k.1, m.1 ) ]
   --[ ProgressTo_1111( ~prog_111 ), A( ) ]->
-   [ State_1111( ~prog_, ~prog_111, k.1, m.1 ) ]
+   [ ]
 
   /*
-  rule (modulo AC) eventA_0_111[color=#ffffff, process="event A( );",
-                                issapicrule]:
+  rule (modulo AC) eventA_0_111[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
      [ State_111( ~prog_, ~prog_111, k, m ) ]
     --[ ProgressTo_1111( ~prog_111 ), A( ) ]->
-     [ State_1111( ~prog_, ~prog_111, k, m ) ]
-  */
-
-rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule]:
-   [ State_1111( ~prog_, ~prog_111, k.1, m.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_1111[color=#ffffff, process="0", issapicrule]:
-     [ State_1111( ~prog_, ~prog_111, k, m ) ] --> [ ]
+     [ ]
   */
 
 rule (modulo E) inrm_0_12[color=#ffffff, process="in('r',m.2);",
-                          issapicrule]:
+                          issapicrule, role='Process']:
    [
    Fr( ~prog_121 ), State_1( ~prog_, k.1 ), In( m.2 ),
    MID_Receiver( ~mid_12 )
@@ -149,7 +144,7 @@ rule (modulo E) inrm_0_12[color=#ffffff, process="in('r',m.2);",
 
   /*
   rule (modulo AC) inrm_0_12[color=#ffffff, process="in('r',m.2);",
-                             issapicrule]:
+                             issapicrule, role='Process']:
      [ Fr( ~prog_121 ), State_1( ~prog_, k ), In( m ), MID_Receiver( ~mid_12 )
      ]
     --[ ProgressFrom_121( ~prog_121 ), Receive( ~mid_12, m ) ]->
@@ -157,39 +152,31 @@ rule (modulo E) inrm_0_12[color=#ffffff, process="in('r',m.2);",
   */
 
 rule (modulo E) outcm_0_121[color=#ffffff, process="out('c',m.2);",
-                            issapicrule]:
+                            issapicrule, role='Process']:
    [ State_121( ~prog_, ~prog_121, k.1, m.2 ), In( 'c' ) ]
   --[ ChannelIn( 'c' ) ]->
    [ State_1211( ~prog_, ~prog_121, k.1, m.2 ), Out( m.2 ) ]
 
   /*
   rule (modulo AC) outcm_0_121[color=#ffffff, process="out('c',m.2);",
-                               issapicrule]:
+                               issapicrule, role='Process']:
      [ State_121( ~prog_, ~prog_121, k, m ), In( 'c' ) ]
     --[ ChannelIn( 'c' ) ]->
      [ State_1211( ~prog_, ~prog_121, k, m ), Out( m ) ]
   */
 
-rule (modulo E) eventB_0_1211[color=#ffffff, process="event B( );",
-                              issapicrule]:
+rule (modulo E) eventB_0_1211[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
    [ State_1211( ~prog_, ~prog_121, k.1, m.2 ) ]
   --[ ProgressTo_12111( ~prog_121 ), B( ) ]->
-   [ State_12111( ~prog_, ~prog_121, k.1, m.2 ) ]
+   [ ]
 
   /*
-  rule (modulo AC) eventB_0_1211[color=#ffffff, process="event B( );",
-                                 issapicrule]:
+  rule (modulo AC) eventB_0_1211[color=#ffffff, process="0", issapicrule,
+                                 role='Process']:
      [ State_1211( ~prog_, ~prog_121, k, m ) ]
     --[ ProgressTo_12111( ~prog_121 ), B( ) ]->
-     [ State_12111( ~prog_, ~prog_121, k, m ) ]
-  */
-
-rule (modulo E) p_0_12111[color=#ffffff, process="0", issapicrule]:
-   [ State_12111( ~prog_, ~prog_121, k.1, m.2 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_12111[color=#ffffff, process="0", issapicrule]:
-     [ State_12111( ~prog_, ~prog_121, k, m ) ] --> [ ]
+     [ ]
   */
 
 restriction single_session:
@@ -221,43 +208,16 @@ Message Derivation Checks
 
   The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
 
-Rule MessageIDRule: 
-Failed to derive Variable(s): ~mid_
-
-Rule Init: 
-Failed to derive Variable(s): ~prog_
-
-Rule newk_0_: 
-Failed to derive Variable(s): ~prog_, k.1
-
 Rule inrsignmk_0_11: 
-Failed to derive Variable(s): ~mid_11, ~prog_, ~prog_111, k.1, m.1
-
-Rule eventA_0_111: 
-Failed to derive Variable(s): ~prog_, ~prog_111, k.1, m.1
-
-Rule p_0_1111: 
-Failed to derive Variable(s): ~prog_, ~prog_111, k.1, m.1
-
-Rule inrm_0_12: 
-Failed to derive Variable(s): ~mid_12, ~prog_, ~prog_121, k.1, m.2
-
-Rule outcm_0_121: 
-Failed to derive Variable(s): ~prog_, ~prog_121, k.1, m.2
-
-Rule eventB_0_1211: 
-Failed to derive Variable(s): ~prog_, ~prog_121, k.1, m.2
-
-Rule p_0_12111: 
-Failed to derive Variable(s): ~prog_, ~prog_121, k.1, m.2
+Failed to derive Variable(s): m.1
 */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -269,7 +229,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini2.spthy
 
   output:          examples/sapic/fast/feature-progress/mini2.spthy.tmp
-  processing time: 0.16s
+  processing time: 0.19s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

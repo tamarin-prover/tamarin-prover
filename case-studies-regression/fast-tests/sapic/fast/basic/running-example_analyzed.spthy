@@ -1,0 +1,1006 @@
+theory RunningExample begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: p
+
+
+
+predicate: SencSucc( c, k )<=>∃ m. senc(m, k) = c
+
+
+
+lemma can_create_key:
+  exists-trace "∃ #t h k. NewKey( h, k ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t h k. (NewKey( h, k ) @ #t)"
+*/
+simplify
+solve( State_111111( h, k ) ▶₀ #t )
+  case newk_0_11111
+  SOLVED // trace found
+qed
+
+lemma can_obtain_wrapping:
+  exists-trace "∃ #t k1 k2. Wrap( k1, k2 ) @ #t"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #t k1 k2. (Wrap( k1, k2 ) @ #t)"
+*/
+simplify
+solve( State_1211111( a1, h1, h2, k1, k2 ) ▶₀ #t )
+  case lookupkeyhask_0_121111
+  solve( Insert( <'key', h2>, k2 ) @ #t2 )
+    case insertkeyhk_0_1111111
+    solve( State_1111111( h2, k2 ) ▶₀ #t2 )
+      case eventNewKeyhk_0_111111
+      solve( Insert( <'key', h1>, k1 ) @ #t2.1 )
+        case insertkeyhk_0_1111111
+        solve( State_1111111( h1, k1 ) ▶₀ #t2.1 )
+          case eventNewKeyhk_0_111111
+          solve( Insert( <'att', ~n>, 'wrap' ) @ #t2.2 )
+            case insertatthwrap_0_11121
+            solve( State_11121( ~n ) ▶₀ #t2.2 )
+              case inh_0_1112
+              solve( !KU( ~n.1 ) @ #vk.2 )
+                case outh_0_111111111
+                solve( !KU( ~n ) @ #vk.2 )
+                  case outh_0_111111111
+                  SOLVED // trace found
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma dec_limits [reuse, sources]:
+  all-traces
+  "∀ k m #t1.
+    (DecUsing( k, m ) @ #t1) ⇒
+    (∃ h k2 #t2 #t3.
+      (((NewKey( h, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)) ∧ (#t2 < #t1)) ∧
+      (#t3 < #t1))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ k m #t1.
+  (DecUsing( k, m ) @ #t1)
+ ∧
+  ∀ h k2 #t2 #t3.
+   (NewKey( h, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
+  ⇒
+   ((¬(#t2 < #t1)) ∨ (¬(#t3 < #t1)))"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (∀ k m #t1.
+           (DecUsing( k, m ) @ #t1)
+          ⇒
+           ((last(#t1)) ∨
+            (∃ h k2 #t2 #t3.
+              (NewKey( h, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
+             ∧
+              (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #t1) ∧ (#t3 < #t1))))  ∥
+         (∃ x #NOW x.1.
+           (Restr_ifSencSuccck_0_1121111_1( x, x.1 ) @ #NOW)
+          ∧
+           (¬(last(#NOW))) ∧ (∀ m. (senc(m, x) = x.1) ⇒ ⊥))  ∥
+         (∃ x y #t3.
+           (IsIn( x, y ) @ #t3)
+          ∧
+           (¬(last(#t3))) ∧
+           (∀ #t2.
+             (Insert( x, y ) @ #t2)
+            ⇒
+             ((last(#t2)) ∨
+              (#t2 = #t3) ∨
+              (#t3 < #t2) ∨
+              (∃ #t1 yp.
+                (Insert( x, yp ) @ #t1)
+               ∧
+                (¬(last(#t1))) ∧
+                (((#t1 = #t2) ∨ (#t2 < #t1))) ∧
+                (¬(#t1 = #t2)) ∧
+                (((#t3 = #t1) ∨ (#t1 < #t3))))))) )
+    case case_1
+    solve( (last(#t1))  ∥
+           (∃ h k2 #t2 #t3.
+             (NewKey( h, k2 ) @ #t2) ∧ (!KU( k2 ) @ #t3)
+            ∧
+             (¬(last(#t3))) ∧ (¬(last(#t2))) ∧ (#t2 < #t1) ∧ (#t3 < #t1)) )
+      case case_1
+      solve( State_11211111( a, c, k, h ) ▶₀ #t1 )
+        case ifSencSuccck_0_1121111
+        solve( Insert( <'key', h>, k ) @ #t2 )
+          case insertkeyhk_0_1111111
+          solve( State_1111111( h, k ) ▶₀ #t2 )
+            case eventNewKeyhk_0_111111
+            solve( Insert( <'att', ~n.1>, 'dec' ) @ #t2.1 )
+              case insertatthdec_0_11111111
+              solve( State_11111111( ~n.1, k ) ▶₀ #t2.1 )
+                case insertkeyhk_0_1111111
+                solve( !KU( senc(m, ~n) ) @ #vk.2 )
+                  case c_senc
+                  by contradiction /* from formulas */
+                next
+                  case outsdecck_0_112111111
+                  by contradiction /* from formulas */
+                next
+                  case outsenckk_0_12111111_case_1
+                  solve( !KU( ~n.1 ) @ #vk.2 )
+                    case outh_0_111111111
+                    solve( Insert( <'key', h2>, m ) @ #t2.2 )
+                      case insertkeyhk_0_1111111
+                      solve( State_1111111( h2, m ) ▶₀ #t2.2 )
+                        case eventNewKeyhk_0_111111
+                        solve( Insert( <'key', h1>, ~n.1 ) @ #t2.3 )
+                          case insertkeyhk_0_1111111
+                          solve( State_1111111( h1, ~n.1 ) ▶₀ #t2.3 )
+                            case eventNewKeyhk_0_111111
+                            solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3) )
+                              case case_1
+                              by contradiction /* from formulas */
+                            next
+                              case case_2
+                              by solve( Insert( <'att', ~n.2>, 'wrap' ) @ #t2.1 )
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  next
+                    case outsdecck_0_112111111
+                    by contradiction /* from formulas */
+                  next
+                    case outsenckk_0_12111111
+                    solve( Insert( <'key', h2>, m ) @ #t2.2 )
+                      case insertkeyhk_0_1111111
+                      solve( State_1111111( h2, m ) ▶₀ #t2.2 )
+                        case eventNewKeyhk_0_111111
+                        solve( Insert( <'key', h1>, ~n.1 ) @ #t2.3 )
+                          case insertkeyhk_0_1111111
+                          solve( State_1111111( h1, ~n.1 ) ▶₀ #t2.3 )
+                            case eventNewKeyhk_0_111111
+                            solve( (#t2.1 < #t2.3)  ∥ (#t2.1 = #t2.3) )
+                              case case_1
+                              by contradiction /* from formulas */
+                            next
+                              case case_2
+                              by solve( Insert( <'att', ~n.2>, 'wrap' ) @ #t2.1 )
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                next
+                  case outsenckk_0_12111111_case_2
+                  solve( !KU( ~n.1 ) @ #vk.2 )
+                    case outh_0_111111111
+                    solve( Insert( <'key', h2>, k2 ) @ #t2.2 )
+                      case insertkeyhk_0_1111111
+                      solve( State_1111111( h2, k2 ) ▶₀ #t2.2 )
+                        case eventNewKeyhk_0_111111
+                        by contradiction /* impossible chain */
+                      qed
+                    qed
+                  next
+                    case outsdecck_0_112111111
+                    by contradiction /* from formulas */
+                  next
+                    case outsenckk_0_12111111
+                    solve( Insert( <'key', h2>, k2 ) @ #t2.2 )
+                      case insertkeyhk_0_1111111
+                      solve( State_1111111( h2, k2 ) ▶₀ #t2.2 )
+                        case eventNewKeyhk_0_111111
+                        by contradiction /* impossible chain */
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    solve( (#t1.1 = #t2)  ∥ (#t2 < #t1.1) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma cannot_obtain_key_ind [reuse, use_induction]:
+  all-traces "¬(∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j)"
+*/
+induction
+  case empty_trace
+  by contradiction /* from formulas */
+next
+  case non_empty_trace
+  solve( (∀ #i #j h k.
+           (NewKey( h, k ) @ #i) ∧ (!KU( k ) @ #j) ⇒ ((last(#j)) ∨ (last(#i))))  ∥
+         (∃ x #NOW x.1.
+           (Restr_ifSencSuccck_0_1121111_1( x, x.1 ) @ #NOW)
+          ∧
+           (¬(last(#NOW))) ∧ (∀ m. (senc(m, x) = x.1) ⇒ ⊥))  ∥
+         (∃ x y #t3.
+           (IsIn( x, y ) @ #t3)
+          ∧
+           (¬(last(#t3))) ∧
+           (∀ #t2.
+             (Insert( x, y ) @ #t2)
+            ⇒
+             ((last(#t2)) ∨
+              (#t2 = #t3) ∨
+              (#t3 < #t2) ∨
+              (∃ #t1 yp.
+                (Insert( x, yp ) @ #t1)
+               ∧
+                (¬(last(#t1))) ∧
+                (((#t1 = #t2) ∨ (#t2 < #t1))) ∧
+                (¬(#t1 = #t2)) ∧
+                (((#t3 = #t1) ∨ (#t1 < #t3))))))) )
+    case case_1
+    solve( (last(#j))  ∥ (last(#i)) )
+      case case_1
+      solve( State_111111( h, k ) ▶₀ #i )
+        case newk_0_11111
+        solve( !KU( ~n.1 ) @ #j )
+          case outsdecck_0_112111111
+          by contradiction /* from formulas */
+        next
+          case outsenckk_0_12111111
+          solve( Insert( <'key', h2>, k2 ) @ #t2 )
+            case insertkeyhk_0_1111111
+            solve( State_1111111( h2, k2 ) ▶₀ #t2 )
+              case eventNewKeyhk_0_111111
+              solve( (#vr.9, 0) ~~> (#j, 0) )
+                case Var_fresh_3_n
+                solve( Insert( <'key', h1>, k1 ) @ #t2.1 )
+                  case insertkeyhk_0_1111111
+                  solve( State_1111111( h1, k1 ) ▶₀ #t2.1 )
+                    case eventNewKeyhk_0_111111
+                    by contradiction /* from formulas */
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    next
+      case case_2
+      solve( State_111111( h, k ) ▶₀ #i )
+        case newk_0_11111
+        solve( !KU( ~n.1 ) @ #j )
+          case outsdecck_0_112111111
+          by contradiction /* from formulas */
+        next
+          case outsenckk_0_12111111
+          by contradiction /* node #j after last node #i */
+        qed
+      qed
+    qed
+  next
+    case case_2
+    by contradiction /* from formulas */
+  next
+    case case_3
+    solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
+      case case_1
+      by contradiction /* from formulas */
+    next
+      case case_2
+      by contradiction /* from formulas */
+    qed
+  qed
+qed
+
+lemma cannot_obtain_key:
+  all-traces "¬(∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (K( k ) @ #j))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i #j h k. (NewKey( h, k ) @ #i) ∧ (K( k ) @ #j)"
+*/
+simplify
+by contradiction /* from formulas */
+
+
+
+
+
+
+
+
+
+
+
+rule (modulo E) Init[color=#ffffff, process='!', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process='!', issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_[color=#ffffff, process='!', issapicrule,
+                     role='Process']:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process='|', issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#ffffff, process='|', issapicrule,
+                       role='Process']:
+   [ State_11( ) ] --> [ State_111( ), State_112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111[color=#ffffff, process='|', issapicrule,
+                        role='Process']:
+   [ State_111( ) ] --> [ State_1111( ), State_1112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newh_0_1111[color=#ffffff, process='new h.1;',
+                            issapicrule, role='Process']:
+   [ State_1111( ), Fr( h.1 ) ] --> [ State_11111( h.1 ) ]
+
+  /*
+  rule (modulo AC) newh_0_1111[color=#ffffff, process='new h.1;',
+                               issapicrule, role='Process']:
+     [ State_1111( ), Fr( h ) ] --> [ State_11111( h ) ]
+  */
+
+rule (modulo E) newk_0_11111[color=#ffffff, process='new k.1;',
+                             issapicrule, role='Process']:
+   [ State_11111( h.1 ), Fr( k.1 ) ] --> [ State_111111( h.1, k.1 ) ]
+
+  /*
+  rule (modulo AC) newk_0_11111[color=#ffffff, process='new k.1;',
+                                issapicrule, role='Process']:
+     [ State_11111( h ), Fr( k ) ] --> [ State_111111( h, k ) ]
+  */
+
+rule (modulo E) eventNewKeyhk_0_111111[color=#ffffff,
+                                       process='event NewKey( h.1, k.1 );', issapicrule, role='Process']:
+   [ State_111111( h.1, k.1 ) ]
+  --[ NewKey( h.1, k.1 ) ]->
+   [ State_1111111( h.1, k.1 ) ]
+
+  /*
+  rule (modulo AC) eventNewKeyhk_0_111111[color=#ffffff,
+                                          process='event NewKey( h.1, k.1 );', issapicrule, role='Process']:
+     [ State_111111( h, k ) ] --[ NewKey( h, k ) ]-> [ State_1111111( h, k ) ]
+  */
+
+rule (modulo E) insertkeyhk_0_1111111[color=#ffffff,
+                                      process='insert <'key', h.1>,k.1;', issapicrule, role='Process']:
+   [ State_1111111( h.1, k.1 ) ]
+  --[ Insert( <'key', h.1>, k.1 ) ]->
+   [ State_11111111( h.1, k.1 ) ]
+
+  /*
+  rule (modulo AC) insertkeyhk_0_1111111[color=#ffffff,
+                                         process='insert <'key', h.1>,k.1;', issapicrule, role='Process']:
+     [ State_1111111( h, k ) ]
+    --[ Insert( <'key', h>, k ) ]->
+     [ State_11111111( h, k ) ]
+  */
+
+rule (modulo E) insertatthdec_0_11111111[color=#ffffff,
+                                         process='insert <'att', h.1>,'dec';', issapicrule, role='Process']:
+   [ State_11111111( h.1, k.1 ) ]
+  --[ Insert( <'att', h.1>, 'dec' ) ]->
+   [ State_111111111( h.1, k.1 ) ]
+
+  /*
+  rule (modulo AC) insertatthdec_0_11111111[color=#ffffff,
+                                            process='insert <'att', h.1>,'dec';', issapicrule,
+                                            role='Process']:
+     [ State_11111111( h, k ) ]
+    --[ Insert( <'att', h>, 'dec' ) ]->
+     [ State_111111111( h, k ) ]
+  */
+
+rule (modulo E) outh_0_111111111[color=#ffffff, process='out(h.1);',
+                                 issapicrule, role='Process']:
+   [ State_111111111( h.1, k.1 ) ]
+  -->
+   [ State_1111111111( h.1, k.1 ), Out( h.1 ) ]
+
+  /*
+  rule (modulo AC) outh_0_111111111[color=#ffffff, process='out(h.1);',
+                                    issapicrule, role='Process']:
+     [ State_111111111( h, k ) ] --> [ State_1111111111( h, k ), Out( h ) ]
+  */
+
+rule (modulo E) p_0_1111111111[color=#ffffff, process='0', issapicrule,
+                               role='Process']:
+   [ State_1111111111( h.1, k.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111111[color=#ffffff, process='0', issapicrule,
+                                  role='Process']:
+     [ State_1111111111( h, k ) ] --> [ ]
+  */
+
+rule (modulo E) inh_0_1112[color=#ffffff, process='in(h.2);',
+                           issapicrule, role='Process']:
+   [ State_1112( ), In( h.2 ) ] --> [ State_11121( h.2 ) ]
+
+  /*
+  rule (modulo AC) inh_0_1112[color=#ffffff, process='in(h.2);',
+                              issapicrule, role='Process']:
+     [ State_1112( ), In( h ) ] --> [ State_11121( h ) ]
+  */
+
+rule (modulo E) insertatthwrap_0_11121[color=#ffffff,
+                                       process='insert <'att', h.2>,'wrap';', issapicrule, role='Process']:
+   [ State_11121( h.2 ) ]
+  --[ Insert( <'att', h.2>, 'wrap' ) ]->
+   [ State_111211( h.2 ) ]
+
+  /*
+  rule (modulo AC) insertatthwrap_0_11121[color=#ffffff,
+                                          process='insert <'att', h.2>,'wrap';', issapicrule, role='Process']:
+     [ State_11121( h ) ]
+    --[ Insert( <'att', h>, 'wrap' ) ]->
+     [ State_111211( h ) ]
+  */
+
+rule (modulo E) p_0_111211[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+   [ State_111211( h.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111211[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+     [ State_111211( h ) ] --> [ ]
+  */
+
+rule (modulo E) inhc_0_112[color=#ffffff, process='in(<h.3, c.1>);',
+                           issapicrule, role='Process']:
+   [ State_112( ), In( <h.3, c.1> ) ] --> [ State_1121( c.1, h.3 ) ]
+
+  /*
+  rule (modulo AC) inhc_0_112[color=#ffffff, process='in(<h.3, c.1>);',
+                              issapicrule, role='Process']:
+     [ State_112( ), In( <h, c> ) ] --> [ State_1121( c, h ) ]
+  */
+
+rule (modulo E) lookupatthasa_0_1121[color=#ffffff,
+                                     process='lookup <'att', h.3> as a.1', no_derivcheck, issapicrule,
+                                     role='Process']:
+   [ State_1121( c.1, h.3 ) ]
+  --[ IsIn( <'att', h.3>, a.1 ) ]->
+   [ State_11211( a.1, c.1, h.3 ) ]
+
+  /*
+  rule (modulo AC) lookupatthasa_0_1121[color=#ffffff,
+                                        process='lookup <'att', h.3> as a.1', no_derivcheck, issapicrule,
+                                        role='Process']:
+     [ State_1121( c, h ) ]
+    --[ IsIn( <'att', h>, a ) ]->
+     [ State_11211( a, c, h ) ]
+  */
+
+rule (modulo E) lookupatthasa_1_1121[color=#ffffff,
+                                     process='lookup <'att', h.3> as a.1', no_derivcheck, issapicrule,
+                                     role='Process']:
+   [ State_1121( c.1, h.3 ) ]
+  --[ IsNotSet( <'att', h.3> ) ]->
+   [ State_11212( c.1, h.3 ) ]
+
+  /*
+  rule (modulo AC) lookupatthasa_1_1121[color=#ffffff,
+                                        process='lookup <'att', h.3> as a.1', no_derivcheck, issapicrule,
+                                        role='Process']:
+     [ State_1121( c, h ) ]
+    --[ IsNotSet( <'att', h> ) ]->
+     [ State_11212( c, h ) ]
+  */
+
+rule (modulo E) ifadec_0_11211[color=#ffffff, process='if a.1='dec'',
+                               issapicrule, role='Process']:
+   [ State_11211( a.1, c.1, h.3 ) ]
+  --[ Pred_Eq( a.1, 'dec' ) ]->
+   [ State_112111( a.1, c.1, h.3 ) ]
+
+  /*
+  rule (modulo AC) ifadec_0_11211[color=#ffffff, process='if a.1='dec'',
+                                  issapicrule, role='Process']:
+     [ State_11211( a, c, h ) ]
+    --[ Pred_Eq( a, 'dec' ) ]->
+     [ State_112111( a, c, h ) ]
+  */
+
+rule (modulo E) ifadec_1_11211[color=#ffffff, process='if a.1='dec'',
+                               issapicrule, role='Process']:
+   [ State_11211( a.1, c.1, h.3 ) ]
+  --[ Pred_Not_Eq( a.1, 'dec' ) ]->
+   [ State_112112( a.1, c.1, h.3 ) ]
+
+  /*
+  rule (modulo AC) ifadec_1_11211[color=#ffffff, process='if a.1='dec'',
+                                  issapicrule, role='Process']:
+     [ State_11211( a, c, h ) ]
+    --[ Pred_Not_Eq( a, 'dec' ) ]->
+     [ State_112112( a, c, h ) ]
+  */
+
+rule (modulo E) lookupkeyhask_0_112111[color=#ffffff,
+                                       process='lookup <'key', h.3> as k.2', no_derivcheck, issapicrule,
+                                       role='Process']:
+   [ State_112111( a.1, c.1, h.3 ) ]
+  --[ IsIn( <'key', h.3>, k.2 ) ]->
+   [ State_1121111( a.1, c.1, k.2, h.3 ) ]
+
+  /*
+  rule (modulo AC) lookupkeyhask_0_112111[color=#ffffff,
+                                          process='lookup <'key', h.3> as k.2', no_derivcheck, issapicrule,
+                                          role='Process']:
+     [ State_112111( a, c, h ) ]
+    --[ IsIn( <'key', h>, k ) ]->
+     [ State_1121111( a, c, k, h ) ]
+  */
+
+rule (modulo E) lookupkeyhask_1_112111[color=#ffffff,
+                                       process='lookup <'key', h.3> as k.2', no_derivcheck, issapicrule,
+                                       role='Process']:
+   [ State_112111( a.1, c.1, h.3 ) ]
+  --[ IsNotSet( <'key', h.3> ) ]->
+   [ State_1121112( a.1, c.1, h.3 ) ]
+
+  /*
+  rule (modulo AC) lookupkeyhask_1_112111[color=#ffffff,
+                                          process='lookup <'key', h.3> as k.2', no_derivcheck, issapicrule,
+                                          role='Process']:
+     [ State_112111( a, c, h ) ]
+    --[ IsNotSet( <'key', h> ) ]->
+     [ State_1121112( a, c, h ) ]
+  */
+
+restriction Restr_ifSencSuccck_0_1121111_1:
+  "∀ x #NOW x.1.
+    (Restr_ifSencSuccck_0_1121111_1( x, x.1 ) @ #NOW) ⇒
+    (∃ m. senc(m, x) = x.1)"
+
+rule (modulo E) ifSencSuccck_0_1121111[color=#ffffff,
+                                       process='if SencSucc( c.1, k.2 )', issapicrule, role='Process']:
+   [ State_1121111( a.1, c.1, k.2, h.3 ) ]
+  --[ Restr_ifSencSuccck_0_1121111_1( k.2, c.1 ) ]->
+   [ State_11211111( a.1, c.1, k.2, h.3 ) ]
+
+  /*
+  rule (modulo AC) ifSencSuccck_0_1121111[color=#ffffff,
+                                          process='if SencSucc( c.1, k.2 )', issapicrule, role='Process']:
+     [ State_1121111( a, c, k, h ) ]
+    --[ Restr_ifSencSuccck_0_1121111_1( k, c ) ]->
+     [ State_11211111( a, c, k, h ) ]
+  */
+
+restriction Restr_ifSencSuccck_1_1121111_1:
+  "∀ x #NOW x.1.
+    (Restr_ifSencSuccck_1_1121111_1( x, x.1 ) @ #NOW) ⇒
+    (¬(∃ m. senc(m, x) = x.1))"
+  // safety formula
+
+rule (modulo E) ifSencSuccck_1_1121111[color=#ffffff,
+                                       process='if SencSucc( c.1, k.2 )', issapicrule, role='Process']:
+   [ State_1121111( a.1, c.1, k.2, h.3 ) ]
+  --[ Restr_ifSencSuccck_1_1121111_1( k.2, c.1 ) ]->
+   [ State_11211112( a.1, c.1, k.2, h.3 ) ]
+
+  /*
+  rule (modulo AC) ifSencSuccck_1_1121111[color=#ffffff,
+                                          process='if SencSucc( c.1, k.2 )', issapicrule, role='Process']:
+     [ State_1121111( a, c, k, h ) ]
+    --[ Restr_ifSencSuccck_1_1121111_1( k, c ) ]->
+     [ State_11211112( a, c, k, h ) ]
+  */
+
+rule (modulo E) eventDecUsingksdecck_0_11211111[color=#ffffff,
+                                                process='event DecUsing( k.2, sdec(c.1, k.2) );', issapicrule,
+                                                role='Process']:
+   [ State_11211111( a.1, c.1, k.2, h.3 ) ]
+  --[ DecUsing( k.2, sdec(c.1, k.2) ) ]->
+   [ State_112111111( a.1, c.1, k.2, h.3 ) ]
+
+  /*
+  rule (modulo AC) eventDecUsingksdecck_0_11211111[color=#ffffff,
+                                                   process='event DecUsing( k.2, sdec(c.1, k.2) );',
+                                                   issapicrule, role='Process']:
+     [ State_11211111( a, c, k, h ) ]
+    --[ DecUsing( k, z ) ]->
+     [ State_112111111( a, c, k, h ) ]
+    variants (modulo AC)
+    1. c     = c.9
+       k     = k.10
+       z     = sdec(c.9, k.10)
+    
+    2. c     = senc(x.9, x.10)
+       k     = x.10
+       z     = x.9
+  */
+
+rule (modulo E) outsdecck_0_112111111[color=#ffffff,
+                                      process='out(sdec(c.1, k.2));', issapicrule, role='Process']:
+   [ State_112111111( a.1, c.1, k.2, h.3 ) ]
+  -->
+   [ State_1121111111( a.1, c.1, k.2, h.3 ), Out( sdec(c.1, k.2) ) ]
+
+  /*
+  rule (modulo AC) outsdecck_0_112111111[color=#ffffff,
+                                         process='out(sdec(c.1, k.2));', issapicrule, role='Process']:
+     [ State_112111111( a, c, k, h ) ]
+    -->
+     [ State_1121111111( a, c, k, h ), Out( z ) ]
+    variants (modulo AC)
+    1. c     = c.9
+       k     = k.10
+       z     = sdec(c.9, k.10)
+    
+    2. c     = senc(x.9, x.10)
+       k     = x.10
+       z     = x.9
+  */
+
+rule (modulo E) p_0_1121111111[color=#ffffff, process='0', issapicrule,
+                               role='Process']:
+   [ State_1121111111( a.1, c.1, k.2, h.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1121111111[color=#ffffff, process='0', issapicrule,
+                                  role='Process']:
+     [ State_1121111111( a, c, k, h ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_11211112[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+   [ State_11211112( a.1, c.1, k.2, h.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11211112[color=#ffffff, process='0', issapicrule,
+                                role='Process']:
+     [ State_11211112( a, c, k, h ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1121112[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+   [ State_1121112( a.1, c.1, h.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1121112[color=#ffffff, process='0', issapicrule,
+                               role='Process']:
+     [ State_1121112( a, c, h ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_112112[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+   [ State_112112( a.1, c.1, h.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112112[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+     [ State_112112( a, c, h ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_11212[color=#ffffff, process='0', issapicrule,
+                          role='Process']:
+   [ State_11212( c.1, h.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11212[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+     [ State_11212( c, h ) ] --> [ ]
+  */
+
+rule (modulo E) inhh_0_12[color=#ffffff, process='in(<h1.1, h2.1>);',
+                          issapicrule, role='Process']:
+   [ State_12( ), In( <h1.1, h2.1> ) ] --> [ State_121( h1.1, h2.1 ) ]
+
+  /*
+  rule (modulo AC) inhh_0_12[color=#ffffff, process='in(<h1.1, h2.1>);',
+                             issapicrule, role='Process']:
+     [ State_12( ), In( <h1, h2> ) ] --> [ State_121( h1, h2 ) ]
+  */
+
+rule (modulo E) lookupatthasa_0_121[color=#ffffff,
+                                    process='lookup <'att', h1.1> as a1.1', no_derivcheck, issapicrule,
+                                    role='Process']:
+   [ State_121( h1.1, h2.1 ) ]
+  --[ IsIn( <'att', h1.1>, a1.1 ) ]->
+   [ State_1211( a1.1, h1.1, h2.1 ) ]
+
+  /*
+  rule (modulo AC) lookupatthasa_0_121[color=#ffffff,
+                                       process='lookup <'att', h1.1> as a1.1', no_derivcheck, issapicrule,
+                                       role='Process']:
+     [ State_121( h1, h2 ) ]
+    --[ IsIn( <'att', h1>, a1 ) ]->
+     [ State_1211( a1, h1, h2 ) ]
+  */
+
+rule (modulo E) lookupatthasa_1_121[color=#ffffff,
+                                    process='lookup <'att', h1.1> as a1.1', no_derivcheck, issapicrule,
+                                    role='Process']:
+   [ State_121( h1.1, h2.1 ) ]
+  --[ IsNotSet( <'att', h1.1> ) ]->
+   [ State_1212( h1.1, h2.1 ) ]
+
+  /*
+  rule (modulo AC) lookupatthasa_1_121[color=#ffffff,
+                                       process='lookup <'att', h1.1> as a1.1', no_derivcheck, issapicrule,
+                                       role='Process']:
+     [ State_121( h1, h2 ) ]
+    --[ IsNotSet( <'att', h1> ) ]->
+     [ State_1212( h1, h2 ) ]
+  */
+
+rule (modulo E) ifawrap_0_1211[color=#ffffff, process='if a1.1='wrap'',
+                               issapicrule, role='Process']:
+   [ State_1211( a1.1, h1.1, h2.1 ) ]
+  --[ Pred_Eq( a1.1, 'wrap' ) ]->
+   [ State_12111( a1.1, h1.1, h2.1 ) ]
+
+  /*
+  rule (modulo AC) ifawrap_0_1211[color=#ffffff, process='if a1.1='wrap'',
+                                  issapicrule, role='Process']:
+     [ State_1211( a1, h1, h2 ) ]
+    --[ Pred_Eq( a1, 'wrap' ) ]->
+     [ State_12111( a1, h1, h2 ) ]
+  */
+
+rule (modulo E) ifawrap_1_1211[color=#ffffff, process='if a1.1='wrap'',
+                               issapicrule, role='Process']:
+   [ State_1211( a1.1, h1.1, h2.1 ) ]
+  --[ Pred_Not_Eq( a1.1, 'wrap' ) ]->
+   [ State_12112( a1.1, h1.1, h2.1 ) ]
+
+  /*
+  rule (modulo AC) ifawrap_1_1211[color=#ffffff, process='if a1.1='wrap'',
+                                  issapicrule, role='Process']:
+     [ State_1211( a1, h1, h2 ) ]
+    --[ Pred_Not_Eq( a1, 'wrap' ) ]->
+     [ State_12112( a1, h1, h2 ) ]
+  */
+
+rule (modulo E) lookupkeyhask_0_12111[color=#ffffff,
+                                      process='lookup <'key', h1.1> as k1.1', no_derivcheck, issapicrule,
+                                      role='Process']:
+   [ State_12111( a1.1, h1.1, h2.1 ) ]
+  --[ IsIn( <'key', h1.1>, k1.1 ) ]->
+   [ State_121111( a1.1, h1.1, h2.1, k1.1 ) ]
+
+  /*
+  rule (modulo AC) lookupkeyhask_0_12111[color=#ffffff,
+                                         process='lookup <'key', h1.1> as k1.1', no_derivcheck, issapicrule,
+                                         role='Process']:
+     [ State_12111( a1, h1, h2 ) ]
+    --[ IsIn( <'key', h1>, k1 ) ]->
+     [ State_121111( a1, h1, h2, k1 ) ]
+  */
+
+rule (modulo E) lookupkeyhask_1_12111[color=#ffffff,
+                                      process='lookup <'key', h1.1> as k1.1', no_derivcheck, issapicrule,
+                                      role='Process']:
+   [ State_12111( a1.1, h1.1, h2.1 ) ]
+  --[ IsNotSet( <'key', h1.1> ) ]->
+   [ State_121112( a1.1, h1.1, h2.1 ) ]
+
+  /*
+  rule (modulo AC) lookupkeyhask_1_12111[color=#ffffff,
+                                         process='lookup <'key', h1.1> as k1.1', no_derivcheck, issapicrule,
+                                         role='Process']:
+     [ State_12111( a1, h1, h2 ) ]
+    --[ IsNotSet( <'key', h1> ) ]->
+     [ State_121112( a1, h1, h2 ) ]
+  */
+
+rule (modulo E) lookupkeyhask_0_121111[color=#ffffff,
+                                       process='lookup <'key', h2.1> as k2.1', no_derivcheck, issapicrule,
+                                       role='Process']:
+   [ State_121111( a1.1, h1.1, h2.1, k1.1 ) ]
+  --[ IsIn( <'key', h2.1>, k2.1 ) ]->
+   [ State_1211111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ]
+
+  /*
+  rule (modulo AC) lookupkeyhask_0_121111[color=#ffffff,
+                                          process='lookup <'key', h2.1> as k2.1', no_derivcheck, issapicrule,
+                                          role='Process']:
+     [ State_121111( a1, h1, h2, k1 ) ]
+    --[ IsIn( <'key', h2>, k2 ) ]->
+     [ State_1211111( a1, h1, h2, k1, k2 ) ]
+  */
+
+rule (modulo E) lookupkeyhask_1_121111[color=#ffffff,
+                                       process='lookup <'key', h2.1> as k2.1', no_derivcheck, issapicrule,
+                                       role='Process']:
+   [ State_121111( a1.1, h1.1, h2.1, k1.1 ) ]
+  --[ IsNotSet( <'key', h2.1> ) ]->
+   [ State_1211112( a1.1, h1.1, h2.1, k1.1 ) ]
+
+  /*
+  rule (modulo AC) lookupkeyhask_1_121111[color=#ffffff,
+                                          process='lookup <'key', h2.1> as k2.1', no_derivcheck, issapicrule,
+                                          role='Process']:
+     [ State_121111( a1, h1, h2, k1 ) ]
+    --[ IsNotSet( <'key', h2> ) ]->
+     [ State_1211112( a1, h1, h2, k1 ) ]
+  */
+
+rule (modulo E) eventWrapkk_0_1211111[color=#ffffff,
+                                      process='event Wrap( k1.1, k2.1 );', issapicrule, role='Process']:
+   [ State_1211111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ]
+  --[ Wrap( k1.1, k2.1 ) ]->
+   [ State_12111111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ]
+
+  /*
+  rule (modulo AC) eventWrapkk_0_1211111[color=#ffffff,
+                                         process='event Wrap( k1.1, k2.1 );', issapicrule, role='Process']:
+     [ State_1211111( a1, h1, h2, k1, k2 ) ]
+    --[ Wrap( k1, k2 ) ]->
+     [ State_12111111( a1, h1, h2, k1, k2 ) ]
+  */
+
+rule (modulo E) outsenckk_0_12111111[color=#ffffff,
+                                     process='out(senc(k2.1, k1.1));', issapicrule, role='Process']:
+   [ State_12111111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ]
+  -->
+   [
+   State_121111111( a1.1, h1.1, h2.1, k1.1, k2.1 ), Out( senc(k2.1, k1.1) )
+   ]
+
+  /*
+  rule (modulo AC) outsenckk_0_12111111[color=#ffffff,
+                                        process='out(senc(k2.1, k1.1));', issapicrule, role='Process']:
+     [ State_12111111( a1, h1, h2, k1, k2 ) ]
+    -->
+     [ State_121111111( a1, h1, h2, k1, k2 ), Out( senc(k2, k1) ) ]
+  */
+
+rule (modulo E) p_0_121111111[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+   [ State_121111111( a1.1, h1.1, h2.1, k1.1, k2.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121111111[color=#ffffff, process='0', issapicrule,
+                                 role='Process']:
+     [ State_121111111( a1, h1, h2, k1, k2 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1211112[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+   [ State_1211112( a1.1, h1.1, h2.1, k1.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1211112[color=#ffffff, process='0', issapicrule,
+                               role='Process']:
+     [ State_1211112( a1, h1, h2, k1 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_121112[color=#ffffff, process='0', issapicrule,
+                           role='Process']:
+   [ State_121112( a1.1, h1.1, h2.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_121112[color=#ffffff, process='0', issapicrule,
+                              role='Process']:
+     [ State_121112( a1, h1, h2 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12112[color=#ffffff, process='0', issapicrule,
+                          role='Process']:
+   [ State_12112( a1.1, h1.1, h2.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12112[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+     [ State_12112( a1, h1, h2 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1212[color=#ffffff, process='0', issapicrule,
+                         role='Process']:
+   [ State_1212( h1.1, h2.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1212[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+     [ State_1212( h1, h2 ) ] --> [ ]
+  */
+
+restriction set_in:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+restriction set_notin:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  // safety formula
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/basic/running-example.spthy
+
+  output:          examples/sapic/fast/basic/running-example.spthy.tmp
+  processing time: 2.68s
+  
+  can_create_key (exists-trace): verified (3 steps)
+  can_obtain_wrapping (exists-trace): verified (11 steps)
+  dec_limits (all-traces): verified (41 steps)
+  cannot_obtain_key_ind (all-traces): verified (21 steps)
+  cannot_obtain_key (all-traces): verified (2 steps)
+
+==============================================================================
+*/

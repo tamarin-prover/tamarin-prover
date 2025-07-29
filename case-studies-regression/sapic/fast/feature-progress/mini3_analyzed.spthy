@@ -45,9 +45,9 @@ guarded formula characterizing all satisfying traces:
 */
 simplify
 solve( State_211( ~prog_211, m ) ▶₀ #t )
-  case inrm_0_21
+  case p_1_2
   solve( State_211( ~prog_211, m.1 ) ▶₀ #t.2 )
-    case inrm_0_21
+    case p_1_2
     SOLVED // trace found
   qed
 qed
@@ -89,13 +89,13 @@ simplify
 solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
   case case_1
   solve( State_211( ~prog_211, m ) ▶₀ #t1 )
-    case inrm_0_21
+    case p_1_2
     solve( State_211( ~prog_211.1, m.1 ) ▶₀ #t2 )
-      case inrm_0_21
+      case p_1_2
       solve( State_211( ~prog_211, m.2 ) ▶₀ #t.1 )
-        case inrm_0_21
+        case p_1_2
         solve( State_211( ~prog_211.1, m.2 ) ▶₀ #t.1 )
-          case inrm_0_21
+          case p_1_2
           SOLVED // trace found
         qed
       qed
@@ -119,96 +119,76 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule,
+                              role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="+", issapicrule]:
+rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
+                     role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
+rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
+   [ State_( ) ] --> [ !Semistate_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_2[color=#ffffff, process="in('r',m.2);", issapicrule,
+                      role='Process']:
+   [ !Semistate_21( ), Fr( ~prog_211 ), In( m.2 ), MID_Receiver( ~mid_21 ) ]
+  --[ ProgressFrom_211( ~prog_211 ), Receive( ~mid_21, m.2 ) ]->
+   [ State_211( ~prog_211, m.2 ) ]
+
+  /*
+  rule (modulo AC) p_1_2[color=#ffffff, process="in('r',m.2);",
+                         issapicrule, role='Process']:
+     [ !Semistate_21( ), Fr( ~prog_211 ), In( m ), MID_Receiver( ~mid_21 ) ]
+    --[ ProgressFrom_211( ~prog_211 ), Receive( ~mid_21, m ) ]->
+     [ State_211( ~prog_211, m ) ]
+  */
+
+rule (modulo E) eventB_0_211[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
+   [ State_211( ~prog_211, m.2 ) ]
+  --[ ProgressTo_2111( ~prog_211 ), B( ) ]->
+   [ ]
+
+  /*
+  rule (modulo AC) eventB_0_211[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+     [ State_211( ~prog_211, m ) ]
+    --[ ProgressTo_2111( ~prog_211 ), B( ) ]->
+     [ ]
+  */
+
 rule (modulo E) inrm_0_1[color=#ffffff, process="in('r',m.1);",
-                         issapicrule]:
+                         issapicrule, role='Process']:
    [ Fr( ~prog_11 ), State_( ), In( m.1 ), MID_Receiver( ~mid_1 ) ]
   --[ ProgressFrom_11( ~prog_11 ), Receive( ~mid_1, m.1 ) ]->
    [ State_11( ~prog_11, m.1 ) ]
 
   /*
   rule (modulo AC) inrm_0_1[color=#ffffff, process="in('r',m.1);",
-                            issapicrule]:
+                            issapicrule, role='Process']:
      [ Fr( ~prog_11 ), State_( ), In( m ), MID_Receiver( ~mid_1 ) ]
     --[ ProgressFrom_11( ~prog_11 ), Receive( ~mid_1, m ) ]->
      [ State_11( ~prog_11, m ) ]
   */
 
-rule (modulo E) eventA_0_11[color=#ffffff, process="event A( );",
-                            issapicrule]:
+rule (modulo E) eventA_0_11[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
    [ State_11( ~prog_11, m.1 ) ]
   --[ ProgressTo_111( ~prog_11 ), A( ) ]->
-   [ State_111( ~prog_11, m.1 ) ]
+   [ ]
 
   /*
-  rule (modulo AC) eventA_0_11[color=#ffffff, process="event A( );",
-                               issapicrule]:
-     [ State_11( ~prog_11, m ) ]
-    --[ ProgressTo_111( ~prog_11 ), A( ) ]->
-     [ State_111( ~prog_11, m ) ]
-  */
-
-rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule]:
-   [ State_111( ~prog_11, m.1 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule]:
-     [ State_111( ~prog_11, m ) ] --> [ ]
-  */
-
-rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule]:
-   [ State_( ) ] --> [ !Semistate_21( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_1_2[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_21( ) ] --> [ State_21( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) inrm_0_21[color=#ffffff, process="in('r',m.2);",
-                          issapicrule]:
-   [ Fr( ~prog_211 ), State_21( ), In( m.2 ), MID_Receiver( ~mid_21 ) ]
-  --[ ProgressFrom_211( ~prog_211 ), Receive( ~mid_21, m.2 ) ]->
-   [ State_211( ~prog_211, m.2 ) ]
-
-  /*
-  rule (modulo AC) inrm_0_21[color=#ffffff, process="in('r',m.2);",
-                             issapicrule]:
-     [ Fr( ~prog_211 ), State_21( ), In( m ), MID_Receiver( ~mid_21 ) ]
-    --[ ProgressFrom_211( ~prog_211 ), Receive( ~mid_21, m ) ]->
-     [ State_211( ~prog_211, m ) ]
-  */
-
-rule (modulo E) eventB_0_211[color=#ffffff, process="event B( );",
-                             issapicrule]:
-   [ State_211( ~prog_211, m.2 ) ]
-  --[ ProgressTo_2111( ~prog_211 ), B( ) ]->
-   [ State_2111( ~prog_211, m.2 ) ]
-
-  /*
-  rule (modulo AC) eventB_0_211[color=#ffffff, process="event B( );",
-                                issapicrule]:
-     [ State_211( ~prog_211, m ) ]
-    --[ ProgressTo_2111( ~prog_211 ), B( ) ]->
-     [ State_2111( ~prog_211, m ) ]
-  */
-
-rule (modulo E) p_0_2111[color=#ffffff, process="0", issapicrule]:
-   [ State_2111( ~prog_211, m.2 ) ] --> [ ]
-
-  /*
-  rule (modulo AC) p_0_2111[color=#ffffff, process="0", issapicrule]:
-     [ State_2111( ~prog_211, m ) ] --> [ ]
+  rule (modulo AC) eventA_0_11[color=#ffffff, process="0", issapicrule,
+                               role='Process']:
+     [ State_11( ~prog_11, m ) ] --[ ProgressTo_111( ~prog_11 ), A( ) ]-> [ ]
   */
 
 restriction single_session:
@@ -228,42 +208,14 @@ restriction Progress_211_to_2111:
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule MessageIDRule: 
-Failed to derive Variable(s): ~mid_
-
-Rule inrm_0_1: 
-Failed to derive Variable(s): ~mid_1, ~prog_11, m.1
-
-Rule eventA_0_11: 
-Failed to derive Variable(s): ~prog_11, m.1
-
-Rule p_0_111: 
-Failed to derive Variable(s): ~prog_11, m.1
-
-Rule inrm_0_21: 
-Failed to derive Variable(s): ~mid_21, ~prog_211, m.2
-
-Rule eventB_0_211: 
-Failed to derive Variable(s): ~prog_211, m.2
-
-Rule p_0_2111: 
-Failed to derive Variable(s): ~prog_211, m.2
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -275,10 +227,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini3.spthy
 
   output:          examples/sapic/fast/feature-progress/mini3.spthy.tmp
-  processing time: 0.11s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.12s
   
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)

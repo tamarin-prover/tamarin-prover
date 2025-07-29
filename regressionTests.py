@@ -481,7 +481,7 @@ Parser test results:
 
 		## make case-studies ##
 		if not settings.no_make:
-			cases = "case-studies" if settings.slow else "fast-case-studies FAST=y"
+			cases = "case-studies" if settings.slow else "fast-case-studies sapic-case-studies-fast FAST=y"
 			command = f"make -j {settings.jobs} {cases} 2>/dev/null"
 			logging.warning(f"running '{command}' ...")
 			output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT).decode("utf-8")

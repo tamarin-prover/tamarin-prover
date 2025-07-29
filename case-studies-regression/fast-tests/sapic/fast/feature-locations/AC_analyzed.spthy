@@ -1,0 +1,900 @@
+theory AttestedComputation begin
+
+// Function signature and definition of the equational theory E
+
+functions: check_rep/2[destructor], fst/1, get_rep/1[destructor], list/2,
+           pair/2, prog/3, rep/2[private,constructor], report/1, snd/1
+equations:
+    check_rep(rep(x.1, x.2), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    get_rep(rep(x.1, x.2)) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+heuristic: S
+
+/* looping facts with injective instances: L_CellLocked/2, L_PureState/2
+*/
+
+
+
+predicate: Report( x, y )<=>¬(y = 'loc')
+
+
+
+
+
+
+
+lemma can_run_v:
+  exists-trace "∃ #i m. Local( m, 'loc' ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ #i m. (Local( m, 'loc' ) @ #i)"
+*/
+simplify
+by solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
+          ) ▶₀ #i )
+
+lemma simp [reuse]:
+  all-traces
+  "∀ #i m. (!KU( rep(m, 'loc') ) @ #i) ⇒ (∃ #j. Remote( m, 'loc' ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i m.
+  (!KU( rep(m, 'loc') ) @ #i) ∧ ∀ #j. (Remote( m, 'loc' ) @ #j) ⇒ ⊥"
+*/
+simplify
+solve( !KU( rep(m, 'loc') ) @ #i )
+  case ReportRule
+  by contradiction /* from formulas */
+qed
+
+lemma attested_comput:
+  all-traces
+  "∀ #i m. (Local( m, 'loc' ) @ #i) ⇒ (∃ #j. Remote( m, 'loc' ) @ #j)"
+/*
+guarded formula characterizing all counter-examples:
+"∃ #i m. (Local( m, 'loc' ) @ #i) ∧ ∀ #j. (Remote( m, 'loc' ) @ #j) ⇒ ⊥"
+*/
+simplify
+by solve( State_1211111111111( StateChannel, lock, state2, i.1, lio, o, r
+          ) ▶₀ #i )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+restriction Restr_ReportRule_1:
+  "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
+  // safety formula
+
+rule (modulo E) ReportRule[color=#ffffff, process='!', issapicrule,
+                           role='Process']:
+   [ In( <x, loc> ) ]
+  --[ Restr_ReportRule_1( loc ) ]->
+   [ Out( rep(x, loc) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Init[color=#ffffff, process='!', issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process='!', issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ !Semistate_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_[color=#ffffff, process='!', issapicrule,
+                     role='Process']:
+   [ !Semistate_1( ) ] --> [ State_1( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1[color=#ffffff, process='|', issapicrule,
+                      role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstate_0_11[color=#ffffff, process='new state.1;',
+                              issapicrule, role='Process']:
+   [ State_11( ), Fr( state.1 ) ] --> [ State_111( state.1 ) ]
+
+  /*
+  rule (modulo AC) newstate_0_11[color=#ffffff, process='new state.1;',
+                                 issapicrule, role='Process']:
+     [ State_11( ), Fr( state ) ] --> [ State_111( state ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_111[color=#ffffff,
+                                             process='new StateChannel:channel;', issapicrule,
+                                             role='Process']:
+   [ State_111( state.1 ), Fr( StateChannel ) ]
+  -->
+   [ State_1111( StateChannel, state.1 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_111[color=#ffffff,
+                                                process='new StateChannel:channel;', issapicrule,
+                                                role='Process']:
+     [ State_111( state ), Fr( StateChannel ) ]
+    -->
+     [ State_1111( StateChannel, state ) ]
+  */
+
+rule (modulo E) insertstateinit_0_1111[color=#ffffff,
+                                       process='insert state.1,'init';', issapicrule, role='Process']:
+   [ State_1111( StateChannel, state.1 ) ]
+  -->
+   [ State_11111( StateChannel, state.1 ), L_PureState( state.1, 'init' ) ]
+
+  /*
+  rule (modulo AC) insertstateinit_0_1111[color=#ffffff,
+                                          process='insert state.1,'init';', issapicrule, role='Process']:
+     [ State_1111( StateChannel, state ) ]
+    -->
+     [ State_11111( StateChannel, state ), L_PureState( state, 'init' ) ]
+  */
+
+rule (modulo E) p_0_11111[color=#ffffff, process='!', issapicrule,
+                          role='Process']:
+   [ State_11111( StateChannel, state.1 ) ]
+  -->
+   [ !Semistate_111111( StateChannel, state.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_11111[color=#ffffff, process='!', issapicrule,
+                             role='Process']:
+     [ State_11111( StateChannel, state ) ]
+    -->
+     [ !Semistate_111111( StateChannel, state ) ]
+  */
+
+rule (modulo E) p_1_11111[color=#ffffff, process='!', issapicrule,
+                          role='Process']:
+   [ !Semistate_111111( StateChannel, state.1 ) ]
+  -->
+   [ State_111111( StateChannel, state.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_11111[color=#ffffff, process='!', issapicrule,
+                             role='Process']:
+     [ !Semistate_111111( StateChannel, state ) ]
+    -->
+     [ State_111111( StateChannel, state ) ]
+  */
+
+rule (modulo E) r_0_111111[color=#ffffff, process='r()', issapicrule,
+                           role='Process']:
+   [ State_111111( StateChannel, state.1 ) ]
+  -->
+   [
+   State_1111111( StateChannel, state.1 ),
+   State_1111112( StateChannel, state.1 )
+   ]
+
+  /*
+  rule (modulo AC) r_0_111111[color=#ffffff, process='r()', issapicrule,
+                              role='Process']:
+     [ State_111111( StateChannel, state ) ]
+    -->
+     [
+     State_1111111( StateChannel, state ),
+     State_1111112( StateChannel, state )
+     ]
+  */
+
+rule (modulo E) lockstate_0_1111111[color=#405280,
+                                    process='lock state.1;', issapicrule, role='r']:
+   [ State_1111111( StateChannel, state.1 ) ]
+  -->
+   [ State_11111111( StateChannel, state.1 ) ]
+
+  /*
+  rule (modulo AC) lockstate_0_1111111[color=#405280,
+                                       process='lock state.1;', issapicrule, role='r']:
+     [ State_1111111( StateChannel, state ) ]
+    -->
+     [ State_11111111( StateChannel, state ) ]
+  */
+
+rule (modulo E) lookupstateaslio_0_11111111[color=#405280,
+                                            process='lookup state.1 as lio.1', no_derivcheck, issapicrule,
+                                            role='r']:
+   [
+   State_11111111( StateChannel, state.1 ), L_PureState( state.1, lio.1 ),
+   Fr( lock )
+   ]
+  -->
+   [
+   State_111111111( StateChannel, lock, lio.1, state.1 ),
+   L_CellLocked( state.1, lock )
+   ]
+
+  /*
+  rule (modulo AC) lookupstateaslio_0_11111111[color=#405280,
+                                               process='lookup state.1 as lio.1', no_derivcheck, issapicrule,
+                                               role='r']:
+     [
+     State_11111111( StateChannel, state ), L_PureState( state, lio ),
+     Fr( lock )
+     ]
+    -->
+     [
+     State_111111111( StateChannel, lock, lio, state ),
+     L_CellLocked( state, lock )
+     ]
+  */
+
+rule (modulo E) eventReadlio_0_111111111[color=#405280,
+                                         process='event Read( lio.1 );', issapicrule, role='r']:
+   [ State_111111111( StateChannel, lock, lio.1, state.1 ) ]
+  --[ Read( lio.1 ) ]->
+   [ State_1111111111( StateChannel, lock, lio.1, state.1 ) ]
+
+  // loop breaker: [0]
+  /*
+  rule (modulo AC) eventReadlio_0_111111111[color=#405280,
+                                            process='event Read( lio.1 );', issapicrule, role='r']:
+     [ State_111111111( StateChannel, lock, lio, state ) ]
+    --[ Read( lio ) ]->
+     [ State_1111111111( StateChannel, lock, lio, state ) ]
+    // loop breaker: [0]
+  */
+
+rule (modulo E) ini_0_1111111111[color=#405280, process='in(i.1);',
+                                 issapicrule, role='r']:
+   [ State_1111111111( StateChannel, lock, lio.1, state.1 ), In( i.1 ) ]
+  -->
+   [ State_11111111111( StateChannel, lock, i.1, lio.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) ini_0_1111111111[color=#405280, process='in(i.1);',
+                                    issapicrule, role='r']:
+     [ State_1111111111( StateChannel, lock, lio, state ), In( i ) ]
+    -->
+     [ State_11111111111( StateChannel, lock, i, lio, state ) ]
+  */
+
+rule (modulo E) newr_0_11111111111[color=#405280, process='new r.1;',
+                                   issapicrule, role='r']:
+   [ State_11111111111( StateChannel, lock, i.1, lio.1, state.1 ), Fr( r.1 )
+   ]
+  -->
+   [ State_111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) newr_0_11111111111[color=#405280, process='new r.1;',
+                                      issapicrule, role='r']:
+     [ State_11111111111( StateChannel, lock, i, lio, state ), Fr( r ) ]
+    -->
+     [ State_111111111111( StateChannel, lock, i, lio, r, state ) ]
+  */
+
+rule (modulo E) eventRemoteprogrilioilioloc_0_111111111111[color=#405280,
+                                                           process='event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );',
+                                                           issapicrule, role='r']:
+   [ State_111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ) ]
+  --[ Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' ) ]->
+   [ State_1111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ) ]
+
+  /*
+  rule (modulo AC) eventRemoteprogrilioilioloc_0_111111111111[color=#405280,
+                                                              process='event Remote( <prog(r.1, i.1, lio.1), i.1, lio.1>, 'loc' );',
+                                                              issapicrule, role='r']:
+     [ State_111111111111( StateChannel, lock, i, lio, r, state ) ]
+    --[ Remote( <prog(r, i, lio), i, lio>, 'loc' ) ]->
+     [ State_1111111111111( StateChannel, lock, i, lio, r, state ) ]
+  */
+
+rule (modulo E) outprogrilioreportprogrilioilio_0_1111111111111[color=#405280,
+                                                                process='out(<prog(r.1, i.1, lio.1), report(<prog(r.1, i.1, lio.1), i.1, lio.1>)
+>);',
+                                                                issapicrule, role='r']:
+   [ State_1111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ) ]
+  -->
+   [
+   State_11111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ),
+   Out( <prog(r.1, i.1, lio.1), report(<prog(r.1, i.1, lio.1), i.1, lio.1>)>
+   )
+   ]
+
+  /*
+  rule (modulo AC) outprogrilioreportprogrilioilio_0_1111111111111[color=#405280,
+                                                                   process='out(<prog(r.1, i.1, lio.1), report(<prog(r.1, i.1, lio.1), i.1, lio.1>)
+>);',
+                                                                   issapicrule, role='r']:
+     [ State_1111111111111( StateChannel, lock, i, lio, r, state ) ]
+    -->
+     [
+     State_11111111111111( StateChannel, lock, i, lio, r, state ),
+     Out( <prog(r, i, lio), report(<prog(r, i, lio), i, lio>)> )
+     ]
+  */
+
+rule (modulo E) insertstatelistprogriliolistilio_0_11111111111111[color=#405280,
+                                                                  process='insert state.1,list(prog(r.1, i.1, lio.1), list(i.1, lio.1));',
+                                                                  issapicrule, role='r']:
+   [
+   State_11111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ),
+   L_CellLocked( state.1, lock )
+   ]
+  -->
+   [
+   State_111111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ),
+   L_PureState( state.1, list(prog(r.1, i.1, lio.1), list(i.1, lio.1)) )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) insertstatelistprogriliolistilio_0_11111111111111[color=#405280,
+                                                                     process='insert state.1,list(prog(r.1, i.1, lio.1), list(i.1, lio.1));',
+                                                                     issapicrule, role='r']:
+     [
+     State_11111111111111( StateChannel, lock, i, lio, r, state ),
+     L_CellLocked( state, lock )
+     ]
+    -->
+     [
+     State_111111111111111( StateChannel, lock, i, lio, r, state ),
+     L_PureState( state, list(prog(r, i, lio), list(i, lio)) )
+     ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) unlockstate_0_111111111111111[color=#405280,
+                                              process='unlock state.1;', issapicrule, role='r']:
+   [ State_111111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 ) ]
+  -->
+   [ State_1111111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 )
+   ]
+
+  /*
+  rule (modulo AC) unlockstate_0_111111111111111[color=#405280,
+                                                 process='unlock state.1;', issapicrule, role='r']:
+     [ State_111111111111111( StateChannel, lock, i, lio, r, state ) ]
+    -->
+     [ State_1111111111111111( StateChannel, lock, i, lio, r, state ) ]
+  */
+
+rule (modulo E) p_0_1111111111111111[color=#405280, process='0',
+                                     issapicrule, role='r']:
+   [ State_1111111111111111( StateChannel, lock, i.1, lio.1, r.1, state.1 )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_1111111111111111[color=#405280, process='0',
+                                        issapicrule, role='r']:
+     [ State_1111111111111111( StateChannel, lock, i, lio, r, state ) ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) p_0_111111112[color=#405280, process='0', issapicrule,
+                              role='r']:
+   [ State_111111112( StateChannel, state.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111112[color=#405280, process='0', issapicrule,
+                                 role='r']:
+     [ State_111111112( StateChannel, state ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1111112[color=#ffffff, process='0', issapicrule,
+                            role='Process']:
+   [ State_1111112( StateChannel, state.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111112[color=#ffffff, process='0', issapicrule,
+                               role='Process']:
+     [ State_1111112( StateChannel, state ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process='!', issapicrule,
+                       role='Process']:
+   [ State_12( ) ] --> [ !Semistate_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_12[color=#ffffff, process='!', issapicrule,
+                       role='Process']:
+   [ !Semistate_121( ) ] --> [ State_121( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) newstate_0_121[color=#ffffff, process='new state2.1;',
+                               issapicrule, role='Process']:
+   [ State_121( ), Fr( state2.1 ) ] --> [ State_1211( state2.1 ) ]
+
+  /*
+  rule (modulo AC) newstate_0_121[color=#ffffff, process='new state2.1;',
+                                  issapicrule, role='Process']:
+     [ State_121( ), Fr( state2 ) ] --> [ State_1211( state2 ) ]
+  */
+
+rule (modulo E) newStateChannelchannel_0_1211[color=#ffffff,
+                                              process='new StateChannel.1:channel;', issapicrule,
+                                              role='Process']:
+   [ State_1211( state2.1 ), Fr( StateChannel.1 ) ]
+  -->
+   [ State_12111( StateChannel.1, state2.1 ) ]
+
+  /*
+  rule (modulo AC) newStateChannelchannel_0_1211[color=#ffffff,
+                                                 process='new StateChannel.1:channel;', issapicrule,
+                                                 role='Process']:
+     [ State_1211( state2 ), Fr( StateChannel ) ]
+    -->
+     [ State_12111( StateChannel, state2 ) ]
+  */
+
+rule (modulo E) insertstateinit_0_12111[color=#ffffff,
+                                        process='insert state2.1,'init';', issapicrule, role='Process']:
+   [ State_12111( StateChannel.1, state2.1 ) ]
+  -->
+   [
+   State_121111( StateChannel.1, state2.1 ), L_PureState( state2.1, 'init' )
+   ]
+
+  /*
+  rule (modulo AC) insertstateinit_0_12111[color=#ffffff,
+                                           process='insert state2.1,'init';', issapicrule, role='Process']:
+     [ State_12111( StateChannel, state2 ) ]
+    -->
+     [ State_121111( StateChannel, state2 ), L_PureState( state2, 'init' ) ]
+  */
+
+rule (modulo E) p_0_121111[color=#ffffff, process='!', issapicrule,
+                           role='Process']:
+   [ State_121111( StateChannel.1, state2.1 ) ]
+  -->
+   [ !Semistate_1211111( StateChannel.1, state2.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_121111[color=#ffffff, process='!', issapicrule,
+                              role='Process']:
+     [ State_121111( StateChannel, state2 ) ]
+    -->
+     [ !Semistate_1211111( StateChannel, state2 ) ]
+  */
+
+rule (modulo E) p_1_121111[color=#ffffff, process='!', issapicrule,
+                           role='Process']:
+   [ !Semistate_1211111( StateChannel.1, state2.1 ) ]
+  -->
+   [ State_1211111( StateChannel.1, state2.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_121111[color=#ffffff, process='!', issapicrule,
+                              role='Process']:
+     [ !Semistate_1211111( StateChannel, state2 ) ]
+    -->
+     [ State_1211111( StateChannel, state2 ) ]
+  */
+
+rule (modulo E) v_0_1211111[color=#ffffff, process='v()', issapicrule,
+                            role='Process']:
+   [ State_1211111( StateChannel.1, state2.1 ) ]
+  -->
+   [
+   State_12111111( StateChannel.1, state2.1 ),
+   State_12111112( StateChannel.1, state2.1 )
+   ]
+
+  /*
+  rule (modulo AC) v_0_1211111[color=#ffffff, process='v()', issapicrule,
+                               role='Process']:
+     [ State_1211111( StateChannel, state2 ) ]
+    -->
+     [
+     State_12111111( StateChannel, state2 ),
+     State_12111112( StateChannel, state2 )
+     ]
+  */
+
+rule (modulo E) inior_0_12111111[color=#658040,
+                                 process='in(<i.2, o.2, r.2>);', issapicrule, role='v']:
+   [ State_12111111( StateChannel.1, state2.1 ), In( <i.2, o.2, r.2> ) ]
+  -->
+   [ State_121111111( StateChannel.1, state2.1, i.2, o.2, r.2 ) ]
+
+  /*
+  rule (modulo AC) inior_0_12111111[color=#658040,
+                                    process='in(<i.2, o.2, r.2>);', issapicrule, role='v']:
+     [ State_12111111( StateChannel, state2 ), In( <i, o, r> ) ]
+    -->
+     [ State_121111111( StateChannel, state2, i, o, r ) ]
+  */
+
+rule (modulo E) lockstate_0_121111111[color=#658040,
+                                      process='lock state2.1;', issapicrule, role='v']:
+   [ State_121111111( StateChannel.1, state2.1, i.2, o.2, r.2 ) ]
+  -->
+   [ State_1211111111( StateChannel.1, state2.1, i.2, o.2, r.2 ) ]
+
+  /*
+  rule (modulo AC) lockstate_0_121111111[color=#658040,
+                                         process='lock state2.1;', issapicrule, role='v']:
+     [ State_121111111( StateChannel, state2, i, o, r ) ]
+    -->
+     [ State_1211111111( StateChannel, state2, i, o, r ) ]
+  */
+
+rule (modulo E) lookupstateaslio_0_1211111111[color=#658040,
+                                              process='lookup state2.1 as lio.2', no_derivcheck, issapicrule,
+                                              role='v']:
+   [
+   State_1211111111( StateChannel.1, state2.1, i.2, o.2, r.2 ),
+   L_PureState( state2.1, lio.2 ), Fr( lock.1 )
+   ]
+  -->
+   [
+   State_12111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2, r.2
+   ),
+   L_CellLocked( state2.1, lock.1 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) lookupstateaslio_0_1211111111[color=#658040,
+                                                 process='lookup state2.1 as lio.2', no_derivcheck,
+                                                 issapicrule, role='v']:
+     [
+     State_1211111111( StateChannel, state2, i, o, r ),
+     L_PureState( state2, lio ), Fr( lock )
+     ]
+    -->
+     [
+     State_12111111111( StateChannel, lock, state2, i, lio, o, r ),
+     L_CellLocked( state2, lock )
+     ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) eventReadlio_0_12111111111[color=#658040,
+                                           process='event Read( lio.2 );', issapicrule, role='v']:
+   [
+   State_12111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2, r.2
+   )
+   ]
+  --[ Read( lio.2 ) ]->
+   [
+   State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                       r.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventReadlio_0_12111111111[color=#658040,
+                                              process='event Read( lio.2 );', issapicrule, role='v']:
+     [ State_12111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    --[ Read( lio ) ]->
+     [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+  */
+
+rule (modulo E) ifoiliocheckreprloc_0_121111111111[color=#658040,
+                                                   process='if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')',
+                                                   issapicrule, role='v']:
+   [
+   State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                       r.2
+   )
+   ]
+  --[ Pred_Eq( <o.2, i.2, lio.2>, check_rep(r.2, 'loc') ) ]->
+   [
+   State_1211111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                        r.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifoiliocheckreprloc_0_121111111111[color=#658040,
+                                                      process='if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')',
+                                                      issapicrule, role='v']:
+     [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    --[ Pred_Eq( <o, i, lio>, z ) ]->
+     [ State_1211111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    variants (modulo AC)
+    1. r     = r.12
+       z     = check_rep(r.12, 'loc')
+    
+    2. r     = rep(x.11, 'loc')
+       z     = x.11
+  */
+
+rule (modulo E) ifoiliocheckreprloc_1_121111111111[color=#658040,
+                                                   process='if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')',
+                                                   issapicrule, role='v']:
+   [
+   State_121111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                       r.2
+   )
+   ]
+  --[ Pred_Not_Eq( <o.2, i.2, lio.2>, check_rep(r.2, 'loc') ) ]->
+   [
+   State_1211111111112( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                        r.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) ifoiliocheckreprloc_1_121111111111[color=#658040,
+                                                      process='if <o.2, i.2, lio.2>=check_rep(r.2, 'loc')',
+                                                      issapicrule, role='v']:
+     [ State_121111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    --[ Pred_Not_Eq( <o, i, lio>, z ) ]->
+     [ State_1211111111112( StateChannel, lock, state2, i, lio, o, r ) ]
+    variants (modulo AC)
+    1. r     = r.12
+       z     = check_rep(r.12, 'loc')
+    
+    2. r     = rep(x.11, 'loc')
+       z     = x.11
+  */
+
+rule (modulo E) eventLocaloilioloc_0_1211111111111[color=#658040,
+                                                   process='event Local( <o.2, i.2, lio.2>, 'loc' );',
+                                                   issapicrule, role='v']:
+   [
+   State_1211111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                        r.2
+   )
+   ]
+  --[ Local( <o.2, i.2, lio.2>, 'loc' ) ]->
+   [
+   State_12111111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                         r.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) eventLocaloilioloc_0_1211111111111[color=#658040,
+                                                      process='event Local( <o.2, i.2, lio.2>, 'loc' );',
+                                                      issapicrule, role='v']:
+     [ State_1211111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    --[ Local( <o, i, lio>, 'loc' ) ]->
+     [ State_12111111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+  */
+
+rule (modulo E) insertstatelistolistilio_0_12111111111111[color=#658040,
+                                                          process='insert state2.1,list(o.2, list(i.2, lio.2));',
+                                                          issapicrule, role='v']:
+   [
+   State_12111111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                         r.2
+   ),
+   L_CellLocked( state2.1, lock.1 )
+   ]
+  -->
+   [
+   State_121111111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                          r.2
+   ),
+   L_PureState( state2.1, list(o.2, list(i.2, lio.2)) )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) insertstatelistolistilio_0_12111111111111[color=#658040,
+                                                             process='insert state2.1,list(o.2, list(i.2, lio.2));',
+                                                             issapicrule, role='v']:
+     [
+     State_12111111111111( StateChannel, lock, state2, i, lio, o, r ),
+     L_CellLocked( state2, lock )
+     ]
+    -->
+     [
+     State_121111111111111( StateChannel, lock, state2, i, lio, o, r ),
+     L_PureState( state2, list(o, list(i, lio)) )
+     ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) unlockstate_0_121111111111111[color=#658040,
+                                              process='unlock state2.1;', issapicrule, role='v']:
+   [
+   State_121111111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                          r.2
+   )
+   ]
+  -->
+   [
+   State_1211111111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2,
+                           o.2, r.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) unlockstate_0_121111111111111[color=#658040,
+                                                 process='unlock state2.1;', issapicrule, role='v']:
+     [ State_121111111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    -->
+     [ State_1211111111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+  */
+
+rule (modulo E) p_0_1211111111111111[color=#658040, process='0',
+                                     issapicrule, role='v']:
+   [
+   State_1211111111111111( StateChannel.1, lock.1, state2.1, i.2, lio.2,
+                           o.2, r.2
+   )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_1211111111111111[color=#658040, process='0',
+                                        issapicrule, role='v']:
+     [ State_1211111111111111( StateChannel, lock, state2, i, lio, o, r ) ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) insertstatelio_0_1211111111112[color=#658040,
+                                               process='insert state2.1,lio.2;', issapicrule, role='v']:
+   [
+   State_1211111111112( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                        r.2
+   ),
+   L_CellLocked( state2.1, lock.1 )
+   ]
+  -->
+   [
+   State_12111111111121( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                         r.2
+   ),
+   L_PureState( state2.1, lio.2 )
+   ]
+
+  // loop breaker: [1]
+  /*
+  rule (modulo AC) insertstatelio_0_1211111111112[color=#658040,
+                                                  process='insert state2.1,lio.2;', issapicrule, role='v']:
+     [
+     State_1211111111112( StateChannel, lock, state2, i, lio, o, r ),
+     L_CellLocked( state2, lock )
+     ]
+    -->
+     [
+     State_12111111111121( StateChannel, lock, state2, i, lio, o, r ),
+     L_PureState( state2, lio )
+     ]
+    // loop breaker: [1]
+  */
+
+rule (modulo E) unlockstate_0_12111111111121[color=#658040,
+                                             process='unlock state2.1;', issapicrule, role='v']:
+   [
+   State_12111111111121( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                         r.2
+   )
+   ]
+  -->
+   [
+   State_121111111111211( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                          r.2
+   )
+   ]
+
+  /*
+  rule (modulo AC) unlockstate_0_12111111111121[color=#658040,
+                                                process='unlock state2.1;', issapicrule, role='v']:
+     [ State_12111111111121( StateChannel, lock, state2, i, lio, o, r ) ]
+    -->
+     [ State_121111111111211( StateChannel, lock, state2, i, lio, o, r ) ]
+  */
+
+rule (modulo E) p_0_121111111111211[color=#658040, process='0',
+                                    issapicrule, role='v']:
+   [
+   State_121111111111211( StateChannel.1, lock.1, state2.1, i.2, lio.2, o.2,
+                          r.2
+   )
+   ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_121111111111211[color=#658040, process='0',
+                                       issapicrule, role='v']:
+     [ State_121111111111211( StateChannel, lock, state2, i, lio, o, r ) ]
+    -->
+     [ ]
+  */
+
+rule (modulo E) p_0_12111111112[color=#658040, process='0', issapicrule,
+                                role='v']:
+   [ State_12111111112( StateChannel.1, state2.1, i.2, o.2, r.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12111111112[color=#658040, process='0', issapicrule,
+                                   role='v']:
+     [ State_12111111112( StateChannel, state2, i, o, r ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12111112[color=#ffffff, process='0', issapicrule,
+                             role='Process']:
+   [ State_12111112( StateChannel.1, state2.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12111112[color=#ffffff, process='0', issapicrule,
+                                role='Process']:
+     [ State_12111112( StateChannel, state2 ) ] --> [ ]
+  */
+
+restriction predicate_eq:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  // safety formula
+
+restriction predicate_not_eq:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  // safety formula
+
+restriction single_session:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Wellformedness-error in Process
+  There is an unlock that cannot be matched with a lock.
+
+Facts occur in the left-hand-side but not in any right-hand-side 
+=================================================================
+
+  1. in rule "p_0_111111112":  factName `State_111111112' arity: 2 multiplicity: Linear. Perhaps you want to use the fact in rule "lockstate_0_1111111":  factName `State_11111111' arity: 2 multiplicity: Linear
+  
+  2. in rule "p_0_12111111112":  factName `State_12111111112' arity: 5 multiplicity: Linear. Perhaps you want to use the fact in rule "lockstate_0_121111111":  factName `State_1211111111' arity: 5 multiplicity: Linear
+*/
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
+Compiled at: 2025-06-06 08:30:52.256236371 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-locations/AC.spthy
+
+  output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
+  processing time: 3.93s
+  
+  WARNING: 2 wellformedness check failed!
+           The analysis results might be wrong!
+  
+  can_run_v (exists-trace): falsified - no trace found (2 steps)
+  simp (all-traces): verified (3 steps)
+  attested_comput (all-traces): verified (2 steps)
+
+==============================================================================
+*/

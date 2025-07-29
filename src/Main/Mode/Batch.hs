@@ -32,7 +32,6 @@ import Main.Console
 import Main.Environment
 import Main.TheoryLoader
 import Main.Utils
-import Data.Label qualified as L
 import Data.Map qualified as M
 import Theory.Constraint.System.Dot
 import Text.Dot qualified as D
@@ -276,7 +275,7 @@ run thisMode as
             systemsWithMetadata :: [(Lemma IncrementalProof, ProofPath, System)]
             systemsWithMetadata = do
               lemma <- getLemmas thy
-              let proof = L.get lProof lemma
+              let proof = lemma._lProof
               [(lemma, proofPath, system) | (proofPath, system) <- proofSystems proof]
 
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
@@ -295,22 +294,22 @@ run thisMode as
                              -> String
             traceOutputLabel graphOptions dotOptions lemma proofPath =
               "trace_"
-              ++ L.get thyName thy                         -- Name of the theory in which the constraint system appears.
+              ++ thy._thyName                              -- Name of the theory in which the constraint system appears.
               ++ "_"
               ++ traceLabelOptions graphOptions dotOptions -- Graph options are included in a short format.
               ++ "_"
-              ++ L.get lName lemma                         -- Name of the lemma in which the constraint system appears.
+              ++ lemma._lName                              -- Name of the lemma in which the constraint system appears.
               ++ intercalate "-" proofPath                 -- Path through the proof where the constraint system is located.
 
             -- | Format the graph rendering options in a concise way.
             traceLabelOptions :: GraphOptions -> DotOptions -> String
             traceLabelOptions graphOptions dotOptions =
-              let s1 = show $ L.get goSimplificationLevel graphOptions
-                  s2 = if L.get goShowAutoSource graphOptions then "AS1" else "AS0"
-                  s3 = if L.get goClustering graphOptions then "CL1" else "CL0"
-                  s4 = if L.get goAbbreviate graphOptions then "A1" else "A0"
-                  s5 = if L.get goCompress graphOptions then "C1" else "C0"
-                  s6 = case L.get doNodeStyle dotOptions of
+              let s1 = show graphOptions._goSimplificationLevel
+                  s2 = if graphOptions._goShowAutoSource then "AS1" else "AS0"
+                  s3 = if graphOptions._goClustering then "CL1" else "CL0"
+                  s4 = if graphOptions._goAbbreviate then "A1" else "A0"
+                  s5 = if graphOptions._goCompress then "C1" else "C0"
+                  s6 = case dotOptions._doNodeStyle of
                          FullBoringNodes -> "NF"
                          CompactBoringNodes -> "NB"
               in
