@@ -98,14 +98,17 @@ builtins thy0 =do
     extendSig (name, Just msig, opt) = do
         _ <- symbol name
         currSig <- sig <$> getState
-        let builtinFuncs = getReservedNames msig
-        let existingFuncs = map (BC.unpack . fst) (S.toList $ stFunSyms currSig)
-        
-        -- Find conflicts between builtins and existing functions
-        let conflicts = [f | f <- builtinFuncs, f `elem` existingFuncs]
+        let builtinFuncs = S.toList $ stFunSyms msig
+        let existingFuncs = S.toList $ stFunSyms currSig
+        let conflicts = [ (fname, arity1, arity2)
+                        | (fname, arity1) <- builtinFuncs
+                        , (fname', arity2) <- existingFuncs
+                        , fname == fname'
+                        , arity1 /= arity2
+                        ]
         unless (null conflicts) $ do
-            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s): " ++ 
-                  show conflicts ++ ". Please remove these function definitions or use different names."
+            fail $ "Builtin '" ++ name ++ "' conflicts with existing function(s) (same name, different arity): " ++ 
+                  show [fname | (fname, _, _) <- conflicts] ++ ". Please remove these function definitions or use different names."
         
         modifyStateSig (`mappend` msig)
         modifyState (\st -> st { reservedBuiltinNames = 

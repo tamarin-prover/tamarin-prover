@@ -1,0 +1,7 @@
+theory SameFunctionsInBuiltins
+begin
+
+builtins: hashing, signing
+
+// Both define hashing function h\1, so it should not generate an error.
+end
