@@ -6157,7 +6157,106 @@
       "required": true,
       "types": [
         {
-          "type": "theory",
+          "type": "splib",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "splib",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "accountability_lemma",
+          "named": true
+        },
+        {
+          "type": "built_ins",
+          "named": true
+        },
+        {
+          "type": "case_test",
+          "named": true
+        },
+        {
+          "type": "diff_equiv_lemma",
+          "named": true
+        },
+        {
+          "type": "diff_lemma",
+          "named": true
+        },
+        {
+          "type": "diff_rule",
+          "named": true
+        },
+        {
+          "type": "equations",
+          "named": true
+        },
+        {
+          "type": "equiv_lemma",
+          "named": true
+        },
+        {
+          "type": "export",
+          "named": true
+        },
+        {
+          "type": "formal_comment",
+          "named": true
+        },
+        {
+          "type": "functions",
+          "named": true
+        },
+        {
+          "type": "global_heuristic",
+          "named": true
+        },
+        {
+          "type": "lemma",
+          "named": true
+        },
+        {
+          "type": "let",
+          "named": true
+        },
+        {
+          "type": "macros",
+          "named": true
+        },
+        {
+          "type": "options",
+          "named": true
+        },
+        {
+          "type": "predicates",
+          "named": true
+        },
+        {
+          "type": "preprocessor",
+          "named": true
+        },
+        {
+          "type": "process",
+          "named": true
+        },
+        {
+          "type": "restriction",
+          "named": true
+        },
+        {
+          "type": "rule",
+          "named": true
+        },
+        {
+          "type": "tactic",
           "named": true
         }
       ]
@@ -6382,116 +6481,6 @@
           }
         ]
       }
-    }
-  },
-  {
-    "type": "theory",
-    "named": true,
-    "fields": {
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "ident",
-            "named": true
-          }
-        ]
-      }
-    },
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "accountability_lemma",
-          "named": true
-        },
-        {
-          "type": "built_ins",
-          "named": true
-        },
-        {
-          "type": "case_test",
-          "named": true
-        },
-        {
-          "type": "diff_equiv_lemma",
-          "named": true
-        },
-        {
-          "type": "diff_lemma",
-          "named": true
-        },
-        {
-          "type": "diff_rule",
-          "named": true
-        },
-        {
-          "type": "equations",
-          "named": true
-        },
-        {
-          "type": "equiv_lemma",
-          "named": true
-        },
-        {
-          "type": "export",
-          "named": true
-        },
-        {
-          "type": "formal_comment",
-          "named": true
-        },
-        {
-          "type": "functions",
-          "named": true
-        },
-        {
-          "type": "global_heuristic",
-          "named": true
-        },
-        {
-          "type": "lemma",
-          "named": true
-        },
-        {
-          "type": "let",
-          "named": true
-        },
-        {
-          "type": "macros",
-          "named": true
-        },
-        {
-          "type": "options",
-          "named": true
-        },
-        {
-          "type": "predicates",
-          "named": true
-        },
-        {
-          "type": "preprocessor",
-          "named": true
-        },
-        {
-          "type": "process",
-          "named": true
-        },
-        {
-          "type": "restriction",
-          "named": true
-        },
-        {
-          "type": "rule",
-          "named": true
-        },
-        {
-          "type": "tactic",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -6811,10 +6800,6 @@
     "named": false
   },
   {
-    "type": "begin",
-    "named": false
-  },
-  {
     "type": "bfs",
     "named": false
   },
@@ -6908,10 +6893,6 @@
   },
   {
     "type": "else",
-    "named": false
-  },
-  {
-    "type": "end",
     "named": false
   },
   {
@@ -7276,10 +7257,6 @@
   },
   {
     "type": "then",
-    "named": false
-  },
-  {
-    "type": "theory",
     "named": false
   },
   {
