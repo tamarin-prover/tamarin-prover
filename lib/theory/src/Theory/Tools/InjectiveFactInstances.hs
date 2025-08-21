@@ -216,7 +216,6 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
                 getBehaviour (t1, t2) | elemNotBelowReducible reducible t2 t1 = StrictlyDecreasing
                 getBehaviour (t1, t2) | (t1,t2) `elem` constraints = StrictlyIncreasing
                 getBehaviour (t1, t2) | (t2,t1) `elem` constraints = StrictlyDecreasing
-                -- getBehaviour constraints (t1, t2) | (t1,t2) `elem` constraints = StrictlyIncreasing
                 getBehaviour _ = Unstable
 
                 behaviours =
