@@ -1,7 +1,7 @@
 const common = require('../common_grammar.js');
 
 module.exports = grammar({
-  name: 'spthy', 
+  name: 'splib',
   extras: common.extras,
   conflicts: common.conflicts,
   externals: common.externals,
@@ -9,14 +9,8 @@ module.exports = grammar({
   word: common.word,
 
   rules: {
-    source_file: $ => $.theory,
-    theory: $ => seq(
-      'theory',
-      field('name', $.ident),
-      'begin',
-      repeat($._body_item),
-      'end'
-    ),
+    source_file: $ => $.splib,
+    splib: $ => repeat1($._body_item),
     ...common.rules,
   }
 });

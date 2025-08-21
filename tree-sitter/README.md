@@ -1,6 +1,6 @@
 # Independent spthy parser
 
-This directory contains an indepdendent parser for Tamarin's spthy language.
+This directory contains an indepdendent parser for Tamarin's spthy and splib language.
 The parser is auto-generated from a tree-sitter grammar.
 
 ## Dependencies
@@ -19,5 +19,6 @@ $ make install
 Generate/update parser library:
 
 ``` shell
-$ make generate
+$ make generate_spthy
+$ make generate_splib
 ```

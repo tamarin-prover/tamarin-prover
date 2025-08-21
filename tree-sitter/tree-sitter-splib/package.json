@@ -1,8 +1,8 @@
 {
-  "name": "tree-sitter-spthy",
+  "name": "tree-sitter-splib",
   "version": "0.0.1",
-  "description": "Spthy grammar for tree-sitter",
-  "repository": "github:tamarin-prover/tamarin-prover/tree-sitter/tree-sitter-spthy",
+  "description": "Splib grammar for tree-sitter",
+  "repository": "github:tree-sitter/tree-sitter-splib",
   "license": "MIT",
   "main": "bindings/node",
   "types": "bindings/node",
@@ -10,7 +10,7 @@
     "incremental",
     "parsing",
     "tree-sitter",
-    "spthy"
+    "splib"
   ],
   "files": [
     "grammar.js",
@@ -38,15 +38,16 @@
   },
   "scripts": {
     "install": "node-gyp-build",
-    "prestart": "tree-sitter build --wasm",
-    "start": "tree-sitter playground",
-    "test": "node --test bindings/node/*_test.js",
-    "prebuildify": "prebuildify --napi --strip"
+    "prebuildify": "prebuildify --napi --strip",
+    "build": "tree-sitter generate --no-bindings",
+    "build-wasm": "tree-sitter build --wasm",
+    "test": "tree-sitter test",
+    "parse": "tree-sitter parse"
   },
   "tree-sitter": [
     {
-      "scope": "source.spthy",
-      "injection-regex": "^spthy$"
+      "scope": "source.splib",
+      "injection-regex": "^splib$"
     }
   ]
 }
