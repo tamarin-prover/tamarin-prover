@@ -23,7 +23,6 @@ import Control.Monad.Trans.PreciseFresh qualified as Precise
 import Data.ByteString.Char8 qualified as BC
 import Data.Char
 import Data.Data
-import Data.Function (on)
 import Data.Functor.Identity qualified
 import Data.List as List
 import Data.Map qualified as M
@@ -1393,7 +1392,7 @@ loadHeaders tc thy typeEnv = do
     typedHeaderOfFunSym = foldMap headerOfFunSym userDeclaredFunctions
 
     -- events headers
-    eventHeaders = M.foldrWithKey (\tag types acc -> HEvent ('e' : factTagName tag) ("(" ++ makeArgtypes types ++ ")") `S.insert` acc) S.empty (events typeEnv)
+    eventHeaders = M.foldrWithKey (\tag types acc -> HEvent ('e' : factTagName tag) ("(" ++ makeArgtypes types ++ ")") `S.insert` acc) S.empty typeEnv.events
     -- generating headers for equations
     sigRules = S.toList (stRules sig)
 
@@ -1418,7 +1417,7 @@ headersOfRule tc typeEnv r | (lhs `RRule` rhs) <- ctxtStRuleToRRule r = do
         FApp (NoEq (_, (_, Private, Destructor))) _ -> " [private]"
         _ -> ""
       freesr = frees lhs `union` frees rhs
-      freesrTyped = map (\v -> (v, M.lookup v $ vars tye)) freesr
+      freesrTyped = map (\v -> (v, M.lookup v tye.vars)) freesr
       hrule =
         Eq
           prefix
