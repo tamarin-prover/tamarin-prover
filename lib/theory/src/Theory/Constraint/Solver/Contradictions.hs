@@ -34,7 +34,7 @@ import qualified Data.Foldable                  as F
 import           Data.Functor                   (($>))
 import           Data.List
 import qualified Data.Map                       as M
-import           Data.Maybe                     (fromMaybe, listToMaybe)
+import           Data.Maybe                     (fromMaybe, listToMaybe, mapMaybe)
 -- import           Data.Monoid
 import qualified Data.Set                       as S
 import           Safe                           (headMay)
@@ -106,6 +106,8 @@ contradictions ctxt sys = F.asum
     , guard (enableBP msig && hasForbiddenBP sys)   $> ForbiddenBP
     -- New CR-Rule *N6'*
     , guard (hasForbiddenChain sys)                 $> ForbiddenChain
+    -- New Constraint for AC constructors
+    , guard (hasForbiddenConstrChain sys msig)      $> ForbiddenChain
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
     , guard (eqsIsFalse $ L.get sEqStore sys)       $> IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
@@ -299,6 +301,37 @@ hasForbiddenChain sys =
         -- and check whether any of them happens before the KD-conclusion
         ku_before       <- pure $ any (\(_, x) -> alwaysBefore sys x (fst c)) ku_start
         return (is_msg_var && is_not_equality && ku_before)
+
+-- | Detect non-normal chains chaining two instances of the constructor rule of an AC-symbol where both add a single msg variable
+hasForbiddenConstrChain :: System -> MaudeSig -> Bool
+hasForbiddenConstrChain sys msig = elem True $ map (any forbidden) edges
+  where
+    edges = map transitiveClosure $ groupBy (\(_, _, _, _, n1) (_, _, _, _, n2) -> n1 == n2) $ mapMaybe f $ S.toList $ L.get sLessAtoms sys
+    
+    forbidden (_, _, r1, r2, n) = (any (\x -> isTrivialKUFact x || isNearlyTrivialKUFact n x) (L.get rPrems r1) && any (\x -> isTrivialKUFact x || isNearlyTrivialKUFact n x)  (L.get rPrems r2))
+    
+    f :: LessAtom -> Maybe (NodeId, NodeId, RuleACInst, RuleACInst, String)
+    f (LessAtom n1 n2 Adversary) = do
+        r1 <- nodeRuleSafe n1 sys
+        r2 <- nodeRuleSafe n2 sys
+        name1 <- isACConstrRule r1 msig
+        name2 <- isACConstrRule r2 msig
+        -- traceM (show name1 ++ " - " ++ show name2 ++ " - " ++ show r1 ++ " : " ++ show r2 ++ " : " ++ show (isACConstrRule r1 msig) ++ " : "
+        --   ++ show (isACConstrRule r2 msig) ++ " : " ++ show (any isTrivialKUFact (L.get rPrems r1)) ++ " : "
+        --   ++ show (any isTrivialKUFact (L.get rPrems r2)) ++ " : " ++ show (any (isNearlyTrivialKUFact name1) (L.get rPrems r1)) ++ " : "
+        --   ++ show (any (isNearlyTrivialKUFact name2) (L.get rPrems r2)))
+        guard $ name1 == name2
+        return (n1, n2, r1, r2, name1)
+    f _                          = Nothing
+
+    transitiveClosure :: Eq a => Eq b => Eq c => [(a, a, b, b, c)] -> [(a, a, b, b, c)]
+    transitiveClosure closure 
+      | closure == closureUntilNow = closure
+      | otherwise                  = transitiveClosure closureUntilNow
+      where closureUntilNow = 
+              nub $ closure ++ [(a, c, r1, r4, n) | (a, b, r1, _, n) <- closure, (b', c, _, r4, _) <- closure, b == b']
+
+
 
 -- Diffie-Hellman and Bilinear Pairing
 --------------------------------------

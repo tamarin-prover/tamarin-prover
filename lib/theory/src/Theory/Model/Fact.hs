@@ -47,6 +47,8 @@ module Theory.Model.Fact (
   , isSolveFirstFact
   , isSolveLastFact
   , isNoSourcesFact
+  , isTrivialKUFact
+  , isNearlyTrivialKUFact
 
   , DirTag(..)
   , kuFact
@@ -233,6 +235,16 @@ isKFact = isJust . kFactView
 isKUFact :: LNFact -> Bool
 isKUFact (Fact KUFact _ _) = True
 isKUFact _                 = False
+
+-- | True if the fact is a trivial KU-fact, i.e., contains a simple msg variable.
+isTrivialKUFact :: LNFact -> Bool
+isTrivialKUFact (Fact KUFact _ [t]) = isMsgVar t
+isTrivialKUFact _                   = False
+
+-- | True if the fact is a "nrealy" trivial KU-fact, i.e., contains a given operator where all arguments are simple msg variable.
+isNearlyTrivialKUFact :: String -> LNFact -> Bool
+isNearlyTrivialKUFact s (Fact KUFact _ [t]) = isTrivialFunSymTerm t s
+isNearlyTrivialKUFact _ _                   = False
 
 -- | True if the fact is a KD-fact.
 isKDFact :: LNFact -> Bool

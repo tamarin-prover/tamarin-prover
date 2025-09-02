@@ -54,6 +54,7 @@ module Term.LTerm (
   , isNatVar
   , isPubConst
   , isSimpleTerm
+  , isTrivialFunSymTerm
   , getVar
   , getMsgVar
   , freshToConst
@@ -146,6 +147,8 @@ import           Logic.Connectives
 
 import           Term.Rewriting.Definitions
 import           Term.VTerm
+
+import           Debug.Trace
 
 ------------------------------------------------------------------------------
 -- Sorts.
@@ -390,6 +393,12 @@ isSimpleTerm :: LNTerm -> Bool
 isSimpleTerm t =
     not (containsPrivate t) &&
     (getAll . foldMap (All . (LSortFresh /=) . sortOfLit) $ t)
+
+-- | True if the term is a given function term with only message variables as arguments
+isTrivialFunSymTerm :: LNTerm -> String -> Bool
+isTrivialFunSymTerm (viewTerm -> FApp f t) sym = -- trace ("isTrivialFunSymTerm: " ++ show (showFunSymName f) ++ " - " ++ show sym) $
+    showFunSymName f == sym && all isMsgVar t
+isTrivialFunSymTerm _                      _   = False
 
 -- | 'True' iff no instance of this term contains fresh names or private function symbols.
 neverContainsFreshPriv :: LNTerm -> Bool

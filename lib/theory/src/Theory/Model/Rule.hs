@@ -79,6 +79,7 @@ module Theory.Model.Rule (
   , isDestrRule
   , isIEqualityRule
   , isConstrRule
+  , isACConstrRule
   , isPubConstrRule
   , isNatConstrRule
   , isFreshRule
@@ -662,6 +663,25 @@ isConstrRule ru = case ruleName ru of
   IntrInfo NatConstrRule   -> True
   IntrInfo CoerceRule      -> True
   _                        -> False
+
+-- | Returns the name of the function (corresponding to showFunSymName) iff the rule is a construction rule for an AC symbol.
+-- FIXME: avoid strings here, use FunSym instead. requires annotating rules with FunSyms
+isACConstrRule :: HasRuleName r => r -> MaudeSig -> Maybe String
+isACConstrRule ru msig = case ruleName ru of
+  IntrInfo (ConstrRule name)  -> -- trace ("isACConstrRule: " ++ show name) $
+        if name == BC.pack "_xor" then
+          Just $ show Xor
+        else if name == BC.pack "_mult" then
+          Just $ show Mult
+        else if name == BC.pack "_union" then
+          Just $ show Union
+        else if name == BC.pack "_natplus" then
+          Just $ show NatPlus
+        -- if the name is one of the standard AC symbols, return the corresponding name
+        else 
+          (\(n, _) -> BC.unpack n) <$> find (\(f, _) -> f==BC.drop 1 name) (stACFunSyms msig)
+  _                           -> Nothing
+
 
 -- | True iff the rule is a construction rule.
 isPubConstrRule :: HasRuleName r => r -> Bool
