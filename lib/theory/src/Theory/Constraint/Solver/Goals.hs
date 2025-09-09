@@ -222,36 +222,22 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
     mayRu <- M.lookup i <$> getM sNodes
     showRuleCaseName <$> case mayRu of
         Nothing -> case fa of
-            -- (Fact KUFact _ [m@(FAPP (AC o) ts)]) -> do
-            --        partitions <- disjunctionOfList $ twoPartitions ts
-            --        case partitions of
-            --            (_, []) -> do
-            --                 let ru = Rule (IntrInfo CoerceRule) [kdFact m] [fa] [fa] []
-            --                 modM sNodes (M.insert i ru)
-            --                 insertGoal (PremiseG (i, PremIdx 0) (kdFact m)) False
-            --                 return ru
-            --            (a',  b') -> do
-            --                 let a = fAppAC o a'
-            --                 let b = fAppAC o b'
-            --                 let ru = Rule (IntrInfo (ConstrRule $ nameApp o)) [(kuFact a),(kuFact b)] [fa] [fa] []
-            --                 modM sNodes (M.insert i ru)
-            --                 mapM_ requiresKU [a, b] *> return ru
-            _                                        -> do
+            (Fact KUFact _ [m@(FAPP (AC o) ts)]) -> do
+                   ru  <- labelNodeId i (annotatePrems <$> rules) Nothing
+                   let prems = map getKUVars $ get rPrems ru
+                   act <- disjunctionOfList $ get rActs ru
+                   void (solveFactEqs SplitNow (ACConstructor (head prems) (prems!!1)) [Equal fa act])
+                   return ru
+            _                                    -> do
                    ru  <- labelNodeId i (annotatePrems <$> rules) Nothing
                    act <- disjunctionOfList $ get rActs ru
-                   void (solveFactEqs SplitNow [Equal fa act])
+                   void (solveFactEqs SplitNow OtherRule [Equal fa act])
                    return ru
-
         Just ru -> do unless (fa `elem` get rActs ru) $ do
                           act <- disjunctionOfList $ get rActs ru
-                          void (solveFactEqs SplitNow [Equal fa act])
+                          void (solveFactEqs SplitNow OtherRule [Equal fa act])
                       return ru
   where
-    nameApp Mult = BC.pack "_mult"
-    nameApp Union = BC.pack "_union"
-    nameApp NatPlus = BC.pack "_natplus"
-    nameApp Xor = BC.pack "_xor"
-    nameApp (ACfct (b, _)) = BC.pack "_" <> b
     -- If the fact in the action goal has annotations, then consider annotated
     -- versions of intruder rules (this allows high or low priority intruder knowledge
     -- goals to propagate to intruder knowledge of subterms)
@@ -259,11 +245,11 @@ solveAction rules (i, fa@(Fact _ ann _)) = do
         if not (S.null ann) && isIntruderRule ru then
             Rule ri (annotateFact ann <$> ps) cs (annotateFact ann <$> as) nvs
             else ru
-    requiresKU t = do
-        j <- freshLVar "vk" LSortNode
-        let faKU = kuFact t
-        insertLess (LessAtom j i Adversary)
-        void (insertAction j faKU)
+    
+    getKUVars (Fact KUFact _ [m]) = case viewTerm m of
+                                      (Lit  (Var v)) -> v
+                                      _              -> error "getKUVars: should be impossible"
+    getKUVars _                   = error "getKUVars: should be impossible"
 
 -- | CR-rules *DG_{2,P}* and *DG_{2,d}*: solve a premise with a direct edge
 -- from a unifying conclusion or using a destruction chain.

@@ -48,6 +48,7 @@ module Theory.Tools.EquationStore (
   -- * Simplification
   , simp
   , simpDisjunction
+  , removePermutations
 
   -- ** Pretty printing
   , prettyEqStore
@@ -65,7 +66,6 @@ import           Extension.Prelude
 import           Utils.Misc
 
 import           Debug.Trace.Ignore
-
 import           Control.Basics
 import           Control.DeepSeq
 import           Control.Monad.State   hiding (get, modify, put)
@@ -557,6 +557,30 @@ foreachDisj hnd f =
               eqsConj =: Conj (reverse lefts ++ ((,) idx <$> disjs) ++ rights)
               maybe (return ()) (\s -> MS.modify (applyEqStore hnd s)) msubst
               return True
+
+-- | Removes substitutions that are equal up to a permutation of the images of two given variables
+removePermutations :: EqStore -> SplitId -> LVar -> LVar -> EqStore
+removePermutations eqs splitId v1 v2 = 
+      modify eqsConj removePerms eqs
+  where
+    removePerms (Conj disjs) = Conj $ map f disjs
+    
+    f (sid, substs) =
+      if sid == splitId
+        then (sid, S.fromList $ removePerm $ S.toList substs)
+        else (sid, substs)
+    
+    removePerm []     = []
+    removePerm (s:rest) = s:removePerm (filter (notIsPerm s) rest)
+      where
+        notIsPerm subst1 subst2 = 
+          let lst1 = substToListVFresh subst1
+              lst2 = substToListVFresh subst2
+          in not (length lst1 == length lst2 &&
+              all (\(x,t) -> (x == v1 && t == fromJust (imageOfVFresh subst2 v2))
+                  || (x == v2 && t == fromJust (imageOfVFresh subst2 v1))
+                  || (x,t) `elem` lst2) lst1)
+              
 
 ------------------------------------------------------------------------------
 -- Pretty printing

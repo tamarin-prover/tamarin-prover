@@ -177,7 +177,7 @@ enforceNodeUniqueness =
     (,,)
       <$> (merge (const $ return Unchanged) freshRuleInsts)
       <*> (merge (solveRuleEqs SplitNow)    kdConcs)
-      <*> (merge (solveFactEqs SplitNow)    kuActions)
+      <*> (merge (solveFactEqs SplitNow OtherRule)    kuActions)
   where
     -- *DG4*
     freshRuleInsts se = do
@@ -214,7 +214,7 @@ enforceFreshAndKuNodeUniqueness :: Reduction (ChangeIndicator, ChangeIndicator)
 enforceFreshAndKuNodeUniqueness =
     (,)
       <$> (merge (const $ return Unchanged) freshRuleInsts)
-      <*> (merge (solveFactEqs SplitNow)    kuActions)
+      <*> (merge (solveFactEqs SplitNow OtherRule)    kuActions)
   where
     -- *DG4*
     freshRuleInsts se = do
