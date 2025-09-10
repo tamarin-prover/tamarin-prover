@@ -739,7 +739,7 @@ module.exports = grammar({
       ),
 
       // for parsing extended attribute
-      xattribute_ident: _ => token(prec(-1, /x[a-zA-Z_]+/)),
+      xattribute_ident: _ => token(prec(-1, /x-[a-zA-Z_]+/)),
       // for parsing inside extended attribute
       no_square_brackets: _ => token(prec(-1, /[^\[\]]*/)),
       no_round_brackets:   _ => token(prec(-1, /[^\(\)]*/)),

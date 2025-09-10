@@ -118,7 +118,7 @@ module Theory.Text.Parser.Token (
   , parseString
   , parseStringWState
   ,opLessTerm
-  ,identitfierStartingWithX
+  ,extIdentifier
   ,betweenMatching
   ,manyCharsExcept) where
 
@@ -341,10 +341,10 @@ list = brackets . commaSep
 stringLiteral :: Parser String
 stringLiteral = T.stringLiteral spthy
 
--- | Parse a string literal starting with "x"
-identitfierStartingWithX :: Parser String
-identitfierStartingWithX = T.lexeme spthy $ do
-    _ <- try (string "x")
+-- | Parse a string literal marked as external, i.e., starting with "x-"
+extIdentifier :: Parser String
+extIdentifier= T.lexeme spthy $ do
+    _ <- try (string "x-")
     identifier
 
 -- | A formal comment; i.e., (header, body)
