@@ -138,10 +138,10 @@ mapAct ::
 mapAct f anrule =
   let (l', a', r', res') =
         f
-          ( prems anrule,
-            acts anrule,
-            concs anrule,
-            restr anrule
+          ( anrule.prems,
+            anrule.acts,
+            anrule.concs,
+            anrule.restr
           )
    in anrule {prems = l', acts = a', concs = r', restr = res'}
 
