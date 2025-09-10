@@ -346,7 +346,7 @@ The following outputs are supported:
   [ProVerif](https://bblanche.gitlabpages.inria.fr/proverif/) input format. 
   The translation of lookups/inserts relies on features that are not yet
   available in ProVerif (at the time of writing) and require preprocessing 
-  with [GSVerif](https://gitlab.inria.fr/chevalvi/gsverif).
+  with [GSVerif's protocol platform branch](https://gitlab.inria.fr/chevalvi/gsverif/-/tree/protocol_platform?ref_type=heads).
 - *proverifequiv*: - same as `proverif`, but specifically for the translation
   of equivalence properties aka privacy properties aka ProVerif's `diff` mode.
 - *deepsec*: - translate to [Deepsec](https://deepsec-prover.github.io/)'s input format
