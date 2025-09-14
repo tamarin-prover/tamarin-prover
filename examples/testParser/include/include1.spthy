@@ -8,7 +8,7 @@ builtins: symmetric-encryption
 
 functions: f1/1
 
-#include "include2.spthy"
+#include "include_2.spthy"
 
 #include "include/include3.spthy"
 
