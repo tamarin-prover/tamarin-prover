@@ -658,4 +658,4 @@ opNull = symbol_ "0"
 filePath :: Parser FilePath
 filePath = many charDir
   where
-    charDir = alphaNum <|> oneOf ("." <> [pathSeparator])
+    charDir = alphaNum <|> oneOf ("._-" <> [pathSeparator])
