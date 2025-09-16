@@ -72,13 +72,13 @@ typeWith t tt
             if lvarSort lvar' == LSortPub then
                 return Nothing
             else do
-                maybeType <- Map.lookup lvar' <$> gets vars
+                maybeType <- Map.lookup lvar' <$> gets (.vars)
                 case maybeType of
                     Nothing -> throwM $ WFUnbound (S.singleton lvar')
                     Just t' -> return t'
         t' <- catch (sqcap stype' tt) (sqHandler t)
         te <- get
-        modify' (\s -> s { vars = Map.insert (slvar v) t' (vars te)})
+        modify' (\s -> s { vars = Map.insert (slvar v) t' te.vars })
         return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
     | FAppNoEq fs@(_,(n,_,_)) ts   <- viewTerm2 t -- CASE: standard function application
     = do
@@ -105,7 +105,7 @@ typeWith t tt
     | otherwise = return (t, Nothing) -- This case should never occur.
     where
         insertFun fs newFunType = do
-                    fte <- gets funs
+                    fte <- gets (.funs)
                     case Map.lookup fs fte of
                         Nothing -> modify' (\s -> s {funs =  Map.insert fs newFunType fte })
                         Just oldFunType -> do
@@ -114,7 +114,7 @@ typeWith t tt
                                   modify' (\s -> s {funs =  Map.insert fs mergedFunType fte })
                                 Left _ -> throwM $ TypingErrorFunctionMerge fs newFunType oldFunType
         getFun n fs = do
-            maybeFType <- Map.lookup fs <$> gets funs
+            maybeFType <- Map.lookup fs <$> gets (.funs)
             return $ fromMaybe (defaultFunctionType n) maybeFType
         mergeFunTypes (ins1,out1) (ins2,out2)= do
             ins <- zipWithM sqcap ins1 ins2
@@ -129,7 +129,7 @@ typeTermsWithEnv ::  (MonadThrow m, MonadCatch m) => TypingEnvironment -> [Term 
 typeTermsWithEnv typeEnv terms = execStateT (mapM typeWith' terms) typeEnv'
          where typeWith' t = typeWith t Nothing
                freeVars = foldl (\acc x -> acc `List.union` frees x) [] (map toLNTerm terms)
-               nVars = foldl (\acc x -> Map.insert x Nothing acc ) (vars typeEnv) freeVars
+               nVars = foldl (\acc x -> Map.insert x Nothing acc ) typeEnv.vars freeVars
                typeEnv' = typeEnv{ vars = nVars}
 
 typeProcess :: (GoodAnnotation a, MonadThrow m, MonadCatch m, Show a, Typeable a) =>
@@ -146,7 +146,7 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
             ac' <- traverseTermsAction (typeWith' $ ProcessAction ac ann r) typeWithFact typeWithVar ac
             argTypes <- mapM (`typeWith` Nothing) ts
             te <- get
-            _ <- modify' (\s -> s { events = Map.insert tag (map snd argTypes) (events te)})
+            _ <- modify' (\s -> s { events = Map.insert tag (map snd argTypes) te.events })
             return (ProcessAction ac' ann r)
         gAct ac ann r = do -- r is typed subprocess
             ac' <- traverseTermsAction (typeWith' $ ProcessAction ac ann r) typeWithFact typeWithVar ac
@@ -161,10 +161,10 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
         insertVar v = do
             te <- get
-            case Map.lookup (slvar v) (vars te) of
+            case Map.lookup (slvar v) te.vars of
                 Just _ -> throwM $ WFBoundTwice v
                 Nothing ->
-                  modify' (\s -> s { vars = Map.insert (slvar v) (stype v) (vars te)})
+                  modify' (\s -> s { vars = Map.insert (slvar v) (stype v) te.vars })
         handleEx p' wferror = throwM $ ProcessNotWellformed wferror (Just p')
 
 toSapicLVar :: LVar -> SapicLVar
@@ -204,7 +204,7 @@ typeTheoryEnv th = do
     initTE <- initTEFromSig th
     (thaux, fteaux) <- runStateT (mapMProcesses typeAndRenameProcess th) initTE
     (th', fte) <- runStateT (mapMProcessesDef typeAndRenameProcessDef thaux) fteaux
-    let th'' = Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') (funs fte)
+    let th'' = Map.foldrWithKey addFunctionTypingInfo' (clearFunctionTypingInfos th') fte.funs
     return (th'', fte)
     where
         typeAndRenameProcess p = do

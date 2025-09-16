@@ -1,0 +1,33 @@
+theory RuleAttribute
+
+// Tests for parsing rule attributes, including attributes that start with x,
+// which shall be ignored.
+
+begin
+
+rule test7 [x-bla]:
+    [] --> []
+
+rule test5 [x-lol = 'test', x-har="now", x-ing=[] ]:
+    [] --> []
+
+rule process  [process='anything']:
+    [] --> []
+
+
+rule bla  [no_derivcheck,issapicrule, role='test',color='#111111', color='000000', process='anything']:
+    [] --> []
+
+rule test2 [no_derivcheck]:
+    [] --> []
+
+rule test4 [role='test']:
+    [] --> []
+
+rule test6 [role='test', role='overwritten']:
+    [] --> []
+
+rule process_backwardcompat  [process='anything']:
+    [] --> []
+
+end
