@@ -127,7 +127,6 @@ protoRule = do
     subst <- option emptySubst letBlock
     (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
-    -- TODO: Permit parsing of "no variants"
     variants <- option [] $ symbol "variants" *> commaSep1 protoRuleAC
     return $ OpenProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) variants
 
