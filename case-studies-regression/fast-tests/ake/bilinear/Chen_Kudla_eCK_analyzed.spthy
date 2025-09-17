@@ -249,7 +249,8 @@ rule (modulo E) Resp_1:
      ]
     --[
     Accept( ~ey, $B, $A,
-            kdf(<z, em('P', hp($A))^(~ey*~x), z.1, $A, $B, X, pmult(~ey, 'P')>)
+            kdf(<z, em('P', hp($A))^(~ey*~x), pmult(x.1, x.2), $A, $B, X, 
+                 pmult(~ey, 'P')>)
     ),
     Sid( ~ey, <'Resp', $B, $A, X, pmult(~ey, 'P')> ),
     Match( ~ey, <'Init', $A, $B, X, pmult(~ey, 'P')> )
@@ -257,136 +258,59 @@ rule (modulo E) Resp_1:
      [
      Out( pmult(~ey, 'P') ),
      !Sessk( ~ey,
-             kdf(<z, em('P', hp($A))^(~ey*~x), z.1, $A, $B, X, pmult(~ey, 'P')>)
+             kdf(<z, em('P', hp($A))^(~ey*~x), pmult(x.1, x.2), $A, $B, X, 
+                  pmult(~ey, 'P')>)
      ),
      !Ephk( ~ey )
      ]
     variants (modulo AC)
-     1. $B    = $B.44
-        ~ey   = ~ey.45
-        ~x    = ~ey.45
-        X     = pmult(inv(~ey.45), z.53)
-        z     = em(z.53, hp($B.44))
-        z.1   = z.53
+    1. $B    = $B.51
+       ~ey   = ~ey.52
+       ~x    = ~x.65
+       X     = X.54
+       z     = em(X.54, hp($B.51))^~x.65
+       x.1   = ~ey.52
+       x.2   = X.54
     
-     2. $B    = $B.49
-        ~ey   = ~ey.50
-        ~x    = ~x.63
-        X     = X.52
-        z     = em(X.52, hp($B.49))^~x.63
-        z.1   = pmult(~ey.50, X.52)
+    2. $B    = $B.61
+       ~ey   = ~ey.62
+       ~x    = ~x.75
+       X     = pmult(inv(~x.75), x.85)
+       z     = em(x.85, hp($B.61))
+       x.1   = (~ey.62*inv(~x.75))
+       x.2   = x.85
     
-     3. $B    = $B.49
-        ~ey   = ~ey.50
-        ~x    = ~x.63
-        X     = pmult(inv(~ey.50), z.58)
-        z     = em(z.58, hp($B.49))^(~x.63*inv(~ey.50))
-        z.1   = z.58
+    3. $B    = $B.661
+       ~ey   = ~ey.662
+       ~x    = ~x.675
+       X     = pmult(x.1319, x.685)
+       z     = em(x.685, hp($B.661))^(~x.675*x.1319)
+       x.1   = (~ey.662*x.1319)
+       x.2   = x.685
     
-     4. $B    = $B.612
-        ~ey   = ~ey.613
-        ~x    = ~x.626
-        X     = pmult(x.1220, x.1221)
-        z     = em(x.1221, hp($B.612))^(~x.626*x.1220)
-        z.1   = pmult((~ey.613*x.1220), x.1221)
+    4. $B    = $B.662
+       ~ey   = ~ey.663
+       ~x    = ~x.676
+       X     = pmult(inv((~x.676*x.1321)), x.686)
+       z     = em(x.686, hp($B.662))^inv(x.1321)
+       x.1   = (~ey.663*inv((~x.676*x.1321)))
+       x.2   = x.686
     
-     5. $B    = $B.612
-        ~ey   = ~ey.613
-        ~x    = ~x.626
-        X     = pmult(inv(~x.626), x.1221)
-        z     = em(x.1221, hp($B.612))
-        z.1   = pmult((~ey.613*inv(~x.626)), x.1221)
+    5. $B    = $B.662
+       ~ey   = ~ey.663
+       ~x    = ~x.676
+       X     = pmult((x.1321*inv(~x.676)), x.686)
+       z     = em(x.686, hp($B.662))^x.1321
+       x.1   = (~ey.663*x.1321*inv(~x.676))
+       x.2   = x.686
     
-     6. $B    = $B.613
-        ~ey   = ~ey.614
-        ~x    = ~x.627
-        X     = pmult(inv((~ey.614*~x.627)), x.1223)
-        z     = em(x.1223, hp($B.613))^inv(~ey.614)
-        z.1   = pmult(inv(~x.627), x.1223)
-    
-     7. $B    = $B.613
-        ~ey   = ~ey.614
-        ~x    = ~ey.614
-        X     = pmult(inv((~ey.614*x.1222)), x.1223)
-        z     = em(x.1223, hp($B.613))^inv(x.1222)
-        z.1   = pmult(inv(x.1222), x.1223)
-    
-     8. $B    = $B.613
-        ~ey   = ~ey.614
-        ~x    = ~x.627
-        X     = pmult(inv((~x.627*x.1222)), x.1223)
-        z     = em(x.1223, hp($B.613))^inv(x.1222)
-        z.1   = pmult((~ey.614*inv((~x.627*x.1222))), x.1223)
-    
-     9. $B    = $B.613
-        ~ey   = ~ey.614
-        ~x    = ~ey.614
-        X     = pmult((x.1222*inv(~ey.614)), x.1223)
-        z     = em(x.1223, hp($B.613))^x.1222
-        z.1   = pmult(x.1222, x.1223)
-    
-    10. $B    = $B.613
-        ~ey   = ~ey.614
-        ~x    = ~x.627
-        X     = pmult((x.1222*inv(~x.627)), x.1223)
-        z     = em(x.1223, hp($B.613))^x.1222
-        z.1   = pmult((~ey.614*x.1222*inv(~x.627)), x.1223)
-    
-    11. $B    = $B.614
-        ~ey   = ~ey.615
-        ~x    = ~x.628
-        X     = pmult(inv((~ey.615*~x.628*x.1224)), x.1225)
-        z     = em(x.1225, hp($B.614))^inv((~ey.615*x.1224))
-        z.1   = pmult(inv((~x.628*x.1224)), x.1225)
-    
-    12. $B    = $B.614
-        ~ey   = ~ey.615
-        ~x    = ~x.628
-        X     = pmult(inv((~ey.615*x.1224)), x.1225)
-        z     = em(x.1225, hp($B.614))^(~x.628*inv((~ey.615*x.1224)))
-        z.1   = pmult(inv(x.1224), x.1225)
-    
-    13. $B    = $B.614
-        ~ey   = ~ey.615
-        ~x    = ~ey.615
-        X     = pmult((x.1223*inv((~ey.615*x.1224))), x.1225)
-        z     = em(x.1225, hp($B.614))^(x.1223*inv(x.1224))
-        z.1   = pmult((x.1223*inv(x.1224)), x.1225)
-    
-    14. $B    = $B.614
-        ~ey   = ~ey.615
-        ~x    = ~x.628
-        X     = pmult((x.1223*inv((~x.628*x.1224))), x.1225)
-        z     = em(x.1225, hp($B.614))^(x.1223*inv(x.1224))
-        z.1   = pmult((~ey.615*x.1223*inv((~x.628*x.1224))), x.1225)
-    
-    15. $B    = $B.614
-        ~ey   = ~ey.615
-        ~x    = ~x.628
-        X     = pmult((x.1224*inv(~ey.615)), x.1225)
-        z     = em(x.1225, hp($B.614))^(~x.628*x.1224*inv(~ey.615))
-        z.1   = pmult(x.1224, x.1225)
-    
-    16. $B    = $B.614
-        ~ey   = ~ey.615
-        ~x    = ~x.628
-        X     = pmult((x.1224*inv((~ey.615*~x.628))), x.1225)
-        z     = em(x.1225, hp($B.614))^(x.1224*inv(~ey.615))
-        z.1   = pmult((x.1224*inv(~x.628)), x.1225)
-    
-    17. $B    = $B.615
-        ~ey   = ~ey.616
-        ~x    = ~x.629
-        X     = pmult((x.1225*inv((~ey.616*~x.629*x.1226))), x.1227)
-        z     = em(x.1227, hp($B.615))^(x.1225*inv((~ey.616*x.1226)))
-        z.1   = pmult((x.1225*inv((~x.629*x.1226))), x.1227)
-    
-    18. $B    = $B.615
-        ~ey   = ~ey.616
-        ~x    = ~x.629
-        X     = pmult((x.1225*inv((~ey.616*x.1226))), x.1227)
-        z     = em(x.1227, hp($B.615))^(~x.629*x.1225*inv((~ey.616*x.1226)))
-        z.1   = pmult((x.1225*inv(x.1226)), x.1227)
+    6. $B    = $B.663
+       ~ey   = ~ey.664
+       ~x    = ~x.677
+       X     = pmult((x.1322*inv((~x.677*x.1323))), x.687)
+       z     = em(x.687, hp($B.663))^(x.1322*inv(x.1323))
+       x.1   = (~ey.664*x.1322*inv((~x.677*x.1323)))
+       x.2   = x.687
   */
 
 lemma key_secrecy_eCK_like:
@@ -541,8 +465,8 @@ Failed to derive Variable(s): ~msk
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
+Compiled at: 2025-09-08 09:04:28.158015016 UTC
 */
 
 end
@@ -554,7 +478,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 32.95s
+  processing time: 24.77s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
