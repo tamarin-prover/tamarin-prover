@@ -41,8 +41,6 @@ import qualified Data.Set                         as S
 -- import qualified Data.ByteString.Lazy as BS
 
 import           Debug.Trace.Ignore
-import Data.Maybe (isJust)
-import Term.Positions (findPos)
 
 
 tmpdir :: FilePath
@@ -58,12 +56,11 @@ tmpdir = "/tmp/tamarin/"
 --   3. Apply variant substitutions to equations
 --      to obtain DNF of equations.
 --   4. Simplify rule.
-variantsProtoRule :: MaudeHandle -> ProtoRuleE -> Maybe ProtoRuleAC
+variantsProtoRule :: MaudeHandle -> ProtoRuleE -> ProtoRuleAC
 variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr _) prems0 concs0 acts0 nvs0) =
     -- rename rule to decrease variable indices
-    (`Precise.evalFresh` Precise.nothingUsed) . renamePrecise  $ convertRule `evalFreshTAvoiding` ru
+    (`Precise.evalFresh` Precise.nothingUsed) . renamePrecise  $ convertRule `evalFreshAvoiding` ru
   where
-    convertRule :: FreshT Maybe (Rule ProtoRuleACInfo)
     convertRule = do
         (abstrPsCsAs, bindings) <- abstrRule
         let eqsAbstr         = map swap (M.toList bindings)
@@ -73,12 +70,12 @@ variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr _) prems0 concs0 acts0 nv
             substs           = [ restrictVFresh (frees abstrPsCsAs) $
                                    removeRenamings $ ((`runReader` hnd) . normSubstVFresh')  $
                                    composeVFresh vsubst abstractionSubst
-                               |  vsubst <- variantSubsts,
-                                  not $ isFreshRedundant vsubst ]
+                               | vsubst <- variantSubsts ]
 
         case substs of
-          [] -> mzero
+          [] -> error $ "variantsProtoRule: rule has no variants `"++show ru++"'"
           _  -> do
+              -- x <- return (emptySubst, Just substs) --
               x <- simpDisjunction hnd (const (const False)) (Disj substs)
               case trace (show ("SIMP",abstractedTerms,
                                 "abstr", abstrPsCsAs,
@@ -118,19 +115,6 @@ variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr _) prems0 concs0 acts0 nv
             freshSubsts = map (restrictVFresh (frees (prems, concs, acts, newvs))) freshSubsts0
 
     trueDisj = [ emptySubstVFresh ]
-
-    freshlyIntroduced :: [LNTerm]
-    freshlyIntroduced = [ t | Fact FreshFact _ [t] <- prems0 ]
-
-    premiseTerms :: [LNTerm]
-    premiseTerms = concat [ ts | Fact t _ ts <- prems0, t /= FreshFact ]
-
-    isFreshRedundant :: LNSubstVFresh -> Bool
-    isFreshRedundant sFresh =
-      let subst = freshToFreeAvoidingFast sFresh (frees premiseTerms)
-          premises = map ((`runReader` hnd) . norm') (apply subst premiseTerms)
-          freshTerms = apply subst freshlyIntroduced
-      in any (\ft -> any (isJust . findPos ft) premises) freshTerms
 
 computeVariantsCached :: LNTerm -> MaudeHandle -> [LNSubstVFresh]
 computeVariantsCached inp hnd = computeVariants inp `runReader` hnd
