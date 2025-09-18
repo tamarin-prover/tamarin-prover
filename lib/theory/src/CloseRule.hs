@@ -251,7 +251,7 @@ derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof1 || che
 
     -- trace ("\ntheory : \n" ++ tabTheory modifiedTheory)
 
-    newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "Out0") [] []) (pre s) (co s) (a s) []) []]
+    newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "Out0") (RuleAttributes Nothing Nothing False False Nothing) []) (pre s) (co s) (a s) []) []]
     varD s = frees $ concatMap factTerms s
     varFresh s = map msgToFreshVars (varD s)
     pre = freesToFresh . varFresh

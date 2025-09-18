@@ -251,7 +251,7 @@ prettyMaudeSigExcept sig excl = P.vcat
       where
             showAttrNoEq (Public,Destructor) = "[destructor]"
             showAttrNoEq (Private,Destructor) = "[private,destructor]"
-            showAttrNoEq (Private,Constructor) = "[private]"
+            showAttrNoEq (Private,Constructor) = "[private,constructor]"
             showAttrNoEq (Public,Constructor) = ""
 
     ppFunSymb (ACfctUser (f,(priv,constr))) = P.text $ BC.unpack f ++ "/2" ++ showAttrAC (priv,constr)

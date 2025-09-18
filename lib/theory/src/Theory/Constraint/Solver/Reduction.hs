@@ -236,7 +236,7 @@ labelNodeId = \i rules parent -> do
                                     [kuFactAnn ann m] [inFact m] [kLogFact m] []
 
 
-    mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule [] []))
+    mkFreshRuleAC m = Rule (ProtoInfo (ProtoRuleACInstInfo FreshRule mempty []))
                            [] [freshFact m] [] [m]
 
     exploitPrems i ru = mapM_ (exploitPrem i ru) (enumPrems ru)
@@ -320,7 +320,7 @@ insertAction i fa@(Fact _ ann _) = do
                 Just (UpK, viewTerm2 -> FInv m) -> do
                 -- In the diff case, add inv rule instead of goal
                     if isdiff
-                       then do                          
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -339,7 +339,7 @@ insertAction i fa@(Fact _ ann _) = do
                 Just (UpK, viewTerm2 -> FMult ms) -> do
                 -- In the diff case, add mult rule instead of goal
                     if isdiff
-                       then do           
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -351,7 +351,7 @@ insertAction i fa@(Fact _ ann _) = do
                                insertGoal goal False
                                markGoalAsSolved "exists" goal
                                return Changed
-                          
+
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
@@ -359,7 +359,7 @@ insertAction i fa@(Fact _ ann _) = do
                 Just (UpK, viewTerm2 -> FUnion ms) -> do
                 -- In the diff case, add union (?) rule instead of goal
                     if isdiff
-                       then do                        
+                       then do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
@@ -371,7 +371,7 @@ insertAction i fa@(Fact _ ann _) = do
                                insertGoal goal False
                                markGoalAsSolved "exists" goal
                                return Changed
-                          
+
                        else do
                           insertGoal goal False
                           mapM_ requiresKU ms *> return Changed
@@ -525,7 +525,7 @@ insertGoalStatus goal status = do
 -- | Insert a 'Goal' and store its age.
 insertGoal :: Goal -> Bool -> Reduction ()
 insertGoal goal looping = insertGoalStatus goal (GoalStatus False 0 looping)
- 
+
 -- | Mark the given goal as solved.
 markGoalAsSolved :: String -> Goal -> Reduction ()
 markGoalAsSolved how goal =
@@ -786,4 +786,3 @@ solveRuleConstraints (Just eqConstr) = do
     setM sEqStore =<< simp hnd (const (const False)) eqs
     noContradictoryEqStore
 solveRuleConstraints Nothing = return ()
-

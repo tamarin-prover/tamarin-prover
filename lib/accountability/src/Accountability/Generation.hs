@@ -5,16 +5,18 @@
 -- Portability : GHC only
 --
 -- Compute translation-specific restrictions
-module Accountability.Generation
-  ( generateAccountabilityLemmas
-  , checkWellformedness
-  ) where
+module Accountability.Generation (
+        generateAccountabilityLemmas
+      , checkWellformedness
+      , mergeQuantifiers
+) where
 
-import Control.Monad.Catch (MonadThrow)
-import Control.Monad.Fresh (MonadFresh, evalFreshT)
-import Text.PrettyPrint.Class (Document(text, ($-$)), ($--$), vcat, Doc)
-import Theory
-import Theory.Tools.Wellformedness (WfErrorReport)
+import           Control.Monad.Catch         (MonadThrow)
+import           Control.Monad.Fresh         (MonadFresh, evalFreshT)
+import qualified Extension.Data.Label        as L
+import           Text.PrettyPrint.Class      (Document(text, ($-$)), ($--$), vcat, Doc)
+import           Theory
+import           Theory.Tools.Wellformedness (WfErrorReport)
 
 ------------------------------------------------------------------------------
 -- Utilities

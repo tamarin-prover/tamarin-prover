@@ -84,4 +84,6 @@ library
     other-modules:
 
     default-extensions:
+      DuplicateRecordFields
+      NoFieldSelectors
       OverloadedRecordDot

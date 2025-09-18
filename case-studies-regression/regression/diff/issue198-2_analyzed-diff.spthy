@@ -1,0 +1,303 @@
+theory issue198_2 begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~v1 ) ]
+  --[ Setup( ), Roles( $H1, $H2, $D1, $D2 ) ]->
+   [
+   AgSt_H1v( diff($H2, $H1), diff($D2, $D1), ~v1 ),
+   ShuffleAgents( (<$H1, $D1>++<$H2, $D2>) )
+   ]
+
+rule (modulo E) shuffleVoters:
+   [ ShuffleAgents( (x++y) ) ] --> [ AgSt_S0( x ), AgSt_S0( y ) ]
+
+rule (modulo E) H_vote:
+   [ AgSt_H1v( $H, $D, vote ) ]
+  --[ Comm( $H, vote ), MyVote( $H, vote ) ]->
+   [ AgSt_H2( $H, $D, vote ), Channel( $H, vote ) ]
+
+rule (modulo E) S_1:
+   [
+   AgSt_S0( <$Hvoter, $Dvoter> ), AgSt_S0( <$Hempty, $Dempty> ),
+   Channel( $Hvoter, vote )
+   ]
+  --[ LearnS( $Hvoter, vote ), LearnS( $Hempty, 'empty' ) ]->
+   [ ]
+
+restriction OneSetup [right]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction OneSetup [left]:
+  "∀ #i #j. ((Setup( ) @ #i) ∧ (Setup( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction notSameRole [right]:
+  "∀ H1 H2 D1 D2 #i.
+    (Roles( H1, H2, D1, D2 ) @ #i) ⇒
+    ((((((¬(H1 = H2)) ∧ (¬(H1 = D1))) ∧ (¬(H1 = D2))) ∧ (¬(H2 = D1))) ∧
+      (¬(H2 = D2))) ∧
+     (¬(D1 = D2)))"
+  // safety formula
+
+restriction notSameRole [left]:
+  "∀ H1 H2 D1 D2 #i.
+    (Roles( H1, H2, D1, D2 ) @ #i) ⇒
+    ((((((¬(H1 = H2)) ∧ (¬(H1 = D1))) ∧ (¬(H1 = D2))) ∧ (¬(H2 = D1))) ∧
+      (¬(H2 = D2))) ∧
+     (¬(D1 = D2)))"
+  // safety formula
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  qed
+next
+  case Rule_Destrd_0_snd
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( <x, x.1> ) ▶₀ #i ) )
+  qed
+next
+  case Rule_Destrd_union
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( (x++y) ) ▶₀ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( (x++y) ) ▶₀ #i ) )
+  qed
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    by step( solve( !KD( x ) ▶₁ #i ) )
+  next
+    case RHS
+    step( simplify )
+    by step( solve( !KD( x ) ▶₁ #i ) )
+  qed
+next
+  case Rule_H_vote
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( AgSt_H1v( $H, $D, vote ) ▶₀ #i ) )
+      case Setup
+      by sorry // Cannot prove
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( AgSt_H1v( $H, $D, vote ) ▶₀ #i ) )
+      case Setup
+      by sorry // Cannot prove
+    qed
+  qed
+next
+  case Rule_S_1
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( AgSt_S0( <$Hvoter, $Dvoter> ) ▶₀ #i ) )
+      case shuffleVoters_case_1
+      step( solve( AgSt_S0( <$Hempty, $Dempty> ) ▶₁ #i ) )
+        case shuffleVoters_case_1
+        by step( contradiction /* from formulas */ )
+      next
+        case shuffleVoters_case_2
+        step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
+          case H_vote
+          by step( contradiction /* from formulas */ )
+        qed
+      qed
+    next
+      case shuffleVoters_case_2
+      step( solve( AgSt_S0( <$Hempty, $Dempty> ) ▶₁ #i ) )
+        case shuffleVoters_case_1
+        step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
+          case H_vote
+          by sorry // Cannot prove
+        qed
+      next
+        case shuffleVoters_case_2
+        by step( contradiction /* from formulas */ )
+      qed
+    next
+      case shuffleVoters_case_3
+      step( solve( AgSt_S0( <$Hempty, $Dempty> ) ▶₁ #i ) )
+        case shuffleVoters_case_1
+        by step( contradiction /* from formulas */ )
+      next
+        case shuffleVoters_case_2
+        step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
+          case H_vote
+          by step( contradiction /* from formulas */ )
+        qed
+      qed
+    next
+      case shuffleVoters_case_4
+      step( solve( AgSt_S0( <$Hempty, $Dempty> ) ▶₁ #i ) )
+        case shuffleVoters_case_1
+        step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
+          case H_vote
+          by sorry // Cannot prove
+        qed
+      next
+        case shuffleVoters_case_2
+        by step( contradiction /* from formulas */ )
+      qed
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( AgSt_S0( <$Hvoter, $Dvoter> ) ▶₀ #i ) )
+      case shuffleVoters_case_1
+      step( solve( AgSt_S0( <$Hempty, $Dempty> ) ▶₁ #i ) )
+        case shuffleVoters_case_1
+        by step( contradiction /* from formulas */ )
+      next
+        case shuffleVoters_case_2
+        step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
+          case H_vote
+          by sorry // Cannot prove
+        qed
+      qed
+    next
+      case shuffleVoters_case_2
+      step( solve( AgSt_S0( <$Hempty, $Dempty> ) ▶₁ #i ) )
+        case shuffleVoters_case_1
+        step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
+          case H_vote
+          by step( contradiction /* from formulas */ )
+        qed
+      next
+        case shuffleVoters_case_2
+        by step( contradiction /* from formulas */ )
+      qed
+    next
+      case shuffleVoters_case_3
+      step( solve( AgSt_S0( <$Hempty, $Dempty> ) ▶₁ #i ) )
+        case shuffleVoters_case_1
+        by step( contradiction /* from formulas */ )
+      next
+        case shuffleVoters_case_2
+        step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
+          case H_vote
+          by sorry // Cannot prove
+        qed
+      qed
+    next
+      case shuffleVoters_case_4
+      step( solve( AgSt_S0( <$Hempty, $Dempty> ) ▶₁ #i ) )
+        case shuffleVoters_case_1
+        step( solve( Channel( $Hvoter, vote ) ▶₂ #i ) )
+          case H_vote
+          by step( contradiction /* from formulas */ )
+        qed
+      next
+        case shuffleVoters_case_2
+        by step( contradiction /* from formulas */ )
+      qed
+    qed
+  qed
+next
+  case Rule_Send
+  backward-search
+    case LHS
+    step( simplify )
+    MIRRORED
+  next
+    case RHS
+    step( simplify )
+    MIRRORED
+  qed
+next
+  case Rule_Setup
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry // Cannot prove
+  next
+    case RHS
+    step( simplify )
+    by sorry // Cannot prove
+  qed
+next
+  case Rule_shuffleVoters
+  backward-search
+    case LHS
+    step( simplify )
+    step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
+      case Setup_case_1
+      by sorry // Cannot prove
+    next
+      case Setup_case_2
+      by sorry // Cannot prove
+    qed
+  next
+    case RHS
+    step( simplify )
+    step( solve( ShuffleAgents( (x++y) ) ▶₀ #i ) )
+      case Setup_case_1
+      by sorry // Cannot prove
+    next
+      case Setup_case_2
+      by sorry // Cannot prove
+    qed
+  qed
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/diff/issue198-2.spthy
+
+  output:          examples/regression/diff/issue198-2.spthy.tmp
+  processing time: 0.16s
+  
+  DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
+
+==============================================================================
+*/

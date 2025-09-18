@@ -1,7 +1,6 @@
 theory RevealingSignatures
 begin
 
-functions: h/7
 builtins: hashing, revealing-signing
 
 rule ONE:

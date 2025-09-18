@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -10,6 +11,7 @@
 module Sapic.Annotation
   ( ProcessAnnotation(..)
   , AnnotatedProcess
+  , AnnotatedSapicException
   , annLock
   , annSecretChannel
   , annDestructorEquation
@@ -30,6 +32,7 @@ import GHC.Generics (Generic)
 import Term.LTerm
 import Term.Substitution
 import Theory.Sapic
+import Sapic.Exceptions
 
 -- | Variables used to annotate locks. Encapsulated in newtype because of
 -- Semigroup instance below
@@ -58,7 +61,7 @@ data ProcessAnnotation v = ProcessAnnotation
 
 instance GoodAnnotation (ProcessAnnotation v)
     where
-        getProcessParsedAnnotation = parsingAnn
+        getProcessParsedAnnotation = (.parsingAnn)
         setProcessParsedAnnotation pn an = an { parsingAnn = pn }
         defaultAnnotation   = mempty
 
@@ -72,21 +75,21 @@ instance Monoid (ProcessAnnotation v) where
 
 instance Semigroup (ProcessAnnotation v) where
   (<>)  p1 p2 = ProcessAnnotation
-        (parsingAnn p1 <> parsingAnn p2)
-        (lock p1 <> lock p2)
-        (unlock p1 <> unlock p2)
-        (secretChannel p1 <> secretChannel p2)
-        (mayMerge (destructorEquation p1) (destructorEquation p2))
-        (elseBranch p2)
-        (pureState p1 || pureState p2)
-        (stateChannel p1 <> stateChannel p2)
-        (mayMerge (isStateChannel p1) (isStateChannel p2))
+        (p1.parsingAnn <> p2.parsingAnn)
+        (p1.lock <> p2.lock)
+        (p1.unlock <> p2.unlock)
+        (p1.secretChannel <> p2.secretChannel)
+        (mayMerge p1.destructorEquation p2.destructorEquation)
+        p2.elseBranch
+        (p1.pureState || p2.pureState)
+        (p1.stateChannel <> p2.stateChannel)
+        (mayMerge p1.isStateChannel p2.isStateChannel)
 
 getProcessNames :: GoodAnnotation ann => ann -> [String]
 getProcessNames = processnames . getProcessParsedAnnotation
 
 setProcessNames :: GoodAnnotation a => [String] -> a -> a
-setProcessNames pn = mappendProcessParsedAnnotation (mempty {processnames = pn})
+setProcessNames pn = setProcessParsedAnnotation (mempty {processnames = pn})
 
 instance (Apply s SapicTerm) => (Apply s (ProcessAnnotation v)) where
     apply = applyAnn
@@ -98,6 +101,7 @@ newtype AnProcess ann = AnProcess (LProcess ann)
     deriving (Typeable, Show)
 
 type AnnotatedProcess = LProcess (ProcessAnnotation LVar)
+type AnnotatedSapicException = SapicException (ProcessAnnotation LVar)
 
 -- This instance is useful for modifying annotations, but not for much more.
 instance Functor AnProcess where
@@ -132,7 +136,7 @@ toAnProcess :: GoodAnnotation an => PlainProcess -> LProcess an
 toAnProcess = unAnProcess . fmap f . AnProcess
   where
         -- f :: ProcessParsedAnnotation -> an
-        f l = setProcessParsedAnnotation l defaultAnnotation
+        f l = mappendProcessParsedAnnotation l defaultAnnotation
 
 toProcess :: GoodAnnotation an => LProcess an -> PlainProcess
 toProcess = unAnProcess . fmap f . AnProcess

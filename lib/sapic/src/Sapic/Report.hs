@@ -43,7 +43,7 @@ reportInit anP (initrules,initTx) = return (reportrule : initrules, initTx)
 -- | This rules use the builtin restriction system to bind the Report predicate (which must be defined by the user), to this rule.
 opt_loc :: Maybe SapicTerm -> ProcessAnnotation v -> Maybe SapicTerm
 opt_loc loc ann =
- case (location $ parsingAnn ann) of
+ case location ann.parsingAnn of
   Nothing -> loc
   Just x -> Just x
 

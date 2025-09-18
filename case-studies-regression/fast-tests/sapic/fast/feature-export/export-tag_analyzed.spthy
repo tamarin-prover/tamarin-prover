@@ -1,0 +1,45 @@
+theory ExportInfo begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.4
+Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
+Compiled at: 2025-09-08 09:04:28.158015016 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/sapic/fast/feature-export/export-tag.spthy
+
+  output:          examples/sapic/fast/feature-export/export-tag.spthy.tmp
+  processing time: 0.04s
+  
+
+==============================================================================
+*/

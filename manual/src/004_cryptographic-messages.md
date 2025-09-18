@@ -181,7 +181,7 @@ x*inv(x) = 1
 pmult(x,(pmult(y,p)) = pmult(x*y,p)
 pmult(1,p)           = p
 em(p,q)              = em(q,p)
-em(pmult(x,p),q)     = pmult(x,em(q,p))
+em(pmult(x,p),q)     = em(p,q)^x
 ~~~
 
 `xor`:

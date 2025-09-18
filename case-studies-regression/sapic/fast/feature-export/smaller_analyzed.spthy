@@ -21,8 +21,8 @@ guarded formula characterizing all satisfying traces:
 "∃ #i. (A( ) @ #i)"
 */
 simplify
-solve( State_11( x, (x++z) ) ▶₀ #i )
-  case Init
+solve( State_111( x, y ) ▶₀ #i )
+  case ifSmallerxy_0_11
   SOLVED // trace found
 qed
 
@@ -32,12 +32,30 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule]:
-   [ In( x.1 ), In( y.1 ) ] --[ Init( ) ]-> [ State_11( x.1, y.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="in(x.1);", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
+                       role='Process']:
+   [ State_( ), In( x.1 ) ] --> [ State_1( x.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="in(x.1);", issapicrule]:
-     [ In( x ), In( y ) ] --[ Init( ) ]-> [ State_11( x, y ) ]
+  rule (modulo AC) inx_0_[color=#ffffff, process="in(x.1);", issapicrule,
+                          role='Process']:
+     [ State_( ), In( x ) ] --> [ State_1( x ) ]
+  */
+
+rule (modulo E) iny_0_1[color=#ffffff, process="in(y.1);", issapicrule,
+                        role='Process']:
+   [ State_1( x.1 ), In( y.1 ) ] --> [ State_11( x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) iny_0_1[color=#ffffff, process="in(y.1);", issapicrule,
+                           role='Process']:
+     [ State_1( x ), In( y ) ] --> [ State_11( x, y ) ]
   */
 
 restriction Restr_ifSmallerxy_0_11_1:
@@ -45,15 +63,66 @@ restriction Restr_ifSmallerxy_0_11_1:
     (Restr_ifSmallerxy_0_11_1( x, x.1 ) @ #NOW) ⇒ (∃ z. x = (z++x.1))"
 
 rule (modulo E) ifSmallerxy_0_11[color=#ffffff,
-                                 process="if Smaller( x.1, y.1 )", issapicrule]:
+                                 process="if Smaller( x.1, y.1 )", issapicrule, role='Process']:
    [ State_11( x.1, y.1 ) ]
-  --[ A( ), Restr_ifSmallerxy_0_11_1( y.1, x.1 ) ]->
-   [ ]
+  --[ Restr_ifSmallerxy_0_11_1( y.1, x.1 ) ]->
+   [ State_111( x.1, y.1 ) ]
 
   /*
   rule (modulo AC) ifSmallerxy_0_11[color=#ffffff,
-                                    process="if Smaller( x.1, y.1 )", issapicrule]:
-     [ State_11( x, y ) ] --[ A( ), Restr_ifSmallerxy_0_11_1( y, x ) ]-> [ ]
+                                    process="if Smaller( x.1, y.1 )", issapicrule, role='Process']:
+     [ State_11( x, y ) ]
+    --[ Restr_ifSmallerxy_0_11_1( y, x ) ]->
+     [ State_111( x, y ) ]
+  */
+
+restriction Restr_ifSmallerxy_1_11_1:
+  "∀ x #NOW x.1.
+    (Restr_ifSmallerxy_1_11_1( x, x.1 ) @ #NOW) ⇒ (¬(∃ z. x = (z++x.1)))"
+  // safety formula
+
+rule (modulo E) ifSmallerxy_1_11[color=#ffffff,
+                                 process="if Smaller( x.1, y.1 )", issapicrule, role='Process']:
+   [ State_11( x.1, y.1 ) ]
+  --[ Restr_ifSmallerxy_1_11_1( y.1, x.1 ) ]->
+   [ State_112( x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) ifSmallerxy_1_11[color=#ffffff,
+                                    process="if Smaller( x.1, y.1 )", issapicrule, role='Process']:
+     [ State_11( x, y ) ]
+    --[ Restr_ifSmallerxy_1_11_1( y, x ) ]->
+     [ State_112( x, y ) ]
+  */
+
+rule (modulo E) eventA_0_111[color=#ffffff, process="event A( );",
+                             issapicrule, role='Process']:
+   [ State_111( x.1, y.1 ) ] --[ A( ) ]-> [ State_1111( x.1, y.1 ) ]
+
+  /*
+  rule (modulo AC) eventA_0_111[color=#ffffff, process="event A( );",
+                                issapicrule, role='Process']:
+     [ State_111( x, y ) ] --[ A( ) ]-> [ State_1111( x, y ) ]
+  */
+
+rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule,
+                         role='Process']:
+   [ State_1111( x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+     [ State_1111( x, y ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_112[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_112( x.1, y.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_112[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_112( x, y ) ] --> [ ]
   */
 
 restriction single_session:
@@ -66,8 +135,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: f406d926a9eca90938ec0f955316087bb842bb6e (with uncommited changes), branch: error_messages
-Compiled at: 2025-02-20 12:12:04.473468 UTC
+Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
+Compiled at: 2025-06-18 14:31:09.981542 UTC
 */
 
 end
@@ -79,7 +148,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-export/smaller.spthy
 
   output:          examples/sapic/fast/feature-export/smaller.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.10s
   
   Ahappens (exists-trace): verified (3 steps)
 

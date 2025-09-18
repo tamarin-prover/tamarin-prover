@@ -32,7 +32,7 @@ description:
     .
     The paper describing the theory underlying the Tamarin prover was
     accepted at CSF 2012. Its extended version is available from
-    <http://tamarin-prover.github.io>.
+    <https://tamarin-prover.com>.
     .
     The Tamarin prover supports both a batch analysis mode and the
     interactive construction of security proofs using a GUI. Example protocols
@@ -42,14 +42,14 @@ description:
     The Tamarin prover uses maude (<http://maude.cs.illinois.edu/>) as a
     unification backend and GraphViz (<http://www.graphviz.org/>) to visualize
     constraint systems. Detailed instructions for installing the Tamarin
-    prover are given at <http://tamarin-prover.github.io>.
+    prover are given at <https://tamarin-prover.com>.
     .
     The paper describing the theory underlying the extension for observational
     equivalence is published at CCS 2015. Its extended version is available from
-    <http://tamarin-prover.github.io>. For observational equivalence proofs just
+    <https://tamarin-prover.com>. For observational equivalence proofs just
     add the "--diff" flag when calling the @tamarin-prover@.
 
-homepage:           https://tamarin-prover.github.io
+homepage:           https://tamarin-prover.com
 
 
 --------------
@@ -127,7 +127,6 @@ executable tamarin-prover
       , binary
       , binary-orphans
       , binary-instances
-      , blaze-builder
       , blaze-html
       , bytestring
       , cmdargs
@@ -136,7 +135,6 @@ executable tamarin-prover
       , deepseq
       , directory
       , exceptions
-      , fclabels
       , file-embed
       , filepath
       , gitrev
@@ -181,7 +179,6 @@ executable tamarin-prover
       Web.Dispatch
       Web.Hamlet
       Web.Handler
-      Web.Instances
       Web.Settings
       Web.Theory
       Web.Types
@@ -191,7 +188,9 @@ executable tamarin-prover
     default-extensions:
       DuplicateRecordFields
       LambdaCase
+      NoFieldSelectors
       OverloadedRecordDot
+      OverloadedStrings
       TemplateHaskell
 
 

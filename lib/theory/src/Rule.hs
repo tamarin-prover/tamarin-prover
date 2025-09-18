@@ -8,17 +8,23 @@ module Rule (
 
 import Items.RuleItem
 
-import           Prelude                             hiding (id, (.))
+import Prelude                             hiding (id, (.))
 
-import           Control.Category
+import Control.Category
 
 import qualified Extension.Data.Label                as L
 
-import           Theory.Model
-import           Theory.Proof
-import           Theory.Tools.RuleVariants
+import Theory.Model
+import Theory.Proof
+import Theory.Tools.RuleVariants
 
-import           Term.Macro
+import Term.Macro
+import Theory.Constraint.Solver.Sources (IntegerParameters)
+import Data.Maybe (maybeToList)
+
+
+
+
 
 -- | Get an OpenProtoRule's name
 getOpenProtoRuleName :: OpenProtoRule -> String
@@ -79,8 +85,8 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
 -- soundness sequent, if required.
 closeProtoRule :: MaudeHandle -> [Macro] -> OpenProtoRule -> [ClosedProtoRule]
 -- if there are no macros, we do not call applyMacroInRule to make sure that new vars are not overwritten (important for diff mode)
-closeProtoRule hnd []     (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd ruE)]
-closeProtoRule hnd macros (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd (applyMacroInRule macros ruE))]
+closeProtoRule hnd []     (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd ruE)
+closeProtoRule hnd macros (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
 closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
 
 
