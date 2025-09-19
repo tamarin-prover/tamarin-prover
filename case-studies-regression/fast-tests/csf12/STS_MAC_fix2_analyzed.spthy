@@ -123,27 +123,11 @@ rule (modulo E) Resp_1:
        X     = X.14
        z     = X.14^~ekR.12
     
-    2. ~ekR  = ~ekR.15
-       X     = z.20^inv(~ekR.15)
-       z     = z.20
-    
-    3. ~ekR  = ~ekR.45
+    2. ~ekR  = ~ekR.45
        X     = x.85^x.86
        z     = x.85^(~ekR.45*x.86)
     
-    4. ~ekR  = ~ekR.47
-       X     = x.89^inv((~ekR.47*x.90))
-       z     = x.89^inv(x.90)
-    
-    5. ~ekR  = ~ekR.47
-       X     = x.89^(x.90*inv(~ekR.47))
-       z     = x.89^x.90
-    
-    6. ~ekR  = ~ekR.48
-       X     = x.90^(x.91*inv((~ekR.48*x.92)))
-       z     = x.90^(x.91*inv(x.92))
-    
-    7. X     = DH_neutral
+    3. X     = DH_neutral
        z     = DH_neutral
   */
 
@@ -260,31 +244,15 @@ solve( Init_1( $I, $R, ~ltkI, ~ekI ) ▶₀ #i1 )
         qed
       next
         case Sessionkey_Reveal_case_3
-        solve( splitEqs(2) )
-          case split_case_1
+        solve( splitEqs(1) )
+          case split
           by contradiction /* from formulas */
-        next
-          case split_case_2
-          solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
-                           ~ltkI.1)
-                 ) @ #vk.20 )
-            case c_sign
-            by solve( !KU( ~ltkI.1 ) @ #vk.27 )
-          qed
         qed
       next
         case Sessionkey_Reveal_case_4
-        solve( splitEqs(2) )
-          case split_case_1
+        solve( splitEqs(1) )
+          case split
           by contradiction /* from formulas */
-        next
-          case split_case_2
-          solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
-                           ~ltkI.1)
-                 ) @ #vk.20 )
-            case c_sign
-            by solve( !KU( ~ltkI.1 ) @ #vk.27 )
-          qed
         qed
       next
         case c_KDF
@@ -339,83 +307,88 @@ solve( !Pk( $I, pk(~ltkI) ) ▶₀ #i1 )
   case Register_pk_clone_case_1
   solve( Resp_1( $I, $R, ~ltkR, ~ekR, hki ) ▶₁ #i1 )
     case Resp_1
-    solve( !KU( sign(<'2', $I, $R, hki, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
-      case Init_2_case_1
-      solve( !KU( sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.16 )
-        case Resp_1
-        solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.12 )
-          case Sessionkey_Reveal_case_1
-          solve( splitEqs(2) )
-            case split_case_1
-            by contradiction /* from formulas */
-          next
-            case split_case_2
-            solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
-                             ~ltkR.1)
-                   ) @ #vk.25 )
-              case c_sign
-              by solve( !KU( ~ltkR.1 ) @ #vk.31 )
-            qed
-          qed
-        next
-          case Sessionkey_Reveal_case_2
-          solve( splitEqs(2) )
-            case split
-            solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
-                             ~ltkR.1)
-                   ) @ #vk.25 )
-              case c_sign
-              by solve( !KU( ~ltkR.1 ) @ #vk.31 )
-            qed
-          qed
-        next
-          case Sessionkey_Reveal_case_3
-          solve( splitEqs(3) )
-            case split_case_1
-            by contradiction /* from formulas */
-          next
-            case split_case_2
-            solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
-                             ~ltkI.1)
-                   ) @ #vk.25 )
-              case c_sign
-              by solve( !KU( ~ltkI.1 ) @ #vk.32 )
-            qed
-          qed
-        next
-          case Sessionkey_Reveal_case_4
-          solve( splitEqs(3) )
-            case split
-            solve( !KU( sign(<'2', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
-                             ~ltkI.1)
-                   ) @ #vk.25 )
-              case c_sign
-              by solve( !KU( ~ltkI.1 ) @ #vk.32 )
-            qed
-          qed
-        next
-          case c_KDF
-          solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.18 )
-            case Init_1
-            by solve( !KU( ~ekR ) @ #vk.19 )
-          next
-            case Resp_1
-            by solve( !KU( ~ekI ) @ #vk.19 )
-          next
-            case c_exp
-            by solve( !KU( ~ekI ) @ #vk.21 )
-          qed
-        qed
+    solve( splitEqs(1) )
+      case split_case_1
+      solve( !KU( sign(<'2', $I, $R, hki, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
+        case Init_2_case_1
+        by contradiction /* non-normal terms */
+      next
+        case Init_2_case_2
+        by contradiction /* non-normal terms */
       next
         case c_sign
-        by solve( !KU( ~ltkR.1 ) @ #vk.22 )
+        by solve( !KU( ~ltkI ) @ #vk.15 )
       qed
     next
-      case Init_2_case_2
-      by contradiction /* from formulas */
+      case split_case_2
+      solve( !KU( sign(<'2', $I, $R, x^x.1, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
+        case Init_2_case_1
+        solve( !KU( sign(<'1', $I, $R, 'g'^~ekR, 'g'^~ekI>, ~ltkR.1) ) @ #vk.16 )
+          case Resp_1
+          solve( !KU( KDF('g'^(~ekI*~ekR)) ) @ #vk.12 )
+            case Sessionkey_Reveal_case_1
+            solve( splitEqs(3) )
+              case split_case_1
+              by contradiction /* from formulas */
+            next
+              case split_case_2
+              solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                               ~ltkR.1)
+                     ) @ #vk.25 )
+                case c_sign
+                by solve( !KU( ~ltkR.1 ) @ #vk.31 )
+              qed
+            qed
+          next
+            case Sessionkey_Reveal_case_2
+            solve( splitEqs(3) )
+              case split
+              solve( !KU( sign(<'1', $I.1, $R.1, 'g'^(~ekI*~ekR*inv(~tid)), 'g'^~tid>,
+                               ~ltkR.1)
+                     ) @ #vk.25 )
+                case c_sign
+                by solve( !KU( ~ltkR.1 ) @ #vk.31 )
+              qed
+            qed
+          next
+            case Sessionkey_Reveal_case_3
+            solve( splitEqs(3) )
+              case split
+              by contradiction /* from formulas */
+            qed
+          next
+            case Sessionkey_Reveal_case_4
+            by solve( splitEqs(3) )
+          next
+            case c_KDF
+            solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.18 )
+              case Init_1
+              by solve( !KU( ~ekR ) @ #vk.19 )
+            next
+              case Resp_1
+              by solve( !KU( ~ekI ) @ #vk.19 )
+            next
+              case c_exp
+              by solve( !KU( ~ekI ) @ #vk.21 )
+            qed
+          qed
+        next
+          case c_sign
+          by solve( !KU( ~ltkR.1 ) @ #vk.22 )
+        qed
+      next
+        case Init_2_case_2
+        by contradiction /* from formulas */
+      next
+        case c_sign
+        by solve( !KU( ~ltkI ) @ #vk.15 )
+      qed
     next
-      case c_sign
-      by solve( !KU( ~ltkI ) @ #vk.15 )
+      case split_case_3
+      solve( !KU( sign(<'2', $I, $R, DH_neutral, 'g'^~ekR>, ~ltkI) ) @ #vk.7 )
+        case c_sign
+        by solve( !KU( ~ltkI ) @ #vk.15 )
+      qed
     qed
   qed
 next
@@ -462,8 +435,8 @@ Failed to derive Variable(s): ~ltkI
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
+Compiled at: 2025-09-08 09:04:28.158015016 UTC
 */
 
 end
@@ -475,13 +448,13 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          examples/csf12/STS_MAC_fix2.spthy.tmp
-  processing time: 1.37s
+  processing time: 1.51s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  KI_Perfect_Forward_Secrecy_I (all-traces): verified (26 steps)
-  KI_Perfect_Forward_Secrecy_R (all-traces): verified (28 steps)
+  KI_Perfect_Forward_Secrecy_I (all-traces): verified (22 steps)
+  KI_Perfect_Forward_Secrecy_R (all-traces): verified (31 steps)
 
 ==============================================================================
 */

@@ -161,93 +161,45 @@ rule (modulo E) Resp_1:
      !Sessk( ~ey, h2(<'g'^(h1(<~ey, sk($B)>)*sk($A)), z, z.1, $A, $B>) )
      ]
     variants (modulo AC)
-     1. $B    = $B.33
-        ~ey   = ~ey.34
-        X     = X.35
-        z     = X.35^sk($B.33)
-        z.1   = X.35^h1(<~ey.34, sk($B.33)>)
+    1. $B    = $B.33
+       ~ey   = ~ey.34
+       X     = X.35
+       z     = X.35^sk($B.33)
+       z.1   = X.35^h1(<~ey.34, sk($B.33)>)
     
-     2. $B    = $B.36
-        ~ey   = ~ey.37
-        X     = z.41^inv(sk($B.36))
-        z     = z.41
-        z.1   = z.41^(h1(<~ey.37, sk($B.36)>)*inv(sk($B.36)))
+    2. $B    = $B.36
+       ~ey   = ~ey.37
+       X     = z.41^inv(sk($B.36))
+       z     = z.41
+       z.1   = z.41^(h1(<~ey.37, sk($B.36)>)*inv(sk($B.36)))
     
-     3. $B    = $B.37
-        ~ey   = ~ey.38
-        X     = z.43^inv(h1(<~ey.38, sk($B.37)>))
-        z     = z.43^(inv(h1(<~ey.38, sk($B.37)>))*sk($B.37))
-        z.1   = z.43
+    3. $B    = $B.465
+       ~ey   = ~ey.466
+       X     = x.926^x.927
+       z     = x.926^(x.927*sk($B.465))
+       z.1   = x.926^(x.927*h1(<~ey.466, sk($B.465)>))
     
-     4. $B    = $B.465
-        ~ey   = ~ey.466
-        X     = x.926^x.927
-        z     = x.926^(x.927*sk($B.465))
-        z.1   = x.926^(x.927*h1(<~ey.466, sk($B.465)>))
+    4. $B    = $B.467
+       ~ey   = ~ey.468
+       X     = x.930^inv((x.931*sk($B.467)))
+       z     = x.930^inv(x.931)
+       z.1   = x.930^(h1(<~ey.468, sk($B.467)>)*inv((x.931*sk($B.467))))
     
-     5. $B    = $B.466
-        ~ey   = ~ey.467
-        X     = x.929^inv((h1(<~ey.467, sk($B.466)>)*sk($B.466)))
-        z     = x.929^inv(h1(<~ey.467, sk($B.466)>))
-        z.1   = x.929^inv(sk($B.466))
+    5. $B    = $B.467
+       ~ey   = ~ey.468
+       X     = x.930^(x.931*inv(sk($B.467)))
+       z     = x.930^x.931
+       z.1   = x.930^(x.931*h1(<~ey.468, sk($B.467)>)*inv(sk($B.467)))
     
-     6. $B    = $B.467
-        ~ey   = ~ey.468
-        X     = x.930^inv((x.931*h1(<~ey.468, sk($B.467)>)))
-        z     = x.930^(inv((x.931*h1(<~ey.468, sk($B.467)>)))*sk($B.467))
-        z.1   = x.930^inv(x.931)
+    6. $B    = $B.468
+       ~ey   = ~ey.469
+       X     = x.931^(x.932*inv((x.933*sk($B.468))))
+       z     = x.931^(x.932*inv(x.933))
+       z.1   = x.931^(x.932*h1(<~ey.469, sk($B.468)>)*inv((x.933*sk($B.468))))
     
-     7. $B    = $B.467
-        ~ey   = ~ey.468
-        X     = x.930^inv((x.931*h1(<~ey.468, sk($B.467)>)*sk($B.467)))
-        z     = x.930^inv((x.931*h1(<~ey.468, sk($B.467)>)))
-        z.1   = x.930^inv((x.931*sk($B.467)))
-    
-     8. $B    = $B.467
-        ~ey   = ~ey.468
-        X     = x.930^inv((x.931*sk($B.467)))
-        z     = x.930^inv(x.931)
-        z.1   = x.930^(h1(<~ey.468, sk($B.467)>)*inv((x.931*sk($B.467))))
-    
-     9. $B    = $B.467
-        ~ey   = ~ey.468
-        X     = x.930^(x.931*inv(h1(<~ey.468, sk($B.467)>)))
-        z     = x.930^(x.931*inv(h1(<~ey.468, sk($B.467)>))*sk($B.467))
-        z.1   = x.930^x.931
-    
-    10. $B    = $B.467
-        ~ey   = ~ey.468
-        X     = x.930^(x.931*inv(sk($B.467)))
-        z     = x.930^x.931
-        z.1   = x.930^(x.931*h1(<~ey.468, sk($B.467)>)*inv(sk($B.467)))
-    
-    11. $B    = $B.467
-        ~ey   = ~ey.468
-        X     = x.930^(x.931*inv((h1(<~ey.468, sk($B.467)>)*sk($B.467))))
-        z     = x.930^(x.931*inv(h1(<~ey.468, sk($B.467)>)))
-        z.1   = x.930^(x.931*inv(sk($B.467)))
-    
-    12. $B    = $B.468
-        ~ey   = ~ey.469
-        X     = x.931^(x.932*inv((x.933*h1(<~ey.469, sk($B.468)>))))
-        z     = x.931^(x.932*inv((x.933*h1(<~ey.469, sk($B.468)>)))*sk($B.468))
-        z.1   = x.931^(x.932*inv(x.933))
-    
-    13. $B    = $B.468
-        ~ey   = ~ey.469
-        X     = x.931^(x.932*inv((x.933*h1(<~ey.469, sk($B.468)>)*sk($B.468))))
-        z     = x.931^(x.932*inv((x.933*h1(<~ey.469, sk($B.468)>))))
-        z.1   = x.931^(x.932*inv((x.933*sk($B.468))))
-    
-    14. $B    = $B.468
-        ~ey   = ~ey.469
-        X     = x.931^(x.932*inv((x.933*sk($B.468))))
-        z     = x.931^(x.932*inv(x.933))
-        z.1   = x.931^(x.932*h1(<~ey.469, sk($B.468)>)*inv((x.933*sk($B.468))))
-    
-    15. X     = DH_neutral
-        z     = DH_neutral
-        z.1   = DH_neutral
+    7. X     = DH_neutral
+       z     = DH_neutral
+       z.1   = DH_neutral
   */
 
 rule (modulo E) Sessk_reveal:
@@ -366,8 +318,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
+Compiled at: 2025-09-08 09:04:28.158015016 UTC
 */
 
 end
@@ -379,7 +331,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_PFS_private.spthy.tmp
-  processing time: 1.46s
+  processing time: 1.33s
   
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (14 steps)
 
