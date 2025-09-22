@@ -71,6 +71,7 @@ data Contradiction =
   | ForbiddenKD                    -- ^ has forbidden KD-fact
   | ImpossibleChain                -- ^ has impossible chain
   | ForbiddenChain                 -- ^ has forbidden chain
+  | ForbiddenACConstrChain         -- ^ has forbidden AC Constructor chain
   | NonInjectiveFactInstance (NodeId, NodeId, NodeId)
     -- ^ Contradicts that certain facts have unique instances.
   | IncompatibleEqs                -- ^ Incompatible equalities.
@@ -107,7 +108,7 @@ contradictions ctxt sys = F.asum
     -- New CR-Rule *N6'*
     , guard (hasForbiddenChain sys)                 $> ForbiddenChain
     -- New Constraint for AC constructors
-    , guard (hasForbiddenConstrChain sys msig)      $> ForbiddenChain
+    , guard (hasForbiddenConstrChain sys msig)      $> ForbiddenACConstrChain
     -- CR-rules *S_≐* and *S_≈* are implemented via the equation store
     , guard (eqsIsFalse $ L.get sEqStore sys)       $> IncompatibleEqs
     -- CR-rules *S_⟂*, *S_{¬,last,1}*, *S_{¬,≐}*, *S_{¬,≈}*
@@ -477,6 +478,7 @@ prettyContradiction contra = case contra of
     ForbiddenBP                  -> text "non-normal bilinear pairing rule instance"
     ForbiddenKD                  -> text "forbidden KD-fact"
     ForbiddenChain               -> text "forbidden chain"
+    ForbiddenACConstrChain       -> text "forbidden AC constructor chain"
     ImpossibleChain              -> text "impossible chain"
     NonInjectiveFactInstance cex -> text $ "non-injective facts " ++ show cex
     FormulasFalse                -> text "from formulas"

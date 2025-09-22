@@ -55,6 +55,7 @@ module Term.LTerm (
   , isPubConst
   , isSimpleTerm
   , isTrivialFunSymTerm
+  , isTrivialACFunSymTerm
   , getVar
   , getMsgVar
   , freshToConst
@@ -399,6 +400,12 @@ isTrivialFunSymTerm :: LNTerm -> String -> Bool
 isTrivialFunSymTerm (viewTerm -> FApp f t) sym = -- trace ("isTrivialFunSymTerm: " ++ show (showFunSymName f) ++ " - " ++ show sym) $
     showFunSymName f == sym && all isMsgVar t
 isTrivialFunSymTerm _                      _   = False
+
+-- | True if the term is a given function term with only message variables as arguments
+isTrivialACFunSymTerm :: LNTerm -> Bool
+isTrivialACFunSymTerm (viewTerm -> FApp (AC _) t) = all isMsgVar t
+isTrivialACFunSymTerm _                           = False
+
 
 -- | 'True' iff no instance of this term contains fresh names or private function symbols.
 neverContainsFreshPriv :: LNTerm -> Bool

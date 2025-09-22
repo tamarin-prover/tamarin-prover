@@ -72,13 +72,14 @@ openGoals sys = do
         ActionG i (kFactView -> Just (UpK, m)) ->
           if get sDiffSystem sys
              -- In a diff proof, all action goals need to be solved.
-             then not (solved)
+             then not (solved) -- FIXME : || isTrivialACFunSymTerm m ?
              else
                not $    solved
                     -- message variables are not solved, except if the node already exists in the system -> facilitates finding contradictions
                     || (isMsgVar m && Nothing == M.lookup i (get sNodes sys))
                     || sortOfLNTerm m == LSortPub
                     || sortOfLNTerm m == LSortNat
+                    || isTrivialACFunSymTerm m -- do not solve actions that consist of an AC symbol where all arguments are simple msg variables, important for soundness
                     -- handled by 'insertAction'
                     || isPair m || isInverse m || isProduct m --- || isXor m
                     || isUnion m || isNullaryPublicFunction m
