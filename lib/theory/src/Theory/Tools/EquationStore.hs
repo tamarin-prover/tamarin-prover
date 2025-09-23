@@ -558,9 +558,9 @@ foreachDisj hnd f =
               maybe (return ()) (\s -> MS.modify (applyEqStore hnd s)) msubst
               return True
 
--- | Removes substitutions that are equal up to a permutation of the images of two given variables
-removePermutations :: EqStore -> SplitId -> LVar -> LVar -> EqStore
-removePermutations eqs splitId v1 v2 = 
+-- | Removes substitutions that are equal up to a permutation of the images of two given variables v1 and v2 (modulo a renaming of msg vars).
+removePermutations ::  MaudeHandle -> EqStore -> SplitId -> LVar -> LVar -> EqStore
+removePermutations hnd eqs splitId v1 v2 =
       modify eqsConj removePerms eqs
   where
     removePerms (Conj disjs) = Conj $ map f disjs
@@ -573,14 +573,44 @@ removePermutations eqs splitId v1 v2 =
     removePerm []     = []
     removePerm (s:rest) = s:removePerm (filter (notIsPerm s) rest)
       where
-        notIsPerm subst1 subst2 = 
+        notIsPerm subst1 subst2 =
           let lst1 = substToListVFresh subst1
               lst2 = substToListVFresh subst2
-          in not (length lst1 == length lst2 &&
-              all (\(x,t) -> (x == v1 && t == fromJust (imageOfVFresh subst2 v2))
-                  || (x == v2 && t == fromJust (imageOfVFresh subst2 v1))
-                  || (x,t) `elem` lst2) lst1)
-              
+          in not (length lst1 == length lst2
+                  && all (\(x,t) -> (x == v1) || (x == v2) || (x,t) `elem` lst2) lst1
+                  && ((fromJust (imageOfVFresh subst1 v1) == fromJust (imageOfVFresh subst2 v2) &&
+                       fromJust (imageOfVFresh subst1 v2) == fromJust (imageOfVFresh subst2 v1))
+                    || equalUpToRenaming (fromJust (imageOfVFresh subst1 v1)) (fromJust (imageOfVFresh subst1 v2))
+                                         (fromJust (imageOfVFresh subst2 v1)) (fromJust (imageOfVFresh subst2 v2)))
+                 )
+
+        equalUpToRenaming :: LNTerm -> LNTerm -> LNTerm -> LNTerm -> Bool
+        equalUpToRenaming t11 t12 t21 t22 = any (isRenaming . restrictVFresh varsSubst1) unifs
+          where
+            (v11, v12) = (apply substFixing t11, apply substFixing t12)
+            (v21', v22') = (apply substFixing t21, apply substFixing t22)
+            (v21, v22) = renameAvoiding (v21', v22') ([v1,v2],[v11,v12],varsSubst1)
+
+            unifs = unifyLNTerm eq `runReader` hnd
+            eq = [Equal v11 v22, Equal v12 v21]
+
+            substFixing = replaceNonMSGVarsWithConstant (map fst vars)
+            vars = varOccurences [t11, t12, t21, t22]
+            varsSubst1 = map fst $ varOccurences [v11, v12]
+            
+            replaceNonMSGVarsWithConstant :: [LVar] -> LNSubst
+            replaceNonMSGVarsWithConstant vs' = substFromList (map (\v -> (v, constant v)) vs)
+              where
+                vs = filter (\v -> lvarSort v /= LSortMsg) vs'
+
+            constant :: LVar -> LNTerm
+            constant v = constTerm (Name (pubOrFresh v) (NameId ("constVar_" ++ toConstName v)))
+              where
+                toConstName (LVar name vsort idx) = show vsort ++ "_" ++ show idx ++ "_" ++ name
+
+                pubOrFresh (LVar _ LSortFresh _) = FreshName
+                pubOrFresh (LVar _ _          _) = PubName
+
 
 ------------------------------------------------------------------------------
 -- Pretty printing

@@ -734,7 +734,7 @@ solveTermEqs splitStrat isAC eqs0 =
                                                 $ fromJustNote "solveTermEqs"
                                                 $ performSplit 
                                                   (case isAC of
-                                                    ACConstructor v1 v2 -> removePermutations eqs2 splitId v1 v2
+                                                    ACConstructor v1 v2 -> removePermutations hnd eqs2 splitId v1 v2
                                                     OtherRule -> eqs2)
                                                   splitId
                   (Just splitId, SplitLater) -> do
