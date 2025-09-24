@@ -576,27 +576,34 @@ removePermutations hnd eqs splitId v1 v2 =
         notIsPerm subst1 subst2 =
           let lst1 = substToListVFresh subst1
               lst2 = substToListVFresh subst2
-          in not (length lst1 == length lst2
+              t11 = fromMaybe (error $ "Missing image for v1: " ++ show v1 ++ " in subst1: " ++ show subst1) (imageOfVFresh subst1 v1)
+              t12 = fromMaybe (error $ "Missing image for v2: " ++ show v2 ++ " in subst1: " ++ show subst1) (imageOfVFresh subst1 v2)
+              t21 = fromMaybe (error $ "Missing image for v1: " ++ show v1 ++ " in subst2: " ++ show subst2) (imageOfVFresh subst2 v1)
+              t22 = fromMaybe (error $ "Missing image for v2: " ++ show v2 ++ " in subst2: " ++ show subst2) (imageOfVFresh subst2 v2)
+          in trace (show ("notIsPerm", v1, v2, subst1, subst2, lst1, lst2, t11, t12, t21, t22, not (length lst1 == length lst2
                   && all (\(x,t) -> (x == v1) || (x == v2) || (x,t) `elem` lst2) lst1
-                  && ((fromJust (imageOfVFresh subst1 v1) == fromJust (imageOfVFresh subst2 v2) &&
-                       fromJust (imageOfVFresh subst1 v2) == fromJust (imageOfVFresh subst2 v1))
-                    || equalUpToRenaming (fromJust (imageOfVFresh subst1 v1)) (fromJust (imageOfVFresh subst1 v2))
-                                         (fromJust (imageOfVFresh subst2 v1)) (fromJust (imageOfVFresh subst2 v2)))
+                  && ((t11 == t22 && t12 == t21) || equalUpToRenaming t11 t12 t21 t22 || equalUpToRenaming t12 t11 t21 t22)
+                 ))) $
+              not (length lst1 == length lst2
+                  && all (\(x,t) -> (x == v1) || (x == v2) || (x,t) `elem` lst2) lst1
+                  && ((t11 == t22 && t12 == t21) || equalUpToRenaming t11 t12 t21 t22 || equalUpToRenaming t12 t11 t21 t22)
                  )
 
         equalUpToRenaming :: LNTerm -> LNTerm -> LNTerm -> LNTerm -> Bool
-        equalUpToRenaming t11 t12 t21 t22 = any (isRenaming . restrictVFresh varsSubst1) unifs
+        equalUpToRenaming t11 t12 t21 t22 =
+            any (\x -> isRenaming (restrictVFresh varsSubst1 x) && isRenaming (restrictVFresh varsSubst2 x)) unifs
           where
-            (v11, v12) = (apply substFixing t11, apply substFixing t12)
+            (v11,  v12)  = (apply substFixing t11, apply substFixing t12)
             (v21', v22') = (apply substFixing t21, apply substFixing t22)
-            (v21, v22) = renameAvoiding (v21', v22') ([v1,v2],[v11,v12],varsSubst1)
+            (v21,  v22)  = renameAvoiding (v21', v22') ([v1,v2],[v11,v12])
 
             unifs = unifyLNTerm eq `runReader` hnd
             eq = [Equal v11 v22, Equal v12 v21]
 
-            substFixing = replaceNonMSGVarsWithConstant (map fst vars)
-            vars = varOccurences [t11, t12, t21, t22]
+            substFixing = replaceNonMSGVarsWithConstant vars
+            vars = map fst $ varOccurences [t11, t12, t21, t22]
             varsSubst1 = map fst $ varOccurences [v11, v12]
+            varsSubst2 = map fst $ varOccurences [v21, v22]
             
             replaceNonMSGVarsWithConstant :: [LVar] -> LNSubst
             replaceNonMSGVarsWithConstant vs' = substFromList (map (\v -> (v, constant v)) vs)
