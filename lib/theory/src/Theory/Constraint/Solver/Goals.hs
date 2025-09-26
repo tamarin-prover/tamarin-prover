@@ -22,7 +22,7 @@ module Theory.Constraint.Solver.Goals (
   , plainOpenGoals
   ) where
 
--- import           Debug.Trace
+import           Debug.Trace
 
 import           Prelude                                 hiding (id, (.))
 
@@ -32,6 +32,8 @@ import qualified Data.DAG.Simple                         as D (reachableSet)
 import qualified Data.Map                                as M
 import qualified Data.Monoid                             as Mono
 import qualified Data.Set                                as S
+import           Data.List
+import           Data.Maybe
 
 import           Control.Basics
 import           Control.Category
@@ -63,8 +65,8 @@ import           Utils.Misc                              (twoPartitions)
 
 -- | The list of goals that must be solved before a solution can be extracted.
 -- Each goal is annotated with its age and an indicator for its usefulness.
-openGoals :: System -> [AnnotatedGoal]
-openGoals sys = do
+openGoals :: ProofContext -> System -> [AnnotatedGoal]
+openGoals ctxt sys = do
     (goal, status) <- M.toList $ get sGoals sys
     let solved = get gsSolved status
     -- check whether the goal is still open

@@ -16,6 +16,7 @@ module Utils.Misc (
 
   -- * Control
   , whileTrue
+  , fixpoint
 
   -- * Hashing
   , stringSHA256
@@ -168,3 +169,9 @@ editDistance s t =
                              , d!!(i-1)!!(j-1) + (if s!!(i-1)==t!!(j-1) 
                                                   then 0 else 1) 
                              ]
+
+fixpoint :: Eq a => (a -> a) -> a -> a
+fixpoint f x
+    | x' == x = x'
+    | otherwise = fixpoint f x'
+  where x' = f x

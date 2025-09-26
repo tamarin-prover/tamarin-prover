@@ -55,6 +55,7 @@ import           Theory.Text.Pretty
 import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 
 import           Debug.Trace
+import           Utils.Misc                     (fixpoint)
 
 ------------------------------------------------------------------------------
 -- Contradictions
@@ -305,32 +306,47 @@ hasForbiddenChain sys =
 
 -- | Detect non-normal chains chaining two instances of the constructor rule of an AC-symbol where both add a single msg variable
 hasForbiddenConstrChain :: System -> MaudeSig -> Bool
-hasForbiddenConstrChain sys msig = elem True $ map (any forbidden) edges
+hasForbiddenConstrChain sys msig = trace (show ("hasForbiddenCHain", finalMap, initialMap, extractedNodesAndRules)) $ fst finalMap
   where
-    edges = map transitiveClosure $ groupBy (\(_, _, _, _, n1) (_, _, _, _, n2) -> n1 == n2) $ mapMaybe f $ S.toList $ L.get sLessAtoms sys
-    
-    forbidden (_, _, r1, r2, n) = (any (\x -> isTrivialKUFact x || isNearlyTrivialKUFact n x) (L.get rPrems r1) && any (\x -> isTrivialKUFact x || isNearlyTrivialKUFact n x)  (L.get rPrems r2))
-    
-    f :: LessAtom -> Maybe (NodeId, NodeId, RuleACInst, RuleACInst, String)
-    f (LessAtom n1 n2 Adversary) = do
-        r1 <- nodeRuleSafe n1 sys
+    -- list of linked AC-constructor rules 
+    extractedNodesAndRules :: [(NodeId, RuleACInst, NodeId, RuleACInst, String)]
+    extractedNodesAndRules = mapMaybe extractNodesAndRules $ S.toList $ L.get sLessAtoms sys
+
+    -- initial map for union-find. Maps node ids to (root node id (initialized as ?), isTrivialKUFact, name of the AC-constructor rule)
+    initialMap :: M.Map NodeId (NodeId, S.Set NodeId, String)
+    initialMap = M.fromList $ concatMap (\(n1, r1, n2, r2, n) -> [(n1, (n1, trivial r1 n n1, n)), (n2, (n2, trivial r2 n n2, n))]) extractedNodesAndRules
+      where
+        trivial r n id = if any (\ x -> isTrivialKUFact x || isNearlyTrivialKUFact n x) (L.get rPrems r) then S.singleton id else S.empty
+        
+    -- final map after union-find. Maps node ids to (root node id, isTrivialKUFact, name of the AC-constructor rule)
+    finalMap :: (Bool, M.Map NodeId (NodeId, S.Set NodeId, String))
+    finalMap = fixpoint (\x -> foldr updateMap x extractedNodesAndRules) (False, initialMap) 
+      where
+        updateMap :: (NodeId, RuleACInst, NodeId, RuleACInst, String) 
+                  -> (Bool, M.Map NodeId (NodeId, S.Set NodeId, String)) -> (Bool, M.Map NodeId (NodeId, S.Set NodeId, String))
+        updateMap (a, _, b, _, n) (t, m) = if t then (t, m) else case (M.lookup a m, M.lookup b m) of
+          (_               , Nothing)          -> (t, m)
+          (Just (_, t1, _) , Just (c, t2, n2)) -> if n == n2
+                                then case M.lookup c m of
+                                  Nothing -> error "finalMap: impossible case"
+                                  Just (_, t3, _) -> (t || (length nodes >= 2), M.insert c (c, nodes, n2) $ M.insert b (c, t2, n2) $ M.insert a (c, t1, n2) m)
+                                    where nodes = t1 `S.union` t2 `S.union` t3
+                                else (t, m)
+          (_               , _)                -> error "finalMap: impossible case"
+
+    -- Given a less-atom between two nodes, extract the node ids, the rule at the second node and the name of the AC-constructor rule if both nodes are AC-constructor rules with the same name
+    extractNodesAndRules :: LessAtom -> Maybe (NodeId, RuleACInst, NodeId, RuleACInst, String)
+    extractNodesAndRules (LessAtom n1 n2 Adversary) = case r1' of 
+       Nothing -> Nothing -- n1 does not exist in the graph, return Nothing
+       Just r1 -> do
         r2 <- nodeRuleSafe n2 sys
         name1 <- isACConstrRule r1 msig
         name2 <- isACConstrRule r2 msig
-        -- traceM (show name1 ++ " - " ++ show name2 ++ " - " ++ show r1 ++ " : " ++ show r2 ++ " : " ++ show (isACConstrRule r1 msig) ++ " : "
-        --   ++ show (isACConstrRule r2 msig) ++ " : " ++ show (any isTrivialKUFact (L.get rPrems r1)) ++ " : "
-        --   ++ show (any isTrivialKUFact (L.get rPrems r2)) ++ " : " ++ show (any (isNearlyTrivialKUFact name1) (L.get rPrems r1)) ++ " : "
-        --   ++ show (any (isNearlyTrivialKUFact name2) (L.get rPrems r2)))
         guard $ name1 == name2
-        return (n1, n2, r1, r2, name1)
-    f _                          = Nothing
-
-    transitiveClosure :: Eq a => Eq b => Eq c => [(a, a, b, b, c)] -> [(a, a, b, b, c)]
-    transitiveClosure closure 
-      | closure == closureUntilNow = closure
-      | otherwise                  = transitiveClosure closureUntilNow
-      where closureUntilNow = 
-              nub $ closure ++ [(a, c, r1, r4, n) | (a, b, r1, _, n) <- closure, (b', c, _, r4, _) <- closure, b == b']
+        return (n1, r1, n2, r2, name1) -- both nodes exist, return n2 if they are both AC-constructor rules with the same name
+      where
+        r1' = nodeRuleSafe n1 sys
+    extractNodesAndRules _                          = Nothing
 
 
 
