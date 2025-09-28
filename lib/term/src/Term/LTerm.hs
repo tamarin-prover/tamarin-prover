@@ -626,7 +626,7 @@ rename x = case boundsVarIdx x of
   where
     incVar shift (LVar n so i) = pure $ LVar n so (i+shift)
 
--- | @renameIgnoring t vars@ replaces all variables in @t@ with fresh variables, excpet for the variables in @vars@.
+-- | @renameIgnoring t vars@ replaces all variables in @t@ with fresh variables, except for the variables in @vars@.
 --   Note that the result is not guaranteed to be equal for terms that are
 --   equal modulo changing the indices of variables.
 renameIgnoring :: (MonadFresh m, HasFrees a) => [LVar] -> a -> m a
@@ -676,8 +676,9 @@ evalFreshTAvoiding m = evalFreshT m . avoid
 renameAvoiding :: (HasFrees s, HasFrees t) => s -> t -> s
 renameAvoiding s t = evalFreshAvoiding (rename s) t
 
--- | @s `renameAvoiding` t@ replaces all free variables in @s@ by
---   fresh variables avoiding variables in @t@.
+-- | @s `renameAvoidingIgnoring` t@ replaces all free variables in @s@, 
+--   except for the variables in @vars@ by fresh variables avoiding 
+--   variables in @t@.
 renameAvoidingIgnoring :: (HasFrees s, HasFrees t) => s -> t -> [LVar] -> s
 renameAvoidingIgnoring s t vars = renameIgnoring vars s `evalFreshAvoiding` t
 

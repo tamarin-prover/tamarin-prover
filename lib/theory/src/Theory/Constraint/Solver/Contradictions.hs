@@ -306,7 +306,8 @@ hasForbiddenChain sys =
 
 -- | Detect non-normal chains chaining two instances of the constructor rule of an AC-symbol where both add a single msg variable
 hasForbiddenConstrChain :: System -> MaudeSig -> Bool
-hasForbiddenConstrChain sys msig = trace (show ("hasForbiddenCHain", finalMap, initialMap, extractedNodesAndRules)) $ fst finalMap
+hasForbiddenConstrChain sys msig = -- trace (show ("hasForbiddenCHain", finalMap, initialMap, extractedNodesAndRules)) $ 
+    fst finalMap
   where
     -- list of linked AC-constructor rules 
     extractedNodesAndRules :: [(NodeId, RuleACInst, NodeId, RuleACInst, String)]
