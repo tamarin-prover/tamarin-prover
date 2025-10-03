@@ -567,25 +567,25 @@ removePermutations hnd eqs splitId v1 v2 =
     
     f (sid, substs) =
       if sid == splitId
-        then (sid, S.fromList $ removePerm $ S.toList substs)
+        then (sid, S.fromList $ removePerm [] $ S.toList substs)
         else (sid, substs)
     
-    removePerm []       = []
-    removePerm (s:rest) = s:removePerm (filter (notIsPerm s) rest)
+    removePerm r []       = r
+    removePerm r (s:rest) = removePerm (s:filter (not . isPerm s) r) (filter (not . isPerm s) rest)
       where
-        notIsPerm subst1 subst2 =
+        isPerm subst1 subst2 =
           let lst1 = substToListVFresh subst1
               lst2 = substToListVFresh subst2
               t11 = fromMaybe (error $ "Missing image for v1: " ++ show v1 ++ " in subst1: " ++ show subst1) (imageOfVFresh subst1 v1)
               t12 = fromMaybe (error $ "Missing image for v2: " ++ show v2 ++ " in subst1: " ++ show subst1) (imageOfVFresh subst1 v2)
               t21 = fromMaybe (error $ "Missing image for v1: " ++ show v1 ++ " in subst2: " ++ show subst2) (imageOfVFresh subst2 v1)
               t22 = fromMaybe (error $ "Missing image for v2: " ++ show v2 ++ " in subst2: " ++ show subst2) (imageOfVFresh subst2 v2)
-          in not (length lst1 == length lst2 && (
+          in (length lst1 == length lst2 && (
                   (all (\(x,t) -> (x == v1) || (x == v2) || (x,t) `elem` lst2) lst1 && (t11 == t22 && t12 == t21))
                   || equalUpToRenaming True subst1 subst2
                   || equalUpToRenaming False subst1 subst2
-                  )
                 )
+              )
 
         equalUpToRenaming :: Bool -> LNSubstVFresh -> LNSubstVFresh -> Bool
         equalUpToRenaming perm subst1 subst2 = trace (show ("equalUpToRenaming", v1, v2, subst1, subst1', subst1'', matchs, subst2, subst2', subst2''', subst2'', matchers, g)) g
