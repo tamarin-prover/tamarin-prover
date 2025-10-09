@@ -343,7 +343,8 @@ hasForbiddenConstrChain sys msig = -- trace (show ("hasForbiddenCHain", finalMap
         r2 <- nodeRuleSafe n2 sys
         name1 <- isACConstrRule r1 msig
         name2 <- isACConstrRule r2 msig
-        guard $ name1 == name2
+        conc <- headMay (L.get rConcs r1)
+        guard $ name1 == name2 && conc `elem` L.get rPrems r2 -- both rules are AC-constructor rules with the same name and the conclusion of the first rule is a premise of the second rule
         return (n1, r1, n2, r2, name1) -- both nodes exist, return n2 if they are both AC-constructor rules with the same name
       where
         r1' = nodeRuleSafe n1 sys
