@@ -12,4 +12,10 @@ ghc-options:
   "$everything": -Wall
 nix:
   packages: [ zlib ]
-
+extra-deps:
+  - crypto-token-0.1.1
+  - data-default-class-0.1.2.0
+  - tls-2.1.0
+  - tls-session-manager-0.0.6
+  - wai-extra-3.1.15
+  - warp-tls-3.4.6
