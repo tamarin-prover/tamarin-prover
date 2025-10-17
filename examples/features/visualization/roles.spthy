@@ -43,7 +43,7 @@ rule Reveal_ltk:
   }
 */
 
-rule I_1 [role="Initiator",color=#ffff00]:
+rule I_1 [role='Initiator',color=#ffff00]:
   let m1 = aenc{'1', ~ni, $I}pkR
   in
     [ Fr(~ni)
@@ -55,7 +55,7 @@ rule I_1 [role="Initiator",color=#ffff00]:
     , St_I_1($I, $R, ~ni)
     ]
 
-rule R_1 [role="Responder"]:
+rule R_1 [role='Responder']:
   let m1 = aenc{'1', ni, I}pk(ltkR)
       m2 = aenc{'2', ni, ~nr}pkI
   in
@@ -72,7 +72,7 @@ rule R_1 [role="Responder"]:
     , St_R_1($R, I, ni, ~nr)
     ]
 
-rule I_2 [role="Initiator"]:
+rule I_2 [role='Initiator']:
   let m2 = aenc{'2', ni, nr}pk(ltkI)
       m3 = aenc{'3', nr}pkR
   in
@@ -91,7 +91,7 @@ rule I_2 [role="Initiator"]:
     , Secret(I,R,ni)
     ]
 
-rule R_2 [role="Responder"]:
+rule R_2 [role='Responder']:
     [ St_R_1(R, I, ni, nr)
     , !Ltk(R, ltkR)
     , In( aenc{'3', nr}pk(ltkR) )

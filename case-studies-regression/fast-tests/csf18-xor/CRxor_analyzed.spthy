@@ -46,39 +46,14 @@ rule (modulo E) responder:
        z     = (~k.5⊕~nb.5)
     
     3. ~k    = ~x.5
-       ~nb   = ~x.5
-       na    = na.6
-       z     = na.6
-    
-    4. ~k    = ~x.5
        ~nb   = ~nb.6
        na    = ~x.5
        z     = ~nb.6
     
-    5. ~k    = ~x.5
-       ~nb   = ~x.6
-       na    = (~x.5⊕~x.6)
-       z     = zero
-    
-    6. ~k    = ~x.5
-       ~nb   = ~x.6
-       na    = (~x.5⊕~x.6⊕x.7)
-       z     = x.7
-    
-    7. ~k    = ~x.5
+    4. ~k    = ~x.5
        ~nb   = ~nb.8
        na    = (~x.5⊕x.7)
        z     = (x.7⊕~nb.8)
-    
-    8. ~k    = ~k.6
-       ~nb   = ~x.5
-       na    = ~x.5
-       z     = ~k.6
-    
-    9. ~k    = ~k.7
-       ~nb   = ~x.5
-       na    = (~x.5⊕x.6)
-       z     = (x.6⊕~k.7)
   */
 
 rule (modulo E) initiator2:
@@ -169,9 +144,6 @@ solve( Initiated( ~na ) ▶₀ #i )
       solve( !KU( h(~k) ) @ #vk.1 )
         case c_h
         by solve( !KU( ~k ) @ #vk.3 )
-      next
-        case responder
-        by contradiction /* cyclic */
       qed
     next
       case split_case_3
@@ -455,16 +427,16 @@ solve( Initiated( ~na ) ▶₀ #i )
       case split_case_7
       solve( !KU( h((~k⊕x)) ) @ #vk.1 )
         case responder
-        solve( !KU( (~na⊕x) ) @ #vk.2 )
-          case c_xor
-          solve( splitEqs(2) )
-            case split_case_2
-            solve( !KU( (~nb⊕na.1) ) @ #vk.4 )
+        solve( splitEqs(2) )
+          case split_case_2
+          solve( !KU( (~na⊕~nb⊕na.1) ) @ #vk.2 )
+            case c_xor_case_1
+            solve( !KU( (~na⊕na.1) ) @ #vk.4 )
               case c_xor
-              solve( !KU( ~na ) @ #vk.5 )
-                case initiator
-                solve( !KU( ~nb ) @ #vk.6 )
-                  case responder
+              solve( !KU( ~nb ) @ #vk.5 )
+                case responder
+                solve( !KU( ~na ) @ #vk.6 )
+                  case initiator
                   SOLVED // trace found
                 qed
               qed
@@ -502,7 +474,7 @@ solve( Initiated( ~na ) ▶₀ #i )
         solve( !KU( h((~k⊕~na⊕nb)) ) @ #vk.1 )
           case responder
           solve( splitEqs(1) )
-            case split_case_2
+            case split_case_1
             solve( !KU( ~nb ) @ #vk.2 )
               case responder
               solve( !KU( ~na ) @ #vk.3 )
@@ -531,8 +503,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
+Compiled at: 2025-09-08 09:04:28.158015016 UTC
 */
 
 end
@@ -544,9 +516,9 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.98s
+  processing time: 0.86s
   
-  alive (all-traces): verified (92 steps)
+  alive (all-traces): verified (91 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   executable (exists-trace): verified (10 steps)
 

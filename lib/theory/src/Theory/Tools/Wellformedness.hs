@@ -84,6 +84,7 @@ import           Data.Maybe
 -- import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Set                    as S
 -- import           Data.Traversable            (traverse)
+import Data.Functor (($>))
 
 import           Control.Monad.Bind
 
@@ -351,20 +352,23 @@ natWellSortedReportDiff thy = natSortErrors itemsTerms
 
 --- | Check that the protocol rule variants are correct.
 variantsCheck :: MaudeHandle -> [Macro] -> String -> OpenProtoRule -> WfErrorReport
-variantsCheck _   _      _    (OpenProtoRule _ [])     = []
-variantsCheck hnd macros info (OpenProtoRule ruE ruAC) =
-  if sameVariantsUpToActions ruAC recomputedVariants then
-    []
-  else
-    return $
-            ( (underlineTopic "Variants")
-            , text info $-$ (nest 2 $ (numbered' $ (map prettyProtoRuleAC ruAC)))
-              $--$ text "Recomputed variants: " $--$
-              (nest 2 $ (numbered' $ map prettyProtoRuleAC recomputedVariants))
-            )
+variantsCheck hnd macros info (OpenProtoRule ruE ruAC) = catMaybes
+  [ guard (not (null ruAC) && not (sameVariantsUpToActions ruAC recomputedVariants)) $>
+      ( underlineTopic "Variants"
+      , text info $-$ nest 2 (numbered' (map prettyProtoRuleAC ruAC))
+        $--$ text "Recomputed variants: " $--$
+        nest 2 (numbered' $ map prettyProtoRuleAC recomputedVariants)
+      )
+  , guard (null recomputedVariants) $>
+      ( underlineTopic "Rule has no variants"
+      ,       text "Rule " <> prettyRuleName ruE <> text " has no variants."
+        $--$  text "Most likely, this means that the rule's use of fresh variables is contradictory. "
+        <>    text "For exaple, a rule with the premises In(~x) and Fr(~x) has no variants because ~x cannot be sent before it is generated." )]
   where
-    recomputedVariants = map (get cprRuleAC) $ unfoldRuleVariants $
-      ClosedProtoRule ruE (variantsProtoRule hnd (applyMacroInRule macros ruE))
+    recomputedVariants =
+      map (get cprRuleAC) $
+      concatMap (unfoldRuleVariants . ClosedProtoRule ruE) $
+      maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
     sameVariantsUpToActions parsed computed = all (\x -> any (equalUpToAddedActions x) computed) parsed
 
 -- | Report on missing or different variants.
