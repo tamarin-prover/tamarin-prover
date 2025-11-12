@@ -100,7 +100,7 @@ theoryLoadFlags =
       "dfs"
       ["stop-on-trace"]
       (updateArg "stop-on-trace")
-      "DFS|BFS|SEQDFS|NONE"
+      "DFS|BFS|SEQDFS|SORRY|NONE"
       "How to search for traces (default DFS)",
     flagOpt
       "5"
@@ -358,6 +358,7 @@ stopOnTrace as = case map toLower <$> findArg "stop-on-trace" as of
   Just "none" -> pure $ Just CutNothing
   Just "bfs" -> pure $ Just CutBFS
   Just "seqdfs" -> pure $ Just CutSingleThreadDFS
+  Just "sorry" -> pure $ Just CutAfterSorry
   Just unknown -> throwError $ ArgumentError ("unknown stop-on-trace method: " ++ unknown)
   Nothing -> pure Nothing
 

@@ -84,7 +84,7 @@ in a configuration block.
 
     configuration := 'configuration' ':' '"' option (' ' option)* '"'
     option          := '--auto-sources' | ('--stop-on-trace' '=' search_method)
-    search_method := 'DFS' | 'BFS' | 'SEQDFS' | 'NONE'
+    search_method := 'DFS' | 'BFS' | 'SEQDFS' | 'SORRY' | 'NONE'
 
 Restrictions specify restrictions on the set of traces considered, i.e., they filter
 the set of traces of a protocol. The formula of a restriction is available as an
