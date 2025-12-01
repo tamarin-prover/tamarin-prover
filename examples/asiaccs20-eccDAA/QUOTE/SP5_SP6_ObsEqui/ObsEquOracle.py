@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import re
 import os
@@ -20,8 +20,8 @@ maxPrio = 110
 for i in range(0,maxPrio):
   rank.append([])
 
-if lemma<>"AnyLemma":
-  print "applying lemma"
+if lemma!="AnyLemma":
+  print("applying lemma")
   for line in lines:
     num = line.split(':')[0]
 
@@ -41,4 +41,4 @@ else:
 for listGoals in reversed(rank):
   for goal in listGoals:
     sys.stderr.write(goal)
-    print goal
+    print(goal)
