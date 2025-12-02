@@ -1,0 +1,19 @@
+theory simple
+// <- keyword
+//      ^ module
+begin
+
+rule Rule1:
+// <- keyword
+//    ^ function
+	[] --[]-> []
+
+lemma Lemma1:
+// <- keyword
+//     ^ function
+	exists-trace
+	// ^ property
+	"T"
+
+end
+// <- keyword
