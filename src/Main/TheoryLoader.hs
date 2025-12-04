@@ -145,8 +145,8 @@ theoryLoadFlags =
       "FILE"
       ("Path to the oracle heuristic (default '" ++ "./theory_filename.oracle" ++ "', fallback '" ++ "./oracle" ++ "')"),
     flagNone
-      ["stop-on-no-rank"]
-      (addEmptyArg "stop-on-no-rank")
+      ["oracle-only"]
+      (addEmptyArg "oracle-only")
       "When set, the oracle heuristic will stop proof search if the oracle does not rank any proof goals.",
     flagNone
       ["quiet"]
@@ -202,7 +202,7 @@ data TheoryLoadOptions = TheoryLoadOptions
     stopOnTrace :: Maybe SolutionExtractor,
     proofBound :: Maybe Int,
     heuristic :: Maybe (Heuristic ProofContext),
-    stopOnNoRank :: Bool,
+    oracleOnly :: Bool,
     partialEvaluation :: Maybe EvaluationStyle,
     defines :: [String],
     diffMode :: Bool,
@@ -230,7 +230,7 @@ defaultTheoryLoadOptions =
       stopOnTrace = Nothing,
       proofBound = Nothing,
       heuristic = Nothing,
-      stopOnNoRank = False,
+      oracleOnly = False,
       partialEvaluation = Nothing,
       defines = [],
       diffMode = False,
@@ -267,7 +267,7 @@ mkTheoryLoadOptions as =
     <*> stopOnTrace as
     <*> proofBound
     <*> heuristic
-    <*> stopOnNoRank
+    <*> oracleOnly
     <*> partialEvaluation
     <*> defines
     <*> diffMode
@@ -312,7 +312,7 @@ mkTheoryLoadOptions as =
       name -> name
     -- toGoalRanking | argExists "diff" as = stringToGoalRankingDiff
     --              | otherwise           = stringToGoalRanking
-    stopOnNoRank = pure $ argExists "stop-on-no-rank" as
+    oracleOnly = pure $ argExists "oracle-only" as
 
     partialEvaluation = case map toLower <$> findArg "partial-evaluation" as of
       Just "summary" -> pure $ Just Summary
@@ -703,7 +703,7 @@ constructAutoProver thyOpts =
     Nothing
     thyOpts.proofBound
     (fromMaybe CutDFS thyOpts.stopOnTrace)
-    thyOpts.stopOnNoRank
+    thyOpts.oracleOnly
 
 -----------------------------------------------
 -- Add Options parameters in an OpenTheory
