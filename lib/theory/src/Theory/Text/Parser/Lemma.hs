@@ -16,7 +16,6 @@ module Theory.Text.Parser.Lemma(
 )
 where
 
-import           Prelude                    hiding (id, (.))
 import           Control.Applicative        hiding (empty, many, optional)
 import           Text.Parsec                hiding ((<|>))
 import           Theory

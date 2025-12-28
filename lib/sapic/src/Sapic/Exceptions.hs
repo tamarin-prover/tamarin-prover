@@ -99,7 +99,7 @@ instance Show (SapicException an) where
     show (CannotExpandPredicate facttag rstr) = "Undefined predicate "
                               ++ showFactTagArity facttag
                               ++ " in definition of predicate: "
-                              ++ rstr._rstrName
+                              ++ rstr.name
                               ++ "."
 
 instance Show WFerror where

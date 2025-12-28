@@ -13,16 +13,8 @@ module Theory.Constraint.System.Graph.Graph (
     , SimplificationLevel(..)
     , levelNum
     , GraphOptions(..)
-    , goSimplificationLevel
-    , goShowAutoSource
-    , goClustering
-    , goAbbreviate
-    , goCompress
     , defaultGraphOptions
-    , Graph
-    , gRepr
-    , gOptions
-    , gAbbreviations
+    , Graph(..)
     , getGraphSinks
     , module Theory.Constraint.System.Graph.GraphRepr
     , module Theory.Constraint.System.Graph.Abbreviation
@@ -33,7 +25,6 @@ module Theory.Constraint.System.Graph.Graph (
 import qualified Data.Map                 as M
 import           Data.Maybe
 import qualified Data.Set                 as S
-import           Extension.Data.Label
 import           Extension.Prelude        (collectBy)
 import qualified Theory.Constraint.System as Sys
 import           Theory.Constraint.System.Graph.GraphRepr
@@ -54,50 +45,48 @@ levelNum SL3 = 3
 
 -- | Options for the graph generation.
 data GraphOptions = GraphOptions
-  { _goSimplificationLevel :: SimplificationLevel -- ^ The simplification level for simplifying the initial 'System'.
-  , _goShowAutoSource      :: Bool                -- ^ Whether to show auto sources like "AUTO_xxx". a.d. TODO this maybe belongs in the DotOptions, not sure if auto source hiding is relevant for JSON.
-  , _goClustering          :: Bool                -- ^ Whether to generate clusters of rules with common prefixes.
-  , _goAbbreviate          :: Bool                -- ^ Whether to generate abbreviations.
-  , _goCompress            :: Bool                -- ^ Whether to compress the initial 'System'.
+  { simplificationLevel :: SimplificationLevel -- ^ The simplification level for simplifying the initial 'System'.
+  , showAutoSource      :: Bool                -- ^ Whether to show auto sources like "AUTO_xxx". a.d. TODO this maybe belongs in the DotOptions, not sure if auto source hiding is relevant for JSON.
+  , clustering          :: Bool                -- ^ Whether to generate clusters of rules with common prefixes.
+  , abbreviate          :: Bool                -- ^ Whether to generate abbreviations.
+  , compress            :: Bool                -- ^ Whether to compress the initial 'System'.
   }
     deriving( Eq, Ord )
 
 -- | The default options for graph generation.
 defaultGraphOptions :: GraphOptions
 defaultGraphOptions = GraphOptions
-  { _goSimplificationLevel = SL2
-  , _goShowAutoSource = False
-  , _goClustering = False
-  , _goAbbreviate = True
-  , _goCompress = True
+  { simplificationLevel = SL2
+  , showAutoSource = False
+  , clustering = False
+  , abbreviate = True
+  , compress = True
   }
 
 -- | An abstract graph to derive visualiations of a 'System'.
 data Graph = Graph
-  { _gSystem        :: Sys.System    -- ^ The backing 'System' instance.
-  , _gOptions       :: GraphOptions  -- ^ The options which influence graph generation.
-  , _gRepr          :: GraphRepr     -- ^ The actual representation in terms of nodes, edges & clusters.
-  , _gAbbreviations :: Abbreviations -- ^ The map of generated abbreviations.
+  { system        :: Sys.System    -- ^ The backing 'System' instance.
+  , options       :: GraphOptions  -- ^ The options which influence graph generation.
+  , repr          :: GraphRepr     -- ^ The actual representation in terms of nodes, edges & clusters.
+  , abbreviations :: Abbreviations -- ^ The map of generated abbreviations.
   }
     deriving( Eq, Ord )
-
-$(mkLabels [''Graph, ''GraphOptions])
 
 -- | All facts associated to this node premise.
 resolveNodePremFact :: Sys.NodePrem -> Graph -> Maybe Th.LNFact
 resolveNodePremFact prem graph =
-  let se = get gSystem graph in
+  let se = graph.system in
   Sys.resolveNodePremFact prem se
 
 -- | The fact associated with this node conclusion, if there is one.
 resolveNodeConcFact :: Sys.NodeConc -> Graph -> Maybe Th.LNFact
 resolveNodeConcFact conc graph =
-  let se = get gSystem graph in
+  let se = graph.system in
   Sys.resolveNodeConcFact conc se
 
 -- | Get all nodes from a 'System' corresponding to rule instances.
 systemNodes :: Sys.System -> [Node]
-systemNodes se = map systemNode (M.toList $ get Sys.sNodes se)
+systemNodes se = map systemNode (M.toList se.nodes)
   where
     systemNode (nid, ru) = Node nid (SystemNode ru)
 
@@ -109,22 +98,22 @@ systemUnsolvedActionNodes se = map unsolvedActionNode (collectBy $ Sys.unsolvedA
 
 -- | Get all nodes from a 'System' corresponding to an induction node.
 systemLastActionNode :: Sys.System -> [Node]
-systemLastActionNode se = maybe [] (\nid -> [Node nid LastActionAtom]) (get Sys.sLastAtom se)
+systemLastActionNode se = maybe [] (\nid -> [Node nid LastActionAtom]) se.lastAtom
 
 -- | Get all nodes from a 'System' that are "missing", i.e. they are mentioned by an edge but don't exist elsewhere.
 -- a.d. This assumes that there is no edge where both the source and target are missing. But that situation should never happen.
 systemMissingNodes :: Sys.System -> [Node]
-systemMissingNodes se = mapMaybe missingNode (S.toList $ get Sys.sEdges se)
+systemMissingNodes se = mapMaybe missingNode (S.toList se.edges)
   where
     missingNode (Sys.Edge (nid, idx) _) | nid `notElem` nodelist = Just $ Node nid (MissingNode (Left idx))
     missingNode (Sys.Edge _ (nid, idx)) | nid `notElem` nodelist = Just $ Node nid (MissingNode (Right idx))
     missingNode _ = Nothing
-    nodelist = map fst $ M.toList $ get Sys.sNodes se
+    nodelist = map fst $ M.toList se.nodes
 
 -- | Get all edges from a 'System' corresponding to edges between rule instances.
 systemEdges :: Sys.System -> [Edge]
 systemEdges se =
-  let edges = S.toList $ get Sys.sEdges se in
+  let edges = S.toList se.edges in
   map (\(Sys.Edge src tgt) -> SystemEdge (src, tgt)) edges
 
 -- | Computes a basic graph representation from a System
@@ -144,7 +133,7 @@ computeBasicGraphRepr se =
         ++ systemLastActionNode se
         ++ systemMissingNodes se
       edges =  systemEdges se
-        ++ map LessEdge (S.toList $ get Sys.sLessAtoms se)
+        ++ map LessEdge (S.toList se.lessAtoms)
         ++ map UnsolvedChain (Sys.unsolvedChains se)
   in
     GraphRepr [] nodes edges
@@ -153,11 +142,11 @@ computeBasicGraphRepr se =
 systemToGraph :: Sys.System -> GraphOptions -> Graph
 systemToGraph se options =
   let -- We first do the existing simplification steps on a System that were defined in the Dot module originally.
-      simplfiedSystem = simplifySystem (levelNum $ get goSimplificationLevel options) $
-                          if get goCompress options then compressSystem se else se
+      simplfiedSystem = simplifySystem (levelNum options.simplificationLevel) $
+                          if options.compress then compressSystem se else se
       basicGraphRepr = computeBasicGraphRepr simplfiedSystem
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
-      repr = if get goClustering options
+      repr = if options.clustering
              then addIntelligentClusterUsingSimilarNames basicGraphRepr
              else addClusterByRole basicGraphRepr
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
@@ -167,6 +156,6 @@ systemToGraph se options =
 -- | Get all sink nodes of a graph, i.e. those without outgoing edges.
 getGraphSinks :: Graph -> [Node]
 getGraphSinks graph =
-  let repr = get gRepr graph
+  let repr = graph.repr
       edgeList = toEdgeList repr in
   map (\(node, _, _) -> node) $ filter (\(_, _, outlist) -> null outlist) edgeList

@@ -124,9 +124,8 @@ module Theory.Text.Parser.Token (
   ,betweenMatching
   ,manyCharsExcept) where
 
-import           Prelude             hiding (id, (.))
+import           Prelude             hiding (id)
 
-import           Data.Label
 -- import           Data.Binary
 import qualified Data.ByteString            as B
 import           Data.List (foldl')
@@ -136,7 +135,6 @@ import qualified Data.Set                   as S
 -- import           GHC.Generics                        (Generic)
 
 import           Control.Applicative hiding (empty, many, optional)
-import           Control.Category
 import           Control.Monad
 
 import           System.FilePath
@@ -176,22 +174,22 @@ mkStateSig :: MaudeSig -> ParserState
 mkStateSig sign = mempty {sig=sign}
 
 mkMacroStateSig :: OpenTheory -> ParserState
-mkMacroStateSig thy = mkStateSig (addMacrosToSignature (theoryMacros thy) (get sigpMaudeSig $ get thySignature thy))
+mkMacroStateSig thy = mkStateSig (addMacrosToSignature (theoryMacros thy) thy.signature.maudeInfo)
 
 modifyStateSig ::  Monad m => (MaudeSig -> MaudeSig) -> ParsecT s ParserState m ()
 modifyStateSig modifier = do
    st <- getState
-   setState (st {sig = modifier $ sig st})
+   setState (st {sig = modifier st.sig})
 
 modifyStateFlag ::  Monad m => (S.Set String -> S.Set String) -> ParsecT s ParserState m ()
 modifyStateFlag modifier = do
    st <- getState
-   setState (st {flags = modifier $ flags st})
+   setState (st {flags = modifier st.flags})
 
 requireNaturalNumbers :: String -> Parser ()
 requireNaturalNumbers what = do
     st <- getState
-    unless (enableNat (sig st)) $
+    unless (enableNat st.sig) $
         fail $ what ++ " requires the natural-numbers builtin"
 
 -- | Add macros to the signature so they're recognized as function symbols

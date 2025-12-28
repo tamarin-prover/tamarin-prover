@@ -23,9 +23,7 @@ import Theory.Syntactic.Predicate
 import Items.CaseTestItem
 import Items.AccLemmaItem
 import Lemma
-import           Prelude                             hiding (id, (.))
 import           Control.DeepSeq
-import           Prelude                             hiding (id, (.))
 import Items.ExportInfo
 
 ------------------------------------------------------------------------------

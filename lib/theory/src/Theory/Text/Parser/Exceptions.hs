@@ -15,8 +15,6 @@ module Theory.Text.Parser.Exceptions(
 )
 where
 
-import           Prelude                    hiding (id, (.))
-import           Data.Label
 -- import           Data.Monoid                hiding (Last)
 import qualified Control.Monad.Fail         as Fail
 import qualified Control.Monad.Catch        as Catch
@@ -35,15 +33,15 @@ instance Show (ParsingException) where
                                          -- ++ " in lemma: "
                                          -- ++ get lName lem
                                          -- ++ "."
-    show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName $ get oprRuleE ru)
-    show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ get lName lem
-    show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ get rstrName rstr
+    show (DuplicateItem (RuleItem ru)) = "duplicate rule: " ++ render (prettyRuleName ru.ruleE)
+    show (DuplicateItem (LemmaItem lem)) =  "duplicate lemma: " ++ lem.name
+    show (DuplicateItem (RestrictionItem rstr)) =  "duplicate restriction: " ++ rstr.name
     show (DuplicateItem (TextItem _)) =  undefined
     show (DuplicateItem (ConfigBlockItem b)) =  "duplicate configuration block:" ++ show b
-    show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar (get pFact pr))
+    show (DuplicateItem (PredicateItem pr)) =  "duplicate predicate: " ++ render (prettyFact prettyLVar pr.fact)
     show (DuplicateItem (MacroItem mc)) = "duplicate macro: " ++ render (prettyMacros mc)
     show (DuplicateItem (TranslationItem (ProcessDefItem pDef))) =
-        "duplicate process: " ++ get pName pDef
+        "duplicate process: " ++ pDef.name
     show (DuplicateItem (TranslationItem (ProcessItem _))) = "duplicate process item"
     show (DuplicateItem (TranslationItem (FunctionTypingInfo _)))   = "duplicate function typing info item"
     show (DuplicateItem (TranslationItem (ExportInfoItem _))) = "duplicate exportinfo  item"

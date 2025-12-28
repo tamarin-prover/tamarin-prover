@@ -3,6 +3,9 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Items.ExportInfo (
     module Items.ExportInfo
@@ -11,12 +14,12 @@ module Items.ExportInfo (
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
-import Data.Label as L ( mkLabels )
+import Optics.TH (makeFieldLabelsNoPrefix)
 
 data ExportInfo = ExportInfo
-        { _eTag            :: String
-        , _eText           :: String
+        { tag            :: String
+        , text           :: String
          }
          deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-$(mkLabels [''ExportInfo])
+makeFieldLabelsNoPrefix ''ExportInfo

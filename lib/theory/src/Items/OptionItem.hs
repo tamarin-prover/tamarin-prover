@@ -1,6 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Items.OptionItem (
     Option(..)
@@ -9,8 +14,8 @@ module Items.OptionItem (
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
-import Data.Label as L
 import qualified Data.Set as S
+import Optics.TH (makeFieldLabelsNoPrefix)
 import Theory.Model.Fact
 
 ------------------------------------------------------------------------------
@@ -20,21 +25,21 @@ import Theory.Model.Fact
 -- | Note: setOption below assumes all values to be boolean
 data Option = Option
         {
-          _verboseOption                     :: Bool
-        , _precomputationOnlyOption          :: Bool
-        , _transAllowPatternMatchinginLookup :: Bool
-        , _transProgress                     :: Bool
-        , _transReliable                     :: Bool
-        , _transReport                       :: Bool
-        , _stateChannelOpt                   :: Bool
-        , _asynchronousChannels              :: Bool
-        , _compressEvents                    :: Bool
-        , _deductionChainCheck               :: Bool
-        , _forcedInjectiveFacts              :: S.Set FactTag
-        , _lemmasToProve                     :: [String]
-        , _openChainsLimit                   :: Integer
-        , _saturationLimit                   :: Integer
+          verboseOption                     :: Bool
+        , precomputationOnlyOption          :: Bool
+        , transAllowPatternMatchinginLookup :: Bool
+        , transProgress                     :: Bool
+        , transReliable                     :: Bool
+        , transReport                       :: Bool
+        , stateChannelOpt                   :: Bool
+        , asynchronousChannels              :: Bool
+        , compressEvents                    :: Bool
+        , deductionChainCheck               :: Bool
+        , forcedInjectiveFacts              :: S.Set FactTag
+        , lemmasToProve                     :: [String]
+        , openChainsLimit                   :: Integer
+        , saturationLimit                   :: Integer
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
-$(mkLabels [''Option])
+makeFieldLabelsNoPrefix ''Option
 -- generate accessors for Option data structure records

@@ -1,23 +1,24 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Items.RuleItem (
     module Items.RuleItem
+                      , ClosedRuleCache(..)
 ) where
 
 import GHC.Generics
 import Control.DeepSeq
 import Data.Binary
 
-import           Prelude                             hiding (id, (.))
-
-
 import qualified Data.Set                            as S
 
-import           Control.Category
-import           Extension.Data.Label                hiding (get)
-import qualified Extension.Data.Label                as L
+import           Optics.TH (makeFieldLabelsNoPrefix)
 
 import           Theory.Model
 import           Theory.Proof
@@ -32,8 +33,8 @@ import           Theory.Tools.InjectiveFactInstances
 -- Optionally, the variant(s) modulo AC can be present if they were loaded
 -- or contain additional actions.
 data OpenProtoRule = OpenProtoRule
-       { _oprRuleE  :: ProtoRuleE             -- original rule modulo E
-       , _oprRuleAC :: [ProtoRuleAC]          -- variant(s) modulo AC
+       { ruleE  :: ProtoRuleE             -- original rule modulo E
+       , ruleAC :: [ProtoRuleAC]          -- variant(s) modulo AC
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -41,8 +42,8 @@ data OpenProtoRule = OpenProtoRule
 -- Optionally, the left and right rules can be present if they were loaded
 -- or contain additional actions.
 data DiffProtoRule = DiffProtoRule
-       { _dprRule       :: ProtoRuleE         -- original rule with diff
-       , _dprLeftRight  :: Maybe (OpenProtoRule, OpenProtoRule)
+       { rule       :: ProtoRuleE         -- original rule with diff
+       , leftRight  :: Maybe (OpenProtoRule, OpenProtoRule)
                                               -- left and right instances
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
@@ -54,28 +55,31 @@ data DiffProtoRule = DiffProtoRule
 -- actions only to closed rules. Opening such rules keeps the AC rules s.t.
 -- they can be exported.
 data ClosedProtoRule = ClosedProtoRule
-       { _cprRuleE         :: ProtoRuleE      -- original rule modulo E
-       , _cprRuleAC        :: ProtoRuleAC     -- variant(s) modulo AC
+       { ruleE         :: ProtoRuleE      -- original rule modulo E
+       , ruleAC        :: ProtoRuleAC     -- variant(s) modulo AC
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
 type OpenRuleCache = [IntrRuleAC]
 
 data ClosedRuleCache = ClosedRuleCache
-       { _crcRules               :: ClassifiedRules
-       , _crcRawSources          :: [Source]
-       , _crcRefinedSources      :: [Source]
-       , _crcInjectiveFactInsts  :: S.Set (FactTag, [[MonotonicBehaviour]])
+       { rules               :: ClassifiedRules
+       , rawSources          :: [Source]
+       , refinedSources      :: [Source]
+       , injectiveFactInsts  :: S.Set (FactTag, [[MonotonicBehaviour]])
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-$(mkLabels [''OpenProtoRule, ''DiffProtoRule, ''ClosedProtoRule, ''ClosedRuleCache])
+makeFieldLabelsNoPrefix ''OpenProtoRule
+makeFieldLabelsNoPrefix ''DiffProtoRule
+makeFieldLabelsNoPrefix ''ClosedProtoRule
+makeFieldLabelsNoPrefix ''ClosedRuleCache
 
 instance HasRuleName OpenProtoRule where
-    ruleName = ruleName . L.get oprRuleE
+    ruleName = ruleName . (.ruleE)
 
 instance HasRuleName DiffProtoRule where
-    ruleName = ruleName . L.get dprRule
+    ruleName = ruleName . (.rule)
 
 instance HasRuleName ClosedProtoRule where
-    ruleName = ruleName . L.get cprRuleAC
+    ruleName = ruleName . (.ruleAC)

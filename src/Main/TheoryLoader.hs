@@ -56,7 +56,7 @@ import Export qualified
 import Items.LemmaItem (HasLemmaAttributes, HasLemmaName)
 import Items.OptionItem (Option (..))
 import Main.Console
-
+import Optics.Core ((%), set)
 import Safe
 import Sapic qualified
 import System.Console.CmdArgs.Explicit
@@ -80,7 +80,7 @@ import Theory.Tools.IntruderRules
   )
 import Theory.Tools.MessageDerivationChecks
 import Theory.Tools.Wellformedness
-import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, deductionChainCheck)
+import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -463,7 +463,7 @@ loadTheory thyOpts input inFile = do
     unwrapError (Left (Right v)) = Right $ Left v
     unwrapError (Right (Left e)) = Left e
     unwrapError (Right (Right v)) = Right $ Right v
-    theoryName = either (._thyName) (._diffThyName)
+    theoryName = either (.name) (.name)
 
 -- | Preprocess an open theory based on the specified output module so that
 -- well-formedness can be checked (but do not translate yet)
@@ -499,21 +499,21 @@ translateTheory thyOpts thy = do
   pure (report, transThy)
   where
     withTheory f = bitraverse f pure
-    theoryName = either (._thyName) (._diffThyName)
+    theoryName = either (.name) (.name)
 
 -- | Closes the intruder deduction rules and applies the no deconstruction chain check if enabled.
 checkCloseIntrRule :: SignatureWithMaude -> String -> OpenTranslatedTheory -> (SignatureWithMaude, OpenTranslatedTheory)
-checkCloseIntrRule sign name thy = (sigWithMaude', thy {_thyCache = intrRulesACred, _thySignature = sig'})
+checkCloseIntrRule sign name thy = (sigWithMaude', thy {cache = intrRulesACred, signature = sig'})
   where
-    hnd = sign._sigMaudeInfo
-    sig = thy._thySignature
+    hnd = sign.maudeInfo
+    sig = thy.signature
 
-    intrRules = thy._thyCache
+    intrRules = thy.cache
 
     -- do the no deconstruction chain check or not?
-    deductionChainCheckBool = thy._thyOptions._deductionChainCheck
-    ocLimit = thy._thyOptions._openChainsLimit
-    satLimit = thy._thyOptions._saturationLimit
+    deductionChainCheckBool = thy.options.deductionChainCheck
+    ocLimit = thy.options.openChainsLimit
+    satLimit = thy.options.saturationLimit
     ndcChecks = if deductionChainCheckBool then prettyNDCcheck False ocLimit satLimit sign name intrRules else (sign, intrRules)
     (sigWithMaude', intrRulesACred) = ndcChecks
     sig' = if deductionChainCheckBool then toSignaturePure sigWithMaude' else sig
@@ -522,16 +522,16 @@ checkCloseIntrRule sign name thy = (sigWithMaude', thy {_thyCache = intrRulesACr
 checkCloseIntrRuleDiff :: SignatureWithMaude -> String -> OpenDiffTheory -> (SignatureWithMaude, OpenDiffTheory)
 checkCloseIntrRuleDiff sign name diffThy = if deductionChainCheckBool then (sigWithMaude'', diffCRThy) else (sign, diffThy)
   where
-    -- hnd = sign._sigMaudeInfo
-    -- sig = diffThy._diffThySignature
+    -- hnd = sign.maudeInfo
+    -- sig = diffThy.signature
 
-    dcl = diffThy._diffThyDiffCacheLeft
-    cl  = diffThy._diffThyCacheLeft
+    dcl = diffThy.diffCacheLeft
+    cl  = diffThy.cacheLeft
 
     -- do the no deconstruction chain check or not?
-    deductionChainCheckBool = diffThy._diffThyOptions._deductionChainCheck
-    ocLimit = diffThy._diffThyOptions._openChainsLimit
-    satLimit = diffThy._diffThyOptions._saturationLimit
+    deductionChainCheckBool = diffThy.options.deductionChainCheck
+    ocLimit = diffThy.options.openChainsLimit
+    satLimit = diffThy.options.saturationLimit
 
     -- we need to do the NDC check for trace and equivalence mode separately:
     -- the NDC attribute governs the trace intruder rules, NDC-diff the diff intruder rules
@@ -543,11 +543,11 @@ checkCloseIntrRuleDiff sign name diffThy = if deductionChainCheckBool then (sigW
     (sigWithMaude'', dclACred) = ndcChecksDiff
     sig'' = toSignaturePure sigWithMaude''
 
-    diffDCLThy = diffThy    {_diffThyDiffCacheLeft = dclACred, _diffThySignature = sig''}  -- diffThySignature is the same for both sides, so we can just update it once
-    diffDCRThy = diffDCLThy {_diffThyDiffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
+    diffDCLThy = diffThy    {diffCacheLeft = dclACred, signature = sig''}  -- diffThySignature is the same for both sides, so we can just update it once
+    diffDCRThy = diffDCLThy {diffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
 
-    diffCLThy = diffDCRThy {_diffThyCacheLeft = clACred}
-    diffCRThy = diffCLThy  {_diffThyCacheRight = clACred}  -- diffThyCacheLeft and diffThyCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
+    diffCLThy = diffDCRThy {cacheLeft = clACred}
+    diffCRThy = diffCLThy  {cacheRight = clACred}  -- diffThyCacheLeft and diffThyCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
 
 -- | Perform wellformedness and deducability checks on a theory.
 checkTranslatedTheory ::
@@ -598,7 +598,7 @@ checkTranslatedTheory thyOpts sign thy = do
 
   pure (report, signWithMaude, deducThy)
   where
-    mh = sign._sigMaudeInfo
+    mh = sign.maudeInfo
     incompleteMSRs = False -- TODO how do we know if we do not have all MSRs due to translation?
     autoSources = thyOpts.autoSources
     derivChecks = thyOpts.derivationChecks
@@ -616,12 +616,12 @@ checkTranslatedTheory thyOpts sign thy = do
     defaultDiffProver = replaceDiffSorryProver $ runAutoDiffProver $ constructAutoProver defaultTheoryLoadOptions
     maudePublicSig s =
       Signature $
-        s._sigMaudeInfo
-          { stFunSyms = makepublic (stFunSyms s._sigMaudeInfo)
-          , stACFunSyms = makepublicAC (stACFunSyms s._sigMaudeInfo)
-          , funSyms = makepublicsym (funSyms s._sigMaudeInfo)
-          , irreducibleFunSyms = makepublicsym (irreducibleFunSyms s._sigMaudeInfo)
-          , reducibleFunSyms = makepublicsym (reducibleFunSyms s._sigMaudeInfo)
+        s.maudeInfo
+          { stFunSyms = makepublic (stFunSyms s.maudeInfo)
+          , stACFunSyms = makepublicAC (stACFunSyms s.maudeInfo)
+          , funSyms = makepublicsym (funSyms s.maudeInfo)
+          , irreducibleFunSyms = makepublicsym (irreducibleFunSyms s.maudeInfo)
+          , reducibleFunSyms = makepublicsym (reducibleFunSyms s.maudeInfo)
           }
     makepublic = Data.Set.map (\(name, (int, _, construct, ndc)) -> (name, (int, Public, construct, ndc)))
     makepublicAC = Data.Set.map (\(name, (_, construct, ndc)) -> (name,(Public, construct, ndc)))
@@ -630,7 +630,7 @@ checkTranslatedTheory thyOpts sign thy = do
       AC (ACfct (name, (_, constr, ndc))) -> AC (ACfct (name,(Public, constr, ndc)))
       x -> x
 
-    theoryName = either (._thyName) (._diffThyName)
+    theoryName = either (.name) (.name)
 
 -- | Add report and version information to a theory.
 withVersionAndReport ::
@@ -712,7 +712,7 @@ closeTranslatedTheory thyOpts sign srcThy = do
 
     withDiffTheory = bitraverse pure
 
-    theoryName = either (._thyName) (._diffThyName)
+    theoryName = either (.name) (.name)
 
 -- | Translate an open theory, perform checks on the translated theory and finally close it.
 closeTheory ::
@@ -735,7 +735,7 @@ closeTheory version loadedThyOpts sign srcThy = do
     loadedStopOnTrace = loadedThyOpts.stopOnTrace
     loadedHeuristic = loadedThyOpts.heuristic
 
-    srcThyInFileName = either (._thyInFile) (._diffThyInFile) srcThy
+    srcThyInFileName = either (.inFile) (.inFile) srcThy
 
     -- Update command line arguments with arguments taken from the configuration block.
     -- Set the default oraclename if needed.
@@ -743,7 +743,7 @@ closeTheory version loadedThyOpts sign srcThy = do
 
     -- Set the oraclename to theory_filename.oracle (if none was supplied).
     thyHeurDefOracle opts =
-      opts { heuristic = (\(Heuristic grl) -> Heuristic $ defaultOracleNames srcThyInFileName grl) <$> loadedHeuristic }
+      (opts :: TheoryLoadOptions) { heuristic = (\(Heuristic grl) -> Heuristic $ defaultOracleNames srcThyInFileName grl) <$> loadedHeuristic }
 
     -- Read and process the arguments from the theory's config block.
     srcThyConfigBlockArgs = argsConfigString $ either theoryConfigBlock diffTheoryConfigBlock srcThy
@@ -821,29 +821,23 @@ addParamsOptions ::
 addParamsOptions opt = addVerboseOptions . addPrecomputationOnlyOptions . addSatArg . addChainsArg . addLemmaToProve . addNdcOption
   where
     -- Add the no deconstruction chain (NDC) check parameter in the Options
-    _deductionChainCheck = opt.ndcCheck
-    addNdcOption (Left thy) = Left thy {_thyOptions = thy._thyOptions {_deductionChainCheck}}
-    addNdcOption (Right diffThy) = Right diffThy {_diffThyOptions = diffThy._diffThyOptions {_deductionChainCheck}}
+    addNdcOption (Left thy) = Left $ set (#options % #deductionChainCheck) opt.ndcCheck thy
+    addNdcOption (Right diffThy) = Right $ set (#options % #deductionChainCheck) opt.ndcCheck diffThy
     -- Add Open Chain Limit parameters in the Options
-    _openChainsLimit = opt.openChain
-    addChainsArg (Left thy) = Left thy {_thyOptions = thy._thyOptions {_openChainsLimit}}
-    addChainsArg (Right diffThy) = Right diffThy {_diffThyOptions = diffThy._diffThyOptions {_openChainsLimit}}
+    addChainsArg (Left thy) = Left $ set (#options % #openChainsLimit) opt.openChain thy
+    addChainsArg (Right diffThy) = Right $ set (#options % #openChainsLimit) opt.openChain diffThy
     -- Add Saturation Limit parameters in the Options
-    _saturationLimit = opt.saturation
-    addSatArg (Left thy) = Left thy {_thyOptions = thy._thyOptions {_saturationLimit}}
-    addSatArg (Right diffThy) = Right diffThy {_diffThyOptions = diffThy._diffThyOptions {_saturationLimit}}
+    addSatArg (Left thy) = Left $ set (#options % #saturationLimit) opt.saturation thy
+    addSatArg (Right diffThy) = Right $ set (#options % #saturationLimit) opt.saturation diffThy
     -- Add lemmas to Prove in the Options
-    _lemmasToProve = opt.lemmaNames
-    addLemmaToProve (Left thy) = Left thy {_thyOptions = thy._thyOptions {_lemmasToProve}}
-    addLemmaToProve (Right diffThy) = Right diffThy {_diffThyOptions = diffThy._diffThyOptions {_lemmasToProve}}
+    addLemmaToProve (Left thy) = Left $ set (#options % #lemmasToProve) opt.lemmaNames thy
+    addLemmaToProve (Right diffThy) = Right $ set (#options % #lemmasToProve) opt.lemmaNames diffThy
     -- Add Verbose parameter in the Options
-    _verboseOption = opt.verboseMode
-    addVerboseOptions (Left thy) = Left thy {_thyOptions = thy._thyOptions {_verboseOption}}
-    addVerboseOptions (Right diffThy) = Right diffThy {_diffThyOptions = diffThy._diffThyOptions {_verboseOption}}
+    addVerboseOptions (Left thy) = Left $ set (#options % #verboseOption) opt.verboseMode thy
+    addVerboseOptions (Right diffThy) = Right $ set (#options % #verboseOption) opt.verboseMode diffThy
     -- Add PrecomputationOnly parameter in the Options
-    _precomputationOnlyOption = opt.precomputeOnlyMode
-    addPrecomputationOnlyOptions (Left thy) = Left thy {_thyOptions = thy._thyOptions {_precomputationOnlyOption}}
-    addPrecomputationOnlyOptions (Right diffThy) = Right diffThy {_diffThyOptions = diffThy._diffThyOptions {_precomputationOnlyOption}}
+    addPrecomputationOnlyOptions (Left thy) = Left $ set (#options % #precomputationOnlyOption) opt.precomputeOnlyMode thy
+    addPrecomputationOnlyOptions (Right diffThy) = Right $ set (#options % #precomputationOnlyOption) opt.precomputeOnlyMode diffThy
 
 ------------------------------------------------------------------------------
 -- Message deduction variants cached in files
@@ -888,7 +882,7 @@ addMessageDeductionRuleVariants thy0
   | enableDH msig = addIntruderVariants [mkDhIntruderVariants]
   | otherwise = thy
   where
-    msig = thy0._thySignature._sigMaudeInfo --get (sigpMaudeSig . thySignature) thy0
+    msig = thy0.signature.maudeInfo --get (sigpMaudeSig . thySignature) thy0
     rules0 = reader $ \hnd -> subtermConstructorRules False hnd msig ++ specialIntruderRules False
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
@@ -907,7 +901,7 @@ addMessageDeductionRuleVariantsWithoutMaude thy0
   | enableDH msig = addIntruderVariants [ mkDhIntruderVariants ]
   | otherwise     = thy
   where
-    msig         = thy0._thySignature._sigMaudeInfo
+    msig         = thy0.signature.maudeInfo
     rules        = specialIntruderRules False -- subtermConstructorRules False hnd msig ++ 
                    ++ (if enableMSet msig then multisetIntruderRules else [])
                    ++ (if enableXor msig then xorIntruderRules else [])
@@ -927,7 +921,7 @@ addMessageDeductionRuleVariantsDiff thy0
   | enableDH msig = addIntruderVariantsDiff [mkDhIntruderVariants]
   | otherwise = thy >>= \x -> return (addIntrRuleLabels x)
   where
-    msig = thy0._diffThySignature._sigMaudeInfo
+    msig = thy0.signature.maudeInfo
     rules0 diff' = reader $ \hnd -> subtermConstructorRules diff' hnd msig
         ++ specialIntruderRules diff'
         ++ (if enableNat msig then natIntruderRules else [])

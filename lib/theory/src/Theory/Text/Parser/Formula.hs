@@ -13,10 +13,8 @@ module Theory.Text.Parser.Formula
     guardedFormula,
   )
 where
-import           Prelude                    hiding (id, (.))
 -- import           Data.Monoid                hiding (Last)
 import           Control.Applicative        hiding (empty, many, optional)
-import           Control.Category
 import           Text.Parsec                hiding ((<|>))
 import           Text.PrettyPrint.Class     (render)
 import           Term.Substitution
@@ -29,7 +27,7 @@ import Control.Basics
 
 smallerp :: Ord v => Parser v -> Parser (ProtoAtom SyntacticSugar (Term (Lit Name v)))
 smallerp varp = do
-    mset <- enableMSet . sig <$> getState
+    mset <- enableMSet . (.sig) <$> getState
     unless mset (fail "Need builtins: multiset to use multiset comparison operator.")
     a <- try (termp <* opLessTerm)
     b <- termp

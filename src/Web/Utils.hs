@@ -23,7 +23,7 @@ import Control.Monad.State (State)
 import qualified Control.Monad.State as State
 import qualified Data.ByteString.Char8 as BC
 
-import Extension.Data.Label (get, modify)
+import Optics.Core (over)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 
@@ -38,7 +38,7 @@ type TermState = Map String Int
 
 -- | Get all terms appearing in a constraint system
 getTerms :: System -> [LNTerm]
-getTerms = concatMap (concatMap factTerms . (\r -> get rConcs r ++ get rPrems r)) . get sNodes
+getTerms = concatMap (concatMap (.factTerms) . (\r -> r.concs ++ r.prems)) . (.nodes)
 
 
 -- | Count the number of occurences of all terms in a given constraint system.
@@ -91,17 +91,17 @@ shorten (viewTerm -> x) = return $ termViewToTerm x
 
 -- | Update the given constraint system with shorter terms.
 updateSystem :: Legend -> System -> System
-updateSystem l = modify sNodes (M.map change)
+updateSystem l = over #nodes (M.map change)
     where
       change :: RuleACInst -> RuleACInst
-      change = modify rPrems go . modify rConcs go
+      change = over #prems go . over #concs go
 
       go :: [LNFact] -> [LNFact]
       go = map (\(tag, a, ts) -> Fact tag a ts) . (\fs -> zip3 (tags fs) (annotations fs) (terms fs))
         where
-          tags = map factTag
-          annotations = map factAnnotations
-          terms = map (map aux . factTerms)
+          tags = map (.factTag)
+          annotations = map (.factAnnotations)
+          terms = map (map aux . (.factTerms))
           aux t = case M.lookup t l of
                     Just t' -> t'
                     Nothing -> t

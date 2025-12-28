@@ -10,6 +10,11 @@
 -- This module provides a simple interface for building .dot graph files, for input into the dot and graphviz tools.
 -- It includes a monadic interface for building graphs.
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Text.Dot
         (
@@ -35,7 +40,7 @@ module Text.Dot
         , graphAttributes
         , share
         , same
-        , createClusterNodeId 
+        , createClusterNodeId
         , cluster
         , createSubGraph
           -- * Record construction
@@ -72,12 +77,13 @@ import Data.Char           (isSpace)
 import Data.List           (intersperse)
 import qualified Data.Text.Lazy as T
 import Control.Monad       (liftM)
-import Control.Monad.State (State, runState)
-import Extension.Data.Label
+import Control.Monad.State (State, runState, gets)
 import Data.GraphViz.Printing (renderDot, unqtDot)
 import Data.GraphViz.Attributes.HTML
 import Data.GraphViz.Attributes.Colors
 import Data.GraphViz (GraphvizCommand(Dot), DotRepr (setID))
+import Optics.TH (makeFieldLabelsNoPrefix)
+import Optics.State (assign, modifying)
 
 -- | Identifier for a node in a dot file.
 data NodeId = NodeId String
@@ -99,15 +105,15 @@ data GraphElement = GraphAttribute String String              -- ^ Global attrib
 
 -- | The state of the dot generator monad.
 data DotGenState = DotGenState {
-  _dgsId       :: Int,           -- ^ The current node id which is incremented for every statement that generates a node.
-  _dgsElements :: [GraphElement] -- ^ The current list of generated elements.
+  dgsId       :: Int,        -- ^ The current node id which is incremented for every statement that generates a node.
+  elements :: [GraphElement] -- ^ The current list of generated elements.
 }
 
-$(mkLabels [''DotGenState])
+makeFieldLabelsNoPrefix ''DotGenState
 
 -- | The monad for generating dot statements.
 type Dot = State DotGenState
- 
+
 -- | Evaluating a dot generator expression.
 runDot :: DotGenState -> Dot a -> (a, DotGenState)
 runDot state dot = runState dot state
@@ -115,17 +121,17 @@ runDot state dot = runState dot state
 -- | Retrieving and incrementing the node id in the state.
 nextId :: Dot Int
 nextId = do
-  uq <- getM dgsId
-  () <- setM dgsId (succ uq)
+  uq <- gets (.dgsId)
+  assign #dgsId (succ uq)
   return uq
 
 setId :: Int  -> Dot()
-setId i = do 
-  setM dgsId i
+setId i = do
+  assign #dgsId i
 
 -- | Initialize DotGenState
 initializeDotGenState :: DotGenState
-initializeDotGenState = DotGenState { _dgsId = 0, _dgsElements = [] }
+initializeDotGenState = DotGenState { dgsId = 0, elements = [] }
 
 -- | Modify DotGenState
 modifyDotGenState :: Dot a -> DotGenState -> DotGenState
@@ -133,7 +139,7 @@ modifyDotGenState action state = snd (runDot state action)
 
 -- | Get elements from DotGenState
 getDotGenStateElements :: Dot [GraphElement]
-getDotGenStateElements = getM dgsElements
+getDotGenStateElements = gets (.elements)
 
 createClusterNodeId :: String -> NodeId
 createClusterNodeId agentName = NodeId (quoteDotId ("cluster_" ++ agentName))
@@ -144,18 +150,18 @@ quoteDotId str = "\"" ++ concatMap escape str ++ "\""
     escape '"'  = "\\\""
     escape '\\' = "\\\\"
     escape c    = [c]
-  
+
 createSubGraph :: Maybe NodeId -> [GraphElement] -> GraphElement
 createSubGraph = SubGraph
 
 -- | Add elements to the dot state.
 addElements :: [GraphElement] -> Dot ()
 addElements elems = do
-  modM dgsElements (++elems)
+  modifying #elements (++elems)
 
 -- | 'rawNode' takes a list of attributes, generates a new node, and gives a 'NodeId'.
 rawNode :: [(String, String)] -> Dot NodeId
-rawNode attrs = do 
+rawNode attrs = do
     uq <- nextId
     let nid = NodeId $ "n" ++ show uq
     addElements [GraphNode nid attrs]
@@ -183,12 +189,12 @@ edge  from to attrs = addElements [ GraphEdge from to attrs ]
 
 -- | 'scope' groups a subgraph together; in dot these are the subgraphs inside "{" and "}".
 scope     :: Dot a -> Dot a
-scope dot = do 
-  uq <- getM dgsId
-  let subState = DotGenState { _dgsId = uq, _dgsElements = [] }
+scope dot = do
+  uq <- gets (.dgsId)
+  let subState = DotGenState { dgsId = uq, elements = [] }
   let (a, finalState) = runDot subState dot
-  setM dgsId (get dgsId finalState)
-  addElements [SubGraph Nothing (get dgsElements finalState)]
+  assign #dgsId finalState.dgsId
+  addElements [SubGraph Nothing finalState.elements]
   return a
 
 -- | 'share' is when a set of nodes share specific attributes. Usually used for layout tweaking.
@@ -196,7 +202,7 @@ share :: [(String,String)] -> [NodeId] -> Dot ()
 share attrs nodeids =
   let elems = [ Scope ( [ GraphAttribute name val | (name,val) <- attrs]
                ++ [ GraphNode nodeid [] | nodeid <- nodeids ]
-               ) ] 
+               ) ]
   in addElements elems
 
 -- | 'same' provides a combinator for a common pattern; a set of 'NodeId's with the same rank.
@@ -207,12 +213,12 @@ same = share [("rank","same")]
 -- | 'cluster' builds an explicit, internally named subgraph (called cluster).
 cluster :: Dot a -> Dot (NodeId,a)
 cluster dot = do
-  uq <- getM dgsId  
+  uq <- gets (.dgsId)
   let cid = NodeId $ "cluster_" ++ show uq
-  let clusterState = DotGenState { _dgsId = succ uq, _dgsElements = [] }
+  let clusterState = DotGenState { dgsId = succ uq, elements = [] }
   let (a, finalState) = runDot clusterState dot
-  setM dgsId (get dgsId finalState)
-  addElements [SubGraph (Just cid) (get dgsElements finalState)]
+  assign #dgsId finalState.dgsId
+  addElements [SubGraph (Just cid) finalState.elements]
   return (cid, a)
 
 -- | 'attribute' gives a attribute to the current scope.
@@ -234,16 +240,16 @@ graphAttributes attrs = addElements [ GraphNode (NodeId "graph") attrs]
 -- 'showDot' renders a dot graph as a 'String' with the supplied label as the digraph id.
 showDot :: String -> Dot a -> String
 showDot label dot =
-      -- We must escape all double quote characters in the graphviz label by using a backslash. 
+      -- We must escape all double quote characters in the graphviz label by using a backslash.
       -- In the comparison we just use '"' because it is a single character.
-      -- Then for the replacement we must use three \, the first two insert a literal backslash into the string, 
-      -- the third one is used to insert a literal double quote into the string. 
+      -- Then for the replacement we must use three \, the first two insert a literal backslash into the string,
+      -- the third one is used to insert a literal double quote into the string.
   let escapedLabel = concatMap (\c -> if c == '"' then "\\\"" else [c]) label
-      initialState = DotGenState { _dgsId = 0, _dgsElements = [] } 
+      initialState = DotGenState { dgsId = 0, elements = [] }
       (_, finalState) = runDot initialState dot
-      elems = get dgsElements finalState
-  in 
-    "digraph " ++ 
+      elems = finalState.elements
+  in
+    "digraph " ++
     "\"" ++ escapedLabel ++ "\"" ++
     " {\n" ++ unlines (map showGraphElement elems) ++ "\n}\n"
 
@@ -316,7 +322,7 @@ mrecord' rec attrs = do (nId, ids) <- mrecord rec attrs
 -- | A variant of "mrecord" ignoring the port to node-id association list.
 mrecord_ :: Record a -> [(String,String)] -> Dot NodeId
 mrecord_ rec attrs = liftM fst $ mrecord rec attrs
-  
+
 
 -- | 'userNodeId' allows a user to use their own (Int-based) node id's, without needing to remap them.
 userNodeId :: Int -> NodeId
@@ -344,7 +350,7 @@ showAttrs xs = "[" ++ showAttrs' xs ++ "]"
 
 -- | Render a single attribute. HTML labels are not escaped as they should contain valid graphviz HTML-like code.
 showAttr :: (String, String) -> String
-showAttr (name, val) 
+showAttr (name, val)
   | name == "html_label" = "label=" ++ val
   | otherwise = name ++ "=\"" ++ concatMap escape val ++ "\""
     where
@@ -413,7 +419,7 @@ vcat' = vcat . map field
 
 -- Generate an html label attribute from a graphviz 'Label'.
 htmlLabel :: Label -> (String, String)
-htmlLabel label = 
+htmlLabel label =
   let rendered = T.unpack $ renderDot $ unqtDot label
       html = "<" ++ rendered ++ ">" in
   ("html_label", html)

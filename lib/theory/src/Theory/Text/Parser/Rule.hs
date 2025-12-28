@@ -19,10 +19,8 @@ module Theory.Text.Parser.Rule (
 )
 where
 
-import           Prelude                    hiding (id, (.))
 import qualified Data.ByteString            as B
 import qualified Data.ByteString.Char8      as BC
-import           Data.Label
 import           Data.Either
 import           Data.Foldable
 -- import           Data.Monoid                hiding (Last)
@@ -31,8 +29,8 @@ import qualified Data.Text.Encoding         as TE
 import qualified Data.Set                   as S
 import           Data.Color
 import           Control.Applicative        hiding (empty, many, optional)
-import           Control.Category
 import           Control.Monad
+import           Optics.Core (over)
 import           Text.Parsec                hiding ((<|>))
 import           Text.Read                  (readMaybe)
 import           Term.Substitution
@@ -118,7 +116,7 @@ diffRule = do
     (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
     leftRight  <- optionMaybe ( (,) <$> (symbol "left"  *> protoRule) <*> (symbol "right" *> protoRule))
-    return $ DiffProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) leftRight
+    return $ DiffProtoRule (Rule (over #restriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) leftRight
 
 -- | Parse a protocol rule. For the special rules 'Reveal_fresh', 'Fresh',
 -- 'Knows', and 'Learn' no rule is returned as the default theory already
@@ -132,7 +130,7 @@ protoRule = do
     (ps0,as0,cs0,rs0) <- genericRule msgvar nodevar
     let (ps,as,cs,rs) = apply subst (ps0,as0,cs0,rs0)
     variants <- option [] $ symbol "variants" *> commaSep1 protoRuleAC
-    return $ OpenProtoRule (Rule (modify preRestriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) variants
+    return $ OpenProtoRule (Rule (over #restriction (++ rs) ri) ps cs as (newVariables ps $ cs ++ as)) variants
 
 -- | Parse RuleInfo
 protoRuleACInfo :: Parser ProtoRuleACInfo
@@ -163,7 +161,7 @@ intrRule = do
     intrInfo = do
         name  <- identifier
         limit <- option 0 natural
-        msig  <- sig <$> getState
+        msig  <- (.sig) <$> getState
         let knownFuns = S.toList (funSyms msig)
         -- FIXME: Parse whether we have a subterm rule or a constant rule
         --        Currently we (wrongly) always assume that we have a subterm rule, this prohibits recomputing variants

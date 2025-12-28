@@ -39,7 +39,6 @@ import           Data.List hiding (isSuffixOf)
 import qualified Data.Set                          as S
 import           Data.ByteString.Char8 (ByteString, append, pack, empty, isSuffixOf)
 
-import           Extension.Data.Label
 
 import           Term.Maude.Signature
 import           Term.Narrowing.Variants.Compute
@@ -346,20 +345,20 @@ dhIntruderRules diff = reader $ \hnd -> minimizeIntruderRules diff hnd $
 -- of a given intruder rule @irule@
 variantsIntruder :: MaudeHandle -> ([LNSubstVFresh] -> [LNSubstVFresh]) -> Bool -> Bool -> IntrRuleAC -> [IntrRuleAC]
 variantsIntruder hnd minimizeVariants applyFilters diff ru = go [] $ reverse $ do
-    let ruleTerms = concatMap factTerms
-                              (get rPrems ru++get rConcs ru++get rActs ru)
+    let ruleTerms = concatMap (.factTerms)
+                              (ru.prems ++ ru.concs ++ ru.acts)
     fsigma <- minimizeVariants $ computeVariants (fAppList ruleTerms) `runReader` hnd
     let sigma     = freshToFree fsigma `evalFreshAvoiding` ruleTerms
         ruvariant = normRule' (apply sigma ru) `runReader` hnd
-    guard (not applyFilters || (frees (get rConcs ruvariant) /= [] || diff) &&
+    guard (not applyFilters || (frees ruvariant.concs /= [] || diff) &&
            -- ground terms are already deducible by applying construction rules
            (not applyFilters || ruvariant /= ru) &&
            -- this is a construction rule
-           (get rConcs ruvariant) \\ (get rPrems ruvariant) /= []
+           ruvariant.concs \\ ruvariant.prems /= []
            -- The conclusion is included in the premises
            )
 
-    case concatMap factTerms $ get rConcs ruvariant of
+    case concatMap (.factTerms) ruvariant.concs of
         [viewTerm -> FApp (AC Mult) _] ->
             fail "Rules with product conclusion are redundant"
         _                              -> return ruvariant
@@ -506,7 +505,7 @@ bpVariantsIntruder diff hnd ru = do
 ------------------------------------------------------------------------------
 
 isDRule :: ByteString -> Rule (RuleInfo t IntrRuleACInfo) -> Bool
-isDRule ruString ru = case get rInfo ru of
+isDRule ruString ru = case ru.info of
     IntrInfo (DestrRule n _ _ _ _) | n == append (pack "_") ruString -> True
     _                                                                -> False
 

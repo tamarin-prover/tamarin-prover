@@ -4,7 +4,6 @@ module Theory.Tools.MessageDerivationChecks (
 ) where
 
 import  Theory.Model.Formula
-import  qualified Data.Label as L
 import Items.RuleItem
 import TheoryObject
 import Theory.Model
@@ -20,12 +19,9 @@ import qualified Data.List as List
 import CloseRule (closeTheoryWithMaude,proveTheory)
 
 import Control.Basics
-import Control.Category
 
-import Prelude hiding (id, (.))
-
-import           Prelude                             hiding (id, (.))
 import OpenTheory
+import Optics.Core (over, set)
 
 
 -----------------------------------------------
@@ -41,8 +37,8 @@ checkVariableDeducibility thy sig sources prover =
         provenTheories =  map (proveTheory (const True) prover) closedTheories
         closedTheories = map (\t -> closeTheoryWithMaude sig t sources False) modifiedTheories
         modifiedTheories =  zipWith3 (\r l t -> (addRules [r] . addLemmas l ) t)  newRules newLemmas (repeat emptyPublicThy)
-        emptyPublicThy = L.set thyOptions newOptions emptyPublicThy0
-        newOptions =  L.set deductionChainCheck False (L.get thyOptions emptyPublicThy0)
+        emptyPublicThy = set #options newOptions emptyPublicThy0
+        newOptions =  set #deductionChainCheck False emptyPublicThy0.options
         emptyPublicThy0 = makeFunsPublic (toSignaturePure sig) $ deleteRulesAndLemmasAndRestrictionsFromTheory thy
         newRules = zipWith3 (\idx freevs prems -> generateRule freevs (premisesToOut prems) idx) [0..] freeVars premises
         newLemmas = zipWith3 (\idx freevs _-> generateSeparatedLemmas idx freevs) [0..] freeVars premises
@@ -75,7 +71,7 @@ diffCheckVariableDeducibility thy sig sources prover diffprover =
 -----------------------------------------------
 
 diffdeleteRulesAndLemmasAndRestrictionsFromTheory :: DiffTheory sig c r r2 p p2 -> DiffTheory sig c r r2 p p2
-diffdeleteRulesAndLemmasAndRestrictionsFromTheory = L.modify diffThyItems deleteDiffRules
+diffdeleteRulesAndLemmasAndRestrictionsFromTheory = over #items deleteDiffRules
     where
         deleteDiffRules = mapMaybe delRules
         delRules (DiffRuleItem _) = Nothing
@@ -86,7 +82,7 @@ diffdeleteRulesAndLemmasAndRestrictionsFromTheory = L.modify diffThyItems delete
         delRules sth = Just sth
 
 deleteRulesAndLemmasAndRestrictionsFromTheory :: Theory sig c r p s -> Theory sig c r p s
-deleteRulesAndLemmasAndRestrictionsFromTheory = L.modify thyItems deleteRules
+deleteRulesAndLemmasAndRestrictionsFromTheory = over #items deleteRules
     where
         deleteRules = mapMaybe delRules
         delRules (RuleItem _) = Nothing
@@ -102,13 +98,13 @@ replacePrivate t = case viewTerm t of
     x -> termViewToTerm x
 
 makeFunsPublic ::  sig -> Theory sig c r p s  -> Theory sig c r p s
-makeFunsPublic = L.set thySignature
+makeFunsPublic = set #signature
 
 diffmakeFunsPublic :: a -> DiffTheory a c r r2 p p2 -> DiffTheory a c r r2 p p2
-diffmakeFunsPublic = L.set diffThySignature
+diffmakeFunsPublic = set #signature
 
 addDiffRules :: [OpenProtoRule] -> DiffTheory sig c DiffProtoRule r2 p p2-> DiffTheory sig c DiffProtoRule r2 p p2
-addDiffRules rules = L.modify diffThyItems (++ map (DiffRuleItem . (\t -> DiffProtoRule (L.get oprRuleE t) (Just (t,t)))) rules)
+addDiffRules rules = over #items (++ map (DiffRuleItem . (\t -> DiffProtoRule t.ruleE (Just (t,t)))) rules)
 
 -----------------------------------------------
 -- Generating error reports
@@ -123,13 +119,13 @@ reportVars analysisresults rules vars = case rulesAndVars of
     where
         rulesAndVars :: String
         rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars' ->
-            if List.any ( /= TraceFound) results && not (ignoreDerivChecks (ruleAttributes $ L.get oprRuleE rule))
+            if List.any ( /= TraceFound) results && not (ruleAttributes rule.ruleE).ignoreDerivChecks
                 then Just $ generateError results rule vars'
                 else Nothing)
             analysisresults rules vars)
 
         generateError :: [ProofStatus] -> OpenProtoRule -> [LVar] -> String
-        generateError results rule vars' = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get oprRuleE rule)))
+        generateError results rule vars' = "Rule " ++ (Pretty.render . prettyProtoRuleName) rule.ruleE.info.name
                 ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars'))
 
 reportDiffVars :: [[ProofStatus]] -> [DiffProtoRule] -> [[LVar]] -> WfErrorReport
@@ -141,13 +137,13 @@ reportDiffVars analysisresults rules vars = case rulesAndVars of
     where
         rulesAndVars :: String
         rulesAndVars = intercalate "\n\n" $ catMaybes (zipWith3 (\results rule vars' ->
-            if List.any ( /= TraceFound) results && not (ignoreDerivChecks (ruleAttributes $ L.get dprRule rule))
+            if List.any ( /= TraceFound) results && not (ruleAttributes rule.rule).ignoreDerivChecks
                 then Just $ generateError results rule vars'
                 else Nothing)
             analysisresults rules vars)
 
         generateError :: [ProofStatus] -> DiffProtoRule -> [LVar] -> String
-        generateError results rule vars' = "Rule " ++ (Pretty.render . prettyProtoRuleName) (L.get preName (L.get rInfo (L.get dprRule rule)))
+        generateError results rule vars' = "Rule " ++ (Pretty.render . prettyProtoRuleName) rule.rule.info.name
                 ++ ": \nFailed to derive Variable(s): " ++ intercalate ", " (map (show . snd) $ filter ((/= TraceFound) . fst) (zip results vars'))
 
 -----------------------------------------------
@@ -158,10 +154,10 @@ freesInThyRules :: [OpenProtoRule] -> [[LVar]]
 freesInThyRules =
     -- Timepoint variables such as #NOW come from _restrict annotations but
     -- are not message variables we need to prove deducible.
-    map (filter ((/= LSortNode) . lvarSort) . frees . L.get oprRuleE)
+    map (filter ((/= LSortNode) . lvarSort) . frees . (.ruleE))
 
 premsOfThyRules :: [OpenProtoRule] -> [[LNFact]]
-premsOfThyRules = map (L.get rPrems . L.get oprRuleE)
+premsOfThyRules = map (.ruleE.prems)
 
 ----------------------------------------------------
 -- Helper functions for rule and lemma generation
@@ -188,7 +184,7 @@ landFormula :: [LNFact] -> ProtoFormula Unit2 (String,LSort) Name  LVar
 landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Free (LVar (show (idx :: Integer)) LSortNode 0))) ) fact ))  ltrue (zip [0..]  (map freeFact facts))
 
 premisesToOut :: [LNFact] -> [LNFact]
-premisesToOut =  map (outFact . natToFreshVars) . concatMap factTerms
+premisesToOut =  map (outFact . natToFreshVars) . concatMap (.factTerms)
 
 
 freeFact :: LNFact ->  Fact (Term (Lit Name (BVar LVar)))

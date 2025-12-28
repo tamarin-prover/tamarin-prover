@@ -28,16 +28,14 @@ module Theory.Text.Parser (
   , liftedAddRestriction
   ) where
 
-import           Prelude                    hiding (id, (.))
-import           Data.Label
 import           Data.Maybe
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
 import           System.FilePath
-import           Control.Category
 import           Control.Monad
 import           Control.Applicative        hiding (empty, many, optional)
 import qualified Control.Monad.Catch        as Catch
+import Optics.Core ((%), over, set)
 import System.IO.Unsafe (unsafePerformIO)
 import           Text.Parsec                hiding ((<|>))
 import           Text.Parsec.Error          (newErrorMessage, Message(..))
@@ -98,10 +96,10 @@ parseLemmaWithMacros :: OpenTheory -> String -> Either ParseError (Lemma ProofSk
 parseLemmaWithMacros thy input = do
      case parseStringWState (mkMacroStateSig thy) "<unknown source>" (lemma Nothing) input of
        Left err -> Left err
-       Right synLemma -> 
+       Right synLemma ->
          case expandLemma thy synLemma of
            Left err -> Left (newErrorMessage (Message $ "Error expanding lemma: " ++ show err) (initialPos "<unknown source>"))
-           Right expandedLemma -> 
+           Right expandedLemma ->
              Right $ applyMacroInLemma (theoryMacros thy) expandedLemma
 
 
@@ -174,18 +172,18 @@ liftedAddCaseTest thy cTest =
 --        (but they should not, as they will not be exported)
 liftedAddProtoRule :: Catch.MonadThrow m => OpenTheory -> OpenProtoRule -> m OpenTheory
 liftedAddProtoRule thy ru
-    | (StandRule rname) <- get (preName . rInfo . oprRuleE) ru = do
-        rformulasE <- mapM (liftedExpandFormula thy) (rfacts $ get oprRuleE ru)
+    | (StandRule rname) <- ru.ruleE.info.name = do
+        rformulasE <- mapM (liftedExpandFormula thy) (rfacts ru.ruleE)
         thy'      <- foldM addExpandedRestriction thy  (restrictions rname rformulasE)
         thy''     <- liftedAddProtoRuleNoExpand   thy' (addActions   rname rformulasE) -- TODO was ru instead of rformulas
         return thy''
     | otherwise = Catch.throwM TryingToAddFreshRule
             where
-                rfacts = get (preRestriction . rInfo)
+                rfacts = (.info.restriction)
                 addExpandedRestriction thy' xrstr = liftMaybeToEx
                                                      (DuplicateItem $ RestrictionItem xrstr)
                                                      (addRestriction xrstr thy')
-                addActions   rname rformulas = modify (rActs . oprRuleE) (++ actions rname rformulas) ru
+                addActions   rname rformulas = over (#ruleE % #acts) (++ actions rname rformulas) ru
 
                 restrictions rname rformulas =  map (fst . fromRuleRestriction' rname) (counter rformulas)
                 actions      rname rformulas =  map (snd . fromRuleRestriction' rname) (counter rformulas)
@@ -230,7 +228,7 @@ evalformula flags0 (FNested t) = evalformula flags0 t
 theory :: Maybe FilePath
        -> Parser OpenTheory
 theory inFile = do
-    flags0 <- flags <$> getState
+    flags0 <- (.flags) <$> getState
     when ("diff" `S.member` flags0) $ modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
@@ -239,10 +237,10 @@ theory inFile = do
     if block == "configuration"
         then do
             fileArgs <- stringLiteral <* symbol_ "begin"
-            addItems inFile (set thyInFile (fromMaybe "" inFile) 
-              $ set thyName thyId (modify thyItems (++ [ConfigBlockItem fileArgs]) defThy)) <* symbol_ "end"
+            addItems inFile (set #inFile (fromMaybe "" inFile)
+              $ set #name thyId (over #items (++ [ConfigBlockItem fileArgs]) defThy)) <* symbol_ "end"
         else do
-            addItems inFile (set thyInFile (fromMaybe "" inFile) $ set thyName thyId defThy) <* symbol_ "end"
+            addItems inFile (set #inFile (fromMaybe "" inFile) $ set #name thyId defThy) <* symbol_ "end"
   where
     addItems :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     addItems inFile0 thy = asum
@@ -252,17 +250,17 @@ theory inFile = do
       , do thy' <- liftedAddTactic thy =<< tactic False
            addItems inFile0 thy'
       , do thy' <- builtins thy
-           msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
+           msig <- (.sig) <$> getState
+           addItems inFile0 $ set (#signature % #maudeInfo) msig thy'
       , do thy' <- options thy
            addItems inFile0 thy'
       , do fs <- functions
-           msig <- sig <$> getState
+           msig <- (.sig) <$> getState
            let thy' = foldl (flip addFunctionTypingInfo) thy fs in
-             addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy'
+             addItems inFile0 $ set (#signature % #maudeInfo) msig thy'
       , do equations
-           msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
+           msig <- (.sig) <$> getState
+           addItems inFile0 $ set (#signature % #maudeInfo) msig thy
       , do thy' <- liftedAddMacros thy =<< macros
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< restriction msgvar nodevar
@@ -274,7 +272,7 @@ theory inFile = do
            thy' <- liftedAddCaseTest thy test
            addItems inFile0 thy'
       , do accLem <- lemmaAcc workDir
-           let tests = mapMaybe (flip lookupCaseTest $ thy) (get aCaseIdentifiers accLem)
+           let tests = mapMaybe (flip lookupCaseTest $ thy) accLem.caseIdentifiers
            thy' <- liftedAddAccLemma thy (rewriteAccLemmaOracle inFile0 $ defineCaseTests accLem tests)
            addItems inFile0 thy'
       , do lem <- lemma workDir
@@ -293,10 +291,10 @@ theory inFile = do
            addItems inFile0 thy'
       , do
            lem <- equivLemma thy
-           addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
+           addItems inFile0 (over #items (++ [TranslationItem lem]) thy)
       , do
            lem <- diffEquivLemma thy
-           addItems inFile0 (modify thyItems (++ [TranslationItem lem]) thy)
+           addItems inFile0 (over #items (++ [TranslationItem lem]) thy)
       , do thy' <- preddeclaration thy
            addItems inFile0 (thy')
       , do thy'  <- export thy
@@ -313,14 +311,14 @@ theory inFile = do
        addItems inFile0 thy
 
     rewriteLemmaOracle inFile' lem =
-      set lAttributes (map (rwOracleLemHeurAttr inFile') lattrs) lem
+      set #attributes (map (rwOracleLemHeurAttr inFile') lattrs) lem
       where
-        lattrs  = get lAttributes lem
+        lattrs  = lem.attributes
 
     rewriteAccLemmaOracle inFile' accLemma =
-      set aAttributes (map (rwOracleLemHeurAttr inFile') acclattrs) accLemma
+      set #attributes (map (rwOracleLemHeurAttr inFile') acclattrs) accLemma
       where
-        acclattrs  = get aAttributes accLemma
+        acclattrs  = accLemma.attributes
 
     rwOracleLemHeurAttr inFile' (LemmaHeuristic grl) = LemmaHeuristic $ defaultOracleNames (fromMaybe "" inFile') grl
     rwOracleLemHeurAttr _ attr = attr
@@ -331,7 +329,7 @@ theory inFile = do
          st <- getState
          let (thy', st') = unsafePerformIO (parseFileWState st (addItems' (Just filepath) thy) filepath)
          _ <- putState st'
-         addItems inFile0 $ set (sigpMaudeSig . thySignature) (sig st') thy'
+         addItems inFile0 $ set (#signature % #maudeInfo) st'.sig thy'
       where
         addItems' :: Maybe FilePath -> OpenTheory -> Parser (OpenTheory, ParserState)
         addItems' inFile1 thy1 = do
@@ -350,7 +348,7 @@ theory inFile = do
     ifdef :: Maybe FilePath -> OpenTheory ->  Parser OpenTheory
     ifdef inFile0 thy = do
        flagf <- symbol_ "#ifdef" *> flagdisjuncts
-       flags0 <- flags <$> getState
+       flags0 <- (.flags) <$> getState
        if evalformula flags0 flagf
          then do thy' <- addItems inFile0 thy
                  asum [do symbol_ "#else"
@@ -378,7 +376,7 @@ theory inFile = do
     -- add process to theoryitems
     liftedAddProcessDef thy pDef = case addProcessDef pDef thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate process: " ++ get pName pDef
+        Nothing   -> fail $ "duplicate process: " ++ pDef.name
 
     liftedAddHeuristic thy h = case addHeuristic h thy of
         Just thy' -> return thy'
@@ -388,7 +386,7 @@ theory inFile = do
         Just thy' -> return thy'
         Nothing   -> fail $ "default tactic already defined"
 
-    liftedAddMacros thy m = case addMacros m thy of 
+    liftedAddMacros thy m = case addMacros m thy of
         Just thy' -> return thy'
         Nothing   -> fail $ "macro already defined"
 
@@ -397,7 +395,7 @@ theory inFile = do
 diffTheory :: Maybe FilePath
        -> Parser OpenDiffTheory
 diffTheory inFile = do
-    flags0 <- flags <$> getState
+    flags0 <- (.flags) <$> getState
     modifyStateSig (`mappend` enableDiffMaudeSig) -- Add the diffEnabled flag into the MaudeSig when the diff flag is set on the command line.
     symbol_ "theory"
     thyId <- identifier
@@ -405,9 +403,9 @@ diffTheory inFile = do
     if block == "configuration"
         then do
             fileArgs <- stringLiteral <* symbol_ "begin"
-            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (modify diffThyItems (++ [DiffConfigBlockItem fileArgs]) (defaultOpenDiffTheory ("diff" `S.member` flags0)))) <* symbol_ "end"
+            addItems inFile (set #inFile (fromMaybe "" inFile) $ set #name thyId (over #items (++ [DiffConfigBlockItem fileArgs]) (defaultOpenDiffTheory ("diff" `S.member` flags0)))) <* symbol_ "end"
         else do
-            addItems inFile (set diffThyInFile (fromMaybe "" inFile) $ set diffThyName thyId (defaultOpenDiffTheory ("diff" `S.member` flags0))) <* symbol "end"
+            addItems inFile (set #inFile (fromMaybe "" inFile) $ set #name thyId (defaultOpenDiffTheory ("diff" `S.member` flags0))) <* symbol "end"
   where
     addItems :: Maybe FilePath -> OpenDiffTheory -> Parser OpenDiffTheory
     addItems inFile0 thy = asum
@@ -417,15 +415,15 @@ diffTheory inFile = do
            addItems inFile0 thy'
       , do
            diffbuiltins
-           msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
+           msig <- (.sig) <$> getState
+           addItems inFile0 $ set (#signature % #maudeInfo) msig thy
       , do _ <- functions -- typing affects only SAPIC translation, hence functions
                           -- are only added to maude signature, but not to theory.
-           msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
+           msig <- (.sig) <$> getState
+           addItems inFile0 $ set (#signature % #maudeInfo) msig thy
       , do equations
-           msig <- sig <$> getState
-           addItems inFile0 $ set (sigpMaudeSig . diffThySignature) msig thy
+           msig <- (.sig) <$> getState
+           addItems inFile0 $ set (#signature % #maudeInfo) msig thy
 --      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
 --           addItems inFile0 thy'
       , do thy' <- liftedAddDiffMacros thy =<< macros
@@ -462,7 +460,7 @@ diffTheory inFile = do
     ifdef :: Maybe FilePath -> OpenDiffTheory ->  Parser OpenDiffTheory
     ifdef inFile0 thy = do
        flagf <- symbol_ "#ifdef" *> flagdisjuncts
-       flags0 <- flags <$> getState
+       flags0 <- (.flags) <$> getState
        if evalformula flags0 flagf
          then do thy' <- addItems inFile0 thy
                  asum [do symbol_ "#else"
@@ -492,7 +490,7 @@ diffTheory inFile = do
          st <- getState
          let (thy', st') = unsafePerformIO (parseFileWState st (addItems' (Just filepath) thy) filepath)
          _ <- putState st'
-         addItems inFile0 $ set (sigpMaudeSig . diffThySignature) (sig st') thy'
+         addItems inFile0 $ set (#signature % #maudeInfo) st'.sig thy'
       where
         addItems' :: Maybe FilePath -> OpenDiffTheory -> Parser (OpenDiffTheory, ParserState)
         addItems' inFile1 thy1 = do
@@ -519,7 +517,7 @@ diffTheory inFile = do
 
     liftedAddDiffRule thy ru = case addOpenProtoDiffRule ru thy of
         Just thy' -> return thy'
-        Nothing   -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName $ get dprRule ru)
+        Nothing   -> fail $ "duplicate rule or inconsistent names: " ++ render (prettyRuleName $ ru.rule)
 
     liftedAddDiffLemma thy ru = case addDiffLemma ru thy of
         Just thy' -> return thy'
@@ -532,27 +530,27 @@ diffTheory inFile = do
     liftedAddLemma' thy lem = if isLeftLemma lem
                                 then case addLemmaDiff LHS lem thy of
                                         Just thy' -> return thy'
-                                        Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                        Nothing   -> fail $ "duplicate lemma: " ++ lem.name
                                 else if isRightLemma lem
                                      then case addLemmaDiff RHS lem thy of
                                              Just thy' -> return thy'
-                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                             Nothing   -> fail $ "duplicate lemma: " ++ lem.name
                                      else case addLemmaDiff RHS (addRightLemma lem) thy of
                                              Just thy' -> case addLemmaDiff LHS (addLeftLemma lem) thy' of
                                                              Just thy'' -> return thy''
-                                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
-                                             Nothing   -> fail $ "duplicate lemma: " ++ get lName lem
+                                                             Nothing   -> fail $ "duplicate lemma: " ++ lem.name
+                                             Nothing   -> fail $ "duplicate lemma: " ++ lem.name
 
     liftedAddRestriction' thy rstr = if isLeftRestriction rstr
                                        then case addRestrictionDiff LHS (toRestriction rstr) thy of
                                                Just thy' -> return thy'
-                                               Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                               Nothing   -> fail $ "duplicate restriction: " ++ (toRestriction rstr).name
                                        else if isRightRestriction rstr
                                                then case addRestrictionDiff RHS (toRestriction rstr) thy of
                                                   Just thy' -> return thy'
-                                                  Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                                  Nothing   -> fail $ "duplicate restriction: " ++ (toRestriction rstr).name
                                                else case addRestrictionDiff RHS (toRestriction rstr) thy of
                                                   Just thy' -> case addRestrictionDiff LHS (toRestriction rstr) thy' of
                                                      Just thy'' -> return thy''
-                                                     Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
-                                                  Nothing   -> fail $ "duplicate restriction: " ++ get rstrName (toRestriction rstr)
+                                                     Nothing   -> fail $ "duplicate restriction: " ++ (toRestriction rstr).name
+                                                  Nothing   -> fail $ "duplicate restriction: " ++ (toRestriction rstr).name

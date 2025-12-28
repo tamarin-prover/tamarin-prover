@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Theory.ProofSkeleton
   ( ProofSkeleton,
     DiffProofSkeleton,
@@ -12,14 +14,11 @@ module Theory.ProofSkeleton
   prettyIncrementalProof, prettyIncrementalDiffProof)
 where
 
-import           Prelude                             hiding (id, (.))
-
 import           Theory.Proof
 import Lemma
 import Theory.Model
 import Text.PrettyPrint.Highlight
 import Theory.Text.Pretty
-import Control.Category
 import Data.Maybe
 
 ------------------------------------------------------------------------------
@@ -78,18 +77,18 @@ prettyIncrementalProof :: HighlightDocument d => IncrementalProof -> d
 prettyIncrementalProof = prettyProofWith ppStep (const id)
   where
     ppStep step = sep
-      [ prettyProofMethod (psMethod step)
-      , if isNothing (psInfo step) then multiComment_ ["unannotated"]
-                                   else emptyDoc
+      [ prettyProofMethod step.method
+      , if isNothing step.info then multiComment_ ["unannotated"]
+                               else emptyDoc
       ]
 
 prettyIncrementalDiffProof :: HighlightDocument d => IncrementalDiffProof -> d
 prettyIncrementalDiffProof = prettyDiffProofWith ppStep (const id)
   where
     ppStep step = sep
-      [ prettyDiffProofMethod (dpsMethod step)
-      , if isNothing (dpsInfo step) then multiComment_ ["unannotated"]
-                                    else emptyDoc
+      [ prettyDiffProofMethod step.method
+      , if isNothing step.info then multiComment_ ["unannotated"]
+                               else emptyDoc
       ]
 
 

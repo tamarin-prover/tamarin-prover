@@ -13,11 +13,9 @@ module Theory.Text.Parser.Proof (
 )
 where
 
-import           Prelude                    hiding (id, (.))
 import qualified Data.Map                   as M
 -- import           Data.Monoid                hiding (Last)
 import           Control.Applicative        hiding (empty, many, optional)
-import           Control.Category
 import           Text.Parsec                hiding ((<|>))
 import           Theory
 import           Theory.Text.Parser.Token

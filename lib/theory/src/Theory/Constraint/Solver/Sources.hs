@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- |
 -- Copyright   : (c) 2011,2012 Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -26,20 +27,15 @@ module Theory.Constraint.Solver.Sources (
 
   -- Paramters type
   , IntegerParameters(..)
-  , paramOpenChainsLimit
-  , paramSaturationLimit
-  , showSaturationSteps
 
   ) where
 
-import           Prelude                                 hiding (id, (.))
 import           Safe
 
 import qualified Data.Map                                as M
 import qualified Data.Set                                as S
 
 import           Control.Basics
-import           Control.Category
 import           Control.Monad.Disj
 import           Control.Monad.Reader
 import           Control.Monad.State                     (gets)
@@ -52,7 +48,9 @@ import           Control.Parallel.Strategies
 
 -- import           Text.PrettyPrint.Highlight
 
-import           Extension.Data.Label
+import           Optics.Core
+import           Optics.State
+
 import           Extension.Prelude
 
 import           Theory.Constraint.Solver.Contradictions (contradictorySystem)
@@ -73,11 +71,10 @@ import qualified Data.Binary  as B
 -- | Parameters
 data IntegerParameters = IntegerParameters
     {
-      _paramOpenChainsLimit :: Integer
-    , _paramSaturationLimit :: Integer
-    , _showSaturationSteps  :: Bool
+      openChainsLimit :: Integer
+    , saturationLimit :: Integer
+    , showSaturationSteps  :: Bool
     } deriving( Eq, Ord, Show, G.Generic, NFData, B.Binary )
-$(mkLabels [''IntegerParameters])
 
 ------------------------------------------------------------------------------
 -- Precomputing case distinctions
@@ -86,7 +83,7 @@ $(mkLabels [''IntegerParameters])
 -- | The number of remaining chain constraints of each case.
 unsolvedChainConstraints :: Source -> [Int]
 unsolvedChainConstraints =
-    map (length . unsolvedChains . snd) . getDisj . get cdCases
+    map (length . unsolvedChains . snd) . getDisj . (.cases)
 
 
 -- Construction
@@ -103,7 +100,7 @@ initialSource ctxt restrictions goal =
     Source goal cases
   where
     polish ((name, se), _) = ([name], se)
-    se0   = insertLemmas restrictions $ emptySystem RawSource $ get pcDiffContext ctxt
+    se0   = insertLemmas restrictions $ emptySystem RawSource ctxt.diffContext
     cases = polish <$> runReduction instantiate ctxt se0 (avoid (goal, se0))
     instantiate = do
         insertGoal goal False
@@ -117,17 +114,17 @@ refineSource
     -> ([a], Source)
 refineSource ctxt proofStep th =
     ( map fst $ getDisj refinement
-    , set cdCases newCases th )
+    , set #cases newCases th )
   where
     newCases =   Disj . removeRedundantCases ctxt stableVars snd
-               . map (second (modify sSubst (restrict stableVars)))
+               . map (second (over sSubst (restrict stableVars)))
                . getDisj $ snd <$> refinement
 
-    stableVars = frees (get cdGoal th)
+    stableVars = frees th.goal
 
     fs         = avoid th
     refinement = do
-        (names, se)        <- get cdCases th
+        (names, se)        <- th.cases
         ((x, names'), se') <- fst <$> runReduction proofStep ctxt se fs
         return (x, (combine names names', se'))
 
@@ -243,7 +240,7 @@ removeRedundantCases ctxt stableVars getSys cases0 =
     -- drop cases where the normed systems coincide
     cases          =   map (fst . snd) . sortOn fst . sortednubBy (\(_,(_, x)) (_,(_, y)) -> compareSystemsUpToNewVars x y) $ decoratedCases
 
-    addNormSys = id &&& ((modify sEqStore dropNameHintsBound) . renameDropNameHints . getSys)
+    addNormSys = id &&& ((over #eqStore dropNameHintsBound) . renameDropNameHints . getSys)
 
     -- this is an ordering that works well in the cases we tried
     orderedVars sys =
@@ -257,7 +254,7 @@ removeRedundantCases ctxt stableVars getSys cases0 =
       where
         stableVarBindings = M.fromList (map (\v -> (v, v)) stableVars)
 
-    msig = mhMaudeSig . get pcMaudeHandle $ ctxt
+    msig = mhMaudeSig . pcMaudeHandle $ ctxt
 
 ------------------------------------------------------------------------------
 -- Applying precomputed case distinctions
@@ -272,30 +269,30 @@ matchToGoal
     -> Maybe Source
     -- ^ An adapted version of the source with the given goal
 matchToGoal ctxt th0 goalTerm =
-  if not $ maybeMatcher (goalTerm, get cdGoal th0) then Nothing else
-  case (goalTerm, get cdGoal th) of
+  if not $ maybeMatcher (goalTerm, th0.goal) then Nothing else
+  case (goalTerm, th.goal) of
     ( PremiseG      (iTerm, premIdxTerm) faTerm
      ,PremiseG pPat@(iPat,  _          ) faPat  ) ->
         case doMatch (faTerm `matchFact` faPat <> iTerm `matchLVar` iPat) of
             []      -> Nothing
             subst:_ ->
                 let refine = do
-                        modM sEdges (substNodePrem pPat (iPat, premIdxTerm))
+                        modifying #edges (substNodePrem pPat (iPat, premIdxTerm))
                         refineSubst subst
-                in Just $ snd $ refineSource ctxt refine (set cdGoal goalTerm th)
+                in Just $ snd $ refineSource ctxt refine (set #goal goalTerm th)
 
     (ActionG iTerm faTerm, ActionG iPat faPat) ->
         case doMatch (faTerm `matchFact` faPat <> iTerm `matchLVar` iPat) of
             []      -> Nothing
             subst:_ -> Just $ snd $ refineSource ctxt
-                                        (refineSubst subst) (set cdGoal goalTerm th)
+                                        (refineSubst subst) (set #goal goalTerm th)
 
     -- No other matches possible, as we only precompute case distinctions for
     -- premises and KU-actions.
     _ -> Nothing
   where
     -- this code reflects the precomputed cases in 'precomputeSources'
-    maybeMatcher (PremiseG _ faTerm, PremiseG _ faPat)  = factTag faTerm == factTag faPat
+    maybeMatcher (PremiseG _ faTerm, PremiseG _ faPat)  = faTerm.factTag == faPat.factTag
     maybeMatcher ( ActionG _ (Fact KUFact _ [tTerm])
                  , ActionG _ (Fact KUFact _ [tPat]))      =
         case (viewTerm tPat, viewTerm tTerm) of
@@ -309,7 +306,7 @@ matchToGoal ctxt th0 goalTerm =
     substNodePrem from to = S.map
         (\ e@(Edge c p) -> if p == from then Edge c to else e)
 
-    doMatch match = runReader (solveMatchLNTerm match) (get pcMaudeHandle ctxt)
+    doMatch match = runReader (solveMatchLNTerm match) (pcMaudeHandle ctxt)
 
     refineSubst subst = do
         void (solveSubstEqs SplitNow subst)
@@ -344,7 +341,7 @@ applySource ctxt th0 goal = (\th -> (_applySource th, Just th0)) <$> matchToGoal
     _applySource :: Source -> Reduction [String]
     _applySource th = do
       markGoalAsSolved "precomputed" goal
-      (names, sysTh0) <- disjunctionOfList $ getDisj $ get cdCases th
+      (names, sysTh0) <- disjunctionOfList $ getDisj th.cases
       sysTh <- evalBindT (someInst sysTh0) keepVarBindings
       conjoinSystem sysTh
       return names
@@ -359,28 +356,28 @@ saturateSources parameters ctxt thsInit  =
   where
     go :: [Source] -> Integer -> [Source]
     go ths n
-      | any or (changes `using` parList rdeepseq) && (n <= get paramSaturationLimit parameters) =
-          if get showSaturationSteps parameters then
-            trace ("[Saturating Sources] Step " ++ show n ++ " (Max " ++ show (get paramSaturationLimit parameters) ++ ")")
+      | any or (changes `using` parList rdeepseq) && (n <= parameters.saturationLimit) =
+          if parameters.showSaturationSteps then
+            trace ("[Saturating Sources] Step " ++ show n ++ " (Max " ++ show parameters.saturationLimit ++ ")")
              $ go ths' (n + 1)
           else 
              go ths' (n + 1)
-      | n > get paramSaturationLimit parameters =
-          if get showSaturationSteps parameters then
-            trace ("[Saturating Sources] Saturation aborted, more than " ++ show (get paramSaturationLimit parameters) ++
+      | n > parameters.saturationLimit =
+          if parameters.showSaturationSteps then
+            trace ("[Saturating Sources] Saturation aborted, more than " ++ show parameters.saturationLimit ++
                  " iterations. (Limit can be change with -s=)") ths'
           else
             ths'
       | otherwise =
-          if get showSaturationSteps parameters then
+          if parameters.showSaturationSteps then
             trace "[Saturating Sources] Done" ths'
           else ths'
       where
           (changes, ths') = unzip $ map (refineSource ctxt solver) ths
-          goodTh th = length (getDisj (get cdCases th)) <= 1
+          goodTh th = length (getDisj th.cases) <= 1
           solver
             = do names <- solveAllSafeGoals
-                            (filter goodTh ths) (get paramOpenChainsLimit parameters)
+                            (filter goodTh ths) parameters.openChainsLimit
                  return (not $ null names, names)
 
 -- | Precompute a saturated set of case distinctions.
@@ -392,7 +389,7 @@ precomputeSources
 precomputeSources parameters ctxt restrictions =
     map cleanupCaseNames (saturateSources parameters ctxt rawSources)
   where
-    cleanupCaseNames = modify cdCases $ fmap $ first $
+    cleanupCaseNames = over #cases $ fmap $ first $
         filter (not . null)
       . map (filter (`elem` '_' : ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']))
 
@@ -422,10 +419,10 @@ precomputeSources parameters ctxt restrictions =
     someNodeId = LVar "i" LSortNode 0
 
     -- FIXME: Also use facts from proof context.
-    rules = get pcRules ctxt
+    rules = ctxt.rules
     absProtoFacts = sortednub $ do
         ru <- joinAllRules rules
-        fa@(tag,_) <- absFact <$> (getProtoFact =<< (get rConcs ru ++ get rPrems ru))
+        fa@(tag,_) <- absFact <$> (getProtoFact =<< (ru.concs ++ ru.prems))
         -- exclude facts handled specially by the prover
         guard (not $ tag `elem` [OutFact, InFact, FreshFact])
         return fa
@@ -445,7 +442,7 @@ precomputeSources parameters ctxt restrictions =
         , NoEq o `S.notMember` implicitFunSig, k > 0 || priv==Private]
       ]
 
-    msig = mhMaudeSig . get pcMaudeHandle $ ctxt
+    msig = mhMaudeSig . pcMaudeHandle $ ctxt
 
 -- | Refine a set of sources by exploiting additional source
 -- assumptions.
@@ -456,20 +453,20 @@ refineWithSourceAsms
     -> [Source]       -- ^ Original, raw sources.
     -> [Source]       -- ^ Manipulated, refined sources.
 refineWithSourceAsms _ [] _ cases0 =
-    (modify cdCases . fmap . second) (set sSourceKind RefinedSource) <$> cases0
+    (over #cases . fmap . second) (set #sourceKind RefinedSource) <$> cases0
 refineWithSourceAsms parameters assumptions ctxt cases0 =
     fmap (modifySystems removeFormulas) $
     saturateSources parameters ctxt $
     modifySystems updateSystem <$> cases0
   where
-    modifySystems   = modify cdCases . fmap . second
+    modifySystems   = over #cases . fmap . second
     updateSystem se =
-        modify sFormulas (S.union (S.fromList assumptions)) $
-        set sSourceKind RefinedSource                       $ se
+        over #formulas (S.union (S.fromList assumptions)) $
+        set #sourceKind RefinedSource                     $ se
     removeFormulas =
-        modify sGoals (M.filterWithKey isNoDisjGoal)
-      . set sFormulas S.empty
-      . set sSolvedFormulas S.empty
+        over #goals (M.filterWithKey isNoDisjGoal)
+      . set #formulas S.empty
+      . set #solvedFormulas S.empty
 
     isNoDisjGoal (DisjG _)  _ = False
     isNoDisjGoal _          _ = True

@@ -52,7 +52,7 @@ debug = showWith thy debugM debugInput
 debugInput = do
   prf <- steps
   let ctxt = prf.rpCtxt
-  let hnd = ctxt._pcSignature._sigMaudeInfo
+  let hnd = ctxt.signature.maudeInfo
 
   s <- systemAt 0 prf
   return (ctxt, hnd, prf, s)
@@ -60,4 +60,4 @@ debugInput = do
 -- | Use the values returned above to perform debugging.
 debugM (_, _, _, s) = do
   putStrLn "The constraint system contains the following annotated nodes"
-  mapM_ print (M.keys s._sNodes)
+  mapM_ print (M.keys s.nodes)

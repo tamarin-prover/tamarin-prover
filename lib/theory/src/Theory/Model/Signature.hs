@@ -5,6 +5,10 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt & Simon Meier
@@ -22,13 +26,11 @@ module Theory.Model.Signature
     -- ** Pure signatures
     SignaturePure,
     emptySignaturePure,
-    sigpMaudeSig,
 
     -- ** Using Maude to handle operations relative to a 'Signature'
     SignatureWithMaude,
     toSignatureWithMaude,
     toSignaturePure,
-    sigmMaudeHandle,
     joinNDCinSigWMaude,
 
     -- ** Pretty-printing
@@ -41,8 +43,8 @@ where
 -- import           Control.Applicative
 import Control.DeepSeq
 import Data.Binary
-import Data.Label qualified as L
 import Data.Set qualified as S
+import Optics.TH (makeFieldLabelsNoPrefix)
 import System.IO.Unsafe (unsafePerformIO)
 import Term.LTerm
 import Term.Maude.Process (MaudeHandle, mhFilePath, mhMaudeSig, startMaude)
@@ -52,10 +54,10 @@ import Theory.Text.Pretty
 -- | A theory signature.
 data Signature a = Signature
   { -- The signature of the message algebra
-    _sigMaudeInfo :: a
+    maudeInfo :: a
   }
 
-$(L.mkLabels [''Signature])
+makeFieldLabelsNoPrefix ''Signature
 
 ------------------------------------------------------------------------------
 -- Pure Signatures
@@ -63,10 +65,6 @@ $(L.mkLabels [''Signature])
 
 -- | A 'Signature' without an associated Maude process.
 type SignaturePure = Signature MaudeSig
-
--- | Access the maude signature.
-sigpMaudeSig :: SignaturePure L.:-> MaudeSig
-sigpMaudeSig = sigMaudeInfo
 
 -- | The empty pure signature.
 emptySignaturePure :: Bool -> SignaturePure
@@ -82,7 +80,7 @@ deriving instance Ord SignaturePure
 deriving instance Show SignaturePure
 
 instance Binary SignaturePure where
-  put sig = put (L.get sigMaudeInfo sig)
+  put sig = put sig.maudeInfo
   get = Signature <$> get
 
 instance NFData SignaturePure where
@@ -95,10 +93,6 @@ instance NFData SignaturePure where
 -- | A 'Signature' with an associated, running Maude process.
 type SignatureWithMaude = Signature MaudeHandle
 
--- | Access the maude handle in a signature.
-sigmMaudeHandle :: SignatureWithMaude L.:-> MaudeHandle
-sigmMaudeHandle = sigMaudeInfo
-
 -- | Ensure that maude is running and configured with the current signature.
 toSignatureWithMaude ::
   -- | Path to Maude executable.
@@ -106,18 +100,18 @@ toSignatureWithMaude ::
   SignaturePure ->
   IO (SignatureWithMaude)
 toSignatureWithMaude maudePath sig = do
-  hnd <- startMaude maudePath (L.get sigMaudeInfo sig)
-  return $ sig {_sigMaudeInfo = hnd}
+  hnd <- startMaude maudePath sig.maudeInfo
+  return $ sig {maudeInfo = hnd}
 
 -- | The pure signature of a 'SignatureWithMaude'.
 toSignaturePure :: SignatureWithMaude -> SignaturePure
-toSignaturePure sig = sig {_sigMaudeInfo = mhMaudeSig $ L.get sigMaudeInfo sig}
+toSignaturePure sig = sig {maudeInfo = mhMaudeSig sig.maudeInfo}
 
 -- | Adds the given NDC state to a function symbol (by name) in the signature.
 joinNDCinSigWMaude :: SignatureWithMaude -> FunSym -> NDCstate -> SignatureWithMaude
-joinNDCinSigWMaude sig funSym ndcState = sig {_sigMaudeInfo = mh}
+joinNDCinSigWMaude sig funSym ndcState = sig {maudeInfo = mh}
   where
-    mh = (L.get sigMaudeInfo sig) {mhMaudeSig = joinNDCinSig (mhMaudeSig $ L.get sigMaudeInfo sig) funSym ndcState}
+    mh = sig.maudeInfo {mhMaudeSig = joinNDCinSig (mhMaudeSig sig.maudeInfo) funSym ndcState}
     
 
 
@@ -172,16 +166,16 @@ instance NFData SignatureWithMaude where
 -- | Pretty-print a pure signature.
 prettySignaturePure :: (HighlightDocument d) => SignaturePure -> d
 prettySignaturePure sig =
-  prettyMaudeSig $ L.get sigpMaudeSig sig
-    
+  prettyMaudeSig sig.maudeInfo
+
 -- | Pretty-print a pure signature, but omit given set of
 --   function symbols. Used for pretty-printing OpenTheories
 --   with typed function declarations
 prettySignaturePureExcept :: HighlightDocument d => S.Set UserDefinedSym -> SignaturePure -> d
 prettySignaturePureExcept exc sig  =
-  prettyMaudeSigExcept (L.get sigpMaudeSig sig) exc
+  prettyMaudeSigExcept sig.maudeInfo exc
 
 -- | Pretty-print a signature with maude.
 prettySignatureWithMaude :: (HighlightDocument d) => SignatureWithMaude -> d
 prettySignatureWithMaude sig =
-  prettyMaudeSig $ mhMaudeSig $ L.get sigmMaudeHandle sig
+  prettyMaudeSig $ mhMaudeSig sig.maudeInfo

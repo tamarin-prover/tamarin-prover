@@ -6,6 +6,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Items.LemmaItem (
     module Items.LemmaItem
@@ -15,9 +18,9 @@ import GHC.Records
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
+import Optics.TH (makeFieldLabelsNoPrefix)
 import Theory.Constraint.Solver (GoalRanking, ProofContext)
 import Theory.Model
-import Data.Label as L
 import Theory.Module
 
 ------------------------------------------------------------------------------
@@ -46,17 +49,18 @@ data TraceQuantifier = ExistsTrace | AllTraces
 -- | A lemma describes a property that holds in the context of a theory
 -- together with a proof of its correctness.
 data ProtoLemma f p = Lemma
-       { _lName            :: String
-       , _lPlaintext       :: String
-       , _lModified        :: Bool
-       , _lTraceQuantifier :: TraceQuantifier
-       , _lFormula         :: f
-       , _lOriginalFormula :: Maybe f
-       , _lAttributes      :: [LemmaAttribute]
-       , _lProof           :: p
+       { name            :: String
+       , plaintext       :: String
+       , modified        :: Bool
+       , traceQuantifier :: TraceQuantifier
+       , formula         :: f
+       , originalFormula :: Maybe f
+       , attributes      :: [LemmaAttribute]
+       , proof           :: p
        }
        deriving( Generic)
-$(mkLabels [''ProtoLemma])
+
+makeFieldLabelsNoPrefix ''ProtoLemma
 
 type Lemma = ProtoLemma LNFormula
 type SyntacticLemma = ProtoLemma SyntacticLNFormula
@@ -72,34 +76,35 @@ deriving instance Binary p => Binary  (Lemma p)
 -- | A diff lemma describes a correspondence property that holds in the context of a theory
 -- together with a proof of its correctness.
 data DiffLemma p = DiffLemma
-       { _lDiffName            :: String
---        , _lTraceQuantifier :: TraceQuantifier
---        , _lFormula         :: LNFormula
-       , _lDiffAttributes      :: [LemmaAttribute]
-       , _lDiffProof           :: p
+       { name            :: String
+--       , traceQuantifier :: TraceQuantifier
+--       , formula         :: LNFormula
+       , attributes      :: [LemmaAttribute]
+       , proof           :: p
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
-$(mkLabels [''DiffLemma])
+
+makeFieldLabelsNoPrefix ''DiffLemma
 
 type HasLemmaName l = HasField "lName" l String
 
 instance HasField "lName" (ProtoLemma f p) String where
-  getField = _lName
+  getField = (.name)
 instance HasField "lName" (DiffLemma p) String where
-  getField = _lDiffName
+  getField = (.name)
 
 type HasLemmaPlaintext l = HasField "lPlaintext" l String
 
 instance HasField "lPlaintext" (ProtoLemma f p) String where
-  getField = _lPlaintext
+  getField = (.plaintext)
 
 
 type HasLemmaAttributes l = HasField "lAttributes" l [LemmaAttribute]
 
 instance HasField "lAttributes" (ProtoLemma f p) [LemmaAttribute] where
-  getField = _lAttributes
+  getField = (.attributes)
 instance HasField "lAttributes" (DiffLemma p) [LemmaAttribute] where
-  getField = _lDiffAttributes
+  getField = (.attributes)
 
 
 -- Instances
@@ -109,7 +114,7 @@ instance Functor Lemma where
     fmap f (Lemma n p m qua fm ofm atts prf) = Lemma n p m qua fm ofm atts (f prf)
 
 instance Foldable Lemma where
-    foldMap f = f . L.get lProof
+    foldMap f = f . (.proof)
 
 instance Traversable Lemma where
     traverse f (Lemma n p m qua fm ofm atts prf) = Lemma n p m qua fm ofm atts <$> f prf
@@ -118,7 +123,7 @@ instance Functor DiffLemma where
     fmap f (DiffLemma n atts prf) = DiffLemma n atts (f prf)
 
 instance Foldable DiffLemma where
-    foldMap f = f . L.get lDiffProof
+    foldMap f = f . (.proof)
 
 instance Traversable DiffLemma where
     traverse f (DiffLemma n atts prf) = DiffLemma n atts <$> f prf

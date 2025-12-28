@@ -75,7 +75,7 @@ applyMProcessParsedAnnotation ::
 --     Map.Map SapicLVar (VTerm c SapicLVar)
 --     -> ProcessParsedAnnotation -> m ProcessParsedAnnotation
 applyMProcessParsedAnnotation subst ann =
-        return ann {location = fmap (apply subst) (location ann)
+        return ann {location = fmap (apply subst) ann.location
                     -- , backSubstitution = undefined 
                     -- WARNING: we do not apply the substitution to the back
                     -- translation, as this is not always possible. If variables

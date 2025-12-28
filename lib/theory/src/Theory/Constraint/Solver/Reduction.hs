@@ -78,7 +78,6 @@ module Theory.Constraint.Solver.Reduction (
   ) where
 
 import           Debug.Trace
-import           Prelude                                 hiding (id, (.))
 
 import qualified Data.Foldable                           as F
 import qualified Data.Map                                as M
@@ -89,7 +88,6 @@ import           Data.List                               (mapAccumL)
 import           Safe
 
 import           Control.Basics
-import           Control.Category
 import           Control.Monad.Bind
 import           Control.Monad.Disj
 import           Control.Monad.Reader
@@ -97,7 +95,6 @@ import           Control.Monad.State                     (StateT, execStateT, ge
 
 import           Text.PrettyPrint.Class
 
-import           Extension.Data.Label
 -- import           Extension.Data.Monoid                   (Monoid(..))
 import           Extension.Prelude
 
@@ -107,6 +104,10 @@ import           Theory.Constraint.Solver.Contradictions
 import           Theory.Constraint.System
 import           Theory.Model
 import Control.Applicative.Lift (Lift(Other))
+
+import Optics.Core (Lens', view, set)
+import Optics.State (assign, modifying, use)
+import Optics.State.Operators ((.=))
 
 ------------------------------------------------------------------------------
 -- The constraint reduction monad
@@ -186,11 +187,11 @@ getProofContext = ask
 
 -- | Retrieve the 'MaudeHandle' from the 'ProofContext'.
 getMaudeHandle :: Reduction MaudeHandle
-getMaudeHandle = askM pcMaudeHandle
+getMaudeHandle = asks pcMaudeHandle
 
 -- | Retrieve the verbose parameter from the 'ProofContext'.
 getVerbose :: Reduction Bool
-getVerbose = askM pcVerbose
+getVerbose = asks (.verbose)
 
 
 -- Inserting (fresh) nodes into the constraint system
@@ -225,7 +226,7 @@ labelNodeId = \i rules parent -> do
                     -> setRemainingRuleApplications ru1 ((getRemainingRuleApplications pa) - 1)
                 _   -> ru1
     solveRuleConstraints mrconstrs
-    modM sNodes (M.insert i ru)
+    modifying #nodes (M.insert i ru)
     exploitPrems i ru
     return ru
   where
@@ -246,19 +247,19 @@ labelNodeId = \i rules parent -> do
         Fact InFact ann [m] -> do
             j <- freshLVar "vf" LSortNode
             ruKnows <- mkISendRuleAC ann m
-            modM sNodes (M.insert j ruKnows)
-            modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i, v))
+            modifying #nodes (M.insert j ruKnows)
+            modifying #edges (S.insert $ Edge (j, ConcIdx 0) (i, v))
             exploitPrems j ruKnows
 
         -- CR-rule *DG2_2* specialized for *Fr* facts.
         Fact FreshFact _ [m] -> do
             j <- freshLVar "vf" LSortNode
-            modM sNodes (M.insert j (mkFreshRuleAC m))
+            modifying #nodes (M.insert j (mkFreshRuleAC m))
             unless (isFreshVar m) $ do
                 -- 'm' must be of sort fresh ==> enforce via unification
                 n <- varTerm <$> freshLVar "n" LSortFresh
                 void (solveTermEqs SplitNow OtherRule [Equal m n])
-            modM sEdges (S.insert $ Edge (j, ConcIdx 0) (i,v))
+            modifying #edges (S.insert $ Edge (j, ConcIdx 0) (i,v))
 
           -- CR-rule *DG2_{2,u}*: solve a KU-premise by inserting the
           -- corresponding KU-actions before this node.
@@ -270,7 +271,7 @@ labelNodeId = \i rules parent -> do
           -- Store premise goal for later processing using CR-rule *DG2_2*
           | otherwise -> insertGoal (PremiseG (i,v) fa) (v `elem` breakers)
       where
-        breakers = ruleInfo (get praciLoopBreakers) (const []) $ get rInfo ru
+        breakers = ruleInfo (.loopBreakers) (const []) ru.info
 
 -- | Insert a chain constrain.
 insertChain :: NodeConc -> NodePrem -> Reduction ()
@@ -281,7 +282,7 @@ insertChain c p = insertGoal (ChainG c p) False
 insertEdges :: [(NodeConc, LNFact, LNFact, NodePrem)] -> Reduction ()
 insertEdges edges = do
     void (solveFactEqs SplitNow OtherRule [ Equal fa1 fa2 | (_, fa1, fa2, _) <- edges ])
-    modM sEdges (\es -> foldr S.insert es [ Edge c p | (c,_,_,p) <- edges])
+    modifying #edges (\es -> foldr S.insert es [ Edge c p | (c,_,_,p) <- edges])
 
 -- | Insert an 'Action' atom. Ensures that (almost all) trivial *KU* actions
 -- are solved immediately using rule *S_{at,u,triv}*. We currently avoid
@@ -292,9 +293,9 @@ insertEdges edges = do
 -- that no rule is applicable.
 insertAction :: NodeId -> LNFact -> Reduction ChangeIndicator
 insertAction i fa@(Fact _ ann _) = do
-    present <- (goal `M.member`) <$> getM sGoals
-    isdiff <- getM sDiffSystem
-    nodePresent <- (i `M.member`) <$> getM sNodes
+    present <- (goal `M.member`) <$> gets (.goals)
+    isdiff <- gets (.diffSystem)
+    nodePresent <- (i `M.member`) <$> gets (.nodes)
     if present
       then do return Unchanged
       else do case kFactView fa of
@@ -305,7 +306,7 @@ insertAction i fa@(Fact _ ann _) = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_pair") (NoEq pairSym))) ([(kuFactAnn ann m1),(kuFactAnn ann m2)]) ([fa]) ([fa]) []))
+                               modifying #nodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_pair") (NoEq pairSym))) ([(kuFactAnn ann m1),(kuFactAnn ann m2)]) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "pair" goal
                                requiresKU m1 *> requiresKU m2 *> return Changed
@@ -324,7 +325,7 @@ insertAction i fa@(Fact _ ann _) = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_inv") (NoEq invSym))) ([(kuFactAnn ann m)]) ([fa]) ([fa]) []))
+                               modifying #nodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_inv") (NoEq invSym))) ([(kuFactAnn ann m)]) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "inv" goal
                                requiresKU m *> return Changed
@@ -343,7 +344,7 @@ insertAction i fa@(Fact _ ann _) = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_mult") (AC Mult))) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
+                               modifying #nodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_mult") (AC Mult))) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "mult" goal
                                mapM_ requiresKU ms *> return Changed
@@ -363,7 +364,7 @@ insertAction i fa@(Fact _ ann _) = do
                           -- if the node is already present in the graph, do not insert it again. (This can be caused by substitutions applying and changing a goal.)
                           if not nodePresent
                              then do
-                               modM sNodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_union") (AC Union))) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
+                               modifying #nodes (M.insert i (Rule (IntrInfo (ConstrRule (BC.pack "_union") (AC Union))) (map (\x -> kuFactAnn ann x) ms) ([fa]) ([fa]) []))
                                insertGoal goal False
                                markGoalAsSolved "union" goal
                                mapM_ requiresKU ms *> return Changed
@@ -391,22 +392,22 @@ insertAction i fa@(Fact _ ann _) = do
 
 -- | Insert a 'Less' atom. @insertLess i j@ means that *i < j* is added.
 insertLess :: LessAtom -> Reduction ()
-insertLess = modM sLessAtoms . S.insert
+insertLess = modifying #lessAtoms . S.insert
 
 -- | Insert a 'Subterm' atom. *x ⊏ y* is added to the SubtermStore
 insertSubterm :: LNTerm -> LNTerm -> Reduction ()
-insertSubterm x y = setM sSubtermStore . addSubterm (x, y) =<< getM sSubtermStore
+insertSubterm x y = assign #subtermStore . addSubterm (x, y) =<< gets (.subtermStore)
 
 -- | Insert the negation of a 'Subterm' atom. *¬ x ⊏ y* is added to the SubtermStore
 insertNegSubterm :: LNTerm -> LNTerm -> Reduction()
-insertNegSubterm x y = setM sSubtermStore . addNegSubterm (x, y) =<< getM sSubtermStore
+insertNegSubterm x y = assign #subtermStore . addNegSubterm (x, y) =<< gets (.subtermStore)
 
 -- | Insert a 'Last' atom and ensure their uniqueness.
 insertLast :: NodeId -> Reduction ChangeIndicator
 insertLast i = do
-    lst <- getM sLastAtom
+    lst <- gets (.lastAtom)
     case lst of
-      Nothing -> setM sLastAtom (Just i) >> return Unchanged
+      Nothing -> assign #lastAtom (Just i) >> return Unchanged
       Just j  -> solveNodeIdEqs [Equal i j]
 
 -- | Insert an atom. Returns 'Changed' if another part of the constraint
@@ -429,8 +430,8 @@ insertFormula = do
     insert True
   where
     insert mark fm = do
-        formulas       <- getM sFormulas
-        solvedFormulas <- getM sSolvedFormulas
+        formulas       <- gets (.formulas)
+        solvedFormulas <- gets (.solvedFormulas)
         insert' mark formulas solvedFormulas fm
 
     insert' mark formulas solvedFormulas fm
@@ -448,14 +449,14 @@ insertFormula = do
 
           -- Store for later applications of CR-rule *S_∨*
           GDisj disj -> do
-              modM sFormulas (S.insert fm)
+              modifying #formulas (S.insert fm)
               insertGoal (DisjG disj) False
 
           -- CR-rule *S_∃*
           GGuarded Ex ss as gf -> do
               -- must always mark as solved, as we otherwise may repeatedly
               -- introduce fresh variables.
-              modM sSolvedFormulas $ S.insert fm
+              modifying #solvedFormulas $ S.insert fm
               xs <- mapM (uncurry freshLVar) ss
               let body = gconj (map GAto as ++ [gf])
               insert False (substBound (zip [0..] (reverse xs)) body)
@@ -480,7 +481,7 @@ insertFormula = do
           -- CR-rule *S_{¬,last}*
           GGuarded All [] [Last i]   gf  | gf == gfalse -> do
               markAsSolved
-              lst <- getM sLastAtom
+              lst <- gets (.lastAtom)
               j <- case lst of
                      Nothing  -> do j <- freshLVar "last" LSortNode
                                     void (insertLast j)
@@ -489,9 +490,9 @@ insertFormula = do
               insert False $ gdisj [ GAto (Less j i), GAto (Less i j) ]
 
           -- Guarded All quantification: store for saturation
-          GGuarded All _ _ _ -> modM sFormulas (S.insert fm)
+          GGuarded All _ _ _ -> modifying #formulas (S.insert fm)
       where
-        markAsSolved = when mark $ modM sSolvedFormulas $ S.insert fm
+        markAsSolved = when mark $ modifying #solvedFormulas $ S.insert fm
 
 -- | 'True' iff the formula can be reduced by one of the rules implemented in
 -- 'insertFormula'.
@@ -518,9 +519,9 @@ combineGoalStatus (GoalStatus solved1 age1 loops1)
 -- | Insert a goal and its status with a new age. Merge status if goal exists.
 insertGoalStatus :: Goal -> GoalStatus -> Reduction ()
 insertGoalStatus goal status = do
-    age <- getM sNextGoalNr
-    modM sGoals $ M'.insertWith combineGoalStatus goal (set gsNr age status)
-    sNextGoalNr =: succ age
+    age <- gets (.nextGoalNr)
+    modifying #goals $ M'.insertWith combineGoalStatus goal (set #nr age status)
+    #nextGoalNr .= succ age
 
 -- | Insert a 'Goal' and store its age.
 insertGoal :: Goal -> Bool -> Reduction ()
@@ -536,33 +537,33 @@ markGoalAsSolved how goal =
         | otherwise   -> updateStatus
       ChainG _ _      -> delete
       SplitG _        -> updateStatus
-      DisjG disj      -> modM sFormulas       (S.delete $ GDisj disj) >>
-                         modM sSolvedFormulas (S.insert $ GDisj disj) >>
+      DisjG disj      -> modifying #formulas       (S.delete $ GDisj disj) >>
+                         modifying #solvedFormulas (S.insert $ GDisj disj) >>
                          updateStatus
       SubtermG _      -> updateStatus
   where
     delete :: Reduction ()
-    delete = modM sGoals $ M.delete goal
+    delete = modifying #goals $ M.delete goal
 
     updateStatus :: Reduction ()
     updateStatus = do
-        mayStatus <- M.lookup goal <$> getM sGoals
+        mayStatus <- M.lookup goal <$> gets (.goals)
         verbose <- getVerbose
         case mayStatus of
           Just status -> if (verbose) then trace (msg status) $
-              modM sGoals $ M.insert goal $ set gsSolved True status else modM sGoals $ M.insert goal $ set gsSolved True status
+              modifying #goals $ M.insert goal $ set #solved True status else modifying #goals $ M.insert goal $ set #solved True status
           Nothing     -> trace ("markGoalAsSolved: inexistent constraint " ++ show goal) $ return ()
 
     msg status = render $ nest 2 $ fsep $
-        [ text ("solved goal nr. "++ show (get gsNr status))
+        [ text ("solved goal nr. "++ show status.nr)
           <-> parens (text how) <> colon
         , nest 2 (prettyGoal goal) ]
 
 removeSolvedSplitGoals :: Reduction ()
 removeSolvedSplitGoals = do
-    goals    <- getM sGoals
-    existent <- splitExists <$> getM sEqStore
-    sequence_ [ modM sGoals $ M.delete goal
+    goals    <- gets (.goals)
+    existent <- splitExists <$> gets (.eqStore)
+    sequence_ [ modifying #goals $ M.delete goal
               | goal@(SplitG i) <- M.keys goals, not (existent i) ]
 
 
@@ -578,7 +579,7 @@ substSystem = do
     -- right after a proof step renamed and reset it). Applying an empty
     -- substitution cannot change anything and maintains no invariants, so we
     -- skip the (otherwise O(system size)) traversal entirely.
-    subst <- getM sSubst
+    subst <- use sSubst
     if nullSubst subst
       then return Unchanged
       else do
@@ -598,34 +599,34 @@ substSystem = do
 substEdges, substLessAtoms, substSubtermStore, substLastAtom, substFormulas,
   substSolvedFormulas, substLemmas, substNextGoalNr :: Reduction ()
 
-substEdges          = substPart sEdges
-substLessAtoms      = substPart sLessAtoms
-substSubtermStore   = substPart sSubtermStore
-substLastAtom       = substPart sLastAtom
-substFormulas       = substPart sFormulas
-substSolvedFormulas = substPart sSolvedFormulas
-substLemmas         = substPart sLemmas
+substEdges          = substPart #edges
+substLessAtoms      = substPart #lessAtoms
+substSubtermStore   = substPart #subtermStore
+substLastAtom       = substPart #lastAtom
+substFormulas       = substPart #formulas
+substSolvedFormulas = substPart #solvedFormulas
+substLemmas         = substPart #lemmas
 substNextGoalNr     = return ()
 
 -- | Apply the current substitution of the equation store to a part of the
 -- sequent. This is an internal function.
-substPart :: Apply LNSubst a => (System :-> a) -> Reduction ()
-substPart l = do subst <- getM sSubst
-                 modM l (apply subst)
+substPart :: Apply LNSubst a => (Lens' System a) -> Reduction ()
+substPart l = do subst <- use sSubst
+                 modifying l (apply subst)
 
 -- | Apply the current substitution of the equation store the nodes of the
 -- constraint system. Indicates whether additional equalities were added to
 -- the equations store.
 substNodes :: Reduction ChangeIndicator
 substNodes =
-    substNodeIds <* ((modM sNodes . M.map . apply) =<< getM sSubst)
+    substNodeIds <* ((modifying #nodes . M.map . apply) =<< use sSubst)
 
 -- | @setNodes nodes@ normalizes the @nodes@ such that node ids are unique and
 -- then updates the @sNodes@ field of the proof state to the corresponding map.
 -- Return @True@ iff new equalities have been added to the equation store.
 setNodes :: [(NodeId, RuleACInst)] -> Reduction ChangeIndicator
 setNodes nodes0 = do
-    sNodes =: M.fromList nodes
+    #nodes .= M.fromList nodes
     if null ruleEqs then                                    return Unchanged
                     else solveRuleEqs SplitLater ruleEqs >> return Changed
   where
@@ -641,22 +642,22 @@ setNodes nodes0 = do
 substNodeIds :: Reduction ChangeIndicator
 substNodeIds =
     whileChanging $ do
-        subst <- getM sSubst
-        nodes <- gets (map (first (apply subst)) . M.toList . get sNodes)
+        subst <- use sSubst
+        nodes <- gets (map (first (apply subst)) . M.toList . (.nodes))
         setNodes nodes
 
 -- | Substitute all goals. Keep the ones with the lower nr.
 substGoals :: Reduction ChangeIndicator
 substGoals = do
-    subst <- getM sSubst
-    goals <- M.toList <$> getM sGoals
-    sGoals =: M.empty
+    subst <- use sSubst
+    goals <- M.toList <$> gets (.goals)
+    #goals .= M.empty
     changes <- forM goals $ \(goal, status) -> case goal of
         -- Look out for KU-actions that might need to be solved again.
         ActionG i fa@(kFactView -> Just (UpK, m))
           | (isMsgVar m || isProduct m || isUnion m {--|| isXor m-}) && (apply subst m /= m) ->
               insertAction i (apply subst fa)
-        _ -> do modM sGoals $
+        _ -> do modifying #goals $
                   M'.insertWith combineGoalStatus (apply subst goal) status
                 return Unchanged
 
@@ -671,34 +672,34 @@ substGoals = do
 -- with the free variables in the proof state.
 conjoinSystem :: System -> Reduction ()
 conjoinSystem sys = do
-    kind <- getM sSourceKind
-    unless (kind == get sSourceKind sys) $
+    kind <- gets (.sourceKind)
+    unless (kind == sys.sourceKind) $
         error "conjoinSystem: source-kind mismatch"
-    joinSets sSolvedFormulas
-    joinSets sLemmas
-    joinSets sEdges
-    F.mapM_ insertLast                 $ get sLastAtom    sys
-    F.mapM_ insertLess $ get sLessAtoms sys
+    joinSets #solvedFormulas
+    joinSets #lemmas
+    joinSets #edges
+    F.mapM_ insertLast sys.lastAtom
+    F.mapM_ insertLess sys.lessAtoms
     -- split-goals are not valid anymore
-    mapM_   (uncurry insertGoalStatus) $ filter (not . isSplitGoal . fst) $ M.toList $ get sGoals sys
-    F.mapM_ insertFormula $ get sFormulas sys
+    mapM_   (uncurry insertGoalStatus) $ filter (not . isSplitGoal . fst) $ M.toList sys.goals
+    F.mapM_ insertFormula sys.formulas
     -- update nodes
-    _ <- (setNodes . (M.toList (get sNodes sys) ++) . M.toList) =<< getM sNodes
+    _ <- (setNodes . (M.toList sys.nodes ++) . M.toList) =<< gets (.nodes)
     -- conjoin equation store
-    eqs <- getM sEqStore
-    let (eqs',splitIds) = (mapAccumL addDisj eqs (map snd . getConj $ get sConjDisjEqs sys))
-    setM sEqStore eqs'
+    eqs <- gets (.eqStore)
+    let (eqs',splitIds) = (mapAccumL addDisj eqs (map snd . getConj . sConjDisjEqs $ sys))
+    assign #eqStore eqs'
     -- conjoin subterm store
-    modM sSubtermStore (conjoinSubtermStores (get sSubtermStore sys))
+    modifying #subtermStore (conjoinSubtermStores sys.subtermStore)
     -- add split-goals for all disjunctions of sys
     mapM_  (`insertGoal` False) $ SplitG <$> splitIds
-    void (solveSubstEqs SplitNow $ get sSubst sys)
+    void (solveSubstEqs SplitNow (view sSubst sys))
     -- Propagate substitution changes. Ignore change indicator, as it is
     -- assumed to be 'Changed' by default.
     void substSystem
   where
-    joinSets :: Ord a => (System :-> S.Set a) -> Reduction ()
-    joinSets proj = modM proj (`S.union` get proj sys)
+    joinSets :: Ord a => (Lens' System (S.Set a)) -> Reduction ()
+    joinSets proj = modifying proj (`S.union` view proj sys)
 
 -- Unification via the equation store
 -------------------------------------
@@ -720,7 +721,7 @@ data IsACConstructor = ACConstructor LVar LVar  | OtherRule
 -- | @noContradictoryEqStore@ succeeds iff the equation store is not
 -- contradictory.
 noContradictoryEqStore :: Reduction ()
-noContradictoryEqStore = (contradictoryIf . eqsIsFalse) =<< getM sEqStore
+noContradictoryEqStore = (contradictoryIf . eqsIsFalse) =<< gets (.eqStore)
 
 -- | Add a list of term equalities to the equation store. And
 --  split resulting disjunction of equations according
@@ -735,8 +736,8 @@ solveTermEqs splitStrat isAC eqs0 =
       eqs1 -> do
         hnd <- getMaudeHandle
         se  <- gets id
-        (eqs2, maySplitId) <- addEqs hnd eqs1 =<< getM sEqStore
-        setM sEqStore
+        (eqs2, maySplitId) <- addEqs hnd eqs1 =<< gets (.eqStore)
+        assign #eqStore
             =<< simp hnd (substCreatesNonNormalTerms hnd se)
             =<< case (maySplitId, splitStrat) of
                   (Just splitId, SplitNow) -> disjunctionOfList
@@ -765,16 +766,16 @@ solveNodeIdEqs = solveTermEqs SplitNow OtherRule . map (fmap varTerm)
 -- | Add a list of fact equalities to the equation store, if possible.
 solveFactEqs :: SplitStrategy -> IsACConstructor -> [Equal LNFact] -> Reduction ChangeIndicator
 solveFactEqs split isAC eqs = do
-    contradictoryIf (not $ all evalEqual $ map (fmap factTag) eqs)
-    solveListEqs (solveTermEqs split isAC) $ map (fmap factTerms) eqs
+    contradictoryIf (not $ all evalEqual $ map (fmap (.factTag)) eqs)
+    solveListEqs (solveTermEqs split isAC) $ map (fmap (.factTerms)) eqs
 
 -- | Add a list of rule equalities to the equation store, if possible.
 solveRuleEqs :: SplitStrategy -> [Equal RuleACInst] -> Reduction ChangeIndicator
 solveRuleEqs split eqs = do
-    contradictoryIf (not $ all evalEqual $ map (fmap (get rInfo)) eqs)
+    contradictoryIf (not $ all evalEqual $ map (fmap (.info)) eqs)
     solveListEqs (solveFactEqs split OtherRule) $
-        map (fmap (get rConcs)) eqs ++ map (fmap (get rPrems)) eqs
-        ++ map (fmap (get rActs)) eqs
+        map (fmap (.concs)) eqs ++ map (fmap (.prems)) eqs
+        ++ map (fmap (.acts)) eqs
 
 -- | Solve a number of equalities between lists interpreted as free terms
 -- using the given solver for solving the entailed per-element equalities.
@@ -789,9 +790,9 @@ solveListEqs solver eqs = do
 solveRuleConstraints :: Maybe RuleACConstrs -> Reduction ()
 solveRuleConstraints (Just eqConstr) = do
     hnd <- getMaudeHandle
-    (eqs, splitId) <- addRuleVariants eqConstr <$> getM sEqStore
+    (eqs, splitId) <- addRuleVariants eqConstr <$> gets (.eqStore)
     insertGoal (SplitG splitId) False
     -- do not use expensive substCreatesNonNormalTerms here
-    setM sEqStore =<< simp hnd (const (const False)) eqs
+    assign #eqStore =<< simp hnd (const (const False)) eqs
     noContradictoryEqStore
 solveRuleConstraints Nothing = return ()

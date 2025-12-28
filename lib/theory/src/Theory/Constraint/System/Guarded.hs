@@ -7,6 +7,8 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -- |
 -- Copyright   : (c) 2011 Benedikt Schmidt & Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -468,12 +470,12 @@ formulaToGuarded_ = either (error . render) id . formulaToGuarded
 
 -- | @formulaToGuarded fm@ returns a guarded formula @gf@ that is
 -- equivalent to @fm@ if possible.
-formulaToGuarded :: HighlightDocument d => LNFormula  -> Either d LNGuarded
+formulaToGuarded :: forall d. HighlightDocument d => LNFormula  -> Either d LNGuarded
 formulaToGuarded fmOrig =
-      either (Left . ppError . unErrorDoc) Right
+      either (Left . ppError ) Right
     $ Precise.evalFreshT (convert False fmOrig) (avoidPrecise fmOrig)
   where
-    ppFormula :: HighlightDocument a => LNFormula -> a
+    ppFormula :: HighlightDocument d => LNFormula -> d
     ppFormula = nest 2 . doubleQuotes . prettyLNFormula
 
     ppError d = d $-$ text "in the formula" $-$ ppFormula fmOrig

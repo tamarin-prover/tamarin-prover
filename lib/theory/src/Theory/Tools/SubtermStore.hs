@@ -10,6 +10,10 @@
 {-# LANGUAGE TypeSynonymInstances       #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- |
 -- Copyright   : (c) 2010-2012 Benedikt Schmidt, Simon Meier
 -- License     : GPL v3 (see LICENSE)
@@ -20,11 +24,6 @@
 module Theory.Tools.SubtermStore (
   -- ** Construction
     SubtermStore(..)
-  , negSubterms
-  , posSubterms
-  , solvedSubterms
-  , isContradictory
-  , oldNegSubterms
   , emptySubtermStore
   , conjoinSubtermStores
   , isNatSubterm
@@ -58,7 +57,6 @@ import           Control.Monad.Fresh
 --import           Control.Monad.Bind
 --import           Control.Monad.Reader
 --import           Extension.Prelude
---import           Utils.Misc
 
 --import           Debug.Trace
 
@@ -73,8 +71,6 @@ import           Data.List             (sort, (\\), delete)
 import           Data.Maybe            (isNothing, fromMaybe, fromJust, mapMaybe)
 import qualified Data.Set              as S
 import qualified Data.Map              as M
-import           Extension.Data.Label  hiding (for, get)
-import qualified Extension.Data.Label  as L
 import           Data.Data
 
 import           Data.Array.ST
@@ -82,24 +78,26 @@ import           Data.Array
 import qualified Data.Graph            as G
 import qualified Data.Tree             as T
 
+import Optics.Core (over, set)
+import Optics.TH (makeFieldLabelsNoPrefix)
 
 ------------------------------------------------------------------------------
 -- Subterm Store
 ------------------------------------------------------------------------------
 
 data SubtermStore = SubtermStore {
-      _negSubterms     :: S.Set (LNTerm, LNTerm)  -- negative subterms
-    , _posSubterms     :: S.Set (LNTerm, LNTerm)  -- subterms
-    , _solvedSubterms  :: S.Set (LNTerm, LNTerm)  -- subterms that have been split
-    , _isContradictory :: Bool
-    , _oldNegSubterms  :: S.Set (LNTerm, LNTerm)  -- copy of negSubterms that is not changed by apply/HasFrees/add[Neg]Subterm
+      negSubterms     :: S.Set (LNTerm, LNTerm)  -- negative subterms
+    , posSubterms     :: S.Set (LNTerm, LNTerm)  -- subterms
+    , solvedSubterms  :: S.Set (LNTerm, LNTerm)  -- subterms that have been split
+    , isContradictory :: Bool
+    , oldNegSubterms  :: S.Set (LNTerm, LNTerm)  -- copy of negSubterms that is not changed by apply/HasFrees/add[Neg]Subterm
     }
   deriving( Eq, Ord, Generic )
 
 instance NFData SubtermStore
 instance Binary SubtermStore
 
-$(mkLabels [''SubtermStore])
+makeFieldLabelsNoPrefix ''SubtermStore
 
 -- | @emptyEqStore@ is the empty equation store.
 emptySubtermStore :: SubtermStore
@@ -115,22 +113,22 @@ isNatSubterm (small, big) = (sortOfLNTerm small == LSortNat || isMsgVar small) &
 -- | used only in freshOrdering in "Simplify.hs"
 -- does not include solved subterms as they are not needed for freshOrdering
 rawSubtermRel :: SubtermStore -> [(LNTerm, LNTerm)]
-rawSubtermRel sst = S.toList (L.get posSubterms sst)
+rawSubtermRel sst = S.toList sst.posSubterms
 
 addSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
-addSubterm st sst = if st `elem` L.get solvedSubterms sst
+addSubterm st sst = if st `elem` sst.solvedSubterms
                       then sst
-                      else modify posSubterms (S.insert st) sst
+                      else over #posSubterms (S.insert st) sst
 
 addNegSubterm :: (LNTerm, LNTerm) -> SubtermStore -> SubtermStore
-addNegSubterm st = modify negSubterms (S.insert st)
+addNegSubterm st = over #negSubterms (S.insert st)
 
 -- | returns true if any of the subterms has a reducible operator on the top of the right side.
 -- If this is the case when rankProofMethods is empty (i.e., no constraints to solve) then the proof cannot be finished
 hasReducibleOperatorsOnTop :: FunSig -> SubtermStore -> Bool
 hasReducibleOperatorsOnTop reducible sst = all (topIsNotReducible . snd) allSubterms
   where
-    allSubterms = S.toList (L.get posSubterms sst `S.union` L.get negSubterms sst `S.union` L.get solvedSubterms sst)
+    allSubterms = S.toList (sst.posSubterms `S.union` sst.negSubterms `S.union` sst.solvedSubterms)
     topIsNotReducible term = case viewTerm term of
                                   FApp f _ -> f `S.notMember` reducible
                                   _        -> True
@@ -143,11 +141,11 @@ hasReducibleOperatorsOnTop reducible sst = all (topIsNotReducible . snd) allSubt
 -- | simplifies the subterm store and returns a list of goals and equations to insert into the system
 simpSubtermStore :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LNGuarded], [Goal])
 simpSubtermStore reducible sst = do
-    let sst0 = modify posSubterms (`S.difference` L.get solvedSubterms sst) sst  -- when a subterm gets substituted to one which is already solved
+    let sst0 = over #posSubterms (`S.difference` sst.solvedSubterms) sst  -- when a subterm gets substituted to one which is already solved
     (sst1, newFormulas) <- simpSplitNegSt reducible sst0  -- split negative subterms
     (sst2, arity1Equations, goals) <- simpSplitPosSt reducible sst1  -- split positive subterms
     let (sst3, newNegEqs) = negativeSubtermVars sst2  -- CR-rule S_neg
-    let sst4 = modify isContradictory (|| hasSubtermCycle reducible sst3) sst3  -- CR-rule S_chain
+    let sst4 = over #isContradictory (|| hasSubtermCycle reducible sst3) sst3  -- CR-rule S_chain
     let (sst5, newNatEqs) = simpNatCycles sst4
     return (sst5, newFormulas ++ arity1Equations ++ newNegEqs ++ newNatEqs, goals)
     -- NOT resolve constants (already done by splitting)
@@ -169,16 +167,16 @@ simpSubtermStore reducible sst = do
 -- otherwise, all SubtermG should be removed and then replaced by this list
 simpSplitPosSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LNGuarded], [Goal])
 simpSplitPosSt reducible sst = do
-    let subts = S.toList $ L.get posSubterms sst
+    let subts = S.toList sst.posSubterms
     splits <- mapM (splitSubterm reducible True) subts  --recurse only one level (noRecurse = True)
     let splittableSubterms = [ SubtermG x | (x, splitCases) <- zip subts splits, splitCases `notElem` [[TrueD],[SubtermD x]] ]
     --let toIgnoreAsTheyHaveNoSplits = [ x | (x, [SubtermD y]) <- zip changedSubterms splits, x==y]
     let toRemoveAsTrue = S.fromList [ x | (x, [TrueD]) <- zip subts splits]
-    let arity1Eq = [eq | [SubtermD st, EqualD eq] <- map sort splits, st `elem` L.get negSubterms sst]  --arity-one-deduction
+    let arity1Eq = [eq | [SubtermD st, EqualD eq] <- map sort splits, st `elem` sst.negSubterms]  --arity-one-deduction
     let arity1Formulas = [GAto $ EqE (lTermToBTerm l) (lTermToBTerm r) | (l,r) <- arity1Eq]
 
-    let sst1 = modify posSubterms (`S.difference` toRemoveAsTrue) sst
-    let sst2 = modify isContradictory (|| [] `elem` splits) sst1
+    let sst1 = over #posSubterms (`S.difference` toRemoveAsTrue) sst
+    let sst2 = over #isContradictory (|| [] `elem` splits) sst1
 
     return (sst2, arity1Formulas, splittableSubterms)
 
@@ -186,7 +184,7 @@ simpSplitPosSt reducible sst = do
 
 simpSplitNegSt :: MonadFresh m => FunSig -> SubtermStore -> m (SubtermStore, [LNGuarded])
 simpSplitNegSt reducible sst = do
-    let changedNegSubterms = S.toList (L.get negSubterms sst `S.difference` L.get oldNegSubterms sst)
+    let changedNegSubterms = S.toList (sst.negSubterms `S.difference` sst.oldNegSubterms)
     splits <- concat <$> mapM (splitSubterm reducible False) changedNegSubterms
     let splitSubterms = S.fromList $ [st | SubtermD st <- splits] ++ [st | NatSubtermD st <- splits]
     let flippedNatSubterms = S.fromList [(t, s ++: fAppNatOne) | NatSubtermD (s, t) <- splits, isNatSubterm (s,t)]  -- isNatSubterm is necessary to exclude that s is a msgVar!!!
@@ -195,20 +193,20 @@ simpSplitNegSt reducible sst = do
     zippedIsFalse <- zip changedNegSubterms <$> mapM (liftM null . splitSubterm reducible False) changedNegSubterms
     let alreadyFalseNegSt = S.fromList [st | (st, True) <- zippedIsFalse]
 
-    let sst1 = modify posSubterms (`S.union` flippedNatSubterms) sst
-    let sst2 = modify negSubterms (`S.union` splitSubterms) sst1
-    let sst3 = modify negSubterms (`S.difference` alreadyFalseNegSt) sst2
-    let sst4 = set oldNegSubterms (L.get negSubterms sst1) sst3
-    let sst5 = modify isContradictory (|| TrueD `elem` splits) sst4
+    let sst1 = over #posSubterms (`S.union` flippedNatSubterms) sst
+    let sst2 = over #negSubterms (`S.union` splitSubterms) sst1
+    let sst3 = over #negSubterms (`S.difference` alreadyFalseNegSt) sst2
+    let sst4 = set #oldNegSubterms sst1.negSubterms sst3
+    let sst5 = over #isContradictory (|| TrueD `elem` splits) sst4
 
     return (sst5, eqFormulas ++ acFormulas)
 
 simpNatCycles :: SubtermStore -> (SubtermStore, [LNGuarded])
 simpNatCycles sst = (sst1, equalities)
   where
-    maybeEqual = natSubtermEqualities $ S.toList $ L.get posSubterms sst
+    maybeEqual = natSubtermEqualities $ S.toList sst.posSubterms
     equalities = [GAto $ EqE (lTermToBTerm l) (lTermToBTerm r) | (Equal l r) <- concat maybeEqual]
-    sst1 = modify isContradictory (|| isNothing maybeEqual) sst
+    sst1 = over #isContradictory (|| isNothing maybeEqual) sst
 
 
 
@@ -225,7 +223,7 @@ hasSubtermCycle reducible store = isNothing $ foldM visitForest S.empty dag
   where
     -- extract dag from store
     dag :: [(LNTerm, LNTerm)]
-    dag = S.toList $ L.get posSubterms store
+    dag = S.toList store.posSubterms
 
     -- adapted from cyclic in Simple.hs but using tuples of LNTerm instead of LNTerm
     visitForest :: S.Set (LNTerm, LNTerm) -> (LNTerm, LNTerm) -> Maybe (S.Set (LNTerm, LNTerm))
@@ -361,12 +359,12 @@ isTrueFalse reducible (Just sst) st =
                    else if cyclic || natCyclic             then Just False
                    else                                         Nothing
           where
-            sstInserted = modify posSubterms (S.insert st) sst
+            sstInserted = over #posSubterms (S.insert st) sst
             cyclic = hasSubtermCycle reducible sstInserted
-            natCyclic = isNothing $ natSubtermEqualities $ S.toList $ L.get posSubterms sstInserted
+            natCyclic = isNothing $ natSubtermEqualities $ S.toList sstInserted.posSubterms
 
-            negSt = L.get negSubterms sst
-            posSt = L.get posSubterms sst `S.union` L.get solvedSubterms sst
+            negSt = sst.negSubterms
+            posSt = sst.posSubterms `S.union` sst.solvedSubterms
             isNegatedInside = st `S.member` negSt
             isInside = st `S.member` posSt
 
@@ -377,12 +375,12 @@ isTrueFalse reducible (Just sst) st =
 negativeSubtermVars :: SubtermStore -> (SubtermStore, [LNGuarded])
 negativeSubtermVars sst = (sst1, equations)
   where
-    negSt = S.toList $ L.get negSubterms sst
-    posSt = S.toList (L.get posSubterms sst `S.union` L.get solvedSubterms sst)
+    negSt = S.toList sst.negSubterms
+    posSt = S.toList (sst.posSubterms `S.union` sst.solvedSubterms)
     pairs = [(x, y) | x@(_,a) <- negSt, y@(_,b) <- posSt, a == b]
     equations = [gnotAtom $ EqE (lTermToBTerm x) (lTermToBTerm y) | ((x,_),(y,_)) <- pairs]
     newSubterms = S.fromList [(x,y) | ((x,_),(y,_)) <- pairs]
-    sst1 = modify negSubterms (`S.union` newSubterms) sst
+    sst1 = over #negSubterms (`S.union` newSubterms) sst
 
 
 

@@ -98,7 +98,7 @@ import Theory
   , toSignaturePure
   , checkAndExtendProver
   , theoryRestrictions
-  , Prover (runProver), unproven
+  , Prover, runProver, unproven
   )
 
 import Theory.Proof
@@ -190,7 +190,7 @@ getLemmaPlaintext nr path = do
     let lemmaItem = case eitherTheory of
             (Just (Trace thy)) -> (\n -> lookupLemma n thy.theory) =<< lname
             _ -> Nothing
-    pure $ maybe "Enter your new Lemma" ((._lPlaintext)) lemmaItem
+    pure $ maybe "Enter your new Lemma" ((.plaintext)) lemmaItem
 
 
 -- | modifies the proof of a lemma after editing (eg in the case of reuse lemmas)
@@ -485,7 +485,7 @@ loadAndCloseTheory srcContent filePath = do
   yesod <- getYesod
   liftIO $ runExceptT $ do
     openThy <- yesod.loadThy srcContent filePath
-    let sig = either (._thySignature) (._diffThySignature) openThy
+    let sig = either (.signature) (.signature) openThy
     sig' <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
     (report, closedThy) <- yesod.closeThy sig' openThy
     let wfErrors = makeWfErrorsHtml report
@@ -833,7 +833,7 @@ getOverviewR idx path = withTheory idx $ \ti -> do
     getParams <- reqGetParams <$> getRequest
     let renderParamsF' route = renderParamsF route getParams
     overview <- liftIO $ overviewTpl renderF renderParamsF' ti path lptxt
-    setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
+    setTitle (toHtml $ "Theory: " ++ ti.theory.name)
     overview
 
 getTheoryVerifyR :: TheoryIdx -> TheoryPath -> Handler RepJson
@@ -897,7 +897,7 @@ getInteractiveOverviewR idx path = withTheory idx ( \ti -> do
   defaultLayout $ do
       let renderParamsF' route = renderParamsF route getParams
       overview <- liftIO $ overviewTpl renderF renderParamsF' ti path lptxt
-      setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
+      setTitle (toHtml $ "Theory: " ++ ti.theory.name)
       overview)
 
 getInteractiveDotGraphR :: TheoryIdx -> TheoryPath -> Handler Html
@@ -905,7 +905,7 @@ getInteractiveDotGraphR idx path = withTheory idx ( \ti -> do
   renderF <- getUrlRender
   let dotPath = T.unpack $ renderF (TheoryGraphJsonR idx path)
   intdotLayout True $ do 
-      setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
+      setTitle (toHtml $ "Theory: " ++ ti.theory.name)
       toWidget
         [hamlet|
             <dot-graph-viz dotsrc="#{dotPath}">
@@ -916,7 +916,7 @@ getInteractiveDotGraphDiffR idx path = withDiffTheory idx (\ti -> do
   renderF <- getUrlRender
   let dotPath = T.unpack $ renderF (TheoryGraphJsonDiffR idx path)
   intdotLayout False $ do
-      setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
+      setTitle (toHtml $ "DiffTheory: " ++ ti.theory.name)
       toWidget
         [hamlet|
             <dot-graph-viz dotsrc="#{dotPath}">
@@ -927,7 +927,7 @@ getInteractiveDotGraphMirrorDiffR idx path = withDiffTheory idx (\ti -> do
   renderF <- getUrlRender
   let dotPath = T.unpack $ renderF (TheoryGraphJsonMirrorDiffR idx path)
   intdotLayout False $ do
-      setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
+      setTitle (toHtml $ "DiffTheory: " ++ ti.theory.name)
       toWidget
         [hamlet|
             <dot-graph-viz dotsrc="#{dotPath}">
@@ -998,7 +998,7 @@ getOverviewDiffR idx path = withDiffTheory idx $ \ti -> do
   renderF <- getUrlRender
   defaultLayout $ do
     overview <- liftIO $ overviewDiffTpl renderF ti path
-    setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
+    setTitle (toHtml $ "DiffTheory: " ++ ti.theory.name)
     overview
 
 -- | Show overview over diff theory (framed layout) with interactive dot graph
@@ -1008,7 +1008,7 @@ getInteractiveOverviewDiffR idx path = withDiffTheory idx ( \ti -> do
   renderF <- getUrlRender
   defaultLayout $ do
       overview <- liftIO $ overviewDiffTpl renderF ti path
-      setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
+      setTitle (toHtml $ "DiffTheory: " ++ ti.theory.name)
       overview )
 
 -- | Show source (pretty-printed open theory).
@@ -1150,7 +1150,7 @@ getProverAllR (name, mkProver) idx = do
         (\thy -> nextSmartThyPath thy (TheoryProof (last $ names thy) []))
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
-        names thy = (._lName) <$> getLemmas thy
+        names thy = (.name) <$> getLemmas thy
         autoProver = mkProver ti.autoProver
         proveAll thy = pure $ foldM (\tha lemma -> applyProverAtPath tha lemma [] autoProver) thy $ names thy
 
@@ -1215,9 +1215,9 @@ getProverDiffAllR (name, mkProver, mkDiffProver) idx  = do
         (\thy -> nextSmartDiffThyPath thy (DiffTheoryDiffProof (last $ namesDiff thy) []))
         (JsonAlert $ "Sorry, but " <> name <> " failed!")
       where
-        namesDiff thy = (._lDiffName) <$> getDiffLemmas thy
+        namesDiff thy = (.name) <$> getDiffLemmas thy
         autoDiffProver = mkDiffProver ti.autoProver
-        names thy = map (\(x, y) -> (x, y._lName)) $ getEitherLemmas thy
+        names thy = map (\(x, y) -> (x, y.name)) $ getEitherLemmas thy
         autoProver = mkProver ti.autoProver
         proveDiff thy = foldM (\tha lemma -> applyDiffProverAtPath tha lemma [] autoDiffProver) thy $ namesDiff thy
         proveAllDiff thy = pure $ do
@@ -1236,8 +1236,8 @@ getAutoProverR idx extractor bound quitOnEmpty =
   getProverR (fullName, runAutoProver . adapt) idx
   where
     adapt autoProver = autoProver
-      { apBound = actualBound
-      , apCut = if quitOnEmpty then CutAfterSorry else extractor
+      { bound = actualBound
+      , cut = if quitOnEmpty then CutAfterSorry else extractor
       , quitOnEmptyOracle = quitOnEmpty }
 
     withCommas = intersperse ", "
@@ -1265,7 +1265,7 @@ getAutoProverAllR
 getAutoProverAllR idx extractor bound _ =
   getProverAllR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver { bound = actualBound, cut = extractor }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1294,7 +1294,7 @@ getAutoProverDiffR
 getAutoProverDiffR idx extractor bound =
   getProverDiffR (fullName, runAutoProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver { bound = actualBound, cut = extractor }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1321,7 +1321,7 @@ getAutoProverAllDiffR
 getAutoProverAllDiffR idx extractor bound =
   getProverDiffAllR (fullName, runAutoProver . adapt, runAutoDiffProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver { bound = actualBound, cut = extractor }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1349,7 +1349,7 @@ getAutoDiffProverR
 getAutoDiffProverR idx extractor bound =
     getDiffProverR (fullName, runAutoDiffProver . adapt) idx
   where
-    adapt autoProver = autoProver { apBound = actualBound, apCut = extractor }
+    adapt autoProver = autoProver { bound = actualBound, cut = extractor }
 
     withCommas = intersperse ", "
     fullName   = mconcat $ proverName : " (" : withCommas qualifiers ++ [")"]
@@ -1404,11 +1404,11 @@ getOptions = do
   clustering <- lookupGetParam "clustering"
   let simplificationLevel = fromMaybe SL2 (simpl >>= readMaybe . T.unpack)
       graphOptions = defaultGraphOptions
-        { _goSimplificationLevel = simplificationLevel
-        , _goCompress = compress
-        , _goShowAutoSource = showAutosource
-        , _goAbbreviate = abbreviate
-        , _goClustering = isJust clustering
+        { simplificationLevel = simplificationLevel
+        , compress = compress
+        , showAutoSource = showAutosource
+        , abbreviate = abbreviate
+        , clustering = isJust clustering
         }
   let dotOptions = defaultDotOptions { _doNodeStyle = nodeStyle }
   pure (graphOptions, dotOptions)
@@ -1616,7 +1616,7 @@ postEditTheoryR idx = withTheory idx $ \ti -> formHandler
       , "Parser returned the message:"
       , T.pack $ show err ]
 
-    name = T.pack tiTheory._thyName
+    name = T.pack tiTheory.name
     theoryFormTpl = formTpl (EditTheoryR idx) "Load as new theory"
 -}
 
@@ -1657,10 +1657,10 @@ postEditPathR idx (TheoryLemma lemmaName) = withTheory idx $ \ti -> do
                [ "Unable to add lemma to theory."
                , "Does a lemma with the same name already exist?" ])
   where
-    path (Just l) = TheoryLemma (get lName l)
+    path (Just l) = TheoryLemma l.name
     path Nothing = TheoryLemma ""
 
-    action (Just l) = "Edit lemma " ++ get lName l
+    action (Just l) = "Edit lemma " ++ l.name
     action Nothing = "Add new lemma"
 
     -- formlet lemma = fieldsToDivs $ textareaField

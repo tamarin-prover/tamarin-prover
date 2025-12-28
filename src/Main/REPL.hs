@@ -40,7 +40,7 @@ loadThy inFile = either (error . show) id <$> errOrThy
       srcThy <- lift $ readFile inFile
       thy    <- fromLeft (error "diff theory") <$> loadTheory defaultTheoryLoadOptions srcThy inFile
 
-      let sig = thy._thySignature
+      let sig = thy.signature
       sig'   <- lift $ toSignatureWithMaude defaultTheoryLoadOptions.maudePath sig
 
       fromLeft (error "diff theory") . snd <$> L.closeTheory "" defaultTheoryLoadOptions sig' (Left thy)
@@ -54,9 +54,9 @@ data REPLProof = REPLProof
 
 rankMethods :: ProofContext -> System -> Int -> [ProofMethod]
 rankMethods ctxt sys depth =
-  let heuristic = fromMaybe (defaultHeuristic False) ctxt._pcHeuristic
+  let heuristic = fromMaybe (defaultHeuristic False) ctxt.heuristic
       ranking = useHeuristic heuristic depth
-      tactic = fromMaybe [defaultTactic] ctxt._pcTactic
+      tactic = fromMaybe [defaultTactic] ctxt.tactic
   in map fst $ rankProofMethods ranking tactic ctxt sys
 
 collectPaths :: ProofContext -> IncrementalProof -> PathMap
@@ -69,19 +69,19 @@ collectPaths ctxt prf = M.fromList $ zip [0..] $ map (\p -> (p, getMethods p)) $
 
     getMethods :: ProofPath -> [ProofMethod]
     getMethods path = fromMaybe (error "illegal path") $ do
-      sys <- prf `atPath` path >>= psInfo . root
+      sys <- prf `atPath` path >>= (.root.info)
       return $ rankMethods ctxt sys (length path)
 
 getProofForLemma :: String -> REPL REPLProof
 getProofForLemma name = do
   thy <- ask
-  let lem = fmap fst $ uncons $ mapMaybe (matcher thy) thy._thyItems
+  let lem = fmap fst $ uncons $ mapMaybe (matcher thy) thy.items
   maybeREPL "No such lemma" lem
   where
     matcher :: ClosedTheory -> TheoryItem ClosedProtoRule IncrementalProof () -> Maybe REPLProof
     matcher thy (LemmaItem l) = do
-      guard (l._lName == name)
-      let prf = l._lProof
+      guard (l.name == name)
+      let prf = l.proof
       let ctxt = getProofContext l thy
       return $ REPLProof prf ctxt (collectPaths ctxt prf)
     matcher _ _               = Nothing
@@ -94,7 +94,7 @@ solve pathIdx methodIdx prf =
   in do
   (path, methods) <- maybeREPL "illegal path index" mPath
   method <- maybeREPL "illegal method index" (methods !?! methodIdx)
-  sys <- maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root)
+  sys <- maybeREPL "illegal path" (iPrf `atPath` path >>= (.root.info))
   iPrf' <- maybeREPL "applying method failed" $ modifyAtPath (runProver (oneStepProver method) ctxt (length path) sys) path iPrf
   return (REPLProof iPrf' ctxt (collectPaths ctxt iPrf'))
   where
@@ -111,7 +111,7 @@ systemAt pathIdx prf =
       iPrf = prf.rpProof
   in do
     (path, _) <- maybeREPL "illegal path index" mPath
-    maybeREPL "illegal path" (iPrf `atPath` path >>= psInfo . root)
+    maybeREPL "illegal path" (iPrf `atPath` path >>= (.root.info))
 
 getMethodsAt :: Int -> REPLProof -> REPL [ProofMethod]
 getMethodsAt i prf = maybe (fail "illegal index") (return . snd) (M.lookup i prf.rpPaths)

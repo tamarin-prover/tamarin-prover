@@ -62,12 +62,12 @@ instance Monoid ProcessParsedAnnotation where
 
 instance Semigroup ProcessParsedAnnotation where
     (<>) p1 p2 = ProcessParsedAnnotation
-        (processnames p1 ++ processnames p2)
-        (case (location p1, location p2) of
+        (p1.processnames ++ p2.processnames)
+        (case (p1.location, p2.location) of
              (Nothing, Just l2) -> Just l2
              (l1, Nothing) -> l1
              (_, l2) -> l2)
-        (backSubstitution p1 `compose` backSubstitution p2)
+        (p1.backSubstitution `compose` p2.backSubstitution)
 
 -- | Any annotation that is good enough to be converted back into a Process
 --  can at least recover the names of the processes used to bind
@@ -97,7 +97,7 @@ mappendProcessParsedAnnotation pn = mapProcessParsedAnnotation (<> pn)
 
 applyProcessParsedAnnotation :: Apply s SapicTerm => s -> ProcessParsedAnnotation -> ProcessParsedAnnotation
 applyProcessParsedAnnotation subst ann =
-        ann {location = fmap (apply subst) (location ann)
+        ann {location = fmap (apply subst) ann.location
                     -- , backSubstitution = undefined
                     -- WARNING: we do not apply the substitution to the back
                     -- translation, as this is not always possible. If variables

@@ -6,7 +6,6 @@ import Rule
 import Theory.ProofSkeleton
 import Theory.Model
 import TheoryObject
-import Prelude hiding (id, (.))
 
 -- | Open theories can be extended. Invariants:
 --   1. Lemma names are unique.

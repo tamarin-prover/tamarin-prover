@@ -3,6 +3,9 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Items.CaseTestItem (
     module Items.CaseTestItem
@@ -11,7 +14,7 @@ module Items.CaseTestItem (
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
-import Data.Label as L
+import Optics.TH (makeFieldLabelsNoPrefix)
 import Theory.Model
 import Theory.Syntactic.Predicate
 import Text.PrettyPrint.Highlight (HighlightDocument, Document (nest, (<->), ($-$), text, sep), colon, doubleQuotes)
@@ -23,23 +26,23 @@ import Text.PrettyPrint.Highlight (HighlightDocument, Document (nest, (<->), ($-
 type CaseIdentifier = String
 
 data CaseTest = CaseTest
-       { _cName       :: CaseIdentifier
-       , _cFormula    :: SyntacticLNFormula
+       { name       :: CaseIdentifier
+       , formula    :: SyntacticLNFormula
        }
        deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
-$(mkLabels [''CaseTest])
+makeFieldLabelsNoPrefix ''CaseTest
 
 caseTestToPredicate :: CaseTest -> Maybe Predicate
 caseTestToPredicate caseTest = fmap (mkPredicate name) formula
   where
-    name = L.get cName caseTest
-    formula = toLNFormula (L.get cFormula caseTest)
+    name = caseTest.name
+    formula = toLNFormula caseTest.formula
 
 prettyCaseTest :: HighlightDocument d => CaseTest -> d
 prettyCaseTest caseTest =
-    text "test" <-> text (L.get cName caseTest) <> colon $-$
+    text "test" <-> text caseTest.name <> colon $-$
     (nest 2 $
-      sep [  doubleQuotes $ prettySyntacticLNFormula $ L.get cFormula caseTest
+      sep [  doubleQuotes $ prettySyntacticLNFormula caseTest.formula
           ]
     )

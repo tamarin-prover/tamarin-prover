@@ -28,7 +28,7 @@ import Data.List as List
 import Data.Map qualified as M
 import Data.Maybe (catMaybes, mapMaybe)
 import Data.Set qualified as S
-import Extension.Data.Label qualified as L
+-- import Debug.Trace (trace)
 import ProVerifHeader
 import Sapic.Exceptions
 import Sapic.Facts
@@ -49,7 +49,7 @@ loadRules ruleIdEvents thy m = case theoryRules thy of
       baseHeaders = Sym "free" "publicChannel" ":channel" []
       desHeaders = map makeDestructorHeader $ M.toList destructors
       ruleHeaders = foldMap (\r -> makeHeadersFromRule ruleIdEvents r thy) rulesMod
-      ruleNames = map (\(OpenProtoRule ruE _) -> showRuleName ruE._rInfo._preName) rulesMod
+      ruleNames = map (\(OpenProtoRule ruE _) -> showRuleName ruE.info.name) rulesMod
       ruleComb = text ("( " ++ intercalate " | " (map ((++ ")") . ("!(" ++)) ruleNames) ++ " )")
       -- want to export restrictions and reuse/src lemmas => need to introduce fresh stamps (as there no timepoints in such formulas)
       rulesMod = map (\(OpenProtoRule ruE rusAC) -> OpenProtoRule (applyMacroInRule (theoryMacros thy) ruE) rusAC) $ case m of
@@ -96,8 +96,8 @@ translateEmbeddedRuleAction matchedVars rprems racts rconcls =
 
 -- | Apply multisetSemantics to all rules in an OpenTheory
 mapRulesWithMultisetSemantics :: OpenTheory -> OpenTheory
-mapRulesWithMultisetSemantics =
-  L.modify thyItems (map updateRule)
+mapRulesWithMultisetSemantics thy =
+  thy {items = map updateRule thy.items}
   where
     updateRule (RuleItem (OpenProtoRule ruE ruAC)) =
       RuleItem (OpenProtoRule (multisetSemantics ruE) ruAC)
@@ -109,7 +109,7 @@ multisetTheory thy =
       hasDistinctFact =
         any ruleHasDistinctFact
           [ ruE
-          | RuleItem (OpenProtoRule ruE _) <- L.get thyItems thy'
+          | RuleItem (OpenProtoRule ruE _) <- thy'.items
           ]
    in if hasDistinctFact
         then case addRestriction (parseAndConvertRestriction resDistinctFact) thy' of
@@ -120,7 +120,7 @@ multisetTheory thy =
 -- Helper to check if a rule has a DistinctFact action
 ruleHasDistinctFact :: Rule i -> Bool
 ruleHasDistinctFact ru =
-  any (\f -> factTagName (factTag f) == "DistinctFact") (ru._rActs)
+  any (\f -> factTagName f.factTag == "DistinctFact") ru.acts
 
 resDistinctFact :: String
 resDistinctFact =
@@ -140,9 +140,9 @@ parseAndConvertRestriction s =
 
 multisetSemantics :: HasRuleName (Rule i) => Rule i -> Rule i
 multisetSemantics r = r
-  { _rPrems = freshFacts ++ statPrems
-  , _rActs = distinctActions ++ r._rActs
-  , _rConcs = statConcs
+  { prems = freshFacts ++ statPrems
+  , acts = distinctActions ++ r.acts
+  , concs = statConcs
   }
   where
     statifyConcs :: String -> [LNFact] -> ([LNFact], [(FactTag, LNTerm)])
@@ -155,7 +155,7 @@ multisetSemantics r = r
     statifyPrems prefix facts =
       let (_, factsWithVars) = mapAccumL (statify prefix) M.empty facts
           facts' = map fst factsWithVars
-          distincts = [ (tag, fresh, factTerms fact)
+          distincts = [ (tag, fresh, fact.factTerms)
                       | (fact, Just (tag, fresh)) <- factsWithVars ]
       in (facts', distincts)
 
@@ -169,8 +169,8 @@ multisetSemantics r = r
               fresh = mkFreshTerm prefix name (toInteger idx)
           in (counts', (Fact tag ann (fresh : ts), Just (tag, fresh)))
 
-    (statConcs, freshVars) = statifyConcs "R" r._rConcs
-    (statPrems, distinctVars) = statifyPrems "L" r._rPrems
+    (statConcs, freshVars) = statifyConcs "R" r.concs
+    (statPrems, distinctVars) = statifyPrems "L" r.prems
 
     freshFacts = map (mkFreshFact . snd) freshVars
 
@@ -199,7 +199,7 @@ makeHeadersFromRule :: S.Set String -> OpenProtoRule -> OpenTheory -> S.Set ProV
 makeHeadersFromRule ruleIdEvents (OpenProtoRule ruE _) = makeHeadersFromProtoRule ruleIdEvents ruE
 
 notDiffRuleActs :: Rule ProtoRuleEInfo -> [Fact LNTerm]
-notDiffRuleActs ru = filter isNotDiffAnnotation ru._rActs
+notDiffRuleActs ru = filter isNotDiffAnnotation ru.acts
   where
     isNotDiffAnnotation fa =
       fa
@@ -212,15 +212,15 @@ notDiffRuleActs ru = filter isNotDiffAnnotation ru._rActs
 makeHeadersFromProtoRule :: S.Set String -> Rule ProtoRuleEInfo -> OpenTheory -> S.Set ProVerifHeader
 makeHeadersFromProtoRule ruleIdEvents ru thy = S.unions [freeHeaders, tables, events]
   where
-    freeHeaders = makeFreeHeaders ru._rPrems (notDiffRuleActs ru) ru._rConcs thy
-    tables = makeTableHeaders ru._rPrems ru._rConcs
+    freeHeaders = makeFreeHeaders ru.prems (notDiffRuleActs ru) ru.concs thy
+    tables = makeTableHeaders ru.prems ru.concs
     events = makeEventHeaders ruleIdEvents (notDiffRuleActs ru)
 
 makeFreeHeaders :: [LNFact] -> [LNFact] -> [LNFact] -> OpenTheory -> S.Set ProVerifHeader
 makeFreeHeaders rprems racts rconcls thy = headers
   where
     termBitstrings = freeBitstringsFromFacts rprems racts rconcls
-    lemmas = (._lFormula) <$> theoryLemmas thy
+    lemmas = (.formula) <$> theoryLemmas thy
     lemmaBitstrings = foldMap searchLemmaForBitstrings lemmas
     bitstrings = termBitstrings `S.union` lemmaBitstrings
     headers = S.map (\x -> Sym "free" x ":bitstring" []) bitstrings
@@ -232,7 +232,7 @@ makeFreeHeadersFromFacts rprems racts rconcls =
 freeBitstringsFromFacts :: [LNFact] -> [LNFact] -> [LNFact] -> S.Set String
 freeBitstringsFromFacts rprems racts rconcls = foldMap searchTermForBitstrings allTerms
   where
-    allTerms = foldMap factTerms (rprems ++ racts ++ rconcls)
+    allTerms = foldMap (.factTerms) (rprems ++ racts ++ rconcls)
 
 searchLemmaForBitstrings :: ProtoFormula Unit2 (String, LSort) Name LVar -> S.Set String
 searchLemmaForBitstrings =
@@ -297,8 +297,8 @@ translateOpenProtoRule ruleIdEvents (OpenProtoRule ruE _) thy =
 checkTypes :: Rule ProtoRuleEInfo -> OpenTheory -> Rule ProtoRuleEInfo
 checkTypes ru thy = if null incorrectFunctionUsages then ru else throw $ UnsupportedTypes incorrectFunctionUsages
   where
-    allFacts = ru._rPrems ++ notDiffRuleActs ru ++ ru._rConcs
-    allTerms = foldMap factTerms allFacts
+    allFacts = ru.prems ++ notDiffRuleActs ru ++ ru.concs
+    allTerms = foldMap (.factTerms) allFacts
     incorrectFunctionUsages = S.toList . S.fromList $ foldMap (incorrectTermTypes thy) allTerms
 
 incorrectTermTypes :: (Show l) => OpenTheory -> Term l -> [String]
@@ -330,8 +330,8 @@ translateProtoRule ::
 translateProtoRule ruleIdEvents ru de =
   (ruleDoc, destructors)
   where
-    rname = showRuleName ru._rInfo._preName
-    (factsDoc, destructors) = translateRule ruleIdEvents rname ru._rPrems (notDiffRuleActs ru) ru._rConcs de
+    rname = showRuleName ru.info.name
+    (factsDoc, destructors) = translateRule ruleIdEvents rname ru.prems (notDiffRuleActs ru) ru.concs de
     ruleDoc = text "let" <-> text rname <-> text "=" $-$ nest 8 factsDoc
 
 showRuleName :: ProtoRuleName -> String
@@ -369,7 +369,7 @@ translateRuleDocs ruleIdEvents maybeRname initialVars rprems racts rconcls destr
   -- destrX is a map where the keys are terms a and t, where a given destructor extracts a from t
   -- and the values are the given destructors (which have appeared in the rule translation until that point)
   let ruleIdName = maybe "" ("rid_" ++) maybeRname
-      ruleUsesRuleId = any (\fact -> factTagName (factTag fact) `S.member` ruleIdEvents) racts
+      ruleUsesRuleId = any (\fact -> factTagName fact.factTag `S.member` ruleIdEvents) racts
       ruleIdDoc = text "new" <-> text ruleIdName <> text ": bitstring"
       (docs1, vars1, vars1', destr1) = translatePatterns rprems GET patternGetsFilter initialVars M.empty destrs
       (docs2, vars2) = translateNonPatterns rprems GET nonPatternGetsFilter vars1
@@ -398,10 +398,10 @@ sortActionsByPriority facts = restrictionFacts ++ eqNeqFacts ++ otherFacts
     (eqNeqFacts, otherFacts) = partition isEqOrNeqFact nonRestrictionFacts
 
     hasRstrPrefix :: String -> LNFact -> Bool
-    hasRstrPrefix prefix fact = prefix `isPrefixOf` factTagName (factTag fact)
+    hasRstrPrefix prefix fact = prefix `isPrefixOf` factTagName fact.factTag
 
     isEqOrNeqFact :: LNFact -> Bool
-    isEqOrNeqFact fact = factTagName (factTag fact) `elem` equalityActionNames
+    isEqOrNeqFact fact = factTagName fact.factTag `elem` equalityActionNames
 
     -- "Eq" is produced by SAPIC. Keep the corresponding negative name and
     -- the long-form spellings for hand-written embedded MSR actions.

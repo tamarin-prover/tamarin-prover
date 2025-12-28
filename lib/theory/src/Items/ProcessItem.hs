@@ -4,6 +4,10 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Items.ProcessItem (
     module Items.ProcessItem
 ) where
@@ -11,21 +15,20 @@ module Items.ProcessItem (
 import Theory.Sapic
 import GHC.Generics
 import Data.Binary (Binary)
-import Data.Label as L
 import           Control.DeepSeq
-
-import           Prelude                             hiding (id, (.))
+import Optics.TH (makeFieldLabelsNoPrefix)
 
 ------------------------------------------------------------------------------
 -- Processes
 ------------------------------------------------------------------------------
 
 data ProcessDef = ProcessDef
-        { _pName            :: String
-        , _pBody            :: PlainProcess
-        , _pVars            :: Maybe [SapicLVar]
+        { name            :: String
+        , body            :: PlainProcess
+        , vars            :: Maybe [SapicLVar]
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
-$(mkLabels [''ProcessDef])
+
+makeFieldLabelsNoPrefix ''ProcessDef
 
 -- generate accessors for ProcessDef data structure records

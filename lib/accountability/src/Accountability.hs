@@ -52,7 +52,7 @@ translate thy = do
 -- | Checks if the case tests requiered by an accountability lemma are present
 undefinedCaseTests :: Alternative f => AccLemma -> f (String, [CaseIdentifier])
 undefinedCaseTests accLem =
-  (accLem._aName, required \\ defined) <$ guard (required /= defined)
+  (accLem.name, required \\ defined) <$ guard (required /= defined)
   where
-    required = accLem._aCaseIdentifiers
-    defined = (._cName) <$> accLem._aCaseTests
+    required = accLem.caseIdentifiers
+    defined = (.name) <$> accLem.caseTests

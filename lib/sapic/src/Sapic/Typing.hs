@@ -1,4 +1,8 @@
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Sapic.Typing
   ( typeTheory
@@ -21,6 +25,9 @@ import Data.Set qualified as S
 import Data.Tuple
 import Data.Typeable (Typeable)
 import GHC.Stack (HasCallStack)
+import Optics.Core (set)
+import Optics.State (assign)
+import Optics.TH (makeFieldLabelsNoPrefix)
 
 import Theory
 import Theory.Sapic
@@ -58,6 +65,8 @@ data TypingEnvironment = TypingEnvironment {
     ,   events :: Map.Map FactTag [SapicType]
 } deriving (Show, Eq)
 
+makeFieldLabelsNoPrefix ''TypingEnvironment
+
 -- | Try to type term `t` with a type more specific than `tt`. Returns typed
 -- term and its type in a Throw-Monad that contains the TypingEnvironment state.
 typeWith :: (MonadThrow m, MonadCatch m) =>
@@ -66,7 +75,7 @@ typeWith :: (MonadThrow m, MonadCatch m) =>
     -> StateT
         TypingEnvironment m (Term (Lit Name SapicLVar), SapicType)
 typeWith t tt
-    | Lit2 (Var v) <- viewTerm2 t , lvar' <- slvar v -- CASE: variable
+    | Lit2 (Var v) <- viewTerm2 t , lvar' <- v.slvar -- CASE: variable
     = do
         stype' <-
             if lvarSort lvar' == LSortPub then
@@ -78,7 +87,7 @@ typeWith t tt
                     Just t' -> return t'
         t' <- catch (sqcap stype' tt) (sqHandler t)
         te <- get
-        modify' (\s -> s { vars = Map.insert (slvar v) t' te.vars })
+        modify' (\s -> set #vars (Map.insert v.slvar t' te.vars) s)
         return (termViewToTerm $ Lit (Var (SapicLVar lvar' t')), t')
     | FAppNoEq fs@(_,(n,_,_,_)) ts   <- viewTerm2 t -- CASE: standard function application
     = do
@@ -130,7 +139,7 @@ typeTermsWithEnv typeEnv terms = execStateT (mapM typeWith' terms) typeEnv'
          where typeWith' t = typeWith t Nothing
                freeVars = foldl (\acc x -> acc `List.union` frees x) [] (map toLNTerm terms)
                nVars = foldl (\acc x -> Map.insert x Nothing acc ) typeEnv.vars freeVars
-               typeEnv' = typeEnv{ vars = nVars}
+               typeEnv' = set #vars nVars typeEnv
 
 typeProcess :: (GoodAnnotation a, MonadThrow m, MonadCatch m, Show a, Typeable a) =>
     Process a SapicLVar ->  StateT
@@ -156,15 +165,15 @@ typeProcess = traverseProcess fNull fAct fComb gAct gComb
             return $ ProcessComb c' ann rl rr
         typeWith' p' t = catch (fst <$> typeWith t Nothing) (handleEx p')
         typeWithVar  v -- variables are correctly typed, as we just inserted them
-            | Nothing <- stype v = return $ SapicLVar (slvar v) defaultSapicType
+            | Nothing <- v.stype = return $ SapicLVar v.slvar defaultSapicType
             | otherwise = return v
         typeWithFact = return -- typing facts is hard because of quantified variables. We skip for now.
         insertVar v = do
             te <- get
-            case Map.lookup (slvar v) te.vars of
+            case Map.lookup v.slvar te.vars of
                 Just _ -> throwM $ WFBoundTwice v
                 Nothing ->
-                  modify' (\s -> s { vars = Map.insert (slvar v) (stype v) te.vars })
+                  assign #vars (Map.insert v.slvar v.stype te.vars)
         handleEx p' wferror = throwM $ ProcessNotWellformed wferror (Just p')
 
 toSapicLVar :: LVar -> SapicLVar
@@ -185,7 +194,7 @@ initTEFromSig th = do
   foldM typeRule initTE sigRules
   where
     -- we load all funs and add default type
-    sig = th._thySignature._sigMaudeInfo
+    sig = th.signature.maudeInfo
     funSet = stFunSyms sig
     funACSet = stACFunSyms sig
     funTyped = foldMap (\fs@(_,(n,_,_,_)) -> Map.singleton (NoEqUser fs) (defaultFunctionType n)) funSet
@@ -212,16 +221,16 @@ typeTheoryEnv th = do
     where
         typeAndRenameProcess p = do
                 pUnique <- renameUnique p
-                modify' (\s -> s { vars = Map.empty})
+                assign #vars Map.empty
                 typeProcess pUnique
         typeAndRenameProcessDef p = do
-                let pr = p._pBody
-                let pvars = fromMaybe (S.toList (varsProc pr) List.\\ accBindings pr) p._pVars
+                let pr = p.body
+                let pvars = fromMaybe (S.toList (varsProc pr) List.\\ accBindings pr) p.vars
                 let aux_pr = ProcessAction (ChIn Nothing (fAppList (map varTerm pvars)) S.empty) mempty pr
                 renamedP <- typeAndRenameProcess aux_pr
                 case renamedP of
                   ProcessAction (ChIn _ (viewTerm2 -> FList tVars) _) _ prf ->
-                    return $ p { _pBody = prf, _pVars = Just $ map termVar' tVars}
+                    return $ p { body = prf, vars = Just $ map termVar' tVars}
                   _ -> return p -- should not be taken
         addFunctionTypingInfo' sym (ins,out) = addFunctionTypingInfo (sym, ins,out)
 

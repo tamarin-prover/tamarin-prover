@@ -18,11 +18,9 @@ import Term.LTerm
 import qualified Data.Set as S
 
 
-import           Prelude                    hiding (id, (.))
 import           Data.Char                  (isUpper, toUpper)
 import           Data.Foldable              (asum)
 -- import           Data.Monoid                hiding (Last)
-import           Control.Category
 import           Text.Parsec                hiding ((<|>))
 
 import Theory.Text.Parser.Term

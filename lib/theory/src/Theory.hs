@@ -21,28 +21,15 @@ module Theory (
   , addProcessDef
   , lookupProcessDef
   , lookupFunctionTypingInfo
-  , pName
-  , pBody
-  , pVars
   , addFunctionTypingInfo
   , addMacros
   , addDiffMacros
   , clearFunctionTypingInfos
 
   -- * Options
-  , transAllowPatternMatchinginLookup
-  , transProgress
-  , transReliable
-  , transReport
-  , stateChannelOpt
-  , asynchronousChannels
-  , compressEvents
-  , forcedInjectiveFacts
   , setforcedInjectiveFacts
-  , thyOptions
-  , thyIsSapic
   , setOption
-  , Option
+  , Option(..)
   -- * Predicates
   , module Theory.Syntactic.Predicate
   , addPredicate
@@ -51,13 +38,9 @@ module Theory (
   , ExportInfo(..)
   , addExportInfo
   , lookupExportInfo
-  , eTag
-  , eText
 
   -- * Case Tests
   , CaseTest(..)
-  , cName
-  , cFormula
   , caseTestToPredicate
   , defineCaseTests
 
@@ -69,21 +52,7 @@ module Theory (
   , SyntacticLemma
   , ProtoLemma(..)
   , AccLemma(..)
-  , lName
   , DiffLemma
-  , lDiffName
-  , lDiffAttributes
-  , lDiffProof
-  , lTraceQuantifier
-  , lFormula
-  , lAttributes
-  , lProof
-  , lPlaintext
-  , aName
-  , aAttributes
-  , aCaseIdentifiers
-  , aCaseTests
-  , aFormula
   , unprovenLemma
   , skeletonLemma
   , skeletonDiffLemma
@@ -99,20 +68,6 @@ module Theory (
   , DiffTheory(..)
   , TheoryItem(..)
   , DiffTheoryItem(..)
-  , thyName
-  , thyInFile
-  , thySignature
-  , thyTactic
-  , thyCache
-  , thyItems
-  , diffThyName
-  , diffThyInFile
-  , diffThySignature
-  , diffThyCacheLeft
-  , diffThyCacheRight
-  , diffThyDiffCacheLeft
-  , diffThyDiffCacheRight
-  , diffThyItems
   , diffTheoryLemmas
   , diffTheorySideLemmas
   , diffTheoryDiffRules
@@ -208,13 +163,7 @@ module Theory (
 
   , ClosedProtoRule(..)
   , OpenProtoRule(..)
-  , oprRuleE
-  , oprRuleAC
-  , cprRuleE
-  , cprRuleAC
   , DiffProtoRule(..)
-  , dprRule
-  , dprLeftRight
   , unfoldRuleVariants
 
   , getLemmas
@@ -284,8 +233,6 @@ module Theory (
 
 -- import           Debug.Trace
 
-import           Prelude                             hiding (id, (.))
-
 --import           GHC.Generics                        (Generic)
 -- import           Data.Typeable
 --import           Data.Binary
@@ -335,5 +282,4 @@ import Theory.Model
 import Theory.Proof
 import Theory.Syntactic.Predicate
 import TheoryObject
-import Prelude hiding (id, (.))
 

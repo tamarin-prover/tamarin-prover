@@ -2,21 +2,22 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Theory.Syntactic.Predicate
     (
         Predicate(..)
-      , pFact
-      , pFormula
       , mkPredicate
       , smallerFact
       , builtinPredicates
     ,lookupPredicate,expandFormula)
 where
 
--- import qualified Data.Label.Point
--- import qualified Data.Label.Poly
-import           Extension.Data.Label                hiding (get)
-import qualified Extension.Data.Label                as L
+import Optics.TH
 import Theory.Model
 import qualified Data.Set as S
 import GHC.Generics
@@ -30,8 +31,8 @@ import Data.Char (toUpper)
 ------------------------------------------------------------------------------
 
 data Predicate = Predicate
-        { _pFact            :: Fact LVar
-        , _pFormula         :: LNFormula
+        { fact            :: Fact LVar
+        , formula         :: LNFormula
         }
         deriving( Eq, Ord, Show, Generic, NFData, Binary )
 
@@ -44,7 +45,7 @@ mkPredicate name formula = Predicate fact formula
 
 -- generate accessors for Predicate data structure records
 
-$(mkLabels [''Predicate])
+makeFieldLabelsNoPrefix ''Predicate
 
 
 smallerFact :: t -> t -> Fact t
@@ -75,7 +76,7 @@ builtinPredicates = [
 
 -- | Find the predicate with the fact name in a list
 lookupPredicate :: Fact t -> [Predicate] -> Maybe Predicate
-lookupPredicate fact = find (sameName fact . L.get pFact) . (++ builtinPredicates)
+lookupPredicate fact = find (sameName fact . (.fact)) . (++ builtinPredicates)
     where
         sameName (Fact tag _ _) (Fact tag' _ _) = tag == tag'
 
@@ -85,10 +86,10 @@ expandFormula plist = traverseFormulaAtom f
         f:: SyntacticAtom (VTerm Name (BVar LVar)) -> Either FactTag LNFormula
         f x | Syntactic (Pred fa)   <- x
             , Just pr <- lookupPredicate fa plist
-              = return $ apply' (compSubst (L.get pFact pr) fa) (L.get pFormula pr)
+              = return $ apply' (compSubst pr.fact fa) pr.formula
 
             | (Syntactic (Pred fa))   <- x
-            , Nothing <- lookupPredicate fa plist = Left $ factTag fa
+            , Nothing <- lookupPredicate fa plist = Left fa.factTag
 
             | otherwise = return $ Ato $ toAtom x
         apply' :: (Integer -> Subst Name (BVar LVar)) -> LNFormula -> LNFormula

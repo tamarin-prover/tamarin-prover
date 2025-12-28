@@ -1,5 +1,5 @@
 name: tamarin-prover-theory
-cabal-version: >= 1.8
+cabal-version: >= 1.10
 build-type: Simple
 version: 1.13.0
 license: GPL
@@ -36,6 +36,7 @@ source-repository head
 -- library stanzas
 ----------------------
 library
+  default-language: GHC2021
   ghc-options:
     -Wall
     -fwarn-tabs
@@ -54,9 +55,11 @@ library
     directory,
     dlist,
     exceptions,
-    fclabels,
     filepath,
     mtl,
+    optics-core,
+    optics-extra,
+    optics-th,
     parallel,
     parsec,
     pretty,
@@ -158,4 +161,8 @@ library
     Theory.Text.Parser.Term
 
   default-extensions:
+    DuplicateRecordFields
     ImportQualifiedPost
+    NoFieldSelectors
+    OverloadedLabels
+    OverloadedRecordDot

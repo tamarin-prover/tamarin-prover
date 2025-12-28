@@ -168,7 +168,7 @@ loadTheories thOpts readyMsg thDir thLoad thClose autoProver = do
 
       result <- runExceptT $ do
         openThy <- thLoad srcThy path
-        let sig = either (._thySignature) (._diffThySignature) openThy
+        let sig = either (.signature) (.signature) openThy
         sig' <- liftIO $ toSignatureWithMaude thOpts.maudePath sig
         thClose sig' openThy
 

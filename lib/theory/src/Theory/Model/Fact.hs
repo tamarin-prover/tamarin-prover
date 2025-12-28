@@ -189,7 +189,7 @@ instance Sized t => Sized (Fact t) where
 instance HasFrees t => HasFrees (Fact t) where
     {-# INLINABLE foldFrees #-}
     foldFrees  f = foldMap  (foldFrees f)
-    foldFreesOcc f c fa = foldFreesOcc f (show (factTag fa):c) (factTerms fa)
+    foldFreesOcc f c fa = foldFreesOcc f (show fa.factTag:c) fa.factTerms
     {-# INLINABLE mapFrees #-}
     mapFrees   f = traverse (mapFrees f)
 
@@ -347,7 +347,7 @@ isInFact _                 = False
 
 -- | True iff the fact is the non-special Log-fact K() from the intruder rule isend
 isKLogFact :: Fact t -> Bool
-isKLogFact f = isProtoFact f && (factTagName (factTag f) == "K")
+isKLogFact f = isProtoFact f && (factTagName f.factTag == "K")
 
 -- | View a protocol fact.
 protoFactView :: LNFact -> Maybe [LNTerm]
@@ -410,7 +410,7 @@ factArity (Fact tag _ ts)
 
 -- | The multiplicity of a 'Fact'.
 factMultiplicity :: Fact t -> Multiplicity
-factMultiplicity = factTagMultiplicity . factTag
+factMultiplicity = factTagMultiplicity . (.factTag)
 
 -- | The terms of a 'Fact'.
 getFactTerms :: Fact t -> [t]
@@ -471,8 +471,8 @@ type LNFact = Fact LNTerm
 -- | Unify a list of @LFact@ equalities.
 unifyLNFactEqs :: [Equal LNFact] -> WithMaude [LNSubstVFresh]
 unifyLNFactEqs eqs
-  | all (evalEqual . fmap factTag) eqs =
-      unifyLNTerm (map (fmap (fAppList . factTerms)) eqs)
+  | all (evalEqual . fmap (.factTag)) eqs =
+      unifyLNTerm (map (fmap (fAppList . (.factTerms))) eqs)
   | otherwise = return []
 
 -- | 'True' iff the two facts are unifiable.
@@ -489,9 +489,9 @@ matchFact :: Fact t -- ^ Term
             -> Fact t -- ^ Pattern
             -> Match t
 matchFact t p =
-    matchOnlyIf (factTag t == factTag p &&
-                 length (factTerms t) == length (factTerms p))
-    <> mconcat (zipWith matchWith (factTerms t) (factTerms p))
+    matchOnlyIf (t.factTag == p.factTag &&
+                 length t.factTerms == length p.factTerms)
+    <> mconcat (zipWith matchWith t.factTerms p.factTerms)
 
 -- | Get "left" variant of a diff fact
 getLeftFact :: LNFact -> LNFact

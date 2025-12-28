@@ -11,8 +11,6 @@ module CloseRule (
     prettyNDCcheck
 )where
 
-import           Prelude                             hiding (id, (.))
-
 import qualified Data.ByteString.Char8 as BC
 import           Data.Function (on)
 import           Data.List
@@ -20,7 +18,6 @@ import           Data.Maybe
 import qualified Data.Set                            as S
 
 import           Control.Basics
-import           Control.Category
 import           Control.Exception (evaluate)
 import           Control.DeepSeq (force)
 import           Control.Monad.Reader
@@ -28,8 +25,7 @@ import           Control.Monad.Bind (MonadFresh)
 import qualified Control.Monad.State                 as MS
 import           Control.Parallel.Strategies
 
-import qualified Extension.Data.Label                as L
-import           Extension.Data.Label                hiding (get)
+import           Optics.Core (over, set, (%))
 
 import           Items.RuleItem
 
@@ -58,27 +54,27 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
   if autoSources && containsPartialDeconstructions (cache items)
     then
         proveTheory (const True) checkProofM
-      $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items') items' (L.get thyOptions thy0)  (L.get thyIsSapic thy0)
+      $ Theory thy0.name thy0.inFile h t sig (cache items') items' thy0.options thy0.isSapic
     else
         proveTheory (const True) checkProofM
-      $ Theory (L.get thyName thy0) (L.get thyInFile thy0) h t sig (cache items) items (L.get thyOptions thy0) (L.get thyIsSapic thy0)
+      $ Theory thy0.name thy0.inFile h t sig (cache items) items thy0.options thy0.isSapic
   where
-    parameters = Sources.IntegerParameters (L.get (openChainsLimit . thyOptions) thy0) (L.get (saturationLimit . thyOptions) thy0) showSaturation
-    h          = L.get thyHeuristic thy0
-    t          = L.get thyTactic thy0
-    forcedInjFacts = L.get forcedInjectiveFacts $ L.get thyOptions thy0
-    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) (L.get thyCache thy0) (L.get (verboseOption . thyOptions) thy0) False (L.get thyIsSapic thy0)
+    parameters = Sources.IntegerParameters thy0.options.openChainsLimit thy0.options.saturationLimit showSaturation
+    h          = thy0.heuristic
+    t          = thy0.tactic
+    forcedInjFacts = thy0.options.forcedInjectiveFacts
+    cache its = closeRuleCache parameters restrictions (typAsms its) forcedInjFacts sig (rules its) thy0.cache thy0.options.verboseOption False thy0.isSapic
     checkProofM = checkAndExtendProver (sorryProver Nothing)
 
     -- Maude / Signature handle
-    hnd = L.get sigmMaudeHandle sig
+    hnd = sig.maudeInfo
 
     -- Close all theory items: in parallel (especially useful for variants)
     --
     -- NOTE that 'rdeepseq' is OK here, as the proof has not yet been checked
     -- and therefore no constraint systems will be unnecessarily cached.
     (items, _solveRel, _breakers) = (`runReader` hnd) $ addSolvingLoopBreakers $ unfoldClosedRules
-       ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
+       ((closeTheoryItem <$> thy0.items) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem
        (RuleItem . closeProtoRule hnd (theoryMacros thy0))
        (RestrictionItem . applyMacroInRestriction (theoryMacros thy0))
@@ -113,10 +109,10 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
 
     -- extract source restrictions and lemmas
     restrictions = do RestrictionItem rstr <- items
-                      return $ formulaToGuarded_ $ L.get rstrFormula rstr
+                      return $ formulaToGuarded_ rstr.formula
     typAsms its  = do LemmaItem lem <- its
                       guard (isSourceLemma lem)
-                      return $ formulaToGuarded_ $ L.get lFormula lem
+                      return $ formulaToGuarded_ lem.formula
 
     -- extract protocol rules
     rules :: [TheoryItem ClosedProtoRule IncrementalProof s] -> [ClosedProtoRule]
@@ -124,16 +120,16 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
     errClose = error "closeTheory"
 
     addSolvingLoopBreakers = useAutoLoopBreakersAC
-        (liftToItem $ enumPrems . L.get cprRuleAC)
-        (liftToItem $ enumConcs . L.get cprRuleAC)
-        (liftToItem $ getDisj . L.get (pracVariants . rInfo . cprRuleAC))
+        (liftToItem $ enumPrems . (.ruleAC))
+        (liftToItem $ enumConcs . (.ruleAC))
+        (liftToItem $ getDisj . (.ruleAC.info.variants))
         addBreakers
       where
         liftToItem f (RuleItem ru) = f ru
         liftToItem _ _             = []
 
         addBreakers bs (RuleItem ru) =
-            RuleItem (L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
+            RuleItem (set (#ruleAC % #info % #loopBreakers) bs ru)
         addBreakers _  item = item
 
 -- Applying provers
@@ -146,7 +142,7 @@ proveTheory :: (Lemma IncrementalProof -> Bool)   -- ^ Lemma selector.
             -> ClosedTheory
             -> ClosedTheory
 proveTheory selector prover thy =
-    modify thyItems ((`MS.evalState` []) . mapM prove) thy
+    over #items ((`MS.evalState` []) . mapM prove) thy
   where
     prove item = case item of
       LemmaItem l0 -> do l <- MS.gets (LemmaItem . proveLemma l0)
@@ -155,11 +151,11 @@ proveTheory selector prover thy =
       _            -> do return item
 
     proveLemma lem preItems
-      | selector lem = modify lProof add lem
+      | selector lem = over #proof add lem
       | otherwise    = lem
       where
         ctxt    = getProofContext lem thy
-        sys     = mkSystem ctxt (theoryRestrictions thy) preItems $ L.get lFormula lem
+        sys     = mkSystem ctxt (theoryRestrictions thy) preItems lem.formula
         add prf = fromMaybe prf $ runProver prover ctxt 0 sys prf
 
 
@@ -171,21 +167,21 @@ mkSystem ctxt restrictions previousItems =
     -- they do not change the considered set of traces. This is the key
     -- difference between lemmas and restrictions.
     addLemmasLocal
-  . formulaToSystem (map (formulaToGuarded_ . L.get rstrFormula) restrictions)
-                    (L.get pcSourceKind ctxt)
-                    (L.get pcTraceQuantifier ctxt) False
+  . formulaToSystem (map (formulaToGuarded_ . (.formula)) restrictions)
+                    ctxt.sourceKind
+                    ctxt.traceQuantifier False
   where
     addLemmasLocal sys =
-        insertLemmas (gatherReusableLemmas $ L.get sSourceKind sys) sys
+        insertLemmas (gatherReusableLemmas sys.sourceKind) sys
 
     gatherReusableLemmas kind = do
         LemmaItem lem <- previousItems
         guard $    lemmaSourceKind lem <= kind
-                && ReuseLemma `elem` L.get lAttributes lem
-                && AllTraces == L.get lTraceQuantifier lem
-                && L.get lName lem `notElem` L.get pcHiddenLemmas ctxt
-                && "ALL" `notElem` L.get pcHiddenLemmas ctxt
-        return $ formulaToGuarded_ $ L.get lFormula lem
+                && ReuseLemma `elem` lem.attributes
+                && AllTraces == lem.traceQuantifier
+                && lem.name `notElem` ctxt.hiddenLemmas
+                && "ALL" `notElem` ctxt.hiddenLemmas
+        return $ formulaToGuarded_ lem.formula
 
 -- | Apply the given substitutions to the two given intruder rules and return all resulting rules. This is used for applying chain reduction rules.
 appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> m [(IntrRuleAC,IntrRuleAC)]
@@ -255,16 +251,16 @@ deductionCheck ocLimit satLimit sig intrR fact terms =
     tabTheory [] = ""
 
     newRules s = [OpenProtoRule (Rule (ProtoRuleEInfo (StandRule "Out0") (RuleAttributes Nothing Nothing False False Nothing) []) (pre s) (co s) (a s) []) []]
-    varD s = frees $ concatMap factTerms s
+    varD s = frees $ concatMap (.factTerms) s
     varFresh s = map msgToFreshVars (varD s)
     pre = freesToFresh . varFresh
-    co = map (outFact . msgToFreshTerms) . concatMap factTerms
+    co = map (outFact . msgToFreshTerms) . concatMap (.factTerms)
     a s = [protoFact Linear "Generated_0" (map (msgToFreshTerms . lvarToLnterm) (varD s)),factOnlyOnce]
     aLemma s = [protoFact Linear "Generated_0" (map lvarToLnterm (varD s))]
 
     newLemmas s = [Lemma "Deduction" "Deduction" False AllTraces f (Just f) [] (unproven ())]
       where
-        f = Not (existFormula $ landFormula $ aLemma s ++ [kLogFact (head (factTerms fact))]) -- FIXME : the head could be a problem
+        f = Not (existFormula $ landFormula $ aLemma s ++ [kLogFact (head fact.factTerms)]) -- FIXME : the head could be a problem
     
     newRestriction0 :: Restriction
     newRestriction0 = Restriction "OnlyOnce" f (Just f)
@@ -309,7 +305,7 @@ ndcCheck ocLimit satLimit sig intrR r@(Rule (DestrRule _ i _ _ _) ((Fact KDFact 
     []    -> Nothing
     subst -> Just (checkDeduction (applySubsts subst r freshInst1))
   where
-    hnd        = L.get sigmMaudeHandle sig
+    hnd        = sig.maudeInfo
     runMaude   = (`runReader` hnd)
     freshInst1 = r1 `renameAvoiding` r
     -- ppPair (x, y) = render (prettyIntrRuleAC x) ++ " \n " ++ render (prettyIntrRuleAC y)
@@ -411,13 +407,13 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
         isSapic
 
     -- Maude handle
-    hnd = L.get sigmMaudeHandle sig
+    hnd = sig.maudeInfo
     reducibles = reducibleFunSyms $ mhMaudeSig hnd
 
     forcedInjFacts' = S.map (\x -> (x, replicate (factTagArity x) [Unspecified])) forcedInjFacts
     -- inj fact instances
     injFactInstances = forcedInjFacts' `S.union`
-        simpleInjectiveFactInstances reducibles (L.get cprRuleE <$> protoRules)
+        simpleInjectiveFactInstances reducibles ((.ruleE) <$> protoRules)
 
     -- precomputing the case distinctions: we make sure to only add safety
     -- restrictions. Otherwise, it wouldn't be sound to use the precomputed case
@@ -428,7 +424,7 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
 
     -- classifying the rules
     rulesAC = (fmap IntrInfo                    <$> intrRules) <|>
-              (fmap ProtoInfo . L.get cprRuleAC <$> protoRules)
+              (fmap ProtoInfo . (.ruleAC) <$> protoRules)
 
     anyOf ps = partition (\x -> any ($ x) ps)
 
@@ -437,7 +433,7 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
 
     -- and sort them into ClassifiedRules datastructure for later use in proofs
     classifiedRules = ClassifiedRules
-      { _crConstruct  = constr
-      , _crDestruct   = destr
-      , _crProtocol   = proto
+      { construct  = constr
+      , destruct   = destr
+      , protocol   = proto
       }

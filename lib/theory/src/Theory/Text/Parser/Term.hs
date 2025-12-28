@@ -20,12 +20,10 @@ module Theory.Text.Parser.Term (
 )
 where
 
-import           Prelude                    hiding (id, (.))
 import qualified Data.ByteString.Char8      as BC
 import           Data.Foldable              (asum)
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Set                   as S
-import           Control.Category
 import           Control.Monad
 import           Text.Parsec
 import           Term.Substitution
@@ -61,7 +59,7 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 -- if the operator is not known.
 lookupArity :: String -> Parser (Int, Privacy,Constructability, ACstate, NDCstate)
 lookupArity op = do
-    maudeSig <- sig <$> getState
+    maudeSig <- (.sig) <$> getState
     case lookup (BC.pack op) (map extractName(S.toList (userDefinedFunSyms maudeSig) ++ map NoEqUser (S.toList (macroNames maudeSig) ++ [(emapSymString, (2,Public,Constructor,NotNDC))]))) of
         Nothing                            -> fail $ "unknown operator `" ++ op ++ "'"
         Just (NoEqUser (_,(k,priv,cnstr,ndc))) -> return (k,priv,cnstr,NotAC,ndc)
@@ -125,7 +123,7 @@ diffOp eqn plit = do
   ts <- symbol "diff" *> parens (commaSep (msetterm eqn plit))
   when (2 /= length ts) $ fail
     "the diff operator requires exactly 2 arguments"
-  diff <- enableDiff . sig <$> getState
+  diff <- enableDiff . (.sig) <$> getState
   when eqn $ fail
     "diff operator not allowed in equations"
   unless diff $ fail
@@ -156,7 +154,7 @@ term eqn plit = asum
     application = asum $ map (try . ($ plit)) [naryOpApp eqn, binaryAlgApp eqn, diffOp eqn]
     pairing = angled (tupleterm eqn plit)
     nullaryApp = do
-      maudeSig <- sig <$> getState
+      maudeSig <- (.sig) <$> getState
       -- FIXME: This try should not be necessary.
       asum [ try (symbol (BC.unpack sym)) $> fApp fs []
            | fs@(NoEq (sym,(0,_,_,_))) <- S.toList $
@@ -165,7 +163,7 @@ term eqn plit = asum
 -- | A left-associative sequence of user-defined AC operators.
 acterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 acterm eqn plit = do
-    acsyms <- stACFunSyms . sig <$> getState
+    acsyms <- stACFunSyms . (.sig) <$> getState
     parseACSym $ S.toList acsyms
   where
     parseACSym [] = term eqn plit
@@ -178,7 +176,7 @@ expterm eqn plit = chainl1 (acterm eqn plit) (curry fAppExp <$ opExp)
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 multterm eqn plit = do
-    dh <- enableDH . sig  <$> getState
+    dh <- enableDH . (.sig)  <$> getState
     if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
         else acterm eqn plit
@@ -186,7 +184,7 @@ multterm eqn plit = do
 -- | A left-associative sequence of xors.
 xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 xorterm eqn plit = do
-    xor <- enableXor . sig <$> getState
+    xor <- enableXor . (.sig) <$> getState
     if xor && not eqn-- if xor is not enabled, do not accept 'xorterms's
         then chainl1 (multterm eqn plit) ((\a b -> fAppAC Xor [a,b]) <$ opXor)
         else multterm eqn plit
@@ -194,7 +192,7 @@ xorterm eqn plit = do
 -- | A left-associative sequence of multiset unions.
 msetterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 msetterm eqn plit = do
-    mset <- enableMSet . sig <$> getState
+    mset <- enableMSet . (.sig) <$> getState
     if mset && not eqn-- if multiset is not enabled, do not accept 'msetterms's
         then chainl1 (natterm eqn plit) ((\a b -> fAppAC Union [a,b]) <$ opUnion)
         else natterm eqn plit
@@ -202,7 +200,7 @@ msetterm eqn plit = do
 -- | A left-associative sequence of natural numbers.
 natterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 natterm eqn plit = do
-    nats <- enableNat . sig <$> getState
+    nats <- enableNat . (.sig) <$> getState
     if nats && not eqn-- if nat is not enabled, do not accept 'natterms'
         then chainl1 (xorterm eqn plit) ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
         else xorterm eqn plit
