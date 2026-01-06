@@ -420,7 +420,7 @@ step by clicking on `1. simplify`, to obtain the following screen:
 Tamarin has now translated the lemma into a constraint system. Since
 Tamarin looks for counterexamples to the lemma, it looks for a protocol
 execution that contains a `SessKeyC( S, k )` and a `K( k )` action, but
-does not use an `LtkReveal( S )`. This is visualized in the graph as
+does not use a `LtkReveal( S )`. This is visualized in the graph as
 follows. The only way of getting a `SessKeyC( S, k )` action is using an
 instance of the `Client_2` rule on the left, and the `K( k )` rule is
 symbolized on the right using a round box (adversary reasoning is always
