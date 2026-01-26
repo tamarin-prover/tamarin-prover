@@ -275,8 +275,8 @@ prettyTerm ppLit = ppTerm
   where
     ppTerm t = case viewTerm t of
         Lit l                                     -> ppLit l
-        FApp (AC (ACfct (f, _))) []                    -> text (BC.unpack f)
-        FApp (AC (ACfct (f, _))) ts                    -> ppFun f ts
+        FApp (AC (ACfct (f, _))) []               -> text (BC.unpack f)
+        FApp (AC (ACfct (f, _))) ts               -> ppFun f ts
         FApp (AC Mult)     ts                     -> ppTerms "*" 1 "(" ")" ts
         FApp (AC Xor)      ts                     -> ppTerms "⊕" 1 "(" ")" ts
         FApp (AC Union)    ts                     -> ppTerms "++" 1 "(" ")" ts

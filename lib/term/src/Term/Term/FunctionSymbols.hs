@@ -114,7 +114,7 @@ data FctAttr = Privacy Privacy | Constructability Constructability | ACstate ACs
 -- | NoEq function symbols (with respect to the background theory).
 type NoEqSym = (ByteString, (Int, Privacy,Constructability)) -- ^ operator name, arity, private, destructor
 
--- | AC function symbols (with respect to the background theory).
+-- | User-defined AC function symbols.
 type ACfctSym = (ByteString, (Privacy,Constructability)) -- ^ operator name, private, destructor
 
 -- | AC function symbols.
@@ -125,7 +125,7 @@ data ACSym = Union | Mult | Xor | NatPlus | ACfct ACfctSym
 data CSym = EMap
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
--- | User define function symbol
+-- | User defined function symbols
 data UserDefinedSym = NoEqUser NoEqSym | ACfctUser ACfctSym
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
@@ -142,8 +142,10 @@ type FunSig = Set FunSym
 -- | NoEq function signatures.
 type NoEqFunSig = Set NoEqSym
 
+-- | User-defined AC function signatures.
 type ACfctFunSig = Set ACfctSym
 
+-- | User-defined function signatures.
 type UserDefinedSig = Set UserDefinedSym
 
 ----------------------------------------------------------------------

@@ -68,8 +68,6 @@ import           Data.List
 import           Data.Binary
 -- import           Data.Monoid ( mempty )
 
-import Debug.Trace
-
 ----------------------------------------------------------------------
 -- Substitutions
 ----------------------------------------------------------------------
