@@ -19,7 +19,7 @@ module Term.Term.FunctionSymbols (
     , Constructability(..)
     , ACstate(..)
     , FctAttr(..)
-    , UserDefineSym(..)
+    , UserDefinedSym(..)
     , ACfctSym
     , NoEqSym
 
@@ -27,7 +27,7 @@ module Term.Term.FunctionSymbols (
     , FunSig
     , NoEqFunSig
     , ACfctFunSig
-    , UserDefineSig
+    , UserDefinedSig
 
     -- ** concrete symbols strings
     , diffSymString
@@ -126,7 +126,7 @@ data CSym = EMap
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | User define function symbol
-data UserDefineSym = NoEqUser NoEqSym | ACfctUser ACfctSym
+data UserDefinedSym = NoEqUser NoEqSym | ACfctUser ACfctSym
   deriving (Eq, Ord, Typeable, Data, Show, Generic, NFData, Binary)
 
 -- | Function symbols
@@ -144,7 +144,7 @@ type NoEqFunSig = Set NoEqSym
 
 type ACfctFunSig = Set ACfctSym
 
-type UserDefineSig = Set UserDefineSym
+type UserDefinedSig = Set UserDefinedSym
 
 ----------------------------------------------------------------------
 -- Fixed function symbols

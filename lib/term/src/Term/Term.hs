@@ -55,7 +55,7 @@ module Term.Term (
     , Constructability(..)
     , ACstate(..)
     , FctAttr(..)
-    , UserDefineSym(..)
+    , UserDefinedSym(..)
     , ACfctSym
     , NoEqSym
 
@@ -63,7 +63,7 @@ module Term.Term (
     , FunSig
     , NoEqFunSig
     , ACfctFunSig
-    , UserDefineSig
+    , UserDefinedSig
 
     -- ** concrete symbols strings
     , diffSymString

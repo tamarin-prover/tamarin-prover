@@ -688,7 +688,7 @@ lookupProcessDef :: String -> Theory sig c r p TranslationElement -> Maybe (Proc
 lookupProcessDef name = find ((name ==) . L.get pName) . theoryProcessDefs
 
 -- | Find the function typing info for a given function symbol.
-lookupFunctionTypingInfo :: UserDefineSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
+lookupFunctionTypingInfo :: UserDefinedSym -> Theory sig c r p TranslationElement -> Maybe SapicFunSym
 lookupFunctionTypingInfo tag = find (\(fs,_,_) -> tag == fs) . theoryFunctionTypingInfos
 
 -- | Find the export info for the given tag.

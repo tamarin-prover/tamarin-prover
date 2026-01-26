@@ -54,7 +54,7 @@ defaultFunctionType n =  (replicate n Nothing ,Nothing) -- if no type defined, a
 
 data TypingEnvironment = TypingEnvironment {
         vars :: Map.Map LVar SapicType
-    ,   funs :: Map.Map UserDefineSym ([SapicType],SapicType)
+    ,   funs :: Map.Map UserDefinedSym ([SapicType],SapicType)
     ,   events :: Map.Map FactTag [SapicType]
 }
 

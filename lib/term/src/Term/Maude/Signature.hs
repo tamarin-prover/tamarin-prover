@@ -154,14 +154,14 @@ noEqFunSyms msig = S.fromList [ o | NoEq o <- S.toList (funSyms msig) ]
 acUserFunSyms :: MaudeSig -> ACfctFunSig
 acUserFunSyms msig = S.fromList [ o | AC (ACfct o) <- S.toList (funSyms msig) ]
 
-userDefineFunSyms :: MaudeSig -> UserDefineSig
+userDefineFunSyms :: MaudeSig -> UserDefinedSig
 userDefineFunSyms msig = S.map NoEqUser (noEqFunSyms msig) `S.union` S.map ACfctUser (acUserFunSyms msig)
 
-userDefineSTFunSyms :: MaudeSig -> UserDefineSig
+userDefineSTFunSyms :: MaudeSig -> UserDefinedSig
 userDefineSTFunSyms msig = S.map NoEqUser (stFunSyms msig) `S.union` S.map ACfctUser (acUserFunSyms msig)
 
 -- | Add function symbol to given maude signature.
-addFunSym :: UserDefineSym -> MaudeSig -> MaudeSig
+addFunSym :: UserDefinedSym -> MaudeSig -> MaudeSig
 addFunSym funsym msig = case funsym of
   NoEqUser f  -> msig `mappend` mempty {stFunSyms=S.fromList [f]}
   ACfctUser f -> msig `mappend` mempty {stACFunSyms=S.fromList [f]}
@@ -225,7 +225,7 @@ enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
 -- Pretty Printing
 ------------------------------------------------------------------------------
 
-prettyMaudeSigExcept :: P.HighlightDocument d => MaudeSig -> S.Set UserDefineSym -> d
+prettyMaudeSigExcept :: P.HighlightDocument d => MaudeSig -> S.Set UserDefinedSym -> d
 prettyMaudeSigExcept sig excl = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
     , ppNonEmptyList' "functions:" ppFunSymb $ (S.toList (S.map (\fct -> (NoEqUser fct)) (stFunSyms sig S.\\ exclNoEq)) ++ S.toList (S.map (\fct -> (ACfctUser fct)) (stACFunSyms sig S.\\ exclAC)))

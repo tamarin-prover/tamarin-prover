@@ -238,7 +238,7 @@ subtermIntruderRules diff hnd maudeSig =
 
 -- | @constructionRules fSig@ returns the construction rules for the given
 -- function signature @fSig@
-constructionRules :: UserDefineSig -> [IntrRuleAC]
+constructionRules :: UserDefinedSig -> [IntrRuleAC]
 constructionRules fSig =
     [ createRule s k acstate | (s,(k,Public,Constructor,acstate)) <- S.toList (noEqorACSet fSig) ]
   where
