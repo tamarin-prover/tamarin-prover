@@ -54,7 +54,6 @@ import           Theory.Text.Pretty
 
 import           Term.Rewriting.Norm            (maybeNotNfSubterms, nf')
 
-import           Debug.Trace
 import           Utils.Misc                     (fixpoint)
 
 ------------------------------------------------------------------------------
@@ -317,7 +316,7 @@ hasForbiddenConstrChain sys msig = -- trace (show ("hasForbiddenCHain", finalMap
     initialMap :: M.Map NodeId (NodeId, S.Set NodeId, String)
     initialMap = M.fromList $ concatMap (\(n1, r1, n2, r2, n) -> [(n1, (n1, trivial r1 n n1, n)), (n2, (n2, trivial r2 n n2, n))]) extractedNodesAndRules
       where
-        trivial r n id = if any (\ x -> isTrivialKUFact x || isNearlyTrivialKUFact n x) (L.get rPrems r) then S.singleton id else S.empty
+        trivial r n iden = if any (\ x -> isTrivialKUFact x || isNearlyTrivialKUFact n x) (L.get rPrems r) then S.singleton iden else S.empty
         
     -- final map after union-find. Maps node ids to (root node id, isTrivialKUFact, name of the AC-constructor rule)
     finalMap :: (Bool, M.Map NodeId (NodeId, S.Set NodeId, String))

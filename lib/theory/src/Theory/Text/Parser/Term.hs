@@ -58,7 +58,7 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 lookupArity :: String -> Parser (Int, Privacy,Constructability, ACstate)
 lookupArity op = do
     maudeSig <- sig <$> getState
-    case lookup (BC.pack op) (S.toList (noEqorACSet (userDefineFunSyms maudeSig)) ++ [(emapSymString, (2,Public,Constructor,NotAC))]) of
+    case lookup (BC.pack op) (S.toList (noEqorACSet (userDefinedFunSyms maudeSig)) ++ [(emapSymString, (2,Public,Constructor,NotAC))]) of
         Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
         Just (k,priv,cnstr,acstate) -> return (k,priv,cnstr,acstate)
         -- Just (NoEqUser (_,(k,priv,cnstr))) -> return (k,priv,cnstr,NotAC)
@@ -92,7 +92,7 @@ naryOpApp eqn plit = do
     ts <- parens $ if k == 1
                      then return <$> tupleterm eqn plit
                      else commaSep (msetterm eqn plit)
-    let k' = (length ts)
+    let k' = length ts
     when (acstate == NotAC && (k /= k')) $
         fail $ "operator `" ++ op ++"' has arity " ++ show k ++
                ", but here it is used with arity " ++ show k'

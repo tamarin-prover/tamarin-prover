@@ -200,7 +200,6 @@ import Data.Char (chr, isDigit)
 import Data.List.Split (splitOn)
 import           Utils.Misc
 
-import Debug.Trace
 
 ------------------------------------------------------------------------------
 -- General Rule

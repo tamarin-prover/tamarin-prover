@@ -91,9 +91,9 @@ funSymDecode s = (ident,priv,constr)
         prefixLen      = BC.length funSymPrefix
         (eAttr,ident)  = BC.splitAt 3 (BC.drop prefixLen s)
         (priv,constr)  = case eAttr of
-                            eAttr | eAttr `elem` ["PDA","PDF"]-> (Private,Destructor)
-                            eAttr | eAttr `elem` ["PCA","PCF"]-> (Private,Constructor)
-                            eAttr | eAttr `elem` ["XDA","XDF"]-> (Public,Destructor)
+                            attr | attr `elem` ["PDA","PDF"]-> (Private,Destructor)
+                            attr | attr `elem` ["PCA","PCF"]-> (Private,Constructor)
+                            attr | attr `elem` ["XDA","XDF"]-> (Public,Destructor)
                             _    -> (Public,Constructor)
 
 

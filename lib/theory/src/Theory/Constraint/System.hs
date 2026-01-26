@@ -293,7 +293,6 @@ import           Theory.Tools.InjectiveFactInstances
 import           System.Directory                     (doesFileExist)
 import           System.FilePath
 import           Text.Show.Functions()
-import           Utils.Misc
 
 ----------------------------------------------------------------------
 -- ClassifiedRules

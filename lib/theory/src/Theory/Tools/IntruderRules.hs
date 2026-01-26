@@ -45,8 +45,6 @@ import           Term.Positions
 
 import           Theory.Model
 
-import Debug.Trace
-
 
 -- Variants of intruder deduction rules
 ----------------------------------------------------------------------
@@ -215,25 +213,16 @@ minimizeIntruderRules diff hnd rules =
 
     -- We assume that the KD-Fact is the first fact, which is the case in destructionRules above
     isDoublePremiseRule (Rule _ ((Fact KDFact _ [t]):prems) concs _ _) =
-       (frees concs == []
-         && not (any containsPrivate (t:(concat $ map getFactTerms prems)))
-         && isMsgVar t && any (==(kuFact t)) prems) -- || isAntiCoerce concs prems || (nullIntersect [t] concs && frees concs /= [])
+       null (frees concs)
+         && not (any containsPrivate (t : concatMap getFactTerms prems))
+         && isMsgVar t && elem (kuFact t) prems
     isDoublePremiseRule _                                               = False
-
-    isAntiCoerce :: [LNFact] -> [LNFact] -> Bool
-    isAntiCoerce ((Fact KDFact _ [x]):facts) prems = any (==(kuFact x)) prems || isAntiCoerce facts prems
-    isAntiCoerce (_:facts) prems = isAntiCoerce facts prems
-    isAntiCoerce [] _ = False
-
-    nullIntersect kdprems [Fact KDFact _ tc] = (frees kdprems `intersect` frees tc) == []
-    nullIntersect _ _ = False
-
 
 -- | @subtermIntruderRules diff maudeSig@ returns the set of intruder rules for
 --   the subterm (not Xor, DH, and MSet) part of the given signature.
 subtermIntruderRules :: Bool -> MaudeHandle -> MaudeSig -> [IntrRuleAC]
 subtermIntruderRules diff hnd maudeSig =
-    minimizeIntruderRules diff hnd (constructionRules (userDefineSTFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
+    minimizeIntruderRules diff hnd (constructionRules (userDefinedSTFunSyms maudeSig) ++ privateConstructorRules (S.toList $ stRules maudeSig))
     -- concatMap  (destructionRules diff) (S.toList $ stRules maudeSig) ++ 
 
 -- | @constructionRules fSig@ returns the construction rules for the given
