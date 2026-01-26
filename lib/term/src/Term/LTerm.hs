@@ -149,8 +149,6 @@ import           Logic.Connectives
 import           Term.Rewriting.Definitions
 import           Term.VTerm
 
-import           Debug.Trace
-
 ------------------------------------------------------------------------------
 -- Sorts.
 ------------------------------------------------------------------------------
@@ -397,7 +395,7 @@ isSimpleTerm t =
 
 -- | True if the term is a given function term with only message variables as arguments
 isTrivialFunSymTerm :: LNTerm -> String -> Bool
-isTrivialFunSymTerm (viewTerm -> FApp f t) sym = -- trace ("isTrivialFunSymTerm: " ++ show (showFunSymName f) ++ " - " ++ show sym) $
+isTrivialFunSymTerm (viewTerm -> FApp f t) sym =
     showFunSymName f == sym && all isMsgVar t
 isTrivialFunSymTerm _                      _   = False
 
