@@ -110,27 +110,11 @@ rule (modulo E) Resp:
        X     = X.14
        z     = X.14^~ekR.13
     
-    2. ~ekR  = ~ekR.19
-       X     = z.26^inv(~ekR.19)
-       z     = z.26
-    
-    3. ~ekR  = ~ekR.64
+    2. ~ekR  = ~ekR.64
        X     = x.123^x.124
        z     = x.123^(~ekR.64*x.124)
     
-    4. ~ekR  = ~ekR.65
-       X     = x.125^inv((~ekR.65*x.126))
-       z     = x.125^inv(x.126)
-    
-    5. ~ekR  = ~ekR.65
-       X     = x.125^(x.126*inv(~ekR.65))
-       z     = x.125^x.126
-    
-    6. ~ekR  = ~ekR.66
-       X     = x.126^(x.127*inv((~ekR.66*x.128)))
-       z     = x.126^(x.127*inv(x.128))
-    
-    7. X     = DH_neutral
+    3. X     = DH_neutral
        z     = DH_neutral
   */
 
@@ -157,23 +141,47 @@ solve( SessionKey( I, R, sessKey ) @ #i )
       case Register_pk
       solve( !KU( sign(<'2', $R, $I, Y>, ~ltk) ) @ #vk.7 )
         case Resp
-        solve( !KU( sign(<'1', $I, $R, X>, ~ltk.2) ) @ #vk.12 )
-          case Init_1
-          solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.4 )
+        solve( splitEqs(1) )
+          case split_case_1
+          solve( !KU( sign(<'1', $I, $R, X>, ~ltk.2) ) @ #vk.12 )
             case Init_1
-            by solve( !KU( ~ekR ) @ #vk.13 )
+            by contradiction /* non-normal terms */
           next
-            case Resp
-            by solve( !KU( ~ekI ) @ #vk.13 )
-          next
-            case c_exp
-            by solve( !KU( ~ekI ) @ #vk.15 )
+            case c_sign
+            solve( !KU( ~ltk.2 ) @ #vk.16 )
+              case Reveal_ltk
+              by contradiction /* from formulas */
+            qed
           qed
         next
-          case c_sign
-          solve( !KU( ~ltk.2 ) @ #vk.16 )
-            case Reveal_ltk
-            by contradiction /* from formulas */
+          case split_case_2
+          solve( !KU( sign(<'1', $I, $R, x^x.1>, ~ltk.2) ) @ #vk.12 )
+            case Init_1
+            solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.5 )
+              case Init_1
+              by solve( !KU( ~ekR ) @ #vk.13 )
+            next
+              case Resp
+              by solve( !KU( ~ekI ) @ #vk.13 )
+            next
+              case c_exp
+              by solve( !KU( ~ekI ) @ #vk.15 )
+            qed
+          next
+            case c_sign
+            solve( !KU( ~ltk.2 ) @ #vk.16 )
+              case Reveal_ltk
+              by contradiction /* from formulas */
+            qed
+          qed
+        next
+          case split_case_3
+          solve( !KU( sign(<'1', $I, $R, DH_neutral>, ~ltk.2) ) @ #vk.12 )
+            case c_sign
+            solve( !KU( ~ltk.2 ) @ #vk.16 )
+              case Reveal_ltk
+              by contradiction /* from formulas */
+            qed
           qed
         qed
       next
@@ -191,23 +199,47 @@ next
     case Register_pk
     solve( !Ltk( $R, ltkR ) ▶₁ #i )
       case Register_pk
-      solve( !KU( sign(<'1', $I, $R, X>, ~ltk) ) @ #vk.7 )
-        case Init_1
-        solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.1 )
+      solve( splitEqs(0) )
+        case split_case_1
+        solve( !KU( sign(<'1', $I, $R, X>, ~ltk) ) @ #vk.7 )
           case Init_1
-          by solve( !KU( ~ekR ) @ #vk.8 )
+          by contradiction /* non-normal terms */
         next
-          case Resp
-          by solve( !KU( ~ekI ) @ #vk.8 )
-        next
-          case c_exp
-          by solve( !KU( ~ekI ) @ #vk.10 )
+          case c_sign
+          solve( !KU( ~ltk ) @ #vk.11 )
+            case Reveal_ltk
+            by contradiction /* from formulas */
+          qed
         qed
       next
-        case c_sign
-        solve( !KU( ~ltk ) @ #vk.11 )
-          case Reveal_ltk
-          by contradiction /* from formulas */
+        case split_case_2
+        solve( !KU( sign(<'1', $I, $R, x^x.1>, ~ltk) ) @ #vk.7 )
+          case Init_1
+          solve( !KU( 'g'^(~ekI*~ekR) ) @ #vk.1 )
+            case Init_1
+            by solve( !KU( ~ekR ) @ #vk.8 )
+          next
+            case Resp
+            by solve( !KU( ~ekI ) @ #vk.8 )
+          next
+            case c_exp
+            by solve( !KU( ~ekI ) @ #vk.10 )
+          qed
+        next
+          case c_sign
+          solve( !KU( ~ltk ) @ #vk.11 )
+            case Reveal_ltk
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case split_case_3
+        solve( !KU( sign(<'1', $I, $R, DH_neutral>, ~ltk) ) @ #vk.6 )
+          case c_sign
+          solve( !KU( ~ltk ) @ #vk.10 )
+            case Reveal_ltk
+            by contradiction /* from formulas */
+          qed
         qed
       qed
     qed
@@ -246,9 +278,9 @@ Failed to derive Variable(s): ltkI
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5
+Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
+Compiled at: 2025-09-19 11:18:23.495617078 UTC
 */
 
 end
@@ -260,12 +292,12 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.26s
+  processing time: 1.28s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
-  Perfect_Forward_Secrecy (all-traces): verified (23 steps)
+  Perfect_Forward_Secrecy (all-traces): verified (39 steps)
 
 ==============================================================================
 */

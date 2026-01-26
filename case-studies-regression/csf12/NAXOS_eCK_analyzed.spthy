@@ -176,93 +176,45 @@ rule (modulo E) Resp_1:
      !Sessk( ~eskR, h2(<'g'^(~x*h1(<~eskR, ~lkR>)), z, z.1, $I, $R>) )
      ]
     variants (modulo AC)
-     1. ~eskR = ~eskR.38
-        ~lkR  = ~lkR.40
-        X     = X.41
-        z     = X.41^~lkR.40
-        z.1   = X.41^h1(<~eskR.38, ~lkR.40>)
+    1. ~eskR = ~eskR.38
+       ~lkR  = ~lkR.40
+       X     = X.41
+       z     = X.41^~lkR.40
+       z.1   = X.41^h1(<~eskR.38, ~lkR.40>)
     
-     2. ~eskR = ~eskR.42
-        ~lkR  = ~lkR.44
-        X     = z.49^inv(~lkR.44)
-        z     = z.49
-        z.1   = z.49^(h1(<~eskR.42, ~lkR.44>)*inv(~lkR.44))
+    2. ~eskR = ~eskR.42
+       ~lkR  = ~lkR.44
+       X     = z.49^inv(~lkR.44)
+       z     = z.49
+       z.1   = z.49^(h1(<~eskR.42, ~lkR.44>)*inv(~lkR.44))
     
-     3. ~eskR = ~eskR.43
-        ~lkR  = ~lkR.45
-        X     = z.51^inv(h1(<~eskR.43, ~lkR.45>))
-        z     = z.51^(~lkR.45*inv(h1(<~eskR.43, ~lkR.45>)))
-        z.1   = z.51
+    3. ~eskR = ~eskR.537
+       ~lkR  = ~lkR.539
+       X     = x.1069^x.1070
+       z     = x.1069^(~lkR.539*x.1070)
+       z.1   = x.1069^(x.1070*h1(<~eskR.537, ~lkR.539>))
     
-     4. ~eskR = ~eskR.537
-        ~lkR  = ~lkR.539
-        X     = x.1069^x.1070
-        z     = x.1069^(~lkR.539*x.1070)
-        z.1   = x.1069^(x.1070*h1(<~eskR.537, ~lkR.539>))
+    4. ~eskR = ~eskR.538
+       ~lkR  = ~lkR.540
+       X     = x.1071^inv((~lkR.540*x.1072))
+       z     = x.1071^inv(x.1072)
+       z.1   = x.1071^(h1(<~eskR.538, ~lkR.540>)*inv((~lkR.540*x.1072)))
     
-     5. ~eskR = ~eskR.538
-        ~lkR  = ~lkR.540
-        X     = x.1071^inv((~lkR.540*x.1072))
-        z     = x.1071^inv(x.1072)
-        z.1   = x.1071^(h1(<~eskR.538, ~lkR.540>)*inv((~lkR.540*x.1072)))
+    5. ~eskR = ~eskR.538
+       ~lkR  = ~lkR.540
+       X     = x.1071^(x.1072*inv(~lkR.540))
+       z     = x.1071^x.1072
+       z.1   = x.1071^(x.1072*h1(<~eskR.538, ~lkR.540>)*inv(~lkR.540))
     
-     6. ~eskR = ~eskR.538
-        ~lkR  = ~lkR.540
-        X     = x.1071^(x.1072*inv(~lkR.540))
-        z     = x.1071^x.1072
-        z.1   = x.1071^(x.1072*h1(<~eskR.538, ~lkR.540>)*inv(~lkR.540))
+    6. ~eskR = ~eskR.539
+       ~lkR  = ~lkR.541
+       X     = x.1072^(x.1073*inv((~lkR.541*x.1074)))
+       z     = x.1072^(x.1073*inv(x.1074))
+       z.1   = x.1072^(x.1073*h1(<~eskR.539, ~lkR.541>)*inv((~lkR.541*x.1074)))
     
-     7. ~eskR = ~eskR.539
-        ~lkR  = ~lkR.541
-        X     = x.1072^(x.1073*inv((~lkR.541*x.1074)))
-        z     = x.1072^(x.1073*inv(x.1074))
-        z.1   = x.1072^(x.1073*h1(<~eskR.539, ~lkR.541>)*inv((~lkR.541*x.1074)))
-    
-     8. ~eskR = ~eskR.539
-        ~lkR  = ~lkR.541
-        X     = x.1074^inv((~lkR.541*h1(<~eskR.539, ~lkR.541>)))
-        z     = x.1074^inv(h1(<~eskR.539, ~lkR.541>))
-        z.1   = x.1074^inv(~lkR.541)
-    
-     9. ~eskR = ~eskR.540
-        ~lkR  = ~lkR.542
-        X     = x.1075^inv((~lkR.542*x.1076*h1(<~eskR.540, ~lkR.542>)))
-        z     = x.1075^inv((x.1076*h1(<~eskR.540, ~lkR.542>)))
-        z.1   = x.1075^inv((~lkR.542*x.1076))
-    
-    10. ~eskR = ~eskR.540
-        ~lkR  = ~lkR.542
-        X     = x.1075^inv((x.1076*h1(<~eskR.540, ~lkR.542>)))
-        z     = x.1075^(~lkR.542*inv((x.1076*h1(<~eskR.540, ~lkR.542>))))
-        z.1   = x.1075^inv(x.1076)
-    
-    11. ~eskR = ~eskR.540
-        ~lkR  = ~lkR.542
-        X     = x.1075^(x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
-        z     = x.1075^(~lkR.542*x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
-        z.1   = x.1075^x.1076
-    
-    12. ~eskR = ~eskR.540
-        ~lkR  = ~lkR.542
-        X     = x.1075^(x.1076*inv((~lkR.542*h1(<~eskR.540, ~lkR.542>))))
-        z     = x.1075^(x.1076*inv(h1(<~eskR.540, ~lkR.542>)))
-        z.1   = x.1075^(x.1076*inv(~lkR.542))
-    
-    13. ~eskR = ~eskR.541
-        ~lkR  = ~lkR.543
-        X     = x.1076^(x.1077*inv((~lkR.543*x.1078*h1(<~eskR.541, ~lkR.543>))))
-        z     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
-        z.1   = x.1076^(x.1077*inv((~lkR.543*x.1078)))
-    
-    14. ~eskR = ~eskR.541
-        ~lkR  = ~lkR.543
-        X     = x.1076^(x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
-        z     = x.1076^(~lkR.543*x.1077*inv((x.1078*h1(<~eskR.541, ~lkR.543>))))
-        z.1   = x.1076^(x.1077*inv(x.1078))
-    
-    15. X     = DH_neutral
-        z     = DH_neutral
-        z.1   = DH_neutral
+    7. X     = DH_neutral
+       z     = DH_neutral
+       z.1   = DH_neutral
   */
 
 rule (modulo E) Sessk_reveal:
@@ -759,9 +711,9 @@ Failed to derive Variable(s): ~lkI
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5
+Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
+Compiled at: 2025-09-19 11:18:23.495617078 UTC
 */
 
 end
@@ -773,7 +725,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 1.01s
+  processing time: 4.52s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

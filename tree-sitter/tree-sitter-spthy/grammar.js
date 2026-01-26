@@ -143,7 +143,7 @@ module.exports = grammar({
 
       include: $ => seq(
           '#include',
-          '"', alias($.param, $.path), '"'
+          '"', $.path, '"'
       ),
 
       _ifdef_formula: $ => choice(
@@ -725,7 +725,7 @@ module.exports = grammar({
       ),
 
       rule_extended_attribute: $ => seq(
-          field('extended_attribute_name', $.xattribute_ident), 
+          field('extended_attribute_name', $.xattribute_ident),
           optional(seq(
           '=',
           choice(
@@ -1458,6 +1458,8 @@ module.exports = grammar({
       ident: $ => /[A-Za-z0-9]\w*/,
 
       param: $ => /[^"]*/,
+
+      path: $ => /[A-Za-z0-9-\_]*/,
 
       export_query: $ => /(\\"|[^"])*/,
 

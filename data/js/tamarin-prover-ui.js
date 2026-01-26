@@ -822,12 +822,12 @@ var mainDisplay = {
     
 
         // Rewrite image paths (if necessary)
-        if(params.length > 0) {
+        if (params.length > 0) {
             var query_string = $.param(params);
-            element.find("img").each(function(idx, elem) {
-                var img = $(elem);
-                var path = img.attr("src") + "?" + query_string;
-                img.attr("src", path);
+            element.find("dot-graph-viz").each(function (idx, elem) {
+                var viz = $(elem);
+                var path = viz.attr("dotsrc") + "?" + query_string;
+                viz.attr("dotsrc", path);
             });
         }
 
