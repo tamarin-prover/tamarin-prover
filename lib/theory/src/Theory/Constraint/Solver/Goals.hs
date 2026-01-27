@@ -22,8 +22,6 @@ module Theory.Constraint.Solver.Goals (
   , plainOpenGoals
   ) where
 
-import           Debug.Trace
-
 import           Prelude                                 hiding (id, (.))
 
 import qualified Data.ByteString.Char8                   as BC
@@ -82,7 +80,7 @@ openGoals ctxt sys = do
                     || sortOfLNTerm m == LSortNat
                     || isTrivialACFunSymTerm m -- do not solve actions that consist of an AC symbol where all arguments are simple msg variables, important for soundness
                     -- handled by 'insertAction'
-                    || isPair m || isInverse m || isProduct m --- || isXor m
+                    || isPair m || isInverse m || isProduct m
                     || isUnion m || isNullaryPublicFunction m
         ActionG _ _                               -> not solved
         PremiseG _ _                              -> not solved

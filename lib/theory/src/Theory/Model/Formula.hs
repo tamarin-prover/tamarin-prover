@@ -518,9 +518,9 @@ prettySyntacticLNFormula fm =
 ------------------------------------------------------------------------------
 
 -- Exists-quantifies every non-time LVar of a formula
-existFormula ::  ProtoFormula Unit2 (String,LSort) Name LVar -> ProtoFormula Unit2 (String,LSort) Name LVar
-existFormula fm = foldl (\ formula var -> exists (lvarName var, lvarSort var) var formula) fm (frees fm)
+existFormula ::  LNFormula -> LNFormula
+existFormula fm = foldl (\formula var -> exists (lvarName var, lvarSort var) var formula) fm (frees fm)
 
 -- Exists-quantifies every non-time LVar of a formula
-forAllFormula ::  ProtoFormula Unit2 (String,LSort) Name LVar -> ProtoFormula Unit2 (String,LSort) Name LVar
-forAllFormula fm = foldl (\ formula var -> forAll (lvarName var, lvarSort var) var formula) fm (frees fm)
+forAllFormula ::  LNFormula -> LNFormula
+forAllFormula fm = foldl (\formula var -> forAll (lvarName var, lvarSort var) var formula) fm (frees fm)

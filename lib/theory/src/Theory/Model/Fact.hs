@@ -243,6 +243,7 @@ isTrivialKUFact (Fact KUFact _ [t]) = isMsgVar t
 isTrivialKUFact _                   = False
 
 -- | True if the fact is a "nearly" trivial KU-fact, i.e., contains a given operator where all arguments are simple msg variables.
+-- FIXME: we should use function argument here instead of string matching. Requires constructor rules to be annotated with function symbols rather than names.
 isNearlyTrivialKUFact :: String -> LNFact -> Bool
 isNearlyTrivialKUFact s (Fact KUFact _ [t]) = isTrivialFunSymTerm t s
 isNearlyTrivialKUFact _ _                   = False
@@ -321,7 +322,6 @@ annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
 applyMacroInFact :: [Macro] -> LNFact -> LNFact
 applyMacroInFact mcs (Fact tag annot terms) = let mTerms = map (applyMacros mcs) terms in
                                               Fact tag annot mTerms
-
 
 -- Transforms different kind of facts into the desired form
 freesToFresh :: [LVar] -> [LNFact]

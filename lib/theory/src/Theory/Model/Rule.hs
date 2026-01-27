@@ -1082,29 +1082,29 @@ unifyRuleACInstEqs eqs
 -- | Are these two rule instances unifiable?
 unifiableRuleACInsts :: RuleACInst -> RuleACInst -> WithMaude Bool
 unifiableRuleACInsts ru1 ru2 =
-    (not . null) <$> unifyRuleACInstEqs [Equal ru1 ru2]
+    not . null <$> unifyRuleACInstEqs [Equal ru1 ru2]
 
 -- | Are these two rule instances equal up to renaming of variables?
 equalRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
 equalRuleUpToRenaming r1@(Rule rn1 pr1 co1 ac1 nvs1) r2@(Rule rn2 pr2 co2 ac2 nvs2) = reader $ \hnd ->
   case eqs of
        Nothing   -> False
-       Just eqs' -> (rn1 == rn2) && (any isRenamingPerRule $ unifs eqs' hnd)
+       Just eqs' -> (rn1 == rn2) && any isRenamingPerRule (unifs eqs' hnd)
     where
        isRenamingPerRule subst = isRenaming (restrictVFresh (vars r1) subst) && isRenaming (restrictVFresh (vars r2) subst)
        vars ru = map fst $ varOccurences ru
        unifs eq hnd = unifyLNTerm eq `runReader` hnd
        eqs = foldl matchFacts (Just $ zipWith Equal nvs1 nvs2) $ zip (pr1++co1++ac1) (pr2++co2++ac2)
-       matchFacts Nothing  _                                    = Nothing
-       matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l)
-                                                    | otherwise = Nothing
+       matchFacts Nothing  _                                   = Nothing
+       matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just (zipWith Equal t1 t2 ++ l)
+                                                        | otherwise = Nothing
 
 -- | Are these two rules equal up to renaming of variables?
 equalDuplicateRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
 equalDuplicateRuleUpToRenaming r1@(Rule _ pr1 co1 ac1 nvs1) r2 = reader $ \hnd ->
   case eqs of
        Nothing   -> False
-       Just eqs' -> (any isRenamingPerRule $ unifs eqs' hnd)
+       Just eqs' -> any isRenamingPerRule (unifs eqs' hnd)
     where
        r2_rename@(Rule _ rpr2 rco2 rac2 rnvs2) = r2 `renameAvoiding` r1
        isRenamingPerRule subst = isRenaming (restrictVFresh (vars r1) subst) && isRenaming (restrictVFresh (vars r2_rename) subst)
@@ -1112,9 +1112,8 @@ equalDuplicateRuleUpToRenaming r1@(Rule _ pr1 co1 ac1 nvs1) r2 = reader $ \hnd -
        unifs eq hnd = unifyLNTerm eq `runReader` hnd
        eqs = foldl matchFacts (Just $ zipWith Equal nvs1 rnvs2) $ zip (pr1++co1++ac1) (rpr2++rco2++rac2)
        matchFacts Nothing  _                                    = Nothing
-       matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just ((zipWith Equal t1 t2)++l)
-                                                    | otherwise = Nothing
-
+       matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just (zipWith Equal t1 t2 ++ l)
+                                                        | otherwise = Nothing
 
 -- | Are the premisses of the first rule subset of those of the second rule up to renaming of variables?
 equalSubsetRuleUpToRenaming :: (Show a, Eq a, HasFrees a, Apply LNSubst a) => Rule a -> Rule a -> WithMaude Bool
@@ -1149,7 +1148,7 @@ equalRuleUpToDiffAnnotation ru1@(Rule rn1 pr1 co1 ac1 nvs1) (Rule rn2 pr2 co2 ac
   rn1 == rn2 && pr1 == pr2 && co1 == co2 && nvs1 == nvs2 &&
   ac1 == filter isNotDiffAnnotation ac2
   where
-    isNotDiffAnnotation fa = (fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru1) 0, factAnnotations = S.empty, factTerms = []})
+    isNotDiffAnnotation fa = fa /= Fact {factTag = ProtoFact Linear ("Diff" ++ getRuleNameDiff ru1) 0, factAnnotations = S.empty, factTerms = []}
 
 -- | Are these two rule instances equal up to an added diff annotation in @ac2@ or @ac1@?
 equalRuleUpToDiffAnnotationSym :: (HasRuleName (Rule a), Eq a) => Rule a -> Rule a -> Bool
