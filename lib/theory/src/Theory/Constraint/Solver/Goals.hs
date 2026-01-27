@@ -50,7 +50,6 @@ import           Theory.Tools.IntruderRules (mkDUnionRule, isDExpRule, isDPMultR
 import           Theory.Model
 import           Term.Builtin.Convenience
 
-
 import           Utils.Misc                              (twoPartitions)
 
 ------------------------------------------------------------------------------

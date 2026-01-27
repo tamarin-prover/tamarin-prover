@@ -350,7 +350,6 @@ hasForbiddenConstrChain sys msig = -- trace (show ("hasForbiddenCHain", finalMap
     extractNodesAndRules _                          = Nothing
 
 
-
 -- Diffie-Hellman and Bilinear Pairing
 --------------------------------------
 
