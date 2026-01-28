@@ -15,6 +15,7 @@ import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.List
 import Data.Maybe (isJust)
+import Text.Read (readMaybe)
 import System.Console.CmdArgs.Explicit as CmdArgs
 import System.Exit (die)
 import System.FilePath
@@ -64,6 +65,9 @@ batchMode = tamarinMode
 
               , flagNone ["precompute-only"] (addEmptyArg "precomputeOnly")
                   "Just run precomputation and show partial deconstructions"
+
+              , flagOpt "2" ["graph-simplification"] (updateArg "graphSimplification") "LEVEL"
+                  "Graph simplification level for dot output (0-3, default: 2)"
               ] ++
               outputFlags ++
               toolFlags
@@ -250,7 +254,13 @@ run thisMode as
         -- while the JSON schema already allows for multiple graphs.
         outputTraces :: ClosedTheory -> IO ()
         outputTraces thy = do
-            let graphOptions = defaultGraphOptions
+            let simplificationLevel = case findArg "graphSimplification" as >>= readMaybe of
+                  Just (0 :: Int) -> SL0
+                  Just 1          -> SL1
+                  Just 2          -> SL2
+                  Just 3          -> SL3
+                  _               -> SL2  -- default
+                graphOptions = defaultGraphOptions { _goSimplificationLevel = simplificationLevel }
                 dotOptions = defaultDotOptions
                 serializeDot (label, system) = D.showDot label $ dotSystemCompact graphOptions dotOptions system
                 serializeJSON = sequentsToJSONPretty graphOptions

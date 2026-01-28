@@ -440,6 +440,11 @@ when we navigate through the proof steps (either by clicking at a certain proof
 step or using the `j` or `k` keys), the graph in the new window will change
 accordingly. This is especially useful when working with large proof graphs.
 
+The visualization of constraint systems can be adjusted using the graph 
+simplification dropdown menu on the right-hand side of the menu bar, which offers four levels (0-3) of simplification
+to make complex graphs more readable. For more information on graph simplification,
+see the [Advanced Features section](011_advanced-features.html#graph-simplification-levels).
+
 To finish the proof at hand, we can either continue manually by selecting the
 constraint to resolve next, or by calling the `autoprove` command, which
 selects the next steps based on a heuristic. Here we have two constraints to

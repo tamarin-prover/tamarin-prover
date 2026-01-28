@@ -912,3 +912,58 @@ For JSON, the standard schema already defines a single top-level object with a
 "graphs" key that holds a list of the individual graphs, which we use to output
 the constrain systems.
 
+### Graph Simplification Levels
+
+When visualizing constraint systems in both the interactive GUI and when generating
+dot output with `--output-dot`, Tamarin applies graph simplification to make large
+constraint graphs more readable. The simplification level controls how aggressively
+the graph is simplified.
+
+There are four simplification levels available:
+
+**Level 0 (SL0)**: No simplification
+:   Shows the complete constraint graph with all edges and nodes. This is useful
+    for detailed analysis but can be overwhelming for large proofs.
+
+**Level 1 (SL1)**: Basic compression
+:   Hides "transfer nodes" — simple intruder deduction rules such as pairing,
+    unpairing, and inverses — and drops ordering constraints that are entailed
+    by the edges in the constraint system. This reduces clutter from trivial
+    deduction steps.
+
+**Level 2 (SL2)**: Transitive reduction (default)
+:   Applies transitive reduction to the less-than ordering constraints (`sLessAtoms`)
+    but preserves edges that are marked as having `Formula` or `Adversary` reasons.
+    This significantly reduces visual clutter while retaining proof-relevant orderings.
+    Level 2 is the default simplification level.
+
+**Level 3 (SL3)**: Full transitive reduction
+:   Removes all transitively-implied less-than constraints without exceptions.
+    This is the most aggressive simplification and produces the most compact graphs,
+    but may hide some proof details that could be relevant for understanding the
+    constraint system.
+
+#### Setting the Simplification Level in the GUI
+
+In the interactive mode, you can change the simplification level using the
+dropdown menu in the constraint system visualization.
+
+You can also specify the simplification level in the URL by adding the
+`simplification` parameter. For example:
+
+    http://localhost:3001/theory/ExampleTheory?simplification=3
+
+#### Setting the Simplification Level for Dot Output
+
+When using the `--output-dot` option in batch mode, you can control the
+default simplification level using the `--graph-simplification` flag:
+
+    tamarin-prover --prove --output-dot=traces.dot --graph-simplification=3 example.spthy
+
+The flag accepts values from 0 to 3, corresponding to the four simplification
+levels described above. The default is level 2.
+
+The simplification level is encoded in the dot graph labels.
+For example, a graph labeled with `SL3` indicates that level 3 (full transitive
+reduction) was used during generation.
+
