@@ -20,7 +20,6 @@ import qualified Data.Set                 as S
 import           Data.List                (foldl')
 import           Control.Basics
 import           Extension.Data.Label
--- import           Theory.Constraint.System
 import           Theory                   
 import qualified Data.DAG.Simple          as Dag
 import           Data.Monoid              (Any(..))
@@ -45,33 +44,67 @@ compressSystem se0 =
   where
     se = dropEntailedOrdConstraints se0
 
--- | Simplify the system up to the sent level, 
--- | for level 3, we will simplify the lesses of system by transitive reduction
--- | for level 2, we will apply the transitive reduction but keep the 
--- | formula constraint 
--- | for level 1, there's no transitive reduction applied
+-- | Simplify the system by applying different levels of simplification.
+-- Level 3: Transitive reduction + collapse adversary subgraphs
+-- Level 2: Transitive reduction preserving Formula and Adversary constraints
+-- Level 1 or other: No simplification
 simplifySystem :: Int -> System -> System
 simplifySystem i sys
-    | i==2 = transitiveReduction sys False
-    | i==3 = transitiveReduction sys True
+    | i == 2    = transitiveReduction sys False
+    | i == 3    = collapseAllAdversarySubgraphs (transitiveReduction sys True)
     | otherwise = sys
 
--- | Simplify the system by transitive reduction (constraint of formula won't  
--- | be applied if totalRed is False) but not for a system which has a graph cyclic
+-- | Simplify the system by transitive reduction.
+-- If totalRed is False, Formula and Adversary constraints are preserved.
+-- Does not apply if the graph has cycles.
 transitiveReduction :: System -> Bool -> System
-transitiveReduction sys totalRed=
+transitiveReduction sys totalRed =
     if Dag.cyclic oldLesses
         then sys
-        else   modify sLessAtoms
-            ( S.intersection ( S.fromList newLesses) ) sys
+        else modify sLessAtoms (S.intersection (S.fromList newLesses)) sys
     where
         oldLessesWithR = S.toList $ get sLessAtoms sys
         oldLesses = rawLessRel sys
         newLesses = if totalRed
             then [ la | la@(LessAtom x y _) <- oldLessesWithR,
-                            (x,y) `elem` Dag.transRed oldLesses ]
+                        (x,y) `elem` Dag.transRed oldLesses ]
             else [ la | la@(LessAtom x y z) <- oldLessesWithR,
-                            (x,y) `elem` Dag.transRed oldLesses || z == Formula || z == Adversary ]
+                        (x,y) `elem` Dag.transRed oldLesses || z == Formula || z == Adversary ]
+
+-- | Collapse the adversary subgraph by replacing it with direct edges from sources to sinks.
+-- This simplification removes internal adversary cluster nodes while preserving sinks.
+-- Sinks are kept because they may have outgoing edges to non-adversary nodes.
+collapseAdversarySubgraph :: System -> System
+collapseAdversarySubgraph sys =
+    let adversaryCluster = findAdversaryCluster sys
+    in if S.null adversaryCluster
+       then sys
+       else
+           let sinks = getSinkNodesInSubset sys adversaryCluster
+               (sourceEdges, sourceLessAtoms) = getEdgesIntoSubset sys adversaryCluster
+               edgesToSinks = S.fromList
+                   [ Edge src (sinkNode, tgtPremIdx)
+                   | Edge src (_, tgtPremIdx) <- S.toList sourceEdges
+                   , sinkNode <- S.toList sinks
+                   ]
+               lessAtomsToSinks = S.fromList
+                   [ LessAtom smaller sinkNode reason
+                   | LessAtom smaller _ reason <- S.toList sourceLessAtoms
+                   , sinkNode <- S.toList sinks
+                   ]
+               nodesToRemove = adversaryCluster `S.difference` sinks
+               reducedSystem = removeSubgraph sys nodesToRemove
+           in set sLessAtoms (S.union (get sLessAtoms reducedSystem) lessAtomsToSinks) $
+              set sEdges (S.union (get sEdges reducedSystem) edgesToSinks) reducedSystem
+
+-- | Repeatedly collapse adversary subgraphs until a fixpoint is reached.
+-- Stops when no more internal nodes can be removed.
+collapseAllAdversarySubgraphs :: System -> System
+collapseAllAdversarySubgraphs sys =
+    let collapsed = collapseAdversarySubgraph sys
+    in if M.size (get sNodes sys) == M.size (get sNodes collapsed)
+       then sys
+       else collapseAllAdversarySubgraphs collapsed
 
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a

@@ -196,6 +196,10 @@ module Theory.Constraint.System (
   , rawEdgeRel
 
   , alwaysBefore
+  , findAdversaryCluster
+  , getSinkNodesInSubset
+  , getEdgesIntoSubset
+  , removeSubgraph
   , isInTrace
 
   -- ** The last node
@@ -260,11 +264,12 @@ import           GHC.Generics                         (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy)
+import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy, maximumBy)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing)
 -- import           Data.Monoid                          (Monoid(..))
 import qualified Data.Monoid                             as Mono
+import           Data.Ord                             (comparing)
 import qualified Data.Set                             as S
 import           Data.Either                          (partitionEithers, lefts)
 import           Data.Tuple                           (swap)
@@ -1635,6 +1640,108 @@ alwaysBefore sys =
          -- speed-up check by first checking less-atoms
          ((i, j) `S.member` getLessAtoms sys)
       || (j `S.member` D.reachableSet [i] lessRel)
+
+-- | Find connected components in a graph where edges are determined by a connectivity predicate.
+--
+-- Takes a connectivity predicate '(NodeId -> NodeId -> Bool)' that determines if two nodes
+-- are connected, and a 'S.Set NodeId' of nodes to partition. Returns '[S.Set NodeId]', a list
+-- of connected components (each component is a set of node IDs).
+connectedComponents :: (NodeId -> NodeId -> Bool) -> S.Set NodeId -> [S.Set NodeId]
+connectedComponents isConnected allNodes = processNodes (S.toList allNodes) S.empty []
+  where
+    processNodes [] _ components = components
+    processNodes (currentNode:remainingNodes) visitedNodes components
+      | currentNode `S.member` visitedNodes = processNodes remainingNodes visitedNodes components
+      | otherwise = let component = collectComponent currentNode S.empty
+                    in processNodes remainingNodes (visitedNodes `S.union` component) (component : components)
+    
+    collectComponent node visitedInComponent
+      | node `S.member` visitedInComponent = visitedInComponent
+      | otherwise = let updatedVisited = S.insert node visitedInComponent
+                        neighbors = S.filter (isConnected node) allNodes
+                        unvisitedNeighbors = neighbors `S.difference` updatedVisited
+                    in S.foldl' (flip collectComponent) updatedVisited unvisitedNeighbors
+
+-- Takes a temporal ordering predicate '(NodeId -> NodeId -> Bool)' that determines if one node
+-- happens before another, a 'S.Set NodeId' of all adversary nodes in the system, and a
+-- 'S.Set NodeId' representing the cluster to check. Returns 'Bool' indicating whether a
+-- non-adversary node exists strictly between any two nodes in the cluster.
+hasIntermediateNonAdversary :: (NodeId -> NodeId -> Bool) -> S.Set NodeId -> S.Set NodeId -> Bool
+hasIntermediateNonAdversary before adversaryNodes cluster =
+    any (\intermediateNode -> any (\firstClusterNode -> any (isBetween intermediateNode firstClusterNode) cluster) cluster) nonAdversaryNodes
+  where
+    nonAdversaryNodes = S.toList (adversaryNodes `S.difference` cluster)
+    isBetween intermediateNode firstClusterNode secondClusterNode = 
+        firstClusterNode `before` intermediateNode && intermediateNode `before` secondClusterNode
+
+-- | Find the largest adversary cluster in the system.
+--
+-- Takes a 'System' constraint system and returns a 'S.Set NodeId' containing
+-- the node IDs of the largest valid adversary cluster.
+--
+-- A cluster is a maximal connected component of adversary nodes where:
+--   1. All nodes are adversary (intruder) rules
+--   2. Nodes are connected via the ordering relation
+--   3. No non-adversary node exists strictly between any two nodes in the cluster
+--
+-- Returns the largest such cluster, or empty set if none exists.
+findAdversaryCluster :: System -> S.Set NodeId
+findAdversaryCluster sys =
+    case filter isValidCluster components of
+      []      -> S.empty
+      clusters -> maximumBy (comparing S.size) clusters
+  where
+    before = alwaysBefore sys
+    allNodes = L.get sNodes sys
+    adversaryNodes = M.keysSet $ M.filter isIntruderRule allNodes
+    isConnected n m = n `before` m || m `before` n
+    components = connectedComponents isConnected adversaryNodes
+    isValidCluster = not . hasIntermediateNonAdversary before adversaryNodes
+
+-- | Return sink nodes within a given node subset.
+--
+-- Takes a 'System' constraint system and a 'S.Set NodeId' representing a subset of nodes.
+-- Returns 'S.Set NodeId' containing the sink nodes (nodes with no outgoing edges to other
+-- nodes in the subset).
+getSinkNodesInSubset :: System -> S.Set NodeId -> S.Set NodeId
+getSinkNodesInSubset sys nodeSet =
+    S.filter isSink nodeSet
+  where
+    before = alwaysBefore sys
+    isSink n = not $ any (\m -> n `before` m && n /= m) (S.toList nodeSet)
+
+-- | Return edges and less atoms from outside to inside a node subset.
+getEdgesIntoSubset :: System -> S.Set NodeId -> (S.Set Edge, S.Set LessAtom)
+getEdgesIntoSubset sys nodeSet = (sourceEdges, sourceLessAtoms)
+  where
+    sourceEdges = S.filter isSourceEdge (L.get sEdges sys)
+    isSourceEdge (Edge (fromNode, _) (toNode, _)) =
+        not (fromNode `S.member` nodeSet) && (toNode `S.member` nodeSet)
+    
+    sourceLessAtoms = S.filter isSourceLessAtom (L.get sLessAtoms sys)
+    isSourceLessAtom (LessAtom smaller larger _) =
+        not (smaller `S.member` nodeSet) && (larger `S.member` nodeSet)
+
+-- | Remove a subgraph from the constraint system.
+--
+-- Takes a 'System' constraint system and a 'S.Set NodeId' representing nodes to remove.
+-- Returns an updated 'System' with the specified nodes removed along with all edges and
+-- less-than atoms that reference any of those nodes (either as source or target).
+removeSubgraph :: System -> S.Set NodeId -> System
+removeSubgraph sys nodesToRemove =
+    L.set sLessAtoms filteredLessAtoms $
+    L.set sEdges filteredEdges $
+    L.set sNodes filteredNodes sys
+  where
+    filteredNodes = M.filterWithKey (\nodeId _ -> not (nodeId `S.member` nodesToRemove)) (L.get sNodes sys)
+    
+    filteredEdges = S.filter (not . edgeReferencesRemovedNode) (L.get sEdges sys)
+    edgeReferencesRemovedNode (Edge (sourceNode, _) (targetNode, _)) =
+        sourceNode `S.member` nodesToRemove || targetNode `S.member` nodesToRemove
+    
+    filteredLessAtoms = S.filter (not . lessAtomReferencesRemovedNode) (L.get sLessAtoms sys)
+    lessAtomReferencesRemovedNode (LessAtom firstNode secondNode _) =
+        firstNode `S.member` nodesToRemove || secondNode `S.member` nodesToRemove
 
 -- | 'True' iff the given node id is guaranteed to be instantiated to an
 -- index in the trace.
