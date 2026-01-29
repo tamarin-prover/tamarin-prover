@@ -938,10 +938,11 @@ There are four simplification levels available:
     Level 2 is the default simplification level.
 
 **Level 3 (SL3)**: Full transitive reduction
-:   Removes all transitively-implied less-than constraints without exceptions.
-    This is the most aggressive simplification and produces the most compact graphs,
-    but may hide some proof details that could be relevant for understanding the
-    constraint system.
+:   Removes all transitively-implied less-than constraints without exceptions. It 
+    collapses adversary subgraphs into their sink nodes, only showing the end results 
+    of adversary derivations. This is the most aggressive simplification and produces 
+    the most compact graphs, but may hide some proof details that could be relevant 
+    for understanding the constraint system.
 
 #### Setting the Simplification Level in the GUI
 
