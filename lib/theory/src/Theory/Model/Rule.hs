@@ -1101,19 +1101,7 @@ equalRuleUpToRenaming r1@(Rule rn1 pr1 co1 ac1 nvs1) r2@(Rule rn2 pr2 co2 ac2 nv
 
 -- | Are these two rules equal up to renaming of variables?
 equalDuplicateRuleUpToRenaming :: (Show a, Eq a, HasFrees a) => Rule a -> Rule a -> WithMaude Bool
-equalDuplicateRuleUpToRenaming r1@(Rule _ pr1 co1 ac1 nvs1) r2 = reader $ \hnd ->
-  case eqs of
-       Nothing   -> False
-       Just eqs' -> any isRenamingPerRule (unifs eqs' hnd)
-    where
-       r2_rename@(Rule _ rpr2 rco2 rac2 rnvs2) = r2 `renameAvoiding` r1
-       isRenamingPerRule subst = isRenaming (restrictVFresh (vars r1) subst) && isRenaming (restrictVFresh (vars r2_rename) subst)
-       vars ru = map fst $ varOccurences ru
-       unifs eq hnd = unifyLNTerm eq `runReader` hnd
-       eqs = foldl matchFacts (Just $ zipWith Equal nvs1 rnvs2) $ zip (pr1++co1++ac1) (rpr2++rco2++rac2)
-       matchFacts Nothing  _                                    = Nothing
-       matchFacts (Just l) (Fact f1 _ t1, Fact f2 _ t2) | f1 == f2  = Just (zipWith Equal t1 t2 ++ l)
-                                                        | otherwise = Nothing
+equalDuplicateRuleUpToRenaming r1 r2 = equalRuleUpToRenaming r1 (r2 `renameAvoiding` r1)
 
 -- | Are the premisses of the first rule subset of those of the second rule up to renaming of variables?
 equalSubsetRuleUpToRenaming :: (Show a, Eq a, HasFrees a, Apply LNSubst a) => Rule a -> Rule a -> WithMaude Bool

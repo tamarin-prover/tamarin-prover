@@ -542,9 +542,6 @@ prettyClosedDiffSummary thy =
     proofStepSummary = proofStepStatus &&& const (Sum (1::Integer))
     diffProofStepSummary = diffProofStepStatus &&& const (Sum (1::Integer))
 
-
-
-
 checkProofStatuses :: ClosedTheory -> [ProofStatus]
 checkProofStatuses thy =  map (foldProof proofStepStatus . L.get lProof) $ theoryLemmas thy
 
