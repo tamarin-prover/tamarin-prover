@@ -268,11 +268,26 @@ dotNodeCompact node manualNodeColor = do
       modM dsConcs $ M.union $ M.fromList concs
       return $ fromJust $ lookup Nothing ids
     UnsolvedActionNode facts -> cacheState dsNodes v $ do
-      lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
-      let lbl = lblPre <-> opAction <-> text (show v)
+      let isCollapsed = get nIsCollapsed node
+      lbl <- if isCollapsed
+             then do
+               -- For collapsed nodes, display as "#v : K ( t )" where t is the term from KU facts
+               let kuFacts = filter isKUFact facts
+                   terms = concatMap factTerms kuFacts
+               case terms of
+                 [t] -> do
+                   renderedTerm <- renderLNFact (Fact KUFact S.empty [t])
+                   return $ text (show v) <-> text ":" <-> text "K" <-> text "(" <-> renderedTerm <-> text ")"
+                 _ -> do
+                   -- Fallback for multiple or no terms
+                   lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
+                   return $ lblPre <-> opAction <-> text (show v)
+             else do
+               lblPre <- (fsep <$> punctuate comma <$> mapM renderLNFact facts)
+               return $ lblPre <-> opAction <-> text (show v)
       let baseAttrs | any isKUFact facts = [("color","gray")]
                     | otherwise          = [("color","darkblue")]
-          attrs = if get nIsCollapsed node
+          attrs = if isCollapsed
                   then ("peripheries", "2") : baseAttrs
                   else baseAttrs
       mkSimpleNode (render lbl) attrs
@@ -306,9 +321,16 @@ dotNodeCompact node manualNodeColor = do
             ps <- psM
             as <- asM
             cs <- csM
-            let lbl | outgoingEdge = show v ++ " : " ++ showDotRuleCaseName ru
-                    | otherwise       = concatMap snd as
-                simpleAttrs = if get nIsCollapsed node then [("peripheries", "2")] else []
+            let isCollapsed = get nIsCollapsed node
+                lbl | isCollapsed && isISendRule ru = 
+                        -- For collapsed isend nodes, show "K ( term )" format
+                        let kuTerms = concatMap (factTerms . snd) (enumConcs ru)
+                        in case kuTerms of
+                             [t] -> show v ++ " : K ( " ++ render (prettyLNTerm t) ++ " )"
+                             _   -> show v ++ " : " ++ showDotRuleCaseName ru
+                    | outgoingEdge = show v ++ " : " ++ showDotRuleCaseName ru
+                    | otherwise    = concatMap snd as
+                simpleAttrs = if isCollapsed then [("peripheries", "2")] else []
             nid <- mkSimpleNode lbl simpleAttrs
             return [ (key, nid) | (key, _) <- ps ++ as ++ cs ]
       -- full record syntax
