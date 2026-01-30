@@ -70,7 +70,7 @@ function getSimplificationFromCookie(): number {
 
 function constructDotSrcParamsFromCookie(): string {
   const param = new URLSearchParams();
-  if (document.cookie.indexOf("abbreviate=") === -1) {
+  if (document.cookie.indexOf("abbreviate=false") !== -1) {
     param.append("unabbreviate", "");
   }
   if (document.cookie.indexOf("auto-sources=") === -1) {

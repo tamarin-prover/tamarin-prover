@@ -86,7 +86,7 @@ var server = {
                     { name: "uncompress", value: "" }
                 );
             }
-            if ($.cookie("abbreviate") == null) {
+            if ($.cookie("abbreviate") === "false") {
                 params = params.concat(
                     { name: "unabbreviate", value: "" }
                 );
@@ -290,10 +290,10 @@ var ui = {
         var abbrv_toggle = $('a#abbrv-toggle');
         abbrv_toggle.click(function(ev) {
             ev.preventDefault();
-            if ($.cookie("abbreviate")) {
-                $.cookie("abbreviate", null, { path: '/' });
+            if ($.cookie("abbreviate") !== "false") {
+                $.cookie("abbreviate", "false", { path: '/' });
             } else {
-                $.cookie("abbreviate", true, { path: '/' });
+                $.cookie("abbreviate", null, { path: '/' });
             }
             $("a.active-link").click();
             mainDisplay.toggleOption(abbrv_toggle);
@@ -411,10 +411,10 @@ var ui = {
 	    }
 	}
 
-        if($.cookie("abbreviate")) {
-            $("a#abbrv-toggle").addClass("active-option");
-        } else {
+        if($.cookie("abbreviate") !== "false") {
             $("a#abbrv-toggle").addClass("disabled-option");
+        } else {
+            $("a#abbrv-toggle").addClass("active-option");
         }
 
         if($.cookie("auto-sources")){
@@ -799,7 +799,7 @@ var mainDisplay = {
                 { name: "uncompress", value: "" }
             );
         }
-        if ($.cookie("abbreviate") == null) {
+        if ($.cookie("abbreviate") === "false") {
             params = params.concat(
                 { name: "unabbreviate", value: "" }
             );
