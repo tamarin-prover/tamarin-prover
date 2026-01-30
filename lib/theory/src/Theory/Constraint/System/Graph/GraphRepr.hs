@@ -16,6 +16,7 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , Node(..)
     , nNodeType
     , nNodeId
+    , nIsCollapsed
     , NodeType(..)
     , Edge(..)
     , Cluster(..)
@@ -49,8 +50,9 @@ import Data.Maybe
 -- | All nodes are identified by their NodeId.
 -- Then we have different types of nodes depending on what data of the System they use.
 data Node = Node {
-    _nNodeId    :: M.NodeId,
-    _nNodeType  :: NodeType
+    _nNodeId       :: M.NodeId,
+    _nNodeType     :: NodeType,
+    _nIsCollapsed  :: Bool  -- ^ True if this node represents a collapsed set of nodes
   }
   deriving( Eq, Ord, Show )
 

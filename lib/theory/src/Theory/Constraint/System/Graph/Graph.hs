@@ -99,25 +99,25 @@ resolveNodeConcFact conc graph =
 systemNodes :: Sys.System -> [Node]
 systemNodes se = map systemNode (M.toList $ get Sys.sNodes se)
   where
-    systemNode (nid, ru) = Node nid (SystemNode ru)
+    systemNode (nid, ru) = Node nid (SystemNode ru) False
 
 -- | Get all nodes from a 'System' corresponding to unsolved inputs by the adversary.
 systemUnsolvedActionNodes :: Sys.System -> [Node]
 systemUnsolvedActionNodes se = map unsolvedActionNode (collectBy $ Sys.unsolvedActionAtoms se)
   where
-    unsolvedActionNode (nid, facts) = Node nid (UnsolvedActionNode facts)
+    unsolvedActionNode (nid, facts) = Node nid (UnsolvedActionNode facts) False
 
 -- | Get all nodes from a 'System' corresponding to an induction node.
 systemLastActionNode :: Sys.System -> [Node]
-systemLastActionNode se = maybe [] (\nid -> [Node nid LastActionAtom]) (get Sys.sLastAtom se)
+systemLastActionNode se = maybe [] (\nid -> [Node nid LastActionAtom False]) (get Sys.sLastAtom se)
 
 -- | Get all nodes from a 'System' that are "missing", i.e. they are mentioned by an edge but don't exist elsewhere.
 -- a.d. This assumes that there is no edge where both the source and target are missing. But that situation should never happen.
 systemMissingNodes :: Sys.System -> [Node]
 systemMissingNodes se = mapMaybe missingNode (S.toList $ get Sys.sEdges se)
   where
-    missingNode (Sys.Edge (nid, idx) _) | nid `notElem` nodelist = Just $ Node nid (MissingNode (Left idx))
-    missingNode (Sys.Edge _ (nid, idx)) | nid `notElem` nodelist = Just $ Node nid (MissingNode (Right idx))
+    missingNode (Sys.Edge (nid, idx) _) | nid `notElem` nodelist = Just $ Node nid (MissingNode (Left idx)) False
+    missingNode (Sys.Edge _ (nid, idx)) | nid `notElem` nodelist = Just $ Node nid (MissingNode (Right idx)) False
     missingNode _ = Nothing
     nodelist = map fst $ M.toList $ get Sys.sNodes se
 
@@ -137,8 +137,9 @@ systemEdges se =
 -- 1. edges between rule instances
 -- 2. edges implied by less-constraints between temporal variables
 -- 3. and any unsolved chains.
-computeBasicGraphRepr :: Sys.System -> GraphRepr
-computeBasicGraphRepr se =
+-- The second parameter is the set of collapsed sink nodes that should be marked as collapsed.
+computeBasicGraphRepr :: Sys.System -> S.Set Th.NodeId -> GraphRepr
+computeBasicGraphRepr se collapsedSinks =
   let nodes = systemNodes se
         ++ systemUnsolvedActionNodes se
         ++ systemLastActionNode se
@@ -146,16 +147,21 @@ computeBasicGraphRepr se =
       edges =  systemEdges se
         ++ map LessEdge (S.toList $ get Sys.sLessAtoms se)
         ++ map UnsolvedChain (Sys.unsolvedChains se)
+      -- Mark collapsed nodes by updating their isCollapsed field
+      markedNodes = map (\node -> 
+        if get nNodeId node `S.member` collapsedSinks 
+        then set nIsCollapsed True node 
+        else node) nodes
   in
-    GraphRepr [] nodes edges
+    GraphRepr [] markedNodes edges
 
 -- | Compute clusters, nodes & edges from a Graph instance according to the Graph's options.
 systemToGraph :: Sys.System -> GraphOptions -> Graph
 systemToGraph se options =
   let -- We first do the existing simplification steps on a System that were defined in the Dot module originally.
-      simplfiedSystem = simplifySystem (levelNum $ get goSimplificationLevel options) $
+      (simplfiedSystem, collapsedSinks) = simplifySystem (levelNum $ get goSimplificationLevel options) $
                           if get goCompress options then compressSystem se else se
-      basicGraphRepr = computeBasicGraphRepr simplfiedSystem
+      basicGraphRepr = computeBasicGraphRepr simplfiedSystem collapsedSinks
       -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
       repr = if get goClustering options
              then addIntelligentClusterUsingSimilarNames basicGraphRepr

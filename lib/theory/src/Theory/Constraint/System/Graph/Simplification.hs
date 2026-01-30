@@ -48,11 +48,12 @@ compressSystem se0 =
 -- Level 3: Transitive reduction + collapse adversary subgraphs
 -- Level 2: Transitive reduction preserving Formula and Adversary constraints
 -- Level 1 or other: No simplification
-simplifySystem :: Int -> System -> System
+-- Returns the simplified system and the set of collapsed sink nodes (empty for levels other than 3).
+simplifySystem :: Int -> System -> (System, S.Set NodeId)
 simplifySystem i sys
-    | i == 2    = transitiveReduction sys False
+    | i == 2    = (transitiveReduction sys False, S.empty)
     | i == 3    = collapseAllAdversarySubgraphs (transitiveReduction sys True)
-    | otherwise = sys
+    | otherwise = (sys, S.empty)
 
 -- | Simplify the system by transitive reduction.
 -- If totalRed is False, Formula and Adversary constraints are preserved.
@@ -74,37 +75,46 @@ transitiveReduction sys totalRed =
 -- | Collapse the adversary subgraph by replacing it with direct edges from sources to sinks.
 -- This simplification removes internal adversary cluster nodes while preserving sinks.
 -- Sinks are kept because they may have outgoing edges to non-adversary nodes.
-collapseAdversarySubgraph :: System -> System
+-- Returns the modified system and the set of new sink nodes for which an actual (non-empty) collapse was performed.
+collapseAdversarySubgraph :: System -> (System, S.Set NodeId)
 collapseAdversarySubgraph sys =
     let adversaryCluster = findAdversaryCluster sys
     in if S.null adversaryCluster
-       then sys
+       then (sys, S.empty)
        else
            let sinks = getSinkNodesInSubset sys adversaryCluster
-               (sourceEdges, sourceLessAtoms) = getEdgesIntoSubset sys adversaryCluster
-               edgesToSinks = S.fromList
-                   [ Edge src (sinkNode, tgtPremIdx)
-                   | Edge src (_, tgtPremIdx) <- S.toList sourceEdges
-                   , sinkNode <- S.toList sinks
-                   ]
-               lessAtomsToSinks = S.fromList
-                   [ LessAtom smaller sinkNode reason
-                   | LessAtom smaller _ reason <- S.toList sourceLessAtoms
-                   , sinkNode <- S.toList sinks
-                   ]
                nodesToRemove = adversaryCluster `S.difference` sinks
-               reducedSystem = removeSubgraph sys nodesToRemove
-           in set sLessAtoms (S.union (get sLessAtoms reducedSystem) lessAtomsToSinks) $
-              set sEdges (S.union (get sEdges reducedSystem) edgesToSinks) reducedSystem
+           in if S.null nodesToRemove
+              then (sys, S.empty)
+              else
+                  let (sourceEdges, sourceLessAtoms) = getEdgesIntoSubset sys adversaryCluster
+                      edgesToSinks = S.fromList
+                          [ Edge src (sinkNode, tgtPremIdx)
+                          | Edge src (_, tgtPremIdx) <- S.toList sourceEdges
+                          , sinkNode <- S.toList sinks
+                          ]
+                      lessAtomsToSinks = S.fromList
+                          [ LessAtom smaller sinkNode reason
+                          | LessAtom smaller _ reason <- S.toList sourceLessAtoms
+                          , sinkNode <- S.toList sinks
+                          ]
+                      reducedSystem = removeSubgraph sys nodesToRemove
+                      finalSystem = set sLessAtoms (S.union (get sLessAtoms reducedSystem) lessAtomsToSinks) $
+                                    set sEdges (S.union (get sEdges reducedSystem) edgesToSinks) reducedSystem
+                  in (finalSystem, sinks)
 
 -- | Repeatedly collapse adversary subgraphs until a fixpoint is reached.
--- Stops when no more internal nodes can be removed.
-collapseAllAdversarySubgraphs :: System -> System
-collapseAllAdversarySubgraphs sys =
-    let collapsed = collapseAdversarySubgraph sys
-    in if M.size (get sNodes sys) == M.size (get sNodes collapsed)
-       then sys
-       else collapseAllAdversarySubgraphs collapsed
+-- Stops when collapseAdversarySubgraph returns no sinks (indicating no adversary cluster found).
+-- Returns the final system and the set of all sinks that remain in the final system.
+collapseAllAdversarySubgraphs :: System -> (System, S.Set NodeId)
+collapseAllAdversarySubgraphs sys = go sys S.empty
+  where
+    go currentSys accumulatedSinks =
+        let (collapsed, newSinks) = collapseAdversarySubgraph currentSys
+            allSinks = S.union accumulatedSinks newSinks
+        in if S.null newSinks
+           then (currentSys, S.filter (\n -> M.member n (get sNodes currentSys)) allSinks)
+           else go collapsed allSinks
 
 
 -- | @hideTransferNode v se@ hides node @v@ in sequent @se@ if it is a
