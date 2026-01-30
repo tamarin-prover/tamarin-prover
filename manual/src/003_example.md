@@ -424,7 +424,10 @@ does not use an `LtkReveal( S )`. This is visualized in the graph as
 follows. The only way of getting a `SessKeyC( S, k )` action is using an
 instance of the `Client_2` rule on the left, and the `K( k )` rule is
 symbolized on the right using a round box (adversary reasoning is always
-visualized using round boxes).  Just below the graph, the formula
+visualized using round boxes). Note that at higher graph simplification levels
+(particularly level 3), adversary derivation clusters may be collapsed and
+represented by nodes with **double outlines**, showing only the final derived
+knowledge rather than all intermediate intruder deduction steps. Just below the graph, the formula
 
     formulas: ∀ #r. (LtkReveal( S ) @ #r) ⇒ ⊥
 
