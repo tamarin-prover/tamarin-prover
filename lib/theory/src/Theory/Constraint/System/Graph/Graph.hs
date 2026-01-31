@@ -137,9 +137,8 @@ systemEdges se =
 -- 1. edges between rule instances
 -- 2. edges implied by less-constraints between temporal variables
 -- 3. and any unsolved chains.
--- The second parameter is the set of collapsed sink nodes that should be marked as collapsed.
-computeBasicGraphRepr :: Sys.System -> S.Set Th.NodeId -> GraphRepr
-computeBasicGraphRepr se collapsedSinks =
+computeBasicGraphRepr :: Sys.System -> GraphRepr
+computeBasicGraphRepr se =
   let nodes = systemNodes se
         ++ systemUnsolvedActionNodes se
         ++ systemLastActionNode se
@@ -147,25 +146,24 @@ computeBasicGraphRepr se collapsedSinks =
       edges =  systemEdges se
         ++ map LessEdge (S.toList $ get Sys.sLessAtoms se)
         ++ map UnsolvedChain (Sys.unsolvedChains se)
-      -- Mark collapsed nodes by updating their isCollapsed field
-      markedNodes = map (\node -> 
-        if get nNodeId node `S.member` collapsedSinks 
-        then set nIsCollapsed True node 
-        else node) nodes
   in
-    GraphRepr [] markedNodes edges
+    GraphRepr [] nodes edges
 
 -- | Compute clusters, nodes & edges from a Graph instance according to the Graph's options.
 systemToGraph :: Sys.System -> GraphOptions -> Graph
 systemToGraph se options =
   let -- We first do the existing simplification steps on a System that were defined in the Dot module originally.
-      (simplfiedSystem, collapsedSinks) = simplifySystem (levelNum $ get goSimplificationLevel options) $
+      simplifiedSystem = simplifySystem (levelNum $ get goSimplificationLevel options) $
                           if get goCompress options then compressSystem se else se
-      basicGraphRepr = computeBasicGraphRepr simplfiedSystem collapsedSinks
-      -- Iterate on the basicGraphRepr depending on what options are set to get the final repr
+      basicGraphRepr = computeBasicGraphRepr simplifiedSystem
+      -- Apply adversary cluster collapsing at level 3
+      graphReprAfterCollapse = if levelNum (get goSimplificationLevel options) == 3
+                               then collapseAdversaryClusters basicGraphRepr
+                               else basicGraphRepr
+      -- Iterate on the graphRepr depending on what options are set to get the final repr
       repr = if get goClustering options
-             then addIntelligentClusterUsingSimilarNames basicGraphRepr
-             else addClusterByRole basicGraphRepr
+             then addIntelligentClusterUsingSimilarNames graphReprAfterCollapse
+             else addClusterByRole graphReprAfterCollapse
       abbrevs = computeAbbreviations repr defaultAbbreviationOptions
   in
     Graph se options repr abbrevs

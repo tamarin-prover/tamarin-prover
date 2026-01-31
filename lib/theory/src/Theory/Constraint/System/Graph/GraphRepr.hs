@@ -32,6 +32,7 @@ module Theory.Constraint.System.Graph.GraphRepr (
     , addIntelligentClusterUsingSimilarNames
     , extractBaseName
     , getRuleNameByNode
+    , collapseAdversaryClusters
   ) where
 
 import           Extension.Data.Label
@@ -41,11 +42,13 @@ import qualified Theory                   as Th
 import qualified Data.Map                 as Map
 
 import qualified Data.Set                 as S
+import qualified Data.DAG.Simple          as Dag
 
 import Data.Char (isDigit)
 import Data.List.Split (splitOn)
-import Data.List (find, intercalate)
+import Data.List (intercalate, maximumBy)
 import Data.Maybe
+import Data.Ord (comparing)
 
 -- | All nodes are identified by their NodeId.
 -- Then we have different types of nodes depending on what data of the System they use.
@@ -241,3 +244,120 @@ addIntelligentClusterUsingSimilarNames :: GraphRepr -> GraphRepr
 addIntelligentClusterUsingSimilarNames repr =
     let nodesBySimilarName = groupBySimilarName (get grNodes repr)
     in addCluster repr nodesBySimilarName "_Session_"
+
+----------------------------------------------------
+-- Adversary cluster collapsing
+----------------------------------------------------
+
+-- | Check if a node represents an intruder/adversary rule
+isIntruderNode :: Node -> Bool
+isIntruderNode (Node _ (SystemNode ru) _) = Th.isIntruderRule ru
+isIntruderNode _ = False
+
+-- | Extract source and target node IDs from an edge
+edgeEndpoints :: Edge -> (M.NodeId, M.NodeId)
+edgeEndpoints (SystemEdge ((src, _), (tgt, _))) = (src, tgt)
+edgeEndpoints (LessEdge (Th.LessAtom src tgt _)) = (src, tgt)
+edgeEndpoints (UnsolvedChain ((src, _), (tgt, _))) = (src, tgt)
+
+-- | Redirect an edge to a new target node
+redirectEdge :: Edge -> M.NodeId -> Edge
+redirectEdge (SystemEdge ((src, srcIdx), (_, tgtIdx))) newTgt = SystemEdge ((src, srcIdx), (newTgt, tgtIdx))
+redirectEdge (LessEdge (Th.LessAtom src _ reason)) newTgt = LessEdge (Th.LessAtom src newTgt reason)
+redirectEdge (UnsolvedChain ((src, srcIdx), (_, tgtIdx))) newTgt = UnsolvedChain ((src, srcIdx), (newTgt, tgtIdx))
+
+-- | Find connected components using the connectivity predicate (matching original).
+-- Two nodes are connected if one happens before the other (in either direction).
+connectedComponentsByPredicate :: (M.NodeId -> M.NodeId -> Bool) -> S.Set M.NodeId -> [S.Set M.NodeId]
+connectedComponentsByPredicate isConnected allNodeIds = processNodes (S.toList allNodeIds) S.empty []
+  where
+    processNodes [] _ acc = acc
+    processNodes (n:ns) visited acc
+      | n `S.member` visited = processNodes ns visited acc
+      | otherwise = 
+          let component = findComponent [n] (S.singleton n)
+          in processNodes ns (visited `S.union` component) (component : acc)
+    
+    findComponent [] visited = visited
+    findComponent (n:queue) visited =
+        let neighbors = filter (\m -> m `S.notMember` visited && isConnected n m) (S.toList allNodeIds)
+        in findComponent (queue ++ neighbors) (visited `S.union` S.fromList neighbors)
+
+-- | Extract adversary node IDs from a list of nodes
+adversaryNodeIds :: [Node] -> S.Set M.NodeId
+adversaryNodeIds nodes = S.fromList [get nNodeId n | n <- nodes, isIntruderNode n]
+
+-- | Check if there's an adversary node (outside this cluster) that lies between two cluster nodes
+hasIntermediateNonAdversary :: (M.NodeId -> M.NodeId -> Bool) -> S.Set M.NodeId -> [Node] -> Bool
+hasIntermediateNonAdversary before cluster allNodes =
+    let adversaryNodes = adversaryNodeIds allNodes
+        nonClusterAdversary = adversaryNodes `S.difference` cluster
+        clusterList = S.toList cluster
+    in any (\(i, c1, c2) -> c1 `before` i && i `before` c2)
+           [(i, c1, c2) | i <- S.toList nonClusterAdversary, c1 <- clusterList, c2 <- clusterList]
+
+-- | Find the largest valid adversary cluster (matching original findAdversaryCluster)
+findLargestAdversaryCluster :: (M.NodeId -> M.NodeId -> Bool) -> [Node] -> S.Set M.NodeId
+findLargestAdversaryCluster before nodes =
+    let validClusters = filter isValidCluster components
+    in if null validClusters
+       then S.empty
+       else maximumBy (comparing S.size) validClusters
+  where
+    adversaryIds = adversaryNodeIds nodes
+    isConnected n m = n `before` m || m `before` n
+    components = connectedComponentsByPredicate isConnected adversaryIds
+    isValidCluster cluster = not (hasIntermediateNonAdversary before cluster nodes)
+
+-- | Get sink nodes within a cluster (nodes with no outgoing before edges to other cluster members)
+getSinkNodes :: (M.NodeId -> M.NodeId -> Bool) -> S.Set M.NodeId -> S.Set M.NodeId
+getSinkNodes before cluster =
+    S.filter (\n -> not $ any (\m -> n `before` m && n /= m) (S.toList cluster)) cluster
+
+-- | Get incoming edges from outside a cluster to inside it
+getIncomingEdges :: S.Set M.NodeId -> [Edge] -> [Edge]
+getIncomingEdges cluster edges = 
+    filter (\e -> let (src, tgt) = edgeEndpoints e
+                  in src `S.notMember` cluster && tgt `S.member` cluster) edges
+
+-- | Update nodes by marking sinks as collapsed and removing internal nodes
+updateNodesForCollapse :: S.Set M.NodeId -> S.Set M.NodeId -> [Node] -> [Node]
+updateNodesForCollapse sinks nodesToRemove nodes =
+    [if nodeId `S.member` sinks then set nIsCollapsed True n else n
+     | n <- nodes, let nodeId = get nNodeId n, nodeId `S.notMember` nodesToRemove]
+
+-- | Update edges by removing those involving removed nodes and adding redirected edges
+updateEdgesForCollapse :: S.Set M.NodeId -> S.Set M.NodeId -> [Edge] -> [Edge] -> [Edge]
+updateEdgesForCollapse sinks nodesToRemove currentEdges incomingEdges =
+    let redirectedEdges = [redirectEdge e sinkId | e <- incomingEdges, sinkId <- S.toList sinks]
+        filteredEdges = filter (\e -> let (src, tgt) = edgeEndpoints e
+                                       in src `S.notMember` nodesToRemove && tgt `S.notMember` nodesToRemove) currentEdges
+    in filteredEdges ++ redirectedEdges
+
+-- | Collapse the largest adversary cluster once.
+-- Returns the updated graph representation, or the original if no cluster can be collapsed.
+collapseOneLargestAdversaryCluster :: GraphRepr -> GraphRepr
+collapseOneLargestAdversaryCluster repr =
+    let currentNodes = get grNodes repr
+        currentEdges = get grEdges repr
+        -- Build before predicate inline (only used here)
+        before n1 n2 = n2 `S.member` Dag.reachableSet [n1] (map edgeEndpoints currentEdges)
+        cluster = findLargestAdversaryCluster before currentNodes
+    in if S.null cluster
+       then repr
+       else
+           let sinks = getSinkNodes before cluster
+               nodesToRemove = cluster `S.difference` sinks
+           in if S.null nodesToRemove
+              then repr  -- No internal nodes to collapse
+              else
+                  let incoming = getIncomingEdges cluster currentEdges
+                      newNodes = updateNodesForCollapse sinks nodesToRemove currentNodes
+                      newEdges = updateEdgesForCollapse sinks nodesToRemove currentEdges incoming
+                  in set grNodes newNodes $ set grEdges newEdges repr
+
+-- | Collapse all adversary clusters iteratively (matching original collapseAllAdversarySubgraphs).
+-- Finds largest cluster, collapses it, then repeats until no more clusters can be collapsed.
+-- The before relation is recomputed after each collapse to reflect the updated graph structure.
+collapseAdversaryClusters :: GraphRepr -> GraphRepr
+collapseAdversaryClusters = until (\r -> collapseOneLargestAdversaryCluster r == r) collapseOneLargestAdversaryCluster
