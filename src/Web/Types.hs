@@ -590,6 +590,7 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/trace/#Int/edit/source                      EditTheoryR             GET POST
 -- /thy/trace/#Int/edit/path/*TheoryPath         EditPathR               GET POST
 /thy/trace/#Int/del/path/*TheoryPath          DeleteStepR             GET
+/thy/trace/#Int/reload                           ReloadTheoryR           POST
 /thy/trace/#Int/unload                           UnloadTheoryR           GET
 /thy/equiv/#Int/overview/*DiffTheoryPath      InteractiveOverviewDiffR               GET
 /thy/equiv/#Int/source                           TheorySourceDiffR           GET

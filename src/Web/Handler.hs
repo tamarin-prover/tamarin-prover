@@ -53,6 +53,7 @@ module Web.Handler
   , getDownloadTheoryR
   , getAppendNewLemmasR
   , getDownloadTheoryDiffR
+  , postReloadTheoryR
   , getUnloadTheoryR
   , getUnloadTheoryDiffR
   )
@@ -121,6 +122,7 @@ import Control.Monad.Trans.Resource (runResourceT)
 import Data.Maybe
 import Data.String (fromString)
 import Data.List (intersperse)
+import Data.Version (showVersion)
 import Data.Conduit as C (runConduit,(.|))
 import Data.Conduit.List (consume)
 import Data.Binary qualified as Bin
@@ -138,6 +140,7 @@ import System.FilePath ((</>))
 
 import Debug.Trace (trace)
 import Main.TheoryLoader
+import Paths_tamarin_prover (version)
 import Main.Console (renderDoc)
 import Text.PrettyPrint.Html
 import Text.Read (readMaybe)
@@ -145,7 +148,7 @@ import Theory.Constraint.System.Dot
 import Theory.Constraint.System.Graph.Graph
 import Theory.Constraint.System.JSON  -- for export of constraint system to JSON
 import Theory.Text.Parser (parsePlainLemma)
-import Theory.Tools.Wellformedness  (prettyWfErrorReport)
+import Theory.Tools.Wellformedness  (prettyWfErrorReport, WfErrorReport)
 import Lemma
 import Prover (mkSystem)
 
@@ -356,6 +359,87 @@ putDiffTheory parent origin thy rep = do
                     (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
     storeTheory yesod newThy idx
     pure (M.insert idx newThy theories, idx)
+
+-- | Reload a theory from its original file on disk.
+-- This handler implements a file reload feature that:
+--   1. Verifies the theory was loaded from a local file (not uploaded/interactive)
+--   2. Re-reads the file content from disk
+--   3. Re-parses and re-runs the complete precomputation pipeline (via loadAndCloseTheory):
+--      - Translation (for SAPIC/higher-level theories)
+--      - Wellformedness checks
+--      - closeTheoryWithMaude (which computes raw sources, refined sources, variants, etc.)
+--      - Partial evaluation if configured
+--   4. Replaces the theory at the same index (preserving URLs/navigation)
+-- This ensures external file changes are reflected with full recomputation.
+postReloadTheoryR :: TheoryIdx -> Handler Html
+postReloadTheoryR idx = do
+  -- Retrieve the current theory to get its origin and file path
+  mTheory <- getTheory idx
+  case mTheory of
+    Nothing -> do
+      setMessage "Theory not found"
+      redirect RootR
+    Just (Trace ti) -> case ti.origin of
+      -- Only allow reload for theories loaded from local files
+      Local filePath -> do
+        srcContent <- liftIO $ readFile filePath
+        result <- loadAndCloseTheory srcContent filePath
+        
+        case result of
+          Left (ParserError e) -> do
+            setMessage $ toHtml $ "Parse error: " ++ show e
+            redirect $ InteractiveOverviewR idx TheoryHelp
+          Left (WarningError report) -> do
+            setMessage $ toHtml $ "Wellformedness errors: " ++ show (length report) ++ " issues found"
+            redirect $ InteractiveOverviewR idx TheoryHelp
+          Right (_report, thy, wfErrors) -> do
+            -- Replace the theory at the same index, preserving parent info and auto-prover
+            case thy of
+              Left closedThy  -> do
+                void $ replaceTheory (Just ti) (Just $ Local filePath) closedThy wfErrors idx
+                setMessage "Theory reloaded successfully from disk"
+                redirect $ InteractiveOverviewR idx TheoryHelp
+              Right _closedDiffThy -> do
+                setMessage "Reload not yet supported for diff theories"
+                redirect $ InteractiveOverviewR idx TheoryHelp
+
+      Upload _ -> do
+        setMessage "Cannot reload: theory was uploaded (no file path)"
+        redirect $ InteractiveOverviewR idx TheoryHelp
+      Interactive -> do
+        setMessage "Cannot reload: theory was created interactively (no file path)"
+        redirect $ InteractiveOverviewR idx TheoryHelp
+    Just (Diff _) -> do
+      setMessage "Reload not yet supported for diff theories"
+      redirect RootR
+
+-- | Delete theory.
+-- | Generate HTML for wellformedness error warnings.
+-- Returns empty string if no errors, otherwise a formatted div with error details.
+makeWfErrorsHtml :: WfErrorReport -> String
+makeWfErrorsHtml [] = ""
+makeWfErrorsHtml report =
+  "<div class=\"wf-warning\">\n" ++
+  "WARNING: the following wellformedness checks failed!<br /><br />\n" ++
+  renderHtmlDoc (htmlDoc $ prettyWfErrorReport report) ++
+  "\n</div>"
+
+-- | Load and close a theory from file content.
+-- This is the common pipeline used by both file upload and file reload.
+-- Returns the closed theory with wellformedness report and HTML errors.
+loadAndCloseTheory
+  :: String         -- ^ Theory source content
+  -> FilePath       -- ^ File path (for error reporting)
+  -> Handler (Either TheoryLoadError (WfErrorReport, Either ClosedTheory ClosedDiffTheory, String))
+loadAndCloseTheory srcContent filePath = do
+  yesod <- getYesod
+  liftIO $ runExceptT $ do
+    openThy <- yesod.loadThy srcContent filePath
+    let sig = either (._thySignature) (._diffThySignature) openThy
+    sig' <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
+    (report, closedThy) <- yesod.closeThy sig' openThy
+    let wfErrors = makeWfErrorsHtml report
+    pure (report, closedThy, wfErrors)
 
 -- | Delete theory.
 delTheory :: TheoryIdx -> Handler ()
@@ -667,33 +751,20 @@ postRootR = do
       if null content
         then setMessage "No theory file given."
       else do
-        yesod <- getYesod
-        thyWithRep <- liftIO $ runExceptT $ do
-          openThy <- yesod.loadThy
-                       (T.unpack $ T.decodeUtf8 $ BS.concat content)
-                       (T.unpack $ fileName fileinfo)
+        let srcContent = T.unpack $ T.decodeUtf8 $ BS.concat content
+            filename = T.unpack $ fileName fileinfo
+        result <- loadAndCloseTheory srcContent filename
 
-          let sig = either (._thySignature) (._diffThySignature) openThy
-          sig'   <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
-
-          -- let tactic = get thyTactic openThy
-          --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
-
-          yesod.closeThy sig' openThy
-
-        case thyWithRep of
+        case result of
           Left err -> setMessage $ "Theory loading failed:\n" <> toHtml (show err)
-          Right (report, thy) -> do
-            wfErrors <- case report of
-              [] -> pure ""
-              _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-            void $ either (putTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo))
-                          (putDiffTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo)) thy wfErrors
+          Right (report, thy, wfErrors) -> do
+            void $ either (putTheory Nothing (Just $ Upload filename))
+                          (putDiffTheory Nothing (Just $ Upload filename)) thy wfErrors
             setMessage $ toHtml $ "Loaded new theory!" ++ warningMsg
               where
                 warningMsg
-                  |null report = ""
-                  |otherwise = " WARNING: ignoring the following wellformedness errors: " ++
+                  | null report = ""
+                  | otherwise = " WARNING: ignoring the following wellformedness errors: " ++
                                   renderDoc (prettyWfErrorReport report)
 
   theories <- getTheories

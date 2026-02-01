@@ -179,6 +179,10 @@ headerTpl info = [whamlet|
             <li><a target=_blank href=@{TheorySourceR idx}>Show source</a>
             <li><a href=@{DownloadTheoryR idx filename}>Download source</a>
             <li><a href=@{AppendNewLemmasR idx filename}>Append modified lemmas to file</a>
+            $if isLocalOrigin origin
+              <li>
+                <form method=POST action=@{ReloadTheoryR idx} style="margin:0;padding:0;">
+                  <button type=submit style="background:none;border:none;color:#4a90d9;cursor:pointer;text-align:left;padding:0;font:inherit;">Reload file</button>
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
@@ -197,6 +201,10 @@ headerTpl info = [whamlet|
             --
     idx = info.index
     filename = info.theory._thyName ++ ".spthy"
+    origin = info.origin
+    -- Check if theory origin is a local file (needed for reload functionality)
+    isLocalOrigin (Local _) = True
+    isLocalOrigin _         = False
 
       {- use this snipped to reactivate saving local theories
     localTheory (Local _) = True
