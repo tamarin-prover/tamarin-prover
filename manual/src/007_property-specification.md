@@ -234,7 +234,9 @@ part. In general, the following applies when editing lemmas in the GUI:
   encounter any issues.
 - You cannot add, modify, or delete sources lemmas. This is because sources
   lemmas influence Tamarin's precomputations. You must edit sources lemmas in
-  your model file and, whenever you do, restart the server afterwards.
+your model file and use "Reload file" from the Actions menu to reload the theory
+with the updated sources lemmas. If the theory was uploaded or modified
+interactively in the web interface, reloading is not possible, and you will have restart the server instead.
 
 Below, we highlight the four most important buttons for editing lemmas in the GUI.
 

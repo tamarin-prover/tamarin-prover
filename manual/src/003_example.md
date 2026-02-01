@@ -277,9 +277,8 @@ commands and keyboard shortcuts you can use to navigate inside the
 theory. In the top right corner there are some links: `Index` leads
 back to the welcome page, `Actions` menu contains `Download source`
 which allows you to download the current theory (including partial
-proofs if they exist) and `Show source` which shows the theory's
-source code, and `Options` allows you to configure the level of
-details in the graph visualization (see below for examples).
+proofs if they exist), `Show source` which shows the theory's source code, and `Reload file`, which re-reads the theory file from disk and performs all the required precomputations.
+Reloading is useful when editing the `.spthy` file outside of the web interface, and wanting to perform analysis on the updated file without restarting the server. The `Options` menu allows you to configure the level of details in the graph visualization (see below for examples).
 
 If you click on `Message theory` on the left, you should see the following:
 
