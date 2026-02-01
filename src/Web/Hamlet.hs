@@ -77,7 +77,7 @@ rootTpl theories = [whamlet|
         <input type=file name="uploadedTheory">
         <div .submit-form>
           <input type=submit value="Load new theory">
-      <p>Note: You can save a theory by downloading the source.
+      <p>Note: You can save a theory by downloading the source from the Actions menu.
   |]
 
 -- | Template for listing theories.
@@ -173,12 +173,12 @@ headerTpl info = [whamlet|
         \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
-      <a class=plain-link href=@{DownloadTheoryR idx filename}>Download</a>
-      <a class=save-link  href=@{AppendNewLemmasR idx filename}>Append modified Lemmas to file</a>
       <ul #navigation>
         <li><a href="#">Actions</a>
           <ul>
             <li><a target=_blank href=@{TheorySourceR idx}>Show source</a>
+            <li><a href=@{DownloadTheoryR idx filename}>Download source</a>
+            <li><a href=@{AppendNewLemmasR idx filename}>Append modified lemmas to file</a>
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
@@ -218,10 +218,10 @@ headerDiffTpl info = [whamlet|
         \ #{showVersion version}
     <div #header-links>
       <a class=plain-link href=@{RootR}>Index</a>
-      <a class=plain-link href=@{DownloadTheoryDiffR idx filename}>Download</a>
       <ul #navigation>
         <li><a href="#">Actions</a>
           <ul>
+            <li><a href=@{DownloadTheoryDiffR idx filename}>Download source</a>
             <li><a target=_blank href=@{TheorySourceDiffR idx}>Show source</a>
         <li><a href="#">Options</a>
           <ul>
