@@ -313,6 +313,7 @@ replaceTheory parent origin thy rep idx = do
           newThy       = Trace (
               TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
                       (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
+      storeTheory yesod newThy idx
       pure (M.insert idx newThy theories, idx)
 
 
