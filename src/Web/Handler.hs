@@ -388,11 +388,15 @@ postReloadTheoryR idx = do
         
         case result of
           Left (ParserError e) -> do
-            setMessage $ toHtml $ "Parse error: " ++ show e
-            redirect $ InteractiveOverviewR idx TheoryHelp
+            -- Show error dialog instead of just setting message
+            let errorMsg = "Parse error while reloading file:\n\n" ++ filePath ++ "\n\n" ++ show e
+            renderErrorDialog idx ti errorMsg
           Left (WarningError report) -> do
-            setMessage $ toHtml $ "Wellformedness errors: " ++ show (length report) ++ " issues found"
-            redirect $ InteractiveOverviewR idx TheoryHelp
+            -- Show wellformedness errors in dialog
+            let errorMsg = "Wellformedness errors while reloading file:\n\n" ++ filePath ++ "\n\n" ++ 
+                          show (length report) ++ " error(s) found:\n\n" ++ 
+                          renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
+            renderErrorDialog idx ti errorMsg
           Right (_report, thy, wfErrors) -> do
             -- Replace the theory at the same index, preserving parent info and auto-prover
             case thy of
@@ -413,6 +417,32 @@ postReloadTheoryR idx = do
     Just (Diff _) -> do
       setMessage "Reload not yet supported for diff theories"
       redirect RootR
+
+-- | Render error dialog page after reload failure.
+renderErrorDialog :: TheoryIdx -> TheoryInfo -> String -> Handler Html
+renderErrorDialog idx ti errorMsg = do
+  renderF <- getUrlRender
+  renderParamsF <- getUrlRenderParams
+  getParams <- reqGetParams <$> getRequest
+  lptxt <- getLemmaPlaintext idx TheoryHelp
+  -- Add cache-control headers to prevent caching
+  addHeader "Cache-Control" "no-cache, no-store, must-revalidate"
+  addHeader "Pragma" "no-cache"
+  addHeader "Expires" "0"
+  defaultLayout $ do
+      let renderParamsF' route = renderParamsF route getParams
+      overview <- liftIO $ overviewTpl renderF renderParamsF' ti TheoryHelp lptxt
+      setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
+      -- Add script to show error dialog on page load
+      toWidget [julius|
+        $(document).ready(function() {
+          var dialog = $("#dialog");
+          var msg = #{toJSON errorMsg};
+          dialog.html(msg.replace(/\n/g, "<br>"));
+          dialog.dialog('open');
+        });
+      |]
+      overview
 
 -- | Delete theory.
 -- | Generate HTML for wellformedness error warnings.
