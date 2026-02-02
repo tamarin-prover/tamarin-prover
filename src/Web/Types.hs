@@ -613,6 +613,7 @@ mkYesodData "WebUI" [parseRoutes|
 -- /thy/equiv/#Int/edit/source                      EditTheoryR             GET POST
 -- /thy/equiv/#Int/edit/path/*DiffTheoryPath         EditPathDiffR               GET POST
 /thy/equiv/#Int/del/path/*DiffTheoryPath      DeleteStepDiffR             GET
+/thy/equiv/#Int/reload                           ReloadTheoryDiffR           POST
 /thy/equiv/#Int/unload                           UnloadTheoryDiffR           GET
 /kill                                      KillThreadR             GET
 -- /threads                                   ThreadsR                GET

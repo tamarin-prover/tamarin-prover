@@ -54,6 +54,7 @@ module Web.Handler
   , postAppendNewLemmasR
   , getDownloadTheoryDiffR
   , postReloadTheoryR
+  , postReloadTheoryDiffR
   , getUnloadTheoryR
   , getUnloadTheoryDiffR
   )
@@ -296,7 +297,7 @@ editLemma idx (TheoryAdd lemmaName) (Lemma n pt m tq f a lp)  = do
 editLemma _ _ _ = pure $ Left "called editLemma with weird input"
 
 
--- | Store a theory, return index.
+-- | Store a theory, return index (backward compatibility wrapper).
 replaceTheory :: Maybe TheoryInfo     -- ^ Index of parent theory
           -> Maybe TheoryOrigin         -- ^ Origin of this theory
           -> ClosedTheory         -- ^ The new closed theory
@@ -316,6 +317,25 @@ replaceTheory parent origin thy rep idx = do
       storeTheory yesod newThy idx
       pure (M.insert idx newThy theories, idx)
 
+-- | Replace a diff theory at the given index (backward compatibility wrapper).
+replaceDiffTheory :: Maybe DiffTheoryInfo  -- ^ Index of parent theory
+              -> Maybe TheoryOrigin         -- ^ Origin of this theory
+              -> ClosedDiffTheory           -- ^ The new closed diff theory
+              -> String
+              -> Int
+              -> Handler TheoryIdx
+replaceDiffTheory parent origin thy rep idx = do
+    yesod <- getYesod
+    liftIO $ modifyMVar yesod.theoryVar $ \theories -> do
+      time <- getZonedTime
+      let parentIdx    = (.index) <$> parent
+          parentOrigin = (.origin) <$> parent
+          newOrigin    = parentOrigin <|> origin <|> Just Interactive
+          newThy       = Diff (
+              TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
+                      (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
+      storeTheory yesod newThy idx
+      pure (M.insert idx newThy theories, idx)
 
 -- | Store a theory, return index.
 putTheory
@@ -361,6 +381,43 @@ putDiffTheory parent origin thy rep = do
     storeTheory yesod newThy idx
     pure (M.insert idx newThy theories, idx)
 
+-- | Check if theory can be reloaded (must have Local origin).
+checkReloadOrigin :: TheoryOrigin -> Either Value FilePath
+checkReloadOrigin (Local filePath) = Right filePath
+checkReloadOrigin (Upload _) = Left $ responseToJson $ JsonAlert "Cannot reload: theory was uploaded (no file path)"
+checkReloadOrigin Interactive = Left $ responseToJson $ JsonAlert "Cannot reload: theory was created interactively (no file path)"
+
+-- | Helper to reload a theory from a local file with unified error handling.
+-- Consolidates parse/wellformedness error handling and theory type checking.
+reloadTheoryFromFile :: FilePath 
+                     -> TheoryIdx
+                     -> Bool                              -- ^ Is diff theory?
+                     -> (ClosedTheory -> Handler ())      -- ^ Replace trace theory action
+                     -> (ClosedDiffTheory -> Handler ())  -- ^ Replace diff theory action  
+                     -> Route WebUI                       -- ^ Success redirect route
+                     -> Handler Value
+reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute = do
+  result <- liftIO (readFile filePath) >>= loadAndCloseTheory `flip` filePath
+  
+  let mkAlert = pure . responseToJson . JsonAlert . T.pack
+      redirect = getUrlRender >>= \f -> pure $ responseToJson $ JsonRedirect $ f successRoute
+      typeName = if isDiff then "diff theory" else "file"
+  
+  case result of
+    Left (ParserError e) -> 
+      mkAlert $ "Parse error while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ show e
+    
+    Left (WarningError report) -> 
+      mkAlert $ "Wellformedness errors while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ 
+                show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++ 
+                ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
+    
+    Right (_report, thy, _wfErrors) -> case (thy, isDiff) of
+      (Left _, True) -> mkAlert "Expected diff theory but file contains standard theory"
+      (Right _, False) -> mkAlert "Expected standard theory but file contains diff theory"
+      (Left closedThy, False) -> replaceTrace closedThy >> redirect
+      (Right closedDiffThy, True) -> replaceDiff closedDiffThy >> redirect
+
 -- | Reload a theory from its original file on disk.
 -- This handler implements a file reload feature that:
 --   1. Verifies the theory was loaded from a local file (not uploaded/interactive)
@@ -374,49 +431,29 @@ putDiffTheory parent origin thy rep = do
 -- This ensures external file changes are reflected with full recomputation.
 --
 -- TODO:
---  - Support reload for diff theories
 --  - Track when user has modified a file in the UI and warn about unsaved changes when attempting to reload. (This can happen when a proof was generated, or when lemmas were added/edited/deleted in the GUI.)
---  - There is some code duplication with the normal file load (trace and diff versions); consider refactoring common parts. However, when I tried this it became a bit ugly. Maybe it makes more sense to first think about refactoring for de-duplicating between the trace mode and diff mode first, and then revisit this bit afterwards.
 postReloadTheoryR :: TheoryIdx -> Handler Value
 postReloadTheoryR idx = do
-  -- Retrieve the current theory to get its origin and file path
   mTheory <- getTheory idx
   case mTheory of
-    Nothing -> 
-      pure $ responseToJson (JsonAlert "Theory not found")
-    Just (Trace ti) -> case ti.origin of
-      -- Only allow reload for theories loaded from local files
-      Local filePath -> do
-        srcContent <- liftIO $ readFile filePath
-        result <- loadAndCloseTheory srcContent filePath
-        
-        case result of
-          Left (ParserError e) -> do
-            -- Return error as JSON with special error-message class marker
-            let errorMsg = "Parse error while reloading file:\n\n" ++ filePath ++ "\n\n" ++ show e
-            pure $ responseToJson (JsonAlert $ T.pack errorMsg)
-          Left (WarningError report) -> do
-            -- Return wellformedness errors as JSON
-            let errorMsg = "Wellformedness errors while reloading file:\n\n" ++ filePath ++ "\n\n" ++ 
-                          show (length report) ++ " error(s) found:\n\n" ++ 
-                          renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
-            pure $ responseToJson (JsonAlert $ T.pack errorMsg)
-          Right (_report, thy, wfErrors) -> do
-            -- Replace the theory at the same index, preserving parent info and auto-prover
-            case thy of
-              Left closedThy  -> do
-                void $ replaceTheory (Just ti) (Just $ Local filePath) closedThy wfErrors idx
-                renderF <- getUrlRender
-                pure $ responseToJson (JsonRedirect $ renderF $ InteractiveOverviewR idx TheoryHelp)
-              Right _closedDiffThy -> 
-                pure $ responseToJson (JsonAlert "Reload not yet supported for diff theories")
+    Nothing -> pure $ responseToJson (JsonAlert "Theory not found")
+    
+    Just (Trace ti) -> 
+      either pure (\fp -> reloadTheoryFromFile fp idx False
+        (\thy -> void $ replaceTheory (Just ti) (Just $ Local fp) thy "" idx)
+        (\_ -> error "Unreachable: diff theory in trace mode")
+        (InteractiveOverviewR idx TheoryHelp)) $ checkReloadOrigin ti.origin
+    
+    Just (Diff dti) -> 
+      either pure (\fp -> reloadTheoryFromFile fp idx True
+        (\_ -> error "Unreachable: trace theory in diff mode")
+        (\thy -> void $ replaceDiffTheory (Just dti) (Just $ Local fp) thy "" idx)
+        (InteractiveOverviewDiffR idx DiffTheoryHelp)) $ checkReloadOrigin dti.origin
 
-      Upload _ -> 
-        pure $ responseToJson (JsonAlert "Cannot reload: theory was uploaded (no file path)")
-      Interactive -> 
-        pure $ responseToJson (JsonAlert "Cannot reload: theory was created interactively (no file path)")
-    Just (Diff _) -> 
-      pure $ responseToJson (JsonAlert "Reload not yet supported for diff theories")
+-- | Alias for postReloadTheoryR to handle diff theory reload route.
+-- The implementation is unified in postReloadTheoryR which handles both trace and diff theories.
+postReloadTheoryDiffR :: TheoryIdx -> Handler Value
+postReloadTheoryDiffR = postReloadTheoryR
 
 -- | Delete theory.
 -- | Generate HTML for wellformedness error warnings.
