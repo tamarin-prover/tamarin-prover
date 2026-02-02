@@ -586,7 +586,7 @@ mkYesodData "WebUI" [parseRoutes|
 /thy/trace/#Int/prev/#String/*TheoryPath      PrevTheoryPathR         GET
 -- /thy/trace/#Int/save                             SaveTheoryR             GET
 /thy/trace/#Int/download/#String                 DownloadTheoryR         GET
-/thy/trace/#Int/get_and_append/#String           AppendNewLemmasR         GET
+/thy/trace/#Int/get_and_append/#String           AppendNewLemmasR         POST
 -- /thy/trace/#Int/edit/source                      EditTheoryR             GET POST
 -- /thy/trace/#Int/edit/path/*TheoryPath         EditPathR               GET POST
 /thy/trace/#Int/del/path/*TheoryPath          DeleteStepR             GET

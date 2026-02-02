@@ -110,7 +110,8 @@ var server = {
             window.location.href = redirectUrl;
         } else if(data.alert) {
             // Server requested alert box
-            ui.showDialog(data.alert);
+            var isError = data.alert.includes("error") || data.alert.includes("Error");
+            ui.showDialog(data.alert, isError);
         } else {
             // It must be a html response.
             html(data.title, data.html);
@@ -242,8 +243,37 @@ var ui = {
         //            );
         //    });
 
-        // Click handler for save link
-        events.installAbsoluteClickHandler("a.save-link", server.handleJson);
+        // Click handler for AJAX action links (e.g., append lemmas)
+        events.installAbsoluteClickHandler("a.ajax-action", server.handleJson);
+
+        // Submit handler for AJAX forms
+        $("form.ajax-form").submit(function(ev) {
+            ev.preventDefault();
+            var form = $(this);
+            var url = form.attr('action');
+            $.ajax({
+                type: 'POST',
+                url: url,
+                success: function(data) {
+                    if(data.alert) {
+                        // Check if it's an error message by looking for common error indicators
+                        var isError = data.alert.includes("error") || data.alert.includes("Error");
+                        // Show dialog with callback to reload page on success (non-error)
+                        ui.showDialog(data.alert, isError, function() {
+                            if (!isError) {
+                                // Reload page without adding to history (avoids form resubmission warning)
+                                location.replace(location.href);
+                            }
+                        });
+                    } else {
+                        server.handleJson(data);
+                    }
+                },
+                error: function() {
+                    ui.showDialog("Failed to submit form", true);
+                }
+            });
+        });
 
         // Click handler for edit link(s)
         events.installAbsoluteClickHandler(
@@ -458,10 +488,23 @@ var ui = {
     /**
      * Show dialog
      * @param msg The message.
+     * @param isError Optional flag to indicate if this is an error message requiring special formatting.
+     * @param callback Optional callback function to execute when dialog is closed.
      */
-    showDialog: function(msg) {
+    showDialog: function(msg, isError, callback) {
         var dialog = $("div#dialog");
-        dialog.html(msg.replace("\n","<br>"));
+        dialog.removeClass("error-message");
+        if (isError) {
+            dialog.addClass("error-message");
+        }
+        dialog.html(msg.replace(/\n/g, "<br>"));
+        
+        // Remove previous close event handlers and add new one if callback provided
+        dialog.off('dialogclose');
+        if (callback) {
+            dialog.one('dialogclose', callback);
+        }
+        
         dialog.dialog('open');
     },
 

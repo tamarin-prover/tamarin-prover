@@ -51,7 +51,7 @@ module Web.Handler
   , getPrevTheoryPathDiffR
   , getSaveTheoryR
   , getDownloadTheoryR
-  , getAppendNewLemmasR
+  , postAppendNewLemmasR
   , getDownloadTheoryDiffR
   , postReloadTheoryR
   , getUnloadTheoryR
@@ -377,14 +377,13 @@ putDiffTheory parent origin thy rep = do
 --  - Support reload for diff theories
 --  - Track when user has modified a file in the UI and warn about unsaved changes when attempting to reload. (This can happen when a proof was generated, or when lemmas were added/edited/deleted in the GUI.)
 --  - There is some code duplication with the normal file load (trace and diff versions); consider refactoring common parts. However, when I tried this it became a bit ugly. Maybe it makes more sense to first think about refactoring for de-duplicating between the trace mode and diff mode first, and then revisit this bit afterwards.
-postReloadTheoryR :: TheoryIdx -> Handler Html
+postReloadTheoryR :: TheoryIdx -> Handler Value
 postReloadTheoryR idx = do
   -- Retrieve the current theory to get its origin and file path
   mTheory <- getTheory idx
   case mTheory of
-    Nothing -> do
-      setMessage "Theory not found"
-      redirect RootR
+    Nothing -> 
+      pure $ responseToJson (JsonAlert "Theory not found")
     Just (Trace ti) -> case ti.origin of
       -- Only allow reload for theories loaded from local files
       Local filePath -> do
@@ -393,61 +392,30 @@ postReloadTheoryR idx = do
         
         case result of
           Left (ParserError e) -> do
-            -- Show error dialog instead of just setting message
+            -- Return error as JSON with special error-message class marker
             let errorMsg = "Parse error while reloading file:\n\n" ++ filePath ++ "\n\n" ++ show e
-            renderErrorDialog idx ti errorMsg
+            pure $ responseToJson (JsonAlert $ T.pack errorMsg)
           Left (WarningError report) -> do
-            -- Show wellformedness errors in dialog
+            -- Return wellformedness errors as JSON
             let errorMsg = "Wellformedness errors while reloading file:\n\n" ++ filePath ++ "\n\n" ++ 
                           show (length report) ++ " error(s) found:\n\n" ++ 
                           renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
-            renderErrorDialog idx ti errorMsg
+            pure $ responseToJson (JsonAlert $ T.pack errorMsg)
           Right (_report, thy, wfErrors) -> do
             -- Replace the theory at the same index, preserving parent info and auto-prover
             case thy of
               Left closedThy  -> do
                 void $ replaceTheory (Just ti) (Just $ Local filePath) closedThy wfErrors idx
-                setMessage "Theory reloaded successfully from disk"
-                redirect $ InteractiveOverviewR idx TheoryHelp
-              Right _closedDiffThy -> do
-                setMessage "Reload not yet supported for diff theories"
-                redirect $ InteractiveOverviewR idx TheoryHelp
+                pure $ responseToJson (JsonAlert "File reloaded successfully")
+              Right _closedDiffThy -> 
+                pure $ responseToJson (JsonAlert "Reload not yet supported for diff theories")
 
-      Upload _ -> do
-        setMessage "Cannot reload: theory was uploaded (no file path)"
-        redirect $ InteractiveOverviewR idx TheoryHelp
-      Interactive -> do
-        setMessage "Cannot reload: theory was created interactively (no file path)"
-        redirect $ InteractiveOverviewR idx TheoryHelp
-    Just (Diff _) -> do
-      setMessage "Reload not yet supported for diff theories"
-      redirect RootR
-
--- | Render error dialog page after reload failure.
-renderErrorDialog :: TheoryIdx -> TheoryInfo -> String -> Handler Html
-renderErrorDialog idx ti errorMsg = do
-  renderF <- getUrlRender
-  renderParamsF <- getUrlRenderParams
-  getParams <- reqGetParams <$> getRequest
-  lptxt <- getLemmaPlaintext idx TheoryHelp
-  -- Add cache-control headers to prevent caching
-  addHeader "Cache-Control" "no-cache, no-store, must-revalidate"
-  addHeader "Pragma" "no-cache"
-  addHeader "Expires" "0"
-  defaultLayout $ do
-      let renderParamsF' route = renderParamsF route getParams
-      overview <- liftIO $ overviewTpl renderF renderParamsF' ti TheoryHelp lptxt
-      setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
-      -- Add script to show error dialog on page load
-      toWidget [julius|
-        $(document).ready(function() {
-          var dialog = $("#dialog");
-          var msg = #{toJSON errorMsg};
-          dialog.html(msg.replace(/\n/g, "<br>"));
-          dialog.dialog('open');
-        });
-      |]
-      overview
+      Upload _ -> 
+        pure $ responseToJson (JsonAlert "Cannot reload: theory was uploaded (no file path)")
+      Interactive -> 
+        pure $ responseToJson (JsonAlert "Cannot reload: theory was created interactively (no file path)")
+    Just (Diff _) -> 
+      pure $ responseToJson (JsonAlert "Reload not yet supported for diff theories")
 
 -- | Delete theory.
 -- | Generate HTML for wellformedness error warnings.
@@ -1658,8 +1626,8 @@ getDownloadTheoryR idx _ = do
   pure (typeOctet, source)
 
 -- | prompt appending of the current theory's lemmas to their source file
-getAppendNewLemmasR :: TheoryIdx -> String -> Handler Value
-getAppendNewLemmasR idx _ = withTheory idx $ \ti -> do
+postAppendNewLemmasR :: TheoryIdx -> String -> Handler Value
+postAppendNewLemmasR idx _ = withTheory idx $ \ti -> do
     let maybePath = case ti.origin of
                         Local path -> Just path
                         _ ->  Nothing

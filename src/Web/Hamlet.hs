@@ -178,10 +178,12 @@ headerTpl info = [whamlet|
           <ul>
             <li><a target=_blank href=@{TheorySourceR idx}>Show source</a>
             <li><a href=@{DownloadTheoryR idx filename}>Download source</a>
-            <li><a href=@{AppendNewLemmasR idx filename}>Append modified lemmas to file</a>
             $if isLocalOrigin origin
               <li>
-                <form method=POST action=@{ReloadTheoryR idx}>
+                <form method=POST action=@{AppendNewLemmasR idx filename} class=ajax-form>
+                  <button type=submit class=link-button>Append modified lemmas to file
+              <li>
+                <form method=POST action=@{ReloadTheoryR idx} class=ajax-form>
                   <button type=submit class=link-button>Reload file
         <li><a href="#">Options</a>
           <ul>
