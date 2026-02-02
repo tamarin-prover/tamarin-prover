@@ -501,9 +501,13 @@ unboundCheck info ru
     originatesFromLookup v = match v $ ruleProcess $ get preAttributes $ get rInfo ru
     match v (Just (ProcessComb (Lookup _ v') _ _ _))  = v == slvar v'
     match _ _ = False
+    isNowNode v = lvarSort v == LSortNode && lvarName v == "NOW"
     unboundVars = do
         v <- frees (get rConcs ru, get rActs ru, get rInfo ru)
-        guard $ not (lvarSort v == LSortPub || v `S.member` boundVars || originatesFromLookup v)
+        guard $ not ( isNowNode v
+                    || lvarSort v == LSortPub
+                    || v `S.member` boundVars
+                    || originatesFromLookup v)
         return v
 
 -- | Report on sort clashes.
