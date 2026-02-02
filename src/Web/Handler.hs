@@ -376,6 +376,7 @@ putDiffTheory parent origin thy rep = do
 -- TODO:
 --  - Support reload for diff theories
 --  - Track when user has modified a file in the UI and warn about unsaved changes when attempting to reload. (This can happen when a proof was generated, or when lemmas were added/edited/deleted in the GUI.)
+--  - There is some code duplication with the normal file load (trace and diff versions); consider refactoring common parts. However, when I tried this it became a bit ugly. Maybe it makes more sense to first think about refactoring for de-duplicating between the trace mode and diff mode first, and then revisit this bit afterwards.
 postReloadTheoryR :: TheoryIdx -> Handler Html
 postReloadTheoryR idx = do
   -- Retrieve the current theory to get its origin and file path
