@@ -369,7 +369,8 @@ ul#navigation li ul li:last-child {
     border-bottom: none;
 }
 
-ul#navigation li ul li a {
+ul#navigation li ul li a,
+ul#navigation li ul li button.link-button {
     display: block;
     width: 100%;
     height: 100%;
@@ -377,9 +378,13 @@ ul#navigation li ul li a {
     padding: 0.5em;
     background: none;
     border: none;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
 }
 
-ul#navigation li ul li a:hover {
+ul#navigation li ul li a:hover,
+ul#navigation li ul li button.link-button:hover {
     background: none;
 }
 

@@ -181,8 +181,8 @@ headerTpl info = [whamlet|
             <li><a href=@{AppendNewLemmasR idx filename}>Append modified lemmas to file</a>
             $if isLocalOrigin origin
               <li>
-                <form method=POST action=@{ReloadTheoryR idx} style="margin:0;padding:0;">
-                  <button type=submit style="background:none;border:none;color:#4a90d9;cursor:pointer;text-align:left;padding:0;font:inherit;">Reload file</button>
+                <form method=POST action=@{ReloadTheoryR idx}>
+                  <button type=submit class=link-button>Reload file
         <li><a href="#">Options</a>
           <ul>
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
