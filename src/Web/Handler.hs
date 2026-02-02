@@ -372,6 +372,10 @@ putDiffTheory parent origin thy rep = do
 --      - Partial evaluation if configured
 --   4. Replaces the theory at the same index (preserving URLs/navigation)
 -- This ensures external file changes are reflected with full recomputation.
+--
+-- TODO:
+--  - Support reload for diff theories
+--  - Track when user has modified a file in the UI and warn about unsaved changes when attempting to reload. (This can happen when a proof was generated, or when lemmas were added/edited/deleted in the GUI.)
 postReloadTheoryR :: TheoryIdx -> Handler Html
 postReloadTheoryR idx = do
   -- Retrieve the current theory to get its origin and file path
