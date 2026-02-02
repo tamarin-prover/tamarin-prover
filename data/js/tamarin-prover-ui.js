@@ -258,19 +258,13 @@ var ui = {
                     if(data.alert) {
                         // Check if it's an error message by looking for common error indicators
                         var isError = data.alert.includes("error") || data.alert.includes("Error");
-                        // Show dialog with callback to reload page on success (non-error)
-                        ui.showDialog(data.alert, isError, function() {
-                            if (!isError) {
-                                // Reload page without adding to history (avoids form resubmission warning)
-                                location.replace(location.href);
-                            }
-                        });
+                        ui.showDialog(data.alert, isError);
                     } else {
                         server.handleJson(data);
                     }
                 },
                 error: function() {
-                    ui.showDialog("Failed to submit form", true);
+                    ui.showDialog("Failed to submit form");
                 }
             });
         });
@@ -489,22 +483,14 @@ var ui = {
      * Show dialog
      * @param msg The message.
      * @param isError Optional flag to indicate if this is an error message requiring special formatting.
-     * @param callback Optional callback function to execute when dialog is closed.
      */
-    showDialog: function(msg, isError, callback) {
+    showDialog: function(msg, isError) {
         var dialog = $("div#dialog");
         dialog.removeClass("error-message");
         if (isError) {
             dialog.addClass("error-message");
         }
         dialog.html(msg.replace(/\n/g, "<br>"));
-        
-        // Remove previous close event handlers and add new one if callback provided
-        dialog.off('dialogclose');
-        if (callback) {
-            dialog.one('dialogclose', callback);
-        }
-        
         dialog.dialog('open');
     },
 

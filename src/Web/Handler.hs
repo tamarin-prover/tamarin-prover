@@ -406,7 +406,8 @@ postReloadTheoryR idx = do
             case thy of
               Left closedThy  -> do
                 void $ replaceTheory (Just ti) (Just $ Local filePath) closedThy wfErrors idx
-                pure $ responseToJson (JsonAlert "File reloaded successfully")
+                renderF <- getUrlRender
+                pure $ responseToJson (JsonRedirect $ renderF $ InteractiveOverviewR idx TheoryHelp)
               Right _closedDiffThy -> 
                 pure $ responseToJson (JsonAlert "Reload not yet supported for diff theories")
 
