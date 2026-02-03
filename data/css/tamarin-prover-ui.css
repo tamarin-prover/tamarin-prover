@@ -198,6 +198,11 @@ div#help {
     padding: 0.5em;
     margin: 0px;
     margin-bottom: 0.5em;
+    text-wrap: wrap;
+}
+
+div#shortcuts {
+    text-wrap: wrap;
 }
 
 /* Forms

@@ -1207,67 +1207,68 @@ helpHtml theoryName info renderUrl = [hamlet|
 
   <h3>Keyboard shortcuts
   <p>
-    <table>
-      <tr>
-        <td>
-          <span class="keys">j/k
-        <td>
-          Jump to the next/previous proof path within the currently
-          \ focused lemma.
-      <tr>
-        <td>
-          <span class="keys">J/K
-        <td>
-          Jump to the next/previous open constraint within the currently
-          \ focused lemma, or to the next/previous lemma if there are no
-          \ more #
-          <tt>sorry
-          \ steps in the proof of the current lemma.
-      <tr>
-        <td>
-          <span class="keys">1-9
-        <td>
-          Apply the proof method with the given number as shown in the
-          \ applicable proof method section in the main view.
-      <tr>
-        <td>
-          <span class="keys">a/A
-        <td>
-          Apply the autoprove method to the focused proof step.
-          \ <span class="keys">a</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">A</span>
-          \ searches for all solutions.
-          \ Needs to have a #
-          <tt>sorry
-          \ selected to work.
-      <tr>
-        <td>
-          <span class="keys">b/B
-        <td>
-          Apply a bounded-depth version of the autoprove method to the
-          \ focused proof step.
-          \ <span class="keys">b</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">B</span>
-          \ searches for all solutions.
-          \ Needs to have a #
-          <tt>sorry
-          \ selected to work.
-      <tr>
-        <td>
-          <span class="keys">s/S
-        <td>
-          Apply the autoprove method to all lemmas.
-          \ <span class="keys">s</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">S</span>
-          \ searches for all solutions.
-      <tr>
-        <td>
-          <span class="keys">?
-        <td>
-          Display this help message.
+    <div id="shortcuts">
+      <table>
+        <tr>
+          <td>
+            <span class="keys">j/k
+          <td>
+            Jump to the next/previous proof path within the currently
+            \ focused lemma.
+        <tr>
+          <td>
+            <span class="keys">J/K
+          <td>
+            Jump to the next/previous open constraint within the currently
+            \ focused lemma, or to the next/previous lemma if there are no
+            \ more #
+            <tt>sorry
+            \ steps in the proof of the current lemma.
+        <tr>
+          <td>
+            <span class="keys">1-9
+          <td>
+            Apply the proof method with the given number as shown in the
+            \ applicable proof method section in the main view.
+        <tr>
+          <td>
+            <span class="keys">a/A
+          <td>
+            Apply the autoprove method to the focused proof step.
+            \ <span class="keys">a</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">A</span>
+            \ searches for all solutions.
+            \ Needs to have a #
+            <tt>sorry
+            \ selected to work.
+        <tr>
+          <td>
+            <span class="keys">b/B
+          <td>
+            Apply a bounded-depth version of the autoprove method to the
+            \ focused proof step.
+            \ <span class="keys">b</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">B</span>
+            \ searches for all solutions.
+            \ Needs to have a #
+            <tt>sorry
+            \ selected to work.
+        <tr>
+          <td>
+            <span class="keys">s/S
+          <td>
+            Apply the autoprove method to all lemmas.
+            \ <span class="keys">s</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">S</span>
+            \ searches for all solutions.
+        <tr>
+          <td>
+            <span class="keys">?
+          <td>
+            Display this help message.
 |] renderUrl
 
 {-
