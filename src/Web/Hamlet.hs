@@ -172,8 +172,12 @@ headerTpl info = [whamlet|
         \ <a href=@{RootR}><span class="tamarin">Tamarin</span></a>
         \ #{showVersion version}
     <div #header-links>
-      <a class=plain-link href=@{RootR}>Index</a>
       <ul #navigation>
+        <li><a href=@{RootR}>Index</a>
+        $if isLocalOrigin origin
+          <li>
+            <form method=POST action=@{ReloadTheoryR idx} class="ajax-form ajax-form-full">
+              <button type=submit class=nav-button>Reload file
         <li><a href="#">Actions</a>
           <ul>
             <li><a target=_blank href=@{TheorySourceR idx}>Show source</a>
@@ -182,11 +186,8 @@ headerTpl info = [whamlet|
               <li>
                 <form method=POST action=@{AppendNewLemmasR idx filename} class=ajax-form>
                   <button type=submit class=link-button>Append modified lemmas to file
-              <li>
-                <form method=POST action=@{ReloadTheoryR idx} class=ajax-form>
-                  <button type=submit class=link-button>Reload file
         <li><a href="#">Options</a>
-          <ul>
+          <ul class="list-with-toggles">
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
             <li><a id=agent-toggle href="#">Clustering by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
