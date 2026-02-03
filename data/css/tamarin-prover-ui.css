@@ -343,7 +343,7 @@ ul#navigation li ul {
     width: 22em;
     display: none;
     list-style: none;
-    margin-left: -6em;
+    margin-left: -4em;
     padding: 0.3em 0 0 0;
     opacity: 0.8;
     filter: alpha(opacity=80);
@@ -389,6 +389,11 @@ ul#navigation li ul li button.link-button:hover {
 
 ul#navigation li ul li:hover {
     background: #666;
+}
+
+/* need to override the ID selector for the class. Normally more specific selectors (e.g., ID) have precedence over more generic ones (class). */
+ul#navigation li ul.list-with-toggles {
+    margin-left: -6em;
 }
 
 /* need to override the ID selector for the class. Normally more specific selectors (e.g., ID) have precedence over more generic ones (class). */
