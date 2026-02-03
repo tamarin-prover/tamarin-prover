@@ -136,7 +136,14 @@ getDotGenStateElements :: Dot [GraphElement]
 getDotGenStateElements = getM dgsElements
 
 createClusterNodeId :: String -> NodeId
-createClusterNodeId agentName = NodeId ("cluster_" ++ agentName)
+createClusterNodeId agentName = NodeId (quoteDotId ("cluster_" ++ agentName))
+
+quoteDotId :: String -> String
+quoteDotId str = "\"" ++ concatMap escape str ++ "\""
+  where
+    escape '"'  = "\\\""
+    escape '\\' = "\\\\"
+    escape c    = [c]
   
 createSubGraph :: Maybe NodeId -> [GraphElement] -> GraphElement
 createSubGraph = SubGraph
