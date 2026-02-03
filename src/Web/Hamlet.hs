@@ -176,7 +176,7 @@ headerTpl info = [whamlet|
         <li><a href=@{RootR}>Index</a>
         $if isLocalOrigin origin
           <li>
-            <form method=POST action=@{ReloadTheoryR idx} class="ajax-form ajax-form-full">
+            <form method=POST action=@{ReloadTheoryR idx} class="ajax-form ajax-form-full reload-confirm">
               <button type=submit class=nav-button>Reload file
         <li><a href="#">Actions</a>
           <ul>

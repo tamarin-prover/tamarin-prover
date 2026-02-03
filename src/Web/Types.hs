@@ -714,6 +714,7 @@ defaultLayout' w = do
           \  <a id=cancel href='#'>Cancel</a>
         ^{pageBody page}
         <div#dialog>
+        <div#confirm-dialog>
         <ul#contextMenu>
           <li.autoprove>
             <a href="#autoprove">Autoprove</a>
