@@ -338,7 +338,7 @@ helpAndExit tmode mayMsg = do
   -- output example info
   putStrLn $ unlines
     [ separator
-    , "To show help for differents commands, type tamarin-prover [Command] --help."
+    , "To show help for different commands, type tamarin-prover [Command] --help."
     , separator
     , "See 'https://github.com/tamarin-prover/tamarin-prover/blob/master/README.md'"
     , "for usage instructions and pointers to examples."
