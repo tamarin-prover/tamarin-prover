@@ -13,6 +13,7 @@ module Theory.Text.Parser.Term (
     , llit
     , natLit
     , term
+    , acterm
     , llitNoPub
     , reservedBuiltins
     , llitWithNode    
@@ -33,6 +34,9 @@ import           Theory.Text.Parser.Token
 import           Data.ByteString.Internal        (unpackChars)
 import Data.Functor (($>))
 
+-- | An AC operator
+opAC :: ACfctSym -> Parser ()
+opAC (op, _) = symbol_ (BC.unpack op)
 
 -- | Parse a lit with logical variables parsed by @varp@
 vlit :: Parser v -> Parser (NTerm v)
@@ -111,7 +115,7 @@ binaryAlgApp eqn plit = do
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     (k,priv,constr,acstate) <- lookupArity op
     arg1 <- braced (tupleterm eqn plit)
-    arg2 <- term plit eqn
+    arg2 <- term eqn plit
     when (k /= 2) $ fail
       "only operators of arity 2 can be written using the `op{t1}t2' notation"
     case acstate of
@@ -133,8 +137,8 @@ diffOp eqn plit = do
   return $ fAppDiff (arg1, arg2)
 
 -- | Parse a term.
-term :: Ord l => Parser (Term l) -> Bool -> Parser (Term l)
-term plit eqn = asum
+term :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+term eqn plit = asum
     [ pairing       <?> "pairs"
     , parens (msetterm eqn plit)
     , symbol "DH_neutral" *> pure fAppDHNeutral    
@@ -155,9 +159,18 @@ term plit eqn = asum
       asum [ try (symbol (BC.unpack sym)) $> fApp fs []
            | fs@(NoEq (sym,(0,_,_))) <- S.toList $ funSyms maudeSig ]
 
+-- | A left-associative sequence of user-defined AC operators.
+acterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
+acterm eqn plit = do
+    acsyms <- stACFunSyms . sig <$> getState
+    parseACSym $ S.toList acsyms
+  where
+    parseACSym [] = term eqn plit
+    parseACSym (op:ops) = chainl1 (parseACSym ops) ((\a b -> fAppACfct op [a,b]) <$ opAC op)
+
 -- | A left-associative sequence of exponentations.
 expterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
-expterm eqn plit = chainl1 (term plit eqn) (curry fAppExp <$ opExp)
+expterm eqn plit = chainl1 (acterm eqn plit) (curry fAppExp <$ opExp)
 
 -- | A left-associative sequence of multiplications.
 multterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
@@ -165,7 +178,7 @@ multterm eqn plit = do
     dh <- enableDH . sig  <$> getState
     if dh && not eqn -- if DH is not enabled, do not accept 'multterm's and 'expterm's
         then chainl1 (expterm eqn plit) ((\a b -> fAppAC Mult [a,b]) <$ opMult)
-        else term plit eqn
+        else acterm eqn plit
 
 -- | A left-associative sequence of xors.
 xorterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
@@ -187,7 +200,7 @@ msetterm eqn plit = do
 natterm :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 natterm eqn plit = do
     nats <- enableNat . sig <$> getState
-    if nats && not eqn-- if xor is not enabled, do not accept 'xorterms's
+    if nats && not eqn-- if nat is not enabled, do not accept 'natterms'
         then chainl1 (xorterm eqn plit) ((\a b -> fAppAC NatPlus [a,b]) <$ opPlus)
         else xorterm eqn plit
 

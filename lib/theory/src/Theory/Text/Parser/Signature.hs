@@ -180,7 +180,7 @@ equations = do
     return ()
   where
     equation = do
-        rrule <- RRule <$> term llitNoPub True <*> (equalSign *> term llitNoPub True)
+        rrule <- RRule <$> acterm True llitNoPub <*> (equalSign *> acterm True llitNoPub)
         case rRuleToCtxtStRule rrule of
           Just str -> return str
           Nothing  -> fail $ "Not a correct equation: " ++ show rrule

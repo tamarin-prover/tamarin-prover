@@ -91,9 +91,9 @@ data MaudeSig = MaudeSig
     , enableXor          :: Bool
     , enableDiff         :: Bool
     , stFunSyms          :: S.Set NoEqSym     -- ^ function signature for subterm theory
-    , stACFunSyms        :: S.Set ACfctSym
+    , stACFunSyms        :: S.Set ACfctSym    -- ^ user-defined AC function signature
     , stRules            :: S.Set CtxtStRule  -- ^ rewriting rules for subterm theory
-    , eqConvergent       :: Bool            -- ^ convergence information for equations
+    , eqConvergent       :: Bool              -- ^ convergence information for equations
     , funSyms            :: FunSig            -- ^ function signature including the
                                               -- function symbols for DH, BP, and Multiset
                                               -- can be computed from enableX and stFunSyms
