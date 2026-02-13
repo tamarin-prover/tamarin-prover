@@ -155,7 +155,10 @@ reportDiffVars analysisresults rules vars = case rulesAndVars of
 -----------------------------------------------
 
 freesInThyRules :: [OpenProtoRule] -> [[LVar]]
-freesInThyRules = map (frees . L.get oprRuleE)
+freesInThyRules =
+    -- Timepoint variables such as #NOW come from _restrict annotations but
+    -- are not message variables we need to prove deducible.
+    map (filter ((/= LSortNode) . lvarSort) . frees . L.get oprRuleE)
 
 premsOfThyRules :: [OpenProtoRule] -> [[LNFact]]
 premsOfThyRules = map (L.get rPrems . L.get oprRuleE)
