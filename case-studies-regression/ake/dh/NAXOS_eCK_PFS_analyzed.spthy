@@ -169,93 +169,45 @@ rule (modulo E) Resp_1:
      !Sessk( ~ey, h2(<'g'^(~x*h1(<~ey, ~eb>)), z, z.1, $A, $B>) )
      ]
     variants (modulo AC)
-     1. ~eb   = ~eb.35
-        ~ey   = ~ey.36
-        X     = X.38
-        z     = X.38^~eb.35
-        z.1   = X.38^h1(<~ey.36, ~eb.35>)
+    1. ~eb   = ~eb.35
+       ~ey   = ~ey.36
+       X     = X.38
+       z     = X.38^~eb.35
+       z.1   = X.38^h1(<~ey.36, ~eb.35>)
     
-     2. ~eb   = ~eb.39
-        ~ey   = ~ey.40
-        X     = z.46^inv(~eb.39)
-        z     = z.46
-        z.1   = z.46^(h1(<~ey.40, ~eb.39>)*inv(~eb.39))
+    2. ~eb   = ~eb.39
+       ~ey   = ~ey.40
+       X     = z.46^inv(~eb.39)
+       z     = z.46
+       z.1   = z.46^(h1(<~ey.40, ~eb.39>)*inv(~eb.39))
     
-     3. ~eb   = ~eb.40
-        ~ey   = ~ey.41
-        X     = z.48^inv(h1(<~ey.41, ~eb.40>))
-        z     = z.48^(~eb.40*inv(h1(<~ey.41, ~eb.40>)))
-        z.1   = z.48
+    3. ~eb   = ~eb.436
+       ~ey   = ~ey.437
+       X     = x.867^x.868
+       z     = x.867^(~eb.436*x.868)
+       z.1   = x.867^(x.868*h1(<~ey.437, ~eb.436>))
     
-     4. ~eb   = ~eb.436
-        ~ey   = ~ey.437
-        X     = x.867^x.868
-        z     = x.867^(~eb.436*x.868)
-        z.1   = x.867^(x.868*h1(<~ey.437, ~eb.436>))
+    4. ~eb   = ~eb.439
+       ~ey   = ~ey.440
+       X     = x.873^inv((~eb.439*x.874))
+       z     = x.873^inv(x.874)
+       z.1   = x.873^(h1(<~ey.440, ~eb.439>)*inv((~eb.439*x.874)))
     
-     5. ~eb   = ~eb.438
-        ~ey   = ~ey.439
-        X     = x.872^inv((~eb.438*h1(<~ey.439, ~eb.438>)))
-        z     = x.872^inv(h1(<~ey.439, ~eb.438>))
-        z.1   = x.872^inv(~eb.438)
+    5. ~eb   = ~eb.439
+       ~ey   = ~ey.440
+       X     = x.873^(x.874*inv(~eb.439))
+       z     = x.873^x.874
+       z.1   = x.873^(x.874*h1(<~ey.440, ~eb.439>)*inv(~eb.439))
     
-     6. ~eb   = ~eb.439
-        ~ey   = ~ey.440
-        X     = x.873^inv((~eb.439*x.874))
-        z     = x.873^inv(x.874)
-        z.1   = x.873^(h1(<~ey.440, ~eb.439>)*inv((~eb.439*x.874)))
+    6. ~eb   = ~eb.440
+       ~ey   = ~ey.441
+       X     = x.874^(x.875*inv((~eb.440*x.876)))
+       z     = x.874^(x.875*inv(x.876))
+       z.1   = x.874^(x.875*h1(<~ey.441, ~eb.440>)*inv((~eb.440*x.876)))
     
-     7. ~eb   = ~eb.439
-        ~ey   = ~ey.440
-        X     = x.873^inv((~eb.439*x.874*h1(<~ey.440, ~eb.439>)))
-        z     = x.873^inv((x.874*h1(<~ey.440, ~eb.439>)))
-        z.1   = x.873^inv((~eb.439*x.874))
-    
-     8. ~eb   = ~eb.439
-        ~ey   = ~ey.440
-        X     = x.873^inv((x.874*h1(<~ey.440, ~eb.439>)))
-        z     = x.873^(~eb.439*inv((x.874*h1(<~ey.440, ~eb.439>))))
-        z.1   = x.873^inv(x.874)
-    
-     9. ~eb   = ~eb.439
-        ~ey   = ~ey.440
-        X     = x.873^(x.874*inv(~eb.439))
-        z     = x.873^x.874
-        z.1   = x.873^(x.874*h1(<~ey.440, ~eb.439>)*inv(~eb.439))
-    
-    10. ~eb   = ~eb.439
-        ~ey   = ~ey.440
-        X     = x.873^(x.874*inv(h1(<~ey.440, ~eb.439>)))
-        z     = x.873^(~eb.439*x.874*inv(h1(<~ey.440, ~eb.439>)))
-        z.1   = x.873^x.874
-    
-    11. ~eb   = ~eb.439
-        ~ey   = ~ey.440
-        X     = x.873^(x.874*inv((~eb.439*h1(<~ey.440, ~eb.439>))))
-        z     = x.873^(x.874*inv(h1(<~ey.440, ~eb.439>)))
-        z.1   = x.873^(x.874*inv(~eb.439))
-    
-    12. ~eb   = ~eb.440
-        ~ey   = ~ey.441
-        X     = x.874^(x.875*inv((~eb.440*x.876)))
-        z     = x.874^(x.875*inv(x.876))
-        z.1   = x.874^(x.875*h1(<~ey.441, ~eb.440>)*inv((~eb.440*x.876)))
-    
-    13. ~eb   = ~eb.440
-        ~ey   = ~ey.441
-        X     = x.874^(x.875*inv((~eb.440*x.876*h1(<~ey.441, ~eb.440>))))
-        z     = x.874^(x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
-        z.1   = x.874^(x.875*inv((~eb.440*x.876)))
-    
-    14. ~eb   = ~eb.440
-        ~ey   = ~ey.441
-        X     = x.874^(x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
-        z     = x.874^(~eb.440*x.875*inv((x.876*h1(<~ey.441, ~eb.440>))))
-        z.1   = x.874^(x.875*inv(x.876))
-    
-    15. X     = DH_neutral
-        z     = DH_neutral
-        z.1   = DH_neutral
+    7. X     = DH_neutral
+       z     = DH_neutral
+       z.1   = DH_neutral
   */
 
 rule (modulo E) Sessk_reveal:
@@ -386,9 +338,9 @@ Failed to derive Variable(s): ~lkI
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5
+Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
+Compiled at: 2025-09-19 11:18:23.495617078 UTC
 */
 
 end
@@ -400,7 +352,7 @@ summary of summaries:
 analyzed: examples/ake/dh/NAXOS_eCK_PFS.spthy
 
   output:          examples/ake/dh/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 0.93s
+  processing time: 4.46s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

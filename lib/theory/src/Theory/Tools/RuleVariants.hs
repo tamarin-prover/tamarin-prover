@@ -125,6 +125,7 @@ variantsProtoRule hnd ru@(Rule (ProtoRuleEInfo na attr _) prems0 concs0 acts0 nv
     premiseTerms :: [LNTerm]
     premiseTerms = concat [ ts | Fact t _ ts <- prems0, t /= FreshFact ]
 
+    -- Optimization documented in: https://eprint.iacr.org/2026/230
     isFreshRedundant :: LNSubstVFresh -> Bool
     isFreshRedundant sFresh =
       let subst = freshToFreeAvoidingFast sFresh (frees premiseTerms)

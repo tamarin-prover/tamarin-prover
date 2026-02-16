@@ -326,10 +326,8 @@ sortGeqLTerm :: IsConst c => (c -> LSort) -> LVar -> LTerm c -> Bool
 sortGeqLTerm st v t = do
     case (lvarSort v, sortOfLTerm st t) of
         (s1, s2) | s1 == s2     -> True
-        -- Node is incomparable to all other sorts, invalid input
-        (LSortNode,  _        ) -> errNodeSort
-        (_,          LSortNode) -> errNodeSort
+        -- Node is incomparable to all other sorts; treat mismatches as non-matching
+        -- instead of crashing so we fail unification gracefully.
+        (LSortNode,  _        ) -> False
+        (_,          LSortNode) -> False
         (s1, s2)                -> sortCompare s1 s2 `elem` [Just EQ, Just GT]
-  where
-    errNodeSort = error $
-        "sortGeqLTerm: node sort misuse " ++ show v ++ " -> " ++ show t

@@ -11,9 +11,12 @@ Portability :  non-portable
 
 module Web.Handler
   ( getOverviewR
+  , getInteractiveOverviewR
+  , getInteractiveDotGraphR
   , postTheoryEditR
   , getTheoryVerifyR
   , getOverviewDiffR
+  , getInteractiveOverviewDiffR
   , getRootR
   , postRootR
   , getTheorySourceR
@@ -26,8 +29,13 @@ module Web.Handler
   , getTheoryPathDiffMR
   -- , getTheoryPathDR
   , getTheoryGraphR
+  , getTheoryInteractiveGraphR
   , getTheoryGraphDiffR
   , getTheoryMirrorDiffR
+  , getTheoryInteractiveGraphDiffR
+  , getTheoryInteractiveMirrorDiffR
+  , getInteractiveDotGraphDiffR
+  , getInteractiveDotGraphMirrorDiffR
   , getAutoProverR
   , getAutoDiffProverR
   , getAutoProverDiffR
@@ -604,7 +612,7 @@ modifyTheory ti f fpath errResponse = do
     Right Nothing    -> pure (responseToJson errResponse)
     Right (Just thy) -> do
       newThyIdx <- putTheory (Just ti) Nothing thy ti.errorsHtml
-      newUrl <- getUrlRender <*> pure (OverviewR newThyIdx (fpath thy))
+      newUrl <- getUrlRender <*> pure (InteractiveOverviewR newThyIdx (fpath thy))
       pure . responseToJson $ JsonRedirect newUrl
   where
    excResponse e = responseToJson
@@ -624,7 +632,7 @@ modifyDiffTheory ti f fpath errResponse = do
     Right Nothing    -> pure (responseToJson errResponse)
     Right (Just thy) -> do
       newThyIdx <- putDiffTheory (Just ti) Nothing thy ti.errorsHtml
-      newUrl <- getUrlRender <*> pure (OverviewDiffR newThyIdx (fpath thy))
+      newUrl <- getUrlRender <*> pure (InteractiveOverviewDiffR newThyIdx (fpath thy))
       pure . responseToJson $ JsonRedirect newUrl
   where
    excResponse e = responseToJson
@@ -712,7 +720,7 @@ getTheoryVerifyR  idx (TheoryProof l path) = do
     idx' <- editProof idx l
     renderUrl <- getUrlRender
     case idx' of
-        Right i -> pure $ RepJson $ toContent $ object ["redirect" .= renderUrl (OverviewR i (TheoryProof l path))]
+        Right i -> pure $ RepJson $ toContent $ object ["redirect" .= renderUrl (InteractiveOverviewR i (TheoryProof l path))]
         Left _  -> getTheoryPathMR idx TheoryHelp
 
 getTheoryVerifyR idx _ = do getTheoryPathMR idx TheoryHelp
@@ -723,9 +731,9 @@ postTheoryEditR :: TheoryIdx -> TheoryPath -> Handler Html
 postTheoryEditR idx (TheoryDelete l) = do
     idx' <- deleteLemma idx l
     case idx' of
-        Right i -> redirect (OverviewR i TheoryHelp)
+        Right i -> redirect (InteractiveOverviewR i TheoryHelp)
         Left  e -> do setMessage $ toHtml e
-                      redirect (OverviewR idx (TheoryDelete l))
+                      redirect (InteractiveOverviewR idx (TheoryDelete l))
 
 
 postTheoryEditR idx path = do
@@ -740,7 +748,7 @@ postTheoryEditR idx path = do
     case idx' of
         Right i -> do
                     case mLemmaText of
-                        Just _ ->  redirect (OverviewR i path)
+                        Just _ ->  redirect (InteractiveOverviewR i path)
                         Nothing -> defaultLayout $ do
                             setTitle "Error"
                             [whamlet|<p>Failed to retrieve lemma-text from form data|]
@@ -756,6 +764,53 @@ postTheoryEditR idx path = do
                       overview
 
 
+-- | Show overview over theory (framed layout) with interactive dot graph
+-- or only the interactive dot graph if opened/requested as a pop up (with graph_only in the url param)
+getInteractiveOverviewR  :: TheoryIdx -> TheoryPath -> Handler Html
+getInteractiveOverviewR idx path = withTheory idx ( \ti -> do
+  renderF <- getUrlRender
+  renderParamsF <- getUrlRenderParams
+  getParams <- reqGetParams <$> getRequest
+  lptxt <- getLemmaPlaintext idx path
+  defaultLayout $ do
+      let renderParamsF' route = renderParamsF route getParams
+      overview <- liftIO $ overviewTpl renderF renderParamsF' ti path lptxt
+      setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
+      overview)
+
+getInteractiveDotGraphR :: TheoryIdx -> TheoryPath -> Handler Html
+getInteractiveDotGraphR idx path = withTheory idx ( \ti -> do
+  renderF <- getUrlRender
+  let dotPath = T.unpack $ renderF (TheoryInteractiveGraphR idx path)
+  intdotLayout $ do 
+      setTitle (toHtml $ "Theory: " ++ ti.theory._thyName)
+      toWidget
+        [hamlet|
+            <dot-graph-viz dotsrc="#{dotPath}">
+        |])
+
+getInteractiveDotGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
+getInteractiveDotGraphDiffR idx path = withDiffTheory idx (\ti -> do
+  renderF <- getUrlRender
+  let dotPath = T.unpack $ renderF (TheoryInteractiveGraphDiffR idx path)
+  intdotLayout $ do 
+      setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
+      toWidget
+        [hamlet|
+            <dot-graph-viz dotsrc="#{dotPath}">
+        |])
+
+getInteractiveDotGraphMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
+getInteractiveDotGraphMirrorDiffR idx path = withDiffTheory idx (\ti -> do
+  renderF <- getUrlRender
+  let dotPath = T.unpack $ renderF (TheoryInteractiveMirrorDiffR idx path)
+  intdotLayout $ do 
+      setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
+      toWidget
+        [hamlet|
+            <dot-graph-viz dotsrc="#{dotPath}">
+        |])
+
 -- | Show overview over diff theory (framed layout).
 getOverviewDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
 getOverviewDiffR idx path = withDiffTheory idx $ \ti -> do
@@ -764,6 +819,16 @@ getOverviewDiffR idx path = withDiffTheory idx $ \ti -> do
     overview <- liftIO $ overviewDiffTpl renderF ti path
     setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
     overview
+
+-- | Show overview over diff theory (framed layout) with interactive dot graph
+-- or only the interactive dot graph if opened/requested as a pop up (with graph_only in the url param)
+getInteractiveOverviewDiffR :: TheoryIdx -> DiffTheoryPath -> Handler Html
+getInteractiveOverviewDiffR idx path = withDiffTheory idx ( \ti -> do
+  renderF <- getUrlRender
+  defaultLayout $ do
+      overview <- liftIO $ overviewDiffTpl renderF ti path
+      setTitle (toHtml $ "DiffTheory: " ++ ti.theory._diffThyName)
+      overview )
 
 -- | Show source (pretty-printed open theory).
 getTheorySourceR :: TheoryIdx -> Handler RepPlain
@@ -1180,9 +1245,22 @@ getTheoryGraphR idx path = withTheory idx $ \ti -> do
     Nothing -> notFound
     Just img -> sendFile (fromString . imageFormatMIME $ yesod.imageFormat) img
 
+-- | Get rendered interactive dot graph for theory and given path.
+getTheoryInteractiveGraphR:: TheoryIdx -> TheoryPath -> Handler T.Text
+getTheoryInteractiveGraphR idx path = withTheory idx ( \ti -> do
+        (graphOptions, dotOptions) <- getOptions
+        case (dotGraphString (dotSystemCompact graphOptions dotOptions) ti.theory path) of 
+          Just dotStr -> return (T.pack dotStr)
+          Nothing     -> notFound
+      )
+
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
 getTheoryGraphDiffR idx path = getTheoryGraphDiffR' idx path False
+
+-- | Get rendered interactive dot graph for theory and given path.
+getTheoryInteractiveGraphDiffR :: TheoryIdx -> DiffTheoryPath -> Handler T.Text
+getTheoryInteractiveGraphDiffR idx path = getTheoryInteractiveGraphDiffR' idx path False
 
 -- | Get rendered graph for theory and given path.
 getTheoryGraphDiffR' :: TheoryIdx -> DiffTheoryPath -> Bool -> Handler ()
@@ -1202,9 +1280,23 @@ getTheoryGraphDiffR' idx path mirror = withDiffTheory idx $ \ti -> do
     Nothing -> notFound
     Just img -> sendFile (fromString . imageFormatMIME $ yesod.imageFormat) img
 
+getTheoryInteractiveGraphDiffR' :: TheoryIdx -> DiffTheoryPath -> Bool -> Handler T.Text
+getTheoryInteractiveGraphDiffR' idx path mirror = withDiffTheory idx ( \ti -> do
+      (graphOptions, dotOptions) <- getOptions
+      case interactiveDotDiffThyPath
+          (dotSystemCompact graphOptions dotOptions)
+          ti.theory path
+          (mirror) of
+        Nothing -> notFound
+        Just dotStr -> return (T.pack dotStr))
+
 -- | Get rendered mirror graph for theory and given path.
 getTheoryMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler ()
 getTheoryMirrorDiffR idx path =  getTheoryGraphDiffR' idx path True
+
+-- | Get rendered mirror graph for theory and given path.
+getTheoryInteractiveMirrorDiffR :: TheoryIdx -> DiffTheoryPath -> Handler T.Text
+getTheoryInteractiveMirrorDiffR idx path =  getTheoryInteractiveGraphDiffR' idx path True
 
 -- | Kill a thread (aka 'cancel request').
 getKillThreadR :: Handler RepPlain

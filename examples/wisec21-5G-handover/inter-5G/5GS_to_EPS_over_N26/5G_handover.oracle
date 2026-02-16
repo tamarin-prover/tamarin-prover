@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import sys
 import re
@@ -117,10 +117,10 @@ elif re.match('^secret\_', lemma):
 
 ## UNEXPECTED LEMMAS
 else:
-  print "Unexpected lemma: {}".format(lemma)
+  print("Unexpected lemma: {}".format(lemma))
   exit(0)
 
 for goalList in reversed(rank):
   for goal in goalList:
     sys.stderr.write(goal)
-    print goal
+    print(goal)
