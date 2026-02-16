@@ -47,8 +47,8 @@ SOLVED // trace found
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: 0d0a9d2c3f0d51a201ab555c488ee6da4d1ee5a1, branch: fix-builtin
-Compiled at: 2026-02-16 13:58:57.542957 UTC
+Git revision: 56c730fe161c4051cb423cc761c3bda98c06d645 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-16 15:32:23.932373448 UTC
 */
 
 end
@@ -60,7 +60,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue753-4.spthy
 
   output:          examples/regression/trace/issue753-4.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.05s
   
   False (all-traces): falsified - found trace (2 steps)
 
