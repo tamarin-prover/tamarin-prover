@@ -24,34 +24,34 @@ heuristic: p
 
 
 
-rule (modulo E) Init[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='P()', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) P_0_[color=#ffffff, process='P()', issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_1[color=#6c8040, process="new a.1;", issapicrule,
+rule (modulo E) newa_0_1[color=#6c8040, process='new a.1;', issapicrule,
                          role='P']:
    [ State_1( ), Fr( a.1 ) ] --> [ State_11( a.1 ) ]
 
   /*
-  rule (modulo AC) newa_0_1[color=#6c8040, process="new a.1;", issapicrule,
+  rule (modulo AC) newa_0_1[color=#6c8040, process='new a.1;', issapicrule,
                             role='P']:
      [ State_1( ), Fr( a ) ] --> [ State_11( a ) ]
   */
 
-rule (modulo E) outga_0_11[color=#6c8040, process="out('g'^a.1);",
+rule (modulo E) outga_0_11[color=#6c8040, process='out('g'^a.1);',
                            issapicrule, role='P']:
    [ State_11( a.1 ) ] --> [ State_111( a.1 ), Out( 'g'^a.1 ) ]
 
   /*
-  rule (modulo AC) outga_0_11[color=#6c8040, process="out('g'^a.1);",
+  rule (modulo AC) outga_0_11[color=#6c8040, process='out('g'^a.1);',
                               issapicrule, role='P']:
      [ State_11( a ) ] --> [ State_111( a ), Out( z ) ]
     variants (modulo AC)
@@ -62,17 +62,17 @@ rule (modulo E) outga_0_11[color=#6c8040, process="out('g'^a.1);",
        z     = 'g'
   */
 
-rule (modulo E) p_0_111[color=#6c8040, process="0", issapicrule,
+rule (modulo E) p_0_111[color=#6c8040, process='0', issapicrule,
                         role='P']:
    [ State_111( a.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111[color=#6c8040, process="0", issapicrule,
+  rule (modulo AC) p_0_111[color=#6c8040, process='0', issapicrule,
                            role='P']:
      [ State_111( a ) ] --> [ ]
   */
 
-rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process='0', issapicrule,
                       role='Process']:
    [ State_2( ) ] --> [ ]
 
@@ -88,8 +88,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
 
 end
@@ -101,7 +101,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let-blocks2.spthy
 
   output:          examples/sapic/fast/basic/let-blocks2.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.02s
   
 
 ==============================================================================

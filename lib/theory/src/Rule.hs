@@ -29,6 +29,7 @@ import           Theory.Tools.IntruderRules
 import           Term.Positions
 import           Term.Macro
 import Theory.Constraint.Solver.Sources (IntegerParameters)
+import Data.Maybe (maybeToList)
 
 
 
@@ -93,8 +94,8 @@ unfoldRuleVariants (ClosedProtoRule ruE ruAC@(Rule ruACInfoOld ps cs as nvs))
 -- soundness sequent, if required.
 closeProtoRule :: MaudeHandle -> [Macro] -> OpenProtoRule -> [ClosedProtoRule]
 -- if there are no macros, we do not call applyMacroInRule to make sure that new vars are not overwritten (important for diff mode)
-closeProtoRule hnd []     (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd ruE)]
-closeProtoRule hnd macros (OpenProtoRule ruE [])   = [ClosedProtoRule ruE (variantsProtoRule hnd (applyMacroInRule macros ruE))]
+closeProtoRule hnd []     (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd ruE)
+closeProtoRule hnd macros (OpenProtoRule ruE [])   = ClosedProtoRule ruE <$> maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
 closeProtoRule _   _      (OpenProtoRule ruE ruAC) = map (ClosedProtoRule ruE) ruAC
 
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants

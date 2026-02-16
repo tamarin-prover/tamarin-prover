@@ -144,39 +144,18 @@ rule (modulo E) RevealSign_With_Compromised_Key:
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Invalid_Extract_Key_From_RevealSign: 
-Failed to derive Variable(s): sk
-
-Rule Invalid_Forge_RevealSignature: 
-Failed to derive Variable(s): sk
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: 1a1dc3f231a8c9bde674df4f0407fd9484c63935 (with uncommited changes), branch: fix-macros-expansion
-Compiled at: 2025-07-02 11:45:41.586397637 UTC
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
 
 end
 /* Output
-maude tool: 'maude'
- checking version: 3.4. OK.
- checking installation: OK.
-[Theory RevealSignatureDerivationTests] Theory loaded
-[Theory RevealSignatureDerivationTests] Theory translated
-[Theory RevealSignatureDerivationTests] Derivation checks started
-[Theory RevealSignatureDerivationTests] Derivation checks ended
-[Theory RevealSignatureDerivationTests] Theory closed
 
 ==============================================================================
 summary of summaries:
@@ -184,10 +163,8 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/revealingSignatureDerivationTest.spthy
 
   output:          examples/features/derivation-checks/revealingSignatureDerivationTest.spthy.tmp
-  processing time: 0.23s
+  processing time: 0.02s
   
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
 
 ==============================================================================
 */

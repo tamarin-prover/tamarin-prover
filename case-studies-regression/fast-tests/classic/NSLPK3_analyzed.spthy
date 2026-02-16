@@ -729,8 +729,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: 0a44c79dec0eccbe1e51aa85da3c6ac96fdf5bd5 (with uncommited changes), branch: HEAD
-Compiled at: 2025-07-01 09:22:11.756606439 UTC
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
 
 end
@@ -742,7 +742,7 @@ summary of summaries:
 analyzed: examples/classic/NSLPK3.spthy
 
   output:          examples/classic/NSLPK3.spthy.tmp
-  processing time: 1.40s
+  processing time: 0.75s
   
   types (all-traces): verified (32 steps)
   nonce_secrecy (all-traces): verified (54 steps)

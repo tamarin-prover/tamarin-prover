@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import os, sys, re, platform
 from datetime import datetime
@@ -112,14 +112,14 @@ def create_html_code(directories, columns, tex_add, split_theory_regex):
 			else:
 				files += [dir + file for file in os.listdir(dir) if file.endswith('.proof')]
 		except:
-			print ('[Error] Invalid directory "%s"' % dir)
+			print(('[Error] Invalid directory "%s"' % dir))
 			return None
 
 	files.sort()
 	files.reverse() #reverse order...this is just a matter of taste
 
 	for proof_file in files:
-		print ('Parsing "%s"' % proof_file)
+		print(('Parsing "%s"' % proof_file))
 
 		results = {}
 		results['Theory file'] = theory_file = proof_file[:-6] + '.spthy'
@@ -154,8 +154,8 @@ def create_html_code(directories, columns, tex_add, split_theory_regex):
 					results['Verified'] = 'No'
 		
 		if 'Theory' not in results:
-			print ('[Warning] No theory name found for "%s", so it will be ignored'\
-						% proof_file)
+			print(('[Warning] No theory name found for "%s", so it will be ignored'\
+						% proof_file))
 			continue
 
 		#rules
@@ -175,8 +175,8 @@ def create_html_code(directories, columns, tex_add, split_theory_regex):
 			for line in open(theory_file).readlines():
 				m = re.match(RULE_HEADER_SPTHY_REGEX, line)
 				if m and m.group(1) not in rule_names:
-					print ('[Warning] Rule "%s" occurs in "%s" but not in "%s"'\
-								% (m.group(1), theory_file, proof_file))
+					print(('[Warning] Rule "%s" occurs in "%s" but not in "%s"'\
+								% (m.group(1), theory_file, proof_file)))
 			#lines of code
 			loc = len(open(theory_file).readlines())
 			if loc < loc_min: loc_min = loc
@@ -184,8 +184,8 @@ def create_html_code(directories, columns, tex_add, split_theory_regex):
 			loc_sum  += loc
 			results['LoC'] = str(loc)
 		else:
-			print ('[Warning] File "%s" exists but not "%s"'\
-						% (proof_file, theory_file))
+			print(('[Warning] File "%s" exists but not "%s"'\
+						% (proof_file, theory_file)))
 
 		#timings
 		time_display = None
@@ -231,18 +231,18 @@ def create_html_code(directories, columns, tex_add, split_theory_regex):
 	#this is specific to EMV
 	for results in global_results:
 		x_group = {}
-		for (col, res) in results.items():
+		for (col, res) in list(results.items()):
 			key = col.replace('_minimal', '')
 			res = re.sub(STEPS_REGEX, '', res)				
 			if key not in x_group:
 				x_group[key] = set()
 			x_group[key].add(res)
 		
-		differ = [k for (k,v) in x_group.items() if len(v) > 1]
+		differ = [k for (k,v) in list(x_group.items()) if len(v) > 1]
 		for col in differ:
 			proof_file = results['Proof file']
-			print ('[Warning] The results for "%s" and "%s_minimal" differ in "%s"'\
-						% (col, col, proof_file))
+			print(('[Warning] The results for "%s" and "%s_minimal" differ in "%s"'\
+						% (col, col, proof_file)))
 	
 	#add metadata
 	cols = cols + METADATA_COLUMNS
@@ -435,7 +435,7 @@ def create_html_code(directories, columns, tex_add, split_theory_regex):
 		
 	#latex code ========================================
 	html += '<h2>Latex code</h2>\n\n<div class="latex-code x-scrollable">\n'
-	for (plain, rich) in LATEX_SYNTAX.items():
+	for (plain, rich) in list(LATEX_SYNTAX.items()):
 		tex = tex.replace(plain, rich)
 	html += tex +'</div>\n\n</body>\n</html>'
 	
@@ -462,11 +462,11 @@ def main(args):
 					if l != '': columns.append(l)
 	
 				if 'Theory' not in columns:
-					print ('[Error] No "Theory" column found in "%s"' % file)
+					print(('[Error] No "Theory" column found in "%s"' % file))
 					return
 			except Exception as e:
-				print ('[Warning] Something is wrong with the columns file "'\
-							+ file + '", so I will ignore')
+				print(('[Warning] Something is wrong with the columns file "'\
+							+ file + '", so I will ignore'))
 				print (e)
 				columns = 'all'
 				
@@ -486,8 +486,8 @@ def main(args):
 						tex_add[proto][lemma] = {}
 					tex_add[proto][lemma] = add[:-1]
 			except Exception as e:
-				print ('[Warning] Something is wrong with the tex-add file "'\
-							+ file + '", so I will ignore')
+				print(('[Warning] Something is wrong with the tex-add file "'\
+							+ file + '", so I will ignore'))
 				print (e)
 				tex_add = {}
 		elif arg.startswith('--split_theory_regex'):
@@ -501,7 +501,7 @@ def main(args):
 	html = create_html_code(directories, columns, tex_add, split_theory_regex)
 	
 	if html:
-		print ('Writing output to "%s"' % output)
+		print(('Writing output to "%s"' % output))
 		outfile = open(output, 'w')
 		outfile.write(html)
 		outfile.close()

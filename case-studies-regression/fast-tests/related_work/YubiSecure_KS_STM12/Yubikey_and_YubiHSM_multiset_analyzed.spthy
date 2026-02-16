@@ -1254,8 +1254,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: 0a44c79dec0eccbe1e51aa85da3c6ac96fdf5bd5 (with uncommited changes), branch: HEAD
-Compiled at: 2025-07-01 09:22:11.756606439 UTC
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
 
 end
@@ -1267,7 +1267,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM_multiset.spthy.tmp
-  processing time: 3.66s
+  processing time: 2.42s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

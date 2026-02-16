@@ -37,9 +37,8 @@ jobs:
           curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
           chmod a+x ~/.local/bin/stack
           stack --no-terminal setup
-          curl -L https://github.com/maude-lang/Maude/releases/download/Maude3.4/Maude-linux.zip > maude.zip
+          curl -L https://github.com/maude-lang/Maude/releases/download/Maude3.5.1/Maude-3.5.1-linux-x86_64.zip > maude.zip
           unzip -oj maude.zip -d ~/.local/bin/
-          mv -f ~/.local/bin/maude.linux64 ~/.local/bin/maude
           chmod a+x ~/.local/bin/maude
           mkdir -p case-studies case-studies/ake case-studies/ake/bilinear case-studies/ake/dh case-studies/related_work
           mkdir -p case-studies/related_work/StatVerif_ARR_CSF11 case-studies/related_work/AIF_Moedersheim_CCS10

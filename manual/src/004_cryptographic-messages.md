@@ -156,9 +156,10 @@ In the following, we write `f/n` to denote that the function symbol `f` is
 `diffie-hellman`:
 
 : This theory models Diffie-Hellman groups. It defines the function symbols
-  `inv/1`, `1/0`, and the symbols `^` and `*`. We use `g ^ a` to denote exponentiation
-  in the group and `*`, `inv` and `1` to model the (multiplicative) abelian group
-  of exponents (the integers modulo the group order). The set of defined equations is:
+  `inv/1`, `1/0`, `DH_neutral/0`, and the symbols `^` and `*`. We use `g ^ a` to
+  denote exponentiation in the group and `*`, `inv` and `1` to model the
+  (multiplicative) abelian group of exponents (the integers modulo the group
+  order). The set of defined equations is:
 
 ~~~
 (x^y)^z  = x^(y*z)
@@ -167,6 +168,7 @@ x*y      = y*x
 (x*y)*z  = x*(y*z)
 x*1      = x
 x*inv(x) = 1
+DH_neutral^x = DH_neutral
 ~~~
 
 `bilinear-pairing`:

@@ -24,7 +24,6 @@ import qualified Data.ByteString            as B
 import qualified Data.ByteString.Char8      as BC
 import           Data.Label
 import           Data.Either
-import           Data.Maybe
 import           Data.Foldable
 -- import           Data.Monoid                hiding (Last)
 import qualified Data.Text                  as T
@@ -74,6 +73,7 @@ ruleAttribute = asum
     , symbol "no_derivcheck" *> return (mempty { ignoreDerivChecks = True })
     , symbol "role=" *> parseRole
     , symbol "issapicrule" *> return (mempty { isSAPiCRule = True })
+    , parseExternalAttribute
     ]
   where
     parseColor = do
@@ -81,14 +81,16 @@ ruleAttribute = asum
         case hexToRGB hc of
             Nothing -> fail $ "Color code " ++ show hc ++ " could not be parsed to RGB"
             Just rgb  -> return $ mempty { ruleColor = Just rgb }
-    parseAndIgnore = do
-                        _ <- try (symbol "\'") <|> symbol "\""
-                        _ <- manyTill anyChar (try (symbol "\"") <|> (try $ symbol "'"))
-                        return  mempty
+
+    parseAndIgnore = betweenMatching (\(l,r)->  manyCharsExcept [l,r] *> return mempty)
     parseRole = do
         _ <- symbol "\'" <|> symbol "\""
         role <- manyTill anyChar (try (symbol "\'" <|> symbol "\""))
         return $ mempty { role = Just role }
+    parseExternalAttribute = do
+       _ <- extIdentifier
+       _ <- optional $ opEqual *> parseAndIgnore
+       return mempty
 
 ruleAttributesp :: Parser RuleAttributes
 ruleAttributesp = option mempty $ fold <$> list ruleAttribute

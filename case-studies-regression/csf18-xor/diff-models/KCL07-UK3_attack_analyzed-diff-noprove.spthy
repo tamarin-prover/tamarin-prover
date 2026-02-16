@@ -6,6 +6,21 @@ builtins: multiset, xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
+tactic: recentalive_tag
+presort: C
+prio: {id}
+  regex".*TagRun\(.*"
+prio: {id}
+  regex".*Tag\(.*"
+
+
+tactic: Observational_equivalence
+presort: C
+prio: {id}
+  regex".*TagRun\(.*"
+prio: {id}
+  regex".*Tag\(.*"
+
 
 
 
@@ -80,7 +95,7 @@ restriction max_number_of_tags_tag_reader [left]:
   "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
   // safety formula
 
-lemma recentalive_tag [right]:
+lemma recentalive_tag [right, heuristic={recentalive_tag}]:
   all-traces
   "∀ x #i.
     (Alive( x, 'Tag' ) @ #i) ⇒
@@ -100,7 +115,7 @@ guarded formula characterizing all counter-examples:
 */
 by sorry
 
-lemma recentalive_tag [left]:
+lemma recentalive_tag [left, heuristic={recentalive_tag}]:
   all-traces
   "∀ x #i.
     (Alive( x, 'Tag' ) @ #i) ⇒
@@ -181,12 +196,12 @@ next
       case tag1
       step( solve( TagRun( ~k, ~id ) ▶₂ #vr ) )
         case select_tag
-        step( solve( Tag( (z.1++<~k, ~id>) ) ▶₀ #vr.1 ) )
+        step( solve( Tag( (z++<~k, ~id>) ) ▶₀ #vr.1 ) )
           case Setup
           by sorry
         next
           case select_tag
-          step( solve( Tag( (z.1++<~k, ~id>++<~k.1, ~id.1>) ) ▶₀ #vr.2 ) )
+          step( solve( Tag( (z++<~k, ~id>++<~k.1, ~id.1>) ) ▶₀ #vr.2 ) )
             case Setup
             step( solve( !KU( r1 ) @ #vk.1 ) )
               case c_fst
@@ -216,172 +231,165 @@ next
               case fresh
               step( solve( !KU( ~x.1 ) @ #vk ) )
                 case fresh
-                step( solve( splitEqs(0) ) )
-                  case split
-                  step( solve( (#vl, 0) ~~> (#i, 1) ) )
-                    case d_0_fst
-                    step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
-                      case Xor
+                step( solve( (#vl, 0) ~~> (#i, 1) ) )
+                  case d_0_fst
+                  step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                    case Xor
+                    by sorry
+                  next
+                    case d_xor_case_1
+                    step( solve( !KU( (~r2⊕z) ) @ #vk.2 ) )
+                      case c_xor
                       by sorry
                     next
-                      case d_xor_case_1
-                      step( solve( !KU( (~r2⊕z) ) @ #vk.2 ) )
-                        case c_xor
-                        by sorry
+                      case coerce
+                      step( solve( !KD( (~r2⊕z) ) ▶₀ #vk.1 ) )
+                        case reader1
+                        by step( contradiction )
                       next
-                        case coerce
-                        step( solve( !KD( (~r2⊕z) ) ▶₀ #vk.1 ) )
-                          case reader1
-                          by step( contradiction )
+                        case tag1
+                        step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                          case d_0_fst
+                          by sorry
                         next
-                          case tag1
-                          step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
-                            case d_0_fst
-                            by sorry
-                          next
-                            case d_0_snd
-                            step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.6 ) )
+                          case d_0_snd
+                          step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.6 ) )
+                            case select_tag
+                            step( solve( Tag( (z.1++<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
+                              case Setup
+                              by sorry
+                            next
                               case select_tag
-                              step( solve( Tag( (z.2++<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
+                              step( solve( Tag( (z.1++<~k.1, ~id.1>++<~k.2, ~id.2>) ) ▶₀ #vr.9 ) )
                                 case Setup
-                                by sorry
-                              next
-                                case select_tag
-                                step( solve( Tag( (z.2++<~k.1, ~id.1>++<~k.2, ~id.2>) ) ▶₀ #vr.9 ) )
-                                  case Setup
-                                  step( solve( (#vr.6, 0) ~~> (#vk.1, 0) ) )
+                                step( solve( (#vr.6, 0) ~~> (#vk.1, 0) ) )
+                                  case Xor
+                                  step( solve( (#vr.5, 0) ~~> (#i, 1) ) )
                                     case Xor
-                                    step( solve( (#vr.5, 0) ~~> (#i, 1) ) )
-                                      case Xor
-                                      step( solve( !KU( (~id⊕h(<~x, ~k>)) ) @ #vk.2 ) )
-                                        case c_xor
-                                        by sorry
+                                    step( solve( !KU( (~id⊕h(<~x, ~k>)) ) @ #vk.2 ) )
+                                      case c_xor
+                                      by sorry
+                                    next
+                                      case coerce
+                                      step( solve( !KD( (~id⊕h(<~x, ~k>)) ) ▶₀ #vk.2 ) )
+                                        case reader1
+                                        by step( contradiction )
                                       next
-                                        case coerce
-                                        step( solve( !KD( (~id⊕h(<~x, ~k>)) ) ▶₀ #vk.2 ) )
-                                          case reader1
-                                          by step( contradiction )
-                                        next
-                                          case tag1
-                                          step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.7 ) )
-                                            case select_tag
-                                            step( solve( Tag( (z.1++<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
-                                              case Setup
-                                              step( solve( splitEqs(7) ) )
-                                                case split
-                                                step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
-                                                  case d_0_fst
-                                                  step( solve( (#vr.8, 0) ~~> (#vk.2, 0) ) )
-                                                    case d_xor_case_1
-                                                    step( solve( !KU( (z⊕~r2.1) ) @ #vk.4 ) )
-                                                      case c_xor
-                                                      by sorry
-                                                    next
-                                                      case coerce
-                                                      step( solve( !KD( (z⊕~r2.1) ) ▶₀ #vk.3 ) )
-                                                        case reader1
-                                                        by step( contradiction )
-                                                      next
-                                                        case tag1
-                                                        step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.10 ) )
-                                                          case select_tag
-                                                          step( solve( Tag( (z.2++<~k.1, ~id.1>)
-                                                                       ) ▶₀ #vr.11 ) )
-                                                            case Setup
-                                                            step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
-                                                              case d_0_fst
+                                        case tag1
+                                        step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.7 ) )
+                                          case select_tag
+                                          step( solve( Tag( (z++<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
+                                            case Setup
+                                            step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                                              case d_0_fst
+                                              step( solve( (#vr.8, 0) ~~> (#vk.2, 0) ) )
+                                                case d_xor_case_1
+                                                step( solve( !KU( (z⊕~r2.1) ) @ #vk.4 ) )
+                                                  case c_xor
+                                                  by sorry
+                                                next
+                                                  case coerce
+                                                  step( solve( !KD( (z⊕~r2.1) ) ▶₀ #vk.3 ) )
+                                                    case reader1
+                                                    by step( contradiction )
+                                                  next
+                                                    case tag1
+                                                    step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.10 ) )
+                                                      case select_tag
+                                                      step( solve( Tag( (z.1++<~k.1, ~id.1>) ) ▶₀ #vr.11 ) )
+                                                        case Setup
+                                                        step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                                                          case d_0_fst
+                                                          by sorry
+                                                        next
+                                                          case d_0_snd
+                                                          step( solve( (#vr.10, 0) ~~> (#vk.3, 0) ) )
+                                                            case Xor
+                                                            step( solve( (#vr.9, 0) ~~> (#vk.2, 0) ) )
+                                                              case Xor
                                                               by sorry
-                                                            next
-                                                              case d_0_snd
-                                                              step( solve( (#vr.10, 0) ~~> (#vk.3, 0) ) )
-                                                                case Xor
-                                                                step( solve( (#vr.9, 0) ~~> (#vk.2, 0) ) )
-                                                                  case Xor
-                                                                  by ATTACK // trace found
-                                                                qed
-                                                              next
-                                                                case d_xor_case_1
-                                                                by sorry
-                                                              next
-                                                                case d_xor_case_2
-                                                                by sorry
-                                                              next
-                                                                case d_xor_case_3
-                                                                by step( contradiction )
-                                                              next
-                                                                case d_xor_case_4
-                                                                by sorry
-                                                              qed
                                                             qed
                                                           next
-                                                            case select_tag
+                                                            case d_xor_case_1
+                                                            by sorry
+                                                          next
+                                                            case d_xor_case_2
+                                                            by sorry
+                                                          next
+                                                            case d_xor_case_3
+                                                            by step( contradiction )
+                                                          next
+                                                            case d_xor_case_4
                                                             by sorry
                                                           qed
                                                         qed
+                                                      next
+                                                        case select_tag
+                                                        by sorry
                                                       qed
                                                     qed
-                                                  next
-                                                    case d_xor_case_2
-                                                    by sorry
-                                                  next
-                                                    case d_xor_case_3
-                                                    by step( contradiction )
-                                                  next
-                                                    case d_xor_case_4
-                                                    by step( contradiction )
                                                   qed
-                                                next
-                                                  case d_0_snd
-                                                  by sorry
                                                 qed
+                                              next
+                                                case d_xor_case_2
+                                                by sorry
+                                              next
+                                                case d_xor_case_3
+                                                by step( contradiction )
+                                              next
+                                                case d_xor_case_4
+                                                by step( contradiction )
                                               qed
                                             next
-                                              case select_tag
+                                              case d_0_snd
                                               by sorry
                                             qed
+                                          next
+                                            case select_tag
+                                            by sorry
                                           qed
                                         qed
                                       qed
                                     qed
-                                  next
-                                    case d_xor_case_1
-                                    by sorry
-                                  next
-                                    case d_xor_case_2
-                                    by sorry
-                                  next
-                                    case d_xor_case_3
-                                    by step( contradiction )
-                                  next
-                                    case d_xor_case_4
-                                    by step( contradiction )
                                   qed
                                 next
-                                  case select_tag
+                                  case d_xor_case_1
+                                  by sorry
+                                next
+                                  case d_xor_case_2
+                                  by sorry
+                                next
+                                  case d_xor_case_3
+                                  by step( contradiction )
+                                next
+                                  case d_xor_case_4
                                   by step( contradiction )
                                 qed
+                              next
+                                case select_tag
+                                by step( contradiction )
                               qed
                             qed
                           qed
                         qed
                       qed
-                    next
-                      case d_xor_case_2
-                      by sorry
-                    next
-                      case d_xor_case_3
-                      by sorry
-                    next
-                      case d_xor_case_4
-                      by sorry
                     qed
                   next
-                    case d_0_snd
+                    case d_xor_case_2
                     by sorry
                   next
-                    case pair
+                    case d_xor_case_3
+                    by sorry
+                  next
+                    case d_xor_case_4
                     by sorry
                   qed
+                next
+                  case d_0_snd
+                  by sorry
+                next
+                  case pair
+                  by sorry
                 qed
               qed
             next
@@ -425,8 +433,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
 
 end
@@ -438,13 +446,13 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
-  processing time: 0.94s
+  processing time: 0.23s
   
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
   RHS :  executable (exists-trace): analysis incomplete (1 steps)
   LHS :  executable (exists-trace): analysis incomplete (1 steps)
-  DiffLemma:  Observational_equivalence : falsified - found trace (90 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (88 steps)
 
 ==============================================================================
 */

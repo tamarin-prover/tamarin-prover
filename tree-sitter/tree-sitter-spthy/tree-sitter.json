@@ -5,8 +5,12 @@
       "camelcase": "Spthy",
       "scope": "source.spthy",
       "path": ".",
-      "file-types": null,
-      "injection-regex": "^spthy$"
+      "file-types": [
+        "spthy",
+        "splib"
+      ],
+      "injection-regex": "^spthy$",
+      "highlights": "queries/highlights.scm"
     }
   ],
   "metadata": {

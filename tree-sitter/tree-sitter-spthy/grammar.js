@@ -143,7 +143,7 @@ module.exports = grammar({
 
       include: $ => seq(
           '#include',
-          '"', alias($.param, $.path), '"'
+          '"', $.path, '"'
       ),
 
       _ifdef_formula: $ => choice(
@@ -700,7 +700,8 @@ module.exports = grammar({
             'no_derivcheck',
             'issapicrule',
             $.rule_process,
-            $.rule_role
+            $.rule_role,
+            $.rule_extended_attribute
             ),
 
       rule_attr_color: $ => seq(
@@ -714,14 +715,38 @@ module.exports = grammar({
       rule_role: $ => seq(
           'role',
           '=',
-          '"', field('role_identifier', $.ident), '"'
+          "'", field('role_identifier', $.ident),"'"
       ),
 
       rule_process: $ => seq(
         'process',
         '=',
-        '"', $.ident, '"'
+        '\'', $.ident, '\''
       ),
+
+      rule_extended_attribute: $ => seq(
+          field('extended_attribute_name', $.xattribute_ident),
+          optional(seq(
+          '=',
+          choice(
+            seq('[',field('extended_attribute_value', $.no_square_brackets), ']'),
+            seq('(',field('extended_attribute_value', $.no_round_brackets), ')'),
+            seq('{',field('extended_attribute_value', $.no_curly_brackets), '}'),
+            seq('"', field('extended_attribute_value', $.no_double_quotes), '"'),
+            seq('\'',field('extended_attribute_value', $.no_single_quotes), '\''),
+            seq('|',field('extended_attribute_value', $.no_pipe), '|'),
+          )))
+      ),
+
+      // for parsing extended attribute
+      xattribute_ident: _ => token(prec(-1, /x-[a-zA-Z_]+/)),
+      // for parsing inside extended attribute
+      no_square_brackets: _ => token(prec(-1, /[^\[\]]*/)),
+      no_round_brackets:   _ => token(prec(-1, /[^\(\)]*/)),
+      no_curly_brackets:   _ => token(prec(-1, /[^\{\}]*/)),
+      no_double_quotes:    _ => token(prec(-1, /[^"]*/)),
+      no_single_quotes:    _ => token(prec(-1, /[^']*/)),
+      no_pipe:    _ => token(prec(-1, /[^|]*/)),
 
       rule_let_block: $ => seq(
           'let',
@@ -1433,6 +1458,8 @@ module.exports = grammar({
       ident: $ => /[A-Za-z0-9]\w*/,
 
       param: $ => /[^"]*/,
+
+      path: $ => /[A-Za-z0-9-\_]*/,
 
       export_query: $ => /(\\"|[^"])*/,
 

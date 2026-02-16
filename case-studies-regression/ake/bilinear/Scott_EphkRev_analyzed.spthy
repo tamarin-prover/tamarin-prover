@@ -141,27 +141,11 @@ rule (modulo E) Resp_1:
        X     = X.38
        z     = X.38^~ey.36
     
-    2. ~ey   = ~ey.36
-       X     = z.41^inv(~ey.36)
-       z     = z.41
-    
-    3. ~ey   = ~ey.372
+    2. ~ey   = ~ey.372
        X     = x.739^x.740
        z     = x.739^(~ey.372*x.740)
     
-    4. ~ey   = ~ey.374
-       X     = x.743^inv((~ey.374*x.744))
-       z     = x.743^inv(x.744)
-    
-    5. ~ey   = ~ey.374
-       X     = x.743^(x.744*inv(~ey.374))
-       z     = x.743^x.744
-    
-    6. ~ey   = ~ey.375
-       X     = x.744^(x.745*inv((~ey.375*x.746)))
-       z     = x.744^(x.745*inv(x.746))
-    
-    7. X     = DH_neutral
+    3. X     = DH_neutral
        z     = DH_neutral
   */
 
@@ -293,8 +277,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
 
 end
@@ -306,7 +290,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 20.14s
+  processing time: 7.17s
   
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (8 steps)
