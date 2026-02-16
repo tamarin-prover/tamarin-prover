@@ -192,7 +192,7 @@ addMacrosToSignature macros msig =
     foldl (\sig macro -> 
         let funSym = macroToFunSym macro
         in case funSym of
-            NoEq noEqSym -> addFunSym noEqSym sig
+            NoEq noEqSym -> addMacroSym noEqSym sig
             _            -> sig) msig macros
 
 -- | A parser for a stream of tokens.
