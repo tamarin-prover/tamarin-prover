@@ -21893,7 +21893,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -21907,7 +21907,7 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 106.87s
+  processing time: 102.82s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

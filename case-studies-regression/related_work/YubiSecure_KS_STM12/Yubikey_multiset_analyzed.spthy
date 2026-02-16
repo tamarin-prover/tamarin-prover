@@ -1509,7 +1509,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -1523,7 +1523,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 7.25s
+  processing time: 7.21s
   
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)

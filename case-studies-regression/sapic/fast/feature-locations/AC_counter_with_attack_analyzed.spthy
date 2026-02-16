@@ -915,7 +915,7 @@ Facts occur in the left-hand-side but not in any right-hand-side
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -929,7 +929,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 0.82s
+  processing time: 0.83s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

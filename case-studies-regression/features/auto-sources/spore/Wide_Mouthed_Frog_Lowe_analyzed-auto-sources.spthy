@@ -1175,7 +1175,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -1189,7 +1189,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy.tmp
-  processing time: 1.76s
+  processing time: 1.58s
   
   executability (exists-trace): verified (16 steps)
   Secrecy (all-traces): verified (30 steps)

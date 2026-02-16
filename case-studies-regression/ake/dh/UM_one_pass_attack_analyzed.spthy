@@ -341,7 +341,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -355,7 +355,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_one_pass_attack.spthy
 
   output:          examples/ake/dh/UM_one_pass_attack.spthy.tmp
-  processing time: 1.14s
+  processing time: 1.10s
   
   key_agreement_reachable (exists-trace): verified (10 steps)
   CK_secure (all-traces): falsified - found trace (19 steps)
