@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import re
 import os
@@ -282,5 +282,5 @@ for listGoals in reversed(rank):
   for goal in listGoals:
     if debug:
       sys.stderr.write(goal)
-    print goal
+    print(goal)
 

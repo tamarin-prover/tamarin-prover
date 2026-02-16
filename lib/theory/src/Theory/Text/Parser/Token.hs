@@ -118,7 +118,10 @@ module Theory.Text.Parser.Token (
   , parseFileWState
   , parseString
   , parseStringWState
-  ,opLessTerm) where
+  ,opLessTerm
+  ,extIdentifier
+  ,betweenMatching
+  ,manyCharsExcept) where
 
 import           Prelude             hiding (id, (.))
 
@@ -289,6 +292,26 @@ singleQuoted = between (symbol "'") (symbol "'")
 doubleQuoted :: Parser a -> Parser a
 doubleQuoted = between (symbol "\"") (symbol "\"")
 
+
+-- | Parse between two matching symbols like @"@ and @"@ or @(@ and @)@. Tells parser these symbols so it can ignore it.
+betweenMatching  :: ((Char, Char) -> Parser a) -> Parser a
+betweenMatching p = asum (betweenSymbolsParse <$> matches)
+     where
+     matches = [
+        ('"', '"'),
+        ('\'', '\''),
+        ('(', ')'),
+        ('[', ']'),
+        ('{', '}'),
+        ('|', '|'),
+        ('<', '>') ]
+     betweenSymbolsParse (l,r) = try $ between (char' l) (char' r) (p (l,r))
+     char' = T.lexeme spthy . char -- need to remove whitespace after r, like symbol does.
+
+-- | consume all chars except those in l,  until we reach on in l. Does not consume that last char.
+manyCharsExcept :: [Char] -> Parser [Char]
+manyCharsExcept l = T.lexeme spthy $ manyTill (noneOf l) (lookAhead $ oneOf l)
+
 -- | A dot @.@.
 dot :: Parser ()
 dot = void $ T.dot spthy
@@ -334,6 +357,12 @@ list = brackets . commaSep
 -- | Parse an arbitrary string literal
 stringLiteral :: Parser String
 stringLiteral = T.stringLiteral spthy
+
+-- | Parse a string literal marked as external, i.e., starting with "x-"
+extIdentifier :: Parser String
+extIdentifier= T.lexeme spthy $ do
+    _ <- try (string "x-")
+    identifier
 
 -- | A formal comment; i.e., (header, body)
 formalComment :: Parser (String, String)
@@ -646,4 +675,4 @@ opNull = symbol_ "0"
 filePath :: Parser FilePath
 filePath = many charDir
   where
-    charDir = alphaNum <|> oneOf ("." <> [pathSeparator])
+    charDir = alphaNum <|> oneOf ("._-" <> [pathSeparator])

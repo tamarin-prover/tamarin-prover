@@ -45,14 +45,14 @@ blatom :: (Hinted v, Ord v) => Parser v -> Parser v -> Parser (SyntacticAtom (VT
 blatom varp nodep = fmap (fmapTerm (fmap Free)) <$> asum
   [ Last        <$> try (symbol "last" *> parens nodevarTerm)        <?> "last atom"
   , flip Action <$> try (fact (vlit varp) <* opAt)        <*> nodevarTerm   <?> "action atom"
-  , Syntactic . Pred <$> try (fact (vlit (try varp <|> nodep) ))                    <?> "predicate atom"
-      -- Predicates can be called for timepoints in addition to other logical vars.
-      -- Note that lexemes that are ambigous (e.g., a variable without a sort)
-      -- will be interpreted by varp.
   , Subterm     <$> try (msetterm False (vlit varp) <* opSubterm) <*> msetterm False (vlit varp) <?> "subterm predicate"    
   , Less        <$> try (nodevarTerm <* opLess)    <*> nodevarTerm   <?> "less atom"
   , smallerp varp <?> "multiset comparisson"
   , EqE         <$> try (termp <* opEqual) <*> termp <?> "term equality"
+  , Syntactic . Pred <$> try (fact (vlit (try varp <|> nodep) ))                    <?> "predicate atom"
+      -- Predicates can be called for timepoints in addition to other logical vars.
+      -- Note that lexemes that are ambigous (e.g., a variable without a sort)
+      -- will be interpreted by varp.
   , EqE         <$>     (nodevarTerm  <* opEqual)  <*> nodevarTerm   <?> "node equality"
   ]
   where

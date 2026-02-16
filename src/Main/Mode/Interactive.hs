@@ -53,7 +53,7 @@ interactiveMode = tamarinMode
       [ flagOpt "" ["port","p"] (updateArg "port") "PORT" "Port to listen on"
       , flagOpt "" ["interface","i"] (updateArg "interface") "INTERFACE"
                 "Interface to listen on (use '*4' for all IPv4 interfaces)"
-      , flagOpt "" ["image-format"] (updateArg "image-format") "PNG|SVG" "image format used for graphs (default PNG)"
+      , flagOpt "" ["image-format"] (updateArg "image-format") "PNG|SVG" "image format used for graphs (default SVG)"
       , flagNone ["debug"] (addEmptyArg "debug") "Show server debugging output"
       , flagNone ["no-logging"] (addEmptyArg "no-logging") "Suppress web server logs."
       -- , flagNone ["autosave"] (addEmptyArg "autosave") "Automatically save proof state"
@@ -146,7 +146,7 @@ run thisMode as = case findArg "workDir" as of
       case map toLower <$> findArg "image-format" as of
         Just "svg" -> SVG
         Just "png" -> PNG
-        Nothing    -> PNG
+        Nothing    -> SVG
         Just _     -> error "image-format must be one of PNG|SVG"
 
     serverUrl port = "http://" ++ address ++ ":" ++ show port

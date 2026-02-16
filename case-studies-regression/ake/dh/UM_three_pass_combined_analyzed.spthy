@@ -308,27 +308,11 @@ rule (modulo E) R_Activate:
        X     = X.32
        z     = X.32^~ey.31
     
-    2. ~ey   = ~ey.31
-       X     = z.35^inv(~ey.31)
-       z     = z.35
-    
-    3. ~ey   = ~ey.333
+    2. ~ey   = ~ey.333
        X     = x.659^x.660
        z     = x.659^(~ey.333*x.660)
     
-    4. ~ey   = ~ey.334
-       X     = x.661^inv((~ey.334*x.662))
-       z     = x.661^inv(x.662)
-    
-    5. ~ey   = ~ey.334
-       X     = x.661^(x.662*inv(~ey.334))
-       z     = x.661^x.662
-    
-    6. ~ey   = ~ey.335
-       X     = x.662^(x.663*inv((~ey.335*x.664)))
-       z     = x.662^(x.663*inv(x.664))
-    
-    7. X     = DH_neutral
+    3. X     = DH_neutral
        z     = DH_neutral
   */
 
@@ -889,9 +873,9 @@ Failed to derive Variable(s): ~ea
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5
+Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
+Compiled at: 2025-09-19 11:18:23.495617078 UTC
 */
 
 end
@@ -903,7 +887,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 7.00s
+  processing time: 37.17s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

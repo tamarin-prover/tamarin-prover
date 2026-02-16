@@ -189,101 +189,45 @@ rule (modulo E) Resp_1:
     ]->
      [ Out( 'g'^~ey ), !Sessk( ~ey, kdf(<z, z.1, $A, $B, X, 'g'^~ey>) ) ]
     variants (modulo AC)
-     1. $A    = $A.14
-        ~ey   = ~ey.16
-        X     = X.17
-        skB   = skB.18
-        z     = X.17^~ey.16
-        z.1   = em(skB.18, hp($A.14))
+    1. $A    = $A.14
+       ~ey   = ~ey.16
+       X     = X.17
+       skB   = skB.18
+       z     = X.17^~ey.16
+       z.1   = em(skB.18, hp($A.14))
     
-     2. $A    = $A.14
-        X     = DH_neutral
-        skB   = skB.18
-        z     = DH_neutral
-        z.1   = em(skB.18, hp($A.14))
+    2. $A    = $A.14
+       X     = DH_neutral
+       skB   = skB.18
+       z     = DH_neutral
+       z.1   = em(skB.18, hp($A.14))
     
-     3. $A    = $A.16
-        ~ey   = ~ey.18
-        X     = z.22^inv(~ey.18)
-        skB   = skB.20
-        z     = z.22
-        z.1   = em(skB.20, hp($A.16))
+    3. $A    = $A.57
+       ~ey   = ~ey.59
+       X     = X.60
+       skB   = pmult(x.111, x.112)
+       z     = X.60^~ey.59
+       z.1   = em(x.112, hp($A.57))^x.111
     
-     4. $A    = $A.57
-        ~ey   = ~ey.59
-        X     = X.60
-        skB   = pmult(x.111, x.112)
-        z     = X.60^~ey.59
-        z.1   = em(x.112, hp($A.57))^x.111
+    4. $A    = $A.57
+       ~ey   = ~ey.59
+       X     = x.111^x.112
+       skB   = skB.61
+       z     = x.111^(~ey.59*x.112)
+       z.1   = em(skB.61, hp($A.57))
     
-     5. $A    = $A.57
-        ~ey   = ~ey.59
-        X     = x.111^x.112
-        skB   = skB.61
-        z     = x.111^(~ey.59*x.112)
-        z.1   = em(skB.61, hp($A.57))
+    5. $A    = $A.57
+       X     = DH_neutral
+       skB   = pmult(x.111, x.112)
+       z     = DH_neutral
+       z.1   = em(x.112, hp($A.57))^x.111
     
-     6. $A    = $A.57
-        X     = DH_neutral
-        skB   = pmult(x.111, x.112)
-        z     = DH_neutral
-        z.1   = em(x.112, hp($A.57))^x.111
-    
-     7. $A    = $A.58
-        ~ey   = ~ey.60
-        X     = x.113^inv((~ey.60*x.114))
-        skB   = skB.62
-        z     = x.113^inv(x.114)
-        z.1   = em(skB.62, hp($A.58))
-    
-     8. $A    = $A.58
-        ~ey   = ~ey.60
-        X     = x.113^(x.114*inv(~ey.60))
-        skB   = skB.62
-        z     = x.113^x.114
-        z.1   = em(skB.62, hp($A.58))
-    
-     9. $A    = $A.59
-        ~ey   = ~ey.61
-        X     = z.65^inv(~ey.61)
-        skB   = pmult(x.115, x.116)
-        z     = z.65
-        z.1   = em(x.116, hp($A.59))^x.115
-    
-    10. $A    = $A.59
-        ~ey   = ~ey.61
-        X     = x.113^x.114
-        skB   = pmult(x.115, x.116)
-        z     = x.113^(~ey.61*x.114)
-        z.1   = em(x.116, hp($A.59))^x.115
-    
-    11. $A    = $A.59
-        ~ey   = ~ey.61
-        X     = x.114^(x.115*inv((~ey.61*x.116)))
-        skB   = skB.63
-        z     = x.114^(x.115*inv(x.116))
-        z.1   = em(skB.63, hp($A.59))
-    
-    12. $A    = $A.60
-        ~ey   = ~ey.62
-        X     = x.115^inv((~ey.62*x.116))
-        skB   = pmult(x.117, x.118)
-        z     = x.115^inv(x.116)
-        z.1   = em(x.118, hp($A.60))^x.117
-    
-    13. $A    = $A.60
-        ~ey   = ~ey.62
-        X     = x.115^(x.116*inv(~ey.62))
-        skB   = pmult(x.117, x.118)
-        z     = x.115^x.116
-        z.1   = em(x.118, hp($A.60))^x.117
-    
-    14. $A    = $A.61
-        ~ey   = ~ey.63
-        X     = x.116^(x.117*inv((~ey.63*x.118)))
-        skB   = pmult(x.119, x.120)
-        z     = x.116^(x.117*inv(x.118))
-        z.1   = em(x.120, hp($A.61))^x.119
+    6. $A    = $A.59
+       ~ey   = ~ey.61
+       X     = x.113^x.114
+       skB   = pmult(x.115, x.116)
+       z     = x.113^(~ey.61*x.114)
+       z.1   = em(x.116, hp($A.59))^x.115
   */
 
 lemma key_agreement_reachable:
@@ -425,9 +369,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5
+Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
+Compiled at: 2025-09-19 11:18:23.495617078 UTC
 */
 
 end
@@ -439,7 +383,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
   output:          examples/ake/bilinear/RYY_PFS.spthy.tmp
-  processing time: 2.93s
+  processing time: 16.49s
   
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)

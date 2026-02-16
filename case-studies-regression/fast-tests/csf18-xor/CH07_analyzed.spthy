@@ -53,40 +53,15 @@ rule (modulo E) tag1:
     
     2. ~k    = ~k.19
        ~r2   = ~r2.20
-       r1    = ~r2.20
-       z     = ~k.19
-    
-    3. ~k    = ~k.19
-       ~r2   = ~r2.20
        r1    = zero
        z     = (~k.19⊕~r2.20)
     
-    4. ~k    = ~k.19
-       ~r2   = ~r2.20
-       r1    = (~k.19⊕~r2.20)
-       z     = zero
-    
-    5. ~k    = ~k.20
-       ~r2   = ~k.20
-       r1    = r1.22
-       z     = r1.22
-    
-    6. ~k    = ~k.20
+    3. ~k    = ~k.20
        ~r2   = ~r2.21
        r1    = r1.22
        z     = (~k.20⊕~r2.21⊕r1.22)
     
-    7. ~k    = ~k.22
-       ~r2   = ~r2.23
-       r1    = (~k.22⊕~r2.23⊕z.26)
-       z     = z.26
-    
-    8. ~k    = ~k.150
-       ~r2   = ~r2.151
-       r1    = (~r2.151⊕x.297)
-       z     = (~k.150⊕x.297)
-    
-    9. ~k    = ~k.151
+    4. ~k    = ~k.151
        ~r2   = ~r2.152
        r1    = (~k.151⊕x.299)
        z     = (~r2.152⊕x.299)
@@ -448,15 +423,15 @@ solve( Alive( x, 'Tag' ) @ #i )
       solve( !KU( lh((h(z)⊕rot(~id, h(z)))) ) @ #vk.2 )
         case tag1
         solve( splitEqs(0) )
-          case split_case_7
-          solve( !KU( (~r1⊕x) ) @ #vk.2 )
-            case c_xor
-            solve( splitEqs(1) )
-              case split_case_1
-              solve( !KU( ~r1 ) @ #vk.5 )
-                case reader1
-                solve( !KU( ~r2 ) @ #vk.5 )
-                  case tag1
+          case split_case_4
+          solve( splitEqs(1) )
+            case split_case_1
+            solve( !KU( (~r1⊕~r2) ) @ #vk.2 )
+              case c_xor
+              solve( !KU( ~r2 ) @ #vk.4 )
+                case tag1
+                solve( !KU( ~r1 ) @ #vk.5 )
+                  case reader1
                   SOLVED // trace found
                 qed
               qed
@@ -604,31 +579,13 @@ solve( Commit( <'T', 'R', t> ) @ #i )
           by contradiction /* from formulas */
         next
           case split_case_2
-          by contradiction /* cyclic */
+          by contradiction /* from formulas */
         next
           case split_case_3
           by contradiction /* from formulas */
         next
           case split_case_4
           by contradiction /* from formulas */
-        next
-          case split_case_5
-          by contradiction /* from formulas */
-        next
-          case split_case_6
-          by contradiction /* from formulas */
-        next
-          case split_case_7
-          solve( splitEqs(1) )
-            case split
-            by contradiction /* from formulas */
-          qed
-        next
-          case split_case_8
-          solve( splitEqs(1) )
-            case split
-            by contradiction /* from formulas */
-          qed
         qed
       qed
     qed
@@ -712,7 +669,7 @@ solve( Alive( x, 'Reader' ) @ #i )
         solve( !KU( rh((h(z)⊕rot(~id, h(z)))) ) @ #vk )
           case reader2
           solve( splitEqs(0) )
-            case split_case_3
+            case split_case_2
             solve( splitEqs(2) )
               case split_case_1
               solve( !KU( ~r1 ) @ #vk.1 )
@@ -763,8 +720,8 @@ Failed to derive Variable(s): hash
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
+Compiled at: 2025-09-08 09:04:28.158015016 UTC
 */
 
 end
@@ -776,14 +733,14 @@ summary of summaries:
 analyzed: examples/csf18-xor/CH07.spthy
 
   output:          examples/csf18-xor/CH07.spthy.tmp
-  processing time: 1.10s
+  processing time: 1.07s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   recentalive_tag (all-traces): falsified - found trace (11 steps)
   recentalive_reader (all-traces): verified (23 steps)
-  noninjectiveagreement_tag (all-traces): verified (25 steps)
+  noninjectiveagreement_tag (all-traces): verified (19 steps)
   noninjectiveagreement_reader (all-traces): verified (15 steps)
   executable (exists-trace): verified (12 steps)
 
