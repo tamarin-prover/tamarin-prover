@@ -166,7 +166,7 @@ prettySignaturePure sig =
   prettyMaudeSig $ L.get sigpMaudeSig sig
     
 -- | Pretty-print a pure signature, but omit given set of
---   NoEqSym function symbols. Used for pretty-printing OpenTheories
+--   function symbols. Used for pretty-printing OpenTheories
 --   with typed function declarations
 prettySignaturePureExcept :: HighlightDocument d => S.Set UserDefinedSym -> SignaturePure -> d
 prettySignaturePureExcept exc sig  =

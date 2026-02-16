@@ -228,7 +228,7 @@ enableDiffMaudeSig = maudeSig $ mempty {enableDiff=True}
 prettyMaudeSigExcept :: P.HighlightDocument d => MaudeSig -> S.Set UserDefinedSym -> d
 prettyMaudeSigExcept sig excl = P.vcat
     [ ppNonEmptyList' "builtins:"  P.text      builtIns
-    , ppNonEmptyList' "functions:" ppFunSymb $ (S.toList (S.map (\fct -> (NoEqUser fct)) (stFunSyms sig S.\\ exclNoEq)) ++ S.toList (S.map (\fct -> (ACfctUser fct)) (stACFunSyms sig S.\\ exclAC)))
+    , ppNonEmptyList' "functions:" ppFunSymb (S.toList (S.map NoEqUser (stFunSyms sig S.\\ exclNoEq)) ++ S.toList (S.map ACfctUser (stACFunSyms sig S.\\ exclAC)))
     , ppNonEmptyList
         (\ds -> P.sep ((if eqConvergent sig then P.keyword_ "equations [convergent]:" else P.keyword_ "equations:") : map (P.nest 2) ds))
         prettyCtxtStRule $ S.toList (stRules sig)
@@ -249,17 +249,17 @@ prettyMaudeSigExcept sig excl = P.vcat
     ppFunSymb (NoEqUser (f,(k,priv,constr))) = P.text $ BC.unpack f ++ "/" ++ show k
                                              ++ showAttrNoEq (priv,constr)
       where
-            showAttrNoEq (Public,Destructor) = "[destructor]"
-            showAttrNoEq (Private,Destructor) = "[private,destructor]"
-            showAttrNoEq (Private,Constructor) = "[private,constructor]"
+            showAttrNoEq (Public,Destructor) = " [destructor]"
+            showAttrNoEq (Private,Destructor) = " [private,destructor]"
+            showAttrNoEq (Private,Constructor) = " [private,constructor]"
             showAttrNoEq (Public,Constructor) = ""
 
     ppFunSymb (ACfctUser (f,(priv,constr))) = P.text $ BC.unpack f ++ "/2" ++ showAttrAC (priv,constr)
       where
-            showAttrAC (Public,Destructor) = "[destructor,AC]"
-            showAttrAC (Private,Destructor) = "[private,destructor,AC]"
-            showAttrAC (Private,Constructor) = "[private,AC]"
-            showAttrAC (Public,Constructor) = "[AC]"
+            showAttrAC (Public,Destructor) = " [destructor,AC]"
+            showAttrAC (Private,Destructor) = " [private,destructor,AC]"
+            showAttrAC (Private,Constructor) = " [private,AC]"
+            showAttrAC (Public,Constructor) = " [AC]"
 
 
     exclNoEq = S.fromList [ o | NoEqUser o <- S.toList excl ]

@@ -868,21 +868,13 @@ prettyEitherRule (_, p) = prettyProtoRuleE $ L.get oprRuleE p
 
 -- | Pretty print an open theory.
 prettyOpenTheory :: (HighlightDocument d) => OpenTheory -> d
-prettyOpenTheory thy =
+prettyOpenTheory =
   prettyTheory
-    (prettySignaturePureExcept funsyms)
+    prettySignaturePure
     (const emptyDoc)
     prettyOpenProtoRule
     prettyProof
     prettyTranslationElement
-    thy
-  where
-    -- prettyIntrVariantsSection prettyOpenProtoRule prettyProof
-
-    funsyms = S.fromList $ map fst' $ theoryFunctionTypingInfos thy
-    -- function symbols that are printed by sapic printer already
-    fst' (NoEqUser a,_,_) = NoEqUser a
-    fst' (ACfctUser a, _, _) = ACfctUser a
 
 -- | Pretty print an open theory.
 prettyOpenDiffTheory :: (HighlightDocument d) => OpenDiffTheory -> d
