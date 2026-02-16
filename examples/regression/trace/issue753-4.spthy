@@ -3,5 +3,8 @@ begin
 
 builtins: hashing, signing
 
+lemma False:
+  "F"
+
 // Both define hashing function h\1, so it should not generate an error.
 end
