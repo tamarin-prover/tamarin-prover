@@ -1,4 +1,6 @@
-theory AndrewSecureRPC begin
+theory AndrewSecureRPC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1542,9 +1544,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -1556,7 +1558,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_RPC.spthy.tmp
-  processing time: 44.83s
+  processing time: 21.66s
   
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (16 steps)

@@ -1,4 +1,6 @@
-theory YahalomLowe begin
+theory YahalomLowe
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1071,9 +1073,9 @@ Facts occur in the left-hand-side but not in any right-hand-side
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -1085,7 +1087,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 2.21s
+  processing time: 1.02s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

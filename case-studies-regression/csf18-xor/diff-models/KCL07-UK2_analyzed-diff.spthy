@@ -1,4 +1,6 @@
-theory KCL07_UK2 begin
+theory KCL07_UK2
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -71,26 +73,23 @@ rule-equivalence
       case tag1
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case d_0_fst
-        step( solve( TagRun( <~k, ~id> ) ▶₂ #vr ) )
-          case setup
-          step( solve( splitEqs(0) ) )
-            case split
-            step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-              case Xor
-              step( solve( !KU( (~id⊕~r2) ) @ #vk ) )
-                case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                  case tag1_case_2
-                  step( solve( !KU( ~id ) @ #vk.3 ) )
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Xor
+          step( solve( TagRun( <~k, ~id> ) ▶₂ #vr ) )
+            case setup
+            step( solve( !KU( (~id⊕~r2) ) @ #vk ) )
+              case c_xor
+              step( solve( !KU( ~r2 ) @ #vk.2 ) )
+                case tag1_case_2
+                step( solve( !KU( ~id ) @ #vk.3 ) )
+                  case transcript
+                  step( solve( !KU( h(<r1, ~k>) ) @ #vk.4 ) )
                     case transcript
-                    step( solve( !KU( h(<r1, ~k>) ) @ #vk.4 ) )
-                      case transcript
-                      step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                        case transcript_case_1
-                        step( solve( !KU( ~r1 ) @ #vk.5 ) )
-                          case transcript
-                          by ATTACK // trace found
-                        qed
+                    step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
+                      case transcript_case_1
+                      step( solve( !KU( ~r1 ) @ #vk.5 ) )
+                        case transcript
+                        by ATTACK // trace found
                       qed
                     qed
                   qed
@@ -109,9 +108,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -123,9 +122,9 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 74.90s
+  processing time: 26.53s
   
-  DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (14 steps)
 
 ==============================================================================
 */

@@ -1,4 +1,6 @@
-theory Chaum_Unforgeability begin
+theory Chaum_Unforgeability
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -138,9 +140,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -152,7 +154,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_unforgeability.spthy
 
   output:          examples/post17/chaum_unforgeability.spthy.tmp
-  processing time: 0.19s
+  processing time: 0.06s
   
   exec (exists-trace): verified (6 steps)
   unforgeability (all-traces): verified (10 steps)

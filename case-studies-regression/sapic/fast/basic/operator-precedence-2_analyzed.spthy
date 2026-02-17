@@ -1,4 +1,6 @@
-theory OperatorPrecedenceNDC begin
+theory OperatorPrecedenceNDC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -32,37 +34,37 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_1[color=#ffffff, process="event A( );",
+rule (modulo E) eventA_0_1[color=#ffffff, process='event A( );',
                            issapicrule, role='Process']:
    [ State_( ) ] --[ A( ) ]-> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );",
+rule (modulo E) eventB_0_11[color=#ffffff, process='event B( );',
                             issapicrule, role='Process']:
    [ State_11( ) ] --[ B( ) ]-> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
                         role='Process']:
    [ State_111( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventC_0_2[color=#ffffff, process="event C( );",
+rule (modulo E) eventC_0_2[color=#ffffff, process='event C( );',
                            issapicrule, role='Process']:
    [ State_( ) ] --[ C( ) ]-> [ State_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_21[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_21[color=#ffffff, process='0', issapicrule,
                        role='Process']:
    [ State_21( ) ] --> [ ]
 
@@ -77,9 +79,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -91,7 +93,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.02s
   
   semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
 

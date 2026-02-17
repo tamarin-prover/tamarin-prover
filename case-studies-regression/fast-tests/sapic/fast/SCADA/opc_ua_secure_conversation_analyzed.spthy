@@ -10033,8 +10033,13 @@ Wellformedness-error in Process
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.4
+<<<<<<< HEAD
 Git revision: 0a44c79dec0eccbe1e51aa85da3c6ac96fdf5bd5 (with uncommited changes), branch: HEAD
 Compiled at: 2025-07-01 09:22:11.756606439 UTC
+=======
+Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
+Compiled at: 2025-09-08 09:04:28.158015016 UTC
+>>>>>>> develop
 */
 
 end
@@ -10046,7 +10051,11 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
+<<<<<<< HEAD
   processing time: 84.46s
+=======
+  processing time: 96.04s
+>>>>>>> develop
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

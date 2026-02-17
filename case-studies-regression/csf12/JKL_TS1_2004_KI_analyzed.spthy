@@ -1,4 +1,6 @@
-theory JKL_TS1_2004_KI begin
+theory JKL_TS1_2004_KI
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -181,9 +183,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -195,7 +197,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS1_2004_KI.spthy
 
   output:          examples/csf12/JKL_TS1_2004_KI.spthy.tmp
-  processing time: 0.36s
+  processing time: 0.16s
   
   JKL2008_1_initiator_key (all-traces): falsified - found trace (7 steps)
   JKL2008_1_responder_key (all-traces): falsified - found trace (7 steps)

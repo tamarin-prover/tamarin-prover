@@ -1,4 +1,6 @@
-theory licensing begin
+theory licensing
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1069,9 +1071,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -1083,7 +1085,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 2.52s
+  processing time: 1.23s
   
   attested_comput (all-traces): verified (6 steps)
   unique (all-traces): verified (7 steps)

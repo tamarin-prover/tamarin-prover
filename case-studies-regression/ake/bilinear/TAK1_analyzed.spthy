@@ -1,4 +1,6 @@
-theory TAK1 begin
+theory TAK1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -2662,9 +2664,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: e98d3ca2496c92e035f2d6391ca932aa4d74758a, branch: develop
-Compiled at: 2025-07-16 14:37:22.227009318 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -2676,7 +2678,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 67.33s
+  processing time: 16.15s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)
