@@ -154,7 +154,7 @@ def parseFile(path):
 	except Exception:
 		return f"There was an error while reading {path}"
 	## parse time ##
-	times = re.findall(r"processing time: (.*)s", output)
+	times = re.findall(r"processing time: ([0-9]+\.?[0-9]*)s", output)
 	if len(times) != 1:
 		return f"Parse error - time: {path}"
 	proof, warningFooter = stripWarningAndFooter(proof)
