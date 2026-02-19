@@ -1,4 +1,6 @@
-theory Destructors begin
+theory Destructors
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -77,61 +79,61 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new k.1;", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='new k.1;', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_[color=#ffffff, process="new k.1;", issapicrule,
+rule (modulo E) newk_0_[color=#ffffff, process='new k.1;', issapicrule,
                         role='Process']:
    [ State_( ), Fr( k.1 ) ] --> [ State_1( k.1 ) ]
 
   /*
-  rule (modulo AC) newk_0_[color=#ffffff, process="new k.1;", issapicrule,
+  rule (modulo AC) newk_0_[color=#ffffff, process='new k.1;', issapicrule,
                            role='Process']:
      [ State_( ), Fr( k ) ] --> [ State_1( k ) ]
   */
 
 rule (modulo E) outsenck_0_1[color=#ffffff,
-                             process="out(senc(k.1, '1'));", issapicrule, role='Process']:
+                             process='out(senc(k.1, '1'));', issapicrule, role='Process']:
    [ State_1( k.1 ) ] --> [ State_11( k.1 ), Out( senc(k.1, '1') ) ]
 
   /*
   rule (modulo AC) outsenck_0_1[color=#ffffff,
-                                process="out(senc(k.1, '1'));", issapicrule, role='Process']:
+                                process='out(senc(k.1, '1'));', issapicrule, role='Process']:
      [ State_1( k ) ] --> [ State_11( k ), Out( senc(k, '1') ) ]
   */
 
-rule (modulo E) inx_0_11[color=#ffffff, process="in(x.1);", issapicrule,
+rule (modulo E) inx_0_11[color=#ffffff, process='in(x.1);', issapicrule,
                          role='Process']:
    [ State_11( k.1 ), In( x.1 ) ] --> [ State_111( k.1, x.1 ) ]
 
   /*
-  rule (modulo AC) inx_0_11[color=#ffffff, process="in(x.1);", issapicrule,
+  rule (modulo AC) inx_0_11[color=#ffffff, process='in(x.1);', issapicrule,
                             role='Process']:
      [ State_11( k ), In( x ) ] --> [ State_111( k, x ) ]
   */
 
 rule (modulo E) letysdeckx_0_111[color=#ffffff,
-                                 process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+                                 process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
    [ State_111( k.1, x.1 ) ] --> [ Let_1111( <k.1, x.1>, k.1, x.1 ) ]
 
   /*
   rule (modulo AC) letysdeckx_0_111[color=#ffffff,
-                                    process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+                                    process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
      [ State_111( k, x ) ] --> [ Let_1111( <k, x>, k, x ) ]
   */
 
 rule (modulo E) letysdeckx_1_111[color=#ffffff,
-                                 process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+                                 process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
    [ Let_1111( <k, senc(k, y.1)>, k.1, x.1 ) ]
   -->
    [ State_1111( k.1, x.1, y.1 ) ]
 
   /*
   rule (modulo AC) letysdeckx_1_111[color=#ffffff,
-                                    process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+                                    process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
      [ Let_1111( <k, senc(k, y)>, k.1, x ) ] --> [ State_1111( k.1, x, y ) ]
   */
 
@@ -142,69 +144,69 @@ restriction Restr_letysdeckx_2_111_1:
   // safety formula
 
 rule (modulo E) letysdeckx_2_111[color=#ffffff,
-                                 process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+                                 process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
    [ Let_1111( <k.1, x.1>, k.1, x.1 ) ]
   --[ Restr_letysdeckx_2_111_1( <k.1, x.1> ) ]->
    [ State_1112( k.1, x.1 ) ]
 
   /*
   rule (modulo AC) letysdeckx_2_111[color=#ffffff,
-                                    process="let y.1=sdec(k.1, x.1)", issapicrule, role='Process']:
+                                    process='let y.1=sdec(k.1, x.1)', issapicrule, role='Process']:
      [ Let_1111( <k, x>, k, x ) ]
     --[ Restr_letysdeckx_2_111_1( <k, x> ) ]->
      [ State_1112( k, x ) ]
   */
 
 rule (modulo E) eventDecy_0_1111[color=#ffffff,
-                                 process="event Dec( y.1 );", issapicrule, role='Process']:
+                                 process='event Dec( y.1 );', issapicrule, role='Process']:
    [ State_1111( k.1, x.1, y.1 ) ]
   --[ Dec( y.1 ) ]->
    [ State_11111( k.1, x.1, y.1 ) ]
 
   /*
   rule (modulo AC) eventDecy_0_1111[color=#ffffff,
-                                    process="event Dec( y.1 );", issapicrule, role='Process']:
+                                    process='event Dec( y.1 );', issapicrule, role='Process']:
      [ State_1111( k, x, y ) ] --[ Dec( y ) ]-> [ State_11111( k, x, y ) ]
   */
 
-rule (modulo E) outy_0_11111[color=#ffffff, process="out(y.1);",
+rule (modulo E) outy_0_11111[color=#ffffff, process='out(y.1);',
                              issapicrule, role='Process']:
    [ State_11111( k.1, x.1, y.1 ) ]
   -->
    [ State_111111( k.1, x.1, y.1 ), Out( y.1 ) ]
 
   /*
-  rule (modulo AC) outy_0_11111[color=#ffffff, process="out(y.1);",
+  rule (modulo AC) outy_0_11111[color=#ffffff, process='out(y.1);',
                                 issapicrule, role='Process']:
      [ State_11111( k, x, y ) ] --> [ State_111111( k, x, y ), Out( y ) ]
   */
 
-rule (modulo E) p_0_111111[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_111111[color=#ffffff, process='0', issapicrule,
                            role='Process']:
    [ State_111111( k.1, x.1, y.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111111[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_111111[color=#ffffff, process='0', issapicrule,
                               role='Process']:
      [ State_111111( k, x, y ) ] --> [ ]
   */
 
-rule (modulo E) eventElse_0_1112[color=#ffffff, process="event Else( );",
+rule (modulo E) eventElse_0_1112[color=#ffffff, process='event Else( );',
                                  issapicrule, role='Process']:
    [ State_1112( k.1, x.1 ) ] --[ Else( ) ]-> [ State_11121( k.1, x.1 ) ]
 
   /*
   rule (modulo AC) eventElse_0_1112[color=#ffffff,
-                                    process="event Else( );", issapicrule, role='Process']:
+                                    process='event Else( );', issapicrule, role='Process']:
      [ State_1112( k, x ) ] --[ Else( ) ]-> [ State_11121( k, x ) ]
   */
 
-rule (modulo E) p_0_11121[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_11121[color=#ffffff, process='0', issapicrule,
                           role='Process']:
    [ State_11121( k.1, x.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11121[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_11121[color=#ffffff, process='0', issapicrule,
                              role='Process']:
      [ State_11121( k, x ) ] --> [ ]
   */
@@ -218,9 +220,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -232,7 +234,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/destructors.spthy
 
   output:          examples/sapic/fast/basic/destructors.spthy.tmp
-  processing time: 0.19s
+  processing time: 0.07s
   
   else (exists-trace): verified (3 steps)
   main (exists-trace): verified (4 steps)

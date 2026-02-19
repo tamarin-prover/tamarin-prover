@@ -1,0 +1,319 @@
+theory CcittX509_1
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, h/1, pair/2, pk/1, sign/2, snd/1,
+           true/0, verify/3
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+
+
+
+
+
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ]
+  --[ Register( $X, ~ltk ) ]->
+   [ !Ltk( $X, ~ltk ), !Pk( $X, pk(~ltk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Get_pk:
+   [ !Pk( $X, pubkey ) ] --> [ Out( pubkey ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( $U, ~ltk ) ] --[ Reveal( $U ) ]-> [ Out( ~ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) A_send:
+   [
+   !Pk( $B, pkB ), !Ltk( $A, ltkA ), Fr( ~ta ), Fr( ~na ), Fr( ~xa ),
+   Fr( ~Ya )
+   ]
+  --[ Running_A( $A, $B, <'A', 'B', ~xa, ~Ya> ), Secret( $A, $B, ~Ya ) ]->
+   [
+   Out( <$A, ~ta, ~na, $B, ~xa, aenc(~Ya, pkB), 
+         h(<~ta, ~na, $B, ~xa, aenc(~Ya, pkB)>), 
+         sign(h(<~ta, ~na, $B, ~xa, aenc(~Ya, pkB)>), ltkA)>
+   )
+   ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B_receive:
+   [
+   In( <x, ta, na, $B, xa, aenc(Ya, pk(~ltkB)), 
+        h(<ta, na, $B, xa, aenc(Ya, pk(~ltkB))>), 
+        sign(h(<ta, na, $B, xa, aenc(Ya, pk(~ltkB))>), ~ltkA)>
+   ),
+   !Pk( x, pk(~ltkA) ), !Ltk( $B, ~ltkB )
+   ]
+  --[ Commit_B( x, $B, <'A', 'B', xa, Ya> ), Secret( x, $B, Ya ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+lemma Secrecy:
+  all-traces
+  "¬(∃ A B m #i.
+      (((Secret( A, B, m ) @ #i) ∧ (∃ #r. K( m ) @ #r)) ∧
+       (¬(∃ #r. Reveal( B ) @ #r))) ∧
+      (¬(∃ #r. Reveal( A ) @ #r)))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B m #i.
+  (Secret( A, B, m ) @ #i)
+ ∧
+  (∃ #r. (K( m ) @ #r)) ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( Secret( A, B, m ) @ #i )
+  case A_send
+  solve( !Pk( $B, pkB ) ▶₀ #i )
+    case Register_pk
+    solve( !Ltk( $A, ltkA ) ▶₁ #i )
+      case Register_pk
+      solve( !KU( ~Ya ) @ #vk )
+        case A_send
+        solve( !KU( ~ltk ) @ #vk.1 )
+          case Reveal_ltk
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+next
+  case B_receive
+  solve( !Pk( A, pk(~ltkA) ) ▶₁ #i )
+    case Register_pk
+    solve( !Ltk( $B, ~ltkB ) ▶₂ #i )
+      case Register_pk
+      solve( !KU( sign(h(<ta, na, $B, xa, aenc(m, pk(~ltkB))>), ~ltkA)
+             ) @ #vk.15 )
+        case A_send
+        solve( !KU( ~Ya ) @ #vk.1 )
+          case A_send
+          solve( !KU( ~ltkB ) @ #vk.16 )
+            case Reveal_ltk
+            by contradiction /* from formulas */
+          qed
+        qed
+      next
+        case c_sign
+        solve( !KU( ~ltkA ) @ #vk.16 )
+          case Reveal_ltk
+          by contradiction /* from formulas */
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma injectiveagreement_B:
+  all-traces
+  "∀ A B t #i.
+    (Commit_B( A, B, t ) @ #i) ⇒
+    (((∃ #j.
+        ((Running_A( A, B, t ) @ #j) ∧ (#j < #i)) ∧
+        (¬(∃ A2 B2 #i2. (Commit_B( A2, B2, t ) @ #i2) ∧ (¬(#i2 = #i))))) ∨
+      (∃ #r. Reveal( A ) @ #r)) ∨
+     (∃ #r. Reveal( B ) @ #r))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B t #i.
+  (Commit_B( A, B, t ) @ #i)
+ ∧
+  (∀ #j.
+    (Running_A( A, B, t ) @ #j)
+   ⇒
+    ((¬(#j < #i)) ∨
+     (∃ A2 B2 #i2. (Commit_B( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
+  (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( !Pk( A, pk(~ltkA) ) ▶₁ #i )
+  case Register_pk
+  solve( !Ltk( $B, ~ltkB ) ▶₂ #i )
+    case Register_pk
+    solve( !KU( sign(h(<ta, na, $B, xa, aenc(Ya, pk(~ltkB))>), ~ltkA)
+           ) @ #vk.14 )
+      case A_send
+      solve( (#i2 < #i)  ∥ (#i < #i2) )
+        case case_1
+        solve( !Pk( A2, pk(~ltkA.1) ) ▶₁ #i2 )
+          case Register_pk
+          solve( !Ltk( $B.1, ~ltkB.1 ) ▶₂ #i2 )
+            case Register_pk
+            solve( !KU( sign(h(<ta.1, na.1, $B.1, ~xa, aenc(~Ya, pk(~ltkB.1))>),
+                             ~ltkA.1)
+                   ) @ #vk.28 )
+              case A_send
+              solve( !KU( ~ta ) @ #vk.9 )
+                case A_send
+                solve( !KU( ~na ) @ #vk.10 )
+                  case A_send
+                  solve( !KU( ~xa ) @ #vk.12 )
+                    case A_send
+                    solve( !KU( aenc(~Ya, pk(~ltkB)) ) @ #vk.13 )
+                      case A_send
+                      solve( !KU( h(<~ta, ~na, $B, ~xa, aenc(~Ya, pk(~ltkB))>) ) @ #vk.14 )
+                        case A_send
+                        SOLVED // trace found
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+lemma agreement_B:
+  all-traces
+  "∀ A B t #i.
+    (Commit_B( A, B, t ) @ #i) ⇒
+    (((∃ #j. (Running_A( A, B, t ) @ #j) ∧ (#j < #i)) ∨
+      (∃ #r. Reveal( A ) @ #r)) ∨
+     (∃ #r. Reveal( B ) @ #r))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ A B t #i.
+  (Commit_B( A, B, t ) @ #i)
+ ∧
+  (∀ #j. (Running_A( A, B, t ) @ #j) ⇒ ¬(#j < #i)) ∧
+  (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)"
+*/
+simplify
+solve( !Pk( A, pk(~ltkA) ) ▶₁ #i )
+  case Register_pk
+  solve( !Ltk( $B, ~ltkB ) ▶₂ #i )
+    case Register_pk
+    solve( !KU( sign(h(<ta, na, $B, xa, aenc(Ya, pk(~ltkB))>), ~ltkA)
+           ) @ #vk.14 )
+      case A_send
+      by contradiction /* from formulas */
+    next
+      case c_sign
+      solve( !KU( ~ltkA ) @ #vk.15 )
+        case Reveal_ltk
+        by contradiction /* from formulas */
+      qed
+    qed
+  qed
+qed
+
+lemma Session_key_honest_setup:
+  exists-trace
+  "∃ A B t #i #j.
+    (((Running_A( A, B, t ) @ #i) ∧ (Commit_B( A, B, t ) @ #j)) ∧
+     (¬(∃ #r. Reveal( B ) @ #r))) ∧
+    (¬(∃ #s. Reveal( A ) @ #s))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ A B t #i #j.
+  (Running_A( A, B, t ) @ #i) ∧ (Commit_B( A, B, t ) @ #j)
+ ∧
+  (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥) ∧ (∀ #s. (Reveal( A ) @ #s) ⇒ ⊥)"
+*/
+simplify
+solve( !Pk( $B, pkB ) ▶₀ #i )
+  case Register_pk
+  solve( !Ltk( $A, ltkA ) ▶₁ #i )
+    case Register_pk
+    solve( !Pk( $A, pk(~ltkA) ) ▶₁ #j )
+      case Register_pk
+      solve( !Ltk( $B, ~ltkB ) ▶₂ #j )
+        case Register_pk
+        solve( !KU( sign(h(<ta.1, na.1, $B, ~xa, aenc(~Ya, pk(~ltkB))>), ~ltkA)
+               ) @ #vk.14 )
+          case A_send
+          solve( !KU( ~xa ) @ #vk.10 )
+            case A_send
+            solve( !KU( ~ta ) @ #vk.7 )
+              case A_send
+              solve( !KU( ~na ) @ #vk.11 )
+                case A_send
+                solve( !KU( aenc(~Ya, pk(~ltk)) ) @ #vk.13 )
+                  case A_send
+                  solve( !KU( h(<~ta, ~na, $B, ~xa, aenc(~Ya, pk(~ltk))>) ) @ #vk.14 )
+                    case A_send
+                    SOLVED // trace found
+                  qed
+                qed
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
+  qed
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
+
+  output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
+  processing time: 0.87s
+  
+  Secrecy (all-traces): verified (15 steps)
+  injectiveagreement_B (all-traces): falsified - found trace (14 steps)
+  agreement_B (all-traces): verified (7 steps)
+  Session_key_honest_setup (exists-trace): verified (12 steps)
+
+==============================================================================
+*/

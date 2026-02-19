@@ -174,7 +174,7 @@ The `no_precomp` annotation can be used in combination with heuristic annotation
 by including both separated by commas---e.g., a premise
 `A(x)[-,no_precomp]` will be delayed and also will not have its sources precomputed.
 
-### Using a Tactic {subsec: tactic}
+### Using a Tactic {#subsec:tactic}
 
 The tactics are a language native to Tamarin designed to allow user to write custom rankings of proof methods.
 
@@ -188,7 +188,7 @@ tactic: uniqueness
 presort: C
 ```
 
-Then we will start to write the priorities following which we want to order the proof methods. Every priority, announced by the `prio`  keywords, is composed of functions that will try to recognize characteristics in the proof methods given by Tamarin. If a proof method is recognized by a function in a priority, it will be be ranked as such, i.e., the higher the priority in the tactic, the higher the proof methods it recognizes will be ranked. The particularity recognized by every function will be detailed in a paragraph below. The tactic language authorizes to combine functions using `|`, `&` and `not`.
+Then we will start to write the priorities following which we want to order the proof methods. Every priority, announced by the `prio`  keywords, is composed of functions that will try to recognize characteristics in the proof methods given by Tamarin. If a proof method is recognized by a function in a priority, it will be ranked as such, i.e., the higher the priority in the tactic, the higher the proof methods it recognizes will be ranked. The particularity recognized by every function will be detailed in a paragraph below. The tactic language authorizes to combine functions using `|`, `&` and `not`.
 Even if the option is not necessary for the proof of the lemma uniqueness, let's now explore the `deprio` keyword. It works as the `prio` one but with the opposite goal since it allows the user to put the recognized proof methods at the bottom of the ranking. In case several `deprio` are written, the first one will be ranked higher than the last ones. If a proof method is recognized by two or more 'priorities' or 'depriorities', only the first one (i.e., the higher rank possible) will be taken into account for the final ranking.
 The order of the proof methods recognized by the same priority is usually predetermined by the presort. However, if this order is not appropriate for one priority, the user can call a 'postranking function'. This function will reorder the proof methods inside the priority given a criteria. If no postranking function is determined, Tamarin will use the identity. For now, the only other option is `smallest`, a function that will order the proof methods by increasing size of their pretty-printed strings.
 
@@ -214,16 +214,19 @@ The other way is directly integrated in the file by adding `[heuristic={uniquene
 The functions used in the tactic language are implemented in Tamarin. Below you can find a list of the currently available functions. At the end at this section, you will find an explanation on how to write your own functions if the one described here do not suffice for your usage.
 
 Pre-implemented functions
-    * `regex`: as explain above, this function takes in parameter a string and will use it as a pattern to match against the proof methods. (Since it is based on the Text.Regex.PCRE module of Haskell, some characters, as the parenthesis, will need to be escaped to achieve the desired behavior).
-    * `isFactName`: as is given by its name, this function will go look in the Tamarin object 'goal' and check if the field FactName matches its parameter. To give an example of its usage, `isFactName` could be used instead of `regex` for the first prio of the above example with same results.
-    * `isInFactTerms`: the function will look in the list contained in the field FactTest whether an element corresponding the parameter can be found.
-The following functions are also implemented but specifically designed to translate the oracles of the Vacarme tool into tactics:
-    * `dhreNoise`: recognize constraints containing a Diffie-Hellman exponentiation. For example, the constraint `Recv( <'g'^~e.1,aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer),aead(kdf2(<kdf1(<ck, 'g'^(~e*~e.1)>), z>), '0',h(<h(<hash, 'g'^~e.1>),aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer)>), payload)>) ▶₁ #claim` is recognized thanks to the presence of the following pattern `'g'^~e.1`. The function does need one parameter from the user, the type of oracle it is used for. It can be `def` for the Vacarme default case, `curve` for Vacarme oracle_C25519_K1X1 case and `diff` if the tactic is used to prove an equivalence lemma. If the parameter specified is anything else, the default case will be used.
-    It works as follows. First, it will retrieve from the system state the formulas that have the `Reveal` fact name and matches the regex `exp\\('g'`. For the retrieved formulas, it will then put in a list the content of the `Free` variables along the variable `~n`. In the case of the example given above, the list would be `[~n,~e,~e.1]`. They are the variable that the function will try to match against. Once it is done, the tested constraint will be recognized if it includes an exponentiation that uses the previously listed elements (just one as exponent or a multiplication).  
-    * `defaultNoise`: this function takes two parameter: the oracle type (as explained for `dhreNoise`) and a regex pattern. The regex pattern should allow the program to extract the nonces targeted by the user from the constraint. For example, in the default case of Vacarme, the regex is `(?<!'g'\^)\~[a-zA-Z.0-9]*` and aims at recovering the nonces used in exponentiation. The goal of the function is to verify that all the recovered nonces can be found in the list extracted from the system state as explained for `dhreNoise`. The constraint will only be recognized if all his nonces are in the list.
-    * `reasonableNoncesNoise`: takes one parameter (same as `dhreNoise`). It works as `defaultNoise` but works with all the nonces of the constraint and therefore does not need a regex pattern to retrieve them.
-    * `nonAbsurdConstraint`: this function retrieve the functions names present in the constraint and verifies if they are "Ku" or "inv" (this means the key words coming before parenthesis). It also retrieves the list of nonces form the system state as explained for `dhreNoise` and checks if they do not appear in the constraint. If both the conditions are verified, the constraint is recognized. It only takes one argument (the same as dhreNoise).
 
+* `regex`: as explained above, this function takes in parameter a string and will use it as a pattern to match against the proof methods. (Since it is based on the Text.Regex.PCRE module of Haskell, some characters, as parentheses, will need to be escaped to achieve the desired behavior).
+* `isFactName`: as is given by its name, this function will go look in the Tamarin object 'goal' and check if the field FactName matches its parameter. To give an example of its usage, `isFactName` could be used instead of `regex` for the first prio of the above example with same results.
+* `isInFactTerms`: the function will look in the list contained in the field FactTest whether an element corresponding the parameter can be found.
+
+The following functions are also implemented but specifically designed to translate the oracles of the Vacarme tool into tactics:
+
+ *  `dhreNoise`: recognize constraints containing a Diffie-Hellman exponentiation. For example, the constraint `Recv( <'g'^~e.1,aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer),aead(kdf2(<kdf1(<ck, 'g'^(~e*~e.1)>), z>), '0',h(<h(<hash, 'g'^~e.1>),aead(kdf2(<ck, 'g'^(~e*~e.1)>), '0', h(<hash, 'g'^~e.1>), peer)>), payload)>) ▶₁ #claim` is recognized thanks to the presence of the following pattern `'g'^~e.1`. The function needs one user parameter, which is the type of oracle it is used for. It can be `def` for the Vacarme default case, `curve` for Vacarme oracle_C25519_K1X1 case and `diff` if the tactic is used to prove an equivalence lemma. If the parameter specified is anything else, the default case will be used.
+
+    It works as follows. First, it will retrieve from the system state the formulas that have the `Reveal` fact name and matches the regex `exp\\('g'`. For the retrieved formulas, it will then put in a list the content of the `Free` variables along the variable `~n`. In the case of the example given above, the list would be `[~n,~e,~e.1]`. They are the variable that the function will try to match against. Once it is done, the tested constraint will be recognized if it includes an exponentiation that uses the previously listed elements (just one as exponent or a multiplication).  
+ * `defaultNoise`: this function takes two parameter: the oracle type (as explained for `dhreNoise`) and a regex pattern. The regex pattern should allow the program to extract the nonces targeted by the user from the constraint. For example, in the default case of Vacarme, the regex is `(?<!'g'\^)\~[a-zA-Z.0-9]*` and aims at recovering the nonces used in exponentiation. The goal of the function is to verify that all the recovered nonces can be found in the list extracted from the system state as explained for `dhreNoise`. The constraint will only be recognized if all his nonces are in the list.
+ * `reasonableNoncesNoise`: takes one parameter (same as `dhreNoise`). It works as `defaultNoise` but works with all the nonces of the constraint and therefore does not need a regex pattern to retrieve them.
+ * `nonAbsurdConstraint`: this function retrieve the functions names present in the constraint and verifies if they are "Ku" or "inv" (this means the key words coming before parenthesis). It also retrieves the list of nonces form the system state as explained for `dhreNoise` and checks if they do not appear in the constraint. If both the conditions are verified, the constraint is recognized. It only takes one argument (the same as dhreNoise).
 
 #### How to write your own function(s)
 
@@ -831,7 +834,7 @@ Positions can also be inside tuples if these tuples are always explicitly used i
 
 In the example above, the `key` in `Store` is strictly increasing as `key` is a syntactic subterm of `h(key)` and `h` is not a reducible operator (not appearing on the top of a rewriting rules left side).
 
-These detected injective facts can be viewed on the top of the right side when clicking on "Message Rewriting Rules". The Store would look as follows: `Store(id,<)` indicating that the first term is for identification of the injective fact while the second term is strictly increasing. Possible symbols are `≤`, `≥`, `<`, `>` and `=`. A tuple position is marked with additional parantheses, e.g., `Store(id,(<,≥),=)`.
+These detected injective facts can be viewed on the top of the right side when clicking on "Message Rewriting Rules". The Store would look as follows: `Store(id,<)` indicating that the first term is for identification of the injective fact while the second term is strictly increasing. Possible symbols are `≤`, `≥`, `<`, `>` and `=`. A tuple position is marked with additional parentheses, e.g., `Store(id,(<,≥),=)`.
 
 Note that this support for reasoning about exclusivity was sufficient for our
 case studies, but it is likely that more complicated case studies require
@@ -911,4 +914,3 @@ of the dot command line program.
 For JSON, the standard schema already defines a single top-level object with a
 "graphs" key that holds a list of the individual graphs, which we use to output
 the constrain systems.
-

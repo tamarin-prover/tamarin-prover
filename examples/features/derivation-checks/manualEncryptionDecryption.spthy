@@ -1,0 +1,14 @@
+theory ManualEncryptionDecryption
+begin
+
+functions: enc/2, dec/2
+equations: dec(enc(x,k),k) = x
+
+//This rule attempts to decrypt an encrypted value using the correct key, using manually defined functions.
+// It should derive the original value without any warnings.
+rule encrypt_decrypt:
+  [ In(enc(x,k)), In(k) ]
+  --[ Decrypted(x) ]->
+  [ Out(x) ]
+
+end

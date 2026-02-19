@@ -1,4 +1,6 @@
-theory NAXOS_eCK begin
+theory NAXOS_eCK
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -556,9 +558,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.5
-Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
-Compiled at: 2025-09-19 11:18:23.495617078 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -570,7 +572,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 2.96s
+  processing time: 0.60s
   
   eCK_key_secrecy (all-traces): verified (89 steps)
 
