@@ -161,6 +161,16 @@ case-studies$(SUBDIR)%_analyzed-deforacle.spthy: examples/%.spthy $(TAMARIN)
 	mv $<.tmp $@
 	\rm -f $<.out
 
+# Special rule for derivation-check files to not bypass derivation checks.
+case-studies$(SUBDIR)features/derivation-checks/%_analyzed-derivcheck.spthy: examples/features/derivation-checks/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out 2>&1
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
 
 ## Observational Equivalence
 ############################
@@ -439,7 +449,6 @@ FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$
 
 
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
-
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
@@ -482,18 +491,12 @@ sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in w
 
 ## Derivation checks
 ##########################
-DERIVATION_CHECK_CASE_STUDIES=$(notdir $(wildcard examples/features/derivation-checks/*.spthy))
-DERIVATION_CHECK_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)features/derivation-checks/,$(DERIVATION_CHECK_CASE_STUDIES)))
 
-# Special rule for derivation-check files to not bypass derivation checks.
-case-studies$(SUBDIR)features/derivation-checks/%_analyzed.spthy: examples/features/derivation-checks/%.spthy $(TAMARIN)
-	mkdir -p $(dir $@)
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out 2>&1
-	printf "\n/* Output\n" >>$<.tmp
-	cat $<.out >>$<.tmp
-	echo "*/" >>$<.tmp
-	mv $<.tmp $@
-	\rm -f $<.out
+DERIVATION_CHECK_CASE_STUDIES=$(notdir $(wildcard examples/features/derivation-checks/*.spthy))
+DERIVATION_CHECK_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck.spthy,$(addprefix case-studies$(SUBDIR)features/derivation-checks/,$(DERIVATION_CHECK_CASE_STUDIES)))
+
+derivation-check-case-studies:	$(DERIVATION_CHECK_CS_TARGETS)
+	grep "verified\|falsified\|processing time" $^
 
 ## All case studies
 ###################

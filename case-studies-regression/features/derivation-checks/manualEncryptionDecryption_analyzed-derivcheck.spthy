@@ -41,6 +41,14 @@ Compiled at: 2026-02-16 12:29:57.582345 UTC
 
 end
 /* Output
+maude tool: 'maude'
+ checking version: 3.5.1. OK.
+ checking installation: OK.
+[Theory ManualEncryptionDecryption] Theory loaded
+[Theory ManualEncryptionDecryption] Theory translated
+[Theory ManualEncryptionDecryption] Derivation checks started
+[Theory ManualEncryptionDecryption] Derivation checks ended
+[Theory ManualEncryptionDecryption] Theory closed
 
 ==============================================================================
 summary of summaries:
@@ -48,7 +56,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/manualEncryptionDecryption.spthy
 
   output:          examples/features/derivation-checks/manualEncryptionDecryption.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.05s
   
 
 ==============================================================================
