@@ -3,7 +3,7 @@ theory licensing
 begin
 
 builtins:  symmetric-encryption,asymmetric-encryption,locations-report
-functions: pk/1,run/2,prg/1,tkn/1,ok/2,ask/2, dec/1,dec1/1,dec2/1
+functions: run/2,prg/1,tkn/1,ok/2,ask/2, dec/1,dec1/1,dec2/1
 heuristic: s
 
 predicates:

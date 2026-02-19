@@ -1,0 +1,85 @@
+theory MacrosInLemmasAndRestrictions begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+macros:
+    m( x ) = x
+    m2( x, y ) = pair(x,y)
+    m3( x ) = x
+
+rule (modulo E) A:
+   [ In( x ) ] --[ A( m(x) ) ]-> [ ]
+
+  /*
+  rule (modulo AC) A:
+     [ In( x ) ] --[ A( x ) ]-> [ ]
+  */
+
+rule (modulo E) B:
+   [ In( x ), In( y ) ] --[ B( m2(x, y) ) ]-> [ ]
+
+  /*
+  rule (modulo AC) B:
+     [ In( x ), In( y ) ] --[ B( <x, y> ) ]-> [ ]
+  */
+
+rule (modulo E) C:
+   [ In( x ) ] --[ C( x ) ]-> [ ]
+
+  /* has exactly the trivial AC variant */
+
+restriction OnlyValidProcessing:
+  "∀ x #i. (A( m(m3(x)) ) @ #i) ⇒ (∃ y. x = y)"
+
+  /*
+  expanded formula:
+  "∀ x #i. (A( x ) @ #i) ⇒ (∃ y. x = y)"
+  */
+
+lemma M:
+  exists-trace "∃ x #i. A( m(x) ) @ #i"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i. (A( x ) @ #i)"
+*/
+simplify
+SOLVED // trace found
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 050ad1dd08df62a7b56f71f56f5c69e1b56cafba (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-16 15:22:18.260570723 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/macros/MacroInLemmasAndRestrictions.spthy
+
+  output:          examples/features/macros/MacroInLemmasAndRestrictions.spthy.tmp
+  processing time: 0.08s
+  
+  M (exists-trace): verified (2 steps)
+
+==============================================================================
+*/
