@@ -49,6 +49,19 @@ instance Show MonotonicBehaviour where
   show Unstable = "."
   show Unspecified = "?"
 
+
+-- | under-approximate monotonicity constraints from a formula.
+-- For now, we only deal with a formula that corresponds to a subterm atom
+-- If we want to express things like OR, we need to return a more refined value.
+extractConstraints :: (Ord c, Ord b) => ProtoFormula syn s c b -> [(Term (Lit c b), Term (Lit c b))]
+extractConstraints (Ato (Subterm t1 t2)) = [(bvarToLVar t1, bvarToLVar t2)]
+    where
+        bvarToLVar =
+            fmapTerm (fmap (foldBVar boundError id))
+        boundError _ = error "implementation error: bounded variable in top-level atom"
+extractConstraints _ = []
+
+
 -- | Compute a simple under-approximation to the set of facts with injective
 -- instances. A fact-tag is has injective instances, if there is no state of
 -- the protocol with more than one instance with the same term as a first
@@ -135,7 +148,7 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
       combineAll (Just (map (map combine) $ zipWith zip behaviours behaviours1) : rest) tag
     combineAll [x] _ = x
     combineAll [] tag = M.lookup tag candidates -- start with the empty shape of Unspecified
-    combineAll _ _ = error "the haskell compiler is too dumb to know that the pattern matching is actually exhaustive"
+    combineAll _ _ = error "The haskell compiler is too dumb to know that the pattern matching is actually exhaustive."
 
     combine :: (MonotonicBehaviour, MonotonicBehaviour) -> MonotonicBehaviour
     combine (x, y) | x == y = x
@@ -161,6 +174,7 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
       where
         prems = L.get rPrems ru
         copies = filter ((tag ==) . factTag) (L.get rConcs ru)
+        constraints = concatMap extractConstraints (L.get preRestriction (L.get rInfo ru))
         firstTerm = headMay . factTerms
 
         -- duplicateFirstTerms are the first terms that appear at least twice - i.e. the corresponding fact cannot be injective
@@ -200,6 +214,8 @@ simpleInjectiveFactInstances reducible rules = S.fromList $ do
                 getBehaviour (t1, t2) | t1 == t2 = Constant
                 getBehaviour (t1, t2) | elemNotBelowReducible reducible t1 t2 = StrictlyIncreasing
                 getBehaviour (t1, t2) | elemNotBelowReducible reducible t2 t1 = StrictlyDecreasing
+                getBehaviour (t1, t2) | (t1,t2) `elem` constraints = StrictlyIncreasing
+                getBehaviour (t1, t2) | (t2,t1) `elem` constraints = StrictlyDecreasing
                 getBehaviour _ = Unstable
 
                 behaviours =

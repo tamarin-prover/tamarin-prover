@@ -5800,6 +5800,10 @@
           "named": true
         },
         {
+          "type": "rule_extended_attribute",
+          "named": true
+        },
+        {
           "type": "rule_process",
           "named": true
         },
@@ -5838,6 +5842,52 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "rule_extended_attribute",
+    "named": true,
+    "fields": {
+      "extended_attribute_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "xattribute_ident",
+            "named": true
+          }
+        ]
+      },
+      "extended_attribute_value": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "no_curly_brackets",
+            "named": true
+          },
+          {
+            "type": "no_double_quotes",
+            "named": true
+          },
+          {
+            "type": "no_pipe",
+            "named": true
+          },
+          {
+            "type": "no_round_brackets",
+            "named": true
+          },
+          {
+            "type": "no_single_quotes",
+            "named": true
+          },
+          {
+            "type": "no_square_brackets",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -7051,7 +7101,8 @@
   },
   {
     "type": "multi_comment",
-    "named": true
+    "named": true,
+    "extra": true
   },
   {
     "type": "multiset",
@@ -7078,12 +7129,36 @@
     "named": false
   },
   {
+    "type": "no_curly_brackets",
+    "named": true
+  },
+  {
     "type": "no_derivcheck",
     "named": false
   },
   {
+    "type": "no_double_quotes",
+    "named": true
+  },
+  {
+    "type": "no_pipe",
+    "named": true
+  },
+  {
     "type": "no_precomp",
     "named": false
+  },
+  {
+    "type": "no_round_brackets",
+    "named": true
+  },
+  {
+    "type": "no_single_quotes",
+    "named": true
+  },
+  {
+    "type": "no_square_brackets",
+    "named": true
   },
   {
     "type": "node",
@@ -7215,7 +7290,8 @@
   },
   {
     "type": "single_comment",
-    "named": true
+    "named": true,
+    "extra": true
   },
   {
     "type": "smallest",
@@ -7312,6 +7388,10 @@
   {
     "type": "variants",
     "named": false
+  },
+  {
+    "type": "xattribute_ident",
+    "named": true
   },
   {
     "type": "xor",

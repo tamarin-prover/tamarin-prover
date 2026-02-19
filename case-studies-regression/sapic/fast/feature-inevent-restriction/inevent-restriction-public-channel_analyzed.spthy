@@ -1,4 +1,6 @@
-theory InEventRestrictionPublicChannel begin
+theory InEventRestrictionPublicChannel
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -38,37 +40,37 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="event A( );", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='event A( );', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_[color=#ffffff, process="event A( );",
+rule (modulo E) eventA_0_[color=#ffffff, process='event A( );',
                           issapicrule, role='Process']:
    [ State_( ) ] --[ A( ), Event( ) ]-> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ina_0_1[color=#ffffff, process="in('a');", issapicrule,
+rule (modulo E) ina_0_1[color=#ffffff, process='in('a');', issapicrule,
                         role='Process']:
    [ State_1( ), In( x ) ] --[ ChannelIn( x ) ]-> [ Let_11( x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) ina_1_1[color=#ffffff, process="in('a');", issapicrule,
+rule (modulo E) ina_1_1[color=#ffffff, process='in('a');', issapicrule,
                         role='Process']:
    [ Let_11( 'a' ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );",
+rule (modulo E) eventB_0_11[color=#ffffff, process='event B( );',
                             issapicrule, role='Process']:
    [ State_11( ) ] --[ B( ), Event( ) ]-> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
                         role='Process']:
    [ State_111( ) ] --> [ ]
 
@@ -92,9 +94,9 @@ restriction in_event:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -106,7 +108,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-public-channel.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.03s
   
   test (all-traces): verified (4 steps)
 

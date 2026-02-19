@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # coding=utf-8
 import re
 import os
@@ -9,7 +9,7 @@ debug = False
 lines = sys.stdin.readlines()
 
 lemma = sys.argv[1]
-if debug: print >> sys.stderr, "Lemma is "+lemma
+if debug: print("Lemma is "+lemma, file=sys.stderr)
 
 priorities = []
 
@@ -35,14 +35,14 @@ if lemma == "coins":
   priorities = [ "!St_C_1",  "!Bank_Pk", "(last", "splitEqs", "Mint", "~~>", "!KU( ~r" ]
   avoid = [ ]
 else:
-  print 1
+  print(1)
   sys.exit()
 
 plist = [ [] for i in priorities ]
 possible = []
 
 for line in lines:
-  if debug: print >> sys.stderr, "Line is "+line,
+  if debug: print("Line is "+line, end=' ', file=sys.stderr)
 
   num = line.split(':')[0]
 
@@ -54,6 +54,6 @@ for line in lines:
 
 for j in range(len(plist)):
   for i in plist[j]:
-    print i
+    print(i)
 for j in possible:
-  print j
+  print(j)

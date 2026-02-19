@@ -1,4 +1,6 @@
-theory mini5 begin
+theory mini5
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -108,34 +110,34 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="new s.1;",
+rule (modulo E) MessageIDRule[color=#ffffff, process='new s.1;',
                               issapicrule, role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertsHELLO_0_11[color=#ffffff, process="0",
+rule (modulo E) insertsHELLO_0_11[color=#ffffff, process='0',
                                   issapicrule, role='Process']:
    [ State_11( ~prog_, s.1 ) ]
   --[ ProgressTo_111( ~prog_ ), Insert( s.1, 'HELLO' ) ]->
    [ ]
 
   /*
-  rule (modulo AC) insertsHELLO_0_11[color=#ffffff, process="0",
+  rule (modulo AC) insertsHELLO_0_11[color=#ffffff, process='0',
                                      issapicrule, role='Process']:
      [ State_11( ~prog_, s ) ]
     --[ ProgressTo_111( ~prog_ ), Insert( s, 'HELLO' ) ]->
      [ ]
   */
 
-rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
                      role='Process']:
    [ Fr( ~prog_ ), Fr( s.1 ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
    [ State_11( ~prog_, s.1 ), State_12( ~prog_, s.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="|", issapicrule,
+  rule (modulo AC) Init[color=#ffffff, process='|', issapicrule,
                         role='Process']:
      [ Fr( ~prog_ ), Fr( s ) ]
     --[ ProgressFrom_( ~prog_ ), Init( ) ]->
@@ -143,69 +145,69 @@ rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
   */
 
 rule (modulo E) lookupsasx_0_12[color=#ffffff,
-                                process="lookup s.1 as x.1", derivchecks, issapicrule, role='Process']:
+                                process='lookup s.1 as x.1', no_derivcheck, issapicrule, role='Process']:
    [ State_12( ~prog_, s.1 ) ]
   --[ IsIn( s.1, x.1 ) ]->
    [ State_121( ~prog_, s.1, x.1 ) ]
 
   /*
   rule (modulo AC) lookupsasx_0_12[color=#ffffff,
-                                   process="lookup s.1 as x.1", derivchecks, issapicrule, role='Process']:
+                                   process='lookup s.1 as x.1', no_derivcheck, issapicrule, role='Process']:
      [ State_12( ~prog_, s ) ]
     --[ IsIn( s, x ) ]->
      [ State_121( ~prog_, s, x ) ]
   */
 
-rule (modulo E) ifxHELLO_0_121[color=#ffffff, process="if x.1='HELLO'",
+rule (modulo E) ifxHELLO_0_121[color=#ffffff, process='if x.1='HELLO'',
                                issapicrule, role='Process']:
    [ State_121( ~prog_, s.1, x.1 ) ]
   --[ Pred_Eq( x.1, 'HELLO' ) ]->
    [ State_1211( ~prog_, s.1, x.1 ) ]
 
   /*
-  rule (modulo AC) ifxHELLO_0_121[color=#ffffff, process="if x.1='HELLO'",
+  rule (modulo AC) ifxHELLO_0_121[color=#ffffff, process='if x.1='HELLO'',
                                   issapicrule, role='Process']:
      [ State_121( ~prog_, s, x ) ]
     --[ Pred_Eq( x, 'HELLO' ) ]->
      [ State_1211( ~prog_, s, x ) ]
   */
 
-rule (modulo E) eventA_0_1211[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventA_0_1211[color=#ffffff, process='0', issapicrule,
                               role='Process']:
    [ State_1211( ~prog_, s.1, x.1 ) ]
   --[ ProgressTo_12111( ~prog_ ), A( ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventA_0_1211[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) eventA_0_1211[color=#ffffff, process='0', issapicrule,
                                  role='Process']:
      [ State_1211( ~prog_, s, x ) ]
     --[ ProgressTo_12111( ~prog_ ), A( ) ]->
      [ ]
   */
 
-rule (modulo E) ifxHELLO_1_121[color=#ffffff, process="if x.1='HELLO'",
+rule (modulo E) ifxHELLO_1_121[color=#ffffff, process='if x.1='HELLO'',
                                issapicrule, role='Process']:
    [ State_121( ~prog_, s.1, x.1 ) ]
   --[ Pred_Not_Eq( x.1, 'HELLO' ) ]->
    [ State_1212( ~prog_, s.1, x.1 ) ]
 
   /*
-  rule (modulo AC) ifxHELLO_1_121[color=#ffffff, process="if x.1='HELLO'",
+  rule (modulo AC) ifxHELLO_1_121[color=#ffffff, process='if x.1='HELLO'',
                                   issapicrule, role='Process']:
      [ State_121( ~prog_, s, x ) ]
     --[ Pred_Not_Eq( x, 'HELLO' ) ]->
      [ State_1212( ~prog_, s, x ) ]
   */
 
-rule (modulo E) eventB_0_1212[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventB_0_1212[color=#ffffff, process='0', issapicrule,
                               role='Process']:
    [ State_1212( ~prog_, s.1, x.1 ) ]
   --[ ProgressTo_12121( ~prog_ ), B( ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventB_0_1212[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) eventB_0_1212[color=#ffffff, process='0', issapicrule,
                                  role='Process']:
      [ State_1212( ~prog_, s, x ) ]
     --[ ProgressTo_12121( ~prog_ ), B( ) ]->
@@ -213,25 +215,25 @@ rule (modulo E) eventB_0_1212[color=#ffffff, process="0", issapicrule,
   */
 
 rule (modulo E) lookupsasx_1_12[color=#ffffff,
-                                process="lookup s.1 as x.1", derivchecks, issapicrule, role='Process']:
+                                process='lookup s.1 as x.1', no_derivcheck, issapicrule, role='Process']:
    [ State_12( ~prog_, s.1 ) ]
   --[ IsNotSet( s.1 ) ]->
    [ State_122( ~prog_, s.1 ) ]
 
   /*
   rule (modulo AC) lookupsasx_1_12[color=#ffffff,
-                                   process="lookup s.1 as x.1", derivchecks, issapicrule, role='Process']:
+                                   process='lookup s.1 as x.1', no_derivcheck, issapicrule, role='Process']:
      [ State_12( ~prog_, s ) ]
     --[ IsNotSet( s ) ]->
      [ State_122( ~prog_, s ) ]
   */
 
-rule (modulo E) eventC_0_122[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventC_0_122[color=#ffffff, process='0', issapicrule,
                              role='Process']:
    [ State_122( ~prog_, s.1 ) ] --[ ProgressTo_1221( ~prog_ ), C( ) ]-> [ ]
 
   /*
-  rule (modulo AC) eventC_0_122[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) eventC_0_122[color=#ffffff, process='0', issapicrule,
                                 role='Process']:
      [ State_122( ~prog_, s ) ] --[ ProgressTo_1221( ~prog_ ), C( ) ]-> [ ]
   */
@@ -280,9 +282,9 @@ restriction progressInit:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -294,7 +296,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini5.spthy
 
   output:          examples/sapic/fast/feature-progress/mini5.spthy.tmp
-  processing time: 0.17s
+  processing time: 0.06s
   
   A_possible (exists-trace): verified (9 steps)
   B_impossible (all-traces): verified (3 steps)

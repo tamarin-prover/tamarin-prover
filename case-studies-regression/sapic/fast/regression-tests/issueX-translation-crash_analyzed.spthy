@@ -1,4 +1,6 @@
-theory Typing begin
+theory Typing
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -22,51 +24,51 @@ heuristic: p
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new sk.1;", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='new sk.1;', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newsk_0_[color=#ffffff, process="new sk.1;", issapicrule,
+rule (modulo E) newsk_0_[color=#ffffff, process='new sk.1;', issapicrule,
                          role='Process']:
    [ State_( ), Fr( sk.1 ) ] --> [ State_1( sk.1 ) ]
 
   /*
-  rule (modulo AC) newsk_0_[color=#ffffff, process="new sk.1;",
+  rule (modulo AC) newsk_0_[color=#ffffff, process='new sk.1;',
                             issapicrule, role='Process']:
      [ State_( ), Fr( sk ) ] --> [ State_1( sk ) ]
   */
 
-rule (modulo E) Clientsk_0_1[color=#ffffff, process="Client(sk.1)",
+rule (modulo E) Clientsk_0_1[color=#ffffff, process='Client(sk.1)',
                              issapicrule, role='Process']:
    [ State_1( sk.1 ) ] --> [ State_11( sk.1 ), State_12( sk.1 ) ]
 
   /*
-  rule (modulo AC) Clientsk_0_1[color=#ffffff, process="Client(sk.1)",
+  rule (modulo AC) Clientsk_0_1[color=#ffffff, process='Client(sk.1)',
                                 issapicrule, role='Process']:
      [ State_1( sk ) ] --> [ State_11( sk ), State_12( sk ) ]
   */
 
-rule (modulo E) newa_0_11[color=#518040, process="new a.1;", issapicrule,
+rule (modulo E) newa_0_11[color=#518040, process='new a.1;', issapicrule,
                           role='Client']:
    [ State_11( sk.1 ), Fr( a.1 ) ] --> [ State_111( a.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) newa_0_11[color=#518040, process="new a.1;",
+  rule (modulo AC) newa_0_11[color=#518040, process='new a.1;',
                              issapicrule, role='Client']:
      [ State_11( sk ), Fr( a ) ] --> [ State_111( a, sk ) ]
   */
 
 rule (modulo E) outhelloClientga_0_111[color=#518040,
-                                       process="out(<'helloClient', 'g'^a.1>);", issapicrule, role='Client']:
+                                       process='out(<'helloClient', 'g'^a.1>);', issapicrule, role='Client']:
    [ State_111( a.1, sk.1 ) ]
   -->
    [ State_1111( a.1, sk.1 ), Out( <'helloClient', 'g'^a.1> ) ]
 
   /*
   rule (modulo AC) outhelloClientga_0_111[color=#518040,
-                                          process="out(<'helloClient', 'g'^a.1>);", issapicrule,
+                                          process='out(<'helloClient', 'g'^a.1>);', issapicrule,
                                           role='Client']:
      [ State_111( a, sk ) ]
     -->
@@ -80,7 +82,7 @@ rule (modulo E) outhelloClientga_0_111[color=#518040,
   */
 
 rule (modulo E) inhelloServergagB_0_1111[color=#518040,
-                                         process="in(<'helloServer', 'g'^=a.1, gB.1>);", issapicrule,
+                                         process='in(<'helloServer', 'g'^=a.1, gB.1>);', issapicrule,
                                          role='Client']:
    [ State_1111( a.1, sk.1 ), In( <'helloServer', 'g'^a.1, gB.1> ) ]
   -->
@@ -88,7 +90,7 @@ rule (modulo E) inhelloServergagB_0_1111[color=#518040,
 
   /*
   rule (modulo AC) inhelloServergagB_0_1111[color=#518040,
-                                            process="in(<'helloServer', 'g'^=a.1, gB.1>);", issapicrule,
+                                            process='in(<'helloServer', 'g'^=a.1, gB.1>);', issapicrule,
                                             role='Client']:
      [ State_1111( a, sk ), In( <'helloServer', z, gB> ) ]
     -->
@@ -102,14 +104,14 @@ rule (modulo E) inhelloServergagB_0_1111[color=#518040,
   */
 
 rule (modulo E) eventKeygBa_0_11111[color=#518040,
-                                    process="event Key( gB.1^a.1 );", issapicrule, role='Client']:
+                                    process='event Key( gB.1^a.1 );', issapicrule, role='Client']:
    [ State_11111( a.1, gB.1, sk.1 ) ]
   --[ Key( gB.1^a.1 ) ]->
    [ State_111111( a.1, gB.1, sk.1 ) ]
 
   /*
   rule (modulo AC) eventKeygBa_0_11111[color=#518040,
-                                       process="event Key( gB.1^a.1 );", issapicrule, role='Client']:
+                                       process='event Key( gB.1^a.1 );', issapicrule, role='Client']:
      [ State_11111( a, gB, sk ) ]
     --[ Key( z ) ]->
      [ State_111111( a, gB, sk ) ]
@@ -306,22 +308,22 @@ rule (modulo E) eventKeygBa_0_11111[color=#518040,
         z     = DH_neutral
   */
 
-rule (modulo E) p_0_111111[color=#518040, process="0", issapicrule,
+rule (modulo E) p_0_111111[color=#518040, process='0', issapicrule,
                            role='Client']:
    [ State_111111( a.1, gB.1, sk.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111111[color=#518040, process="0", issapicrule,
+  rule (modulo AC) p_0_111111[color=#518040, process='0', issapicrule,
                               role='Client']:
      [ State_111111( a, gB, sk ) ] --> [ ]
   */
 
-rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_12[color=#ffffff, process='0', issapicrule,
                        role='Process']:
    [ State_12( sk.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_12[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_12[color=#ffffff, process='0', issapicrule,
                           role='Process']:
      [ State_12( sk ) ] --> [ ]
   */
@@ -335,9 +337,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -349,7 +351,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issueX-translation-crash.spthy
 
   output:          examples/sapic/fast/regression-tests/issueX-translation-crash.spthy.tmp
-  processing time: 0.36s
+  processing time: 0.48s
   
 
 ==============================================================================

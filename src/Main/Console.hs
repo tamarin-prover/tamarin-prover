@@ -173,7 +173,7 @@ ensureMaude as = do
 
     --  Maude versions prior to 2.7.1 are no longer supported,
     --  because the 'get variants' command is incompatible.
-    supportedVersions = ["2.7.1", "3.0", "3.1", "3.2.1", "3.2.2", "3.3", "3.3.1", "3.4", "3.5"]
+    supportedVersions = ["2.7.1", "3.0", "3.1", "3.2.1", "3.2.2", "3.3", "3.3.1", "3.4", "3.5", "3.5.1"]
 
     errMsg' = errMsg $ "'" ++ maude ++ "' executable not found / does not work"
 
@@ -338,7 +338,7 @@ helpAndExit tmode mayMsg = do
   -- output example info
   putStrLn $ unlines
     [ separator
-    , "To show help for differents commands, type tamarin-prover [Command] --help."
+    , "To show help for different commands, type tamarin-prover [Command] --help."
     , separator
     , "See 'https://github.com/tamarin-prover/tamarin-prover/blob/master/README.md'"
     , "for usage instructions and pointers to examples."

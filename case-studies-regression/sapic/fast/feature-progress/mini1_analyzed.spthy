@@ -1,4 +1,6 @@
-theory mini1 begin
+theory mini1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -72,13 +74,13 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule,
+rule (modulo E) MessageIDRule[color=#ffffff, process='+', issapicrule,
                               role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
                      role='Process']:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
@@ -86,50 +88,50 @@ rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inrm_0_1[color=#ffffff, process="in('r',m.1);",
+rule (modulo E) inrm_0_1[color=#ffffff, process='in('r',m.1);',
                          issapicrule, role='Process']:
    [ State_( ~prog_ ), In( m.1 ), MID_Receiver( ~mid_1 ) ]
   --[ Receive( ~mid_1, m.1 ) ]->
    [ State_11( ~prog_, m.1 ) ]
 
   /*
-  rule (modulo AC) inrm_0_1[color=#ffffff, process="in('r',m.1);",
+  rule (modulo AC) inrm_0_1[color=#ffffff, process='in('r',m.1);',
                             issapicrule, role='Process']:
      [ State_( ~prog_ ), In( m ), MID_Receiver( ~mid_1 ) ]
     --[ Receive( ~mid_1, m ) ]->
      [ State_11( ~prog_, m ) ]
   */
 
-rule (modulo E) eventA_0_11[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventA_0_11[color=#ffffff, process='0', issapicrule,
                             role='Process']:
    [ State_11( ~prog_, m.1 ) ] --[ ProgressTo_111( ~prog_ ), A( ) ]-> [ ]
 
   /*
-  rule (modulo AC) eventA_0_11[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) eventA_0_11[color=#ffffff, process='0', issapicrule,
                                role='Process']:
      [ State_11( ~prog_, m ) ] --[ ProgressTo_111( ~prog_ ), A( ) ]-> [ ]
   */
 
-rule (modulo E) newn_0_2[color=#ffffff, process="out('r',n.1);",
+rule (modulo E) newn_0_2[color=#ffffff, process='out('r',n.1);',
                          issapicrule, role='Process']:
    [ State_( ~prog_ ), Fr( n.1 ), MID_Sender( ~mid_21 ) ]
   --[ Send( ~mid_21, n.1 ) ]->
    [ Out( n.1 ), State_211( ~prog_, n.1 ) ]
 
   /*
-  rule (modulo AC) newn_0_2[color=#ffffff, process="out('r',n.1);",
+  rule (modulo AC) newn_0_2[color=#ffffff, process='out('r',n.1);',
                             issapicrule, role='Process']:
      [ State_( ~prog_ ), Fr( n ), MID_Sender( ~mid_21 ) ]
     --[ Send( ~mid_21, n ) ]->
      [ Out( n ), State_211( ~prog_, n ) ]
   */
 
-rule (modulo E) eventB_0_211[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventB_0_211[color=#ffffff, process='0', issapicrule,
                              role='Process']:
    [ State_211( ~prog_, n.1 ) ] --[ ProgressTo_2111( ~prog_ ), B( ) ]-> [ ]
 
   /*
-  rule (modulo AC) eventB_0_211[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) eventB_0_211[color=#ffffff, process='0', issapicrule,
                                 role='Process']:
      [ State_211( ~prog_, n ) ] --[ ProgressTo_2111( ~prog_ ), B( ) ]-> [ ]
   */
@@ -156,9 +158,9 @@ restriction reliable:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -170,7 +172,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini1.spthy
 
   output:          examples/sapic/fast/feature-progress/mini1.spthy.tmp
-  processing time: 0.11s
+  processing time: 0.03s
   
   A_possible (exists-trace): verified (5 steps)
   B_impossible (all-traces): verified (4 steps)

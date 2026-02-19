@@ -1,4 +1,6 @@
-theory TESLA_Scheme1 begin
+theory TESLA_Scheme1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -793,9 +795,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -807,7 +809,7 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 1.38s
+  processing time: 1.39s
   
   authentic (all-traces): verified (157 steps)
   authentic_reachable (exists-trace): verified (12 steps)

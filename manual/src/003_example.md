@@ -32,7 +32,7 @@ After the keyword `begin`, we first declare the cryptographic primitives the
 protocol uses. Afterward, we declare multiset rewriting rules that model
 the protocol, and finally we write the properties to be proven (called
 *lemmas* within the Tamarin framework), which specify the protocol's desired
-security properties.  Note that we have also inserted comments to structure the
+security properties. Note that we have also inserted comments to structure the
 theory.
 
 We next explain in detail the protocol model.
@@ -430,11 +430,21 @@ visualized using round boxes).  Just below the graph, the formula
 
 now states that any occurrence of `LtkReveal( S )` will lead to a contradiction.
 
-To finish the proof, we can either continue manually by selecting the constraint
-to resolve next, or by calling the `autoprove` command, which selects the next
-steps based on a heuristic. Here we have two constraints to resolve: 
-`Client_1( S, k )` and `KU( k )`, both of which are premises for the rules in 
-the unfinished current constraint system.
+We can either inspect the graph in the main window, or we can open the graph in
+another window by clicking the `Open the Graph in New Tab` link or the `Popout`
+button under certain graphs. The links under graphs in the resources tab (Raw
+Resources or Refined Resources) or of the subcases under the main proof steps
+will open the same graph in a new tab. The buttons under the main proof graph
+will open the same graph in a new window with dynamic rendering enabled; i.e.,
+when we navigate through the proof steps (either by clicking at a certain proof
+step or using the `j` or `k` keys), the graph in the new window will change
+accordingly. This is especially useful when working with large proof graphs.
+
+To finish the proof at hand, we can either continue manually by selecting the
+constraint to resolve next, or by calling the `autoprove` command, which
+selects the next steps based on a heuristic. Here we have two constraints to
+resolve: `Client_1( S, k )` and `KU( k )`, both of which are premises for the
+rules in the unfinished current constraint system.
 
 Note that the proof methods in the GUI are sorted according to the same 
 heuristic as is used by the `autoprove` command. Any proof found by always 

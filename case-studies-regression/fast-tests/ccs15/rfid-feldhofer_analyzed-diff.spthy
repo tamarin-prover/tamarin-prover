@@ -1,4 +1,6 @@
-theory RFID_Feldhofer begin
+theory RFID_Feldhofer
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1495,9 +1497,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Maude version 3.5.1
+Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 09:21:12.905860042 UTC
 */
 
 end
@@ -1509,7 +1511,7 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          examples/ccs15/rfid-feldhofer.spthy.tmp
-  processing time: 2.38s
+  processing time: 2.35s
   
   RHS :  types (all-traces): verified (25 steps)
   LHS :  types (all-traces): verified (25 steps)

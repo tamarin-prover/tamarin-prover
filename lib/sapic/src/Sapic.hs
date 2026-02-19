@@ -135,7 +135,7 @@ gen (trans_null, trans_action, trans_comb) anP p tildex = do
       msr' <-  gen trans anP (p++[1]) tildex'
       return $ mapToAnnotatedRule proc' msrs ++ msr'
     where
-      map_prems f = map (\r -> r { prems = map f (prems r) })
+      map_prems f = map (\r -> r { prems = map f r.prems })
       --  Substitute every occurence of  State(p_old,v) with State(p_new,v)
       substStatePos p_old p_new fact
         | (State s p' vs) <- fact, p'==p_old, not $ isSemiState s = State LState p_new vs

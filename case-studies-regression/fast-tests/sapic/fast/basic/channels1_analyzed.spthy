@@ -1,4 +1,6 @@
-theory ChannelsTestOne begin
+theory ChannelsTestOne
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -267,9 +269,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: b954f6565e030d682d7951db74b7033939ef638b (with uncommited changes), branch: develop
-Compiled at: 2025-06-06 08:30:52.256236371 UTC
+Maude version 3.5.1
+Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 09:21:12.905860042 UTC
 */
 
 end
@@ -281,7 +283,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels1.spthy
 
   output:          examples/sapic/fast/basic/channels1.spthy.tmp
-  processing time: 0.54s
+  processing time: 0.32s
   
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)
