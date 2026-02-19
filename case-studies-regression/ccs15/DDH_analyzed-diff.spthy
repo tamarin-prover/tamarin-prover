@@ -1,4 +1,6 @@
-theory DDH begin
+theory DDH
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -7574,7 +7576,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 2.75s
+  processing time: 2.77s
   
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 

@@ -1,4 +1,6 @@
-theory Okamoto_Eligibilty begin
+theory Okamoto_Eligibilty
+
+begin
 
 // Function signature and definition of the equational theory E
 

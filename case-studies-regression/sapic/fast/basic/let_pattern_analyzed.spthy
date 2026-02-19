@@ -1,4 +1,6 @@
-theory PatternMatchLet begin
+theory PatternMatchLet
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -160,7 +162,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let_pattern.spthy
 
   output:          examples/sapic/fast/basic/let_pattern.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.06s
   
   first (all-traces): verified (3 steps)
   first2 (all-traces): verified (2 steps)

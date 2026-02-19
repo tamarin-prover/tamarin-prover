@@ -1,4 +1,6 @@
-theory KCL07 begin
+theory KCL07
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -470,7 +472,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/KCL07.spthy
 
   output:          examples/csf18-xor/KCL07.spthy.tmp
-  processing time: 0.50s
+  processing time: 0.49s
   
   recentalive_tag (all-traces): verified (107 steps)
   executable (exists-trace): verified (16 steps)

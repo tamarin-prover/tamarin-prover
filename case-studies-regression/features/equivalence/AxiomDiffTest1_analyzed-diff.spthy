@@ -1,4 +1,6 @@
-theory AxiomDiffTest1 begin
+theory AxiomDiffTest1
+
+begin
 
 // Function signature and definition of the equational theory E
 

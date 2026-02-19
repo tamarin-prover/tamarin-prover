@@ -1,4 +1,6 @@
-theory Chen_Kudla begin
+theory Chen_Kudla
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -448,7 +450,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -462,7 +464,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla_eCK.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla_eCK.spthy.tmp
-  processing time: 12.17s
+  processing time: 12.50s
   
   key_secrecy_eCK_like (all-traces): falsified - found trace (24 steps)
 

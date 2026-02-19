@@ -1,4 +1,6 @@
-theory HashOneWay begin
+theory HashOneWay
+
+begin
 
 // Function signature and definition of the equational theory E
 

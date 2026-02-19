@@ -1,4 +1,6 @@
-theory Okamoto_Receipt_Freeness begin
+theory Okamoto_Receipt_Freeness
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -124223,7 +124225,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_receipt_freeness.spthy
 
   output:          examples/post17/okamoto_receipt_freeness.spthy.tmp
-  processing time: 357.80s
+  processing time: 356.35s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

@@ -1,4 +1,6 @@
-theory Scott begin
+theory Scott
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -290,7 +292,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 6.61s
+  processing time: 7.02s
   
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (8 steps)

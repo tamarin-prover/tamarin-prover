@@ -1,4 +1,6 @@
-theory Yubikey begin
+theory Yubikey
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -2406,7 +2408,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 10.90s
+  processing time: 10.39s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

@@ -1,4 +1,6 @@
-theory KAS2_eCK begin
+theory KAS2_eCK
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -271,7 +273,7 @@ summary of summaries:
 analyzed: examples/csf12/KAS2_eCK.spthy
 
   output:          examples/csf12/KAS2_eCK.spthy.tmp
-  processing time: 1.09s
+  processing time: 1.22s
   
   eCK_key_secrecy (all-traces): falsified - found trace (16 steps)
 

@@ -1,4 +1,6 @@
-theory NAXOS_eCK begin
+theory NAXOS_eCK
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -570,7 +572,7 @@ summary of summaries:
 analyzed: examples/features//private_function_symbols/NAXOS_eCK_private.spthy
 
   output:          examples/features//private_function_symbols/NAXOS_eCK_private.spthy.tmp
-  processing time: 0.62s
+  processing time: 0.63s
   
   eCK_key_secrecy (all-traces): verified (89 steps)
 

@@ -1,4 +1,6 @@
-theory LAK06 begin
+theory LAK06
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -2715,7 +2717,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/LAK06.spthy
 
   output:          examples/csf18-xor/LAK06.spthy.tmp
-  processing time: 2.81s
+  processing time: 2.78s
   
   executable (exists-trace): verified (9 steps)
   helpingSecrecy (all-traces): verified (2 steps)

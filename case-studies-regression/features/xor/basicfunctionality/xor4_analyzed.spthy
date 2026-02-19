@@ -1,4 +1,6 @@
-theory xor4 begin
+theory xor4
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -249,7 +251,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor4.spthy
 
   output:          examples/features/xor/basicfunctionality/xor4.spthy.tmp
-  processing time: 0.77s
+  processing time: 0.83s
   
   secrecybroken (all-traces): falsified - found trace (11 steps)
 

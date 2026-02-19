@@ -1,4 +1,6 @@
-theory TestPredicate begin
+theory TestPredicate
+
+begin
 
 // Function signature and definition of the equational theory E
 

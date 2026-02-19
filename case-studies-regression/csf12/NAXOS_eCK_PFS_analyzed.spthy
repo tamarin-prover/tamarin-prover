@@ -1,4 +1,6 @@
-theory NAXOS_eCK_PFS begin
+theory NAXOS_eCK_PFS
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -338,7 +340,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 1.11s
+  processing time: 1.12s
   
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 

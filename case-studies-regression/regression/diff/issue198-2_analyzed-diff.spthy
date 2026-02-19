@@ -1,4 +1,6 @@
-theory issue198_2 begin
+theory issue198_2
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -295,7 +297,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue198-2.spthy
 
   output:          examples/regression/diff/issue198-2.spthy.tmp
-  processing time: 0.13s
+  processing time: 0.12s
   
   DiffLemma:  Observational_equivalence : analysis incomplete (84 steps)
 

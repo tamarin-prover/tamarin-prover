@@ -1,4 +1,6 @@
-theory DHKEA_NAXOS_C_eCK_PFS_partially_matching begin
+theory DHKEA_NAXOS_C_eCK_PFS_partially_matching
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -4511,7 +4513,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_partially_matching.spthy.tmp
-  processing time: 25.15s
+  processing time: 25.00s
   
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (797 steps)

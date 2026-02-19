@@ -1,4 +1,6 @@
-theory U2F begin
+theory U2F
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -5765,7 +5767,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-secret-channel/U2F.spthy
 
   output:          examples/sapic/fast/feature-secret-channel/U2F.spthy.tmp
-  processing time: 140.49s
+  processing time: 136.12s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

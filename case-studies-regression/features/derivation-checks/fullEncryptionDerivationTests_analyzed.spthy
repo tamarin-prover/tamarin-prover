@@ -1,4 +1,6 @@
-theory EncryptionDerivationTests begin
+theory EncryptionDerivationTests
+
+begin
 
 // Function signature and definition of the equational theory E
 

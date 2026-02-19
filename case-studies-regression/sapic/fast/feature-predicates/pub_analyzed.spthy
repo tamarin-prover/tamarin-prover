@@ -1,4 +1,6 @@
-theory pubInRestr begin
+theory pubInRestr
+
+begin
 
 // Function signature and definition of the equational theory E
 

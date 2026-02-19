@@ -1,4 +1,6 @@
-theory SignedDH_PFS begin
+theory SignedDH_PFS
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -279,7 +281,7 @@ summary of summaries:
 analyzed: examples/csf12/SignedDH_PFS.spthy
 
   output:          examples/csf12/SignedDH_PFS.spthy.tmp
-  processing time: 0.22s
+  processing time: 0.21s
   
   Perfect_Forward_Secrecy (all-traces): verified (39 steps)
 

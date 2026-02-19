@@ -1,4 +1,6 @@
-theory mini4 begin
+theory mini4
+
+begin
 
 // Function signature and definition of the equational theory E
 

@@ -1,4 +1,6 @@
-theory OperatorPrecedenceLet begin
+theory OperatorPrecedenceLet
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -105,7 +107,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-4.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-4.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.03s
   
   second_process_covered (all-traces): verified (4 steps)
 

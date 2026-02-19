@@ -1,4 +1,6 @@
-theory BanConcreteAndrewSecureRPC begin
+theory BanConcreteAndrewSecureRPC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -488,7 +490,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_Concrete_RPC.spthy.tmp
-  processing time: 4.67s
+  processing time: 4.68s
   
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): falsified - found trace (6 steps)

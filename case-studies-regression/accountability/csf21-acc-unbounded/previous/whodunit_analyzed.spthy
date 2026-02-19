@@ -1,4 +1,6 @@
-theory WhoDunit begin
+theory WhoDunit
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -47872,7 +47874,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/whodunit.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/whodunit.spthy.tmp
-  processing time: 1160.08s
+  processing time: 1219.39s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

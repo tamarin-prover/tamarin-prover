@@ -1,4 +1,6 @@
-theory OperatorPrecedenceNDC begin
+theory OperatorPrecedenceNDC
+
+begin
 
 // Function signature and definition of the equational theory E
 

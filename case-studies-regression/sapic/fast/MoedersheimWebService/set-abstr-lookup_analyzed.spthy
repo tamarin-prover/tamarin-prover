@@ -1,4 +1,6 @@
-theory SetAbst begin
+theory SetAbst
+
+begin
 
 // Function signature and definition of the equational theory E
 

@@ -1,4 +1,6 @@
-theory StatVerifSecurityDevice begin
+theory StatVerifSecurityDevice
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -2566,7 +2568,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 6.18s
+  processing time: 6.11s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

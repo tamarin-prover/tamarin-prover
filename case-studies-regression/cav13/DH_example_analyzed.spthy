@@ -1,4 +1,6 @@
-theory ex1 begin
+theory ex1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -155,7 +157,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.07s
   
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)

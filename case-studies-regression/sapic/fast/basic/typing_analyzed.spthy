@@ -1,4 +1,6 @@
-theory Typing begin
+theory Typing
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -473,7 +475,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing.spthy
 
   output:          examples/sapic/fast/basic/typing.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.05s
   
 
 ==============================================================================

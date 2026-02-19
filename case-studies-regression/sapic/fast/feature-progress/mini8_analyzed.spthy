@@ -1,4 +1,6 @@
-theory mini8 begin
+theory mini8
+
+begin
 
 // Function signature and definition of the equational theory E
 

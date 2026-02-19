@@ -1,4 +1,6 @@
-theory Keyserver begin
+theory Keyserver
+
+begin
 
 // Function signature and definition of the equational theory E
 

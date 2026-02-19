@@ -1,4 +1,6 @@
-theory WooLamPi_f begin
+theory WooLamPi_f
+
+begin
 
 // Function signature and definition of the equational theory E
 

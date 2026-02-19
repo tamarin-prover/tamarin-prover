@@ -1,4 +1,6 @@
-theory TESLA_Scheme1 begin
+theory TESLA_Scheme1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -807,7 +809,7 @@ summary of summaries:
 analyzed: examples/loops/TESLA_Scheme1.spthy
 
   output:          examples/loops/TESLA_Scheme1.spthy.tmp
-  processing time: 1.38s
+  processing time: 1.39s
   
   authentic (all-traces): verified (157 steps)
   authentic_reachable (exists-trace): verified (12 steps)

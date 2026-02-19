@@ -1,4 +1,6 @@
-theory Minimal_Crypto_API begin
+theory Minimal_Crypto_API
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -97,7 +99,7 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Crypto_API.spthy
 
   output:          examples/loops/Minimal_Crypto_API.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.04s
   
   NewKey_invariant (all-traces): verified (7 steps)
   NewKey_secrecy (all-traces): verified (2 steps)

@@ -1,4 +1,6 @@
-theory nsscbc begin
+theory nsscbc
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -145,7 +147,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 6.16s
+  processing time: 5.97s
   
   secrecy (all-traces): falsified - found trace (8 steps)
 

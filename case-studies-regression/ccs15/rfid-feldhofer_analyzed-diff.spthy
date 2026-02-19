@@ -1,4 +1,6 @@
-theory RFID_Feldhofer begin
+theory RFID_Feldhofer
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1509,7 +1511,7 @@ summary of summaries:
 analyzed: examples/ccs15/rfid-feldhofer.spthy
 
   output:          examples/ccs15/rfid-feldhofer.spthy.tmp
-  processing time: 0.92s
+  processing time: 0.98s
   
   RHS :  types (all-traces): verified (25 steps)
   LHS :  types (all-traces): verified (25 steps)

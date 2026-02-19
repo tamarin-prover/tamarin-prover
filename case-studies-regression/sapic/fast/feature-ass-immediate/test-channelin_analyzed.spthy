@@ -1,4 +1,6 @@
-theory AssImmediateChannelIn begin
+theory AssImmediateChannelIn
+
+begin
 
 // Function signature and definition of the equational theory E
 

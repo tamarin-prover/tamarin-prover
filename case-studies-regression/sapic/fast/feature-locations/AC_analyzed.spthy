@@ -1,4 +1,6 @@
-theory AttestedComputation begin
+theory AttestedComputation
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -887,7 +889,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.74s
+  processing time: 0.82s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

@@ -1,4 +1,6 @@
-theory xor0 begin
+theory xor0
+
+begin
 
 // Function signature and definition of the equational theory E
 

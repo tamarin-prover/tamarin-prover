@@ -1,4 +1,6 @@
-theory Joux begin
+theory Joux
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1082,7 +1084,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Joux.spthy
 
   output:          examples/ake/bilinear/Joux.spthy.tmp
-  processing time: 7.53s
+  processing time: 7.57s
   
   session_key_establish (exists-trace): verified (28 steps)
   Session_Key_Secrecy_PFS (all-traces): verified (22 steps)

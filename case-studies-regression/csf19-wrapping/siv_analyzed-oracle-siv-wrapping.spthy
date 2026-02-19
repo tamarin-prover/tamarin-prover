@@ -1,4 +1,6 @@
-theory PKCS11_siv begin
+theory PKCS11_siv
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -13139,7 +13141,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/siv.spthy
 
   output:          examples/csf19-wrapping/siv.spthy.tmp
-  processing time: 53.27s
+  processing time: 54.69s
   
   origin (all-traces): verified (2086 steps)
   Counter_Monotonicity (all-traces): verified (888 steps)

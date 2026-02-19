@@ -1,4 +1,6 @@
-theory Replication begin
+theory Replication
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -114,7 +116,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/replication.spthy
 
   output:          examples/sapic/fast/basic/replication.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.03s
   
   onlyOneSecret (exists-trace): verified (4 steps)
 

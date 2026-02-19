@@ -1,4 +1,6 @@
-theory Nssk_amended begin
+theory Nssk_amended
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1678,7 +1680,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Nssk_amended.spthy
 
   output:          examples/features/auto-sources/spore/Nssk_amended.spthy.tmp
-  processing time: 3.67s
+  processing time: 3.89s
   
   executability (exists-trace): verified (14 steps)
   Secrecy (all-traces): verified (10 steps)

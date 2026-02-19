@@ -1,4 +1,6 @@
-theory probEnc begin
+theory probEnc
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -238,7 +240,7 @@ summary of summaries:
 analyzed: examples/ccs15/probEnc.spthy
 
   output:          examples/ccs15/probEnc.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.08s
   
   DiffLemma:  Observational_equivalence : verified (75 steps)
 

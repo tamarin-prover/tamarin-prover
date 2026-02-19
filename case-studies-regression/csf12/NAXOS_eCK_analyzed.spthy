@@ -1,4 +1,6 @@
-theory NAXOS_eCK begin
+theory NAXOS_eCK
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -712,7 +714,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 1.06s
+  processing time: 1.12s
   
   eCK_key_secrecy (all-traces): verified (134 steps)
 

@@ -1,4 +1,6 @@
-theory NAXOS_eCK begin
+theory NAXOS_eCK
+
+begin
 
 // Function signature and definition of the equational theory E
 

@@ -1,4 +1,6 @@
-theory AxiomDiffTest1 begin
+theory AxiomDiffTest1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -33,7 +35,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -47,7 +49,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/AxiomDiffTest1.spthy
 
   output:          examples/features/equivalence/AxiomDiffTest1.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.06s
   
   DiffLemma:  Observational_equivalence : falsified - found trace (4 steps)
 

@@ -1,4 +1,6 @@
-theory KeyRenegotiation_Minimal begin
+theory KeyRenegotiation_Minimal
+
+begin
 
 // Function signature and definition of the equational theory E
 

@@ -1,4 +1,6 @@
-theory Minimal_Create_Use_Destroy begin
+theory Minimal_Create_Use_Destroy
+
+begin
 
 // Function signature and definition of the equational theory E
 

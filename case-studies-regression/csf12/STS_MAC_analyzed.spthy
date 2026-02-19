@@ -1,4 +1,6 @@
-theory STS_MAC begin
+theory STS_MAC
+
+begin
 
 // Function signature and definition of the equational theory E
 

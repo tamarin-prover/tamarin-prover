@@ -1,4 +1,6 @@
-theory Keyserver begin
+theory Keyserver
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -154,7 +156,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -168,7 +170,7 @@ summary of summaries:
 analyzed: examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy
 
   output:          examples/related_work/AIF_Moedersheim_CCS10/Keyserver.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.05s
   
   Knows_Honest_Key_imp_Revoked (all-traces): verified (6 steps)
 

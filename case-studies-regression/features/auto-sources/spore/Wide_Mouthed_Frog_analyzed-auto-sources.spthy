@@ -1,4 +1,6 @@
-theory WmFrog begin
+theory WmFrog
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -463,7 +465,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 0.32s
+  processing time: 0.33s
   
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)

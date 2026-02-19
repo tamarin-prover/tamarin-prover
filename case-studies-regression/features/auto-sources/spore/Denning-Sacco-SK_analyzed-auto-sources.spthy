@@ -1,4 +1,6 @@
-theory Denning_Sacco_SK begin
+theory Denning_Sacco_SK
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -403,7 +405,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Denning-Sacco-SK.spthy
 
   output:          examples/features/auto-sources/spore/Denning-Sacco-SK.spthy.tmp
-  processing time: 0.41s
+  processing time: 0.43s
   
   executability (exists-trace): verified (7 steps)
   secrecy (all-traces): verified (27 steps)

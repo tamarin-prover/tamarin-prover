@@ -1,4 +1,6 @@
-theory NSLPK3XOR begin
+theory NSLPK3XOR
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -353,7 +355,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/NSLPK3xor.spthy
 
   output:          examples/csf18-xor/NSLPK3xor.spthy.tmp
-  processing time: 2.57s
+  processing time: 2.68s
   
   types (all-traces): falsified - found trace (12 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)

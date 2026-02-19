@@ -1,4 +1,6 @@
-theory RYY begin
+theory RYY
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -599,7 +601,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY.spthy
 
   output:          examples/ake/bilinear/RYY.spthy.tmp
-  processing time: 3.58s
+  processing time: 3.59s
   
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_WPFS (all-traces): verified (80 steps)

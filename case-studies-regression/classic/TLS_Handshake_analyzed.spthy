@@ -1,4 +1,6 @@
-theory TLS_Handshake begin
+theory TLS_Handshake
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -782,7 +784,7 @@ summary of summaries:
 analyzed: examples/classic/TLS_Handshake.spthy
 
   output:          examples/classic/TLS_Handshake.spthy.tmp
-  processing time: 1.68s
+  processing time: 1.75s
   
   session_key_secrecy (all-traces): verified (95 steps)
   injective_agree (all-traces): verified (44 steps)

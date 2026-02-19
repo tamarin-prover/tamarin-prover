@@ -1,4 +1,6 @@
-theory dsscbc begin
+theory dsscbc
+
+begin
 
 // Function signature and definition of the equational theory E
 

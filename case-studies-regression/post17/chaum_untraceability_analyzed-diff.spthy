@@ -1,4 +1,6 @@
-theory Chaum_Untraceability begin
+theory Chaum_Untraceability
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8712,7 +8714,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_untraceability.spthy
 
   output:          examples/post17/chaum_untraceability.spthy.tmp
-  processing time: 34.97s
+  processing time: 36.02s
   
   RHS :  exec (exists-trace): verified (15 steps)
   LHS :  exec (exists-trace): verified (15 steps)

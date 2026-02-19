@@ -1,4 +1,6 @@
-theory JCS12_Typing_Example begin
+theory JCS12_Typing_Example
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -305,7 +307,7 @@ summary of summaries:
 analyzed: examples/loops/JCS12_Typing_Example.spthy
 
   output:          examples/loops/JCS12_Typing_Example.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.11s
   
   typing_assertion (all-traces): verified (15 steps)
   Client_session_key_secrecy_raw (all-traces): verified (8 steps)

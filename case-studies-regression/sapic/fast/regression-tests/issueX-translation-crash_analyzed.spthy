@@ -1,4 +1,6 @@
-theory Typing begin
+theory Typing
+
+begin
 
 // Function signature and definition of the equational theory E
 

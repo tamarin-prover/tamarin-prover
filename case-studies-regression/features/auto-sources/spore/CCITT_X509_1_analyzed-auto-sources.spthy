@@ -1,4 +1,6 @@
-theory CcittX509_1 begin
+theory CcittX509_1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -306,7 +308,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/CCITT_X509_1.spthy
 
   output:          examples/features/auto-sources/spore/CCITT_X509_1.spthy.tmp
-  processing time: 0.92s
+  processing time: 0.88s
   
   Secrecy (all-traces): verified (15 steps)
   injectiveagreement_B (all-traces): falsified - found trace (14 steps)

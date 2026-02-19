@@ -1,4 +1,6 @@
-theory mini6 begin
+theory mini6
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -248,7 +250,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini6.spthy
 
   output:          examples/sapic/fast/feature-progress/mini6.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.10s
   
   A_possible (exists-trace): verified (10 steps)
   B_impossible (all-traces): verified (2 steps)

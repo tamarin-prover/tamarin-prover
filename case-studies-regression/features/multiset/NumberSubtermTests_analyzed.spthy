@@ -1,4 +1,6 @@
-theory NumberSubtermTests begin
+theory NumberSubtermTests
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -229,7 +231,7 @@ summary of summaries:
 analyzed: examples/features//multiset/NumberSubtermTests.spthy
 
   output:          examples/features//multiset/NumberSubtermTests.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.06s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

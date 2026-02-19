@@ -1,4 +1,6 @@
-theory Typing_and_Destructors begin
+theory Typing_and_Destructors
+
+begin
 
 // Function signature and definition of the equational theory E
 

@@ -1,4 +1,6 @@
-theory Chaum_Anonymity begin
+theory Chaum_Anonymity
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -2301,7 +2303,7 @@ summary of summaries:
 analyzed: examples/post17/chaum_anonymity.spthy
 
   output:          examples/post17/chaum_anonymity.spthy.tmp
-  processing time: 2.98s
+  processing time: 3.11s
   
   RHS :  exec (exists-trace): verified (9 steps)
   LHS :  exec (exists-trace): verified (9 steps)

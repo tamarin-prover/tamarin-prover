@@ -1,4 +1,6 @@
-theory SOC begin
+theory SOC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1676,7 +1678,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 3.73s
+  processing time: 4.24s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

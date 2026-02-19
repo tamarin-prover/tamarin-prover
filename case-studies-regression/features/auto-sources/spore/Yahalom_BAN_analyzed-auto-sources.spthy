@@ -1,4 +1,6 @@
-theory Yahalom_BAN begin
+theory Yahalom_BAN
+
+begin
 
 // Function signature and definition of the equational theory E
 

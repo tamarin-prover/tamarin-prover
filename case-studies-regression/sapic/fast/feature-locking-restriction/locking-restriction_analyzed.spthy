@@ -1,4 +1,6 @@
-theory LockingRestriction begin
+theory LockingRestriction
+
+begin
 
 // Function signature and definition of the equational theory E
 

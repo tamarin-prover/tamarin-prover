@@ -1,4 +1,6 @@
-theory KCL07_UK2 begin
+theory KCL07_UK2
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -120,7 +122,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 23.34s
+  processing time: 23.73s
   
   DiffLemma:  Observational_equivalence : falsified - found trace (14 steps)
 

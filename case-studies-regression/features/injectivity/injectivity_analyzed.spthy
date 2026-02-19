@@ -1,4 +1,6 @@
-theory injectivity begin
+theory injectivity
+
+begin
 
 // Function signature and definition of the equational theory E
 

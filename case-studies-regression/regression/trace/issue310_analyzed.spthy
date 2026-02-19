@@ -1,4 +1,6 @@
-theory parseColors begin
+theory parseColors
+
+begin
 
 // Function signature and definition of the equational theory E
 

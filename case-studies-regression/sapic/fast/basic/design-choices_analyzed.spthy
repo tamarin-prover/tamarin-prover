@@ -1,4 +1,6 @@
-theory DesignChoices begin
+theory DesignChoices
+
+begin
 
 // Function signature and definition of the equational theory E
 

@@ -1,4 +1,6 @@
-theory EncryptionComparison begin
+theory EncryptionComparison
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -48,7 +50,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/symEnc.spthy
 
   output:          examples/features/derivation-checks/symEnc.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.04s
   
 
 ==============================================================================

@@ -1,4 +1,6 @@
-theory STS_MAC_fix2 begin
+theory STS_MAC_fix2
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -421,7 +423,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -435,7 +437,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC_fix2.spthy
 
   output:          examples/csf12/STS_MAC_fix2.spthy.tmp
-  processing time: 0.48s
+  processing time: 0.51s
   
   KI_Perfect_Forward_Secrecy_I (all-traces): verified (22 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): verified (31 steps)

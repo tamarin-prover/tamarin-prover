@@ -1,4 +1,6 @@
-theory CH07_UK1 begin
+theory CH07_UK1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -3950,7 +3952,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK1.spthy.tmp
-  processing time: 4.14s
+  processing time: 4.27s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -1,4 +1,6 @@
-theory Yahalom begin
+theory Yahalom
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1190,7 +1192,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom.spthy.tmp
-  processing time: 1.88s
+  processing time: 1.71s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

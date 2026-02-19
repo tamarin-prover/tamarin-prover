@@ -1,4 +1,6 @@
-theory NSPK3 begin
+theory NSPK3
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -388,7 +390,7 @@ summary of summaries:
 analyzed: examples/classic/NSPK3.spthy
 
   output:          examples/classic/NSPK3.spthy.tmp
-  processing time: 0.94s
+  processing time: 1.08s
   
   types (all-traces): verified (32 steps)
   nonce_secrecy (all-traces): falsified - found trace (16 steps)

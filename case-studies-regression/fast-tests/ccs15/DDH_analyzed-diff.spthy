@@ -1,4 +1,6 @@
-theory DDH begin
+theory DDH
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -7560,7 +7562,7 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -7574,7 +7576,7 @@ summary of summaries:
 analyzed: examples/ccs15/DDH.spthy
 
   output:          examples/ccs15/DDH.spthy.tmp
-  processing time: 2.73s
+  processing time: 2.81s
   
   DiffLemma:  Observational_equivalence : verified (2522 steps)
 

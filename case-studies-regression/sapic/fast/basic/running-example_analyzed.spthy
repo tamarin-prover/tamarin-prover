@@ -1,4 +1,6 @@
-theory RunningExample begin
+theory RunningExample
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -994,7 +996,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/running-example.spthy
 
   output:          examples/sapic/fast/basic/running-example.spthy.tmp
-  processing time: 0.85s
+  processing time: 0.82s
   
   can_create_key (exists-trace): verified (3 steps)
   can_obtain_wrapping (exists-trace): verified (11 steps)

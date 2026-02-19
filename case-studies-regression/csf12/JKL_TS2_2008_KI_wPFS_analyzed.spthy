@@ -1,4 +1,6 @@
-theory JKL_TS2_2008_KI_wPFS begin
+theory JKL_TS2_2008_KI_wPFS
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -511,7 +513,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          examples/csf12/JKL_TS2_2008_KI_wPFS.spthy.tmp
-  processing time: 0.60s
+  processing time: 0.56s
   
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (55 steps)

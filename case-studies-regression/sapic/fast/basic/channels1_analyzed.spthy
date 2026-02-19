@@ -1,4 +1,6 @@
-theory ChannelsTestOne begin
+theory ChannelsTestOne
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -281,7 +283,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels1.spthy
 
   output:          examples/sapic/fast/basic/channels1.spthy.tmp
-  processing time: 0.16s
+  processing time: 0.19s
   
   secret (all-traces): verified (4 steps)
   received (exists-trace): verified (3 steps)

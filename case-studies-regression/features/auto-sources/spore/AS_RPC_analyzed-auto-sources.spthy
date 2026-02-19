@@ -1,4 +1,6 @@
-theory AndrewSecureRPC begin
+theory AndrewSecureRPC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1556,7 +1558,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_RPC.spthy.tmp
-  processing time: 21.91s
+  processing time: 22.11s
   
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (16 steps)

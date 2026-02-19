@@ -1,4 +1,6 @@
-theory PredicatesBinding begin
+theory PredicatesBinding
+
+begin
 
 // Function signature and definition of the equational theory E
 

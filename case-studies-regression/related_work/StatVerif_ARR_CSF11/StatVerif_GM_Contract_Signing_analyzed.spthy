@@ -1,4 +1,6 @@
-theory StatVerif_GM_Contract_Signing begin
+theory StatVerif_GM_Contract_Signing
+
+begin
 
 // Function signature and definition of the equational theory E
 

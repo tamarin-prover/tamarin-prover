@@ -1,4 +1,6 @@
-theory CertificateTransparencyExt begin
+theory CertificateTransparencyExt
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -5984,7 +5986,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ct.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ct.spthy.tmp
-  processing time: 22.43s
+  processing time: 21.65s
   
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!

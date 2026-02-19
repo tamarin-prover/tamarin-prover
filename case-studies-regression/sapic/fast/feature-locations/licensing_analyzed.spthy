@@ -1,4 +1,6 @@
-theory licensing begin
+theory licensing
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1083,7 +1085,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 1.20s
+  processing time: 1.25s
   
   attested_comput (all-traces): verified (6 steps)
   unique (all-traces): verified (7 steps)

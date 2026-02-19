@@ -1,4 +1,6 @@
-theory ChannelsTestThree begin
+theory ChannelsTestThree
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -213,7 +215,7 @@ restriction in_event:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -227,7 +229,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.09s
   
   not_secret (exists-trace): verified (4 steps)
   internal_comm (exists-trace): verified (3 steps)

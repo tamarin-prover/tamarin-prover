@@ -1,4 +1,6 @@
-theory YubikeyHSM begin
+theory YubikeyHSM
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -7554,7 +7556,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 13.29s
+  processing time: 12.92s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

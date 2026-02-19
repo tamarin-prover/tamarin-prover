@@ -1,4 +1,6 @@
-theory MacroDiffprobEnc begin
+theory MacroDiffprobEnc
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -12,8 +14,7 @@ equations:
 
 
 
-macros:
-    pubkey( x ) = pk(x)
+macros: pubkey( x ) =  pk(x)
 
 rule (modulo E) enc:
    [ !Key( k ), Fr( ~r1 ), Fr( ~r2 ), In( x ) ]
@@ -253,7 +254,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/MacroDiffprobEnc.spthy
 
   output:          examples/features/equivalence/MacroDiffprobEnc.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.08s
   
   DiffLemma:  Observational_equivalence : verified (75 steps)
 

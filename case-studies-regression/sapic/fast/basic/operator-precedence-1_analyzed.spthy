@@ -1,4 +1,6 @@
-theory OperatorPrecedencePar begin
+theory OperatorPrecedencePar
+
+begin
 
 // Function signature and definition of the equational theory E
 

@@ -1,4 +1,6 @@
-theory TAK1 begin
+theory TAK1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -2676,7 +2678,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1.spthy
 
   output:          examples/ake/bilinear/TAK1.spthy.tmp
-  processing time: 16.12s
+  processing time: 16.30s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): verified (725 steps)

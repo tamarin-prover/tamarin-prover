@@ -1,4 +1,6 @@
-theory SimpleIf begin
+theory SimpleIf
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -132,7 +134,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.03s
   
   bogus_exists (exists-trace): verified (3 steps)
 

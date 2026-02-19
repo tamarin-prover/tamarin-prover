@@ -1,4 +1,6 @@
-theory SignatureDerivationTests begin
+theory SignatureDerivationTests
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -192,7 +194,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/signatureDerivationTest.spthy
 
   output:          examples/features/derivation-checks/signatureDerivationTest.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.10s
   
 
 ==============================================================================

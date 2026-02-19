@@ -1,4 +1,6 @@
-theory KAS1 begin
+theory KAS1
+
+begin
 
 // Function signature and definition of the equational theory E
 

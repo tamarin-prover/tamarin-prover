@@ -1,4 +1,6 @@
-theory NoReplication begin
+theory NoReplication
+
+begin
 
 // Function signature and definition of the equational theory E
 

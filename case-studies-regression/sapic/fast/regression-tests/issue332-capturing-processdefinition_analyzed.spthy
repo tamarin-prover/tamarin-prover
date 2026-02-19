@@ -1,4 +1,6 @@
-theory issue332 begin
+theory issue332
+
+begin
 
 // Function signature and definition of the equational theory E
 

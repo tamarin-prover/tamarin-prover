@@ -1,4 +1,6 @@
-theory AKE begin
+theory AKE
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -596,7 +598,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.28s
+  processing time: 0.29s
   
   can_run_p (exists-trace): verified (3 steps)
   can_run_v (exists-trace): falsified - no trace found (9 steps)

@@ -1,3 +1,4 @@
+from html import parser
 import subprocess, sys, re, os, argparse, logging, datetime, shutil
 
 
@@ -154,7 +155,7 @@ def parseFile(path):
 	except Exception:
 		return f"There was an error while reading {path}"
 	## parse time ##
-	times = re.findall(r"processing time: (.*)s", output)
+	times = re.findall(r"processing time: (\d+\.?\d*)s", output)
 	if len(times) != 1:
 		return f"Parse error - time: {path}"
 	proof, warningFooter = stripWarningAndFooter(proof)
@@ -192,10 +193,13 @@ def parseFile(path):
 
 	## parse config blocks ##
 	try:
-		splitConfigBlock = proof.split("configuration:")[-1]
-		configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
-		configblock = configblock.split(' ')
-		configblock = list(filter(None, configblock))  # Remove empty strings
+		if "configuration:" in proof:
+			splitConfigBlock = proof.split("configuration:")[-1]
+			configblock = parseTest(splitConfigBlock, "configuration").replace('\n', '')
+			configblock = configblock.split(' ')
+			configblock = list(filter(None, configblock))  # Remove empty strings
+		else:
+			configblock = []
 	except Exception as ex:
 		return f"Parse error - config block: {path}"
 	
@@ -237,8 +241,37 @@ def parseFile(path):
 	except Exception as ex:
 		return f"Parse error - lemmas: {path}"
 	
-	
+def testOutputFileParsing(path):
+	"""
+	Tests if a generated Tamarin output file can still be parsed.
+	"""
+	try:
+		# Determine file type based on filename patterns
+		is_diff_file = any(pattern in path for pattern in [
+			"_analyzed-diff.spthy", 
+			"_analyzed-diff-noprove.spthy",
+			"_analyzed-diff-obseqonly.spthy"
+		])
 
+		is_sapic_or_accountability_file = any(pattern in path for pattern in [
+			"sapic",
+			"accountability"
+		])
+  
+		flags = "--diff" if is_diff_file else ""
+		command = f"tamarin-prover --parse-only {flags} {path}"
+		
+		if is_sapic_or_accountability_file and not settings.sapic_output_parse_test:
+			logging.warning(f"Skipping output parse test for {path} since it is a SAPIC or accountability file and the flag --sapic-output-parse-test is not set.")
+			return True, None
+
+		process = subprocess.run(command, shell=True, capture_output=True, text=True)
+		if process.returncode == 0:
+			return True, None
+		else:
+			return False, process.stderr
+	except Exception as ex:
+		return False, str(ex)
 
 def parseFiles(pathB):
 	"""
@@ -269,7 +302,8 @@ def parseFiles(pathB):
 
 def compare():
 	"""
-	Searches for all files in case-studies for the corresponding file in case-studies-regression.
+	Starts by checking if tamarin can still parse the output.
+	Then, searches for all files in case-studies for the corresponding file in case-studies-regression.
 	If this search fails, it gives an error message and continues.
 	Otherwise, it outputs changed values depending on the verbosity.
 	At the end, it outputs a summary
@@ -278,9 +312,20 @@ def compare():
 
 	majorDifferences = False
 	stepSumA, stepSumB, timeSumA, timeSumB = 0, 0, 0, 0
-
+	parseTestsTotal, parseTestsFailed = 0, 0
+	
 	for pathB in iterFolder(settings.folderB):
 
+		## Tamarin parse testing for the output file##
+		if not settings.no_output_parse_test:
+			parseTestsTotal += 1
+			parseSuccess, parseError = testOutputFileParsing(pathB)
+			if not parseSuccess:
+				logging.error(color(colors.RED + colors.BOLD, f"Parse test failed for {pathB}"))
+				logging.error(color(colors.RED, parseError))
+				majorDifferences = True
+				parseTestsFailed += 1		
+  
 		## parse file ##
 		parsed = parseFiles(pathB)
 		if type(parsed) == str:
@@ -440,6 +485,11 @@ def compare():
 	## results differ ##
 	logging.warning("\n" + "-"*80 + "\n")
 	if majorDifferences:
+		if parseTestsFailed > 0:
+			logging.warning(f"Parse tests: {parseTestsTotal - parseTestsFailed}/{parseTestsTotal} successful")
+			logging.error(color(colors.RED + colors.BOLD, f"{parseTestsFailed} output files failed to parse!"))
+		else:
+			logging.warning("All output files successfully parsed")
 		if settings.verbose >= 3:
 			logging.error(color(colors.RED + colors.BOLD, "There were differences in the results of the lemmas, or in the rules, or in the equations, or in the builtins, or in the functions, or in the warnings, or the files itself could not be parsed!"))
 		else: 
@@ -494,7 +544,9 @@ def getArguments():
 			"6: show diff output if the corresponding proofs changed"
 			, type=int, default=3)
 	parser.add_argument("-p", "--parser-test", help = "Run the parser tests.", action="store_true")
-
+	parser.add_argument("-nopt", "--no-output-parse-test", help="Skip testing if output files can be parsed again", action="store_true")
+	parser.add_argument("-spt", "--sapic-output-parse-test", help="Test if SAPIC output files can be parsed again", action="store_true")
+	
 
 	## save the settings ##
 	global settings

@@ -1,4 +1,6 @@
-theory NSLPK3_untagged begin
+theory NSLPK3_untagged
+
+begin
 
 // Function signature and definition of the equational theory E
 

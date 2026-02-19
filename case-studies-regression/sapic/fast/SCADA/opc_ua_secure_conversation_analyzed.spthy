@@ -1,4 +1,6 @@
-theory OPC_UA_Secure_Communication begin
+theory OPC_UA_Secure_Communication
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -10046,7 +10048,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 47.80s
+  processing time: 47.40s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

@@ -1,4 +1,6 @@
-theory TPM_Envelope begin
+theory TPM_Envelope
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -413,7 +415,7 @@ summary of summaries:
 analyzed: examples/ccs15/Attack_TPM_Envelope.spthy
 
   output:          examples/ccs15/Attack_TPM_Envelope.spthy.tmp
-  processing time: 0.16s
+  processing time: 0.19s
   
   RHS :  types (all-traces): analysis incomplete (1 steps)
   LHS :  types (all-traces): analysis incomplete (1 steps)

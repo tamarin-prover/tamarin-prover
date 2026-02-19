@@ -1,4 +1,6 @@
-theory Tutorial begin
+theory Tutorial
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -257,7 +259,7 @@ summary of summaries:
 analyzed: examples/Tutorial.spthy
 
   output:          examples/Tutorial.spthy.tmp
-  processing time: 0.09s
+  processing time: 0.11s
   
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)

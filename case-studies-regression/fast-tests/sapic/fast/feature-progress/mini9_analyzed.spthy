@@ -1,4 +1,6 @@
-theory mini9 begin
+theory mini9
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -251,7 +253,7 @@ restriction reliable:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
+Maude version 3.5.1
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
@@ -265,7 +267,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini9.spthy
 
   output:          examples/sapic/fast/feature-progress/mini9.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.08s
   
   A_possible (exists-trace): verified (15 steps)
   B_possible (exists-trace): verified (7 steps)

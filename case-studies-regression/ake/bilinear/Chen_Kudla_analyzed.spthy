@@ -1,4 +1,6 @@
-theory Chen_Kudla begin
+theory Chen_Kudla
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -2533,7 +2535,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Chen_Kudla.spthy
 
   output:          examples/ake/bilinear/Chen_Kudla.spthy.tmp
-  processing time: 16.02s
+  processing time: 16.45s
   
   key_agreement_reachable (exists-trace): verified (13 steps)
   key_secrecy_ephemeral_no_WPFS (all-traces): verified (679 steps)

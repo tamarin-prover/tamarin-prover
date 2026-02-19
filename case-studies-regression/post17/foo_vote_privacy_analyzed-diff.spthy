@@ -1,4 +1,6 @@
-theory FOO_Vote_Privacy begin
+theory FOO_Vote_Privacy
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -21907,7 +21909,7 @@ summary of summaries:
 analyzed: examples/post17/foo_vote_privacy.spthy
 
   output:          examples/post17/foo_vote_privacy.spthy.tmp
-  processing time: 102.82s
+  processing time: 104.48s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

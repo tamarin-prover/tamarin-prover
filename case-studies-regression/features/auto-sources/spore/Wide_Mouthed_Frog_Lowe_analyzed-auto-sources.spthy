@@ -1,4 +1,6 @@
-theory WmFrogLowe begin
+theory WmFrogLowe
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1189,7 +1191,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog_Lowe.spthy.tmp
-  processing time: 1.58s
+  processing time: 1.65s
   
   executability (exists-trace): verified (16 steps)
   Secrecy (all-traces): verified (30 steps)

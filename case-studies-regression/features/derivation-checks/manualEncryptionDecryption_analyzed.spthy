@@ -1,4 +1,6 @@
-theory ManualEncryptionDecryption begin
+theory ManualEncryptionDecryption
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -46,7 +48,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/manualEncryptionDecryption.spthy
 
   output:          examples/features/derivation-checks/manualEncryptionDecryption.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.03s
   
 
 ==============================================================================

@@ -1,4 +1,6 @@
-theory SpliceAS_2 begin
+theory SpliceAS_2
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -813,7 +815,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/SpliceAS_2.spthy
 
   output:          examples/features/auto-sources/spore/SpliceAS_2.spthy.tmp
-  processing time: 3.71s
+  processing time: 3.81s
   
   executability (exists-trace): verified (21 steps)
   Secrecy (all-traces): falsified - found trace (16 steps)

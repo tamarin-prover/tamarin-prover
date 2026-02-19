@@ -1,4 +1,6 @@
-theory nestedNDC3 begin
+theory nestedNDC3
+
+begin
 
 // Function signature and definition of the equational theory E
 

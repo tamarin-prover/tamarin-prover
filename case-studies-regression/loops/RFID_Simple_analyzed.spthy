@@ -1,4 +1,6 @@
-theory RFID_Simple begin
+theory RFID_Simple
+
+begin
 
 // Function signature and definition of the equational theory E
 

@@ -1,4 +1,6 @@
-theory N5N6DiffTest begin
+theory N5N6DiffTest
+
+begin
 
 // Function signature and definition of the equational theory E
 

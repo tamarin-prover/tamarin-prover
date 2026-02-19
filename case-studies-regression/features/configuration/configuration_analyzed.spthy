@@ -1,4 +1,8 @@
-theory TestConfiguration begin
+theory TestConfiguration
+
+configuration: "--auto-sources --stop-on-trace=BFS"
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,8 +12,6 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
-
-configuration: "--auto-sources --stop-on-trace=BFS"
 
 rule (modulo E) Testing:
    [ Fr( x ) ] --[ Test( x ) ]-> [ F1( x ) ]

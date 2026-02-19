@@ -734,16 +734,20 @@ prettyTheory ::
   d
 prettyTheory ppSig ppCache ppRule ppPrf ppSap thy =
   vsep $
-    [ kwTheoryHeader $ text $ L.get thyName thy,
+    [ kwTheoryName $ text $ L.get thyName thy]
+    ++ parMap rdeepseq ppItem (filter isConfigBlock (L.get thyItems thy))
+    ++ [kwTheoryBegin,
       lineComment_ "Function signature and definition of the equational theory E",
       ppSig $ L.get thySignature thy,
       if thyT == [] then text "" else vcat $ map prettyTactic thyT,
       if null thyH then text "" else text "heuristic: " <> text (prettyGoalRankings thyH),
       ppCache $ L.get thyCache thy
     ]
-      ++ parMap rdeepseq ppItem (L.get thyItems thy)
+      ++ parMap rdeepseq ppItem (filter (not . isConfigBlock) (L.get thyItems thy))
       ++ [kwEnd]
   where
+    isConfigBlock (ConfigBlockItem _) = True
+    isConfigBlock _ = False
     ppItem =
       foldTheoryItem
         ppRule
@@ -807,7 +811,12 @@ prettyVarList = fsep . punctuate comma . map prettyLVar
 
 -- |  Pretty print all macros
 prettyMacros :: (HighlightDocument d) => [Macro] -> d
-prettyMacros m = if m == [] then text empty else vcat (keyword_ "macros:" : map prettyMacro m)
+prettyMacros [] = text empty
+prettyMacros m = keyword_ "macros:" $$ nest 4 
+  (vcat [if i == length m - 1 
+          then prettyMacro macro 
+          else prettyMacro macro <> comma 
+        | (i, macro) <- zip [0..] m])
 
 -- |  Pretty print a macro.
 prettyMacro :: (HighlightDocument d) => Macro -> d
@@ -818,7 +827,8 @@ prettyMacro (op, args, out) =
         text
         ([BC.unpack op ++ "("])
         <-> prettyVarList args
-        <-> text (") = " ++ show (out))
+        <-> text (") = ")
+        <-> prettyTerm (text . show) out
     ]
   where
     ppNonEmptyList _ _ [] = emptyDoc

@@ -1,4 +1,6 @@
-theory MacroWithRestrictionCRXOR begin
+theory MacroWithRestrictionCRXOR
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -14,8 +16,7 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
-macros:
-    hashedxor( x, y, z ) = h(Xor(x,y,z))
+macros: hashedxor( x, y, z ) =  h((x⊕y⊕z))
 
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --[ OnlyOnce( ) ]-> [ !InitLTK( ~k ), !RespLTK( ~k ) ]
