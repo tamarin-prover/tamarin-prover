@@ -1,4 +1,6 @@
-theory Typing begin
+theory Typing
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -38,99 +40,99 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+rule (modulo E) p_0_[color=#ffffff, process='|', issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newxlol_0_1[color=#ffffff, process="new x.2:lol;",
+rule (modulo E) newxlol_0_1[color=#ffffff, process='new x.2:lol;',
                             issapicrule, role='Process']:
    [ State_1( ), Fr( x.2 ) ] --> [ State_11( x.2 ) ]
 
   /*
-  rule (modulo AC) newxlol_0_1[color=#ffffff, process="new x.2:lol;",
+  rule (modulo AC) newxlol_0_1[color=#ffffff, process='new x.2:lol;',
                                issapicrule, role='Process']:
      [ State_1( ), Fr( x ) ] --> [ State_11( x ) ]
   */
 
-rule (modulo E) outxlol_0_11[color=#ffffff, process="out(x.2:lol);",
+rule (modulo E) outxlol_0_11[color=#ffffff, process='out(x.2:lol);',
                              issapicrule, role='Process']:
    [ State_11( x.2 ) ] --> [ State_111( x.2 ), Out( x.2 ) ]
 
   /*
-  rule (modulo AC) outxlol_0_11[color=#ffffff, process="out(x.2:lol);",
+  rule (modulo AC) outxlol_0_11[color=#ffffff, process='out(x.2:lol);',
                                 issapicrule, role='Process']:
      [ State_11( x ) ] --> [ State_111( x ), Out( x ) ]
   */
 
-rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
                         role='Process']:
    [ State_111( x.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_111[color=#ffffff, process='0', issapicrule,
                            role='Process']:
      [ State_111( x ) ] --> [ ]
   */
 
-rule (modulo E) newxlol_0_2[color=#ffffff, process="new x.3:lol;",
+rule (modulo E) newxlol_0_2[color=#ffffff, process='new x.3:lol;',
                             issapicrule, role='Process']:
    [ State_2( ), Fr( x.3 ) ] --> [ State_21( x.3 ) ]
 
   /*
-  rule (modulo AC) newxlol_0_2[color=#ffffff, process="new x.3:lol;",
+  rule (modulo AC) newxlol_0_2[color=#ffffff, process='new x.3:lol;',
                                issapicrule, role='Process']:
      [ State_2( ), Fr( x ) ] --> [ State_21( x ) ]
   */
 
-rule (modulo E) newxlol_0_21[color=#ffffff, process="new x.4:lol;",
+rule (modulo E) newxlol_0_21[color=#ffffff, process='new x.4:lol;',
                              issapicrule, role='Process']:
    [ State_21( x.3 ), Fr( x.4 ) ] --> [ State_211( x.3, x.4 ) ]
 
   /*
-  rule (modulo AC) newxlol_0_21[color=#ffffff, process="new x.4:lol;",
+  rule (modulo AC) newxlol_0_21[color=#ffffff, process='new x.4:lol;',
                                 issapicrule, role='Process']:
      [ State_21( x ), Fr( x.1 ) ] --> [ State_211( x, x.1 ) ]
   */
 
 rule (modulo E) eventRunxlolxlol_0_211[color=#ffffff,
-                                       process="event Run( x.3:lol, x.4:lol );", issapicrule, role='Process']:
+                                       process='event Run( x.3:lol, x.4:lol );', issapicrule, role='Process']:
    [ State_211( x.3, x.4 ) ]
   --[ Run( x.3, x.4 ) ]->
    [ State_2111( x.3, x.4 ) ]
 
   /*
   rule (modulo AC) eventRunxlolxlol_0_211[color=#ffffff,
-                                          process="event Run( x.3:lol, x.4:lol );", issapicrule,
+                                          process='event Run( x.3:lol, x.4:lol );', issapicrule,
                                           role='Process']:
      [ State_211( x, x.1 ) ] --[ Run( x, x.1 ) ]-> [ State_2111( x, x.1 ) ]
   */
 
 rule (modulo E) outxlolxlol_0_2111[color=#ffffff,
-                                   process="out(<x.3:lol, x.4:lol>);", issapicrule, role='Process']:
+                                   process='out(<x.3:lol, x.4:lol>);', issapicrule, role='Process']:
    [ State_2111( x.3, x.4 ) ]
   -->
    [ State_21111( x.3, x.4 ), Out( <x.3, x.4> ) ]
 
   /*
   rule (modulo AC) outxlolxlol_0_2111[color=#ffffff,
-                                      process="out(<x.3:lol, x.4:lol>);", issapicrule, role='Process']:
+                                      process='out(<x.3:lol, x.4:lol>);', issapicrule, role='Process']:
      [ State_2111( x, x.1 ) ] --> [ State_21111( x, x.1 ), Out( <x, x.1> ) ]
   */
 
-rule (modulo E) p_0_21111[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_21111[color=#ffffff, process='0', issapicrule,
                           role='Process']:
    [ State_21111( x.3, x.4 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_21111[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_21111[color=#ffffff, process='0', issapicrule,
                              role='Process']:
      [ State_21111( x, x.1 ) ] --> [ ]
   */
@@ -144,9 +146,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -158,7 +160,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/typing4.spthy
 
   output:          examples/sapic/fast/basic/typing4.spthy.tmp
-  processing time: 0.12s
+  processing time: 0.05s
   
   sanity (exists-trace): verified (3 steps)
 

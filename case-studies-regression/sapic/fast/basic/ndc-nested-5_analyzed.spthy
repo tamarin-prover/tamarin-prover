@@ -1,4 +1,6 @@
-theory nestedNDC5 begin
+theory nestedNDC5
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -183,37 +185,37 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule,
+rule (modulo E) MessageIDRule[color=#ffffff, process='+', issapicrule,
                               role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_12[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_1_12[color=#ffffff, process='0', issapicrule,
                        role='Process']:
    [ !Semistate_121( ~prog_ ) ] --[ ProgressTo_1211( ~prog_ ), B( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_21[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_1_21[color=#ffffff, process='0', issapicrule,
                        role='Process']:
    [ !Semistate_211( ~prog_ ) ] --[ ProgressTo_2111( ~prog_ ), C( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_22[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_22[color=#ffffff, process='!', issapicrule,
                        role='Process']:
    [ !Semistate_221( ~prog_ ) ] --> [ State_221( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2212[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_2212[color=#ffffff, process='!', issapicrule,
                          role='Process']:
    [ State_221( ~prog_ ) ] --> [ !Semistate_22121( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_2212[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_1_2212[color=#ffffff, process='0', issapicrule,
                          role='Process']:
    [ !Semistate_22121( ~prog_ ) ]
   --[ ProgressTo_221211( ~prog_ ), E( ) ]->
@@ -221,13 +223,13 @@ rule (modulo E) p_1_2212[color=#ffffff, process="0", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventD_0_2211[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventD_0_2211[color=#ffffff, process='0', issapicrule,
                               role='Process']:
    [ State_221( ~prog_ ) ] --[ ProgressTo_22111( ~prog_ ), D( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
                      role='Process']:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
@@ -235,25 +237,25 @@ rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_12[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_12[color=#ffffff, process='!', issapicrule,
                        role='Process']:
    [ State_( ~prog_ ) ] --> [ !Semistate_121( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_21[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_21[color=#ffffff, process='!', issapicrule,
                        role='Process']:
    [ State_( ~prog_ ) ] --> [ !Semistate_211( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_22[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_22[color=#ffffff, process='!', issapicrule,
                        role='Process']:
    [ State_( ~prog_ ) ] --> [ !Semistate_221( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_11[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventA_0_11[color=#ffffff, process='0', issapicrule,
                             role='Process']:
    [ State_( ~prog_ ) ] --[ ProgressTo_111( ~prog_ ), A( ) ]-> [ ]
 
@@ -280,9 +282,9 @@ restriction progressInit:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -294,7 +296,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-5.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-5.spthy.tmp
-  processing time: 0.13s
+  processing time: 0.06s
   
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (5 steps)

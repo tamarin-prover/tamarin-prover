@@ -1,4 +1,6 @@
-theory LetBlockCharlyTwo begin
+theory LetBlockCharlyTwo
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -21,49 +23,49 @@ heuristic: p
 
 
 
-rule (modulo E) Init[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='P()', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_[color=#ffffff, process="P()", issapicrule,
+rule (modulo E) P_0_[color=#ffffff, process='P()', issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_1[color=#6c8040, process="new a.1;", issapicrule,
+rule (modulo E) newa_0_1[color=#6c8040, process='new a.1;', issapicrule,
                          role='P']:
    [ State_1( ), Fr( a.1 ) ] --> [ State_11( a.1 ) ]
 
   /*
-  rule (modulo AC) newa_0_1[color=#6c8040, process="new a.1;", issapicrule,
+  rule (modulo AC) newa_0_1[color=#6c8040, process='new a.1;', issapicrule,
                             role='P']:
      [ State_1( ), Fr( a ) ] --> [ State_11( a ) ]
   */
 
-rule (modulo E) outa_0_11[color=#6c8040, process="out(a.1);",
+rule (modulo E) outa_0_11[color=#6c8040, process='out(a.1);',
                           issapicrule, role='P']:
    [ State_11( a.1 ) ] --> [ State_111( a.1 ), Out( a.1 ) ]
 
   /*
-  rule (modulo AC) outa_0_11[color=#6c8040, process="out(a.1);",
+  rule (modulo AC) outa_0_11[color=#6c8040, process='out(a.1);',
                              issapicrule, role='P']:
      [ State_11( a ) ] --> [ State_111( a ), Out( a ) ]
   */
 
-rule (modulo E) p_0_111[color=#6c8040, process="0", issapicrule,
+rule (modulo E) p_0_111[color=#6c8040, process='0', issapicrule,
                         role='P']:
    [ State_111( a.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111[color=#6c8040, process="0", issapicrule,
+  rule (modulo AC) p_0_111[color=#6c8040, process='0', issapicrule,
                            role='P']:
      [ State_111( a ) ] --> [ ]
   */
 
-rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process='0', issapicrule,
                       role='Process']:
    [ State_2( ) ] --> [ ]
 
@@ -78,9 +80,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -92,7 +94,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let-blocks3.spthy
 
   output:          examples/sapic/fast/basic/let-blocks3.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.02s
   
 
 ==============================================================================

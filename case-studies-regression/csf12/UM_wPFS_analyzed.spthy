@@ -1,4 +1,6 @@
-theory UM_wPFS begin
+theory UM_wPFS
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -472,27 +474,14 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Init_2: 
-Failed to derive Variable(s): ~lkR
-
-Rule Resp_1: 
-Failed to derive Variable(s): ~lkI
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.5
-Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
-Compiled at: 2025-09-19 11:18:23.495617078 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -504,10 +493,7 @@ summary of summaries:
 analyzed: examples/csf12/UM_wPFS.spthy
 
   output:          examples/csf12/UM_wPFS.spthy.tmp
-  processing time: 1.97s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.48s
   
   wPFS_initiator_key (all-traces): verified (40 steps)
   wPFS_responder_key (all-traces): verified (59 steps)

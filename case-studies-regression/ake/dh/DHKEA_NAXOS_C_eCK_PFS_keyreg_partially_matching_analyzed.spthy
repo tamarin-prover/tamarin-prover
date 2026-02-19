@@ -1,4 +1,6 @@
-theory DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching begin
+theory DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -4537,23 +4539,14 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Derivation Checks
-=================
-
-  Derivation checks timed out.
-  Use --derivcheck-timeout=INT to configure timeout.
-  Set to 0 to deactivate for no timeout.
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.5
-Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
-Compiled at: 2025-09-19 11:18:23.495617078 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -4565,10 +4558,7 @@ summary of summaries:
 analyzed: examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy
 
   output:          examples/ake/dh/DHKEA_NAXOS_C_eCK_PFS_keyreg_partially_matching.spthy.tmp
-  processing time: 111.77s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 29.91s
   
   execution_match_same_key_NAXOS (exists-trace): verified (13 steps)
   eCK_key_secrecy (all-traces): verified (809 steps)
