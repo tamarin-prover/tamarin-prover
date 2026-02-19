@@ -1,0 +1,172 @@
+theory RevealSignatureDerivationTests
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, getMessage/1, pair/2, pk/1, revealSign/2,
+           revealVerify/3, snd/1, true/0
+equations:
+    fst(<x.1, x.2>) = x.1,
+    getMessage(revealSign(x.1, x.2)) = x.1,
+    revealVerify(revealSign(x.1, x.2), x.1, pk(x.2)) = true,
+    snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+rule (modulo E) Generate_Signing_Keypair:
+   [ Fr( ~sk ) ]
+  -->
+   [ !SignKey( $A, ~sk ), !VerifyKey( $A, pk(~sk) ), Out( pk(~sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) RevealSign_Message:
+   [ In( m ), !SignKey( A, sk ) ]
+  --[ RevealSigned( A, m ) ]->
+   [ Out( revealSign(m, sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Extract_From_RevealSign:
+   [ In( rs ) ]
+  --[ MessageExtracted( getMessage(rs) ) ]->
+   [ Out( getMessage(rs) ) ]
+
+  /*
+  rule (modulo AC) Extract_From_RevealSign:
+     [ In( rs ) ] --[ MessageExtracted( z ) ]-> [ Out( z ) ]
+    variants (modulo AC)
+    1. rs    = rs.3
+       z     = getMessage(rs.3)
+    
+    2. rs    = revealSign(x.3, x.4)
+       z     = x.3
+  */
+
+rule (modulo E) Verify_RevealSignature:
+   [ In( rs ), In( m ), !VerifyKey( A, pka ) ]
+  --[ RevealSigVerified( A, m ) ]->
+   [ Out( revealVerify(rs, m, pka) ) ]
+
+  /*
+  rule (modulo AC) Verify_RevealSignature:
+     [ In( rs ), In( m ), !VerifyKey( A, pka ) ]
+    --[ RevealSigVerified( A, m ) ]->
+     [ Out( z ) ]
+    variants (modulo AC)
+    1. m     = m.6
+       pka   = pka.6
+       rs    = rs.6
+       z     = revealVerify(rs.6, m.6, pka.6)
+    
+    2. m     = x.6
+       pka   = pk(x.7)
+       rs    = revealSign(x.6, x.7)
+       z     = true
+  */
+
+rule (modulo E) Invalid_Extract_Key_From_RevealSign:
+   [ In( revealSign(m, sk) ) ] --> [ Out( sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_Forge_RevealSignature:
+   [ In( m ), In( pk(sk) ) ] --> [ Out( revealSign(m, sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Protocol_RevealSign_Send:
+   [ Fr( ~m ), !SignKey( $A, ~skA ) ]
+  --[ ProtocolRevealSigned( $A, $B, ~m ) ]->
+   [ Out( <$A, revealSign(~m, ~skA)> ), StoreRevealMsg( $A, $B, ~m ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Protocol_Extract_Verify:
+   [ In( <A, sig> ), !VerifyKey( A, pk ) ]
+  --[ ProtocolRevealVerified( A, $B ) ]->
+   [
+   RevealVerifiedMsg( $B, A, getMessage(sig),
+                      revealVerify(sig, getMessage(sig), pk)
+   )
+   ]
+
+  /*
+  rule (modulo AC) Protocol_Extract_Verify:
+     [ In( <A, sig> ), !VerifyKey( A, pk ) ]
+    --[ ProtocolRevealVerified( A, $B ) ]->
+     [ RevealVerifiedMsg( $B, A, z, z.1 ) ]
+    variants (modulo AC)
+    1. pk    = pk.7
+       sig   = sig.7
+       z     = getMessage(sig.7)
+       z.1   = revealVerify(sig.7, getMessage(sig.7), pk.7)
+    
+    2. pk    = pk.9
+       sig   = revealSign(x.7, x.8)
+       z     = x.7
+       z.1   = revealVerify(revealSign(x.7, x.8), x.7, pk.9)
+    
+    3. pk    = pk(x.7)
+       sig   = revealSign(x.8, x.7)
+       z     = x.8
+       z.1   = true
+  */
+
+rule (modulo E) Reveal_Sign_Key:
+   [ !SignKey( A, sk ) ] --[ KeyReveal( A ) ]-> [ Out( sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) RevealSign_With_Compromised_Key:
+   [ In( sk ), In( m ) ]
+  --[ CompromisedRevealSign( m ) ]->
+   [ Out( revealSign(m, sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/derivation-checks/revealingSignatureDerivationTest.spthy
+
+  output:          examples/features/derivation-checks/revealingSignatureDerivationTest.spthy.tmp
+  processing time: 0.02s
+  
+
+==============================================================================
+*/

@@ -1,4 +1,6 @@
-theory licensing begin
+theory licensing
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -172,14 +174,14 @@ restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
   // safety formula
 
-rule (modulo E) ReportRule[color=#ffffff, process="new prog.1;",
+rule (modulo E) ReportRule[color=#ffffff, process='new prog.1;',
                            issapicrule, role='Process']:
    [ In( <x, loc> ) ]
   --[ Restr_ReportRule_1( fst(loc) ) ]->
    [ Out( rep(x, loc) ) ]
 
   /*
-  rule (modulo AC) ReportRule[color=#ffffff, process="new prog.1;",
+  rule (modulo AC) ReportRule[color=#ffffff, process='new prog.1;',
                               issapicrule, role='Process']:
      [ In( <x, loc> ) ] --[ Restr_ReportRule_1( z ) ]-> [ Out( rep(x, loc) ) ]
     variants (modulo AC)
@@ -190,102 +192,102 @@ rule (modulo E) ReportRule[color=#ffffff, process="new prog.1;",
        z     = x.4
   */
 
-rule (modulo E) Init[color=#ffffff, process="new prog.1;", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='new prog.1;', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newprog_0_[color=#ffffff, process="new prog.1;",
+rule (modulo E) newprog_0_[color=#ffffff, process='new prog.1;',
                            issapicrule, role='Process']:
    [ State_( ), Fr( prog.1 ) ] --> [ State_1( prog.1 ) ]
 
   /*
-  rule (modulo AC) newprog_0_[color=#ffffff, process="new prog.1;",
+  rule (modulo AC) newprog_0_[color=#ffffff, process='new prog.1;',
                               issapicrule, role='Process']:
      [ State_( ), Fr( prog ) ] --> [ State_1( prog ) ]
   */
 
 rule (modulo E) eventAuthprog_0_1[color=#ffffff,
-                                  process="event Auth( prog.1 );", issapicrule, role='Process']:
+                                  process='event Auth( prog.1 );', issapicrule, role='Process']:
    [ State_1( prog.1 ) ] --[ Auth( prog.1 ) ]-> [ State_11( prog.1 ) ]
 
   /*
   rule (modulo AC) eventAuthprog_0_1[color=#ffffff,
-                                     process="event Auth( prog.1 );", issapicrule, role='Process']:
+                                     process='event Auth( prog.1 );', issapicrule, role='Process']:
      [ State_1( prog ) ] --[ Auth( prog ) ]-> [ State_11( prog ) ]
   */
 
-rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+rule (modulo E) p_0_11[color=#ffffff, process='|', issapicrule,
                        role='Process']:
    [ State_11( prog.1 ) ] --> [ State_111( prog.1 ), State_112( prog.1 ) ]
 
   /*
-  rule (modulo AC) p_0_11[color=#ffffff, process="|", issapicrule,
+  rule (modulo AC) p_0_11[color=#ffffff, process='|', issapicrule,
                           role='Process']:
      [ State_11( prog ) ] --> [ State_111( prog ), State_112( prog ) ]
   */
 
-rule (modulo E) p_0_111[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ State_111( prog.1 ) ] --> [ !Semistate_1111( prog.1 ) ]
 
   /*
-  rule (modulo AC) p_0_111[color=#ffffff, process="!", issapicrule,
+  rule (modulo AC) p_0_111[color=#ffffff, process='!', issapicrule,
                            role='Process']:
      [ State_111( prog ) ] --> [ !Semistate_1111( prog ) ]
   */
 
-rule (modulo E) p_1_111[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_111[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ !Semistate_1111( prog.1 ) ] --> [ State_1111( prog.1 ) ]
 
   /*
-  rule (modulo AC) p_1_111[color=#ffffff, process="!", issapicrule,
+  rule (modulo AC) p_1_111[color=#ffffff, process='!', issapicrule,
                            role='Process']:
      [ !Semistate_1111( prog ) ] --> [ State_1111( prog ) ]
   */
 
-rule (modulo E) p_0_1111[color=#ffffff, process="p()", issapicrule,
+rule (modulo E) p_0_1111[color=#ffffff, process='p()', issapicrule,
                          role='Process']:
    [ State_1111( prog.1 ) ]
   -->
    [ State_11111( prog.1 ), State_11112( prog.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111[color=#ffffff, process="p()", issapicrule,
+  rule (modulo AC) p_0_1111[color=#ffffff, process='p()', issapicrule,
                             role='Process']:
      [ State_1111( prog ) ] --> [ State_11111( prog ), State_11112( prog ) ]
   */
 
-rule (modulo E) inpkskV_0_11111[color=#804046, process="in(pk(skV.1));",
+rule (modulo E) inpkskV_0_11111[color=#804046, process='in(pk(skV.1));',
                                 issapicrule, role='p']:
    [ State_11111( prog.1 ), In( pk(skV.1) ) ]
   -->
    [ State_111111( prog.1, skV.1 ) ]
 
   /*
-  rule (modulo AC) inpkskV_0_11111[color=#804046, process="in(pk(skV.1));",
+  rule (modulo AC) inpkskV_0_11111[color=#804046, process='in(pk(skV.1));',
                                    issapicrule, role='p']:
      [ State_11111( prog ), In( pk(skV) ) ] --> [ State_111111( prog, skV ) ]
   */
 
 rule (modulo E) newsharedkey_0_111111[color=#804046,
-                                      process="new shared_key.1;", issapicrule, role='p']:
+                                      process='new shared_key.1;', issapicrule, role='p']:
    [ State_111111( prog.1, skV.1 ), Fr( shared_key.1 ) ]
   -->
    [ State_1111111( prog.1, shared_key.1, skV.1 ) ]
 
   /*
   rule (modulo AC) newsharedkey_0_111111[color=#804046,
-                                         process="new shared_key.1;", issapicrule, role='p']:
+                                         process='new shared_key.1;', issapicrule, role='p']:
      [ State_111111( prog, skV ), Fr( shared_key ) ]
     -->
      [ State_1111111( prog, shared_key, skV ) ]
   */
 
 rule (modulo E) eventSessionPpkskVsharedkey_0_1111111[color=#804046,
-                                                      process="event SessionP( pk(skV.1), shared_key.1 );",
+                                                      process='event SessionP( pk(skV.1), shared_key.1 );',
                                                       issapicrule, role='p']:
    [ State_1111111( prog.1, shared_key.1, skV.1 ) ]
   --[ SessionP( pk(skV.1), shared_key.1 ) ]->
@@ -293,7 +295,7 @@ rule (modulo E) eventSessionPpkskVsharedkey_0_1111111[color=#804046,
 
   /*
   rule (modulo AC) eventSessionPpkskVsharedkey_0_1111111[color=#804046,
-                                                         process="event SessionP( pk(skV.1), shared_key.1 );",
+                                                         process='event SessionP( pk(skV.1), shared_key.1 );',
                                                          issapicrule, role='p']:
      [ State_1111111( prog, shared_key, skV ) ]
     --[ SessionP( pk(skV), shared_key ) ]->
@@ -301,8 +303,8 @@ rule (modulo E) eventSessionPpkskVsharedkey_0_1111111[color=#804046,
   */
 
 rule (modulo E) outaencsharedkeypkskVreportaencsharedkeypkskV_0_11111111[color=#804046,
-                                                                         process="out(<aenc(shared_key.1, pk(skV.1)), 
- report(aenc(shared_key.1, pk(skV.1)))>);",
+                                                                         process='out(<aenc(shared_key.1, pk(skV.1)), 
+ report(aenc(shared_key.1, pk(skV.1)))>);',
                                                                          issapicrule, role='p']:
    [ State_11111111( prog.1, shared_key.1, skV.1 ) ]
   -->
@@ -315,8 +317,8 @@ rule (modulo E) outaencsharedkeypkskVreportaencsharedkeypkskV_0_11111111[color=#
 
   /*
   rule (modulo AC) outaencsharedkeypkskVreportaencsharedkeypkskV_0_11111111[color=#804046,
-                                                                            process="out(<aenc(shared_key.1, pk(skV.1)), 
- report(aenc(shared_key.1, pk(skV.1)))>);",
+                                                                            process='out(<aenc(shared_key.1, pk(skV.1)), 
+ report(aenc(shared_key.1, pk(skV.1)))>);',
                                                                             issapicrule, role='p']:
      [ State_11111111( prog, shared_key, skV ) ]
     -->
@@ -327,7 +329,7 @@ rule (modulo E) outaencsharedkeypkskVreportaencsharedkeypkskV_0_11111111[color=#
   */
 
 rule (modulo E) insencprgprogsharedkey_0_111111111[color=#804046,
-                                                   process="in(senc(prg(prog2.1), =shared_key.1));",
+                                                   process='in(senc(prg(prog2.1), =shared_key.1));',
                                                    issapicrule, role='p']:
    [
    State_111111111( prog.1, shared_key.1, skV.1 ),
@@ -338,7 +340,7 @@ rule (modulo E) insencprgprogsharedkey_0_111111111[color=#804046,
 
   /*
   rule (modulo AC) insencprgprogsharedkey_0_111111111[color=#804046,
-                                                      process="in(senc(prg(prog2.1), =shared_key.1));",
+                                                      process='in(senc(prg(prog2.1), =shared_key.1));',
                                                       issapicrule, role='p']:
      [
      State_111111111( prog, shared_key, skV ),
@@ -348,28 +350,28 @@ rule (modulo E) insencprgprogsharedkey_0_111111111[color=#804046,
      [ State_1111111111( prog, prog2, shared_key, skV ) ]
   */
 
-rule (modulo E) p_0_1111111111[color=#804046, process="!", issapicrule,
+rule (modulo E) p_0_1111111111[color=#804046, process='!', issapicrule,
                                role='p']:
    [ State_1111111111( prog.1, prog2.1, shared_key.1, skV.1 ) ]
   -->
    [ !Semistate_11111111111( prog.1, prog2.1, shared_key.1, skV.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111111111[color=#804046, process="!", issapicrule,
+  rule (modulo AC) p_0_1111111111[color=#804046, process='!', issapicrule,
                                   role='p']:
      [ State_1111111111( prog, prog2, shared_key, skV ) ]
     -->
      [ !Semistate_11111111111( prog, prog2, shared_key, skV ) ]
   */
 
-rule (modulo E) p_1_1111111111[color=#804046, process="!", issapicrule,
+rule (modulo E) p_1_1111111111[color=#804046, process='!', issapicrule,
                                role='p']:
    [ !Semistate_11111111111( prog.1, prog2.1, shared_key.1, skV.1 ) ]
   -->
    [ State_11111111111( prog.1, prog2.1, shared_key.1, skV.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111111111[color=#804046, process="!", issapicrule,
+  rule (modulo AC) p_1_1111111111[color=#804046, process='!', issapicrule,
                                   role='p']:
      [ !Semistate_11111111111( prog, prog2, shared_key, skV ) ]
     -->
@@ -377,7 +379,7 @@ rule (modulo E) p_1_1111111111[color=#804046, process="!", issapicrule,
   */
 
 rule (modulo E) ininput_0_11111111111[color=#804046,
-                                      process="in(input.1);", issapicrule, role='p']:
+                                      process='in(input.1);', issapicrule, role='p']:
    [
    State_11111111111( prog.1, prog2.1, shared_key.1, skV.1 ), In( input.1 )
    ]
@@ -386,14 +388,14 @@ rule (modulo E) ininput_0_11111111111[color=#804046,
 
   /*
   rule (modulo AC) ininput_0_11111111111[color=#804046,
-                                         process="in(input.1);", issapicrule, role='p']:
+                                         process='in(input.1);', issapicrule, role='p']:
      [ State_11111111111( prog, prog2, shared_key, skV ), In( input ) ]
     -->
      [ State_111111111111( input, prog, prog2, shared_key, skV ) ]
   */
 
 rule (modulo E) insenctkntokensharedkey_0_111111111111[color=#804046,
-                                                       process="in(senc(tkn(token.1), =shared_key.1));",
+                                                       process='in(senc(tkn(token.1), =shared_key.1));',
                                                        issapicrule, role='p']:
    [
    State_111111111111( input.1, prog.1, prog2.1, shared_key.1, skV.1 ),
@@ -408,7 +410,7 @@ rule (modulo E) insenctkntokensharedkey_0_111111111111[color=#804046,
 
   /*
   rule (modulo AC) insenctkntokensharedkey_0_111111111111[color=#804046,
-                                                          process="in(senc(tkn(token.1), =shared_key.1));",
+                                                          process='in(senc(tkn(token.1), =shared_key.1));',
                                                           issapicrule, role='p']:
      [
      State_111111111111( input, prog, prog2, shared_key, skV ),
@@ -418,7 +420,7 @@ rule (modulo E) insenctkntokensharedkey_0_111111111111[color=#804046,
      [ State_1111111111111( input, prog, prog2, shared_key, skV, token ) ]
   */
 
-rule (modulo E) newx_0_1111111111111[color=#804046, process="new x.1;",
+rule (modulo E) newx_0_1111111111111[color=#804046, process='new x.1;',
                                      issapicrule, role='p']:
    [
    State_1111111111111( input.1, prog.1, prog2.1, shared_key.1, skV.1,
@@ -434,7 +436,7 @@ rule (modulo E) newx_0_1111111111111[color=#804046, process="new x.1;",
    ]
 
   /*
-  rule (modulo AC) newx_0_1111111111111[color=#804046, process="new x.1;",
+  rule (modulo AC) newx_0_1111111111111[color=#804046, process='new x.1;',
                                         issapicrule, role='p']:
      [
      State_1111111111111( input, prog, prog2, shared_key, skV, token ),
@@ -445,7 +447,7 @@ rule (modulo E) newx_0_1111111111111[color=#804046, process="new x.1;",
   */
 
 rule (modulo E) outsencaskxtkntokensharedkey_0_11111111111111[color=#804046,
-                                                              process="out(senc(ask(x.1, tkn(token.1)), shared_key.1));",
+                                                              process='out(senc(ask(x.1, tkn(token.1)), shared_key.1));',
                                                               issapicrule, role='p']:
    [
    State_11111111111111( input.1, prog.1, prog2.1, shared_key.1, skV.1,
@@ -462,7 +464,7 @@ rule (modulo E) outsencaskxtkntokensharedkey_0_11111111111111[color=#804046,
 
   /*
   rule (modulo AC) outsencaskxtkntokensharedkey_0_11111111111111[color=#804046,
-                                                                 process="out(senc(ask(x.1, tkn(token.1)), shared_key.1));",
+                                                                 process='out(senc(ask(x.1, tkn(token.1)), shared_key.1));',
                                                                  issapicrule, role='p']:
      [ State_11111111111111( input, prog, prog2, shared_key, skV, token, x ) ]
     -->
@@ -473,7 +475,7 @@ rule (modulo E) outsencaskxtkntokensharedkey_0_11111111111111[color=#804046,
   */
 
 rule (modulo E) insencokxtkntokensharedkey_0_111111111111111[color=#804046,
-                                                             process="in(senc(ok(=x.1, tkn(=token.1)), =shared_key.1));",
+                                                             process='in(senc(ok(=x.1, tkn(=token.1)), =shared_key.1));',
                                                              issapicrule, role='p']:
    [
    State_111111111111111( input.1, prog.1, prog2.1, shared_key.1, skV.1,
@@ -490,7 +492,7 @@ rule (modulo E) insencokxtkntokensharedkey_0_111111111111111[color=#804046,
 
   /*
   rule (modulo AC) insencokxtkntokensharedkey_0_111111111111111[color=#804046,
-                                                                process="in(senc(ok(=x.1, tkn(=token.1)), =shared_key.1));",
+                                                                process='in(senc(ok(=x.1, tkn(=token.1)), =shared_key.1));',
                                                                 issapicrule, role='p']:
      [
      State_111111111111111( input, prog, prog2, shared_key, skV, token, x ),
@@ -502,7 +504,7 @@ rule (modulo E) insencokxtkntokensharedkey_0_111111111111111[color=#804046,
   */
 
 rule (modulo E) eventPoutputinputtoken_0_1111111111111111[color=#804046,
-                                                          process="event Poutput( input.1, token.1 );",
+                                                          process='event Poutput( input.1, token.1 );',
                                                           issapicrule, role='p']:
    [
    State_1111111111111111( input.1, prog.1, prog2.1, shared_key.1, skV.1,
@@ -518,7 +520,7 @@ rule (modulo E) eventPoutputinputtoken_0_1111111111111111[color=#804046,
 
   /*
   rule (modulo AC) eventPoutputinputtoken_0_1111111111111111[color=#804046,
-                                                             process="event Poutput( input.1, token.1 );",
+                                                             process='event Poutput( input.1, token.1 );',
                                                              issapicrule, role='p']:
      [ State_1111111111111111( input, prog, prog2, shared_key, skV, token, x )
      ]
@@ -529,7 +531,7 @@ rule (modulo E) eventPoutputinputtoken_0_1111111111111111[color=#804046,
   */
 
 rule (modulo E) outrunproginput_0_11111111111111111[color=#804046,
-                                                    process="out(run(prog2.1, input.1));", issapicrule,
+                                                    process='out(run(prog2.1, input.1));', issapicrule,
                                                     role='p']:
    [
    State_11111111111111111( input.1, prog.1, prog2.1, shared_key.1, skV.1,
@@ -546,7 +548,7 @@ rule (modulo E) outrunproginput_0_11111111111111111[color=#804046,
 
   /*
   rule (modulo AC) outrunproginput_0_11111111111111111[color=#804046,
-                                                       process="out(run(prog2.1, input.1));", issapicrule,
+                                                       process='out(run(prog2.1, input.1));', issapicrule,
                                                        role='p']:
      [
      State_11111111111111111( input, prog, prog2, shared_key, skV, token, x )
@@ -559,7 +561,7 @@ rule (modulo E) outrunproginput_0_11111111111111111[color=#804046,
      ]
   */
 
-rule (modulo E) p_0_111111111111111111[color=#804046, process="0",
+rule (modulo E) p_0_111111111111111111[color=#804046, process='0',
                                        issapicrule, role='p']:
    [
    State_111111111111111111( input.1, prog.1, prog2.1, shared_key.1, skV.1,
@@ -570,7 +572,7 @@ rule (modulo E) p_0_111111111111111111[color=#804046, process="0",
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111111111111111[color=#804046, process="0",
+  rule (modulo AC) p_0_111111111111111111[color=#804046, process='0',
                                           issapicrule, role='p']:
      [
      State_111111111111111111( input, prog, prog2, shared_key, skV, token, x )
@@ -579,69 +581,69 @@ rule (modulo E) p_0_111111111111111111[color=#804046, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_11112[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_11112[color=#ffffff, process='0', issapicrule,
                           role='Process']:
    [ State_11112( prog.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11112[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_11112[color=#ffffff, process='0', issapicrule,
                              role='Process']:
      [ State_11112( prog ) ] --> [ ]
   */
 
-rule (modulo E) p_0_112[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_112[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ State_112( prog.1 ) ] --> [ !Semistate_1121( prog.1 ) ]
 
   /*
-  rule (modulo AC) p_0_112[color=#ffffff, process="!", issapicrule,
+  rule (modulo AC) p_0_112[color=#ffffff, process='!', issapicrule,
                            role='Process']:
      [ State_112( prog ) ] --> [ !Semistate_1121( prog ) ]
   */
 
-rule (modulo E) p_1_112[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_112[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ !Semistate_1121( prog.1 ) ] --> [ State_1121( prog.1 ) ]
 
   /*
-  rule (modulo AC) p_1_112[color=#ffffff, process="!", issapicrule,
+  rule (modulo AC) p_1_112[color=#ffffff, process='!', issapicrule,
                            role='Process']:
      [ !Semistate_1121( prog ) ] --> [ State_1121( prog ) ]
   */
 
 rule (modulo E) vendorprog_0_1121[color=#ffffff,
-                                  process="vendor(prog.1)", issapicrule, role='Process']:
+                                  process='vendor(prog.1)', issapicrule, role='Process']:
    [ State_1121( prog.1 ) ]
   -->
    [ State_11211( prog.1 ), State_11212( prog.1 ) ]
 
   /*
   rule (modulo AC) vendorprog_0_1121[color=#ffffff,
-                                     process="vendor(prog.1)", issapicrule, role='Process']:
+                                     process='vendor(prog.1)', issapicrule, role='Process']:
      [ State_1121( prog ) ] --> [ State_11211( prog ), State_11212( prog ) ]
   */
 
-rule (modulo E) newskV_0_11211[color=#406880, process="new skV.2;",
+rule (modulo E) newskV_0_11211[color=#406880, process='new skV.2;',
                                issapicrule, role='vendor']:
    [ State_11211( prog.1 ), Fr( skV.2 ) ]
   -->
    [ State_112111( prog.1, skV.2 ) ]
 
   /*
-  rule (modulo AC) newskV_0_11211[color=#406880, process="new skV.2;",
+  rule (modulo AC) newskV_0_11211[color=#406880, process='new skV.2;',
                                   issapicrule, role='vendor']:
      [ State_11211( prog ), Fr( skV ) ] --> [ State_112111( prog, skV ) ]
   */
 
 rule (modulo E) eventHonestPpkskV_0_112111[color=#406880,
-                                           process="event HonestP( pk(skV.2) );", issapicrule, role='vendor']:
+                                           process='event HonestP( pk(skV.2) );', issapicrule, role='vendor']:
    [ State_112111( prog.1, skV.2 ) ]
   --[ HonestP( pk(skV.2) ) ]->
    [ State_1121111( prog.1, skV.2 ) ]
 
   /*
   rule (modulo AC) eventHonestPpkskV_0_112111[color=#406880,
-                                              process="event HonestP( pk(skV.2) );", issapicrule,
+                                              process='event HonestP( pk(skV.2) );', issapicrule,
                                               role='vendor']:
      [ State_112111( prog, skV ) ]
     --[ HonestP( pk(skV) ) ]->
@@ -649,21 +651,21 @@ rule (modulo E) eventHonestPpkskV_0_112111[color=#406880,
   */
 
 rule (modulo E) outpkskV_0_1121111[color=#406880,
-                                   process="out(pk(skV.2));", issapicrule, role='vendor']:
+                                   process='out(pk(skV.2));', issapicrule, role='vendor']:
    [ State_1121111( prog.1, skV.2 ) ]
   -->
    [ State_11211111( prog.1, skV.2 ), Out( pk(skV.2) ) ]
 
   /*
   rule (modulo AC) outpkskV_0_1121111[color=#406880,
-                                      process="out(pk(skV.2));", issapicrule, role='vendor']:
+                                      process='out(pk(skV.2));', issapicrule, role='vendor']:
      [ State_1121111( prog, skV ) ]
     -->
      [ State_11211111( prog, skV ), Out( pk(skV) ) ]
   */
 
 rule (modulo E) inaencsharedkeypkskVsigned_0_11211111[color=#406880,
-                                                      process="in(<aenc(shared_key.2, pk(=skV.2)), signed.1>);",
+                                                      process='in(<aenc(shared_key.2, pk(=skV.2)), signed.1>);',
                                                       issapicrule, role='vendor']:
    [
    State_11211111( prog.1, skV.2 ),
@@ -674,7 +676,7 @@ rule (modulo E) inaencsharedkeypkskVsigned_0_11211111[color=#406880,
 
   /*
   rule (modulo AC) inaencsharedkeypkskVsigned_0_11211111[color=#406880,
-                                                         process="in(<aenc(shared_key.2, pk(=skV.2)), signed.1>);",
+                                                         process='in(<aenc(shared_key.2, pk(=skV.2)), signed.1>);',
                                                          issapicrule, role='vendor']:
      [ State_11211111( prog, skV ), In( <aenc(shared_key, pk(skV)), signed> )
      ]
@@ -683,7 +685,7 @@ rule (modulo E) inaencsharedkeypkskVsigned_0_11211111[color=#406880,
   */
 
 rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#406880,
-                                                                       process="if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)",
+                                                                       process='if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)',
                                                                        issapicrule, role='vendor']:
    [ State_112111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   --[
@@ -695,7 +697,7 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#40
 
   /*
   rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#406880,
-                                                                          process="if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)",
+                                                                          process='if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)',
                                                                           issapicrule, role='vendor']:
      [ State_112111111( prog, signed, shared_key, skV ) ]
     --[ Pred_Eq( aenc(shared_key, pk(skV)), z ) ]->
@@ -713,7 +715,7 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_0_112111111[color=#40
   */
 
 rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#406880,
-                                                                       process="if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)",
+                                                                       process='if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)',
                                                                        issapicrule, role='vendor']:
    [ State_112111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   --[
@@ -725,7 +727,7 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#40
 
   /*
   rule (modulo AC) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#406880,
-                                                                          process="if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)",
+                                                                          process='if aenc(shared_key.2, pk(skV.2))=check_rep(signed.1, <'loc', pk(skV.2)>)',
                                                                           issapicrule, role='vendor']:
      [ State_112111111( prog, signed, shared_key, skV ) ]
     --[ Pred_Not_Eq( aenc(shared_key, pk(skV)), z ) ]->
@@ -743,7 +745,7 @@ rule (modulo E) ifaencsharedkeypkskVcheckrepsignedlocpkskV_1_112111111[color=#40
   */
 
 rule (modulo E) eventSessionVpkskVsharedkey_0_1121111111[color=#406880,
-                                                         process="event SessionV( pk(skV.2), shared_key.2 );",
+                                                         process='event SessionV( pk(skV.2), shared_key.2 );',
                                                          issapicrule, role='vendor']:
    [ State_1121111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   --[ SessionV( pk(skV.2), shared_key.2 ) ]->
@@ -751,7 +753,7 @@ rule (modulo E) eventSessionVpkskVsharedkey_0_1121111111[color=#406880,
 
   /*
   rule (modulo AC) eventSessionVpkskVsharedkey_0_1121111111[color=#406880,
-                                                            process="event SessionV( pk(skV.2), shared_key.2 );",
+                                                            process='event SessionV( pk(skV.2), shared_key.2 );',
                                                             issapicrule, role='vendor']:
      [ State_1121111111( prog, signed, shared_key, skV ) ]
     --[ SessionV( pk(skV), shared_key ) ]->
@@ -759,7 +761,7 @@ rule (modulo E) eventSessionVpkskVsharedkey_0_1121111111[color=#406880,
   */
 
 rule (modulo E) outsencprgprogsharedkey_0_11211111111[color=#406880,
-                                                      process="out(senc(prg(prog.1), shared_key.2));",
+                                                      process='out(senc(prg(prog.1), shared_key.2));',
                                                       issapicrule, role='vendor']:
    [ State_11211111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   -->
@@ -770,7 +772,7 @@ rule (modulo E) outsencprgprogsharedkey_0_11211111111[color=#406880,
 
   /*
   rule (modulo AC) outsencprgprogsharedkey_0_11211111111[color=#406880,
-                                                         process="out(senc(prg(prog.1), shared_key.2));",
+                                                         process='out(senc(prg(prog.1), shared_key.2));',
                                                          issapicrule, role='vendor']:
      [ State_11211111111( prog, signed, shared_key, skV ) ]
     -->
@@ -780,28 +782,28 @@ rule (modulo E) outsencprgprogsharedkey_0_11211111111[color=#406880,
      ]
   */
 
-rule (modulo E) p_0_112111111111[color=#406880, process="!", issapicrule,
+rule (modulo E) p_0_112111111111[color=#406880, process='!', issapicrule,
                                  role='vendor']:
    [ State_112111111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   -->
    [ !Semistate_1121111111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
 
   /*
-  rule (modulo AC) p_0_112111111111[color=#406880, process="!",
+  rule (modulo AC) p_0_112111111111[color=#406880, process='!',
                                     issapicrule, role='vendor']:
      [ State_112111111111( prog, signed, shared_key, skV ) ]
     -->
      [ !Semistate_1121111111111( prog, signed, shared_key, skV ) ]
   */
 
-rule (modulo E) p_1_112111111111[color=#406880, process="!", issapicrule,
+rule (modulo E) p_1_112111111111[color=#406880, process='!', issapicrule,
                                  role='vendor']:
    [ !Semistate_1121111111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
   -->
    [ State_1121111111111( prog.1, signed.1, shared_key.2, skV.2 ) ]
 
   /*
-  rule (modulo AC) p_1_112111111111[color=#406880, process="!",
+  rule (modulo AC) p_1_112111111111[color=#406880, process='!',
                                     issapicrule, role='vendor']:
      [ !Semistate_1121111111111( prog, signed, shared_key, skV ) ]
     -->
@@ -809,7 +811,7 @@ rule (modulo E) p_1_112111111111[color=#406880, process="!", issapicrule,
   */
 
 rule (modulo E) newtoken_0_1121111111111[color=#406880,
-                                         process="new token.2;", issapicrule, role='vendor']:
+                                         process='new token.2;', issapicrule, role='vendor']:
    [
    State_1121111111111( prog.1, signed.1, shared_key.2, skV.2 ),
    Fr( token.2 )
@@ -820,14 +822,14 @@ rule (modulo E) newtoken_0_1121111111111[color=#406880,
 
   /*
   rule (modulo AC) newtoken_0_1121111111111[color=#406880,
-                                            process="new token.2;", issapicrule, role='vendor']:
+                                            process='new token.2;', issapicrule, role='vendor']:
      [ State_1121111111111( prog, signed, shared_key, skV ), Fr( token ) ]
     -->
      [ State_11211111111111( prog, signed, shared_key, skV, token ) ]
   */
 
 rule (modulo E) eventTokentoken_0_11211111111111[color=#406880,
-                                                 process="event Token( token.2 );", issapicrule,
+                                                 process='event Token( token.2 );', issapicrule,
                                                  role='vendor']:
    [ State_11211111111111( prog.1, signed.1, shared_key.2, skV.2, token.2 )
    ]
@@ -837,7 +839,7 @@ rule (modulo E) eventTokentoken_0_11211111111111[color=#406880,
 
   /*
   rule (modulo AC) eventTokentoken_0_11211111111111[color=#406880,
-                                                    process="event Token( token.2 );", issapicrule,
+                                                    process='event Token( token.2 );', issapicrule,
                                                     role='vendor']:
      [ State_11211111111111( prog, signed, shared_key, skV, token ) ]
     --[ Token( token ) ]->
@@ -845,7 +847,7 @@ rule (modulo E) eventTokentoken_0_11211111111111[color=#406880,
   */
 
 rule (modulo E) outsenctkntokensharedkey_0_112111111111111[color=#406880,
-                                                           process="out(senc(tkn(token.2), shared_key.2));",
+                                                           process='out(senc(tkn(token.2), shared_key.2));',
                                                            issapicrule, role='vendor']:
    [ State_112111111111111( prog.1, signed.1, shared_key.2, skV.2, token.2 )
    ]
@@ -857,7 +859,7 @@ rule (modulo E) outsenctkntokensharedkey_0_112111111111111[color=#406880,
 
   /*
   rule (modulo AC) outsenctkntokensharedkey_0_112111111111111[color=#406880,
-                                                              process="out(senc(tkn(token.2), shared_key.2));",
+                                                              process='out(senc(tkn(token.2), shared_key.2));',
                                                               issapicrule, role='vendor']:
      [ State_112111111111111( prog, signed, shared_key, skV, token ) ]
     -->
@@ -868,7 +870,7 @@ rule (modulo E) outsenctkntokensharedkey_0_112111111111111[color=#406880,
   */
 
 rule (modulo E) insencaskxtkntokensharedkey_0_1121111111111111[color=#406880,
-                                                               process="in(senc(ask(x.2, tkn(token2.1)), =shared_key.2));",
+                                                               process='in(senc(ask(x.2, tkn(token2.1)), =shared_key.2));',
                                                                issapicrule, role='vendor']:
    [
    State_1121111111111111( prog.1, signed.1, shared_key.2, skV.2, token.2 ),
@@ -883,7 +885,7 @@ rule (modulo E) insencaskxtkntokensharedkey_0_1121111111111111[color=#406880,
 
   /*
   rule (modulo AC) insencaskxtkntokensharedkey_0_1121111111111111[color=#406880,
-                                                                  process="in(senc(ask(x.2, tkn(token2.1)), =shared_key.2));",
+                                                                  process='in(senc(ask(x.2, tkn(token2.1)), =shared_key.2));',
                                                                   issapicrule, role='vendor']:
      [
      State_1121111111111111( prog, signed, shared_key, skV, token ),
@@ -897,7 +899,7 @@ rule (modulo E) insencaskxtkntokensharedkey_0_1121111111111111[color=#406880,
   */
 
 rule (modulo E) iftkntokentkntoken_0_11211111111111111[color=#406880,
-                                                       process="if tkn(token.2)=tkn(token2.1)", issapicrule,
+                                                       process='if tkn(token.2)=tkn(token2.1)', issapicrule,
                                                        role='vendor']:
    [
    State_11211111111111111( prog.1, signed.1, token2.1, shared_key.2, skV.2,
@@ -913,7 +915,7 @@ rule (modulo E) iftkntokentkntoken_0_11211111111111111[color=#406880,
 
   /*
   rule (modulo AC) iftkntokentkntoken_0_11211111111111111[color=#406880,
-                                                          process="if tkn(token.2)=tkn(token2.1)",
+                                                          process='if tkn(token.2)=tkn(token2.1)',
                                                           issapicrule, role='vendor']:
      [
      State_11211111111111111( prog, signed, token2, shared_key, skV, token, x
@@ -927,7 +929,7 @@ rule (modulo E) iftkntokentkntoken_0_11211111111111111[color=#406880,
   */
 
 rule (modulo E) iftkntokentkntoken_1_11211111111111111[color=#406880,
-                                                       process="if tkn(token.2)=tkn(token2.1)", issapicrule,
+                                                       process='if tkn(token.2)=tkn(token2.1)', issapicrule,
                                                        role='vendor']:
    [
    State_11211111111111111( prog.1, signed.1, token2.1, shared_key.2, skV.2,
@@ -943,7 +945,7 @@ rule (modulo E) iftkntokentkntoken_1_11211111111111111[color=#406880,
 
   /*
   rule (modulo AC) iftkntokentkntoken_1_11211111111111111[color=#406880,
-                                                          process="if tkn(token.2)=tkn(token2.1)",
+                                                          process='if tkn(token.2)=tkn(token2.1)',
                                                           issapicrule, role='vendor']:
      [
      State_11211111111111111( prog, signed, token2, shared_key, skV, token, x
@@ -957,7 +959,7 @@ rule (modulo E) iftkntokentkntoken_1_11211111111111111[color=#406880,
   */
 
 rule (modulo E) outsencokxtkntokensharedkey_0_112111111111111111[color=#406880,
-                                                                 process="out(senc(ok(x.2, tkn(token.2)), shared_key.2));",
+                                                                 process='out(senc(ok(x.2, tkn(token.2)), shared_key.2));',
                                                                  issapicrule, role='vendor']:
    [
    State_112111111111111111( prog.1, signed.1, token2.1, shared_key.2,
@@ -974,7 +976,7 @@ rule (modulo E) outsencokxtkntokensharedkey_0_112111111111111111[color=#406880,
 
   /*
   rule (modulo AC) outsencokxtkntokensharedkey_0_112111111111111111[color=#406880,
-                                                                    process="out(senc(ok(x.2, tkn(token.2)), shared_key.2));",
+                                                                    process='out(senc(ok(x.2, tkn(token.2)), shared_key.2));',
                                                                     issapicrule, role='vendor']:
      [
      State_112111111111111111( prog, signed, token2, shared_key, skV, token, x
@@ -989,7 +991,7 @@ rule (modulo E) outsencokxtkntokensharedkey_0_112111111111111111[color=#406880,
      ]
   */
 
-rule (modulo E) p_0_1121111111111111111[color=#406880, process="0",
+rule (modulo E) p_0_1121111111111111111[color=#406880, process='0',
                                         issapicrule, role='vendor']:
    [
    State_1121111111111111111( prog.1, signed.1, token2.1, shared_key.2,
@@ -1000,7 +1002,7 @@ rule (modulo E) p_0_1121111111111111111[color=#406880, process="0",
    [ ]
 
   /*
-  rule (modulo AC) p_0_1121111111111111111[color=#406880, process="0",
+  rule (modulo AC) p_0_1121111111111111111[color=#406880, process='0',
                                            issapicrule, role='vendor']:
      [
      State_1121111111111111111( prog, signed, token2, shared_key, skV, token,
@@ -1011,7 +1013,7 @@ rule (modulo E) p_0_1121111111111111111[color=#406880, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_112111111111111112[color=#406880, process="0",
+rule (modulo E) p_0_112111111111111112[color=#406880, process='0',
                                        issapicrule, role='vendor']:
    [
    State_112111111111111112( prog.1, signed.1, token2.1, shared_key.2,
@@ -1022,7 +1024,7 @@ rule (modulo E) p_0_112111111111111112[color=#406880, process="0",
    [ ]
 
   /*
-  rule (modulo AC) p_0_112111111111111112[color=#406880, process="0",
+  rule (modulo AC) p_0_112111111111111112[color=#406880, process='0',
                                           issapicrule, role='vendor']:
      [
      State_112111111111111112( prog, signed, token2, shared_key, skV, token, x
@@ -1032,22 +1034,22 @@ rule (modulo E) p_0_112111111111111112[color=#406880, process="0",
      [ ]
   */
 
-rule (modulo E) p_0_1121111112[color=#406880, process="0", issapicrule,
+rule (modulo E) p_0_1121111112[color=#406880, process='0', issapicrule,
                                role='vendor']:
    [ State_1121111112( prog.1, signed.1, shared_key.2, skV.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1121111112[color=#406880, process="0", issapicrule,
+  rule (modulo AC) p_0_1121111112[color=#406880, process='0', issapicrule,
                                   role='vendor']:
      [ State_1121111112( prog, signed, shared_key, skV ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11212[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_11212[color=#ffffff, process='0', issapicrule,
                           role='Process']:
    [ State_11212( prog.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11212[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_11212[color=#ffffff, process='0', issapicrule,
                              role='Process']:
      [ State_11212( prog ) ] --> [ ]
   */
@@ -1064,33 +1066,14 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule inpkskV_0_11111: 
-Failed to derive Variable(s): skV.1
-
-Rule insencprgprogsharedkey_0_111111111: 
-Failed to derive Variable(s): prog2.1
-
-Rule insenctkntokensharedkey_0_111111111111: 
-Failed to derive Variable(s): token.1
-
-Rule insencaskxtkntokensharedkey_0_1121111111111111: 
-Failed to derive Variable(s): token2.1, x.2
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -1102,10 +1085,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 2.29s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 1.19s
   
   attested_comput (all-traces): verified (6 steps)
   unique (all-traces): verified (7 steps)

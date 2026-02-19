@@ -1,4 +1,6 @@
-theory JKL_TS2_2004_KI_wPFS begin
+theory JKL_TS2_2004_KI_wPFS
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -96,27 +98,11 @@ rule (modulo E) Resp_1:
        X     = X.37
        z     = X.37^~ekR.34
     
-    2. ~ekR  = ~ekR.34
-       X     = z.40^inv(~ekR.34)
-       z     = z.40
-    
-    3. ~ekR  = ~ekR.218
+    2. ~ekR  = ~ekR.218
        X     = x.431^x.432
        z     = x.431^(~ekR.218*x.432)
     
-    4. ~ekR  = ~ekR.221
-       X     = x.437^inv((~ekR.221*x.438))
-       z     = x.437^inv(x.438)
-    
-    5. ~ekR  = ~ekR.221
-       X     = x.437^(x.438*inv(~ekR.221))
-       z     = x.437^x.438
-    
-    6. ~ekR  = ~ekR.222
-       X     = x.438^(x.439*inv((~ekR.222*x.440)))
-       z     = x.438^(x.439*inv(x.440))
-    
-    7. X     = DH_neutral
+    3. X     = DH_neutral
        z     = DH_neutral
   */
 
@@ -236,13 +222,17 @@ solve( !Ltk( $R, ~lkR ) ▶₂ #i1 )
   case generate_ltk
   solve( !Pk( $I, 'g'^~x ) ▶₃ #i1 )
     case generate_ltk
-    solve( !KU( h(<hkI, 'g'^~ekR, z, 'g'^(~lkR*~x)>) ) @ #vk.1 )
-      case Sessk_reveal_case_1
-      solve( !KU( 'g'^~ekR ) @ #vk.2 )
-        case Resp_1
-        solve( !KU( 'g'^~tid ) @ #vk.2 )
+    solve( splitEqs(0) )
+      case split_case_2
+      solve( !KU( h(<x^x.1, 'g'^~ekR, x^(~ekR*x.1), 'g'^(~lkR*~x.2)>)
+             ) @ #vk.1 )
+        case Sessk_reveal_case_1
+        solve( !KU( 'g'^~tid ) @ #vk.1 )
           case Init_1
-          SOLVED // trace found
+          solve( !KU( 'g'^~ekR ) @ #vk.2 )
+            case Resp_1
+            SOLVED // trace found
+          qed
         qed
       qed
     qed
@@ -257,27 +247,14 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Init_2: 
-Failed to derive Variable(s): ~lkR
-
-Rule Resp_1: 
-Failed to derive Variable(s): ~lkI
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -289,13 +266,10 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS2_2004_KI_wPFS.spthy
 
   output:          examples/csf12/JKL_TS2_2004_KI_wPFS.spthy.tmp
-  processing time: 0.25s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.24s
   
   JKL2008_2_initiator_key (all-traces): falsified - found trace (7 steps)
-  JKL2008_2_responder_key (all-traces): falsified - found trace (7 steps)
+  JKL2008_2_responder_key (all-traces): falsified - found trace (8 steps)
 
 ==============================================================================
 */

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import re
 import os
@@ -21,7 +21,7 @@ for i in range(0,maxPrio):
   rank.append([])
   
 if lemma[0:11]=="oracle_corr": #SP1
-  print "applying oracle to oracle_correctness"
+  print("applying oracle to oracle_correctness")
   for line in lines:
     num = line.split(':')[0]
     if re.match('.*Host_.*', line): rank[109].append(num)
@@ -57,7 +57,7 @@ if lemma[0:11]=="oracle_corr": #SP1
     elif re.match('.*\!KU\( KDF_EK\(~TPM_EK_Seed\).*', line): rank[50].append(num) 
     
 elif lemma[0:15]=="oracle_SP3_Unfo":#SP3
-  print "applying oracle to oracle_SP3_Unforgability for CERIFY"
+  print("applying oracle to oracle_SP3_Unforgability for CERIFY")
   for line in lines:
     num = line.split(':')[0]
     if re.match('.*\!Pk\(.*', line): rank[109].append(num)
@@ -104,7 +104,7 @@ elif lemma[0:15]=="oracle_SP3_Unfo":#SP3
     elif re.match('.*\!KU\( KDF_AES\(~TPM.*', line): rank[30].append(num)
 
 elif lemma[0:17]=="oracle_auth_alive":
-  print "applying oracle to oracle_auth_alive"
+  print("applying oracle to oracle_auth_alive")
   for line in lines:
     num = line.split(':')[0]
     if re.match('.*In_S\(.*', line): rank[106].append(num)
@@ -113,7 +113,7 @@ elif lemma[0:17]=="oracle_auth_alive":
 
 
 elif lemma[0:16]=="oracle_auth_weak" or lemma[0:15]=="oracle_auth_non" or lemma[0:21]=="oracle_auth_injective":
-  print "applying oracle to oracle_auth_weak/non/inject"
+  print("applying oracle to oracle_auth_weak/non/inject")
   for line in lines:
     num = line.split(':')[0]
 
@@ -152,7 +152,7 @@ elif lemma[0:16]=="oracle_auth_weak" or lemma[0:15]=="oracle_auth_non" or lemma[
 
 
 elif lemma[0:19]=="oracle_auth_secrecy":
-  print "applying oracle to oracle_auth_secrecy"
+  print("applying oracle to oracle_auth_secrecy")
   for line in lines:
     num = line.split(':')[0]
 
@@ -180,7 +180,7 @@ elif lemma[0:19]=="oracle_auth_secrecy":
         print ("!!!")
     elif re.match('.*In_S\(.*', line): 
         rank[107].append(num)
-        print ("Hello",line)
+        print(("Hello",line))
     elif re.match('.*\!KU\( pk\( KDF_EK\(~TPM_EK.*', line): rank[100].append(num)
     elif re.match('.*\!KU\( KDF_EK\(~TPM_EK.*', line): rank[100].append(num)
     elif re.match('.*\!KU\( curlyK\(~K_2\) \)', line): rank[91].append(num)
@@ -206,7 +206,7 @@ elif lemma[0:19]=="oracle_auth_secrecy":
 
 
 elif lemma[0:14]=="oracle_SP4_Non":
-  print "applying oracle to oracle_SP4_NonFrameability for BSN"
+  print("applying oracle to oracle_SP4_NonFrameability for BSN")
   for line in lines:
     num = line.split(':')[0]
     if re.match('.*\!SignatureVerified.*', line): rank[108].append(num)
@@ -265,11 +265,11 @@ elif lemma[0:14]=="oracle_SP4_Non":
 
 
 else:
-    print "not applying the rule"
+    print("not applying the rule")
     exit(0)
 
 # Ordering all goals by ranking (higher first)
 for listGoals in reversed(rank):
   for goal in listGoals:
     sys.stderr.write(goal)
-    print goal
+    print(goal)

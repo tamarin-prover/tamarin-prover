@@ -1,4 +1,6 @@
-theory CRXOR begin
+theory CRXOR
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -448,122 +450,122 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="new ~k.1;", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='new ~k.1;', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_[color=#ffffff, process="new ~k.1;", issapicrule,
+rule (modulo E) newk_0_[color=#ffffff, process='new ~k.1;', issapicrule,
                         role='Process']:
    [ State_( ), Fr( ~k.1 ) ] --> [ State_1( ~k.1 ) ]
 
   /*
-  rule (modulo AC) newk_0_[color=#ffffff, process="new ~k.1;", issapicrule,
+  rule (modulo AC) newk_0_[color=#ffffff, process='new ~k.1;', issapicrule,
                            role='Process']:
      [ State_( ), Fr( ~k ) ] --> [ State_1( ~k ) ]
   */
 
-rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_1[color=#ffffff, process='!', issapicrule,
                       role='Process']:
    [ State_1( ~k.1 ) ] --> [ !Semistate_11( ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1[color=#ffffff, process="!", issapicrule,
+  rule (modulo AC) p_0_1[color=#ffffff, process='!', issapicrule,
                          role='Process']:
      [ State_1( ~k ) ] --> [ !Semistate_11( ~k ) ]
   */
 
-rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
                       role='Process']:
    [ !Semistate_11( ~k.1 ) ] --> [ State_11( ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1[color=#ffffff, process="!", issapicrule,
+  rule (modulo AC) p_1_1[color=#ffffff, process='!', issapicrule,
                          role='Process']:
      [ !Semistate_11( ~k ) ] --> [ State_11( ~k ) ]
   */
 
-rule (modulo E) p_0_11[color=#ffffff, process="|", issapicrule,
+rule (modulo E) p_0_11[color=#ffffff, process='|', issapicrule,
                        role='Process']:
    [ State_11( ~k.1 ) ] --> [ State_111( ~k.1 ), State_112( ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_0_11[color=#ffffff, process="|", issapicrule,
+  rule (modulo AC) p_0_11[color=#ffffff, process='|', issapicrule,
                           role='Process']:
      [ State_11( ~k ) ] --> [ State_111( ~k ), State_112( ~k ) ]
   */
 
-rule (modulo E) Initiator_0_111[color=#ffffff, process="Initiator()",
+rule (modulo E) Initiator_0_111[color=#ffffff, process='Initiator()',
                                 issapicrule, role='Process']:
    [ State_111( ~k.1 ) ] --> [ State_1111( ~k.1 ), State_1112( ~k.1 ) ]
 
   /*
-  rule (modulo AC) Initiator_0_111[color=#ffffff, process="Initiator()",
+  rule (modulo AC) Initiator_0_111[color=#ffffff, process='Initiator()',
                                    issapicrule, role='Process']:
      [ State_111( ~k ) ] --> [ State_1111( ~k ), State_1112( ~k ) ]
   */
 
-rule (modulo E) newna_0_1111[color=#80404f, process="new ~na.1;",
+rule (modulo E) newna_0_1111[color=#80404f, process='new ~na.1;',
                              issapicrule, role='Initiator']:
    [ State_1111( ~k.1 ), Fr( ~na.1 ) ] --> [ State_11111( ~k.1, ~na.1 ) ]
 
   /*
-  rule (modulo AC) newna_0_1111[color=#80404f, process="new ~na.1;",
+  rule (modulo AC) newna_0_1111[color=#80404f, process='new ~na.1;',
                                 issapicrule, role='Initiator']:
      [ State_1111( ~k ), Fr( ~na ) ] --> [ State_11111( ~k, ~na ) ]
   */
 
 rule (modulo E) eventChallengena_0_11111[color=#80404f,
-                                         process="event Challenge( ~na.1 );", issapicrule, role='Initiator']:
+                                         process='event Challenge( ~na.1 );', issapicrule, role='Initiator']:
    [ State_11111( ~k.1, ~na.1 ) ]
   --[ Challenge( ~na.1 ) ]->
    [ State_111111( ~k.1, ~na.1 ) ]
 
   /*
   rule (modulo AC) eventChallengena_0_11111[color=#80404f,
-                                            process="event Challenge( ~na.1 );", issapicrule,
+                                            process='event Challenge( ~na.1 );', issapicrule,
                                             role='Initiator']:
      [ State_11111( ~k, ~na ) ]
     --[ Challenge( ~na ) ]->
      [ State_111111( ~k, ~na ) ]
   */
 
-rule (modulo E) outna_0_111111[color=#80404f, process="out(~na.1);",
+rule (modulo E) outna_0_111111[color=#80404f, process='out(~na.1);',
                                issapicrule, role='Initiator']:
    [ State_111111( ~k.1, ~na.1 ) ]
   -->
    [ State_1111111( ~k.1, ~na.1 ), Out( ~na.1 ) ]
 
   /*
-  rule (modulo AC) outna_0_111111[color=#80404f, process="out(~na.1);",
+  rule (modulo AC) outna_0_111111[color=#80404f, process='out(~na.1);',
                                   issapicrule, role='Initiator']:
      [ State_111111( ~k, ~na ) ] --> [ State_1111111( ~k, ~na ), Out( ~na ) ]
   */
 
 rule (modulo E) inmnb_0_1111111[color=#80404f,
-                                process="in(<m.1, nb.1>);", issapicrule, role='Initiator']:
+                                process='in(<m.1, nb.1>);', issapicrule, role='Initiator']:
    [ State_1111111( ~k.1, ~na.1 ), In( <m.1, nb.1> ) ]
   -->
    [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
 
   /*
   rule (modulo AC) inmnb_0_1111111[color=#80404f,
-                                   process="in(<m.1, nb.1>);", issapicrule, role='Initiator']:
+                                   process='in(<m.1, nb.1>);', issapicrule, role='Initiator']:
      [ State_1111111( ~k, ~na ), In( <m, nb> ) ]
     -->
      [ State_11111111( ~k, ~na, m, nb ) ]
   */
 
 rule (modulo E) ifhknanbm_0_11111111[color=#80404f,
-                                     process="if h((~k.1⊕~na.1⊕nb.1))=m.1", issapicrule, role='Initiator']:
+                                     process='if h((~k.1⊕~na.1⊕nb.1))=m.1', issapicrule, role='Initiator']:
    [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
   --[ Pred_Eq( h((~k.1⊕~na.1⊕nb.1)), m.1 ) ]->
    [ State_111111111( ~k.1, ~na.1, m.1, nb.1 ) ]
 
   /*
   rule (modulo AC) ifhknanbm_0_11111111[color=#80404f,
-                                        process="if h((~k.1⊕~na.1⊕nb.1))=m.1", issapicrule, role='Initiator']:
+                                        process='if h((~k.1⊕~na.1⊕nb.1))=m.1', issapicrule, role='Initiator']:
      [ State_11111111( ~k, ~na, m, nb ) ]
     --[ Pred_Eq( h(z), m ) ]->
      [ State_111111111( ~k, ~na, m, nb ) ]
@@ -615,14 +617,14 @@ rule (modulo E) ifhknanbm_0_11111111[color=#80404f,
   */
 
 rule (modulo E) ifhknanbm_1_11111111[color=#80404f,
-                                     process="if h((~k.1⊕~na.1⊕nb.1))=m.1", issapicrule, role='Initiator']:
+                                     process='if h((~k.1⊕~na.1⊕nb.1))=m.1', issapicrule, role='Initiator']:
    [ State_11111111( ~k.1, ~na.1, m.1, nb.1 ) ]
   --[ Pred_Not_Eq( h((~k.1⊕~na.1⊕nb.1)), m.1 ) ]->
    [ State_111111112( ~k.1, ~na.1, m.1, nb.1 ) ]
 
   /*
   rule (modulo AC) ifhknanbm_1_11111111[color=#80404f,
-                                        process="if h((~k.1⊕~na.1⊕nb.1))=m.1", issapicrule, role='Initiator']:
+                                        process='if h((~k.1⊕~na.1⊕nb.1))=m.1', issapicrule, role='Initiator']:
      [ State_11111111( ~k, ~na, m, nb ) ]
     --[ Pred_Not_Eq( h(z), m ) ]->
      [ State_111111112( ~k, ~na, m, nb ) ]
@@ -674,7 +676,7 @@ rule (modulo E) ifhknanbm_1_11111111[color=#80404f,
   */
 
 rule (modulo E) eventAlivenak_0_111111111[color=#80404f,
-                                          process="event Alive( ~na.1, ~k.1 );", issapicrule,
+                                          process='event Alive( ~na.1, ~k.1 );', issapicrule,
                                           role='Initiator']:
    [ State_111111111( ~k.1, ~na.1, m.1, nb.1 ) ]
   --[ Alive( ~na.1, ~k.1 ) ]->
@@ -682,115 +684,115 @@ rule (modulo E) eventAlivenak_0_111111111[color=#80404f,
 
   /*
   rule (modulo AC) eventAlivenak_0_111111111[color=#80404f,
-                                             process="event Alive( ~na.1, ~k.1 );", issapicrule,
+                                             process='event Alive( ~na.1, ~k.1 );', issapicrule,
                                              role='Initiator']:
      [ State_111111111( ~k, ~na, m, nb ) ]
     --[ Alive( ~na, ~k ) ]->
      [ State_1111111111( ~k, ~na, m, nb ) ]
   */
 
-rule (modulo E) p_0_1111111111[color=#80404f, process="0", issapicrule,
+rule (modulo E) p_0_1111111111[color=#80404f, process='0', issapicrule,
                                role='Initiator']:
    [ State_1111111111( ~k.1, ~na.1, m.1, nb.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1111111111[color=#80404f, process="0", issapicrule,
+  rule (modulo AC) p_0_1111111111[color=#80404f, process='0', issapicrule,
                                   role='Initiator']:
      [ State_1111111111( ~k, ~na, m, nb ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111112[color=#80404f, process="0", issapicrule,
+rule (modulo E) p_0_111111112[color=#80404f, process='0', issapicrule,
                               role='Initiator']:
    [ State_111111112( ~k.1, ~na.1, m.1, nb.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111111112[color=#80404f, process="0", issapicrule,
+  rule (modulo AC) p_0_111111112[color=#80404f, process='0', issapicrule,
                                  role='Initiator']:
      [ State_111111112( ~k, ~na, m, nb ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1112[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_1112[color=#ffffff, process='0', issapicrule,
                          role='Process']:
    [ State_1112( ~k.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1112[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_1112[color=#ffffff, process='0', issapicrule,
                             role='Process']:
      [ State_1112( ~k ) ] --> [ ]
   */
 
-rule (modulo E) Responder_0_112[color=#ffffff, process="Responder()",
+rule (modulo E) Responder_0_112[color=#ffffff, process='Responder()',
                                 issapicrule, role='Process']:
    [ State_112( ~k.1 ) ] --> [ State_1121( ~k.1 ), State_1122( ~k.1 ) ]
 
   /*
-  rule (modulo AC) Responder_0_112[color=#ffffff, process="Responder()",
+  rule (modulo AC) Responder_0_112[color=#ffffff, process='Responder()',
                                    issapicrule, role='Process']:
      [ State_112( ~k ) ] --> [ State_1121( ~k ), State_1122( ~k ) ]
   */
 
-rule (modulo E) inna_0_1121[color=#805d40, process="in(na.2);",
+rule (modulo E) inna_0_1121[color=#805d40, process='in(na.2);',
                             issapicrule, role='Responder']:
    [ State_1121( ~k.1 ), In( na.2 ) ] --> [ State_11211( ~k.1, na.2 ) ]
 
   /*
-  rule (modulo AC) inna_0_1121[color=#805d40, process="in(na.2);",
+  rule (modulo AC) inna_0_1121[color=#805d40, process='in(na.2);',
                                issapicrule, role='Responder']:
      [ State_1121( ~k ), In( na ) ] --> [ State_11211( ~k, na ) ]
   */
 
-rule (modulo E) newnb_0_11211[color=#805d40, process="new ~nb.2;",
+rule (modulo E) newnb_0_11211[color=#805d40, process='new ~nb.2;',
                               issapicrule, role='Responder']:
    [ State_11211( ~k.1, na.2 ), Fr( ~nb.2 ) ]
   -->
    [ State_112111( ~k.1, ~nb.2, na.2 ) ]
 
   /*
-  rule (modulo AC) newnb_0_11211[color=#805d40, process="new ~nb.2;",
+  rule (modulo AC) newnb_0_11211[color=#805d40, process='new ~nb.2;',
                                  issapicrule, role='Responder']:
      [ State_11211( ~k, na ), Fr( ~nb ) ] --> [ State_112111( ~k, ~nb, na ) ]
   */
 
-rule (modulo E) ifnazero_0_112111[color=#805d40, process="if na.2=zero",
+rule (modulo E) ifnazero_0_112111[color=#805d40, process='if na.2=zero',
                                   issapicrule, role='Responder']:
    [ State_112111( ~k.1, ~nb.2, na.2 ) ]
   --[ Pred_Eq( na.2, zero ) ]->
    [ State_1121111( ~k.1, ~nb.2, na.2 ) ]
 
   /*
-  rule (modulo AC) ifnazero_0_112111[color=#805d40, process="if na.2=zero",
+  rule (modulo AC) ifnazero_0_112111[color=#805d40, process='if na.2=zero',
                                      issapicrule, role='Responder']:
      [ State_112111( ~k, ~nb, na ) ]
     --[ Pred_Eq( na, zero ) ]->
      [ State_1121111( ~k, ~nb, na ) ]
   */
 
-rule (modulo E) ifnazero_1_112111[color=#805d40, process="if na.2=zero",
+rule (modulo E) ifnazero_1_112111[color=#805d40, process='if na.2=zero',
                                   issapicrule, role='Responder']:
    [ State_112111( ~k.1, ~nb.2, na.2 ) ]
   --[ Pred_Not_Eq( na.2, zero ) ]->
    [ State_1121112( ~k.1, ~nb.2, na.2 ) ]
 
   /*
-  rule (modulo AC) ifnazero_1_112111[color=#805d40, process="if na.2=zero",
+  rule (modulo AC) ifnazero_1_112111[color=#805d40, process='if na.2=zero',
                                      issapicrule, role='Responder']:
      [ State_112111( ~k, ~nb, na ) ]
     --[ Pred_Not_Eq( na, zero ) ]->
      [ State_1121112( ~k, ~nb, na ) ]
   */
 
-rule (modulo E) p_0_1121111[color=#805d40, process="0", issapicrule,
+rule (modulo E) p_0_1121111[color=#805d40, process='0', issapicrule,
                             role='Responder']:
    [ State_1121111( ~k.1, ~nb.2, na.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1121111[color=#805d40, process="0", issapicrule,
+  rule (modulo AC) p_0_1121111[color=#805d40, process='0', issapicrule,
                                role='Responder']:
      [ State_1121111( ~k, ~nb, na ) ] --> [ ]
   */
 
 rule (modulo E) eventNeqForExecnazero_0_1121112[color=#805d40,
-                                                process="event NeqForExec( na.2, zero );", issapicrule,
+                                                process='event NeqForExec( na.2, zero );', issapicrule,
                                                 role='Responder']:
    [ State_1121112( ~k.1, ~nb.2, na.2 ) ]
   --[ NeqForExec( na.2, zero ) ]->
@@ -798,7 +800,7 @@ rule (modulo E) eventNeqForExecnazero_0_1121112[color=#805d40,
 
   /*
   rule (modulo AC) eventNeqForExecnazero_0_1121112[color=#805d40,
-                                                   process="event NeqForExec( na.2, zero );", issapicrule,
+                                                   process='event NeqForExec( na.2, zero );', issapicrule,
                                                    role='Responder']:
      [ State_1121112( ~k, ~nb, na ) ]
     --[ NeqForExec( na, zero ) ]->
@@ -806,14 +808,14 @@ rule (modulo E) eventNeqForExecnazero_0_1121112[color=#805d40,
   */
 
 rule (modulo E) eventResponsek_0_11211121[color=#805d40,
-                                          process="event Response( ~k.1 );", issapicrule, role='Responder']:
+                                          process='event Response( ~k.1 );', issapicrule, role='Responder']:
    [ State_11211121( ~k.1, ~nb.2, na.2 ) ]
   --[ Response( ~k.1 ) ]->
    [ State_112111211( ~k.1, ~nb.2, na.2 ) ]
 
   /*
   rule (modulo AC) eventResponsek_0_11211121[color=#805d40,
-                                             process="event Response( ~k.1 );", issapicrule,
+                                             process='event Response( ~k.1 );', issapicrule,
                                              role='Responder']:
      [ State_11211121( ~k, ~nb, na ) ]
     --[ Response( ~k ) ]->
@@ -821,7 +823,7 @@ rule (modulo E) eventResponsek_0_11211121[color=#805d40,
   */
 
 rule (modulo E) outhknbnanb_0_112111211[color=#805d40,
-                                        process="out(<h((~k.1⊕~nb.2⊕na.2)), ~nb.2>);", issapicrule,
+                                        process='out(<h((~k.1⊕~nb.2⊕na.2)), ~nb.2>);', issapicrule,
                                         role='Responder']:
    [ State_112111211( ~k.1, ~nb.2, na.2 ) ]
   -->
@@ -832,7 +834,7 @@ rule (modulo E) outhknbnanb_0_112111211[color=#805d40,
 
   /*
   rule (modulo AC) outhknbnanb_0_112111211[color=#805d40,
-                                           process="out(<h((~k.1⊕~nb.2⊕na.2)), ~nb.2>);", issapicrule,
+                                           process='out(<h((~k.1⊕~nb.2⊕na.2)), ~nb.2>);', issapicrule,
                                            role='Responder']:
      [ State_112111211( ~k, ~nb, na ) ]
     -->
@@ -884,22 +886,22 @@ rule (modulo E) outhknbnanb_0_112111211[color=#805d40,
        z     = (x.8⊕~k.9)
   */
 
-rule (modulo E) p_0_1121112111[color=#805d40, process="0", issapicrule,
+rule (modulo E) p_0_1121112111[color=#805d40, process='0', issapicrule,
                                role='Responder']:
    [ State_1121112111( ~k.1, ~nb.2, na.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1121112111[color=#805d40, process="0", issapicrule,
+  rule (modulo AC) p_0_1121112111[color=#805d40, process='0', issapicrule,
                                   role='Responder']:
      [ State_1121112111( ~k, ~nb, na ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1122[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_1122[color=#ffffff, process='0', issapicrule,
                          role='Process']:
    [ State_1122( ~k.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1122[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_1122[color=#ffffff, process='0', issapicrule,
                             role='Process']:
      [ State_1122( ~k ) ] --> [ ]
   */
@@ -921,9 +923,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -935,7 +937,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 1.16s
+  processing time: 1.08s
   
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)

@@ -1,0 +1,57 @@
+theory EncryptionComparison
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, sdec/2, senc/2, snd/1
+equations:
+    fst(<x.1, x.2>) = x.1,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+rule (modulo E) builtin_encrypt_decrypt:
+   [ In( senc(x, k) ), In( k ) ] --[ BuiltinDecrypted( x ) ]-> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/derivation-checks/symEnc.spthy
+
+  output:          examples/features/derivation-checks/symEnc.spthy.tmp
+  processing time: 0.02s
+  
+
+==============================================================================
+*/

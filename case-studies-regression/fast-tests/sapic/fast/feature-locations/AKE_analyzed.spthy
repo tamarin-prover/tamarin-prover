@@ -1,4 +1,6 @@
-theory AKE begin
+theory AKE
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -582,9 +584,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
-Compiled at: 2025-09-08 09:04:28.158015016 UTC
+Maude version 3.5.1
+Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 09:21:12.905860042 UTC
 */
 
 end
@@ -596,7 +598,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 1.12s
+  processing time: 0.62s
   
   can_run_p (exists-trace): verified (3 steps)
   can_run_v (exists-trace): falsified - no trace found (9 steps)

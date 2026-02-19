@@ -1,0 +1,3 @@
+# Ignore files compiled from front-end
+css/intdot-*.css
+js/intdot-*.js

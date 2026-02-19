@@ -1,0 +1,9 @@
+dynamic-graph>iframe {
+    border: 1px solid black;
+    width: 100%;
+    display: block;
+}
+
+dynamic-graph>button {
+    margin-top: 10px;
+}

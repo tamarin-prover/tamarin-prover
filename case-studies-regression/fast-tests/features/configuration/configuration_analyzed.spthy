@@ -1,4 +1,8 @@
-theory TestConfiguration begin
+theory TestConfiguration
+
+configuration: "--auto-sources --stop-on-trace=BFS"
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,8 +12,6 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
-
-configuration: "--auto-sources --stop-on-trace=BFS"
 
 rule (modulo E) Testing:
    [ Fr( x ) ] --[ Test( x ) ]-> [ F1( x ) ]
@@ -36,9 +38,9 @@ SOLVED // trace found
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
-Compiled at: 2025-09-08 09:04:28.158015016 UTC
+Maude version 3.5.1
+Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 09:21:12.905860042 UTC
 */
 
 end
@@ -50,7 +52,7 @@ summary of summaries:
 analyzed: examples/features//configuration/configuration.spthy
 
   output:          examples/features//configuration/configuration.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.03s
   
   test_lemma (exists-trace): verified (2 steps)
 

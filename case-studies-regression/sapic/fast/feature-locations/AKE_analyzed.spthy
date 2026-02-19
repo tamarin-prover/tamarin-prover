@@ -1,4 +1,6 @@
-theory AKE begin
+theory AKE
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -197,14 +199,14 @@ restriction Restr_ReportRule_1:
   "∀ x #NOW. (Restr_ReportRule_1( x ) @ #NOW) ⇒ (¬(x = 'loc'))"
   // safety formula
 
-rule (modulo E) ReportRule[color=#ffffff, process="|", issapicrule,
+rule (modulo E) ReportRule[color=#ffffff, process='|', issapicrule,
                            role='Process']:
    [ In( <x, loc> ) ]
   --[ Restr_ReportRule_1( first(loc) ) ]->
    [ Out( rep(x, loc) ) ]
 
   /*
-  rule (modulo AC) ReportRule[color=#ffffff, process="|", issapicrule,
+  rule (modulo AC) ReportRule[color=#ffffff, process='|', issapicrule,
                               role='Process']:
      [ In( <x, loc> ) ] --[ Restr_ReportRule_1( z ) ]-> [ Out( rep(x, loc) ) ]
     variants (modulo AC)
@@ -215,92 +217,92 @@ rule (modulo E) ReportRule[color=#ffffff, process="|", issapicrule,
        z     = x.4
   */
 
-rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='|', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+rule (modulo E) p_0_[color=#ffffff, process='|', issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_1[color=#ffffff, process='!', issapicrule,
                       role='Process']:
    [ State_1( ) ] --> [ !Semistate_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
                       role='Process']:
    [ !Semistate_11( ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) r_0_11[color=#ffffff, process="r()", issapicrule,
+rule (modulo E) r_0_11[color=#ffffff, process='r()', issapicrule,
                        role='Process']:
    [ State_11( ) ] --> [ State_111( ), State_112( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inpkV_0_111[color=#405280, process="in(pkV.1);",
+rule (modulo E) inpkV_0_111[color=#405280, process='in(pkV.1);',
                             issapicrule, role='r']:
    [ State_111( ), In( pkV.1 ) ] --> [ State_1111( pkV.1 ) ]
 
   /*
-  rule (modulo AC) inpkV_0_111[color=#405280, process="in(pkV.1);",
+  rule (modulo AC) inpkV_0_111[color=#405280, process='in(pkV.1);',
                                issapicrule, role='r']:
      [ State_111( ), In( pkV ) ] --> [ State_1111( pkV ) ]
   */
 
-rule (modulo E) p_0_1111[color=#405280, process="!", issapicrule,
+rule (modulo E) p_0_1111[color=#405280, process='!', issapicrule,
                          role='r']:
    [ State_1111( pkV.1 ) ] --> [ !Semistate_11111( pkV.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111[color=#405280, process="!", issapicrule,
+  rule (modulo AC) p_0_1111[color=#405280, process='!', issapicrule,
                             role='r']:
      [ State_1111( pkV ) ] --> [ !Semistate_11111( pkV ) ]
   */
 
-rule (modulo E) p_1_1111[color=#405280, process="!", issapicrule,
+rule (modulo E) p_1_1111[color=#405280, process='!', issapicrule,
                          role='r']:
    [ !Semistate_11111( pkV.1 ) ] --> [ State_11111( pkV.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111[color=#405280, process="!", issapicrule,
+  rule (modulo AC) p_1_1111[color=#405280, process='!', issapicrule,
                             role='r']:
      [ !Semistate_11111( pkV ) ] --> [ State_11111( pkV ) ]
   */
 
-rule (modulo E) newk_0_11111[color=#405280, process="new k.1;",
+rule (modulo E) newk_0_11111[color=#405280, process='new k.1;',
                              issapicrule, role='r']:
    [ State_11111( pkV.1 ), Fr( k.1 ) ] --> [ State_111111( k.1, pkV.1 ) ]
 
   /*
-  rule (modulo AC) newk_0_11111[color=#405280, process="new k.1;",
+  rule (modulo AC) newk_0_11111[color=#405280, process='new k.1;',
                                 issapicrule, role='r']:
      [ State_11111( pkV ), Fr( k ) ] --> [ State_111111( k, pkV ) ]
   */
 
 rule (modulo E) eventSessionPpkVk_0_111111[color=#405280,
-                                           process="event SessionP( pkV.1, k.1 );", issapicrule, role='r']:
+                                           process='event SessionP( pkV.1, k.1 );', issapicrule, role='r']:
    [ State_111111( k.1, pkV.1 ) ]
   --[ SessionP( pkV.1, k.1 ) ]->
    [ State_1111111( k.1, pkV.1 ) ]
 
   /*
   rule (modulo AC) eventSessionPpkVk_0_111111[color=#405280,
-                                              process="event SessionP( pkV.1, k.1 );", issapicrule, role='r']:
+                                              process='event SessionP( pkV.1, k.1 );', issapicrule, role='r']:
      [ State_111111( k, pkV ) ]
     --[ SessionP( pkV, k ) ]->
      [ State_1111111( k, pkV ) ]
   */
 
 rule (modulo E) eventPoutputaenckpkVreportaenckpkV_0_1111111[color=#405280,
-                                                             process="event Poutput( aenc(k.1, pkV.1), report(aenc(k.1, pkV.1)) );",
+                                                             process='event Poutput( aenc(k.1, pkV.1), report(aenc(k.1, pkV.1)) );',
                                                              issapicrule, role='r']:
    [ State_1111111( k.1, pkV.1 ) ]
   --[ Poutput( aenc(k.1, pkV.1), report(aenc(k.1, pkV.1)) ) ]->
@@ -308,7 +310,7 @@ rule (modulo E) eventPoutputaenckpkVreportaenckpkV_0_1111111[color=#405280,
 
   /*
   rule (modulo AC) eventPoutputaenckpkVreportaenckpkV_0_1111111[color=#405280,
-                                                                process="event Poutput( aenc(k.1, pkV.1), report(aenc(k.1, pkV.1)) );",
+                                                                process='event Poutput( aenc(k.1, pkV.1), report(aenc(k.1, pkV.1)) );',
                                                                 issapicrule, role='r']:
      [ State_1111111( k, pkV ) ]
     --[ Poutput( aenc(k, pkV), report(aenc(k, pkV)) ) ]->
@@ -316,7 +318,7 @@ rule (modulo E) eventPoutputaenckpkVreportaenckpkV_0_1111111[color=#405280,
   */
 
 rule (modulo E) outaenckpkVreportaenckpkV_0_11111111[color=#405280,
-                                                     process="out(<aenc(k.1, pkV.1), report(aenc(k.1, pkV.1))>);",
+                                                     process='out(<aenc(k.1, pkV.1), report(aenc(k.1, pkV.1))>);',
                                                      issapicrule, role='r']:
    [ State_11111111( k.1, pkV.1 ) ]
   -->
@@ -327,7 +329,7 @@ rule (modulo E) outaenckpkVreportaenckpkV_0_11111111[color=#405280,
 
   /*
   rule (modulo AC) outaenckpkVreportaenckpkV_0_11111111[color=#405280,
-                                                        process="out(<aenc(k.1, pkV.1), report(aenc(k.1, pkV.1))>);",
+                                                        process='out(<aenc(k.1, pkV.1), report(aenc(k.1, pkV.1))>);',
                                                         issapicrule, role='r']:
      [ State_11111111( k, pkV ) ]
     -->
@@ -335,52 +337,52 @@ rule (modulo E) outaenckpkVreportaenckpkV_0_11111111[color=#405280,
      ]
   */
 
-rule (modulo E) p_0_111111111[color=#405280, process="0", issapicrule,
+rule (modulo E) p_0_111111111[color=#405280, process='0', issapicrule,
                               role='r']:
    [ State_111111111( k.1, pkV.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111111111[color=#405280, process="0", issapicrule,
+  rule (modulo AC) p_0_111111111[color=#405280, process='0', issapicrule,
                                  role='r']:
      [ State_111111111( k, pkV ) ] --> [ ]
   */
 
-rule (modulo E) p_0_112[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_112[color=#ffffff, process='0', issapicrule,
                         role='Process']:
    [ State_112( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process='!', issapicrule,
                       role='Process']:
    [ State_2( ) ] --> [ !Semistate_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_2[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_2[color=#ffffff, process='!', issapicrule,
                       role='Process']:
    [ !Semistate_21( ) ] --> [ State_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) v_0_21[color=#ffffff, process="v()", issapicrule,
+rule (modulo E) v_0_21[color=#ffffff, process='v()', issapicrule,
                        role='Process']:
    [ State_21( ) ] --> [ State_211( ), State_212( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) newskVskey_0_211[color=#658040,
-                                 process="new skV.1:skey;", issapicrule, role='v']:
+                                 process='new skV.1:skey;', issapicrule, role='v']:
    [ State_211( ), Fr( skV.1 ) ] --> [ State_2111( skV.1 ) ]
 
   /*
   rule (modulo AC) newskVskey_0_211[color=#658040,
-                                    process="new skV.1:skey;", issapicrule, role='v']:
+                                    process='new skV.1:skey;', issapicrule, role='v']:
      [ State_211( ), Fr( skV ) ] --> [ State_2111( skV ) ]
   */
 
 rule (modulo E) eventHonestPpkskVskeypubkey_0_2111[color=#658040,
-                                                   process="event HonestP( pk(skV.1:skey), 'pubkey' );",
+                                                   process='event HonestP( pk(skV.1:skey), 'pubkey' );',
                                                    issapicrule, role='v']:
    [ State_2111( skV.1 ) ]
   --[ HonestP( pk(skV.1), 'pubkey' ) ]->
@@ -388,7 +390,7 @@ rule (modulo E) eventHonestPpkskVskeypubkey_0_2111[color=#658040,
 
   /*
   rule (modulo AC) eventHonestPpkskVskeypubkey_0_2111[color=#658040,
-                                                      process="event HonestP( pk(skV.1:skey), 'pubkey' );",
+                                                      process='event HonestP( pk(skV.1:skey), 'pubkey' );',
                                                       issapicrule, role='v']:
      [ State_2111( skV ) ]
     --[ HonestP( pk(skV), 'pubkey' ) ]->
@@ -396,45 +398,45 @@ rule (modulo E) eventHonestPpkskVskeypubkey_0_2111[color=#658040,
   */
 
 rule (modulo E) outpkskVskey_0_21111[color=#658040,
-                                     process="out(pk(skV.1:skey));", issapicrule, role='v']:
+                                     process='out(pk(skV.1:skey));', issapicrule, role='v']:
    [ State_21111( skV.1 ) ] --> [ State_211111( skV.1 ), Out( pk(skV.1) ) ]
 
   /*
   rule (modulo AC) outpkskVskey_0_21111[color=#658040,
-                                        process="out(pk(skV.1:skey));", issapicrule, role='v']:
+                                        process='out(pk(skV.1:skey));', issapicrule, role='v']:
      [ State_21111( skV ) ] --> [ State_211111( skV ), Out( pk(skV) ) ]
   */
 
 rule (modulo E) incyphersigned_0_211111[color=#658040,
-                                        process="in(<cypher.1, signed.2>);", issapicrule, role='v']:
+                                        process='in(<cypher.1, signed.2>);', issapicrule, role='v']:
    [ State_211111( skV.1 ), In( <cypher.1, signed.2> ) ]
   -->
    [ State_2111111( cypher.1, skV.1, signed.2 ) ]
 
   /*
   rule (modulo AC) incyphersigned_0_211111[color=#658040,
-                                           process="in(<cypher.1, signed.2>);", issapicrule, role='v']:
+                                           process='in(<cypher.1, signed.2>);', issapicrule, role='v']:
      [ State_211111( skV ), In( <cypher, signed> ) ]
     -->
      [ State_2111111( cypher, skV, signed ) ]
   */
 
 rule (modulo E) eventTest_0_2111111[color=#658040,
-                                    process="event Test( );", issapicrule, role='v']:
+                                    process='event Test( );', issapicrule, role='v']:
    [ State_2111111( cypher.1, skV.1, signed.2 ) ]
   --[ Test( ) ]->
    [ State_21111111( cypher.1, skV.1, signed.2 ) ]
 
   /*
   rule (modulo AC) eventTest_0_2111111[color=#658040,
-                                       process="event Test( );", issapicrule, role='v']:
+                                       process='event Test( );', issapicrule, role='v']:
      [ State_2111111( cypher, skV, signed ) ]
     --[ Test( ) ]->
      [ State_21111111( cypher, skV, signed ) ]
   */
 
 rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
-                                                              process="if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)",
+                                                              process='if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)',
                                                               issapicrule, role='v']:
    [ State_21111111( cypher.1, skV.1, signed.2 ) ]
   --[ Pred_Eq( cypher.1, check_rep(signed.2, <'loc', pk(skV.1)>) ) ]->
@@ -442,7 +444,7 @@ rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
 
   /*
   rule (modulo AC) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
-                                                                 process="if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)",
+                                                                 process='if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)',
                                                                  issapicrule, role='v']:
      [ State_21111111( cypher, skV, signed ) ]
     --[ Pred_Eq( cypher, z ) ]->
@@ -460,7 +462,7 @@ rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_0_21111111[color=#658040,
   */
 
 rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#658040,
-                                                              process="if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)",
+                                                              process='if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)',
                                                               issapicrule, role='v']:
    [ State_21111111( cypher.1, skV.1, signed.2 ) ]
   --[ Pred_Not_Eq( cypher.1, check_rep(signed.2, <'loc', pk(skV.1)>) ) ]->
@@ -468,7 +470,7 @@ rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#658040,
 
   /*
   rule (modulo AC) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#658040,
-                                                                 process="if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)",
+                                                                 process='if cypher.1=check_rep(signed.2, <'loc', pk(skV.1:skey)>)',
                                                                  issapicrule, role='v']:
      [ State_21111111( cypher, skV, signed ) ]
     --[ Pred_Not_Eq( cypher, z ) ]->
@@ -486,8 +488,8 @@ rule (modulo E) ifcyphercheckrepsignedlocpkskVskey_1_21111111[color=#658040,
   */
 
 rule (modulo E) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[color=#658040,
-                                                                             process="event Voutput( aenc(adec(cypher.1, skV.1:skey), pk(skV.1:skey)), signed.2
-);",
+                                                                             process='event Voutput( aenc(adec(cypher.1, skV.1:skey), pk(skV.1:skey)), signed.2
+);',
                                                                              issapicrule, role='v']:
    [ State_211111111( cypher.1, skV.1, signed.2 ) ]
   --[ Voutput( aenc(adec(cypher.1, skV.1), pk(skV.1)), signed.2 ) ]->
@@ -495,8 +497,8 @@ rule (modulo E) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[col
 
   /*
   rule (modulo AC) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[color=#658040,
-                                                                                process="event Voutput( aenc(adec(cypher.1, skV.1:skey), pk(skV.1:skey)), signed.2
-);",
+                                                                                process='event Voutput( aenc(adec(cypher.1, skV.1:skey), pk(skV.1:skey)), signed.2
+);',
                                                                                 issapicrule, role='v']:
      [ State_211111111( cypher, skV, signed ) ]
     --[ Voutput( aenc(z, pk(skV)), signed ) ]->
@@ -514,7 +516,7 @@ rule (modulo E) eventVoutputaencadeccypherskVskeypkskVskeysigned_0_211111111[col
   */
 
 rule (modulo E) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#658040,
-                                                                     process="event SessionV( pk(skV.1:skey), adec(cypher.1, skV.1:skey) );",
+                                                                     process='event SessionV( pk(skV.1:skey), adec(cypher.1, skV.1:skey) );',
                                                                      issapicrule, role='v']:
    [ State_2111111111( cypher.1, skV.1, signed.2 ) ]
   --[ SessionV( pk(skV.1), adec(cypher.1, skV.1) ) ]->
@@ -522,7 +524,7 @@ rule (modulo E) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#6580
 
   /*
   rule (modulo AC) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#658040,
-                                                                        process="event SessionV( pk(skV.1:skey), adec(cypher.1, skV.1:skey) );",
+                                                                        process='event SessionV( pk(skV.1:skey), adec(cypher.1, skV.1:skey) );',
                                                                         issapicrule, role='v']:
      [ State_2111111111( cypher, skV, signed ) ]
     --[ SessionV( pk(skV), z ) ]->
@@ -539,27 +541,27 @@ rule (modulo E) eventSessionVpkskVskeyadeccypherskVskey_0_2111111111[color=#6580
        z     = x.7
   */
 
-rule (modulo E) p_0_21111111111[color=#658040, process="0", issapicrule,
+rule (modulo E) p_0_21111111111[color=#658040, process='0', issapicrule,
                                 role='v']:
    [ State_21111111111( cypher.1, skV.1, signed.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_21111111111[color=#658040, process="0", issapicrule,
+  rule (modulo AC) p_0_21111111111[color=#658040, process='0', issapicrule,
                                    role='v']:
      [ State_21111111111( cypher, skV, signed ) ] --> [ ]
   */
 
-rule (modulo E) p_0_211111112[color=#658040, process="0", issapicrule,
+rule (modulo E) p_0_211111112[color=#658040, process='0', issapicrule,
                               role='v']:
    [ State_211111112( cypher.1, skV.1, signed.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_211111112[color=#658040, process="0", issapicrule,
+  rule (modulo AC) p_0_211111112[color=#658040, process='0', issapicrule,
                                  role='v']:
      [ State_211111112( cypher, skV, signed ) ] --> [ ]
   */
 
-rule (modulo E) p_0_212[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_212[color=#ffffff, process='0', issapicrule,
                         role='Process']:
    [ State_212( ) ] --> [ ]
 
@@ -582,9 +584,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -596,7 +598,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AKE.spthy
 
   output:          examples/sapic/fast/feature-locations/AKE.spthy.tmp
-  processing time: 0.45s
+  processing time: 0.29s
   
   can_run_p (exists-trace): verified (3 steps)
   can_run_v (exists-trace): falsified - no trace found (9 steps)

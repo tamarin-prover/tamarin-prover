@@ -1,4 +1,6 @@
-theory OperatorPrecedenceLookup begin
+theory OperatorPrecedenceLookup
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -37,7 +39,7 @@ qed
 
 
 
-rule (modulo E) Init[color=#ffffff, process="if True( )", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='if True( )', issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -47,7 +49,7 @@ restriction Restr_ifTrue_0__1:
   "∀ #NOW. (Restr_ifTrue_0__1( ) @ #NOW) ⇒ (⊤)"
   // safety formula
 
-rule (modulo E) ifTrue_0_[color=#ffffff, process="if True( )",
+rule (modulo E) ifTrue_0_[color=#ffffff, process='if True( )',
                           issapicrule, role='Process']:
    [ State_( ) ] --[ Restr_ifTrue_0__1( ) ]-> [ State_1( ) ]
 
@@ -57,63 +59,63 @@ restriction Restr_ifTrue_1__1:
   "∀ #NOW. (Restr_ifTrue_1__1( ) @ #NOW) ⇒ (¬(⊤))"
   // safety formula
 
-rule (modulo E) ifTrue_1_[color=#ffffff, process="if True( )",
+rule (modulo E) ifTrue_1_[color=#ffffff, process='if True( )',
                           issapicrule, role='Process']:
    [ State_( ) ] --[ Restr_ifTrue_1__1( ) ]-> [ State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) eventPositiveBranch_0_1[color=#ffffff,
-                                        process="event PositiveBranch( );", issapicrule, role='Process']:
+                                        process='event PositiveBranch( );', issapicrule, role='Process']:
    [ State_1( ) ] --[ PositiveBranch( ) ]-> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) lookupxasx_0_11[color=#ffffff,
-                                process="lookup 'x' as x.1", derivchecks, issapicrule, role='Process']:
+                                process='lookup 'x' as x.1', no_derivcheck, issapicrule, role='Process']:
    [ State_11( ) ] --[ IsIn( 'x', x.1 ) ]-> [ State_111( x.1 ) ]
 
   /*
   rule (modulo AC) lookupxasx_0_11[color=#ffffff,
-                                   process="lookup 'x' as x.1", derivchecks, issapicrule, role='Process']:
+                                   process='lookup 'x' as x.1', no_derivcheck, issapicrule, role='Process']:
      [ State_11( ) ] --[ IsIn( 'x', x ) ]-> [ State_111( x ) ]
   */
 
 rule (modulo E) lookupxasx_1_11[color=#ffffff,
-                                process="lookup 'x' as x.1", derivchecks, issapicrule, role='Process']:
+                                process='lookup 'x' as x.1', no_derivcheck, issapicrule, role='Process']:
    [ State_11( ) ] --[ IsNotSet( 'x' ) ]-> [ State_112( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
                         role='Process']:
    [ State_111( x.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) p_0_111[color=#ffffff, process='0', issapicrule,
                            role='Process']:
      [ State_111( x ) ] --> [ ]
   */
 
 rule (modulo E) eventLookupElse_0_112[color=#ffffff,
-                                      process="event LookupElse( );", issapicrule, role='Process']:
+                                      process='event LookupElse( );', issapicrule, role='Process']:
    [ State_112( ) ] --[ LookupElse( ) ]-> [ State_1121( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertyy_0_1121[color=#ffffff, process="insert 'y','y';",
+rule (modulo E) insertyy_0_1121[color=#ffffff, process='insert 'y','y';',
                                 issapicrule, role='Process']:
    [ State_1121( ) ] --[ Insert( 'y', 'y' ) ]-> [ State_11211( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_11211[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_11211[color=#ffffff, process='0', issapicrule,
                           role='Process']:
    [ State_11211( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process='0', issapicrule,
                       role='Process']:
    [ State_2( ) ] --> [ ]
 
@@ -141,9 +143,9 @@ restriction single_session:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -155,7 +157,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.03s
   
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 

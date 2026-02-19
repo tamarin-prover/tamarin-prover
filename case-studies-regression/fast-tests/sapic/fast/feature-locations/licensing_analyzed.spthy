@@ -1,4 +1,6 @@
-theory licensing begin
+theory licensing
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1064,33 +1066,14 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule inpkskV_0_11111: 
-Failed to derive Variable(s): skV.1
-
-Rule insencprgprogsharedkey_0_111111111: 
-Failed to derive Variable(s): prog2.1
-
-Rule insenctkntokensharedkey_0_111111111111: 
-Failed to derive Variable(s): token.1
-
-Rule insencaskxtkntokensharedkey_0_1121111111111111: 
-Failed to derive Variable(s): token2.1, x.2
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
-Compiled at: 2025-09-08 09:04:28.158015016 UTC
+Maude version 3.5.1
+Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 09:21:12.905860042 UTC
 */
 
 end
@@ -1102,10 +1085,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 5.93s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 2.68s
   
   attested_comput (all-traces): verified (6 steps)
   unique (all-traces): verified (7 steps)
