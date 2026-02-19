@@ -155,16 +155,17 @@ import Theory.Sapic
 data ParserState = PState
        { sig  :: MaudeSig              -- Current signature
        , flags ::  S.Set String        -- Defined flags for pre-processing
+       , reservedBuiltinNames :: [String] -- Reserved function names from enabled builtins
        }
        deriving( Eq, Ord, Show )
 
 -- | A monoid instance to combine parser signatures.
 instance Semigroup ParserState where
- PState sig1 flags1 <> PState sig2 flags2 =
-   PState (sig1 <> sig2) (flags1 `S.union` flags2)
+ PState sig1 flags1 rbn1 <> PState sig2 flags2 rbn2 =
+   PState (sig1 <> sig2) (flags1 `S.union` flags2) (rbn1 ++ rbn2)
 
 instance Monoid ParserState where
-  mempty = PState {sig=mempty, flags = S.empty}
+  mempty = PState {sig=mempty, flags = S.empty, reservedBuiltinNames = []}
 
 mkStateSig :: MaudeSig -> ParserState
 mkStateSig sign = mempty {sig=sign}
