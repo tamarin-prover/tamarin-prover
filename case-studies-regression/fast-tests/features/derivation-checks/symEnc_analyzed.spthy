@@ -1,4 +1,6 @@
-theory EncryptionComparison begin
+theory EncryptionComparison
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -34,15 +36,15 @@ rule (modulo E) builtin_encrypt_decrypt:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: 1a1dc3f231a8c9bde674df4f0407fd9484c63935 (with uncommited changes), branch: fix-macros-expansion
-Compiled at: 2025-07-02 11:45:41.586397637 UTC
+Maude version 3.5.1
+Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 09:21:12.905860042 UTC
 */
 
 end
 /* Output
 maude tool: 'maude'
- checking version: 3.4. OK.
+ checking version: 3.5.1. OK.
  checking installation: OK.
 [Theory EncryptionComparison] Theory loaded
 [Theory EncryptionComparison] Theory translated
@@ -56,7 +58,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/symEnc.spthy
 
   output:          examples/features/derivation-checks/symEnc.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.07s
   
 
 ==============================================================================
