@@ -3311,7 +3311,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/OTP.spthy
 
   output:          examples/sapic/fast/feature-locations/OTP.spthy.tmp
-  processing time: 45.49s
+  processing time: 44.65s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

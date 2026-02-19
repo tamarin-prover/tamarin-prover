@@ -5986,7 +5986,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ct.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ct.spthy.tmp
-  processing time: 22.32s
+  processing time: 20.81s
   
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!

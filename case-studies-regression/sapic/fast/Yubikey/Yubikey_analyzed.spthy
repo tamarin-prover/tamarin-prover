@@ -2408,7 +2408,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 11.73s
+  processing time: 10.19s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

@@ -624,7 +624,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ocsps-msr.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ocsps-msr.spthy.tmp
-  processing time: 0.29s
+  processing time: 0.30s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

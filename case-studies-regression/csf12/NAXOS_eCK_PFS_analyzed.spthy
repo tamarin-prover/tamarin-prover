@@ -340,7 +340,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 1.21s
+  processing time: 1.07s
   
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 

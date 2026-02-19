@@ -23781,7 +23781,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/PKCS11/pkcs11-templates.spthy
 
   output:          examples/sapic/slow/PKCS11/pkcs11-templates.spthy.tmp
-  processing time: 98.34s
+  processing time: 99.08s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

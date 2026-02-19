@@ -15971,7 +15971,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy
 
   output:          examples/sapic/slow/encWrapDecUnwrap/encwrapdecunwrap.spthy.tmp
-  processing time: 53.89s
+  processing time: 54.72s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

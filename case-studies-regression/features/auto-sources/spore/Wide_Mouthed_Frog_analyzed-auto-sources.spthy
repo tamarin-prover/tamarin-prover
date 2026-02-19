@@ -465,7 +465,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 0.33s
+  processing time: 0.30s
   
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)

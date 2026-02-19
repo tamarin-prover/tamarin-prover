@@ -124225,7 +124225,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_receipt_freeness.spthy
 
   output:          examples/post17/okamoto_receipt_freeness.spthy.tmp
-  processing time: 2228.63s
+  processing time: 353.94s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

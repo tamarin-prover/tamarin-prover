@@ -632,7 +632,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/MoedersheimWebService/set-abstr.spthy
 
   output:          examples/sapic/fast/MoedersheimWebService/set-abstr.spthy.tmp
-  processing time: 0.47s
+  processing time: 0.46s
   
   Knows_Honest_Key_imp_Revoked (all-traces): verified (8 steps)
 

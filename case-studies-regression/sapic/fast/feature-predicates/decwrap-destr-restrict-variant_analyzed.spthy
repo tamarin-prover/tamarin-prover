@@ -1268,7 +1268,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict-variant.spthy.tmp
-  processing time: 1.00s
+  processing time: 0.97s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

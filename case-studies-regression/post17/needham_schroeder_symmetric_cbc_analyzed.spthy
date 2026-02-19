@@ -147,7 +147,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 5.93s
+  processing time: 5.82s
   
   secrecy (all-traces): falsified - found trace (8 steps)
 

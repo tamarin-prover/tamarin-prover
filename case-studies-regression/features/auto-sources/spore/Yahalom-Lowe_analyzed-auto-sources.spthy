@@ -1087,7 +1087,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Yahalom-Lowe.spthy
 
   output:          examples/features/auto-sources/spore/Yahalom-Lowe.spthy.tmp
-  processing time: 1.02s
+  processing time: 1.08s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

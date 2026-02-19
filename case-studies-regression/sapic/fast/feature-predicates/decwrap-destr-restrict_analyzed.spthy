@@ -1254,7 +1254,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-restrict.spthy.tmp
-  processing time: 0.83s
+  processing time: 0.80s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

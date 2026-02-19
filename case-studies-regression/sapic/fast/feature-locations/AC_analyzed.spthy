@@ -889,7 +889,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC.spthy
 
   output:          examples/sapic/fast/feature-locations/AC.spthy.tmp
-  processing time: 0.75s
+  processing time: 0.79s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

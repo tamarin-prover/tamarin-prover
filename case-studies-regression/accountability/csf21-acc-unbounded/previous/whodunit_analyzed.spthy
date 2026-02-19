@@ -47874,7 +47874,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/whodunit.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/whodunit.spthy.tmp
-  processing time: 2101.37s
+  processing time: 1166.89s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

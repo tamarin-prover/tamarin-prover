@@ -1085,7 +1085,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/licensing.spthy
 
   output:          examples/sapic/fast/feature-locations/licensing.spthy.tmp
-  processing time: 1.23s
+  processing time: 1.19s
   
   attested_comput (all-traces): verified (6 steps)
   unique (all-traces): verified (7 steps)

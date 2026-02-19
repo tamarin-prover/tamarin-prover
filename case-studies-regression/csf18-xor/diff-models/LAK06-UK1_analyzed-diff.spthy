@@ -32547,7 +32547,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/LAK06-UK1.spthy
 
   output:          examples/csf18-xor/diff-models/LAK06-UK1.spthy.tmp
-  processing time: 23.98s
+  processing time: 23.84s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

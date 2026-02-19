@@ -150,7 +150,7 @@ summary of summaries:
 analyzed: examples/features/derivation-checks/fullEncryptionDerivationTests.spthy
 
   output:          examples/features/derivation-checks/fullEncryptionDerivationTests.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.03s
   
 
 ==============================================================================

@@ -1212,7 +1212,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy
 
   output:          examples/sapic/fast/feature-predicates/decwrap-destr-manual.spthy.tmp
-  processing time: 0.81s
+  processing time: 0.78s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

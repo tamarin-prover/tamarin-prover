@@ -150,8 +150,8 @@ rule (modulo E) amplify_decoy_case3:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Git revision: aa36cbec0c5715297aa253c3b1a3ef085abb32a8 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-17 08:10:35.09952144 UTC
 */
 
 end
@@ -163,7 +163,7 @@ summary of summaries:
 analyzed: examples/regression/trace/seqdfsneeded.spthy
 
   output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-  processing time: 0.07s
+  processing time: 0.10s
   
   slow (exists-trace): verified (24 steps)
 

@@ -931,7 +931,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy
 
   output:          examples/sapic/fast/feature-locations/AC_counter_with_attack.spthy.tmp
-  processing time: 0.84s
+  processing time: 0.89s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

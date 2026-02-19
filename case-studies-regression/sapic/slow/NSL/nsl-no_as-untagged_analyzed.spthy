@@ -2600,7 +2600,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/NSL/nsl-no_as-untagged.spthy
 
   output:          examples/sapic/slow/NSL/nsl-no_as-untagged.spthy.tmp
-  processing time: 20.22s
+  processing time: 19.20s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

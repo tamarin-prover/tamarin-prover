@@ -234,7 +234,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/destructors.spthy
 
   output:          examples/sapic/fast/basic/destructors.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.07s
   
   else (exists-trace): verified (3 steps)
   main (exists-trace): verified (4 steps)

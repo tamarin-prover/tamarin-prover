@@ -1097,7 +1097,7 @@ summary of summaries:
 analyzed: examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy
 
   output:          examples/sapic/slow/feature-locations/AC_sid_with_attack.spthy.tmp
-  processing time: 1.22s
+  processing time: 1.06s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

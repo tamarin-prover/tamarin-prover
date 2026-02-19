@@ -801,7 +801,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 1.47s
+  processing time: 1.36s
   
   recentalive_tag (all-traces): verified (110 steps)
   executable (exists-trace): verified (16 steps)

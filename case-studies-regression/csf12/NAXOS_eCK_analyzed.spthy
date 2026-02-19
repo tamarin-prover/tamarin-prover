@@ -714,7 +714,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK.spthy
 
   output:          examples/csf12/NAXOS_eCK.spthy.tmp
-  processing time: 1.11s
+  processing time: 1.03s
   
   eCK_key_secrecy (all-traces): verified (134 steps)
 

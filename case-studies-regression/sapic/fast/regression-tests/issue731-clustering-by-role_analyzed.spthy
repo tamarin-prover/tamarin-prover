@@ -248,7 +248,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issue731-clustering-by-role.spthy
 
   output:          examples/sapic/fast/regression-tests/issue731-clustering-by-role.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.09s
   
   sanity (exists-trace): verified (7 steps)
 

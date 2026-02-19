@@ -10048,7 +10048,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy
 
   output:          examples/sapic/fast/SCADA/opc_ua_secure_conversation.spthy.tmp
-  processing time: 46.34s
+  processing time: 46.01s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

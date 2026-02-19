@@ -10646,7 +10646,7 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/gcm.spthy
 
   output:          examples/csf19-wrapping/gcm.spthy.tmp
-  processing time: 43.65s
+  processing time: 42.42s
   
   origin (all-traces): verified (1596 steps)
   Counter_Monotonicity (all-traces): verified (875 steps)

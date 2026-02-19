@@ -937,7 +937,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/CRxor.spthy
 
   output:          examples/sapic/fast/feature-xor/CRxor.spthy.tmp
-  processing time: 1.11s
+  processing time: 1.08s
   
   alive (all-traces): verified (111 steps)
   recentalive_tag (exists-trace): verified (10 steps)

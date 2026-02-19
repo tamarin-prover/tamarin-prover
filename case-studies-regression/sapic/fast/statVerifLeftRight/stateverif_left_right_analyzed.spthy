@@ -2568,7 +2568,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 6.23s
+  processing time: 6.05s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

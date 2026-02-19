@@ -5767,7 +5767,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-secret-channel/U2F.spthy
 
   output:          examples/sapic/fast/feature-secret-channel/U2F.spthy.tmp
-  processing time: 140.28s
+  processing time: 133.83s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
