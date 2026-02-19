@@ -23,6 +23,8 @@ module Theory.Text.Pretty (
   , closedComment_
 
   -- * Keywords
+  , kwTheoryName
+  , kwTheoryBegin
   , kwTheoryHeader
   , kwEnd
   , kwModulo
@@ -113,8 +115,16 @@ closedComment_ ls = comment $ fsep [text "/*", text ls, text "*/"]
 -- Keywords
 ------------------------------------------------------------------------------
 
+-- Split the theory header into two parts to allow for configuration blocks.
+kwTheoryName :: HighlightDocument d => d -> d
+kwTheoryName name = keyword_ "theory" <-> name
+
+kwTheoryBegin :: HighlightDocument d => d
+kwTheoryBegin = keyword_ "begin"
+
 kwTheoryHeader :: HighlightDocument d => d -> d
-kwTheoryHeader name = keyword_ "theory" <-> name <-> keyword_ "begin"
+kwTheoryHeader name = kwTheoryName name <-> kwTheoryBegin
+
 
 kwEnd, kwBy, kwCase, kwNext, kwQED, kwRestriction, kwTactic, kwPresort, kwPrio, kwDeprio, kwLemma, kwPredicates, kwPredicate, kwDiffLemma, kwLeft, kwRight, kwVariants :: HighlightDocument d => d
 kwEnd         = keyword_ "end"

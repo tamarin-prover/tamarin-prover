@@ -1,0 +1,201 @@
+theory SignatureDerivationTests
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+
+
+
+
+rule (modulo E) Generate_Signing_Keypair:
+   [ Fr( ~sk ) ]
+  -->
+   [ !SignKey( $A, ~sk ), !VerifyKey( $A, pk(~sk) ), Out( pk(~sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Sign_Message:
+   [ In( m ), !SignKey( A, sk ) ]
+  --[ Signed( A, m ) ]->
+   [ Out( sign(m, sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_Verify_Signature:
+   [ In( sign(m, sk) ), In( m ), In( pk(sk) ) ]
+  --[ ValidSignature( m ) ]->
+   [ Out( verify(sign(m, sk), m, pk(sk)) ) ]
+
+  /*
+  rule (modulo AC) Invalid_Verify_Signature:
+     [ In( sign(m, sk) ), In( m ), In( pk(sk) ) ]
+    --[ ValidSignature( m ) ]->
+     [ Out( true ) ]
+  */
+
+rule (modulo E) Verify_Signature_Well_Derived:
+   [ In( s ), In( m ), In( k ) ]
+  --[ ValidSignature( m ) ]->
+   [ Out( verify(s, m, k) ) ]
+
+  /*
+  rule (modulo AC) Verify_Signature_Well_Derived:
+     [ In( s ), In( m ), In( k ) ] --[ ValidSignature( m ) ]-> [ Out( z ) ]
+    variants (modulo AC)
+    1. k     = k.5
+       m     = m.5
+       s     = s.5
+       z     = verify(s.5, m.5, k.5)
+    
+    2. k     = pk(x.5)
+       m     = x.6
+       s     = sign(x.6, x.5)
+       z     = true
+  */
+
+rule (modulo E) Invalid_Verify_With_Stored_Key:
+   [ In( sign(m, skA) ), In( m ), !VerifyKey( A, pkA ) ]
+  --[ ValidSignatureAttempt( A, m ) ]->
+   [ Out( verify(sign(m, skA), m, pkA) ) ]
+
+  /*
+  rule (modulo AC) Invalid_Verify_With_Stored_Key:
+     [ In( sign(m, skA) ), In( m ), !VerifyKey( A, pkA ) ]
+    --[ ValidSignatureAttempt( A, m ) ]->
+     [ Out( z ) ]
+    variants (modulo AC)
+    1. m     = m.6
+       pkA   = pkA.6
+       skA   = skA.6
+       z     = verify(sign(m.6, skA.6), m.6, pkA.6)
+    
+    2. pkA   = pk(x.6)
+       skA   = x.6
+       z     = true
+  */
+
+rule (modulo E) Verify_With_Stored_Key_WD:
+   [ In( s ), In( m ), !VerifyKey( A, pkA ) ]
+  --[ ValidSignatureAttempt( A, m ) ]->
+   [ Out( verify(s, m, pkA) ) ]
+
+  /*
+  rule (modulo AC) Verify_With_Stored_Key_WD:
+     [ In( s ), In( m ), !VerifyKey( A, pkA ) ]
+    --[ ValidSignatureAttempt( A, m ) ]->
+     [ Out( z ) ]
+    variants (modulo AC)
+    1. m     = m.6
+       pkA   = pkA.6
+       s     = s.6
+       z     = verify(s.6, m.6, pkA.6)
+    
+    2. m     = x.6
+       pkA   = pk(x.7)
+       s     = sign(x.6, x.7)
+       z     = true
+  */
+
+rule (modulo E) Invalid_Extract_From_Sign:
+   [ In( sign(m, sk) ) ] --> [ Out( m ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_Extract_Key_From_Sign:
+   [ In( sign(m, sk) ) ] --> [ Out( sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_Forge_Signature:
+   [ In( m ), In( pk(sk) ) ] --> [ Out( sign(m, sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Protocol_Sign_Send:
+   [ Fr( ~m ), !SignKey( $A, ~skA ) ]
+  --[ ProtocolSigned( $A, $B, ~m ) ]->
+   [ Out( <$A, ~m, sign(~m, ~skA)> ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Protocol_Verify:
+   [ In( <A, m, sig> ), !VerifyKey( A, pubkey ) ]
+  --[ ProtocolVerified( A, $B, m ) ]->
+   [ Out( verify(sig, m, pubkey) ) ]
+
+  /*
+  rule (modulo AC) Protocol_Verify:
+     [ In( <A, m, sig> ), !VerifyKey( A, pubkey ) ]
+    --[ ProtocolVerified( A, $B, m ) ]->
+     [ Out( z ) ]
+    variants (modulo AC)
+    1. m     = m.7
+       pubkey
+             = pubkey.7
+       sig   = sig.7
+       z     = verify(sig.7, m.7, pubkey.7)
+    
+    2. m     = x.7
+       pubkey
+             = pk(x.8)
+       sig   = sign(x.7, x.8)
+       z     = true
+  */
+
+rule (modulo E) Reveal_Sign_Key:
+   [ !SignKey( A, sk ) ] --[ KeyReveal( A ) ]-> [ Out( sk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Sign_With_Compromised_Key:
+   [ In( sk ), In( m ) ] --[ CompromisedSign( m ) ]-> [ Out( sign(m, sk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/derivation-checks/signatureDerivationTest.spthy
+
+  output:          examples/features/derivation-checks/signatureDerivationTest.spthy.tmp
+  processing time: 0.03s
+  
+
+==============================================================================
+*/
