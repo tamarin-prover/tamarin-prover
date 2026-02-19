@@ -1,5 +1,6 @@
 module ClosedTheory (
     module ClosedTheory
+    , prettyClosedProtoRule
 ) where
 
 import Control.Basics
@@ -314,11 +315,11 @@ closeEitherProtoRule :: MaudeHandle -> (Side, OpenProtoRule) -> (Side, [ClosedPr
 closeEitherProtoRule hnd (s, ruE) = (s, closeProtoRule hnd [] ruE)
 
 -- | Apply macro to a diff protocol rule.
-applyMacroInDiffProtoRule :: [Macro]-> DiffProtoRule -> DiffProtoRule
+applyMacroInDiffProtoRule :: [LNMacro]-> DiffProtoRule -> DiffProtoRule
 applyMacroInDiffProtoRule mcs (DiffProtoRule ruE sides) = DiffProtoRule (applyMacroInRule mcs ruE) sides
 
 -- | Apply macro to an open protocol rule.
-applyMacroInProtoRule :: [Macro]-> OpenProtoRule -> OpenProtoRule
+applyMacroInProtoRule :: [LNMacro]-> OpenProtoRule -> OpenProtoRule
 applyMacroInProtoRule mcs (OpenProtoRule ruE variants) = OpenProtoRule (applyMacroInRule mcs ruE) variants
 
 
@@ -382,20 +383,20 @@ prettyClosedTheory :: HighlightDocument d => ClosedTheory -> d
 prettyClosedTheory thy = if containsManualRuleVariants mergedRules
     then
       prettyTheory prettySignatureWithMaude
-                       ppInjectiveFactInsts
-                       -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
-                       prettyOpenProtoRuleAsClosedRule
-                       prettyIncrementalProof
-                       emptyString
-                       thy'
+                  ppInjectiveFactInsts
+                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                  prettyOpenProtoRuleAsClosedRule
+                  prettyIncrementalProof
+                  emptyString
+                  thy'
     else
       prettyTheory prettySignatureWithMaude
-               ppInjectiveFactInsts
-               -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
-               prettyClosedProtoRule
-               prettyIncrementalProof
-               emptyString
-               thy
+                  ppInjectiveFactInsts
+                  -- (prettyIntrVariantsSection . intruderRules . L.get crcRules)
+                  prettyClosedProtoRule
+                  prettyIncrementalProof
+                  emptyString
+                  thy
   where
     items = L.get thyItems thy
     mergedRules = mergeOpenProtoRules $ map (mapTheoryItem openProtoRule id) items

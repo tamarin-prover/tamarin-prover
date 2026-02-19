@@ -38,6 +38,7 @@ data ParseRestriction = ParseRestriction
        { pRstrName       :: String
        , pRstrAttributes :: [RestrictionAttribute]
        , pRstrFormula    :: LNFormula
+       , pRstrOgFormula  :: Maybe LNFormula
        }
        deriving( Eq, Ord, Show )
 
@@ -58,7 +59,7 @@ isRightRestriction rstr =
 
 -- | Converts ParseRestrictions to Restrictions
 toRestriction :: ParseRestriction -> Restriction
-toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr)
+toRestriction rstr = Restriction (pRstrName rstr) (pRstrFormula rstr) (pRstrOgFormula rstr)
 
 -- | Parse a lemma for an open theory from a string.
 parseRestriction :: String -> Either ParseError SyntacticRestriction
@@ -77,6 +78,7 @@ restriction :: (Hinted v, Ord v) => Parser v -> Parser v
                 -> Parser (ProtoRestriction (SyntacticNFormula v))
 restriction varp nodep = Restriction <$> (symbol "restriction" *> identifier <* colon)
                           <*> doubleQuoted (standardFormula varp nodep)
+                          <*> pure Nothing
 
 
 -- | Fail on parsing an old "axiom" keyword.
@@ -87,12 +89,14 @@ restriction varp nodep = Restriction <$> (symbol "restriction" *> identifier <* 
 legacyAxiom :: Parser SyntacticRestriction
 legacyAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") Restriction <$> (symbol "axiom" *> identifier <* colon)
                           <*> doubleQuoted (standardFormula msgvar nodevar)
+                          <*> pure Nothing
 
 -- | Parse a diff restriction.
 diffRestriction :: Parser ParseRestriction
 diffRestriction = ParseRestriction <$> (symbol "restriction" *> identifier)
                     <*> (option [] $ list restrictionAttribute)
                     <*> (colon *> doubleQuoted plainFormula)
+                    <*> pure Nothing
 
 -- | Fail on parsing an old "axiom" keyword.
 --legacyDiffAxiom :: Parser ParseRestriction
@@ -103,3 +107,4 @@ legacyDiffAxiom :: Parser ParseRestriction
 legacyDiffAxiom = trace ("Deprecation Warning: using 'axiom' is retired notation, replace all uses of 'axiom' by 'restriction'.") ParseRestriction <$> (symbol "axiom" *> identifier)
               <*> (option [] $ list restrictionAttribute)
               <*> (colon *> doubleQuoted plainFormula)
+              <*> pure Nothing
