@@ -1,4 +1,6 @@
-theory MacroWithRestrictionCRXOR begin
+theory MacroWithRestrictionCRXOR
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -14,8 +16,7 @@ equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
 
 
-macros:
-    hashedxor( x, y, z ) = h(Xor(x,y,z))
+macros: hashedxor( x, y, z ) =  h((x⊕y⊕z))
 
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --[ OnlyOnce( ) ]-> [ !InitLTK( ~k ), !RespLTK( ~k ) ]
@@ -505,9 +506,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.5
-Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
-Compiled at: 2025-09-19 11:18:23.495617078 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -519,7 +520,7 @@ summary of summaries:
 analyzed: examples/features//macros/MacroWithRestrictionCRxor.spthy
 
   output:          examples/features//macros/MacroWithRestrictionCRxor.spthy.tmp
-  processing time: 1.87s
+  processing time: 0.41s
   
   alive (all-traces): verified (91 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)

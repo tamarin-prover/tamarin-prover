@@ -119,11 +119,11 @@ theoryTpl th = [whamlet|
     <tr>
       $if isTheoryInfo (snd th)
         <td>
-          <a href=@{OverviewR (fst th) TheoryHelp}>
+          <a href=@{InteractiveOverviewR (fst th) TheoryHelp}>
             \#{getEitherTheoryName $ snd th}
       $else
         <td>
-          <a href=@{OverviewDiffR (fst th) DiffTheoryHelp}>
+          <a href=@{InteractiveOverviewDiffR (fst th) DiffTheoryHelp}>
             \#{getEitherTheoryName $ snd th}
       <td>#{formatTime defaultTimeLocale "%T" $ getEitherTheoryTime $ snd th}
       $if getEitherTheoryPrimary (snd th)

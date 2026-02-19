@@ -1,4 +1,6 @@
-theory RYY begin
+theory RYY
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -369,9 +371,9 @@ qed
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.5
-Git revision: b93c7a33fed67a713a90039fce0c4d94def23bd0, branch: HEAD
-Compiled at: 2025-09-19 11:18:23.495617078 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -383,7 +385,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/RYY_PFS.spthy
 
   output:          examples/ake/bilinear/RYY_PFS.spthy.tmp
-  processing time: 16.49s
+  processing time: 3.56s
   
   key_agreement_reachable (exists-trace): verified (11 steps)
   key_secrecy_PFS (all-traces): falsified - found trace (12 steps)

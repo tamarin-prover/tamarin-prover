@@ -1,4 +1,6 @@
-theory SOC begin
+theory SOC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -1657,21 +1659,14 @@ Facts occur in the left-hand-side but not in any right-hand-side
   1. in rule "p_0_11111111111111112":  factName `State_11111111111111112' arity: 7 multiplicity: Linear. Perhaps you want to use the fact in rule "incypher_0_111111111111111":  factName `State_1111111111111111' arity: 7 multiplicity: Linear
   
   2. in rule "p_0_121111111111111111112":  factName `State_121111111111111111112' arity: 9 multiplicity: Linear. Perhaps you want to use the fact in rule "incypher_0_1211111111111111111":  factName `State_12111111111111111111' arity: 9 multiplicity: Linear
-
-Derivation Checks
-=================
-
-  Derivation checks timed out.
-  Use --derivcheck-timeout=INT to configure timeout.
-  Set to 0 to deactivate for no timeout.
 */
 
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
-Compiled at: 2025-09-08 09:04:28.158015016 UTC
+Maude version 3.5.1
+Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 09:21:12.905860042 UTC
 */
 
 end
@@ -1683,9 +1678,9 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-locations/SOC.spthy
 
   output:          examples/sapic/fast/feature-locations/SOC.spthy.tmp
-  processing time: 13.69s
+  processing time: 9.95s
   
-  WARNING: 3 wellformedness check failed!
+  WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!
   
   secrecy (all-traces): verified (2 steps)

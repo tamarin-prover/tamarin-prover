@@ -1,0 +1,83 @@
+theory RevealSignatureDerivationTests
+begin
+
+// Only the "invalid" rules should generate a warning. Everything else should be derived properly.
+
+builtins: revealing-signing
+
+// ====== Key Generation ======
+rule Generate_Signing_Keypair:
+    [ Fr(~sk) ]
+  -->
+    [ !SignKey($A, ~sk), !VerifyKey($A, pk(~sk)), Out(pk(~sk)) ]
+
+// ====== Revealing-Signing Operations ======
+
+// Valid Revealing-Sign Operation
+rule RevealSign_Message:
+    [ In(m), !SignKey(A, sk) ]
+  --[ RevealSigned(A, m) ]->
+    [ Out(revealSign(m, sk)) ]
+
+// Extract message from revealing signature
+rule Extract_From_RevealSign:
+    [ In(rs) ]
+  --[ MessageExtracted(getMessage(rs)) ]->
+    [ Out(getMessage(rs)) ]
+
+// Valid Verification of revealing signature
+rule Verify_RevealSignature:
+    [ In(rs), In(m), !VerifyKey(A, pka) ]
+  --[ RevealSigVerified(A, m) ]->
+    [ Out(revealVerify(rs, m, pka)) ]
+
+// ====== Invalid Derivation Attempts ======
+
+/* Attempt to extract private key from revealing signature. Should generate a warning :
+Rule Invalid_Extract_Key_From_RevealSign: 
+Failed to derive Variable(s): sk
+*/
+rule Invalid_Extract_Key_From_RevealSign:
+    [ In(revealSign(m, sk)) ]
+  -->
+    [ Out(sk) ]
+
+/* Attempt to forge revealing signature without key, should generate a warning :
+Rule Invalid_Forge_RevealSignature: 
+Failed to derive Variable(s): sk
+*/
+rule Invalid_Forge_RevealSignature:
+    [ In(m), In(pk(sk)) ]
+  -->
+    [ Out(revealSign(m, sk)) ]
+
+// ====== Protocol-Style Tests ======
+
+// Similar protocol with revealing signatures
+rule Protocol_RevealSign_Send:
+    [ Fr(~m), !SignKey($A, ~skA) ]
+  --[ ProtocolRevealSigned($A, $B, ~m) ]->
+    [ Out(<$A, revealSign(~m, ~skA)>), StoreRevealMsg($A, $B, ~m) ]
+
+// B extracts and verifies
+rule Protocol_Extract_Verify:
+    [ In(<A, sig>), !VerifyKey(A, pk) ]
+  --[ ProtocolRevealVerified(A, $B) ]->
+    [ RevealVerifiedMsg($B, A, getMessage(sig), 
+                       revealVerify(sig, getMessage(sig), pk)) ]
+
+// ====== Key Reveal for Testing Key Compromise ======
+
+// Reveal signing key (key compromise scenario)
+rule Reveal_Sign_Key:
+    [ !SignKey(A, sk) ]
+  --[ KeyReveal(A) ]->
+    [ Out(sk) ]
+
+// Reveal-sign with compromised key (should work)
+rule RevealSign_With_Compromised_Key:
+    [ In(sk), In(m) ]
+  --[ CompromisedRevealSign(m) ]->
+    [ Out(revealSign(m, sk)) ]
+
+end

@@ -1,8 +1,10 @@
-theory RevealingSignatures begin
+theory RevealingSignatures
+
+begin
 
 // Function signature and definition of the equational theory E
 
-functions: fst/1, getMessage/1, h/1, h/7, pair/2, pk/1, revealSign/2,
+functions: fst/1, getMessage/1, h/1, pair/2, pk/1, revealSign/2,
            revealVerify/3, snd/1, true/0
 equations:
     fst(<x.1, x.2>) = x.1,
@@ -85,16 +87,14 @@ restriction equality:
 
 
 
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -106,7 +106,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue193.spthy
 
   output:          examples/regression/trace/issue193.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.03s
   
   debug (exists-trace): verified (4 steps)
 

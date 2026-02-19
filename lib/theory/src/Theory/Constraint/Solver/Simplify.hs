@@ -443,7 +443,7 @@ freshOrdering = do
   let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  -- add a fake-subterm (f,f) for each freshVar f to the graph
   let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms  -- graph that has subterms (s,t) as nodes and edges (s,t) -> (u,v) if t `el` u
   let termsContaining = [((nid,x), map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]  -- (freshNodeId, t) for all terms t that have to contain x. So also the ones transitively connected by ⊏ to x
-  let newLesses = [ LessAtom i j Fresh | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r, i/=j]  -- new ordering constraints that can be added (or enhanced and then added)
+  let newLesses = [ LessAtom i j Fresh | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r, nonUnifiableNodes i j, i/=j]  -- new ordering constraints that can be added (or enhanced and then added)
   let enhancedLesses = [ LessAtom (last rs) j Fresh | (LessAtom i j _) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
   let allLesses = newLesses ++ enhancedLesses
 
@@ -481,12 +481,10 @@ freshOrdering = do
 
       connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [((NodeId, LNTerm), [LNTerm])] -> RuleACInst -> [NodeId]
       connectNodeToFreshes _ [] _ = []
-      connectNodeToFreshes el (((nid,freshVar), containing):xs) r | allPremsNotF =
+      connectNodeToFreshes el (((nid,freshVar), containing):xs) r =
           case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (concatMap (`get` r) [rPrems, rActs]), t `el` t'] of
             Just nid1 -> nid1 : connectNodeToFreshes el xs r
             _         ->        connectNodeToFreshes el xs r
-        where
-          allPremsNotF = freshFact freshVar `notElem` get rPrems r
       connectNodeToFreshes el (_:xs) r = connectNodeToFreshes el xs r
 
 

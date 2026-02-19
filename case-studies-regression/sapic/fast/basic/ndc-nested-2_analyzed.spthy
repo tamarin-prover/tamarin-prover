@@ -1,4 +1,6 @@
-theory nestedNDC2 begin
+theory nestedNDC2
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -125,13 +127,13 @@ qed
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="event Start( );",
+rule (modulo E) MessageIDRule[color=#ffffff, process='event Start( );',
                               issapicrule, role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="event Start( );",
+rule (modulo E) Init[color=#ffffff, process='event Start( );',
                      issapicrule, role='Process']:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
@@ -139,7 +141,7 @@ rule (modulo E) Init[color=#ffffff, process="event Start( );",
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventStart_0_[color=#ffffff, process="event Start( );",
+rule (modulo E) eventStart_0_[color=#ffffff, process='event Start( );',
                               issapicrule, role='Process']:
    [ State_( ~prog_ ) ]
   --[ ProgressTo_1( ~prog_ ), Start( ) ]->
@@ -147,25 +149,25 @@ rule (modulo E) eventStart_0_[color=#ffffff, process="event Start( );",
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_11[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_11[color=#ffffff, process='!', issapicrule,
                        role='Process']:
    [ State_1( ~prog_ ) ] --> [ !Semistate_111( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_121[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_121[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ State_1( ~prog_ ) ] --> [ !Semistate_1211( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_122[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_0_122[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ State_1( ~prog_ ) ] --> [ !Semistate_1221( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_11[color=#ffffff, process='!', issapicrule,
                        role='Process']:
    [ Fr( ~prog_111 ), !Semistate_111( ~prog_ ) ]
   --[ ProgressFrom_111( ~prog_111 ) ]->
@@ -173,7 +175,7 @@ rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_111[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventA_0_111[color=#ffffff, process='0', issapicrule,
                              role='Process']:
    [ State_111( ~prog_, ~prog_111 ) ]
   --[ ProgressTo_1111( ~prog_111 ), A( ) ]->
@@ -181,7 +183,7 @@ rule (modulo E) eventA_0_111[color=#ffffff, process="0", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_121[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_121[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ Fr( ~prog_1211 ), !Semistate_1211( ~prog_ ) ]
   --[ ProgressFrom_1211( ~prog_1211 ) ]->
@@ -189,7 +191,7 @@ rule (modulo E) p_1_121[color=#ffffff, process="!", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_1211[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventB_0_1211[color=#ffffff, process='0', issapicrule,
                               role='Process']:
    [ State_1211( ~prog_, ~prog_1211 ) ]
   --[ ProgressTo_12111( ~prog_1211 ), B( ) ]->
@@ -197,7 +199,7 @@ rule (modulo E) eventB_0_1211[color=#ffffff, process="0", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_122[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_122[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ Fr( ~prog_1221 ), !Semistate_1221( ~prog_ ) ]
   --[ ProgressFrom_1221( ~prog_1221 ) ]->
@@ -205,7 +207,7 @@ rule (modulo E) p_1_122[color=#ffffff, process="!", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventC_0_1221[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventC_0_1221[color=#ffffff, process='0', issapicrule,
                               role='Process']:
    [ State_1221( ~prog_, ~prog_1221 ) ]
   --[ ProgressTo_12211( ~prog_1221 ), C( ) ]->
@@ -244,9 +246,9 @@ restriction progressInit:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -258,7 +260,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-2.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-2.spthy.tmp
-  processing time: 0.14s
+  processing time: 0.05s
   
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)

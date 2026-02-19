@@ -1,0 +1,129 @@
+theory EncryptionDerivationTests
+begin
+
+// Only the "invalid" rules should generate a warning. Everything else should be derived properly.
+
+// ====== Builtins for symmetric and asymmetric encryption ======
+builtins: symmetric-encryption, asymmetric-encryption
+
+// ====== Manually defined encryption/decryption functions ======
+functions: myenc/2, mydec/2
+equations: mydec(myenc(x,k),k) = x
+
+// ====== Test for manual encryption/decryption ======
+rule test_manual_encryption:
+  [ In(myenc(x,k)), In(k) ]
+  --[ ManualEncrypted(x) ]->
+  [ Out(x) ]
+
+// ====== Test for built-in symmetric encryption ======
+rule test_symmetric_encryption:
+  [ In(senc(x,k)), In(k) ]
+  --[ SymDecrypted(x) ]->
+  [ Out(x) ]
+
+// ====== Invalid derivation attempts for manual and symmetric encryption ======
+/* Attempt to decrypt without key, should generate a warning :
+Rule invalid_manual_decrypt: 
+Failed to derive Variable(s): k, x
+*/
+rule invalid_manual_decrypt:
+  [ In(myenc(x,k)) ]
+  -->
+  [ Out(x) ]
+
+/* Attempt to decrypt symmetric encryption without key, should generate a warning.
+Rule invalid_sym_decrypt: 
+Failed to derive Variable(s): k, x
+*/
+rule invalid_sym_decrypt:
+  [ In(senc(x,k)) ]
+  -->
+  [ Out(x) ]
+
+// ====== Key Reveal Rules for symmetric encryption ======
+rule reveal_symmetric_key:
+  [ In('reveal'), Fr(~k) ]
+  --[ RevealKey(~k) ]->
+  [ Out(~k) ]
+
+// ====== ASYMMETRIC ENCRYPTION TESTS======
+// Generate a key pair for an agent
+rule Register_pk:
+  [ Fr(~ltk) ]
+-->
+  [ !Ltk($A, ~ltk), !Pk($A, pk(~ltk)) ]
+
+// Get agent's public key
+rule Get_pk:
+  [ !Pk(A, pubkey) ]
+-->
+  [ Out(pubkey) ]
+
+// Reveal agent's private key
+rule Reveal_ltk:
+  [ !Ltk(A, ltk) ]
+--[ LtkReveal(A) ]->
+  [ Out(ltk) ]
+
+// Encrypt a message with public key
+rule Encrypt_with_pk:
+  [ In(msg), In(pubkey) ]
+--[ AsymEncrypted(msg, pubkey) ]->
+  [ Out(aenc(msg, pubkey)) ]
+
+// Decrypt a message with corresponding private key
+rule Valid_decrypt_with_sk:
+  [ In(aenc(msg, pk(ltk))), !Ltk(A, ltk) ]
+--[ ValidDecryption(msg, A) ]->
+  [ Out(msg) ]
+
+// Decrypting using directly input private key
+rule Decrypt_with_input_sk:
+  [ In(aenc(msg, pk(ltk))), In(ltk) ]
+--[ SkDecryption(msg) ]->
+  [ Out(msg) ]
+
+/*Invalid derivation attempts for asymmetric encryption
+Attempt to decrypt without knowing the private key, should generate a warning :
+Rule Invalid_decrypt_without_sk: 
+Failed to derive Variable(s): msg, pubkey
+*/
+rule Invalid_decrypt_without_sk:
+  [ In(aenc(msg, pubkey)) ]
+-->
+  [ Out(msg) ]
+
+/* Attempt to extract public key from message, should generate a warning :
+Rule Invalid_extract_pubkey: 
+Failed to derive Variable(s): msg, pubkey
+*/
+
+rule Invalid_extract_pubkey:
+  [ In(aenc(msg, pubkey)) ]
+-->
+  [ Out(pubkey) ]
+
+/* Attempt to derive private key from public key, should generate a warning :
+Rule Invalid_derive_sk_from_pk: 
+Failed to derive Variable(s): ltk
+*/
+rule Invalid_derive_sk_from_pk:
+  [ In(pk(ltk)) ]
+-->
+  [ Out(ltk) ]
+
+// More Realistic Protocol Fragment
+// Agent A encrypts a message to B
+rule A_sends_to_B:
+  [ Fr(~msg), !Pk(B, pubkeyB) ]
+--[ SendEncrypted($A, B, ~msg) ]->
+  [ Out(aenc(<'msg', ~msg, $A>, pubkeyB)) ]
+
+// Agent B decrypts message from A
+rule B_receives_from_A:
+  [ In(aenc(<'msg', msg, A>, pk(ltkB))), !Ltk($B, ltkB) ]
+--[ ReceiveDecrypted($B, A, msg) ]->
+  [ Out('Success') ]
+
+end

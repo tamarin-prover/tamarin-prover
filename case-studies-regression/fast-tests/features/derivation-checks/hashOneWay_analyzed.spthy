@@ -1,0 +1,72 @@
+theory HashOneWay
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+rule (modulo E) invalid_hash_inversion_attempt:
+   [ In( h(x) ) ] --> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule invalid_hash_inversion_attempt: 
+Failed to derive Variable(s): x
+*/
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 44c35631edf83439ae51f1158be3dbf847a9e769 (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 09:21:12.905860042 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.5.1. OK.
+ checking installation: OK.
+[Theory HashOneWay] Theory loaded
+[Theory HashOneWay] Theory translated
+[Theory HashOneWay] Derivation checks started
+[Theory HashOneWay] Derivation checks ended
+[Theory HashOneWay] Theory closed
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/derivation-checks/hashOneWay.spthy
+
+  output:          examples/features/derivation-checks/hashOneWay.spthy.tmp
+  processing time: 0.06s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+
+==============================================================================
+*/
