@@ -1,0 +1,157 @@
+theory EncryptionDerivationTests
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, mydec/2, myenc/2, pair/2, pk/1, sdec/2,
+           senc/2, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    mydec(myenc(x, k), k) = x,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+
+
+rule (modulo E) test_manual_encryption:
+   [ In( myenc(x, k) ), In( k ) ] --[ ManualEncrypted( x ) ]-> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) test_symmetric_encryption:
+   [ In( senc(x, k) ), In( k ) ] --[ SymDecrypted( x ) ]-> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) invalid_manual_decrypt:
+   [ In( myenc(x, k) ) ] --> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) invalid_sym_decrypt:
+   [ In( senc(x, k) ) ] --> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) reveal_symmetric_key:
+   [ In( 'reveal' ), Fr( ~k ) ] --[ RevealKey( ~k ) ]-> [ Out( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Get_pk:
+   [ !Pk( A, pubkey ) ] --> [ Out( pubkey ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Encrypt_with_pk:
+   [ In( msg ), In( pubkey ) ]
+  --[ AsymEncrypted( msg, pubkey ) ]->
+   [ Out( aenc(msg, pubkey) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Valid_decrypt_with_sk:
+   [ In( aenc(msg, pk(ltk)) ), !Ltk( A, ltk ) ]
+  --[ ValidDecryption( msg, A ) ]->
+   [ Out( msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Decrypt_with_input_sk:
+   [ In( aenc(msg, pk(ltk)) ), In( ltk ) ]
+  --[ SkDecryption( msg ) ]->
+   [ Out( msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_decrypt_without_sk:
+   [ In( aenc(msg, pubkey) ) ] --> [ Out( msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_extract_pubkey:
+   [ In( aenc(msg, pubkey) ) ] --> [ Out( pubkey ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_derive_sk_from_pk:
+   [ In( pk(ltk) ) ] --> [ Out( ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) A_sends_to_B:
+   [ Fr( ~msg ), !Pk( B, pubkeyB ) ]
+  --[ SendEncrypted( $A, B, ~msg ) ]->
+   [ Out( aenc(<'msg', ~msg, $A>, pubkeyB) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B_receives_from_A:
+   [ In( aenc(<'msg', msg, A>, pk(ltkB)) ), !Ltk( $B, ltkB ) ]
+  --[ ReceiveDecrypted( $B, A, msg ) ]->
+   [ Out( 'Success' ) ]
+
+  /* has exactly the trivial AC variant */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/derivation-checks/fullEncryptionDerivationTests.spthy
+
+  output:          examples/features/derivation-checks/fullEncryptionDerivationTests.spthy.tmp
+  processing time: 0.03s
+  
+
+==============================================================================
+*/

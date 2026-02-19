@@ -1,4 +1,6 @@
-theory mini6 begin
+theory mini6
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -81,13 +83,13 @@ by solve( State_112( ~prog_, ~prog_11, a ) ▶₀ #t )
 
 
 
-rule (modulo E) MessageIDRule[color=#ffffff, process="new a.1;",
+rule (modulo E) MessageIDRule[color=#ffffff, process='new a.1;',
                               issapicrule, role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="new a.1;", issapicrule,
+rule (modulo E) Init[color=#ffffff, process='new a.1;', issapicrule,
                      role='Process']:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
@@ -95,49 +97,49 @@ rule (modulo E) Init[color=#ffffff, process="new a.1;", issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_[color=#ffffff, process="!", issapicrule,
+rule (modulo E) newa_0_[color=#ffffff, process='!', issapicrule,
                         role='Process']:
    [ State_( ~prog_ ), Fr( a.1 ) ]
   --[ ProgressTo_1( ~prog_ ) ]->
    [ !Semistate_11( ~prog_, a.1 ) ]
 
   /*
-  rule (modulo AC) newa_0_[color=#ffffff, process="!", issapicrule,
+  rule (modulo AC) newa_0_[color=#ffffff, process='!', issapicrule,
                            role='Process']:
      [ State_( ~prog_ ), Fr( a ) ]
     --[ ProgressTo_1( ~prog_ ) ]->
      [ !Semistate_11( ~prog_, a ) ]
   */
 
-rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule,
+rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
                       role='Process']:
    [ Fr( ~prog_11 ), !Semistate_11( ~prog_, a.1 ) ]
   --[ ProgressFrom_11( ~prog_11 ) ]->
    [ State_11( ~prog_, ~prog_11, a.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1[color=#ffffff, process="!", issapicrule,
+  rule (modulo AC) p_1_1[color=#ffffff, process='!', issapicrule,
                          role='Process']:
      [ Fr( ~prog_11 ), !Semistate_11( ~prog_, a ) ]
     --[ ProgressFrom_11( ~prog_11 ) ]->
      [ State_11( ~prog_, ~prog_11, a ) ]
   */
 
-rule (modulo E) ifaa_0_11[color=#ffffff, process="if a.1=a.1",
+rule (modulo E) ifaa_0_11[color=#ffffff, process='if a.1=a.1',
                           issapicrule, role='Process']:
    [ State_11( ~prog_, ~prog_11, a.1 ) ]
   --[ ProgressTo_111( ~prog_11 ), Pred_Eq( a.1, a.1 ) ]->
    [ State_111( ~prog_, ~prog_11, a.1 ) ]
 
   /*
-  rule (modulo AC) ifaa_0_11[color=#ffffff, process="if a.1=a.1",
+  rule (modulo AC) ifaa_0_11[color=#ffffff, process='if a.1=a.1',
                              issapicrule, role='Process']:
      [ State_11( ~prog_, ~prog_11, a ) ]
     --[ ProgressTo_111( ~prog_11 ), Pred_Eq( a, a ) ]->
      [ State_111( ~prog_, ~prog_11, a ) ]
   */
 
-rule (modulo E) inrm_0_111[color=#ffffff, process="in('r',m.1);",
+rule (modulo E) inrm_0_111[color=#ffffff, process='in('r',m.1);',
                            issapicrule, role='Process']:
    [
    Fr( ~prog_1111 ), State_111( ~prog_, ~prog_11, a.1 ), In( m.1 ),
@@ -147,7 +149,7 @@ rule (modulo E) inrm_0_111[color=#ffffff, process="in('r',m.1);",
    [ State_1111( ~prog_, ~prog_11, ~prog_1111, a.1, m.1 ) ]
 
   /*
-  rule (modulo AC) inrm_0_111[color=#ffffff, process="in('r',m.1);",
+  rule (modulo AC) inrm_0_111[color=#ffffff, process='in('r',m.1);',
                               issapicrule, role='Process']:
      [
      Fr( ~prog_1111 ), State_111( ~prog_, ~prog_11, a ), In( m ),
@@ -157,42 +159,42 @@ rule (modulo E) inrm_0_111[color=#ffffff, process="in('r',m.1);",
      [ State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
   */
 
-rule (modulo E) eventA_0_1111[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventA_0_1111[color=#ffffff, process='0', issapicrule,
                               role='Process']:
    [ State_1111( ~prog_, ~prog_11, ~prog_1111, a.1, m.1 ) ]
   --[ ProgressTo_11111( ~prog_1111 ), A( ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventA_0_1111[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) eventA_0_1111[color=#ffffff, process='0', issapicrule,
                                  role='Process']:
      [ State_1111( ~prog_, ~prog_11, ~prog_1111, a, m ) ]
     --[ ProgressTo_11111( ~prog_1111 ), A( ) ]->
      [ ]
   */
 
-rule (modulo E) ifaa_1_11[color=#ffffff, process="if a.1=a.1",
+rule (modulo E) ifaa_1_11[color=#ffffff, process='if a.1=a.1',
                           issapicrule, role='Process']:
    [ State_11( ~prog_, ~prog_11, a.1 ) ]
   --[ Pred_Not_Eq( a.1, a.1 ) ]->
    [ State_112( ~prog_, ~prog_11, a.1 ) ]
 
   /*
-  rule (modulo AC) ifaa_1_11[color=#ffffff, process="if a.1=a.1",
+  rule (modulo AC) ifaa_1_11[color=#ffffff, process='if a.1=a.1',
                              issapicrule, role='Process']:
      [ State_11( ~prog_, ~prog_11, a ) ]
     --[ Pred_Not_Eq( a, a ) ]->
      [ State_112( ~prog_, ~prog_11, a ) ]
   */
 
-rule (modulo E) eventB_0_112[color=#ffffff, process="0", issapicrule,
+rule (modulo E) eventB_0_112[color=#ffffff, process='0', issapicrule,
                              role='Process']:
    [ State_112( ~prog_, ~prog_11, a.1 ) ]
   --[ ProgressTo_1121( ~prog_11 ), B( ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventB_0_112[color=#ffffff, process="0", issapicrule,
+  rule (modulo AC) eventB_0_112[color=#ffffff, process='0', issapicrule,
                                 role='Process']:
      [ State_112( ~prog_, ~prog_11, a ) ]
     --[ ProgressTo_1121( ~prog_11 ), B( ) ]->
@@ -234,9 +236,9 @@ restriction progressInit:
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: a288673cab40b1e997ba23b077ef491d39c2bef6 (with uncommited changes), branch: fix-issue713
-Compiled at: 2025-06-18 14:31:09.981542 UTC
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
 */
 
 end
@@ -248,7 +250,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini6.spthy
 
   output:          examples/sapic/fast/feature-progress/mini6.spthy.tmp
-  processing time: 0.20s
+  processing time: 0.06s
   
   A_possible (exists-trace): verified (10 steps)
   B_impossible (all-traces): verified (2 steps)

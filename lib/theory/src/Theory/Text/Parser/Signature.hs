@@ -130,6 +130,7 @@ functionType = try (do
 functionAttribute :: Parser (Either Privacy Constructability)
 functionAttribute = asum
   [ symbol "private" Data.Functor.$> Left Private
+  , symbol "constructor" Data.Functor.$> Right Constructor
   , symbol "destructor" Data.Functor.$> Right Destructor
   ]
 

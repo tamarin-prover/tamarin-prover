@@ -1,0 +1,460 @@
+theory KCL07_UK3
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: multiset, xor
+functions: fst/1, h/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+tactic: recentalive_tag
+presort: C
+prio: {id}
+  regex".*TagRun\(.*"
+prio: {id}
+  regex".*Tag\(.*"
+
+
+tactic: Observational_equivalence
+presort: C
+prio: {id}
+  regex".*TagRun\(.*"
+prio: {id}
+  regex".*Tag\(.*"
+
+
+
+
+
+
+
+rule (modulo E) Setup:
+   [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
+  --[ OnlyOnce( ) ]->
+   [
+   Reader( ('1'++
+            diff((<~k1, ~id1>++<~k2, ~id2>), (<~k1, ~id1>++<~k1, ~id1>)))
+   ),
+   Tag( ('1'++diff((<~k1, ~id1>++<~k2, ~id2>), (<~k1, ~id1>++<~k1, ~id1>)))
+   )
+   ]
+
+rule (modulo E) select_tag:
+   [ Tag( (z++<~k, ~id>) ) ]
+  --[ Tag( (z++<~k, ~id>) ) ]->
+   [ TagRun( ~k, ~id ), Tag( z ) ]
+
+rule (modulo E) select_reader:
+   [ Reader( (z++<~k, ~id>) ) ]
+  --[ Reader( (z++<~k, ~id>) ) ]->
+   [ ReaderRun( ~k, ~id ), Reader( z ) ]
+
+rule (modulo E) reader1:
+   [ Fr( ~r1 ) ]
+  --[ Challenge( ~r1, 'Reader' ) ]->
+   [ Out( ~r1 ), Initiated( ~r1 ) ]
+
+rule (modulo E) tag1:
+   [ In( r1 ), Fr( ~r2 ), TagRun( ~k, ~id ) ]
+  --[ Response( ~k, 'Tag' ) ]->
+   [ Out( <(~id⊕~r2), (~r2⊕h(<r1, ~k>))> ) ]
+
+rule (modulo E) reader2:
+   [ Initiated( ~r1 ), ReaderRun( ~k, ~id ), In( xoredhash ) ]
+  --[ Alive( ~k, 'Tag' ), Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
+   [ ]
+
+restriction equality [right]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction equality [left]:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  // safety formula
+
+restriction unique [right]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction unique [left]:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  // safety formula
+
+restriction max_number_of_tags_tag [right]:
+  "∀ a b c d #i. (Tag( (a++b++c++d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag [left]:
+  "∀ a b c d #i. (Tag( (a++b++c++d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [right]:
+  "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+restriction max_number_of_tags_tag_reader [left]:
+  "∀ a b c d #i. (Reader( (a++b++c++d) ) @ #i) ⇒ (⊥)"
+  // safety formula
+
+lemma recentalive_tag [right, heuristic={recentalive_tag}]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma recentalive_tag [left, heuristic={recentalive_tag}]:
+  all-traces
+  "∀ x #i.
+    (Alive( x, 'Tag' ) @ #i) ⇒
+    (∃ y #j #k.
+      (((Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+       (#k < #j)) ∧
+      (#j < #i))"
+/*
+guarded formula characterizing all counter-examples:
+"∃ x #i.
+  (Alive( x, 'Tag' ) @ #i)
+ ∧
+  ∀ y #j #k.
+   (Challenge( y, 'Reader' ) @ #k) ∧ (Response( x, 'Tag' ) @ #j)
+  ⇒
+   ((¬(#k < #j)) ∨ (¬(#j < #i)))"
+*/
+by sorry
+
+lemma executable [right]:
+  exists-trace
+  "∃ x #i #j.
+    (((Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+     (∀ #k. (Alive( x, 'Tag' ) @ #k) ⇒ (#i = #k))) ∧
+    (∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ (#j = #k))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+ ∧
+  (∀ #k. (Alive( x, 'Tag' ) @ #k) ⇒ #i = #k) ∧
+  (∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ #j = #k)"
+*/
+by sorry
+
+lemma executable [left]:
+  exists-trace
+  "∃ x #i #j.
+    (((Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)) ∧
+     (∀ #k. (Alive( x, 'Tag' ) @ #k) ⇒ (#i = #k))) ∧
+    (∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ (#j = #k))"
+/*
+guarded formula characterizing all satisfying traces:
+"∃ x #i #j.
+  (Alive( x, 'Tag' ) @ #i) ∧ (Response( x, 'Tag' ) @ #j)
+ ∧
+  (∀ #k. (Alive( x, 'Tag' ) @ #k) ⇒ #i = #k) ∧
+  (∀ #k. (Response( x, 'Tag' ) @ #k) ⇒ #j = #k)"
+*/
+by sorry
+
+diffLemma Observational_equivalence:
+rule-equivalence
+  case Rule_Destrd_0_fst
+  by sorry
+next
+  case Rule_Destrd_0_snd
+  by sorry
+next
+  case Rule_Destrd_union
+  by sorry
+next
+  case Rule_Destrd_xor
+  by sorry
+next
+  case Rule_Equality
+  backward-search
+    case LHS
+    step( simplify )
+    by sorry
+  next
+    case RHS
+    step( simplify )
+    step( solve( !KD( x ) ▶₁ #i ) )
+      case reader1
+      by sorry
+    next
+      case tag1
+      step( solve( TagRun( ~k, ~id ) ▶₂ #vr ) )
+        case select_tag
+        step( solve( Tag( (z++<~k, ~id>) ) ▶₀ #vr.1 ) )
+          case Setup
+          by sorry
+        next
+          case select_tag
+          step( solve( Tag( (z++<~k, ~id>++<~k.1, ~id.1>) ) ▶₀ #vr.2 ) )
+            case Setup
+            step( solve( !KU( r1 ) @ #vk.1 ) )
+              case c_fst
+              by sorry
+            next
+              case c_h
+              by sorry
+            next
+              case c_pair
+              by sorry
+            next
+              case c_snd
+              by sorry
+            next
+              case c_union
+              by sorry
+            next
+              case c_xor
+              by sorry
+            next
+              case c_zero
+              by sorry
+            next
+              case coerce
+              by sorry
+            next
+              case fresh
+              step( solve( !KU( ~x.1 ) @ #vk ) )
+                case fresh
+                step( solve( (#vl, 0) ~~> (#i, 1) ) )
+                  case d_0_fst
+                  step( solve( (#vr.4, 0) ~~> (#i, 1) ) )
+                    case Xor
+                    by sorry
+                  next
+                    case d_xor_case_1
+                    step( solve( !KU( (~r2⊕z) ) @ #vk.2 ) )
+                      case c_xor
+                      by sorry
+                    next
+                      case coerce
+                      step( solve( !KD( (~r2⊕z) ) ▶₀ #vk.1 ) )
+                        case reader1
+                        by step( contradiction )
+                      next
+                        case tag1
+                        step( solve( (#vl.1, 0) ~~> (#vk.1, 0) ) )
+                          case d_0_fst
+                          by sorry
+                        next
+                          case d_0_snd
+                          step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.6 ) )
+                            case select_tag
+                            step( solve( Tag( (z.1++<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
+                              case Setup
+                              by sorry
+                            next
+                              case select_tag
+                              step( solve( Tag( (z.1++<~k.1, ~id.1>++<~k.2, ~id.2>) ) ▶₀ #vr.9 ) )
+                                case Setup
+                                step( solve( (#vr.6, 0) ~~> (#vk.1, 0) ) )
+                                  case Xor
+                                  step( solve( (#vr.5, 0) ~~> (#i, 1) ) )
+                                    case Xor
+                                    step( solve( !KU( (~id⊕h(<~x, ~k>)) ) @ #vk.2 ) )
+                                      case c_xor
+                                      by sorry
+                                    next
+                                      case coerce
+                                      step( solve( !KD( (~id⊕h(<~x, ~k>)) ) ▶₀ #vk.2 ) )
+                                        case reader1
+                                        by step( contradiction )
+                                      next
+                                        case tag1
+                                        step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.7 ) )
+                                          case select_tag
+                                          step( solve( Tag( (z++<~k.1, ~id.1>) ) ▶₀ #vr.8 ) )
+                                            case Setup
+                                            step( solve( (#vl.1, 0) ~~> (#vk.2, 0) ) )
+                                              case d_0_fst
+                                              step( solve( (#vr.8, 0) ~~> (#vk.2, 0) ) )
+                                                case d_xor_case_1
+                                                step( solve( !KU( (z⊕~r2.1) ) @ #vk.4 ) )
+                                                  case c_xor
+                                                  by sorry
+                                                next
+                                                  case coerce
+                                                  step( solve( !KD( (z⊕~r2.1) ) ▶₀ #vk.3 ) )
+                                                    case reader1
+                                                    by step( contradiction )
+                                                  next
+                                                    case tag1
+                                                    step( solve( TagRun( ~k.1, ~id.1 ) ▶₂ #vr.10 ) )
+                                                      case select_tag
+                                                      step( solve( Tag( (z.1++<~k.1, ~id.1>) ) ▶₀ #vr.11 ) )
+                                                        case Setup
+                                                        step( solve( (#vl.1, 0) ~~> (#vk.3, 0) ) )
+                                                          case d_0_fst
+                                                          by sorry
+                                                        next
+                                                          case d_0_snd
+                                                          step( solve( (#vr.10, 0) ~~> (#vk.3, 0) ) )
+                                                            case Xor
+                                                            step( solve( (#vr.9, 0) ~~> (#vk.2, 0) ) )
+                                                              case Xor
+                                                              by sorry
+                                                            qed
+                                                          next
+                                                            case d_xor_case_1
+                                                            by sorry
+                                                          next
+                                                            case d_xor_case_2
+                                                            by sorry
+                                                          next
+                                                            case d_xor_case_3
+                                                            by step( contradiction )
+                                                          next
+                                                            case d_xor_case_4
+                                                            by sorry
+                                                          qed
+                                                        qed
+                                                      next
+                                                        case select_tag
+                                                        by sorry
+                                                      qed
+                                                    qed
+                                                  qed
+                                                qed
+                                              next
+                                                case d_xor_case_2
+                                                by sorry
+                                              next
+                                                case d_xor_case_3
+                                                by step( contradiction )
+                                              next
+                                                case d_xor_case_4
+                                                by step( contradiction )
+                                              qed
+                                            next
+                                              case d_0_snd
+                                              by sorry
+                                            qed
+                                          next
+                                            case select_tag
+                                            by sorry
+                                          qed
+                                        qed
+                                      qed
+                                    qed
+                                  qed
+                                next
+                                  case d_xor_case_1
+                                  by sorry
+                                next
+                                  case d_xor_case_2
+                                  by sorry
+                                next
+                                  case d_xor_case_3
+                                  by step( contradiction )
+                                next
+                                  case d_xor_case_4
+                                  by step( contradiction )
+                                qed
+                              next
+                                case select_tag
+                                by step( contradiction )
+                              qed
+                            qed
+                          qed
+                        qed
+                      qed
+                    qed
+                  next
+                    case d_xor_case_2
+                    by sorry
+                  next
+                    case d_xor_case_3
+                    by sorry
+                  next
+                    case d_xor_case_4
+                    by sorry
+                  qed
+                next
+                  case d_0_snd
+                  by sorry
+                next
+                  case pair
+                  by sorry
+                qed
+              qed
+            next
+              case pub
+              by sorry
+            qed
+          next
+            case select_tag
+            by step( contradiction )
+          qed
+        qed
+      qed
+    qed
+  qed
+next
+  case Rule_Send
+  by sorry
+next
+  case Rule_Setup
+  by sorry
+next
+  case Rule_reader1
+  by sorry
+next
+  case Rule_reader2
+  by sorry
+next
+  case Rule_select_reader
+  by sorry
+next
+  case Rule_select_tag
+  by sorry
+next
+  case Rule_tag1
+  by sorry
+qed
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
+Compiled at: 2026-02-16 20:50:37.030248 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy
+
+  output:          examples/csf18-xor/diff-models/KCL07-UK3_attack.spthy.tmp
+  processing time: 0.22s
+  
+  RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
+  LHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
+  RHS :  executable (exists-trace): analysis incomplete (1 steps)
+  LHS :  executable (exists-trace): analysis incomplete (1 steps)
+  DiffLemma:  Observational_equivalence : analysis incomplete (88 steps)
+
+==============================================================================
+*/
