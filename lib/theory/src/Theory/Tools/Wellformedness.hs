@@ -351,7 +351,7 @@ natWellSortedReportDiff thy = natSortErrors itemsTerms
 
 
 --- | Check that the protocol rule variants are correct.
-variantsCheck :: MaudeHandle -> [Macro] -> String -> OpenProtoRule -> WfErrorReport
+variantsCheck :: MaudeHandle -> [LNMacro] -> String -> OpenProtoRule -> WfErrorReport
 variantsCheck hnd macros info (OpenProtoRule ruE ruAC) = catMaybes
   [ guard (not (null ruAC) && not (sameVariantsUpToActions ruAC recomputedVariants)) $>
       ( underlineTopic "Variants"
@@ -1006,11 +1006,11 @@ formulaReports thy = do
   where
     annFormulas = do LemmaItem l <- get thyItems thy
                      let header = "Lemma " ++ quote (get lName l)
-                         fm     = get lFormula l
+                         fm     = applyMacroInFormula (theoryMacros thy) (get lFormula l)
                      return (header, fm)
               <|> do RestrictionItem rstr <- get thyItems thy
                      let header = "Restriction " ++ quote (get rstrName rstr)
-                         fm     = get rstrFormula rstr
+                         fm     = applyMacroInFormula (theoryMacros thy) (get rstrFormula rstr)
                      return (header, fm)
 
 
@@ -1029,11 +1029,11 @@ formulaReportsDiff thy = do
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
                      let header = show s ++ " Lemma " ++ quote (get lName l)
-                         fm     = get lFormula l
+                         fm     = applyMacroInFormula (diffTheoryMacros thy) (get lFormula l)
                      return (header, fm)
               <|> do EitherRestrictionItem (s, rstr) <- get diffThyItems thy
                      let header = show s ++ " Restriction " ++ quote (get rstrName rstr)
-                         fm     = get rstrFormula rstr
+                         fm     = applyMacroInFormula (diffTheoryMacros thy) (get rstrFormula rstr)
                      return (header, fm)
 
 -- | Check that all rules are multipliation restricted. Compared

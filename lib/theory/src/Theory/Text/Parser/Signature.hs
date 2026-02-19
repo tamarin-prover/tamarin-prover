@@ -177,7 +177,7 @@ function = do
         let k = length argTypes
         let priv = if Private `elem` lefts atts then Private else Public
         let destr = if Destructor `elem` rights atts then Destructor else Constructor
-        case lookup f (S.toList $ stFunSyms sign) of
+        case lookup f (S.toList (stFunSyms sign) ++ S.toList(macroNames sign)) of
           Just kp' | kp' /= (k,priv,destr) && BC.unpack f /= "fst" && BC.unpack f /= "snd" ->
             fail $ "conflicting arities/private " ++
                    show kp' ++ " and " ++ show (k,priv,destr) ++
