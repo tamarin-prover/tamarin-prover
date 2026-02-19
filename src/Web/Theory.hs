@@ -49,6 +49,8 @@ import Data.Maybe
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.Time.Format (defaultTimeLocale, formatTime)
+import Extension.Data.Label qualified as L
+
 
 import System.Directory
 import System.FilePath
@@ -65,7 +67,8 @@ import System.Process hiding (system)
 import Logic.Connectives
 import Theory hiding (lPlaintext)
 import Theory.Text.Pretty
-import TheoryObject (theoryMacros, prettyTactic, diffTheoryMacros, DiffLemma (..))
+import ClosedTheory (prettyClosedProtoRule)
+import TheoryObject (theoryMacros, prettyTactic, diffTheoryMacros, diffTheorySideRules, DiffLemma (..))
 
 import Web.Settings
 import Web.Types
@@ -888,19 +891,24 @@ rulesSnippet thy = vcat
         (prettyMacros $ theoryMacros thy)
     , ppWithHeader "Fact Symbols with Injective Instances" $
         (if null injFacts then text "None" else fsepList (text . showInjFact) injFacts)
-    , ppWithHeader "Multiset Rewriting Rules" $
-        (if null (theoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
-    , ppWithHeader "Restrictions of the Set of Traces" $
-        vsep $ map prettyRestriction $ theoryRestrictions thy
+    , ppWithHeader "Multiset Rewriting Rules" $ vcat (map prettyIntruderRuleAC extraACRules ++ map prettyClosedProtoRule protoRules )
+    , ppWithHeader "Restrictions of the Set of Traces" $ (vsep $ map prettyRestriction $ theoryRestrictions thy)
     ]
   where
-    msrRules   = (getClassifiedRules thy)._crProtocol
+    protoRules = theoryRules thy
+    -- Names of user-defined rules (from theoryRules)
+    protoRuleNames = S.fromList $ map (showRuleCaseName . L.get cprRuleE) protoRules
+    -- All AC rules from ClassifiedRules (including intruder generated rules)
+    allACRules   = (getClassifiedRules thy)._crProtocol
+    -- Only those not already printed (i.e., not in protoRules)
+    extraACRules = filter (\r -> showRuleCaseName r `S.notMember` protoRuleNames) allACRules
     injFacts   = S.toList $ getInjectiveFactInsts thy
     showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ intercalate "," ("id":positions) ++ ")"
       where positions = [case bb of
                           [b] -> show b
                           _   -> "(" ++ intercalate "," (map show bb) ++ ")"
                         | bb <- behaviours ]
+    prettyIntruderRuleAC r = prettyRuleAC r $--$ nest 2 (multiComment_ ["has exactly the trivial AC variant"]) $--$ text ""
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc
@@ -953,19 +961,24 @@ rulesDiffSnippetSide s isdiff thy = vcat
                                      else ppWithHeader "Macros" (prettyMacros $ diffTheoryMacros thy)
     , ppWithHeader "Fact Symbols with Injective Instances" $
         (if null injFacts then text "None" else fsepList (text . showInjFact) injFacts)
-    , ppWithHeader "Multiset Rewriting Rules" $
-        (if null (diffTheoryMacros thy) then text empty else text "(Shown with macros application)") <-> (vsep $ map prettyRuleAC msrRules)
-    , ppWithHeader "Restrictions of the Set of Traces" $
-        vsep $ map prettyRestriction $ diffTheorySideRestrictions s thy
+    , ppWithHeader "Multiset Rewriting Rules" $  vcat (map prettyIntruderRuleAC extraACRules ++ map prettyClosedProtoRule protoRules)
+    , ppWithHeader "Restrictions of the Set of Traces" $ (vsep $ map prettyRestriction $ diffTheorySideRestrictions s thy)
     ]
   where
-    msrRules = (getDiffClassifiedRules s isdiff thy)._crProtocol
+    -- Get all protocol rules for this side (user-defined)
+    protoRules = diffTheorySideRules s thy
+    protoRuleNames = S.fromList $ map (showRuleCaseName . L.get cprRuleE) protoRules
+    -- All AC rules from ClassifiedRules (including intruder generated rules)
+    allACRules   = (getDiffClassifiedRules s isdiff thy)._crProtocol
+    -- Only those not already printed (i.e., not in protoRules)
+    extraACRules = filter (\r -> showRuleCaseName r `S.notMember` protoRuleNames) allACRules
     injFacts = S.toList $ getDiffInjectiveFactInsts s isdiff thy
     showInjFact (tag, behaviours) = showFactTag tag ++ "(" ++ intercalate "," ("id":positions) ++ ")"
       where positions = [case bb of
                           [b] -> show b
                           _   -> "(" ++ intercalate "," (map show bb) ++ ")"
                         | bb <- behaviours ]
+    prettyIntruderRuleAC r = prettyRuleAC r $--$ nest 2 (multiComment_ ["has exactly the trivial AC variant"]) $--$ text ""
     ppWithHeader header body =
         caseEmptyDoc
             emptyDoc

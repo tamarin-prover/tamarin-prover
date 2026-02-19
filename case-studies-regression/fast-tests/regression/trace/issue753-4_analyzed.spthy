@@ -1,0 +1,70 @@
+theory SameFunctionsInBuiltins
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: fst/1, h/1, pair/2, pk/1, sign/2, snd/1, true/0, verify/3
+equations:
+    fst(<x.1, x.2>) = x.1,
+    snd(<x.1, x.2>) = x.2,
+    verify(sign(x.1, x.2), x.1, pk(x.2)) = true
+
+
+
+
+
+
+
+
+
+lemma False:
+  all-traces "⊥"
+/*
+guarded formula characterizing all counter-examples:
+"⊤"
+*/
+simplify
+SOLVED // trace found
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: b71365cfdab5120d97129a6544bd391a2c69f41b (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 12:24:40.37671334 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue753-4.spthy
+
+  output:          examples/regression/trace/issue753-4.spthy.tmp
+  processing time: 0.02s
+  
+  False (all-traces): falsified - found trace (2 steps)
+
+==============================================================================
+*/

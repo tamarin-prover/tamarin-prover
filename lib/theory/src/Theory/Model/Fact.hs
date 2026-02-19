@@ -298,7 +298,7 @@ annotateFact :: S.Set FactAnnotation -> Fact t -> Fact t
 annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
 
 -- | Apply macros in fact
-applyMacroInFact :: [Macro] -> LNFact -> LNFact
+applyMacroInFact :: [LNMacro] -> LNFact -> LNFact
 applyMacroInFact mcs (Fact tag annot terms) = let mTerms = map (applyMacros mcs) terms in
                                               Fact tag annot mTerms
 

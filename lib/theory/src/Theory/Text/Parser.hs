@@ -19,7 +19,8 @@ module Theory.Text.Parser (
   , theory
   , diffTheory
   , parseLemma
-  , parsePlainLemma
+  -- , parsePlainLemma
+  , parseLemmaWithMacros
   , parseRestriction
   , parseIntruderRules
   , liftedAddLemma
@@ -39,7 +40,10 @@ import           Control.Applicative        hiding (empty, many, optional)
 import qualified Control.Monad.Catch        as Catch
 import System.IO.Unsafe (unsafePerformIO)
 import           Text.Parsec                hiding ((<|>))
+import           Text.Parsec.Error          (newErrorMessage, Message(..))
+import           Text.Parsec.Pos            (initialPos)
 import           Text.PrettyPrint.Class     (render)
+import           TheoryObject               (theoryMacros)
 import           Theory
 import           Theory.Text.Parser.Token
 
@@ -52,7 +56,7 @@ import Theory.Text.Parser.Signature
 import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
-import Debug.Trace
+import Lemma (applyMacroInLemma)
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
@@ -86,10 +90,19 @@ parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
 parseLemma = parseString [] "<unknown source>" (lemma Nothing)
 
 -- | Parse a lemma with a given signature, for Lemma editing (signature is for when Lemma uses functions defined in builtins)
-parsePlainLemma :: MaudeSig -> String -> Either ParseError (Lemma ProofSkeleton)
-parsePlainLemma msig = parseStringWState (mkStateSig msig) "<unknown source>" (lemmaWithMsig msig Nothing)
+-- parsePlainLemma :: MaudeSig -> String -> Either ParseError (Lemma ProofSkeleton)
+-- parsePlainLemma msig = parseStringWState (mkStateSig msig) "<unknown source>" (lemmaWithMsig msig Nothing)
 
-
+-- | Parse a lemma with a given signature, on the model of plainLemma, while also expanding macros.
+parseLemmaWithMacros :: OpenTheory -> String -> Either ParseError (Lemma ProofSkeleton)
+parseLemmaWithMacros thy input = do
+     case parseStringWState (mkMacroStateSig thy) "<unknown source>" (lemma Nothing) input of
+       Left err -> Left err
+       Right synLemma -> 
+         case expandLemma thy synLemma of
+           Left err -> Left (newErrorMessage (Message $ "Error expanding lemma: " ++ show err) (initialPos "<unknown source>"))
+           Right expandedLemma -> 
+             Right $ applyMacroInLemma (theoryMacros thy) expandedLemma
 
 
 ------------------------------------------------------------------------------
