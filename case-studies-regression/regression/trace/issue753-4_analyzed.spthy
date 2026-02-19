@@ -1,4 +1,6 @@
-theory SameFunctionsInBuiltins begin
+theory SameFunctionsInBuiltins
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -47,8 +49,8 @@ SOLVED // trace found
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: 56c730fe161c4051cb423cc761c3bda98c06d645 (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-16 15:32:23.932373448 UTC
+Git revision: b71365cfdab5120d97129a6544bd391a2c69f41b (with uncommited changes), branch: HEAD
+Compiled at: 2026-02-19 12:24:40.37671334 UTC
 */
 
 end
@@ -60,7 +62,7 @@ summary of summaries:
 analyzed: examples/regression/trace/issue753-4.spthy
 
   output:          examples/regression/trace/issue753-4.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.02s
   
   False (all-traces): falsified - found trace (2 steps)
 
