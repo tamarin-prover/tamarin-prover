@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-theory seqdfsneeded begin
-=======
 theory seqdfsneeded
 
 begin
->>>>>>> develop
 
 // Function signature and definition of the equational theory E
 
@@ -154,13 +150,8 @@ rule (modulo E) amplify_decoy_case3:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-<<<<<<< HEAD
 Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
 Compiled at: 2026-02-16 12:29:57.582345 UTC
-=======
-Git revision: aa36cbec0c5715297aa253c3b1a3ef085abb32a8 (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-17 08:10:35.09952144 UTC
->>>>>>> develop
 */
 
 end
@@ -172,11 +163,7 @@ summary of summaries:
 analyzed: examples/regression/trace/seqdfsneeded.spthy
 
   output:          examples/regression/trace/seqdfsneeded.spthy.tmp
-<<<<<<< HEAD
   processing time: 0.06s
-=======
-  processing time: 0.10s
->>>>>>> develop
   
   slow (exists-trace): verified (24 steps)
 
