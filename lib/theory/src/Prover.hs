@@ -166,7 +166,6 @@ closeDiffTheoryWithMaude sig thy0 autoSources =
             EitherRuleItem (s, L.set (pracLoopBreakers . rInfo . cprRuleAC) bs ru)
         addBreakers _  item              = item
 
-
 -- | Prove both the assertion soundness as well as all lemmas of the theory. If
 -- the prover fails on a lemma, then its proof remains unchanged.
 proveDiffTheory :: (forall l. (HasLemmaName l, HasLemmaAttributes l) => l -> Bool)       -- ^ Lemma selector.
@@ -320,7 +319,7 @@ openDiffTheory :: ClosedDiffTheory -> OpenDiffTheory
 openDiffTheory  (DiffTheory n f h t sig c1 c2 c3 c4 items opts sapic) =
     -- We merge duplicate rules if they were split into variants
     DiffTheory n f h t (toSignaturePure sig) (openRuleCache c1) (openRuleCache c2) (openRuleCache c3) (openRuleCache c4)
-      (mergeOpenProtoRulesDiff $ map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a p m b c d e) -> (x, Lemma a p m b c d (incrementalToSkeletonProof e)))) items)
+      (mergeOpenProtoRulesDiff $ map (mapDiffTheoryItem id (\(x, y) -> (x, (openProtoRule y))) (\(DiffLemma s a p) -> (DiffLemma s a (incrementalToSkeletonDiffProof p))) (\(x, Lemma a p m b c c' d e) -> (x, Lemma a p m b c c' d (incrementalToSkeletonProof e)))) items)
       opts sapic
 
 ------------------------------------------------------------------------------

@@ -87,8 +87,8 @@ closeTheoryWithMaude sig thy0 autoSources showSaturation =
        ((closeTheoryItem <$> L.get thyItems thy0) `using` parList rdeepseq)
     closeTheoryItem = foldTheoryItem
        (RuleItem . closeProtoRule hnd (theoryMacros thy0))
-       RestrictionItem
-       (LemmaItem . fmap skeletonToIncrementalProof)
+       (RestrictionItem . applyMacroInRestriction (theoryMacros thy0))
+       (LemmaItem . fmap skeletonToIncrementalProof . applyMacroInLemma (theoryMacros thy0))
        TextItem
        ConfigBlockItem
        PredicateItem
@@ -217,7 +217,7 @@ dedNaive fact termsT = aux1 fact
     aux1 _                     = False
 
 derivationTest :: SignatureWithMaude -> OpenRuleCache -> LNFact -> [LNFact] -> Bool
-derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof1 || checkProofd tabProof2 -- trace ("\ntabProof : " ++ show tabProof) 
+derivationTest sig intrR fact terms = null setD || checkProofd tabProof1 || checkProofd tabProof2 -- trace ("\ntabProof : " ++ show tabProof) 
   where
     tInf (Fact _ _ [f]) = f
     tInListf = foldMap getFactTerms
@@ -239,12 +239,12 @@ derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof1 || che
     tabProof1 = concatMap checkProofStatuses provenTheory1
     provenTheory1 = map (proveTheory (const True) defaultProver) closedTheory1
     closedTheory1 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory1 -- no AutoSources
-    modifiedTheory1 = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction2]) t) setD (repeat emptyThy)
+    modifiedTheory1 = map (\s -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0,newRestriction2]) emptyThy) setD
 
     tabProof2 = concatMap checkProofStatuses provenTheory2
     provenTheory2 = map (proveTheory (const True) defaultProver) closedTheory2
     closedTheory2 = map (\t -> closeTheoryWithMaude sig t False False) modifiedTheory2 -- no AutoSources
-    modifiedTheory2 = zipWith (\s t -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0]) t) setD (repeat emptyThy)
+    modifiedTheory2 = map (\s -> (addRules (newRules s) . addLemmas (newLemmas s) . addRestrictions [newRestriction0]) emptyThy) setD
  
     tabTheory (th1:thq) = render (prettyTheory prettySignaturePure prettyOpenRuleCacheWithLimit prettyOpenProtoRule prettyProof prettyTranslationElement th1) ++ " \n\n " ++ tabTheory thq
     tabTheory [] = ""
@@ -259,9 +259,14 @@ derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof1 || che
     a s = [protoFact Linear "Generated_0" (map (msgToFreshTerms . lvarToLnterm) (varD s)),factOnlyOnce]
     alemma s = [protoFact Linear "Generated_0" (map lvarToLnterm (varD s))]
 
-    newLemmas s = [Lemma "Derivation" "Derivation" False AllTraces (Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])) [] (unproven ())] -- FIX-ME : the head should be a problem
+    newLemmas s = [Lemma "Derivation" "Derivation" False AllTraces f (Just f) [] (unproven ())] -- FIX-ME : the head should be a problem
+      where
+        f = Not (existFormula $ landFormula $ alemma s ++ [kLogFact (head (factTerms fact))])
     
-    newRestriction0 = Restriction "OnlyOnce" (forAllFormula (factAnd "i" .&&. factAnd "j" .==>. factEq "i" "j"))
+    newRestriction0 :: Restriction
+    newRestriction0 = Restriction "OnlyOnce" f (Just f)
+      where
+        f = forAllFormula (factAnd "i" .&&. factAnd "j" .==>. factEq "i" "j")
     factAnd x = Ato (Action (LIT (Var (Free (LVar x LSortNode 0)))) factOnlyOnce)
     factEq x y = Ato (EqE (LIT (Var (Free (LVar x LSortNode 0)))) (LIT (Var (Free (LVar y LSortNode 0)))))
     factOnlyOnce = protoFact Linear "OnlyOnce" []
@@ -270,7 +275,10 @@ derivationTest sig intrR fact terms = setD == [] || checkProofd tabProof1 || che
     factAndD x = Ato (Action (LIT (Var (Free (LVar x LSortNode 0)))) factOnlyOnceD)
     factOnlyOnceD = protoFact Linear "OnlyOnceD" []
 
-    newRestriction2 = Restriction "OnlyOnceD" (forAllFormula (factAndD "i" .&&. factAndD "j" .&&. factAndD "k" .==>. factEq "i" "j" .||. factEq "i" "k" .||. factEq "j" "k" ))
+    newRestriction2 :: Restriction
+    newRestriction2 = Restriction "OnlyOnceD" f (Just f)
+     where
+      f = forAllFormula (factAndD "i" .&&. factAndD "j" .&&. factAndD "k" .==>. factEq "i" "j" .||. factEq "i" "k" .||. factEq "j" "k" )
 
     defaultProver = replaceSorryProver $ runAutoProver (AutoProver Nothing Nothing Nothing CutDFS False)
 

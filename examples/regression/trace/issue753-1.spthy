@@ -1,0 +1,9 @@
+theory FunctionRedefiningBeforeBuiltins
+begin
+
+//functions: h/7
+builtins: hashing
+// Should generate an error if functions is uncommented because of the redefining of h function.
+// Hence why it is not added in the makefile.
+
+end

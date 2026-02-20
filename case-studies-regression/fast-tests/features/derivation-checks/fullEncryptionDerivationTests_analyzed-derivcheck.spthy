@@ -1,0 +1,189 @@
+theory EncryptionDerivationTests
+
+begin
+
+// Function signature and definition of the equational theory E
+
+functions: adec/2, aenc/2, fst/1, mydec/2, myenc/2, pair/2, pk/1, sdec/2,
+           senc/2, snd/1
+equations:
+    adec(aenc(x.1, pk(x.2)), x.2) = x.1,
+    fst(<x.1, x.2>) = x.1,
+    mydec(myenc(x, k), k) = x,
+    sdec(senc(x.1, x.2), x.2) = x.1,
+    snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+
+
+rule (modulo E) test_manual_encryption:
+   [ In( myenc(x, k) ), In( k ) ] --[ ManualEncrypted( x ) ]-> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) test_symmetric_encryption:
+   [ In( senc(x, k) ), In( k ) ] --[ SymDecrypted( x ) ]-> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) invalid_manual_decrypt:
+   [ In( myenc(x, k) ) ] --> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) invalid_sym_decrypt:
+   [ In( senc(x, k) ) ] --> [ Out( x ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) reveal_symmetric_key:
+   [ In( 'reveal' ), Fr( ~k ) ] --[ RevealKey( ~k ) ]-> [ Out( ~k ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Register_pk:
+   [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Get_pk:
+   [ !Pk( A, pubkey ) ] --> [ Out( pubkey ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Reveal_ltk:
+   [ !Ltk( A, ltk ) ] --[ LtkReveal( A ) ]-> [ Out( ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Encrypt_with_pk:
+   [ In( msg ), In( pubkey ) ]
+  --[ AsymEncrypted( msg, pubkey ) ]->
+   [ Out( aenc(msg, pubkey) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Valid_decrypt_with_sk:
+   [ In( aenc(msg, pk(ltk)) ), !Ltk( A, ltk ) ]
+  --[ ValidDecryption( msg, A ) ]->
+   [ Out( msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Decrypt_with_input_sk:
+   [ In( aenc(msg, pk(ltk)) ), In( ltk ) ]
+  --[ SkDecryption( msg ) ]->
+   [ Out( msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_decrypt_without_sk:
+   [ In( aenc(msg, pubkey) ) ] --> [ Out( msg ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_extract_pubkey:
+   [ In( aenc(msg, pubkey) ) ] --> [ Out( pubkey ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Invalid_derive_sk_from_pk:
+   [ In( pk(ltk) ) ] --> [ Out( ltk ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) A_sends_to_B:
+   [ Fr( ~msg ), !Pk( B, pubkeyB ) ]
+  --[ SendEncrypted( $A, B, ~msg ) ]->
+   [ Out( aenc(<'msg', ~msg, $A>, pubkeyB) ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) B_receives_from_A:
+   [ In( aenc(<'msg', msg, A>, pk(ltkB)) ), !Ltk( $B, ltkB ) ]
+  --[ ReceiveDecrypted( $B, A, msg ) ]->
+   [ Out( 'Success' ) ]
+
+  /* has exactly the trivial AC variant */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+WARNING: the following wellformedness checks failed!
+
+Message Derivation Checks
+=========================
+
+  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
+
+Rule invalid_manual_decrypt: 
+Failed to derive Variable(s): k, x
+
+Rule invalid_sym_decrypt: 
+Failed to derive Variable(s): k, x
+
+Rule Invalid_decrypt_without_sk: 
+Failed to derive Variable(s): msg, pubkey
+
+Rule Invalid_extract_pubkey: 
+Failed to derive Variable(s): msg, pubkey
+
+Rule Invalid_derive_sk_from_pk: 
+Failed to derive Variable(s): ltk
+*/
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
+*/
+
+end
+/* Output
+maude tool: 'maude'
+ checking version: 3.5.1. OK.
+ checking installation: OK.
+[Theory EncryptionDerivationTests] Theory loaded
+[Theory EncryptionDerivationTests] Theory translated
+[Theory EncryptionDerivationTests] Derivation checks started
+[Theory EncryptionDerivationTests] Derivation checks ended
+[Theory EncryptionDerivationTests] Theory closed
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/features/derivation-checks/fullEncryptionDerivationTests.spthy
+
+  output:          examples/features/derivation-checks/fullEncryptionDerivationTests.spthy.tmp
+  processing time: 0.25s
+  
+  WARNING: 1 wellformedness check failed!
+           The analysis results might be wrong!
+
+==============================================================================
+*/

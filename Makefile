@@ -100,7 +100,7 @@ csf12-case-studies:	$(CSF12_CS_TARGETS)
 case-studies$(SUBDIR)%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -113,7 +113,7 @@ case-studies$(SUBDIR)%_analyzed.spthy:	examples/%.spthy $(TAMARIN)
 case-studies$(SUBDIR)%_analyzed-auto-sources.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p $(dir $@)
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --auto-sources --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --auto-sources --prove --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -126,7 +126,7 @@ case-studies$(SUBDIR)%_analyzed-auto-sources.spthy:	examples/%.spthy $(TAMARIN)
 case-studies$(SUBDIR)%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf18-xor
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -139,7 +139,7 @@ case-studies$(SUBDIR)%_analyzed-oracle-chaum.spthy: examples/%.spthy $(TAMARIN)
 case-studies$(SUBDIR)%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)regression/trace
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=seqdfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=seqdfs -d=0 +RTS -N3  -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -152,9 +152,19 @@ case-studies$(SUBDIR)%_analyzed-seqdfs.spthy: examples/%.spthy $(TAMARIN)
 case-studies$(SUBDIR)%_analyzed-deforacle.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)regression/trace
 	# Use -N3, as the fourth core is used by the OS and the console
-	cd examples/regression/trace && $(TAMARIN) defaultoracle.spthy --prove +RTS -N3 -RTS -odefaultoracle.spthy.tmp >defaultoracle.spthy.out
+	cd examples/regression/trace && $(TAMARIN) defaultoracle.spthy --prove -d=0 +RTS -N3 -RTS -odefaultoracle.spthy.tmp >defaultoracle.spthy.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
+# Special rule for derivation-check files to not bypass derivation checks.
+case-studies$(SUBDIR)features/derivation-checks/%_analyzed-derivcheck.spthy: examples/features/derivation-checks/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out 2>&1
 	printf "\n/* Output\n" >>$<.tmp
 	cat $<.out >>$<.tmp
 	echo "*/" >>$<.tmp
@@ -174,7 +184,7 @@ case-studies$(SUBDIR)%_analyzed-diff.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
 	# Use -N3, as the fourth core is used by the OS and the console
 	# For execution on server using -N14 for faster completion!
-	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs +RTS -N14 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --diff --stop-on-trace=dfs -d=0 +RTS -N14 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -190,7 +200,7 @@ case-studies$(SUBDIR)%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)regression/diff
 	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --diff --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -203,7 +213,7 @@ case-studies$(SUBDIR)%_analyzed-diff-noprove.spthy:	examples/%.spthy $(TAMARIN)
 case-studies$(SUBDIR)%_analyzed-diff-obseqonly.spthy:	examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf18-xor/diff-models
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove=Observational_equivalence --diff --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove=Observational_equivalence --diff -d=0 --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -238,7 +248,7 @@ OBSEQ_TARGETS= $(CCS15_TARGETS) $(TESTOBSEQ_TARGETS)
 case-studies$(SUBDIR)%_analyzed-oracle-gcm-wrapping.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf19-wrapping
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -251,7 +261,7 @@ case-studies$(SUBDIR)%_analyzed-oracle-gcm-wrapping.spthy: examples/%.spthy $(TA
 case-studies$(SUBDIR)%_analyzed-oracle-siv-wrapping.spthy: examples/%.spthy $(TAMARIN)
 	mkdir -p case-studies$(SUBDIR)csf19-wrapping
 	# Use -N3, as the fourth core is used by the OS and the console
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out
+	$(TAMARIN) $< --prove --stop-on-trace=dfs -d=0 +RTS -N3 -RTS -o$<.tmp >$<.out
 	# We only produce the target after the run, otherwise aborted
 	# runs already 'finish' the case.
 	printf "\n/* Output\n" >>$<.tmp
@@ -392,7 +402,7 @@ ake-bp-case-studies:	$(AKE_BP_CS_TARGETS)
 ## Features
 ###########
 
-FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//multiset/NumberSubtermTests.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy features//configuration/configuration.spthy features//macros/MacroExample.spthy features//macros/MacroGlobalVarNSPK3.spthy features//macros/MacroWithRestrictionCRxor.spthy
+FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//multiset/NumberSubtermTests.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy features//configuration/configuration.spthy features//macros/MacroExample.spthy features//macros/MacroGlobalVarNSPK3.spthy features//macros/MacroWithRestrictionCRxor.spthy features/macros/MacroInLemmasAndRestrictions.spthy
 
 FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR),$(FEATURES_CASE_STUDIES)))
 
@@ -404,15 +414,15 @@ features-case-studies:	$(FEATURES_CS_TARGETS)
 ###############
 
 AUTO_SOURCES_CASE_STUDIES=CCITT_X509_1.spthy CCITT_X509_1c.spthy \
-                   CCITT_X509_3.spthy CCITT_X509_3_BAN.spthy \
-                   AS_Concrete_RPC.spthy Lowe_AS_Concrete_RPC.spthy \
-                   AS_Modified_RPC.spthy AS_RPC.spthy \
-                   Denning-Sacco-SK-Lowe.spthy Denning-Sacco-SK.spthy \
-                   Yahalom_BAN.spthy Yahalom-Lowe.spthy Yahalom.spthy \
-                   Nssk.spthy Nssk_amended.spthy Otway-Rees.spthy \
-                   Wide_Mouthed_Frog.spthy Wide_Mouthed_Frog_Lowe.spthy \
-                   SpliceAS.spthy SpliceAS_2.spthy SpliceAS_3.spthy \
-                   WooLam_Pi_f.spthy
+				   CCITT_X509_3.spthy CCITT_X509_3_BAN.spthy \
+				   AS_Concrete_RPC.spthy Lowe_AS_Concrete_RPC.spthy \
+				   AS_Modified_RPC.spthy AS_RPC.spthy \
+				   Denning-Sacco-SK-Lowe.spthy Denning-Sacco-SK.spthy \
+				   Yahalom_BAN.spthy Yahalom-Lowe.spthy Yahalom.spthy \
+				   Nssk.spthy Nssk_amended.spthy Otway-Rees.spthy \
+				   Wide_Mouthed_Frog.spthy Wide_Mouthed_Frog_Lowe.spthy \
+				   SpliceAS.spthy SpliceAS_2.spthy SpliceAS_3.spthy \
+				   WooLam_Pi_f.spthy
 
 AUTO_SOURCES_CS_TARGETS=$(subst .spthy,_analyzed-auto-sources.spthy,$(addprefix case-studies$(SUBDIR)features/auto-sources/spore/,$(AUTO_SOURCES_CASE_STUDIES)))
 
@@ -434,12 +444,11 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
-
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
@@ -451,7 +460,6 @@ DEFAULTORACLE_CASE_TARGETS=$(subst .spthy,_analyzed-deforacle.spthy, $(addprefix
 # case studies
 regression-case-studies:	$(REGRESSION_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS)
 	grep "verified\|falsified\|processing time" case-studies$(SUBDIR)regression/trace/*.spthy
-
 
 ## SAPIC output in Tamarin
 ##########################
@@ -480,6 +488,16 @@ sapic-case-studies-fast:	$(SAPIC_CS_TARGETS_FAST) # used for quick checks during
 sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in winter
 	grep "verified\|falsified\|processing time" $^
 
+
+## Derivation checks
+##########################
+
+DERIVATION_CHECK_CASE_STUDIES=$(notdir $(wildcard examples/features/derivation-checks/*.spthy))
+DERIVATION_CHECK_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck.spthy,$(addprefix case-studies$(SUBDIR)features/derivation-checks/,$(DERIVATION_CHECK_CASE_STUDIES)))
+
+derivation-check-case-studies:	$(DERIVATION_CHECK_CS_TARGETS)
+	grep "verified\|falsified\|processing time" $^
+
 ## All case studies
 ###################
 
@@ -498,7 +516,7 @@ else 	# ($(UNAME_S),Darwin)
 endif
 #	top -b | head >> $@
 
-CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS)
+CS_TARGETS=case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CSF19_WRAPPING_TARGETS) $(CSF12_CS_TARGETS) $(CLASSIC_CS_TARGETS) $(IND_CS_TARGETS) $(AKE_DH_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(FEATURES_CS_TARGETS) $(OBSEQ_TARGETS) $(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) $(POST17_TARGETS) $(REGRESSION_TARGETS) $(XOR_TARGETS) $(AUTO_SOURCES_CS_TARGETS) $(ACCOUNTABILITY_CS_TARGETS) $(DERIVATION_CHECK_CS_TARGETS)
 
 case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 	grep -R "verified\|falsified\|processing time" case-studies$(SUBDIR)
@@ -507,7 +525,7 @@ case-studies: 	case-studies$(SUBDIR)system.info $(CS_TARGETS)
 ## Fast case studies
 ####################
 
-FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS)
+FAST_CS_TARGETS = case-studies$(SUBDIR)Tutorial_analyzed.spthy $(CCS15_PCS_TARGETS) $(TESTOBSEQ_TARGETS) $(FEATURES_CS_TARGETS) $(REGRESSION_OBSEQ_TARGETS) $(CSF12_CS_TARGETS) $(IND_CS_TARGETS) $(CCS15_CS_TARGETS) $(XOR_TRACE_TARGETS) $(POST17_TRACE_TARGETS) $(CLASSIC_CS_TARGETS) $(AKE_BP_CS_TARGETS) $(SEQDFS_TARGETS) $(DEFAULTORACLE_CASE_TARGETS) $(FAST_REGRESSION_TARGETS) $(XOR_DIFF_OBSEQONLY_TARGETS) $(DERIVATION_CHECK_CS_TARGETS)
 
 fast-case-studies: case-studies$(SUBDIR)system.info $(FAST_CS_TARGETS)
 	mkdir -p case-studies$(SUBDIR)

@@ -1,4 +1,6 @@
-theory STS_MAC begin
+theory STS_MAC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -328,27 +330,14 @@ qed
 
 
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Init_2: 
-Failed to derive Variable(s): ~ltkR
-
-Rule Resp_2: 
-Failed to derive Variable(s): ~ltkI
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
-Maude version 3.4
-Git revision: d224b4b965f014cbf18a3a01c5afbd5b20576914 (with uncommited changes), branch: develop
-Compiled at: 2025-09-08 09:04:28.158015016 UTC
+Maude version 3.5.1
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
 
 end
@@ -360,10 +349,7 @@ summary of summaries:
 analyzed: examples/csf12/STS_MAC.spthy
 
   output:          examples/csf12/STS_MAC.spthy.tmp
-  processing time: 2.02s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.98s
   
   KI_Perfect_Forward_Secrecy_I (all-traces): falsified - found trace (12 steps)
   KI_Perfect_Forward_Secrecy_R (all-traces): falsified - found trace (13 steps)

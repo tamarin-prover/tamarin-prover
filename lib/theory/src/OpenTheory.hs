@@ -150,7 +150,7 @@ addAutoSourcesLemma hnd lemmaName (ClosedRuleCache _ raw _ _) items =
     runMaude = (`runReader` hnd)
 
     -- searching for the lemma
-    lemma (LemmaItem (Lemma name _ _ _ _ _ _)) | name == lemmaName = True
+    lemma (LemmaItem (Lemma name _ _ _ _ _ _ _)) | name == lemmaName = True
     lemma _ = False
 
     -- build the lemma
@@ -910,7 +910,9 @@ prettyDiffTheory ::
   d
 prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy =
   vsep $
-    [ kwTheoryHeader $ text $ L.get diffThyName thy,
+    [ kwTheoryName $ text $ L.get diffThyName thy]
+    ++ parMap rdeepseq ppItem (filter isConfigBlock (L.get diffThyItems thy))
+    ++ [kwTheoryBegin,
       lineComment_ "Function signature and definition of the equational theory E",
       ppSig $ L.get diffThySignature thy,
       if thyT == [] then text "" else vcat $ map prettyTactic thyT,
@@ -921,9 +923,11 @@ prettyDiffTheory ppSig ppCache ppRule ppDiffPrf ppPrf thy =
       ppCache $ L.get diffThyDiffCacheLeft thy,
       ppCache $ L.get diffThyDiffCacheRight thy
     ]
-      ++ parMap rdeepseq ppItem (L.get diffThyItems thy)
+      ++ parMap rdeepseq ppItem (filter (not . isConfigBlock) (L.get diffThyItems thy)) 
       ++ [kwEnd]
   where
+    isConfigBlock (DiffConfigBlockItem _) = True
+    isConfigBlock _ = False
     ppItem =
       foldDiffTheoryItem
         prettyDiffRule

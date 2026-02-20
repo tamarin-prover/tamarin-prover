@@ -25,32 +25,29 @@ import           Term.Macro
 import           Theory
 import           Theory.Text.Parser.Token
 import           Theory.Text.Parser.Term
- 
-macros :: Parser ([Macro])
-macros = do 
-    mcs <- (symbol "macros" *> colon *> commaSep macro)
-    return mcs
+
+macros :: Parser [LNMacro]
+macros = do symbol "macros" *> colon *> commaSep macro
     where
-      macro = do 
+      macro = do
         op <- BC.pack <$> identifier
         when (BC.unpack op `elem` reservedBuiltins)
             $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
         args <- parens $ commaSep lvar
-        when (not (length args == length (nub args)))
+        unless (length args == length (nub args))
             $ error $ show op ++ " have two arguments with the same name."
         out <- equalSign *> term False llit
         sign <- sig <$> getState
         let mc = (op, args, out)
         let k = length args
-        case lookup op (S.toList (noEqorACSet (userDefinedFunSyms sign))) of
-            Just _ -> fail $ "Conflicting name for macro " ++ BC.unpack op
-            _ -> do 
-                modifyStateSig $ addFunSym (NoEqUser (op,(k,Private,Destructor))) 
-                return (mc)
-            where
-                noEqorACSet = S.map function
-                function (NoEqUser (o,(k,p,c))) = (o,(k,p,c))
-                function (ACfctUser (o,(p,c))) = (o,(2,p,c))
+        if op `elem` map extractName (S.toList (userDefinedFunSyms sign) ++ map NoEqUser (S.toList (macroNames sign)))
+            then fail $ "Conflicting name for macro " ++ BC.unpack op
+            else do 
+                modifyStateSig $ addMacroSym (op,(k,Private,Destructor))
+                return mc
 
-getMacroName :: Macro -> String
+      extractName (NoEqUser (o, _))  = o
+      extractName (ACfctUser (o, _)) = o
+
+getMacroName :: LNMacro -> String
 getMacroName (op, _, _) = BC.unpack op

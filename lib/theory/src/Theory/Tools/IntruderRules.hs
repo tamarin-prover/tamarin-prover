@@ -229,11 +229,9 @@ subtermIntruderRules diff hnd maudeSig =
 -- function signature @fSig@
 constructionRules :: UserDefinedSig -> [IntrRuleAC]
 constructionRules fSig =
-    [ createRule s k acstate | (s,(k,Public,Constructor,acstate)) <- S.toList (noEqorACSet fSig) ]
+    [ createRule s k NotAC | NoEqUser (s,(k,Public,Constructor)) <- S.toList fSig ] ++
+    [ createRule s 2 IsAC | ACfctUser (s,(Public,Constructor)) <- S.toList fSig ]
   where
-    noEqorACSet = S.map function
-    function (NoEqUser (o,(k,p,c))) = (o,(k,p,c,NotAC))
-    function (ACfctUser (o,(p,c))) = (o,(2,p,c,IsAC))
     createRule s k acstate = Rule (ConstrRule (append (pack "_") s)) (map kuFact vars) [concfact acstate] [concfact acstate] []
       where vars     = take k [ varTerm (LVar "x"  LSortMsg i) | i <- [0..] ]
             m        = fAppNoEq (s,(k,Public,Constructor)) vars

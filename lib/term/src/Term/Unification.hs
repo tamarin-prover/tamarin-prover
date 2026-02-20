@@ -75,7 +75,9 @@ module Term.Unification (
   , acUserFunSyms
   , userDefinedFunSyms
   , userDefinedSTFunSyms
+  , macroNames
   , addFunSym
+  , addMacroSym
   , addCtxtStRule
 
   -- * Convenience exports

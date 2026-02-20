@@ -62,15 +62,13 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 lookupArity :: String -> Parser (Int, Privacy,Constructability, ACstate)
 lookupArity op = do
     maudeSig <- sig <$> getState
-    case lookup (BC.pack op) (S.toList (noEqorACSet (userDefinedFunSyms maudeSig)) ++ [(emapSymString, (2,Public,Constructor,NotAC))]) of
-        Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
-        Just (k,priv,cnstr,acstate) -> return (k,priv,cnstr,acstate)
-        -- Just (NoEqUser (_,(k,priv,cnstr))) -> return (k,priv,cnstr,NotAC)
-        -- Just (ACfctUser (_,(k,priv,cnstr))) -> return (k,priv,cnstr,IsAC)
-        where
-          noEqorACSet = S.map function
-          function (NoEqUser (o,(k,p,c))) = (o,(k,p,c,NotAC))
-          function (ACfctUser (o,(p,c))) = (o,(2,p,c,IsAC))
+    case lookup (BC.pack op) (map extractName(S.toList (userDefinedFunSyms maudeSig) ++ map NoEqUser (S.toList (macroNames maudeSig) ++ [(emapSymString, (2,Public,Constructor))]))) of
+        Nothing                            -> fail $ "unknown operator `" ++ op ++ "'"
+        Just (NoEqUser (_,(k,priv,cnstr))) -> return (k,priv,cnstr,NotAC)
+        Just (ACfctUser (_,(priv,cnstr)))  -> return (2,priv,cnstr,IsAC)
+  where
+    extractName (NoEqUser (o, r))  = (o, NoEqUser (o, r))
+    extractName (ACfctUser (o, r)) = (o, ACfctUser (o, r))
 
 
 reservedBuiltins :: [[Char]]

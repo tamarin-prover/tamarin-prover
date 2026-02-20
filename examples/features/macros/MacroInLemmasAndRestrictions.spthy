@@ -1,0 +1,24 @@
+theory MacrosInLemmasAndRestrictions
+
+begin
+
+macros:
+  m(x) = x, m2(x,y)= <x,y>, m3(x) = x
+
+rule A:
+  [ In(x) ] --[ A(m(x)) ]-> [ ]
+
+rule B:
+  [ In(x), In(y) ] --[ B(m2(x,y)) ]-> [ ]
+
+rule C:
+  [ In(x) ] --[ C(x) ]-> [ ]
+
+restriction OnlyValidProcessing:
+  "All x #i. A(m(m3(x)))@i ==> Ex y. x = y"
+
+lemma M:
+  exists-trace
+  "Ex x #i. A(m(x))@i"
+
+end

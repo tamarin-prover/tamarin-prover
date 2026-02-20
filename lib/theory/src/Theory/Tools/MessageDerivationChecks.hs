@@ -174,7 +174,7 @@ generateAction :: [LVar] ->Int -> LNFact
 generateAction vars idx = protoFact Persistent ("Generated_" ++ show idx) (map lvarToLnterm (deleteGlobals vars))
 
 generateSeparatedLemmas :: Int -> [LVar]-> [ProtoLemma (ProtoFormula Unit2 (String, LSort) Name LVar) (Proof ())]
-generateSeparatedLemmas idx vars = map (\v -> Lemma (show v) "message_deriv" False ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : [(lntermToKUFact (lvarToLnterm v))]) [] (unproven ())) vars
+generateSeparatedLemmas idx vars = map (\v -> Lemma (show v) "message_deriv" False ExistsTrace (existsTimeFormula $ existFormula $ landFormula $ generateAction vars idx : [(lntermToKUFact (lvarToLnterm v))]) Nothing [] (unproven ())) vars
 
 deleteGlobals :: [LVar] -> [LVar]
 deleteGlobals = filter (\v -> lvarSort v /= LSortPub)
@@ -190,12 +190,6 @@ landFormula facts = foldl (\ fm (idx, fact) -> fm .&&. Ato (Action (LIT (Var (Fr
 premisesToOut :: [LNFact] -> [LNFact]
 premisesToOut =  map (outFact . natToFreshVars) . concatMap factTerms
 
--- Convenience functions for converting vars/terms
-freeLNTerm :: LVar -> BVar LVar
-freeLNTerm = Free
-
-freeTerm :: LNTerm -> Term (Lit Name (BVar LVar))
-freeTerm =  fmap (fmap freeLNTerm)
 
 freeFact :: LNFact ->  Fact (Term (Lit Name (BVar LVar)))
 freeFact = fmap freeTerm
