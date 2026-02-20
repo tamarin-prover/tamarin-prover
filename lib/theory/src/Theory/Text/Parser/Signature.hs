@@ -149,6 +149,7 @@ functionAttribute :: Parser FctAttr
 functionAttribute = asum
   [ symbol "private" Data.Functor.$> Privacy Private
   , symbol "destructor" Data.Functor.$> Constructability Destructor
+  , symbol "constructor" Data.Functor.$> Constructability Constructor
   , symbol "AC" Data.Functor.$> ACstate IsAC
   ]
 

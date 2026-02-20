@@ -309,7 +309,8 @@ post17-case-studies:	$(POST17_TARGETS)
 ## XOR-using case studies
 #########################
 
-XOR_TRACE_CASE_STUDIES= NSLPK3xor.spthy CRxor.spthy CH07.spthy KCL07.spthy LAK06.spthy
+## Removed LAK06.spthy, as it is too slow now
+XOR_TRACE_CASE_STUDIES= NSLPK3xor.spthy CRxor.spthy CH07.spthy KCL07.spthy 
 XOR_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)csf18-xor/,$(XOR_TRACE_CASE_STUDIES)))
 
 XOR_TRACE_ORACLE_CASE_STUDIES= chaum_offline_anonymity.spthy
@@ -318,8 +319,8 @@ XOR_TRACE_ORACLE_TARGETS=$(subst .spthy,_analyzed-oracle-chaum.spthy,$(addprefix
 XOR_BASIC_TRACE_CASE_STUDIES= xor0.spthy xor1.spthy xor2.spthy xor3.spthy xor4.spthy xor-basic.spthy
 XOR_BASIC_TRACE_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)features/xor/basicfunctionality/,$(XOR_BASIC_TRACE_CASE_STUDIES)))
 
-# Includes 6 out of 9 diff-case studies from CSF18, excluding KCL07-UK1, LAK06-UK2, LAK06-UK3 due to runtime!
-XOR_DIFF_CASE_STUDIES= CH07-UK1.spthy CH07-UK2.spthy  KCL07-UK2.spthy LAK06-UK1.spthy
+# Includes 6 out of 9 diff-case studies from CSF18, excluding KCL07-UK1, LAK06-UK1 LAK06-UK2, LAK06-UK3 due to runtime!
+XOR_DIFF_CASE_STUDIES= CH07-UK1.spthy CH07-UK2.spthy  KCL07-UK2.spthy
 XOR_DIFF_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)csf18-xor/diff-models/,$(XOR_DIFF_CASE_STUDIES)))
 
 XOR_DIFF_OBSEQONLY_CASE_STUDIES= CH07-UK3.spthy
@@ -444,7 +445,7 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy issue770.spthy
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
@@ -486,6 +487,24 @@ sapic-case-studies:	$(SAPIC_CS_TARGETS_FAST) $(SAPIC_CS_TARGETS_SLOW) # used for
 sapic-case-studies-fast:	$(SAPIC_CS_TARGETS_FAST) # used for quick checks during development
 	grep "verified\|falsified\|processing time" $^
 sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in winter
+	grep "verified\|falsified\|processing time" $^
+
+## User-defined AC symbols
+##########################
+
+AC_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/*.spthy))
+AC_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/,$(AC_CASE_STUDIES)))
+
+ac-case-studies:	$(AC_CS_TARGETS)
+	grep "verified\|falsified\|processing time" $^
+
+FAST_AC_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/fast/*.spthy))
+FAST_AC_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/,$(FAST_AC_CASE_STUDIES)))
+
+FAST_AC_DIFF_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/fast/diff/*.spthy))
+FAST_AC_DIFF_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck-diff.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/diff/,$(FAST_AC_DIFF_CASE_STUDIES)))
+
+fast ac-case-studies:	$(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
 	grep "verified\|falsified\|processing time" $^
 
 
