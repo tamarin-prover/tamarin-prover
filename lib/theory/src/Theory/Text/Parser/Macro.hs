@@ -25,18 +25,18 @@ import           Term.Macro
 import           Theory
 import           Theory.Text.Parser.Token
 import           Theory.Text.Parser.Term
- 
-macros :: Parser ([Macro])
-macros = do 
-    mcs <- (symbol "macros" *> colon *> commaSep macro)
+
+macros :: Parser [LNMacro]
+macros = do
+    mcs <- symbol "macros" *> colon *> commaSep macro
     return mcs
     where
-      macro = do 
+      macro = do
         op <- BC.pack <$> identifier
         when (BC.unpack op `elem` reservedBuiltins)
             $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
         args <- parens $ commaSep lvar
-        when (not (length args == length (nub args)))
+        unless (length args == length (nub args))
             $ error $ show op ++ " have two arguments with the same name."
         out <- equalSign *> term llit False
         sign <- sig <$> getState
@@ -44,9 +44,9 @@ macros = do
         let k = length args
         case lookup op (S.toList $ stFunSyms sign) of
             Just _ -> fail $ "Conflicting name for macro " ++ BC.unpack op
-            _ -> do 
-                modifyStateSig $ addFunSym (op,(k,Private,Destructor)) 
-                return (mc)
+            _ -> do
+                modifyStateSig $ addMacroSym (op,(k,Private,Destructor))
+                return mc
 
-getMacroName :: Macro -> String
+getMacroName :: LNMacro -> String
 getMacroName (op, _, _) = BC.unpack op

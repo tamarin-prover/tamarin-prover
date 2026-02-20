@@ -1,6 +1,10 @@
+<<<<<<< HEAD
+theory DefaultOracle begin
+=======
 theory DefaultOracle
 
 begin
+>>>>>>> develop
 
 // Function signature and definition of the equational theory E
 
@@ -46,8 +50,13 @@ SOLVED // trace found
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
+<<<<<<< HEAD
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
+=======
 Git revision: aa36cbec0c5715297aa253c3b1a3ef085abb32a8 (with uncommited changes), branch: HEAD
 Compiled at: 2026-02-17 08:10:35.09952144 UTC
+>>>>>>> develop
 */
 
 end
@@ -59,7 +68,11 @@ summary of summaries:
 analyzed: defaultoracle.spthy
 
   output:          defaultoracle.spthy.tmp
+<<<<<<< HEAD
+  processing time: 0.04s
+=======
   processing time: 0.05s
+>>>>>>> develop
   
   Test1 (exists-trace): verified (2 steps)
   Test2 (exists-trace): verified (2 steps)

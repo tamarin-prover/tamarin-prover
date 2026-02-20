@@ -225,7 +225,7 @@ foldTheoryItem ::
   (FormalComment -> a) ->
   (ConfigBlock -> a) ->
   (Predicate -> a) ->
-  ([Macro] -> a) ->
+  ([LNMacro] -> a) ->
   (s -> a) ->
   TheoryItem r p s ->
   a
@@ -246,7 +246,7 @@ foldDiffTheoryItem ::
   (DiffLemma p -> a) ->
   ((Side, Lemma p2) -> a) ->
   ((Side, Restriction) -> a) ->
-  ([Macro] -> a) ->
+  ([LNMacro] -> a) ->
   (FormalComment -> a) ->
   (ConfigBlock -> a) ->
   DiffTheoryItem r r2 p p2 ->
@@ -322,7 +322,7 @@ rightTheoryRules =
   foldDiffTheoryItem (const []) (\(x, y) -> if (x == RHS) then [y] else []) (const []) (const []) (const []) (const []) (const []) (const []) <=< L.get diffThyItems
 
 -- |  All macros of a theory.
-theoryMacros :: Theory sig c r p s -> [Macro]
+theoryMacros :: Theory sig c r p s -> [LNMacro]
 theoryMacros =
   foldTheoryItem (const []) (const []) (const []) (const []) (const []) (const []) (\m -> m) (const []) <=< L.get thyItems
 
@@ -390,7 +390,7 @@ diffTheoryRestrictions =
   foldDiffTheoryItem (const []) (const []) (const []) (const []) return (const []) (const []) (const []) <=< L.get diffThyItems
 
 -- |  All macros of a diff theory.
-diffTheoryMacros :: DiffTheory sig c r r2 p p2 -> [Macro]
+diffTheoryMacros :: DiffTheory sig c r r2 p p2 -> [LNMacro]
 diffTheoryMacros =
   foldDiffTheoryItem (const []) (const []) (const []) (const []) (const []) (\m -> m) (const []) (const []) <=< L.get diffThyItems
 
@@ -431,13 +431,19 @@ expandRestriction ::
   Theory sig c r p s ->
   ProtoRestriction SyntacticLNFormula ->
   Either FactTag (ProtoRestriction LNFormula)
-expandRestriction thy (Restriction n f) = Restriction n <$> expandFormula (theoryPredicates thy) f
+expandRestriction thy (Restriction n f ofm) = do
+  f' <- expandFormula (theoryPredicates thy) f
+  ofm' <- mapM (expandFormula (theoryPredicates thy)) ofm
+  return $ Restriction n f' ofm'
 
 expandLemma ::
   Theory sig c r p1 s ->
   ProtoLemma SyntacticLNFormula p2 ->
   Either FactTag (ProtoLemma LNFormula p2)
-expandLemma thy (Lemma n u m tq f a p) = (\f' -> Lemma n u m tq f' a p) <$> expandFormula (theoryPredicates thy) f
+expandLemma thy (Lemma n u m tq f ofm a p) = do
+  f' <- expandFormula (theoryPredicates thy) f
+  ofm' <- mapM (expandFormula (theoryPredicates thy)) ofm
+  return $ Lemma n u m tq f' ofm' a p
 
 -- | Add a new restriction. Fails, if restriction with the same name exists.
 addRestriction :: Restriction -> Theory sig c r p s -> Maybe (Theory sig c r p s)
@@ -475,11 +481,11 @@ addFunctionTypingInfo :: SapicFunSym -> Theory sig c r p TranslationElement -> T
 addFunctionTypingInfo l = modify thyItems (++ [TranslationItem $ FunctionTypingInfo l])
 
 -- | Add new Macros.
-addMacros :: [Macro] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
+addMacros :: [LNMacro] -> Theory sig c r p s -> Maybe (Theory sig c r p s)
 addMacros m thy = return $ modify thyItems (++ [MacroItem m]) thy
 
 -- | Add new Macros.
-addDiffMacros :: [Macro] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
+addDiffMacros :: [LNMacro] -> DiffTheory sig c r r2 p p2 -> Maybe (DiffTheory sig c r r2 p p2)
 addDiffMacros m thy = return $ modify diffThyItems (++ [DiffMacroItem m]) thy
 
 -- | Remove all Function Typing information in Theory
@@ -810,16 +816,16 @@ prettyVarList :: (Document d) => [LVar] -> d
 prettyVarList = fsep . punctuate comma . map prettyLVar
 
 -- |  Pretty print all macros
-prettyMacros :: (HighlightDocument d) => [Macro] -> d
+prettyMacros :: (HighlightDocument d) => [LNMacro] -> d
 prettyMacros [] = text empty
-prettyMacros m = keyword_ "macros:" $$ nest 4 
-  (vcat [if i == length m - 1 
-          then prettyMacro macro 
-          else prettyMacro macro <> comma 
+prettyMacros m = keyword_ "macros:" $$ nest 4
+  (vcat [if i == length m - 1
+          then prettyMacro macro
+          else prettyMacro macro <> comma
         | (i, macro) <- zip [0..] m])
 
 -- |  Pretty print a macro.
-prettyMacro :: (HighlightDocument d) => Macro -> d
+prettyMacro :: (HighlightDocument d) => LNMacro -> d
 prettyMacro (op, args, out) =
   vcat
     [ ppNonEmptyList
@@ -841,20 +847,32 @@ prettyRestriction :: (HighlightDocument d) => Restriction -> d
 prettyRestriction rstr =
   kwRestriction <-> text (L.get rstrName rstr)
     <> colon
-      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr)
+      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula (fromMaybe expandedFormula ogFormula))
       $-$ (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
+      $--$ (case ogFormula of
+            Just _ -> nest 2 $ multiComment $ text "expanded formula:" $-$ 
+                             doubleQuotes (prettyLNFormula expandedFormula)
+            _ -> emptyDoc)
   where
-    safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
+    Restriction _ expandedFormula ogFormula = rstr
+    safety = isSafetyFormula $ formulaToGuarded_ $ expandedFormula
 
 -- | Pretty print an either restriction.
 prettyEitherRestriction :: (HighlightDocument d) => (Side, Restriction) -> d
 prettyEitherRestriction (s, rstr) =
   kwRestriction <-> text (L.get rstrName rstr) <-> prettySide s
     <> colon
-      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula $ L.get rstrFormula rstr)
+      $-$ (nest 2 $ doubleQuotes $ prettyLNFormula (fromMaybe expandedFormula ogFormula))
       $-$ (nest 2 $ if safety then lineComment_ "safety formula" else emptyDoc)
+      $--$ case ogFormula of
+            Just _ -> nest 2 $ multiComment $ text "expanded formula:" $-$ 
+                             doubleQuotes (prettyLNFormula expandedFormula)
+            _ -> emptyDoc
   where
-    safety = isSafetyFormula $ formulaToGuarded_ $ L.get rstrFormula rstr
+    Restriction _ expandedFormula ogFormula = rstr
+    safety = isSafetyFormula $ formulaToGuarded_ $ expandedFormula
+
+
 
 -- | Pretty print a configuration block.
 prettyConfigBlock :: (HighlightDocument d) => ConfigBlock -> d

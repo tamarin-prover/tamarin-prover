@@ -4,6 +4,7 @@ module Lemma (
   , ProtoLemma(..)
   , DiffLemma(..)
   , lemmaSourceKind
+  , applyMacroInLemma
   , addLeftLemma
   , addRightLemma
   , toSystemTraceQuantifier
@@ -25,10 +26,12 @@ import Items.LemmaItem
 
 
 import Text.PrettyPrint.Highlight
+import Term.Macro
 import Theory.Text.Pretty
 import Theory.Model
 --import Theory.Constraint.Solver
 import Data.List (intercalate)
+import Data.Maybe(fromMaybe)
 
 
 -- | The source kind allowed for a lemma.
@@ -76,6 +79,14 @@ isRightLemma lem =
 -- isBothLemma lem =
 --      (BothLemma `elem` L.get lAttributes lem)
 
+-- | Apply macros to a lemma
+applyMacroInLemma :: [LNMacro] -> Lemma p -> Lemma p
+applyMacroInLemma macros lemma = 
+  let originalFormula = L.get lFormula lemma
+      expandedFormula = applyMacroInFormula macros originalFormula
+  in L.set lOriginalFormula (Just originalFormula) $ 
+     L.set lFormula expandedFormula lemma
+
 -- | Pretty print the lemma name together with its attributes.
 prettyLemmaName :: HighlightDocument d => Lemma p -> d
 prettyLemmaName l = case L.get lAttributes l of
@@ -107,14 +118,16 @@ prettyLemma ppPrf lem =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
-          , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
+          , doubleQuotes $ prettyLNFormula (fromMaybe expandedFormula ogFormula)
           ]
     )
     $-$
-    ppLNFormulaGuarded (L.get lFormula lem)
+    ppLNFormulaGuarded expandedFormula
     $-$
     ppPrf (L.get lProof lem)
   where
+    expandedFormula = L.get lFormula lem
+    ogFormula = L.get lOriginalFormula lem    
     ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$
@@ -133,14 +146,16 @@ prettyEitherLemma ppPrf (_, lem) =
     kwLemma <-> prettyLemmaName lem <> colon $-$
     (nest 2 $
       sep [ prettyTraceQuantifier $ L.get lTraceQuantifier lem
-          , doubleQuotes $ prettyLNFormula $ L.get lFormula lem
+          , doubleQuotes $ prettyLNFormula (fromMaybe expandedFormula ogFormula)
           ]
     )
     $-$
-    ppLNFormulaGuarded (L.get lFormula lem)
+    ppLNFormulaGuarded expandedFormula
     $-$
     ppPrf (L.get lProof lem)
   where
+    expandedFormula = L.get lFormula lem
+    ogFormula = L.get lOriginalFormula lem
     ppLNFormulaGuarded fm = case formulaToGuarded fm of
         Left err -> multiComment $
             text "conversion to guarded formula failed:" $$

@@ -1029,7 +1029,7 @@ addAction (Rule info prems concs acts nvs) act =
     else Rule info prems concs (act:acts) nvs
 
 -- | Apply macros into a rule
-applyMacroInRule :: [Macro] -> Rule i -> Rule i
+applyMacroInRule :: [LNMacro] -> Rule i -> Rule i
 applyMacroInRule mcs (Rule info ruPrems ruConcs ruActs _) = Rule info mRuPrems mRuConcs mRuActs mRuNewVars
   where
     mRuPrems   = map (applyMacroInFact mcs) ruPrems
@@ -1198,7 +1198,7 @@ prettyRuleAttribute attr = fsep $ punctuate comma $ catMaybes [ -- Maybe types a
     ]
     where
 
-    ppProcess   p = text "process=" <> text ("\'" ++ prettySapicTopLevel' f p ++ "\'")
+    ppProcess   p = text "process=" <> text ("\"" ++ prettySapicTopLevel' f p ++ "\"")
         where f l a r rest _ = render $ prettyRuleRestr (g l) (g a) (g r) (h rest)
               g = map toLNFact
               h = map toLFormula

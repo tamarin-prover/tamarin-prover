@@ -51,6 +51,7 @@ data ProtoLemma f p = Lemma
        , _lModified        :: Bool
        , _lTraceQuantifier :: TraceQuantifier
        , _lFormula         :: f
+       , _lOriginalFormula :: Maybe f
        , _lAttributes      :: [LemmaAttribute]
        , _lProof           :: p
        }
@@ -105,13 +106,13 @@ instance HasField "lAttributes" (DiffLemma p) [LemmaAttribute] where
 ------------
 
 instance Functor Lemma where
-    fmap f (Lemma n p m qua fm atts prf) = Lemma n p m qua fm atts (f prf)
+    fmap f (Lemma n p m qua fm ofm atts prf) = Lemma n p m qua fm ofm atts (f prf)
 
 instance Foldable Lemma where
     foldMap f = f . L.get lProof
 
 instance Traversable Lemma where
-    traverse f (Lemma n p m qua fm atts prf) = Lemma n p m qua fm atts <$> f prf
+    traverse f (Lemma n p m qua fm ofm atts prf) = Lemma n p m qua fm ofm atts <$> f prf
 
 instance Functor DiffLemma where
     fmap f (DiffLemma n atts prf) = DiffLemma n atts (f prf)
