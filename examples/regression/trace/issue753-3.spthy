@@ -1,0 +1,10 @@
+theory MacroRedefiningBuiltin
+
+begin
+// builtins: hashing
+// Should generate an error if builtins is uncommented because of the redefining of h function.
+// Hence why it is not added in the makefile.
+macros: h(x) = x
+
+
+end

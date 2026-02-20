@@ -161,6 +161,16 @@ case-studies$(SUBDIR)%_analyzed-deforacle.spthy: examples/%.spthy $(TAMARIN)
 	mv $<.tmp $@
 	\rm -f $<.out
 
+# Special rule for derivation-check files to not bypass derivation checks.
+case-studies$(SUBDIR)features/derivation-checks/%_analyzed-derivcheck.spthy: examples/features/derivation-checks/%.spthy $(TAMARIN)
+	mkdir -p $(dir $@)
+	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out 2>&1
+	printf "\n/* Output\n" >>$<.tmp
+	cat $<.out >>$<.tmp
+	echo "*/" >>$<.tmp
+	mv $<.tmp $@
+	\rm -f $<.out
+
 
 ## Observational Equivalence
 ############################
@@ -392,7 +402,7 @@ ake-bp-case-studies:	$(AKE_BP_CS_TARGETS)
 ## Features
 ###########
 
-FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//multiset/NumberSubtermTests.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy features//configuration/configuration.spthy features//macros/MacroExample.spthy features//macros/MacroGlobalVarNSPK3.spthy features//macros/MacroWithRestrictionCRxor.spthy
+FEATURES_CASE_STUDIES=cav13/DH_example.spthy features//multiset/counter.spthy features//multiset/NumberSubtermTests.spthy features//private_function_symbols/NAXOS_eCK_PFS_private.spthy features//private_function_symbols/NAXOS_eCK_private.spthy features//injectivity/injectivity.spthy features//configuration/configuration.spthy features//macros/MacroExample.spthy features//macros/MacroGlobalVarNSPK3.spthy features//macros/MacroWithRestrictionCRxor.spthy features/macros/MacroInLemmasAndRestrictions.spthy
 
 FEATURES_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR),$(FEATURES_CASE_STUDIES)))
 
@@ -434,12 +444,11 @@ accountability-case-studies:	$(ACCOUNTABILITY_CS_TARGETS)
 ## Regression (old issues)
 ##########################
 
-FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy
+FAST_REGRESSION_CASE_STUDIES=issue446-1.spthy issue446-2.spthy issue753-4.spthy
 FAST_REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(FAST_REGRESSION_CASE_STUDIES)))
 
 
 REGRESSION_CASE_STUDIES=issue216.spthy issue193.spthy issue310.spthy issue519.spthy issue527.spthy issue515.spthy
-
 REGRESSION_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)regression/trace/,$(REGRESSION_CASE_STUDIES)))
 
 SEQDFS_CASE_STUDIES=seqdfsneeded.spthy
@@ -482,18 +491,12 @@ sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in w
 
 ## Derivation checks
 ##########################
-DERIVATION_CHECK_CASE_STUDIES=$(notdir $(wildcard examples/features/derivation-checks/*.spthy))
-DERIVATION_CHECK_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)features/derivation-checks/,$(DERIVATION_CHECK_CASE_STUDIES)))
 
-# Special rule for derivation-check files to not bypass derivation checks.
-case-studies$(SUBDIR)features/derivation-checks/%_analyzed.spthy: examples/features/derivation-checks/%.spthy $(TAMARIN)
-	mkdir -p $(dir $@)
-	$(TAMARIN) $< --prove --stop-on-trace=dfs +RTS -N3 -RTS -o$<.tmp >$<.out 2>&1
-	printf "\n/* Output\n" >>$<.tmp
-	cat $<.out >>$<.tmp
-	echo "*/" >>$<.tmp
-	mv $<.tmp $@
-	\rm -f $<.out
+DERIVATION_CHECK_CASE_STUDIES=$(notdir $(wildcard examples/features/derivation-checks/*.spthy))
+DERIVATION_CHECK_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck.spthy,$(addprefix case-studies$(SUBDIR)features/derivation-checks/,$(DERIVATION_CHECK_CASE_STUDIES)))
+
+derivation-check-case-studies:	$(DERIVATION_CHECK_CS_TARGETS)
+	grep "verified\|falsified\|processing time" $^
 
 ## All case studies
 ###################

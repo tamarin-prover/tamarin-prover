@@ -123,20 +123,20 @@ earlier defined macros.
 
 ### Global macros {#sec:macros}
 
-Sometimes we want to use the same let binding(s) in multiples rules. In such a
+Sometimes we want to use the same let binding(s) in multiples rules, lemmas or restrictions. In such a
 case, we can use the `macros` keyword to define global macros, which are
-applied to all rules. Consider the following example:
+applied to all rules, lemmas and restrictions. Consider the following example:
 
 	macros: macro1(x) = h(x), macro2(x, y) = <x, y>, ..., macro7() = $A
 
 Here `macro1` is the name of the first macro, and `x` is its the parameter.
 The second macro is called `macro2` and has two parameters `x` and `y`.
 The last macro `macro7` has no parameters.
-The the term on the right of the `=` sign is the output of the macro. It can be
+The term on the right of the `=` sign is the output of the macro. It can be
 any term built from the functions defined in the equational theory and the
 parameters of the macro.
 
-To use a macro in a rule, we can use the macro like a function inside terms.
+To use a macro in a theory, we can use the macro like a function inside terms.
 For example
 
 	[ In(macro1(~ltk)) ] --[ ... ]-> [ Out(macro2(pkA, pkB)) ]
@@ -158,9 +158,9 @@ However, the following snippet would result in an error
 
 as `innerMacro` is not yet defined when `hashMacro` is defined.
 
-Macros only apply to rules, and are shown in interactive mode together with the
+Macros applied to rules are shown in interactive mode together with the
 protocol rules.
-When exporting a theory, Tamarin will export the original rules (before the
+When exporting a theory, Tamarin will export the original rules, lemmas and restrictions (before the
 macros were applied) and the macros.
 
 Facts
