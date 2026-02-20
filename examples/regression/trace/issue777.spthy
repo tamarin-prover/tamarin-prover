@@ -1,0 +1,13 @@
+theory ExpMacro
+
+begin
+
+builtins: diffie-hellman
+
+macros:
+    pk(x) = 'g'^x // pk(x) = exp('g', x) works
+
+rule A:
+  [ Fr(~x) ] --> [ Out(pk(~x)) ]
+
+end
