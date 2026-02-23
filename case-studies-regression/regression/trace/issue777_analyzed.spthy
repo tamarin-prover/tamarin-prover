@@ -1,0 +1,56 @@
+theory ExpMacro
+
+begin
+
+// Function signature and definition of the equational theory E
+
+builtins: diffie-hellman
+functions: fst/1, pair/2, snd/1
+equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
+
+
+
+
+
+
+
+macros: pk( x ) =  'g'^x
+
+rule (modulo E) A:
+   [ Fr( ~x ) ] --> [ Out( pk(~x) ) ]
+
+  /*
+  rule (modulo AC) A:
+     [ Fr( ~x ) ] --> [ Out( 'g'^~x ) ]
+  */
+
+
+
+
+
+
+
+/* All wellformedness checks were successful. */
+
+/*
+Generated from:
+Tamarin version 1.11.0
+Maude version 3.5.1
+Git revision: 416cbfe3281f13caadedb1f6a3bd33b9eae37052 (with uncommited changes), branch: fix-macro-parser
+Compiled at: 2026-02-20 12:26:01.024789 UTC
+*/
+
+end
+/* Output
+
+==============================================================================
+summary of summaries:
+
+analyzed: examples/regression/trace/issue777.spthy
+
+  output:          examples/regression/trace/issue777.spthy.tmp
+  processing time: 0.02s
+  
+
+==============================================================================
+*/
