@@ -46,12 +46,9 @@ import           Term.Positions
 
 import           Theory.Constraint.Solver.Sources (IntegerParameters)
 import           Theory.Constraint.Solver.Sources     as Sources (IntegerParameters(..))
-
-
 import           Theory.Tools.LoopBreakers
 
-
-import Debug.Trace
+import  Debug.Trace
 import Text.PrettyPrint.Class
 import GHC.IO (unsafePerformIO)
 
@@ -189,13 +186,13 @@ mkSystem ctxt restrictions previousItems =
         guard $    lemmaSourceKind lem <= kind
                 && ReuseLemma `elem` L.get lAttributes lem
                 && AllTraces == L.get lTraceQuantifier lem
-                && (L.get lName lem) `notElem` (L.get pcHiddenLemmas ctxt)
-                && "ALL" `notElem` (L.get pcHiddenLemmas ctxt)
+                && L.get lName lem `notElem` L.get pcHiddenLemmas ctxt
+                && "ALL" `notElem` L.get pcHiddenLemmas ctxt
         return $ formulaToGuarded_ $ L.get lFormula lem
 
-
+-- | Apply the given substitutions to the two given intruder rules and return all resulting rules. This is used for applying chain reduction rules.
 appSubst :: MonadFresh m => [LNSubstVFresh] -> IntrRuleAC -> IntrRuleAC -> m [(IntrRuleAC,IntrRuleAC)]
-appSubst [] _ _    = return []
+appSubst [] _ _             = return []
 appSubst (x:xs) inst0 inst1 = do
   sub <- freshToFree x
   let (instt0,instt1) = apply sub (inst0,inst1)
@@ -301,13 +298,12 @@ builtInDestrRule = map (BC.append (BC.pack "_")) symBI
   where
     symBI = [expSymString, invSymString, unionSymString, xorSymString, pmultSymString, emapSymString, fstSymString, sndSymString]
 
--- FIX-ME : It could be better to add the functions inside the deconstruction rules instead of parsing the rule name
+-- FIXME : Ugly! It would be better to add the functions inside the deconstruction rules instead of parsing the rule name.
 constrNameFunc :: ByteString -> ByteString
 constrNameFunc name = case supprPos (name_decompose name) of
-  [s1] -> s1
-  s1:sq -> BC.intercalate (BC.pack "_") (s1:sq)
-  [] -> error "No Deconstruction Chain Check: This case should not happen, please report it on the github page"
-
+    [s1]  -> s1
+    s1:sq -> BC.intercalate (BC.pack "_") (s1:sq)
+    []    -> error "No Deconstruction Chain Check: This case should not happen, please report it on the github page."
   where
     name_decompose = tail . BC.split '_'
 
@@ -317,6 +313,7 @@ constrNameFunc name = case supprPos (name_decompose name) of
       Nothing -> n1:nq
     supprPos [] = []
 
+-- | Check if the chain of the two given intruder rules can be reduced. This is done by checking if the conclusion of one rule can be unified with a premise of the other rule and then checking if the resulting terms can be derived from the premises of both rules without chaining.
 checkChainReduction :: SignatureWithMaude -> OpenRuleCache -> IntrRuleAC -> IntrRuleAC -> Bool
 checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _):_) conc@[Fact KDFact _ _] _ _) r1@(Rule (DestrRule name1 j _ _) ((Fact KDFact _ _):_) [Fact KDFact _ _] _ _)
   | not (any (`BC.isSuffixOf` name0) builtInDestrRule) && not (any (`BC.isSuffixOf`name1) builtInDestrRule) && i /= 1 && j /= 1 =
@@ -359,7 +356,6 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
 
     dedTest :: IntrRuleAC -> IntrRuleAC -> Bool
     dedTest instSigma inst1Sigma = aux prems
-
       where
         terms = getPremsFactTail instSigma ++ getPremsFactTail inst1Sigma ++ [getPremsFactKD instSigma]
         termsT = foldMap getFactTerms terms
@@ -375,78 +371,25 @@ checkChainReduction sig intrR r@(Rule (DestrRule name0 i _ _) ((Fact KDFact _ _)
         boundToOne rr = rr
 
 
-        aux fa@(Fact KDFact _ [f]) = (dedNaive f termsT || derivationTest sig intrRmodified fa terms)
-        aux _                     = error "No Deconstruction Chain Check: This case should not happen, please report it on the github page" 
-        
-
-    -- auxMatcherFilter = filter nullIntersectAC
-    -- nullIntersectAC (i0@(Rule (DestrRule ni0 _ _ _) _ _ _ _),i1) = not (isACfctDR (name_func ni0) acsig) || not (all has2prems allR) || ((frees (getPremsFactKD i0) `intersect` frees (getConcFact i1)) /= [])
-    -- nullIntersectAC _ = True
-
-    -- has2prems (Rule (DestrRule _ _ _ _) prems _ _ _) = length prems == 2
-    -- has2prems _ = False
-
-    -- searchMatcheraux ((s1,h1):sq)  = foldr (\ru -> (|| searchMatcher s1 h1 ru)) False allR && searchMatcheraux sq
-    -- searchMatcheraux [] = True
-
-    -- searchMatcher :: IntrRuleAC -> IntrRuleAC -> IntrRuleAC -> Bool
-    -- searchMatcher instSigma inst1Sigma inst2init =
-    --   case doMatch (sigmaRHS1 `matchFact` rhs2 <> sigmaF `matchFact` f2) of
-    --     [] -> False
-    --     match -> auxDeducible match
-    --   where
-    --     doMatch match = runReader (solveMatchLNTerm match) hnd
-
-    --     inst2 = inst2init `renameAvoiding` (inst1Sigma, instSigma)
-
-    --     f2 = getPremsFactKD inst2
-    --     rhs2 = getConcFact inst2
-
-    --     sigmaRHS1 = getConcFact inst1Sigma
-    --     sigmaF = getPremsFactKD instSigma
-
-    --     auxDeducible (m1:mq) = checkDeducible m1 || auxDeducible mq
-    --     auxDeducible [] = False
-
-    --     checkDeducible :: Subst Name LVar -> Bool
-    --     checkDeducible m = aux prems
-
-    --      where
-    --       terms = getPremsFactTail instSigma ++ getPremsFactTail inst1Sigma
-    --       termsT = foldMap getFactTerms terms
-    --       inst2sigma2 = apply m inst2
-    --       prems = getPremsFactTail inst2sigma2
-
-    --       factOnlyOnce = protoFact Linear "OnlyOnceD" []
-
-    --       intrRmodified = map boundToOne intrR
-    --       boundToOne rule@(Rule (DestrRule name _ subterm constant) premis concs acts nvs) | getRuleName rule == getRuleName r = Rule (DestrRule name 1 subterm constant) premis concs (acts ++ [factOnlyOnce]) nvs
-    --       boundToOne rule@(Rule (DestrRule name _ _ _) _ _ _ _) | any (`BC.isSuffixOf` name) builtInDestrRule = rule
-    --       boundToOne rule@(Rule (DestrRule name _ True _) _ _ _ _) | not (isACfctDR (name_func name) acsig) = rule
-    --       boundToOne (Rule (DestrRule name 0 subterm constant) premis concs acts nvs) = Rule (DestrRule name 1 subterm constant) premis concs acts nvs
-    --       boundToOne rr = rr
-
-    --       aux (fa@(Fact KUFact _ [f]):q) = (dedNaive f termsT || derivationTest sig intrRmodified fa terms) && aux q
-    --       aux ((Fact KDFact _ _):_) = error "Destructor Boundedness Check: This case should not happen, please report it on the github page" 
-    --       aux []                    = True
-    --       aux _                     = error "Destructor Boundedness Check: This case should not happen, please report it on the github page" 
-
-
+        aux fa@(Fact KDFact _ [f]) = dedNaive f termsT || derivationTest sig intrRmodified fa terms
+        aux _                      = error "No Deconstruction Chain Check: This case should not happen, please report it on the github page" 
 
 checkChainReduction _ _ _ _ = False
 
-
+-- | Apply no deconstruction chain check to a list of intruder rules. If the boolean is false, then the check is ignored and the original list of intruder rules is returned.
 applyChainReduction :: SignatureWithMaude -> OpenRuleCache -> [[IntrRuleAC]] -> Bool -> [IntrRuleAC]
-applyChainReduction _ intrR _ False = intrR
-applyChainReduction sig intrR (t1:tq) True = (if checkChainReductionIter tupleRule then set1ru t1 else t1) ++ applyChainReduction sig intrR tq True
+applyChainReduction _   intrR _       False = intrR
+applyChainReduction sig intrR (t1:tq) True  =
+    (if checkChainReductionIter ruleTuples
+      then map setChainLimitTo1 t1
+      else t1)
+    ++ applyChainReduction sig intrR tq True
   where
-    tupleRule = [(x,y) | x <- t1, y <- t1]
+    ruleTuples = [(x,y) | x <- t1, y <- t1]
     checkChainReductionIter = foldr (\(x,y) -> (&& checkChainReduction sig intrR x y)) True
 
-    set1ru = map change
-
-    change (Rule (DestrRule name _ subterm constant) prems concs acts nvs) = Rule (DestrRule name 1 subterm constant) prems concs acts nvs
-    change r = r
+    setChainLimitTo1 (Rule (DestrRule name _ subterm constant) prems concs acts nvs) = Rule (DestrRule name 1 subterm constant) prems concs acts nvs
+    setChainLimitTo1 r = r
 applyChainReduction _ _ [] _ = []
 
 -- | Close an intruder rule; i.e., compute maximum number of consecutive applications and variants
@@ -456,7 +399,7 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
    [ru]
     where
       ru = Rule (DestrRule name (if containsOnlyNoEq rhs && containsOnlyNoEq t && runMaude (unifiableLNTerms rhs t)
-                              then (length (positions t)) - (if (isPrivateFunction t) then 1 else 2)
+                              then length (positions t) - (if isPrivateFunction t then 1 else 2)
                               -- We do not need to count t itself, hence - 1.
                               -- If t is a private function symbol we need to permit one more rule
                               -- application as there is no associated constructor.
@@ -464,10 +407,10 @@ closeIntrRule hnd (Rule (DestrRule name (-1) subterm constant) prems@((Fact KDFa
         where
            runMaude = (`runReader` hnd)
 closeIntrRule _ ir@(Rule (DestrRule name _ _ _) _ _ _ _) | any (`BC.isSuffixOf`name) builtInDestrRule = [ir]
-closeIntrRule _ (Rule (DestrRule _ _ False _) _ _ _ _) = error "closeIntrRule: This case should not happen, please report it on the github page" --variantsIntruder hnd id False False ir
+closeIntrRule _ (Rule (DestrRule _ _ False _) _ _ _ _)      = error "closeIntrRule: This case should not happen, please report it on the github page"
 closeIntrRule _   ir                                        = [ir]
 
-
+-- | Pretty print the result of chain reduction checks.
 prettyChainReduction :: SignatureWithMaude -> String -> OpenRuleCache -> [[IntrRuleAC]] -> Bool -> [IntrRuleAC]
 prettyChainReduction s name o t b = unsafePerformIO $ do
   traceM ("[Theory " ++ name ++ "] No Deconstruction Chain checks started")
@@ -517,8 +460,8 @@ closeRuleCache parameters restrictions typAsms forcedInjFacts sig protoRules int
     refinedSources     = refineWithSourceAsms parameters typAsms ctxt0 rawSources
 
     -- classifying the rules
-    rulesAC = (fmap IntrInfo                      <$> intrRules) <|>
-              ((fmap ProtoInfo . L.get cprRuleAC) <$> protoRules)
+    rulesAC = (fmap IntrInfo                    <$> intrRules) <|>
+              (fmap ProtoInfo . L.get cprRuleAC <$> protoRules)
 
     anyOf ps = partition (\x -> any ($ x) ps)
 

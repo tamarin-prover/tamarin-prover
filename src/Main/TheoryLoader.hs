@@ -459,6 +459,7 @@ translateTheory thyOpts thy = do
     withTheory f = bitraverse f pure
     theoryName = either (._thyName) (._diffThyName)
 
+-- | Closes the intruder deduction rules and applies the no deconstruction chain check if enabled.
 checkCloseIntrRule :: SignatureWithMaude -> String -> OpenTranslatedTheory -> OpenTranslatedTheory
 checkCloseIntrRule sign name thy = thy {_thyCache = intrRulesACred}
   where
@@ -467,12 +468,14 @@ checkCloseIntrRule sign name thy = thy {_thyCache = intrRulesACred}
     intrRules = thy._thyCache
     intrRulesAC = concat $ map (closeIntrRule hnd) intrRules
 
+    -- for the no deconstruction check we group deconstruction rules of the same function together based on the rule name
     tabT = groupBy ((==) `on` getRuleName) $ sortOn getRuleName intrRulesAC
 
+    -- do the no deconstruction chain check or not?
     chainReductionBool = (thy._thyOptions)._chainReductionCheck
+    intrRulesACred = if chainReductionBool then prettyChainReduction sign name intrRulesAC tabT chainReductionBool else intrRulesAC
 
-    intrRulesACred = if chainReductionBool then prettyChainReduction sign name intrRulesAC tabT chainReductionBool else applyChainReduction sign intrRulesAC tabT chainReductionBool
-
+-- | Copy the chain limit from the diff intruder rules to the closed intruder rules, if they are the same rule (i.e., same name, same premises and same conclusions).
 copyLimit :: [IntrRuleAC] -> IntrRuleAC -> IntrRuleAC
 copyLimit d rule@(Rule (DestrRule _ _ _ _) _ _ _ _) = checkDiff d rule
   where
@@ -480,29 +483,33 @@ copyLimit d rule@(Rule (DestrRule _ _ _ _) _ _ _ _) = checkDiff d rule
     checkDiff [] r = r
 copyLimit _ rule = rule
 
+-- | Closes the intruder deduction rules and applies the no deconstruction chain check if enabled. Version for diff theories.
 checkCloseIntrRuleDiff :: SignatureWithMaude -> String -> OpenDiffTheory -> OpenDiffTheory
-checkCloseIntrRuleDiff sign name diffthy = diffCLthy {_diffThyCacheRight = clACred}
-
+checkCloseIntrRuleDiff sign name diffthy = diffCRthy
   where
     hnd = sign._sigMaudeInfo
 
     dcl = diffthy._diffThyDiffCacheLeft 
-    cl = diffthy._diffThyCacheLeft
+    cl  = diffthy._diffThyCacheLeft
 
     dclAC = concat $ map (closeIntrRule hnd) dcl
-    clAC = concat $ map (closeIntrRule hnd) cl
+    clAC  = concat $ map (closeIntrRule hnd) cl
 
+    -- for the no deconstruction check we group deconstruction rules of the same function together based on the rule name
     tabTDCL = groupBy ((==) `on` getRuleName) $ sortOn getRuleName dclAC
 
+    -- do the no deconstruction chain check or not?
     chainReductionBool = (diffthy._diffThyOptions)._chainReductionCheck
+    dclACred = if chainReductionBool then prettyChainReduction sign name dclAC tabTDCL chainReductionBool else dclAC
+    
+    diffDCLthy = diffthy    {_diffThyDiffCacheLeft = dclACred} 
+    diffDCRthy = diffDCLthy {_diffThyDiffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
 
-    dclACred = if chainReductionBool then prettyChainReduction sign name dclAC tabTDCL chainReductionBool else applyChainReduction sign dclAC tabTDCL chainReductionBool
-    diffDCLthy = diffthy {_diffThyDiffCacheLeft = dclACred} 
+    -- we can copy over the limits we computed for the diff intruder rules to the trace intruder rules to avoid recomputing them
+    clACred   = map (copyLimit dclACred) clAC
 
-    diffDCRthy = diffDCLthy {_diffThyDiffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight are same Intruder Rules
-
-    clACred = map (copyLimit dclACred) clAC
-    diffCLthy = diffDCRthy {_diffThyCacheLeft = clACred}  -- diffThyCacheLeft and diffThyCacheRight are same Intruder Rules
+    diffCLthy = diffDCRthy {_diffThyCacheLeft = clACred}
+    diffCRthy = diffCLthy  {_diffThyCacheRight = clACred}  -- diffThyCacheLeft and diffThyCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
 
 -- | Perform wellformedness and deducability checks on a theory.
 checkTranslatedTheory ::
