@@ -493,18 +493,18 @@ sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in w
 ##########################
 
 AC_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/*.spthy))
-AC_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/,$(AC_CASE_STUDIES)))
+AC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/,$(AC_CASE_STUDIES)))
 
 ac-case-studies:	$(AC_CS_TARGETS)
 	grep "verified\|falsified\|processing time" $^
 
 FAST_AC_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/fast/*.spthy))
-FAST_AC_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/,$(FAST_AC_CASE_STUDIES)))
+FAST_AC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/,$(FAST_AC_CASE_STUDIES)))
 
 FAST_AC_DIFF_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/fast/diff/*.spthy))
-FAST_AC_DIFF_CS_TARGETS=$(subst .spthy,_analyzed-derivcheck-diff.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/diff/,$(FAST_AC_DIFF_CASE_STUDIES)))
+FAST_AC_DIFF_CS_TARGETS=$(subst .spthy,_analyzed-diff.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/fast/diff/,$(FAST_AC_DIFF_CASE_STUDIES)))
 
-fast ac-case-studies:	$(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
+fast-ac-case-studies:	$(FAST_AC_CS_TARGETS) $(FAST_AC_DIFF_CS_TARGETS)
 	grep "verified\|falsified\|processing time" $^
 
 
