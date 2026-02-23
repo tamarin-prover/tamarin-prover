@@ -94,6 +94,9 @@ module Theory.Model.Rule (
   , getRuleNameDiff
   , getRemainingRuleApplications
   , setRemainingRuleApplications
+  , getDeconstrRuleKDPrem
+  , getDeconstrRulePremsTail
+  , getConcFact
   , nfRule
   , normRule
   , isTrivialProtoVariantAC
@@ -832,6 +835,21 @@ setRemainingRuleApplications (Rule (IntrInfo (DestrRule name _ subterm constant)
     = Rule (IntrInfo (DestrRule name i subterm constant)) prems concs acts nvs
 setRemainingRuleApplications rule _
     = rule
+
+-- | Returns the first premise fact of an intruder rule. Should be the KD fact in case of a deconstruction rule.
+getDeconstrRuleKDPrem :: IntrRuleAC -> LNFact
+getDeconstrRuleKDPrem (Rule _ (fact:_) _ _ _) = fact
+getDeconstrRuleKDPrem _                       = error "getDeconstrRuleKDPrem: This case should not happen as deconstructor rules have at least one premise, please report it on the github page." 
+
+-- | Returns the tail of the premises of a deconstruction rule, i.e., all premises except the first KD fact
+getDeconstrRulePremsTail :: IntrRuleAC -> [LNFact]
+getDeconstrRulePremsTail (Rule _ ((Fact KDFact _ _):tls) _ _ _) = tls
+getDeconstrRulePremsTail _                                      = error "getDeconstrRulePremsTail: This case should not happen as deconstruction rules have at least one KD premise, please report it on the github page" 
+
+-- | Returns the conclusion of an intruder rule
+getConcFact :: IntrRuleAC -> LNFact
+getConcFact (Rule _ _ [fact] _ _) = fact
+getConcFact _                     = error "getConcFact: This case should not happen as intruder rules have only one conclusion, please report it on the github page" 
 
 -- | Converts a protocol rule to its "left" variant
 getLeftRule :: Rule i ->  Rule i

@@ -492,6 +492,7 @@ sapic-case-studies-superslow:	$(SAPIC_CS_TARGETS_SUPER_SLOW) # used to heat in w
 ## User-defined AC symbols
 ##########################
 
+# FIXME which files to include here? For now, we just include all files in the directory
 AC_CASE_STUDIES=$(notdir $(wildcard examples/csf26-ac/*.spthy))
 AC_CS_TARGETS=$(subst .spthy,_analyzed.spthy,$(addprefix case-studies$(SUBDIR)csf26-ac/,$(AC_CASE_STUDIES)))
 

@@ -80,7 +80,7 @@ import Theory.Tools.IntruderRules
   )
 import Theory.Tools.MessageDerivationChecks
 import Theory.Tools.Wellformedness
-import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, chainReductionCheck)
+import TheoryObject (diffTheoryConfigBlock, theoryConfigBlock, theoryConfigBlock, noDeductionChainCheck)
 
 ------------------------------------------------------------------------------
 -- Theory loading: shared between interactive and batch mode
@@ -472,8 +472,8 @@ checkCloseIntrRule sign name thy = thy {_thyCache = intrRulesACred}
     tabT = groupBy ((==) `on` getRuleName) $ sortOn getRuleName intrRulesAC
 
     -- do the no deconstruction chain check or not?
-    chainReductionBool = (thy._thyOptions)._chainReductionCheck
-    intrRulesACred = if chainReductionBool then prettyChainReduction sign name intrRulesAC tabT chainReductionBool else intrRulesAC
+    noDeductionChainCheckBool = (thy._thyOptions)._noDeductionChainCheck
+    intrRulesACred = if noDeductionChainCheckBool then prettyNDCcheck sign name intrRulesAC tabT else intrRulesAC
 
 -- | Copy the chain limit from the diff intruder rules to the closed intruder rules, if they are the same rule (i.e., same name, same premises and same conclusions).
 copyLimit :: [IntrRuleAC] -> IntrRuleAC -> IntrRuleAC
@@ -499,8 +499,8 @@ checkCloseIntrRuleDiff sign name diffthy = diffCRthy
     tabTDCL = groupBy ((==) `on` getRuleName) $ sortOn getRuleName dclAC
 
     -- do the no deconstruction chain check or not?
-    chainReductionBool = (diffthy._diffThyOptions)._chainReductionCheck
-    dclACred = if chainReductionBool then prettyChainReduction sign name dclAC tabTDCL chainReductionBool else dclAC
+    noDeductionChainCheckBool = (diffthy._diffThyOptions)._noDeductionChainCheck
+    dclACred = if noDeductionChainCheckBool then prettyNDCcheck sign name dclAC tabTDCL else dclAC
     
     diffDCLthy = diffthy    {_diffThyDiffCacheLeft = dclACred} 
     diffDCRthy = diffDCLthy {_diffThyDiffCacheRight = dclACred}  -- diffThyDiffCacheLeft and diffThyDiffCacheRight contain the same Intruder Rules, so we use the same list of closed intruder rules for both sides
