@@ -90,8 +90,8 @@ div.warning {
     font-weight: bold;
     text-align: center;
     font-size: large;
+    text-wrap:wrap;
 }
-
 div.wf-warning {
     margin: 1em;
     padding: 2em;
@@ -99,6 +99,7 @@ div.wf-warning {
     border: solid 2px #ff8080;
     font-weight: bold;
     font-size: large;
+    text-wrap: wrap;
 }
 
 
