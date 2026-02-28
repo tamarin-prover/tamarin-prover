@@ -922,11 +922,12 @@ dot output with `--output-dot`, Tamarin applies graph simplification to make lar
 constraint graphs more readable. The simplification level controls how aggressively
 the graph is simplified.
 
-There are four simplification levels available:
+There are four simplification levels:
 
 **Level 0 (SL0)**: No simplification
-:   Shows the complete constraint graph with all edges and nodes. This is useful
-    for detailed analysis but can be overwhelming for large proofs.
+:   Shows the complete constraint graph with all edges and nodes in full detail.
+    This is useful for detailed analysis but can be overwhelming for large
+    constraint systems.
 
 **Level 1 (SL1)**: Basic compression
 :   Hides "transfer nodes" — simple intruder deduction rules such as pairing,
@@ -935,19 +936,20 @@ There are four simplification levels available:
     deduction steps.
 
 **Level 2 (SL2)**: Transitive reduction (default)
-:   Applies transitive reduction to the less-than ordering constraints (`sLessAtoms`)
-    but preserves edges that are marked as having `Formula` or `Adversary` reasons.
-    This significantly reduces visual clutter while retaining proof-relevant orderings.
-    Level 2 is the default simplification level.
+:   Applies transitive reduction to the less-than ordering constraints
+    (`sLessAtoms`) but preserves edges that are marked as having `Formula` or
+    `Adversary` reasons. This significantly reduces visual clutter while
+    retaining proof-relevant orderings. Level 2 is the default simplification
+    level.
 
 **Level 3 (SL3)**: Full transitive reduction with adversary cluster collapsing
-:   Removes all transitively-implied less-than constraints without exceptions. It 
-    collapses adversary derivation clusters by hiding internal intruder deduction steps
-    and showing only the sink nodes that represent the derived knowledge. Collapsed 
-    adversary clusters are visualized as nodes with **double outlines** to distinguish
-    them from regular nodes. This is the most aggressive simplification and produces 
-    the most compact graphs, but may hide some proof details that could be relevant 
-    for understanding the constraint system.
+:   Removes all transitively-implied less-than constraints without exceptions.
+    It collapses adversary derivation clusters by hiding internal intruder
+    deduction steps and showing only the sink nodes that represent the derived
+    knowledge. Collapsed adversary clusters are visualized as nodes with
+    *double outlines* to distinguish them from regular nodes. This is the most
+    aggressive simplification and produces the most compact graphs, but may hide
+    some details that could be relevant for understanding the constraint system.
 
 #### Setting the Simplification Level in the GUI
 
