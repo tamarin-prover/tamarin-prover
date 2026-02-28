@@ -924,32 +924,17 @@ the graph is simplified.
 
 There are four simplification levels:
 
-**Level 0 (SL0)**: No simplification
-:   Shows the complete constraint graph with all edges and nodes in full detail.
-    This is useful for detailed analysis but can be overwhelming for large
-    constraint systems.
+ - **Level 0 (SL0)**: No simplification.
+   Shows the complete constraint graph with all edges and nodes in full detail. This is useful for detailed analysis but can be overwhelming for large constraint systems.
 
-**Level 1 (SL1)**: Basic compression
-:   Hides "transfer nodes" — simple intruder deduction rules such as pairing,
-    unpairing, and inverses — and drops ordering constraints that are entailed
-    by the edges in the constraint system. This reduces clutter from trivial
-    deduction steps.
+ - **Level 1 (SL1)**: Basic compression.
+   Hides "transfer nodes" — simple intruder deduction rules such as pairing, unpairing, and inverses — and drops ordering constraints that are entailed by the edges in the constraint system. This reduces clutter from trivial deduction steps.
 
-**Level 2 (SL2)**: Transitive reduction (default)
-:   Applies transitive reduction to the less-than ordering constraints
-    (`sLessAtoms`) but preserves edges that are marked as having `Formula` or
-    `Adversary` reasons. This significantly reduces visual clutter while
-    retaining proof-relevant orderings. Level 2 is the default simplification
-    level.
+ - **Level 2 (SL2)**: Transitive reduction (default). 
+   Applies transitive reduction to the less-than ordering constraints (`sLessAtoms`) but preserves edges that are marked as having `Formula` or `Adversary` reasons. This significantly reduces visual clutter while retaining proof-relevant orderings. Level 2 is the default simplification level.
 
-**Level 3 (SL3)**: Full transitive reduction with adversary cluster collapsing
-:   Removes all transitively-implied less-than constraints without exceptions.
-    It collapses adversary derivation clusters by hiding internal intruder
-    deduction steps and showing only the sink nodes that represent the derived
-    knowledge. Collapsed adversary clusters are visualized as nodes with
-    *double outlines* to distinguish them from regular nodes. This is the most
-    aggressive simplification and produces the most compact graphs, but may hide
-    some details that could be relevant for understanding the constraint system.
+ - **Level 3 (SL3)**: Full transitive reduction with adversary cluster collapsing.
+   Removes all transitively-implied less-than constraints without exceptions. It collapses adversary derivation clusters by hiding internal intruder deduction steps and showing only the sink nodes that represent the derived knowledge. Collapsed adversary clusters are visualized as nodes with *double outlines* to distinguish them from regular nodes. This is the most aggressive simplification and produces the most compact graphs, but may hide some details that could be relevant for understanding the constraint system.
 
 #### Setting the Simplification Level in the GUI
 
