@@ -971,7 +971,7 @@ default simplification level using the `--graph-simplification` flag:
 The flag accepts values from 0 to 3, corresponding to the four simplification
 levels described above. The default is level 2.
 
-The simplification level is encoded in the dot graph labels.
-For example, a graph labeled with `SL3` indicates that level 3 (full transitive
-reduction) was used during generation.
+The simplification level is encoded in the dot graph labels. For example, a
+graph labeled with `SL3` indicates that simplification level 3 was used during
+generation.
 
