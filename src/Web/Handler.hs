@@ -297,7 +297,7 @@ editLemma idx (TheoryAdd lemmaName) (Lemma n pt m tq f ofm a lp)  = do
 editLemma _ _ _ = pure $ Left "called editLemma with weird input"
 
 
--- | Store a theory, return index (backward compatibility wrapper).
+-- | Store a theory, return index.
 replaceTheory :: Maybe TheoryInfo     -- ^ Index of parent theory
           -> Maybe TheoryOrigin         -- ^ Origin of this theory
           -> ClosedTheory         -- ^ The new closed theory
