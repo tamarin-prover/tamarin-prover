@@ -1186,6 +1186,7 @@ getAutoProverR idx extractor bound quitOnEmpty =
         CutDFS             -> ("the autoprover",   []        )
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+        CutAfterSorry      -> ("the autoprover",   ["sorry"])
 
 -- | Run an autoprover on a given proof path.
 getAutoProverAllR
@@ -1212,6 +1213,7 @@ getAutoProverAllR idx extractor bound _ =
         CutDFS             -> ("the autoprover",   []        )
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+        CutAfterSorry      -> ("the autoprover",   ["sorry"])
 
 
 -- | Run an autoprover on a given proof path.
@@ -1240,6 +1242,7 @@ getAutoProverDiffR idx extractor bound =
         CutDFS             -> ("the autoprover",   []        )
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+        CutAfterSorry      -> ("the autoprover",   ["sorry"])
 
 
 -- | Run an autoprover on a given proof path.
@@ -1266,6 +1269,7 @@ getAutoProverAllDiffR idx extractor bound =
         CutDFS             -> ("the autoprover",   []        )
         CutBFS             -> ("the autoprover",   ["bfs"]   )
         CutSingleThreadDFS -> ("the autoprover",   ["seqdfs"])
+        CutAfterSorry      -> ("the autoprover",   ["sorry"])
 
 
 -- | Run an autoprover on a given proof path.

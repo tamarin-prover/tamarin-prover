@@ -23,7 +23,7 @@ module Theory.Text.Parser.Signature (
 where
 
 import Term.Maude.Signature
-import           Prelude                    hiding (id)
+import           Prelude
 import qualified Data.ByteString.Char8      as BC
 import           Data.Either
 -- import           Data.Monoid                hiding (Last)
@@ -285,7 +285,7 @@ goalRanking diff workDir = try oracleRanking <|> internalTacticRanking <|> regul
            goal <- toGoalRanking <$> (string "o" <|> string "O") <* skipMany (char ' ')
            relPath <- optionMaybe (char '"' *> many1 (noneOf "\"\n\r") <* char '"' <* skipMany (char ' '))
 
-           return $ [mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal]
+           return [mapOracleRanking (maybeSetOracleRelPath relPath . maybeSetOracleWorkDir workDir) goal]
 
        toGoalRanking = if diff then stringToGoalRankingDiff False else stringToGoalRanking False
 
