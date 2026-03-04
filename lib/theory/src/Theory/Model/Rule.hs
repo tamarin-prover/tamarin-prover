@@ -1198,7 +1198,7 @@ prettyRuleAttribute attr = fsep $ punctuate comma $ catMaybes [ -- Maybe types a
     ]
     where
 
-    ppProcess   p = text "process=" <> text ("\'" ++ prettySapicTopLevel' f p ++ "\'")
+    ppProcess   p = text "process=" <> text ("\"" ++ prettySapicTopLevel' f p ++ "\"")
         where f l a r rest _ = render $ prettyRuleRestr (g l) (g a) (g r) (h rest)
               g = map toLNFact
               h = map toLFormula
