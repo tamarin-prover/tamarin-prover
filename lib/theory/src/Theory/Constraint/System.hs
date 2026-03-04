@@ -260,7 +260,7 @@ import           GHC.Generics                         (Generic)
 import           Data.Binary
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.DAG.Simple                      as D
-import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy, maximumBy)
+import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing)
 import qualified Data.Monoid                             as Mono
