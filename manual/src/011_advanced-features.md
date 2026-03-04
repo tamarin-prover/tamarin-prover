@@ -941,11 +941,6 @@ There are four simplification levels:
 In the interactive mode, you can change the simplification level using the
 dropdown menu in the constraint system visualization.
 
-You can also specify the simplification level in the URL by adding the
-`simplification` parameter. For example:
-
-    http://localhost:3001/theory/ExampleTheory?simplification=3
-
 #### Setting the Simplification Level for Dot Output
 
 When using the `--output-dot` option in batch mode, you can control the
