@@ -500,8 +500,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: 0cae57e63d6f61be919d6e3efdd8ae9d2f41ceec (with uncommited changes), branch: auto-parse-regression-test-output
-Compiled at: 2026-02-16 20:50:37.030248 UTC
+Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
+Compiled at: 2026-02-16 12:29:57.582345 UTC
 */
 
 end
@@ -513,7 +513,7 @@ summary of summaries:
 analyzed: examples/csf12/JKL_TS2_2008_KI_wPFS.spthy
 
   output:          examples/csf12/JKL_TS2_2008_KI_wPFS.spthy.tmp
-  processing time: 0.53s
+  processing time: 0.56s
   
   JKL2008_2_initiator_key (all-traces): verified (40 steps)
   JKL2008_2_responder_key (all-traces): verified (55 steps)
