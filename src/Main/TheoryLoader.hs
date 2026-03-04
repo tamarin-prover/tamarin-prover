@@ -100,7 +100,7 @@ theoryLoadFlags =
       "dfs"
       ["stop-on-trace"]
       (updateArg "stop-on-trace")
-      "DFS|BFS|SEQDFS|NONE"
+      "DFS|BFS|SEQDFS|SORRY|NONE"
       "How to search for traces (default DFS)",
     flagOpt
       "5"
@@ -144,6 +144,10 @@ theoryLoadFlags =
       (updateArg "oraclename")
       "FILE"
       ("Path to the oracle heuristic (default '" ++ "./theory_filename.oracle" ++ "', fallback '" ++ "./oracle" ++ "')"),
+    flagNone
+      ["oracle-only"]
+      (addEmptyArg "oracle-only")
+      "When set, the oracle heuristic will stop proof search if the oracle does not rank any proof goals.",
     flagNone
       ["quiet"]
       (addEmptyArg "quiet")
@@ -198,6 +202,7 @@ data TheoryLoadOptions = TheoryLoadOptions
     stopOnTrace :: Maybe SolutionExtractor,
     proofBound :: Maybe Int,
     heuristic :: Maybe (Heuristic ProofContext),
+    oracleOnly :: Bool,
     partialEvaluation :: Maybe EvaluationStyle,
     defines :: [String],
     diffMode :: Bool,
@@ -225,6 +230,7 @@ defaultTheoryLoadOptions =
       stopOnTrace = Nothing,
       proofBound = Nothing,
       heuristic = Nothing,
+      oracleOnly = False,
       partialEvaluation = Nothing,
       defines = [],
       diffMode = False,
@@ -261,6 +267,7 @@ mkTheoryLoadOptions as =
     <*> stopOnTrace as
     <*> proofBound
     <*> heuristic
+    <*> oracleOnly
     <*> partialEvaluation
     <*> defines
     <*> diffMode
@@ -305,6 +312,7 @@ mkTheoryLoadOptions as =
       name -> name
     -- toGoalRanking | argExists "diff" as = stringToGoalRankingDiff
     --              | otherwise           = stringToGoalRanking
+    oracleOnly = pure $ argExists "oracle-only" as
 
     partialEvaluation = case map toLower <$> findArg "partial-evaluation" as of
       Just "summary" -> pure $ Just Summary
@@ -350,6 +358,7 @@ stopOnTrace as = case map toLower <$> findArg "stop-on-trace" as of
   Just "none" -> pure $ Just CutNothing
   Just "bfs" -> pure $ Just CutBFS
   Just "seqdfs" -> pure $ Just CutSingleThreadDFS
+  Just "sorry" -> pure $ Just CutAfterSorry
   Just unknown -> throwError $ ArgumentError ("unknown stop-on-trace method: " ++ unknown)
   Nothing -> pure Nothing
 
@@ -694,7 +703,7 @@ constructAutoProver thyOpts =
     Nothing
     thyOpts.proofBound
     (fromMaybe CutDFS thyOpts.stopOnTrace)
-    False
+    thyOpts.oracleOnly
 
 -----------------------------------------------
 -- Add Options parameters in an OpenTheory

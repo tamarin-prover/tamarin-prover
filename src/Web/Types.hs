@@ -626,11 +626,13 @@ instance PathPiece SolutionExtractor where
   toPathPiece CutDFS             = "idfs"
   toPathPiece CutBFS             = "bfs"
   toPathPiece CutSingleThreadDFS = "seqdfs"
+  toPathPiece CutAfterSorry      = "sorry"
 
   fromPathPiece "characterize" = Just CutNothing
   fromPathPiece "idfs"         = Just CutDFS
   fromPathPiece "bfs"          = Just CutBFS
   fromPathPiece "seqdfs"       = Just CutSingleThreadDFS
+  fromPathPiece "sorry"        = Just CutAfterSorry
   fromPathPiece _              = Nothing
 
 instance PathPiece Side where
