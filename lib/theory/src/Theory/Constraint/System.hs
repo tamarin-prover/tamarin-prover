@@ -263,9 +263,7 @@ import qualified Data.DAG.Simple                      as D
 import           Data.List                            (foldl', partition, intersect,find,intercalate, groupBy, maximumBy)
 import qualified Data.Map                             as M
 import           Data.Maybe                           (fromMaybe,mapMaybe, isNothing)
--- import           Data.Monoid                          (Monoid(..))
 import qualified Data.Monoid                             as Mono
-import           Data.Ord                             (comparing)
 import qualified Data.Set                             as S
 import           Data.Either                          (partitionEithers, lefts)
 import           Data.Tuple                           (swap)
