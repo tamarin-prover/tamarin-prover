@@ -21,13 +21,13 @@ heuristic: p
 
 
 
-rule (modulo E) Init[color=#ffffff, process='0', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="0", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_[color=#ffffff, process="0", issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ ]
 
@@ -37,14 +37,19 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end

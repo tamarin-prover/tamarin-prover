@@ -47,10 +47,10 @@ SOLVED // trace found
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: b71365cfdab5120d97129a6544bd391a2c69f41b (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 12:24:40.37671334 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end

@@ -21,31 +21,31 @@ heuristic: p
 
 
 
-rule (modulo E) Init[color=#ffffff, process='Pr('t')', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="Pr('t')", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Prt_0_[color=#ffffff, process='Pr('t')', issapicrule,
+rule (modulo E) Prt_0_[color=#ffffff, process="Pr('t')", issapicrule,
                        role='Process']:
    [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) outt_0_1[color=#408061, process='out('t');', issapicrule,
+rule (modulo E) outt_0_1[color=#408061, process="out('t');", issapicrule,
                          role='Pr']:
    [ State_1( ) ] --> [ State_11( ), Out( 't' ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_11[color=#408061, process='0', issapicrule,
+rule (modulo E) p_0_11[color=#408061, process="0", issapicrule,
                        role='Pr']:
    [ State_11( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
                       role='Process']:
    [ State_2( ) ] --> [ ]
 
@@ -55,14 +55,19 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end
@@ -74,7 +79,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/regression-tests/issue332-capturing-processdefinition.spthy
 
   output:          examples/sapic/fast/regression-tests/issue332-capturing-processdefinition.spthy.tmp
-  processing time: 0.10s
+  processing time: 0.02s
   
 
 ==============================================================================

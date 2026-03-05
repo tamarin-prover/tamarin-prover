@@ -23,49 +23,49 @@ heuristic: p
 
 
 
-rule (modulo E) Init[color=#ffffff, process='P()', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="P()", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) P_0_[color=#ffffff, process='P()', issapicrule,
+rule (modulo E) P_0_[color=#ffffff, process="P()", issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ State_1( ), State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newa_0_1[color=#6c8040, process='new a.1;', issapicrule,
+rule (modulo E) newa_0_1[color=#6c8040, process="new a.1;", issapicrule,
                          role='P']:
    [ State_1( ), Fr( a.1 ) ] --> [ State_11( a.1 ) ]
 
   /*
-  rule (modulo AC) newa_0_1[color=#6c8040, process='new a.1;', issapicrule,
+  rule (modulo AC) newa_0_1[color=#6c8040, process="new a.1;", issapicrule,
                             role='P']:
      [ State_1( ), Fr( a ) ] --> [ State_11( a ) ]
   */
 
-rule (modulo E) outa_0_11[color=#6c8040, process='out(a.1);',
+rule (modulo E) outa_0_11[color=#6c8040, process="out(a.1);",
                           issapicrule, role='P']:
    [ State_11( a.1 ) ] --> [ State_111( a.1 ), Out( a.1 ) ]
 
   /*
-  rule (modulo AC) outa_0_11[color=#6c8040, process='out(a.1);',
+  rule (modulo AC) outa_0_11[color=#6c8040, process="out(a.1);",
                              issapicrule, role='P']:
      [ State_11( a ) ] --> [ State_111( a ), Out( a ) ]
   */
 
-rule (modulo E) p_0_111[color=#6c8040, process='0', issapicrule,
+rule (modulo E) p_0_111[color=#6c8040, process="0", issapicrule,
                         role='P']:
    [ State_111( a.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111[color=#6c8040, process='0', issapicrule,
+  rule (modulo AC) p_0_111[color=#6c8040, process="0", issapicrule,
                            role='P']:
      [ State_111( a ) ] --> [ ]
   */
 
-rule (modulo E) p_0_2[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
                       role='Process']:
    [ State_2( ) ] --> [ ]
 
@@ -75,14 +75,19 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end
@@ -94,7 +99,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/let-blocks3.spthy
 
   output:          examples/sapic/fast/basic/let-blocks3.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.02s
   
 
 ==============================================================================

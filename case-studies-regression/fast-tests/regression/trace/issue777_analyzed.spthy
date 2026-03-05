@@ -34,10 +34,10 @@ rule (modulo E) A:
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 416cbfe3281f13caadedb1f6a3bd33b9eae37052 (with uncommited changes), branch: fix-macro-parser
-Compiled at: 2026-02-20 12:26:01.024789 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end

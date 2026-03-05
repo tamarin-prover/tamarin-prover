@@ -63,10 +63,10 @@ SOLVED // trace found
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 2e1eae7f76482f8cdc2f3aae07b45614c9f9e4cf (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 13:03:26.165591694 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end
@@ -78,7 +78,7 @@ summary of summaries:
 analyzed: examples/features/macros/MacroInLemmasAndRestrictions.spthy
 
   output:          examples/features/macros/MacroInLemmasAndRestrictions.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.02s
   
   M (exists-trace): verified (2 steps)
 

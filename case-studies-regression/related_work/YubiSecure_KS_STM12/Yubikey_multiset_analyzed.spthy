@@ -75,6 +75,11 @@ rule (modulo E) Server_ReceiveOTP_NewSession:
 restriction smaller:
   "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. (a++z) = b)"
 
+  /*
+  expanded formula:
+  "∀ #i a b. (Smaller( a, b ) @ #i) ⇒ (∃ z. (a++z) = b)"
+  */
+
 lemma transitivity:
   all-traces
   "∀ #t1 #t2 a b c.
@@ -1510,10 +1515,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end
@@ -1525,7 +1530,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_multiset.spthy.tmp
-  processing time: 7.07s
+  processing time: 7.03s
   
   transitivity (all-traces): verified (2 steps)
   Login_reachable (exists-trace): verified (8 steps)

@@ -192,6 +192,12 @@ restriction onekeypername:
       ((Register( A ) @ #i) ∧ (Register( A ) @ #j)) ∧ (¬(#i = #j)))"
   // safety formula
 
+  /*
+  expanded formula:
+  "¬(∃ A #i #j.
+      ((Register( A ) @ #i) ∧ (Register( A ) @ #j)) ∧ (¬(#i = #j)))"
+  */
+
 lemma nonce_secrecy:
   all-traces
   "¬(∃ A B s #i.
@@ -340,10 +346,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end
@@ -355,7 +361,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/NSLPK3xor.spthy
 
   output:          examples/csf18-xor/NSLPK3xor.spthy.tmp
-  processing time: 2.93s
+  processing time: 2.44s
   
   types (all-traces): falsified - found trace (12 steps)
   nonce_secrecy (all-traces): falsified - found trace (11 steps)

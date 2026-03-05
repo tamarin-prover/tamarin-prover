@@ -21,48 +21,48 @@ heuristic: p
 
 
 
-rule (modulo E) Init[color=#ffffff, process='new x.1:lol;', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="new x.1:lol;", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newxlol_0_[color=#ffffff, process='new x.1:lol;',
+rule (modulo E) newxlol_0_[color=#ffffff, process="new x.1:lol;",
                            issapicrule, role='Process']:
    [ State_( ), Fr( x.1 ) ] --> [ State_1( x.1 ) ]
 
   /*
-  rule (modulo AC) newxlol_0_[color=#ffffff, process='new x.1:lol;',
+  rule (modulo AC) newxlol_0_[color=#ffffff, process="new x.1:lol;",
                               issapicrule, role='Process']:
      [ State_( ), Fr( x ) ] --> [ State_1( x ) ]
   */
 
 rule (modulo E) eventTestxlol_0_1[color=#ffffff,
-                                  process='event Test( x.1:lol );', issapicrule, role='Process']:
+                                  process="event Test( x.1:lol );", issapicrule, role='Process']:
    [ State_1( x.1 ) ] --[ Test( x.1 ) ]-> [ State_11( x.1 ) ]
 
   /*
   rule (modulo AC) eventTestxlol_0_1[color=#ffffff,
-                                     process='event Test( x.1:lol );', issapicrule, role='Process']:
+                                     process="event Test( x.1:lol );", issapicrule, role='Process']:
      [ State_1( x ) ] --[ Test( x ) ]-> [ State_11( x ) ]
   */
 
 rule (modulo E) outffxlol_0_11[color=#ffffff,
-                               process='out(f(f(x.1:lol)));', issapicrule, role='Process']:
+                               process="out(f(f(x.1:lol)));", issapicrule, role='Process']:
    [ State_11( x.1 ) ] --> [ State_111( x.1 ), Out( f(f(x.1)) ) ]
 
   /*
   rule (modulo AC) outffxlol_0_11[color=#ffffff,
-                                  process='out(f(f(x.1:lol)));', issapicrule, role='Process']:
+                                  process="out(f(f(x.1:lol)));", issapicrule, role='Process']:
      [ State_11( x ) ] --> [ State_111( x ), Out( x ) ]
   */
 
-rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
                         role='Process']:
    [ State_111( x.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
                            role='Process']:
      [ State_111( x ) ] --> [ ]
   */
@@ -71,14 +71,19 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.11.0
+Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-05 10:17:12.323605 UTC
 */
 
 end
