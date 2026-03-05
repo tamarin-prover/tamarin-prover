@@ -745,8 +745,8 @@ prettyTheory ppSig ppCache ppRule ppPrf ppSap thy =
     ++ [kwTheoryBegin,
       lineComment_ "Function signature and definition of the equational theory E",
       ppSig $ L.get thySignature thy,
-      if thyT == [] then text "" else vcat $ map prettyTactic thyT,
-      if null thyH then text "" else text "heuristic: " <> text (prettyGoalRankings thyH),
+      if null thyT then emptyDoc else vcat $ map prettyTactic thyT,
+      if null thyH then emptyDoc else text "heuristic: " <> text (prettyGoalRankings thyH),
       ppCache $ L.get thyCache thy
     ]
       ++ parMap rdeepseq ppItem (filter (not . isConfigBlock) (L.get thyItems thy))
@@ -817,7 +817,7 @@ prettyVarList = fsep . punctuate comma . map prettyLVar
 
 -- |  Pretty print all macros
 prettyMacros :: (HighlightDocument d) => [LNMacro] -> d
-prettyMacros [] = text empty
+prettyMacros [] = emptyDoc
 prettyMacros m = keyword_ "macros:" $$ nest 4
   (vcat [if i == length m - 1
           then prettyMacro macro
@@ -890,8 +890,7 @@ prettyTactic tactic =
     <> (char $ goalRankingToChar $ _presort tactic)
       $-$ sep
         [ ppTabTab "prio" (map stringRankingPrio $ _prios tactic) (map stringsPrio $ _prios tactic),
-          ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic),
-          char '\n'
+          ppTabTab "deprio" (map stringRankingDeprio $ _deprios tactic) (map stringsDeprio $ _deprios tactic)
         ]
   where
     -- pretty print for a prio block
