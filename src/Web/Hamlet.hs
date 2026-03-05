@@ -228,22 +228,25 @@ headerDiffTpl info = [whamlet|
         \ <a href=@{RootR}><span class="tamarin">Tamarin</span></a>
         \ #{showVersion version}
     <div #header-links>
-      <a class=plain-link href=@{RootR}>Index</a>
       <ul #navigation>
+        <li><a href=@{RootR}>Index</a>
+        $if isLocalOrigin origin
+          <li>
+            <form method=POST action=@{ReloadTheoryDiffR idx} class="ajax-form ajax-form-full reload-confirm">
+              <button type=submit class=nav-button>Reload file
         <li><a href="#">Actions</a>
           <ul>
-            <li><a href=@{DownloadTheoryDiffR idx filename}>Download source</a>
             <li><a target=_blank href=@{TheorySourceDiffR idx}>Show source</a>
+            <li><a href=@{DownloadTheoryDiffR idx filename}>Download source</a>
         <li><a href="#">Options</a>
-          <ul>
+          <ul class="list-with-toggles">
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
-            <li><a id=agent-toggle href="#">Clusturing by role</a>
+            <li><a id=agent-toggle href="#">Clustering by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
             <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
             <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
-
   |]
   where
             -- <li><a id=debug-toggle href="#">Debug pane</a>
@@ -253,8 +256,12 @@ headerDiffTpl info = [whamlet|
             --
     idx = info.index
     filename = info.theory._diffThyName ++ ".spthy"
+    origin = info.origin
+    -- Check if theory origin is a local file (needed for reload functionality)
+    isLocalOrigin (Local _) = True
+    isLocalOrigin _         = False
 
-    {- use this snipped to reactivate saving local theories
+      {- use this snipped to reactivate saving local theories
     localTheory (Local _) = True
     localTheory _         = False
 
