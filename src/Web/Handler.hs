@@ -408,15 +408,22 @@ reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute =
       mkAlert $ "Parse error while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ show e
     
     Left (WarningError report) -> 
-      mkAlert $ "Wellformedness errors while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ 
-                show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++ 
-                ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
+      wfWarning report mkAlert typeName
     
-    Right (_report, thy, _wfErrors) -> case (thy, isDiff) of
+    Right (report, thy, _wfErrors) -> case (thy, isDiff) of
       (Left _, True) -> mkAlert "Expected diff theory but file contains standard theory"
       (Right _, False) -> mkAlert "Expected standard theory but file contains diff theory"
-      (Left closedThy, False) -> replaceTrace closedThy >> redirect
-      (Right closedDiffThy, True) -> replaceDiff closedDiffThy >> redirect
+      (Left closedThy, False) -> if not (null report)
+        then wfWarning report mkAlert typeName
+        else
+          replaceTrace closedThy >> redirect
+      (Right closedDiffThy, True) -> if not (null report)
+        then wfWarning report mkAlert typeName
+        else replaceDiff closedDiffThy >> redirect
+    where
+      wfWarning report mkAlert typeName = mkAlert $ "Wellformedness errors while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ 
+                show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++ 
+                ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
 
 -- | Reload a theory from its original file on disk.
 -- This handler implements a file reload feature that:
