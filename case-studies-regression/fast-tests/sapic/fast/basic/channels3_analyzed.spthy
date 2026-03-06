@@ -7,15 +7,7 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
-
-
-
-
-
-
 
 lemma not_secret:
   exists-trace "∃ #i #j x. (Received( x ) @ #i) ∧ (!KU( x ) @ #j)"
@@ -44,12 +36,6 @@ solve( State_211( x ) ▶₀ #i )
   case incx_1_21_case_1
   SOLVED // trace found
 qed
-
-
-
-
-
-
 
 rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
                      role='Process']:
@@ -232,8 +218,8 @@ restriction in_event:
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -245,7 +231,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/channels3.spthy
 
   output:          examples/sapic/fast/basic/channels3.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.10s
   
   not_secret (exists-trace): verified (4 steps)
   internal_comm (exists-trace): verified (3 steps)

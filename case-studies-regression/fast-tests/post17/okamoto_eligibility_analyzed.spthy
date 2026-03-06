@@ -17,10 +17,6 @@ equations [convergent]:
     unblind(blind(m, b), b) = m,
     unblind(sign(blind(m, b), sk), b) = sign(m, sk)
 
-
-
-
-
 rule (modulo E) Register_Voter_pk:
    [ Fr( ~ltkV ) ]
   -->
@@ -202,36 +198,14 @@ solve( P_Ch_Timeliness( $vote, ~r, x ) ▶₀ #j )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -243,7 +217,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_eligibility.spthy
 
   output:          examples/post17/okamoto_eligibility.spthy.tmp
-  processing time: 0.32s
+  processing time: 0.33s
   
   types (all-traces): verified (22 steps)
   exec (exists-trace): verified (6 steps)

@@ -17,15 +17,9 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
 /* looping facts with injective instances: S_Counter/2, Y_counter/2 */
 
 section{* The Yubikey-Protocol with a YubiHSM *}
-
-
 
 rule (modulo E) InitSucc:
    [ In( myzero ), In( S(myzero) ) ]
@@ -7518,36 +7512,6 @@ next
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 WARNING: the following wellformedness checks failed!
 
@@ -7565,8 +7529,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -7578,7 +7542,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey_and_YubiHSM.spthy.tmp
-  processing time: 13.25s
+  processing time: 13.44s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

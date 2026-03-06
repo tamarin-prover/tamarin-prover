@@ -7,11 +7,7 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
-
-
 
 lemma intuitiveTest:
   all-traces "∀ #a. (A( ) @ #a) ⇒ (∃ #i x. (K( x ) @ #i) ∧ (#i < #a))"
@@ -24,12 +20,6 @@ solve( State_111( x ) ▶₀ #a )
   case inx_1_11
   by contradiction /* from formulas */
 qed
-
-
-
-
-
-
 
 rule (modulo E) Init[color=#ffffff, process="new x.1;", issapicrule,
                      role='Process']:
@@ -136,8 +126,8 @@ restriction in_event:
 Generated from:
 Tamarin version 1.12.0
 Maude version 3.5.1
-Git revision: 49bdfd9a775cb085087843fe17f0245a944c4756 (with uncommited changes), branch: prepare-release
-Compiled at: 2026-03-05 10:17:12.323605 UTC
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -149,7 +139,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-ass-immediate/test-channelin.spthy
 
   output:          examples/sapic/fast/feature-ass-immediate/test-channelin.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.05s
   
   intuitiveTest (all-traces): verified (3 steps)
 
