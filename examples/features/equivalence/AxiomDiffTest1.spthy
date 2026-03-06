@@ -15,7 +15,7 @@ functions: h/1
 
 rule Test: 
   [ Fr(~f) ]
-  --[ NeverA() ]->
+  --[ Never() ]->
   [ Out(~f) ]
 
 restriction blockLeft [left]:
