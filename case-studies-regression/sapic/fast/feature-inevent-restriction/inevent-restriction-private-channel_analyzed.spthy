@@ -7,11 +7,7 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
-
-
 
 lemma test:
   all-traces
@@ -37,37 +33,31 @@ solve( State_( ) ▶₀ #a )
   qed
 qed
 
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='event A( );', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="event A( );", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_[color=#ffffff, process='event A( );',
+rule (modulo E) eventA_0_[color=#ffffff, process="event A( );",
                           issapicrule, role='Process']:
    [ State_( ) ] --[ A( ), Event( ) ]-> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inca_0_1[color=#ffffff, process='in('c','a');',
+rule (modulo E) inca_0_1[color=#ffffff, process="in('c','a');",
                          issapicrule, role='Process']:
    [ State_1( ), Message( 'c', x ) ] --> [ Let_11( x ), Ack( 'c', x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inca_1_1[color=#ffffff, process='in('c','a');',
+rule (modulo E) inca_1_1[color=#ffffff, process="in('c','a');",
                          issapicrule, role='Process']:
    [ Let_11( 'a' ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inca_2_1[color=#ffffff, process='in('c','a');',
+rule (modulo E) inca_2_1[color=#ffffff, process="in('c','a');",
                          issapicrule, role='Process']:
    [ State_1( ), In( <'c', x> ) ]
   --[ ChannelIn( <'c', x> ) ]->
@@ -75,19 +65,19 @@ rule (modulo E) inca_2_1[color=#ffffff, process='in('c','a');',
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inca_3_1[color=#ffffff, process='in('c','a');',
+rule (modulo E) inca_3_1[color=#ffffff, process="in('c','a');",
                          issapicrule, role='Process']:
    [ Let_11( 'a' ) ] --> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_11[color=#ffffff, process='event B( );',
+rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );",
                             issapicrule, role='Process']:
    [ State_11( ) ] --[ B( ), Event( ) ]-> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
                         role='Process']:
    [ State_111( ) ] --> [ ]
 
@@ -97,6 +87,11 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction in_event:
   "∀ x #t3.
     (ChannelIn( x ) @ #t3) ⇒
@@ -105,6 +100,17 @@ restriction in_event:
        (∀ #t1. (Event( ) @ #t1) ⇒ ((#t1 < #t2) ∨ (#t3 < #t1)))) ∧
       (∀ #t1 xp.
         (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (ChannelIn( x ) @ #t3) ⇒
+    (∃ #t2.
+      (((K( x ) @ #t2) ∧ (#t2 < #t3)) ∧
+       (∀ #t1. (Event( ) @ #t1) ⇒ ((#t1 < #t2) ∨ (#t3 < #t1)))) ∧
+      (∀ #t1 xp.
+        (K( xp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
 
 /*
 WARNING: the following wellformedness checks failed!
@@ -119,8 +125,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -132,7 +138,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy
 
   output:          examples/sapic/fast/feature-inevent-restriction/inevent-restriction-private-channel.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.06s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

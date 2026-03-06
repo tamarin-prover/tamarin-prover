@@ -10,19 +10,9 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
 heuristic: p
 
 section{* small example for progression function *}
-
-
-
-
-
-
-
-
 
 lemma A_possible:
   exists-trace "∃ #t. A( ) @ #t"
@@ -87,47 +77,31 @@ solve( State_21( ~prog_21 ) ▶₀ #t )
   by solve( State_11( ~prog_11 ) ▶₀ #t2 )
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-rule (modulo E) MessageIDRule[color=#ffffff, process='+', issapicrule,
+rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule,
                               role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule,
                       role='Process']:
    [ State_( ) ] --> [ !Semistate_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule,
                       role='Process']:
    [ State_( ) ] --> [ !Semistate_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule,
                       role='Process']:
    [ Fr( ~prog_11 ), !Semistate_11( ) ]
   --[ ProgressFrom_11( ~prog_11 ) ]->
@@ -135,13 +109,13 @@ rule (modulo E) p_1_1[color=#ffffff, process='!', issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_11[color=#ffffff, process='0', issapicrule,
+rule (modulo E) eventA_0_11[color=#ffffff, process="0", issapicrule,
                             role='Process']:
    [ State_11( ~prog_11 ) ] --[ ProgressTo_111( ~prog_11 ), A( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_2[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_2[color=#ffffff, process="!", issapicrule,
                       role='Process']:
    [ Fr( ~prog_21 ), !Semistate_21( ) ]
   --[ ProgressFrom_21( ~prog_21 ) ]->
@@ -149,7 +123,7 @@ rule (modulo E) p_1_2[color=#ffffff, process='!', issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_21[color=#ffffff, process='0', issapicrule,
+rule (modulo E) eventB_0_21[color=#ffffff, process="0", issapicrule,
                             role='Process']:
    [ State_21( ~prog_21 ) ] --[ ProgressTo_211( ~prog_21 ), B( ) ]-> [ ]
 
@@ -159,18 +133,42 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction Progress_11_to_111:
   "∀ prog_11 #t.
     (ProgressFrom_11( prog_11 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_11 #t.
+    (ProgressFrom_11( prog_11 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+  */
 
 restriction Progress_21_to_211:
   "∀ prog_21 #t.
     (ProgressFrom_21( prog_21 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_211( prog_21 ) @ #t.1)"
 
+  /*
+  expanded formula:
+  "∀ prog_21 #t.
+    (ProgressFrom_21( prog_21 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_211( prog_21 ) @ #t.1)"
+  */
+
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
+
+  /*
+  expanded formula:
+  "∃ #t. Init( ) @ #t"
+  */
 
 /* All wellformedness checks were successful. */
 
@@ -178,8 +176,8 @@ restriction progressInit:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -191,7 +189,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-two-replications.spthy
 
   output:          examples/sapic/fast/basic/ndc-two-replications.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.06s
   
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)
