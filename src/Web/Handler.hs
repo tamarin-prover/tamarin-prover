@@ -391,10 +391,10 @@ checkReloadOrigin Interactive = Left $ responseToJson $ JsonAlert "Cannot reload
 -- Consolidates parse/wellformedness error handling and theory type checking.
 reloadTheoryFromFile :: FilePath 
                      -> TheoryIdx
-                     -> Bool                              -- ^ Is diff theory?
-                     -> (ClosedTheory -> Handler ())      -- ^ Replace trace theory action
-                     -> (ClosedDiffTheory -> Handler ())  -- ^ Replace diff theory action  
-                     -> Route WebUI                       -- ^ Success redirect route
+                     -> Bool                                        -- ^ Is diff theory?
+                     -> (ClosedTheory -> String -> Handler ())      -- ^ Replace trace theory action
+                     -> (ClosedDiffTheory -> String -> Handler ())  -- ^ Replace diff theory action
+                     -> Route WebUI                                 -- ^ Success redirect route
                      -> Handler Value
 reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute = do
   result <- liftIO (readFile filePath) >>= loadAndCloseTheory `flip` filePath
@@ -404,26 +404,21 @@ reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute =
       typeName = if isDiff then "diff theory" else "file"
   
   case result of
-    Left (ParserError e) -> 
+    Left (ParserError e) ->
       mkAlert $ "Parse error while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ show e
     
-    Left (WarningError report) -> 
-      wfWarning report mkAlert typeName
+    Left (WarningError report) -> mkAlert $ "Wellformedness errors while reloading " ++ typeName ++ ":\n\n"
+      ++ filePath ++ "\n\n" ++
+      show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++
+      ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
     
     Right (report, thy, _wfErrors) -> case (thy, isDiff) of
-      (Left _, True) -> mkAlert "Expected diff theory but file contains standard theory"
-      (Right _, False) -> mkAlert "Expected standard theory but file contains diff theory"
-      (Left closedThy, False) -> if not (null report)
-        then wfWarning report mkAlert typeName
-        else
-          replaceTrace closedThy >> redirect
-      (Right closedDiffThy, True) -> if not (null report)
-        then wfWarning report mkAlert typeName
-        else replaceDiff closedDiffThy >> redirect
-    where
-      wfWarning report mkAlert typeName = mkAlert $ "Wellformedness errors while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ 
-                show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++ 
-                ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
+        (Left _, True) -> mkAlert "Expected diff theory but file contains standard theory"
+        (Right _, False) -> mkAlert "Expected standard theory but file contains diff theory"
+        (Left closedThy, False) -> replaceTrace closedThy rep >> redirect
+        (Right closedDiffThy, True) -> replaceDiff closedDiffThy rep >> redirect
+      where
+        rep = if not (null report) then makeWfErrorsHtml report else ""
 
 -- | Reload a theory from its original file on disk.
 -- This handler implements a file reload feature that:
@@ -447,14 +442,14 @@ postReloadTheoryR idx = do
     
     Just (Trace ti) -> 
       either pure (\fp -> reloadTheoryFromFile fp idx False
-        (\thy -> void $ replaceTheory (Just ti) (Just $ Local fp) thy "" idx)
+        (\thy rep -> void $ replaceTheory (Just ti) (Just $ Local fp) thy rep idx)
         (\_ -> error "Unreachable: diff theory in trace mode")
         (InteractiveOverviewR idx TheoryHelp)) $ checkReloadOrigin ti.origin
     
     Just (Diff dti) -> 
       either pure (\fp -> reloadTheoryFromFile fp idx True
         (\_ -> error "Unreachable: trace theory in diff mode")
-        (\thy -> void $ replaceDiffTheory (Just dti) (Just $ Local fp) thy "" idx)
+        (\thy rep -> void $ replaceDiffTheory (Just dti) (Just $ Local fp) thy rep idx)
         (InteractiveOverviewDiffR idx DiffTheoryHelp)) $ checkReloadOrigin dti.origin
 
 -- | Alias for postReloadTheoryR to handle diff theory reload route.
