@@ -13,12 +13,6 @@ equations [convergent]:
     open(commit(ni1, r, pk(sk)), fake(ni1, r, sk, ni2), sk) = ni2,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 rule (modulo E) Attack3:
    [ Fr( ~ni1 ), Fr( ~rnd1 ), Fr( ~ltkV1 ) ]
   -->
@@ -3243,8 +3237,8 @@ qed
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -3256,7 +3250,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 1.72s
+  processing time: 2.76s
   
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 

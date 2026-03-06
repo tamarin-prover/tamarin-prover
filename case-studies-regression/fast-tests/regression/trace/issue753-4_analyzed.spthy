@@ -10,14 +10,6 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
-
-
-
-
-
-
 lemma False:
   all-traces "⊥"
 /*
@@ -27,30 +19,14 @@ guarded formula characterizing all counter-examples:
 simplify
 SOLVED // trace found
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: b71365cfdab5120d97129a6544bd391a2c69f41b (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 12:24:40.37671334 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end

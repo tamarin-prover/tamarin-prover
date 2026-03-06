@@ -8,12 +8,6 @@ builtins: diffie-hellman
 functions: fst/1, h1/1, h2/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 section{* NAXOS *}
 
 rule (modulo E) generate_ltk:
@@ -311,24 +305,14 @@ solve( (∃ MatchingSession #i3 #i4 ms.
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -340,7 +324,7 @@ summary of summaries:
 analyzed: examples/csf12/NAXOS_eCK_PFS.spthy
 
   output:          examples/csf12/NAXOS_eCK_PFS.spthy.tmp
-  processing time: 1.16s
+  processing time: 1.88s
   
   eCK_PFS_key_secrecy (all-traces): falsified - found trace (13 steps)
 

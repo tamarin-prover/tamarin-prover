@@ -10,19 +10,9 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
 heuristic: p
 
 section{* small example for progression function *}
-
-
-
-
-
-
-
-
 
 lemma A_possible:
   exists-trace "∃ #t. A( ) @ #t"
@@ -105,90 +95,74 @@ solve( (#t1 < #t2)  ∥ (#t2 < #t1) )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-rule (modulo E) MessageIDRule[color=#ffffff, process='+', issapicrule,
+rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule,
                               role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule,
                       role='Process']:
    [ State_( ) ] --> [ !Semistate_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_2[color=#ffffff, process='in('r',m.2);', issapicrule,
+rule (modulo E) p_1_2[color=#ffffff, process="in('r',m.2);", issapicrule,
                       role='Process']:
    [ !Semistate_21( ), Fr( ~prog_211 ), In( m.2 ), MID_Receiver( ~mid_21 ) ]
   --[ ProgressFrom_211( ~prog_211 ), Receive( ~mid_21, m.2 ) ]->
    [ State_211( ~prog_211, m.2 ) ]
 
   /*
-  rule (modulo AC) p_1_2[color=#ffffff, process='in('r',m.2);',
+  rule (modulo AC) p_1_2[color=#ffffff, process="in('r',m.2);",
                          issapicrule, role='Process']:
      [ !Semistate_21( ), Fr( ~prog_211 ), In( m ), MID_Receiver( ~mid_21 ) ]
     --[ ProgressFrom_211( ~prog_211 ), Receive( ~mid_21, m ) ]->
      [ State_211( ~prog_211, m ) ]
   */
 
-rule (modulo E) eventB_0_211[color=#ffffff, process='0', issapicrule,
+rule (modulo E) eventB_0_211[color=#ffffff, process="0", issapicrule,
                              role='Process']:
    [ State_211( ~prog_211, m.2 ) ]
   --[ ProgressTo_2111( ~prog_211 ), B( ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventB_0_211[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) eventB_0_211[color=#ffffff, process="0", issapicrule,
                                 role='Process']:
      [ State_211( ~prog_211, m ) ]
     --[ ProgressTo_2111( ~prog_211 ), B( ) ]->
      [ ]
   */
 
-rule (modulo E) inrm_0_1[color=#ffffff, process='in('r',m.1);',
+rule (modulo E) inrm_0_1[color=#ffffff, process="in('r',m.1);",
                          issapicrule, role='Process']:
    [ Fr( ~prog_11 ), State_( ), In( m.1 ), MID_Receiver( ~mid_1 ) ]
   --[ ProgressFrom_11( ~prog_11 ), Receive( ~mid_1, m.1 ) ]->
    [ State_11( ~prog_11, m.1 ) ]
 
   /*
-  rule (modulo AC) inrm_0_1[color=#ffffff, process='in('r',m.1);',
+  rule (modulo AC) inrm_0_1[color=#ffffff, process="in('r',m.1);",
                             issapicrule, role='Process']:
      [ Fr( ~prog_11 ), State_( ), In( m ), MID_Receiver( ~mid_1 ) ]
     --[ ProgressFrom_11( ~prog_11 ), Receive( ~mid_1, m ) ]->
      [ State_11( ~prog_11, m ) ]
   */
 
-rule (modulo E) eventA_0_11[color=#ffffff, process='0', issapicrule,
+rule (modulo E) eventA_0_11[color=#ffffff, process="0", issapicrule,
                             role='Process']:
    [ State_11( ~prog_11, m.1 ) ]
   --[ ProgressTo_111( ~prog_11 ), A( ) ]->
    [ ]
 
   /*
-  rule (modulo AC) eventA_0_11[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) eventA_0_11[color=#ffffff, process="0", issapicrule,
                                role='Process']:
      [ State_11( ~prog_11, m ) ] --[ ProgressTo_111( ~prog_11 ), A( ) ]-> [ ]
   */
@@ -197,18 +171,42 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction Progress_11_to_111:
   "∀ prog_11 #t.
     (ProgressFrom_11( prog_11 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_11 #t.
+    (ProgressFrom_11( prog_11 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+  */
 
 restriction Progress_211_to_2111:
   "∀ prog_211 #t.
     (ProgressFrom_211( prog_211 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_2111( prog_211 ) @ #t.1)"
 
+  /*
+  expanded formula:
+  "∀ prog_211 #t.
+    (ProgressFrom_211( prog_211 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_2111( prog_211 ) @ #t.1)"
+  */
+
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
+
+  /*
+  expanded formula:
+  "∃ #t. Init( ) @ #t"
+  */
 
 /* All wellformedness checks were successful. */
 
@@ -216,8 +214,8 @@ restriction progressInit:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -229,7 +227,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini3.spthy
 
   output:          examples/sapic/fast/feature-progress/mini3.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.08s
   
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)

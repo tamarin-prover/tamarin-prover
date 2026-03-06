@@ -8,14 +8,6 @@ builtins: xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
-
-
 rule (modulo E) Setup:
    [ Fr( ~k ) ] --[ OnlyOnce( ) ]-> [ !InitLTK( ~k ), !RespLTK( ~k ) ]
 
@@ -119,13 +111,28 @@ restriction equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  */
+
 restriction unique:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction inequality:
   "¬(∃ x #i. Neq( x, x ) @ #i)"
   // safety formula
+
+  /*
+  expanded formula:
+  "¬(∃ x #i. Neq( x, x ) @ #i)"
+  */
 
 lemma alive:
   all-traces "∀ x y #i. (Alive( x, y ) @ #i) ⇒ (∃ #j. Response( y ) @ #j)"
@@ -491,22 +498,14 @@ solve( Initiated( ~na ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -518,7 +517,7 @@ summary of summaries:
 analyzed: examples/csf18-xor/CRxor.spthy
 
   output:          examples/csf18-xor/CRxor.spthy.tmp
-  processing time: 0.43s
+  processing time: 0.72s
   
   alive (all-traces): verified (91 steps)
   recentalive_tag (all-traces): falsified - found trace (11 steps)

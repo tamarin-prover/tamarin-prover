@@ -10,15 +10,9 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
 /* looping facts with injective instances: Server/3, Y_counter/2 */
 
 section{* The Yubikey-Protocol *}
-
-
 
 rule (modulo E) InitSucc:
    [ In( myzero ), In( S(myzero) ) ]
@@ -104,13 +98,30 @@ restriction transitivity:
     ((IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)) ⇒
     (∃ #t3. IsSmaller( a, c ) @ #t3)"
 
+  /*
+  expanded formula:
+  "∀ #t1 #t2 a b c.
+    ((IsSmaller( a, b ) @ #t1) ∧ (IsSmaller( b, c ) @ #t2)) ⇒
+    (∃ #t3. IsSmaller( a, c ) @ #t3)"
+  */
+
 restriction smaller_implies_unequal:
   "¬(∃ a #t. IsSmaller( a, a ) @ #t)"
   // safety formula
 
+  /*
+  expanded formula:
+  "¬(∃ a #t. IsSmaller( a, a ) @ #t)"
+  */
+
 restriction theory_before_protocol:
   "∀ #i #j. ((Theory( ) @ #i) ∧ (Protocol( ) @ #j)) ⇒ (#i < #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Theory( ) @ #i) ∧ (Protocol( ) @ #j)) ⇒ (#i < #j)"
+  */
 
 lemma Login_reachable:
   exists-trace "∃ #i pid sid x otp1. Login( pid, sid, x, otp1 ) @ #i"
@@ -3742,28 +3753,14 @@ next
   by contradiction /* from formulas */
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -3775,7 +3772,7 @@ summary of summaries:
 analyzed: examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy
 
   output:          examples/related_work/YubiSecure_KS_STM12/Yubikey.spthy.tmp
-  processing time: 4.48s
+  processing time: 7.07s
   
   Login_reachable (exists-trace): verified (12 steps)
   slightly_weaker_invariant (all-traces): verified (1135 steps)

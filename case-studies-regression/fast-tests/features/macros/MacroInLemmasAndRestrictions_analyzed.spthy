@@ -7,10 +7,6 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
 macros: m( x ) =  x,
         m2( x, y ) =  <x, y>,
         m3( x ) =  x
@@ -53,20 +49,14 @@ guarded formula characterizing all satisfying traces:
 simplify
 SOLVED // trace found
 
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: 2e1eae7f76482f8cdc2f3aae07b45614c9f9e4cf (with uncommited changes), branch: HEAD
-Compiled at: 2026-02-19 13:03:26.165591694 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -78,7 +68,7 @@ summary of summaries:
 analyzed: examples/features/macros/MacroInLemmasAndRestrictions.spthy
 
   output:          examples/features/macros/MacroInLemmasAndRestrictions.spthy.tmp
-  processing time: 0.03s
+  processing time: 0.02s
   
   M (exists-trace): verified (2 steps)
 

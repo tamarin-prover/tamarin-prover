@@ -7,13 +7,9 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
 
 section{* A few test cases for operator precedence *}
-
-
 
 lemma semicolon_binds_stronger_than_NDC:
   exists-trace
@@ -28,43 +24,37 @@ solve( State_( ) ▶₀ #c )
   SOLVED // trace found
 qed
 
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='+', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_1[color=#ffffff, process='event A( );',
+rule (modulo E) eventA_0_1[color=#ffffff, process="event A( );",
                            issapicrule, role='Process']:
    [ State_( ) ] --[ A( ) ]-> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_11[color=#ffffff, process='event B( );',
+rule (modulo E) eventB_0_11[color=#ffffff, process="event B( );",
                             issapicrule, role='Process']:
    [ State_11( ) ] --[ B( ) ]-> [ State_111( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
                         role='Process']:
    [ State_111( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventC_0_2[color=#ffffff, process='event C( );',
+rule (modulo E) eventC_0_2[color=#ffffff, process="event C( );",
                            issapicrule, role='Process']:
    [ State_( ) ] --[ C( ) ]-> [ State_21( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_21[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_21[color=#ffffff, process="0", issapicrule,
                        role='Process']:
    [ State_21( ) ] --> [ ]
 
@@ -74,14 +64,19 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -93,7 +88,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-2.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-2.spthy.tmp
-  processing time: 0.02s
+  processing time: 0.03s
   
   semicolon_binds_stronger_than_NDC (exists-trace): verified (3 steps)
 

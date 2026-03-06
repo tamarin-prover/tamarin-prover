@@ -8,12 +8,6 @@ builtins: diffie-hellman
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
 macros: pk( x ) =  'g'^x
 
 rule (modulo E) A:
@@ -24,20 +18,14 @@ rule (modulo E) A:
      [ Fr( ~x ) ] --> [ Out( 'g'^~x ) ]
   */
 
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: 416cbfe3281f13caadedb1f6a3bd33b9eae37052 (with uncommited changes), branch: fix-macro-parser
-Compiled at: 2026-02-20 12:26:01.024789 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end

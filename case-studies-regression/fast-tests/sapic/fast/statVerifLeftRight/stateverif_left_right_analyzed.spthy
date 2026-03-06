@@ -10,17 +10,7 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
-
-
-
-
-
-
-
-
 
 lemma source [sources]:
   all-traces
@@ -1618,58 +1608,46 @@ solve( State_111121111( x, y, s, sk ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='!', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newsk_0_1[color=#ffffff, process='new sk.1;',
+rule (modulo E) newsk_0_1[color=#ffffff, process="new sk.1;",
                           issapicrule, role='Process']:
    [ State_1( ), Fr( sk.1 ) ] --> [ State_11( sk.1 ) ]
 
   /*
-  rule (modulo AC) newsk_0_1[color=#ffffff, process='new sk.1;',
+  rule (modulo AC) newsk_0_1[color=#ffffff, process="new sk.1;",
                              issapicrule, role='Process']:
      [ State_1( ), Fr( sk ) ] --> [ State_11( sk ) ]
   */
 
-rule (modulo E) news_0_11[color=#ffffff, process='new s.1;', issapicrule,
+rule (modulo E) news_0_11[color=#ffffff, process="new s.1;", issapicrule,
                           role='Process']:
    [ State_11( sk.1 ), Fr( s.1 ) ] --> [ State_111( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) news_0_11[color=#ffffff, process='new s.1;',
+  rule (modulo AC) news_0_11[color=#ffffff, process="new s.1;",
                              issapicrule, role='Process']:
      [ State_11( sk ), Fr( s ) ] --> [ State_111( s, sk ) ]
   */
 
 rule (modulo E) insertFstatussinit_0_111[color=#ffffff,
-                                         process='insert <'F_status', s.1>,'init';', issapicrule,
+                                         process="insert <'F_status', s.1>,'init';", issapicrule,
                                          role='Process']:
    [ State_111( s.1, sk.1 ) ]
   --[ Insert( <'F_status', s.1>, 'init' ) ]->
@@ -1677,49 +1655,49 @@ rule (modulo E) insertFstatussinit_0_111[color=#ffffff,
 
   /*
   rule (modulo AC) insertFstatussinit_0_111[color=#ffffff,
-                                            process='insert <'F_status', s.1>,'init';', issapicrule,
+                                            process="insert <'F_status', s.1>,'init';", issapicrule,
                                             role='Process']:
      [ State_111( s, sk ) ]
     --[ Insert( <'F_status', s>, 'init' ) ]->
      [ State_1111( s, sk ) ]
   */
 
-rule (modulo E) p_0_1111[color=#ffffff, process='|', issapicrule,
+rule (modulo E) p_0_1111[color=#ffffff, process="|", issapicrule,
                          role='Process']:
    [ State_1111( s.1, sk.1 ) ]
   -->
    [ State_11111( s.1, sk.1 ), State_11112( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111[color=#ffffff, process='|', issapicrule,
+  rule (modulo AC) p_0_1111[color=#ffffff, process="|", issapicrule,
                             role='Process']:
      [ State_1111( s, sk ) ]
     -->
      [ State_11111( s, sk ), State_11112( s, sk ) ]
   */
 
-rule (modulo E) Device_0_11111[color=#ffffff, process='Device()',
+rule (modulo E) Device_0_11111[color=#ffffff, process="Device()",
                                issapicrule, role='Process']:
    [ State_11111( s.1, sk.1 ) ]
   -->
    [ State_111111( s.1, sk.1 ), State_111112( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) Device_0_11111[color=#ffffff, process='Device()',
+  rule (modulo AC) Device_0_11111[color=#ffffff, process="Device()",
                                   issapicrule, role='Process']:
      [ State_11111( s, sk ) ]
     -->
      [ State_111111( s, sk ), State_111112( s, sk ) ]
   */
 
-rule (modulo E) p_0_111111[color=#708040, process='|', issapicrule,
+rule (modulo E) p_0_111111[color=#708040, process="|", issapicrule,
                            role='Device']:
    [ State_111111( s.1, sk.1 ) ]
   -->
    [ State_1111111( s.1, sk.1 ), State_1111112( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_0_111111[color=#708040, process='|', issapicrule,
+  rule (modulo AC) p_0_111111[color=#708040, process="|", issapicrule,
                               role='Device']:
      [ State_111111( s, sk ) ]
     -->
@@ -1727,83 +1705,83 @@ rule (modulo E) p_0_111111[color=#708040, process='|', issapicrule,
   */
 
 rule (modulo E) outpksk_0_1111111[color=#708040,
-                                  process='out(pk(sk.1));', issapicrule, role='Device']:
+                                  process="out(pk(sk.1));", issapicrule, role='Device']:
    [ State_1111111( s.1, sk.1 ) ]
   -->
    [ State_11111111( s.1, sk.1 ), Out( pk(sk.1) ) ]
 
   /*
   rule (modulo AC) outpksk_0_1111111[color=#708040,
-                                     process='out(pk(sk.1));', issapicrule, role='Device']:
+                                     process="out(pk(sk.1));", issapicrule, role='Device']:
      [ State_1111111( s, sk ) ] --> [ State_11111111( s, sk ), Out( pk(sk) ) ]
   */
 
-rule (modulo E) p_0_11111111[color=#708040, process='0', issapicrule,
+rule (modulo E) p_0_11111111[color=#708040, process="0", issapicrule,
                              role='Device']:
    [ State_11111111( s.1, sk.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11111111[color=#708040, process='0', issapicrule,
+  rule (modulo AC) p_0_11111111[color=#708040, process="0", issapicrule,
                                 role='Device']:
      [ State_11111111( s, sk ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111112[color=#708040, process='!', issapicrule,
+rule (modulo E) p_0_1111112[color=#708040, process="!", issapicrule,
                             role='Device']:
    [ State_1111112( s.1, sk.1 ) ] --> [ !Semistate_11111121( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1111112[color=#708040, process='!', issapicrule,
+  rule (modulo AC) p_0_1111112[color=#708040, process="!", issapicrule,
                                role='Device']:
      [ State_1111112( s, sk ) ] --> [ !Semistate_11111121( s, sk ) ]
   */
 
-rule (modulo E) p_1_1111112[color=#708040, process='!', issapicrule,
+rule (modulo E) p_1_1111112[color=#708040, process="!", issapicrule,
                             role='Device']:
    [ !Semistate_11111121( s.1, sk.1 ) ] --> [ State_11111121( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1111112[color=#708040, process='!', issapicrule,
+  rule (modulo AC) p_1_1111112[color=#708040, process="!", issapicrule,
                                role='Device']:
      [ !Semistate_11111121( s, sk ) ] --> [ State_11111121( s, sk ) ]
   */
 
-rule (modulo E) p_0_11111121[color=#708040, process='|', issapicrule,
+rule (modulo E) p_0_11111121[color=#708040, process="|", issapicrule,
                              role='Device']:
    [ State_11111121( s.1, sk.1 ) ]
   -->
    [ State_111111211( s.1, sk.1 ), State_111111212( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_0_11111121[color=#708040, process='|', issapicrule,
+  rule (modulo AC) p_0_11111121[color=#708040, process="|", issapicrule,
                                 role='Device']:
      [ State_11111121( s, sk ) ]
     -->
      [ State_111111211( s, sk ), State_111111212( s, sk ) ]
   */
 
-rule (modulo E) locks_0_111111211[color=#708040, process='lock s.1;',
+rule (modulo E) locks_0_111111211[color=#708040, process="lock s.1;",
                                   issapicrule, role='Device']:
    [ State_111111211( s.1, sk.1 ), Fr( lock ) ]
   --[ Lock_0( '0', lock, s.1 ), Lock( '0', lock, s.1 ) ]->
    [ State_1111112111( lock, s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) locks_0_111111211[color=#708040, process='lock s.1;',
+  rule (modulo AC) locks_0_111111211[color=#708040, process="lock s.1;",
                                      issapicrule, role='Device']:
      [ State_111111211( s, sk ), Fr( lock ) ]
     --[ Lock_0( '0', lock, s ), Lock( '0', lock, s ) ]->
      [ State_1111112111( lock, s, sk ) ]
   */
 
-rule (modulo E) inreq_0_1111112111[color=#708040, process='in(req.1);',
+rule (modulo E) inreq_0_1111112111[color=#708040, process="in(req.1);",
                                    issapicrule, role='Device']:
    [ State_1111112111( lock, s.1, sk.1 ), In( req.1 ) ]
   -->
    [ State_11111121111( lock, req.1, s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) inreq_0_1111112111[color=#708040, process='in(req.1);',
+  rule (modulo AC) inreq_0_1111112111[color=#708040, process="in(req.1);",
                                       issapicrule, role='Device']:
      [ State_1111112111( lock, s, sk ), In( req ) ]
     -->
@@ -1811,7 +1789,7 @@ rule (modulo E) inreq_0_1111112111[color=#708040, process='in(req.1);',
   */
 
 rule (modulo E) lookupFstatussasstatus_0_11111121111[color=#708040,
-                                                     process='lookup <'F_status', s.1> as status.1',
+                                                     process="lookup <'F_status', s.1> as status.1",
                                                      no_derivcheck, issapicrule, role='Device']:
    [ State_11111121111( lock, req.1, s.1, sk.1 ) ]
   --[ IsIn( <'F_status', s.1>, status.1 ) ]->
@@ -1819,7 +1797,7 @@ rule (modulo E) lookupFstatussasstatus_0_11111121111[color=#708040,
 
   /*
   rule (modulo AC) lookupFstatussasstatus_0_11111121111[color=#708040,
-                                                        process='lookup <'F_status', s.1> as status.1',
+                                                        process="lookup <'F_status', s.1> as status.1",
                                                         no_derivcheck, issapicrule, role='Device']:
      [ State_11111121111( lock, req, s, sk ) ]
     --[ IsIn( <'F_status', s>, status ) ]->
@@ -1827,7 +1805,7 @@ rule (modulo E) lookupFstatussasstatus_0_11111121111[color=#708040,
   */
 
 rule (modulo E) lookupFstatussasstatus_1_11111121111[color=#708040,
-                                                     process='lookup <'F_status', s.1> as status.1',
+                                                     process="lookup <'F_status', s.1> as status.1",
                                                      no_derivcheck, issapicrule, role='Device']:
    [ State_11111121111( lock, req.1, s.1, sk.1 ) ]
   --[ IsNotSet( <'F_status', s.1> ) ]->
@@ -1835,7 +1813,7 @@ rule (modulo E) lookupFstatussasstatus_1_11111121111[color=#708040,
 
   /*
   rule (modulo AC) lookupFstatussasstatus_1_11111121111[color=#708040,
-                                                        process='lookup <'F_status', s.1> as status.1',
+                                                        process="lookup <'F_status', s.1> as status.1",
                                                         no_derivcheck, issapicrule, role='Device']:
      [ State_11111121111( lock, req, s, sk ) ]
     --[ IsNotSet( <'F_status', s> ) ]->
@@ -1843,63 +1821,63 @@ rule (modulo E) lookupFstatussasstatus_1_11111121111[color=#708040,
   */
 
 rule (modulo E) ifstatusinit_0_111111211111[color=#708040,
-                                            process='if status.1='init'', issapicrule, role='Device']:
+                                            process="if status.1='init'", issapicrule, role='Device']:
    [ State_111111211111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Eq( status.1, 'init' ) ]->
    [ State_1111112111111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifstatusinit_0_111111211111[color=#708040,
-                                               process='if status.1='init'', issapicrule, role='Device']:
+                                               process="if status.1='init'", issapicrule, role='Device']:
      [ State_111111211111( lock, req, s, sk, status ) ]
     --[ Pred_Eq( status, 'init' ) ]->
      [ State_1111112111111( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) ifstatusinit_1_111111211111[color=#708040,
-                                            process='if status.1='init'', issapicrule, role='Device']:
+                                            process="if status.1='init'", issapicrule, role='Device']:
    [ State_111111211111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Not_Eq( status.1, 'init' ) ]->
    [ State_1111112111112( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifstatusinit_1_111111211111[color=#708040,
-                                               process='if status.1='init'', issapicrule, role='Device']:
+                                               process="if status.1='init'", issapicrule, role='Device']:
      [ State_111111211111( lock, req, s, sk, status ) ]
     --[ Pred_Not_Eq( status, 'init' ) ]->
      [ State_1111112111112( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) ifreqleft_0_1111112111111[color=#708040,
-                                          process='if req.1='left'', issapicrule, role='Device']:
+                                          process="if req.1='left'", issapicrule, role='Device']:
    [ State_1111112111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Eq( req.1, 'left' ) ]->
    [ State_11111121111111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifreqleft_0_1111112111111[color=#708040,
-                                             process='if req.1='left'', issapicrule, role='Device']:
+                                             process="if req.1='left'", issapicrule, role='Device']:
      [ State_1111112111111( lock, req, s, sk, status ) ]
     --[ Pred_Eq( req, 'left' ) ]->
      [ State_11111121111111( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) ifreqleft_1_1111112111111[color=#708040,
-                                          process='if req.1='left'', issapicrule, role='Device']:
+                                          process="if req.1='left'", issapicrule, role='Device']:
    [ State_1111112111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Not_Eq( req.1, 'left' ) ]->
    [ State_11111121111112( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifreqleft_1_1111112111111[color=#708040,
-                                             process='if req.1='left'', issapicrule, role='Device']:
+                                             process="if req.1='left'", issapicrule, role='Device']:
      [ State_1111112111111( lock, req, s, sk, status ) ]
     --[ Pred_Not_Eq( req, 'left' ) ]->
      [ State_11111121111112( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) eventInitDevices_0_11111121111111[color=#708040,
-                                                  process='event InitDevice( s.1 );', issapicrule,
+                                                  process="event InitDevice( s.1 );", issapicrule,
                                                   role='Device']:
    [ State_11111121111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ InitDevice( s.1 ) ]->
@@ -1907,7 +1885,7 @@ rule (modulo E) eventInitDevices_0_11111121111111[color=#708040,
 
   /*
   rule (modulo AC) eventInitDevices_0_11111121111111[color=#708040,
-                                                     process='event InitDevice( s.1 );', issapicrule,
+                                                     process="event InitDevice( s.1 );", issapicrule,
                                                      role='Device']:
      [ State_11111121111111( lock, req, s, sk, status ) ]
     --[ InitDevice( s ) ]->
@@ -1915,7 +1893,7 @@ rule (modulo E) eventInitDevices_0_11111121111111[color=#708040,
   */
 
 rule (modulo E) insertFstatussreq_0_111111211111111[color=#708040,
-                                                    process='insert <'F_status', s.1>,req.1;', issapicrule,
+                                                    process="insert <'F_status', s.1>,req.1;", issapicrule,
                                                     role='Device']:
    [ State_111111211111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Insert( <'F_status', s.1>, req.1 ) ]->
@@ -1923,7 +1901,7 @@ rule (modulo E) insertFstatussreq_0_111111211111111[color=#708040,
 
   /*
   rule (modulo AC) insertFstatussreq_0_111111211111111[color=#708040,
-                                                       process='insert <'F_status', s.1>,req.1;', issapicrule,
+                                                       process="insert <'F_status', s.1>,req.1;", issapicrule,
                                                        role='Device']:
      [ State_111111211111111( lock, req, s, sk, status ) ]
     --[ Insert( <'F_status', s>, req ) ]->
@@ -1931,59 +1909,59 @@ rule (modulo E) insertFstatussreq_0_111111211111111[color=#708040,
   */
 
 rule (modulo E) unlocks_0_1111112111111111[color=#708040,
-                                           process='unlock s.1;', issapicrule, role='Device']:
+                                           process="unlock s.1;", issapicrule, role='Device']:
    [ State_1111112111111111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Unlock_0( '0', lock, s.1 ), Unlock( '0', lock, s.1 ) ]->
    [ State_11111121111111111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) unlocks_0_1111112111111111[color=#708040,
-                                              process='unlock s.1;', issapicrule, role='Device']:
+                                              process="unlock s.1;", issapicrule, role='Device']:
      [ State_1111112111111111( lock, req, s, sk, status ) ]
     --[ Unlock_0( '0', lock, s ), Unlock( '0', lock, s ) ]->
      [ State_11111121111111111( lock, req, s, sk, status ) ]
   */
 
-rule (modulo E) p_0_11111121111111111[color=#708040, process='0',
+rule (modulo E) p_0_11111121111111111[color=#708040, process="0",
                                       issapicrule, role='Device']:
    [ State_11111121111111111( lock, req.1, s.1, sk.1, status.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11111121111111111[color=#708040, process='0',
+  rule (modulo AC) p_0_11111121111111111[color=#708040, process="0",
                                          issapicrule, role='Device']:
      [ State_11111121111111111( lock, req, s, sk, status ) ] --> [ ]
   */
 
 rule (modulo E) ifreqright_0_11111121111112[color=#708040,
-                                            process='if req.1='right'', issapicrule, role='Device']:
+                                            process="if req.1='right'", issapicrule, role='Device']:
    [ State_11111121111112( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Eq( req.1, 'right' ) ]->
    [ State_111111211111121( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifreqright_0_11111121111112[color=#708040,
-                                               process='if req.1='right'', issapicrule, role='Device']:
+                                               process="if req.1='right'", issapicrule, role='Device']:
      [ State_11111121111112( lock, req, s, sk, status ) ]
     --[ Pred_Eq( req, 'right' ) ]->
      [ State_111111211111121( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) ifreqright_1_11111121111112[color=#708040,
-                                            process='if req.1='right'', issapicrule, role='Device']:
+                                            process="if req.1='right'", issapicrule, role='Device']:
    [ State_11111121111112( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Pred_Not_Eq( req.1, 'right' ) ]->
    [ State_111111211111122( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) ifreqright_1_11111121111112[color=#708040,
-                                               process='if req.1='right'', issapicrule, role='Device']:
+                                               process="if req.1='right'", issapicrule, role='Device']:
      [ State_11111121111112( lock, req, s, sk, status ) ]
     --[ Pred_Not_Eq( req, 'right' ) ]->
      [ State_111111211111122( lock, req, s, sk, status ) ]
   */
 
 rule (modulo E) eventInitDevices_0_111111211111121[color=#708040,
-                                                   process='event InitDevice( s.1 );', issapicrule,
+                                                   process="event InitDevice( s.1 );", issapicrule,
                                                    role='Device']:
    [ State_111111211111121( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ InitDevice( s.1 ) ]->
@@ -1991,7 +1969,7 @@ rule (modulo E) eventInitDevices_0_111111211111121[color=#708040,
 
   /*
   rule (modulo AC) eventInitDevices_0_111111211111121[color=#708040,
-                                                      process='event InitDevice( s.1 );', issapicrule,
+                                                      process="event InitDevice( s.1 );", issapicrule,
                                                       role='Device']:
      [ State_111111211111121( lock, req, s, sk, status ) ]
     --[ InitDevice( s ) ]->
@@ -1999,7 +1977,7 @@ rule (modulo E) eventInitDevices_0_111111211111121[color=#708040,
   */
 
 rule (modulo E) insertFstatussreq_0_1111112111111211[color=#708040,
-                                                     process='insert <'F_status', s.1>,req.1;', issapicrule,
+                                                     process="insert <'F_status', s.1>,req.1;", issapicrule,
                                                      role='Device']:
    [ State_1111112111111211( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Insert( <'F_status', s.1>, req.1 ) ]->
@@ -2007,7 +1985,7 @@ rule (modulo E) insertFstatussreq_0_1111112111111211[color=#708040,
 
   /*
   rule (modulo AC) insertFstatussreq_0_1111112111111211[color=#708040,
-                                                        process='insert <'F_status', s.1>,req.1;',
+                                                        process="insert <'F_status', s.1>,req.1;",
                                                         issapicrule, role='Device']:
      [ State_1111112111111211( lock, req, s, sk, status ) ]
     --[ Insert( <'F_status', s>, req ) ]->
@@ -2015,91 +1993,91 @@ rule (modulo E) insertFstatussreq_0_1111112111111211[color=#708040,
   */
 
 rule (modulo E) unlocks_0_11111121111112111[color=#708040,
-                                            process='unlock s.1;', issapicrule, role='Device']:
+                                            process="unlock s.1;", issapicrule, role='Device']:
    [ State_11111121111112111( lock, req.1, s.1, sk.1, status.1 ) ]
   --[ Unlock_0( '0', lock, s.1 ), Unlock( '0', lock, s.1 ) ]->
    [ State_111111211111121111( lock, req.1, s.1, sk.1, status.1 ) ]
 
   /*
   rule (modulo AC) unlocks_0_11111121111112111[color=#708040,
-                                               process='unlock s.1;', issapicrule, role='Device']:
+                                               process="unlock s.1;", issapicrule, role='Device']:
      [ State_11111121111112111( lock, req, s, sk, status ) ]
     --[ Unlock_0( '0', lock, s ), Unlock( '0', lock, s ) ]->
      [ State_111111211111121111( lock, req, s, sk, status ) ]
   */
 
-rule (modulo E) p_0_111111211111121111[color=#708040, process='0',
+rule (modulo E) p_0_111111211111121111[color=#708040, process="0",
                                        issapicrule, role='Device']:
    [ State_111111211111121111( lock, req.1, s.1, sk.1, status.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111111211111121111[color=#708040, process='0',
+  rule (modulo AC) p_0_111111211111121111[color=#708040, process="0",
                                           issapicrule, role='Device']:
      [ State_111111211111121111( lock, req, s, sk, status ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111211111122[color=#708040, process='0',
+rule (modulo E) p_0_111111211111122[color=#708040, process="0",
                                     issapicrule, role='Device']:
    [ State_111111211111122( lock, req.1, s.1, sk.1, status.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111111211111122[color=#708040, process='0',
+  rule (modulo AC) p_0_111111211111122[color=#708040, process="0",
                                        issapicrule, role='Device']:
      [ State_111111211111122( lock, req, s, sk, status ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111112111112[color=#708040, process='0',
+rule (modulo E) p_0_1111112111112[color=#708040, process="0",
                                   issapicrule, role='Device']:
    [ State_1111112111112( lock, req.1, s.1, sk.1, status.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1111112111112[color=#708040, process='0',
+  rule (modulo AC) p_0_1111112111112[color=#708040, process="0",
                                      issapicrule, role='Device']:
      [ State_1111112111112( lock, req, s, sk, status ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111211112[color=#708040, process='0', issapicrule,
+rule (modulo E) p_0_111111211112[color=#708040, process="0", issapicrule,
                                  role='Device']:
    [ State_111111211112( lock, req.1, s.1, sk.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111111211112[color=#708040, process='0',
+  rule (modulo AC) p_0_111111211112[color=#708040, process="0",
                                     issapicrule, role='Device']:
      [ State_111111211112( lock, req, s, sk ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111111212[color=#708040, process='!', issapicrule,
+rule (modulo E) p_0_111111212[color=#708040, process="!", issapicrule,
                               role='Device']:
    [ State_111111212( s.1, sk.1 ) ]
   -->
    [ !Semistate_1111112121( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_0_111111212[color=#708040, process='!', issapicrule,
+  rule (modulo AC) p_0_111111212[color=#708040, process="!", issapicrule,
                                  role='Device']:
      [ State_111111212( s, sk ) ] --> [ !Semistate_1111112121( s, sk ) ]
   */
 
-rule (modulo E) p_1_111111212[color=#708040, process='!', issapicrule,
+rule (modulo E) p_1_111111212[color=#708040, process="!", issapicrule,
                               role='Device']:
    [ !Semistate_1111112121( s.1, sk.1 ) ]
   -->
    [ State_1111112121( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_1_111111212[color=#708040, process='!', issapicrule,
+  rule (modulo AC) p_1_111111212[color=#708040, process="!", issapicrule,
                                  role='Device']:
      [ !Semistate_1111112121( s, sk ) ] --> [ State_1111112121( s, sk ) ]
   */
 
-rule (modulo E) locks_0_1111112121[color=#708040, process='lock s.1;',
+rule (modulo E) locks_0_1111112121[color=#708040, process="lock s.1;",
                                    issapicrule, role='Device']:
    [ State_1111112121( s.1, sk.1 ), Fr( lock.1 ) ]
   --[ Lock_1( '1', lock.1, s.1 ), Lock( '1', lock.1, s.1 ) ]->
    [ State_11111121211( lock.1, s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) locks_0_1111112121[color=#708040, process='lock s.1;',
+  rule (modulo AC) locks_0_1111112121[color=#708040, process="lock s.1;",
                                       issapicrule, role='Device']:
      [ State_1111112121( s, sk ), Fr( lock ) ]
     --[ Lock_1( '1', lock, s ), Lock( '1', lock, s ) ]->
@@ -2107,7 +2085,7 @@ rule (modulo E) locks_0_1111112121[color=#708040, process='lock s.1;',
   */
 
 rule (modulo E) inaencxypksk_0_11111121211[color=#708040,
-                                           process='in(aenc(<x.1, y.1>, pk(=sk.1)));', issapicrule,
+                                           process="in(aenc(<x.1, y.1>, pk(=sk.1)));", issapicrule,
                                            role='Device']:
    [
    State_11111121211( lock.1, s.1, sk.1 ), In( aenc(<x.1, y.1>, pk(sk.1)) )
@@ -2117,7 +2095,7 @@ rule (modulo E) inaencxypksk_0_11111121211[color=#708040,
 
   /*
   rule (modulo AC) inaencxypksk_0_11111121211[color=#708040,
-                                              process='in(aenc(<x.1, y.1>, pk(=sk.1)));', issapicrule,
+                                              process="in(aenc(<x.1, y.1>, pk(=sk.1)));", issapicrule,
                                               role='Device']:
      [ State_11111121211( lock, s, sk ), In( aenc(<x, y>, pk(sk)) ) ]
     -->
@@ -2125,7 +2103,7 @@ rule (modulo E) inaencxypksk_0_11111121211[color=#708040,
   */
 
 rule (modulo E) lookupFstatussasstatus_0_111111212111[color=#708040,
-                                                      process='lookup <'F_status', s.1> as status.2',
+                                                      process="lookup <'F_status', s.1> as status.2",
                                                       no_derivcheck, issapicrule, role='Device']:
    [ State_111111212111( lock.1, s.1, sk.1, x.1, y.1 ) ]
   --[ IsIn( <'F_status', s.1>, status.2 ) ]->
@@ -2133,7 +2111,7 @@ rule (modulo E) lookupFstatussasstatus_0_111111212111[color=#708040,
 
   /*
   rule (modulo AC) lookupFstatussasstatus_0_111111212111[color=#708040,
-                                                         process='lookup <'F_status', s.1> as status.2',
+                                                         process="lookup <'F_status', s.1> as status.2",
                                                          no_derivcheck, issapicrule, role='Device']:
      [ State_111111212111( lock, s, sk, x, y ) ]
     --[ IsIn( <'F_status', s>, status ) ]->
@@ -2141,7 +2119,7 @@ rule (modulo E) lookupFstatussasstatus_0_111111212111[color=#708040,
   */
 
 rule (modulo E) lookupFstatussasstatus_1_111111212111[color=#708040,
-                                                      process='lookup <'F_status', s.1> as status.2',
+                                                      process="lookup <'F_status', s.1> as status.2",
                                                       no_derivcheck, issapicrule, role='Device']:
    [ State_111111212111( lock.1, s.1, sk.1, x.1, y.1 ) ]
   --[ IsNotSet( <'F_status', s.1> ) ]->
@@ -2149,7 +2127,7 @@ rule (modulo E) lookupFstatussasstatus_1_111111212111[color=#708040,
 
   /*
   rule (modulo AC) lookupFstatussasstatus_1_111111212111[color=#708040,
-                                                         process='lookup <'F_status', s.1> as status.2',
+                                                         process="lookup <'F_status', s.1> as status.2",
                                                          no_derivcheck, issapicrule, role='Device']:
      [ State_111111212111( lock, s, sk, x, y ) ]
     --[ IsNotSet( <'F_status', s> ) ]->
@@ -2157,49 +2135,49 @@ rule (modulo E) lookupFstatussasstatus_1_111111212111[color=#708040,
   */
 
 rule (modulo E) ifstatusleft_0_1111112121111[color=#708040,
-                                             process='if status.2='left'', issapicrule, role='Device']:
+                                             process="if status.2='left'", issapicrule, role='Device']:
    [ State_1111112121111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Pred_Eq( status.2, 'left' ) ]->
    [ State_11111121211111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) ifstatusleft_0_1111112121111[color=#708040,
-                                                process='if status.2='left'', issapicrule, role='Device']:
+                                                process="if status.2='left'", issapicrule, role='Device']:
      [ State_1111112121111( lock, s, sk, x, y, status ) ]
     --[ Pred_Eq( status, 'left' ) ]->
      [ State_11111121211111( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) ifstatusleft_1_1111112121111[color=#708040,
-                                             process='if status.2='left'', issapicrule, role='Device']:
+                                             process="if status.2='left'", issapicrule, role='Device']:
    [ State_1111112121111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Pred_Not_Eq( status.2, 'left' ) ]->
    [ State_11111121211112( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) ifstatusleft_1_1111112121111[color=#708040,
-                                                process='if status.2='left'', issapicrule, role='Device']:
+                                                process="if status.2='left'", issapicrule, role='Device']:
      [ State_1111112121111( lock, s, sk, x, y, status ) ]
     --[ Pred_Not_Eq( status, 'left' ) ]->
      [ State_11111121211112( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) eventAccessx_0_11111121211111[color=#708040,
-                                              process='event Access( x.1 );', issapicrule, role='Device']:
+                                              process="event Access( x.1 );", issapicrule, role='Device']:
    [ State_11111121211111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Access( x.1 ) ]->
    [ State_111111212111111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) eventAccessx_0_11111121211111[color=#708040,
-                                                 process='event Access( x.1 );', issapicrule, role='Device']:
+                                                 process="event Access( x.1 );", issapicrule, role='Device']:
      [ State_11111121211111( lock, s, sk, x, y, status ) ]
     --[ Access( x ) ]->
      [ State_111111212111111( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) outx_0_111111212111111[color=#708040,
-                                       process='out(x.1);', issapicrule, role='Device']:
+                                       process="out(x.1);", issapicrule, role='Device']:
    [ State_111111212111111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   -->
    [
@@ -2209,82 +2187,82 @@ rule (modulo E) outx_0_111111212111111[color=#708040,
 
   /*
   rule (modulo AC) outx_0_111111212111111[color=#708040,
-                                          process='out(x.1);', issapicrule, role='Device']:
+                                          process="out(x.1);", issapicrule, role='Device']:
      [ State_111111212111111( lock, s, sk, x, y, status ) ]
     -->
      [ State_1111112121111111( lock, s, sk, x, y, status ), Out( x ) ]
   */
 
 rule (modulo E) unlocks_0_1111112121111111[color=#708040,
-                                           process='unlock s.1;', issapicrule, role='Device']:
+                                           process="unlock s.1;", issapicrule, role='Device']:
    [ State_1111112121111111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Unlock_1( '1', lock.1, s.1 ), Unlock( '1', lock.1, s.1 ) ]->
    [ State_11111121211111111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) unlocks_0_1111112121111111[color=#708040,
-                                              process='unlock s.1;', issapicrule, role='Device']:
+                                              process="unlock s.1;", issapicrule, role='Device']:
      [ State_1111112121111111( lock, s, sk, x, y, status ) ]
     --[ Unlock_1( '1', lock, s ), Unlock( '1', lock, s ) ]->
      [ State_11111121211111111( lock, s, sk, x, y, status ) ]
   */
 
-rule (modulo E) p_0_11111121211111111[color=#708040, process='0',
+rule (modulo E) p_0_11111121211111111[color=#708040, process="0",
                                       issapicrule, role='Device']:
    [ State_11111121211111111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   -->
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111121211111111[color=#708040, process='0',
+  rule (modulo AC) p_0_11111121211111111[color=#708040, process="0",
                                          issapicrule, role='Device']:
      [ State_11111121211111111( lock, s, sk, x, y, status ) ] --> [ ]
   */
 
 rule (modulo E) ifstatusright_0_11111121211112[color=#708040,
-                                               process='if status.2='right'', issapicrule, role='Device']:
+                                               process="if status.2='right'", issapicrule, role='Device']:
    [ State_11111121211112( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Pred_Eq( status.2, 'right' ) ]->
    [ State_111111212111121( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) ifstatusright_0_11111121211112[color=#708040,
-                                                  process='if status.2='right'', issapicrule, role='Device']:
+                                                  process="if status.2='right'", issapicrule, role='Device']:
      [ State_11111121211112( lock, s, sk, x, y, status ) ]
     --[ Pred_Eq( status, 'right' ) ]->
      [ State_111111212111121( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) ifstatusright_1_11111121211112[color=#708040,
-                                               process='if status.2='right'', issapicrule, role='Device']:
+                                               process="if status.2='right'", issapicrule, role='Device']:
    [ State_11111121211112( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Pred_Not_Eq( status.2, 'right' ) ]->
    [ State_111111212111122( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) ifstatusright_1_11111121211112[color=#708040,
-                                                  process='if status.2='right'', issapicrule, role='Device']:
+                                                  process="if status.2='right'", issapicrule, role='Device']:
      [ State_11111121211112( lock, s, sk, x, y, status ) ]
     --[ Pred_Not_Eq( status, 'right' ) ]->
      [ State_111111212111122( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) eventAccessy_0_111111212111121[color=#708040,
-                                               process='event Access( y.1 );', issapicrule, role='Device']:
+                                               process="event Access( y.1 );", issapicrule, role='Device']:
    [ State_111111212111121( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Access( y.1 ) ]->
    [ State_1111112121111211( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) eventAccessy_0_111111212111121[color=#708040,
-                                                  process='event Access( y.1 );', issapicrule, role='Device']:
+                                                  process="event Access( y.1 );", issapicrule, role='Device']:
      [ State_111111212111121( lock, s, sk, x, y, status ) ]
     --[ Access( y ) ]->
      [ State_1111112121111211( lock, s, sk, x, y, status ) ]
   */
 
 rule (modulo E) outy_0_1111112121111211[color=#708040,
-                                        process='out(y.1);', issapicrule, role='Device']:
+                                        process="out(y.1);", issapicrule, role='Device']:
    [ State_1111112121111211( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   -->
    [
@@ -2294,138 +2272,138 @@ rule (modulo E) outy_0_1111112121111211[color=#708040,
 
   /*
   rule (modulo AC) outy_0_1111112121111211[color=#708040,
-                                           process='out(y.1);', issapicrule, role='Device']:
+                                           process="out(y.1);", issapicrule, role='Device']:
      [ State_1111112121111211( lock, s, sk, x, y, status ) ]
     -->
      [ State_11111121211112111( lock, s, sk, x, y, status ), Out( y ) ]
   */
 
 rule (modulo E) unlocks_0_11111121211112111[color=#708040,
-                                            process='unlock s.1;', issapicrule, role='Device']:
+                                            process="unlock s.1;", issapicrule, role='Device']:
    [ State_11111121211112111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Unlock_1( '1', lock.1, s.1 ), Unlock( '1', lock.1, s.1 ) ]->
    [ State_111111212111121111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) unlocks_0_11111121211112111[color=#708040,
-                                               process='unlock s.1;', issapicrule, role='Device']:
+                                               process="unlock s.1;", issapicrule, role='Device']:
      [ State_11111121211112111( lock, s, sk, x, y, status ) ]
     --[ Unlock_1( '1', lock, s ), Unlock( '1', lock, s ) ]->
      [ State_111111212111121111( lock, s, sk, x, y, status ) ]
   */
 
-rule (modulo E) p_0_111111212111121111[color=#708040, process='0',
+rule (modulo E) p_0_111111212111121111[color=#708040, process="0",
                                        issapicrule, role='Device']:
    [ State_111111212111121111( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   -->
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111212111121111[color=#708040, process='0',
+  rule (modulo AC) p_0_111111212111121111[color=#708040, process="0",
                                           issapicrule, role='Device']:
      [ State_111111212111121111( lock, s, sk, x, y, status ) ] --> [ ]
   */
 
 rule (modulo E) unlocks_0_111111212111122[color=#708040,
-                                          process='unlock s.1;', issapicrule, role='Device']:
+                                          process="unlock s.1;", issapicrule, role='Device']:
    [ State_111111212111122( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   --[ Unlock_1( '1', lock.1, s.1 ), Unlock( '1', lock.1, s.1 ) ]->
    [ State_1111112121111221( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
 
   /*
   rule (modulo AC) unlocks_0_111111212111122[color=#708040,
-                                             process='unlock s.1;', issapicrule, role='Device']:
+                                             process="unlock s.1;", issapicrule, role='Device']:
      [ State_111111212111122( lock, s, sk, x, y, status ) ]
     --[ Unlock_1( '1', lock, s ), Unlock( '1', lock, s ) ]->
      [ State_1111112121111221( lock, s, sk, x, y, status ) ]
   */
 
-rule (modulo E) p_0_1111112121111221[color=#708040, process='0',
+rule (modulo E) p_0_1111112121111221[color=#708040, process="0",
                                      issapicrule, role='Device']:
    [ State_1111112121111221( lock.1, s.1, sk.1, x.1, y.1, status.2 ) ]
   -->
    [ ]
 
   /*
-  rule (modulo AC) p_0_1111112121111221[color=#708040, process='0',
+  rule (modulo AC) p_0_1111112121111221[color=#708040, process="0",
                                         issapicrule, role='Device']:
      [ State_1111112121111221( lock, s, sk, x, y, status ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111112121112[color=#708040, process='0',
+rule (modulo E) p_0_1111112121112[color=#708040, process="0",
                                   issapicrule, role='Device']:
    [ State_1111112121112( lock.1, s.1, sk.1, x.1, y.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1111112121112[color=#708040, process='0',
+  rule (modulo AC) p_0_1111112121112[color=#708040, process="0",
                                      issapicrule, role='Device']:
      [ State_1111112121112( lock, s, sk, x, y ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111112[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_111112[color=#ffffff, process="0", issapicrule,
                            role='Process']:
    [ State_111112( s.1, sk.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111112[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) p_0_111112[color=#ffffff, process="0", issapicrule,
                               role='Process']:
      [ State_111112( s, sk ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11112[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_11112[color=#ffffff, process="!", issapicrule,
                           role='Process']:
    [ State_11112( s.1, sk.1 ) ] --> [ !Semistate_111121( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_0_11112[color=#ffffff, process='!', issapicrule,
+  rule (modulo AC) p_0_11112[color=#ffffff, process="!", issapicrule,
                              role='Process']:
      [ State_11112( s, sk ) ] --> [ !Semistate_111121( s, sk ) ]
   */
 
-rule (modulo E) p_1_11112[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_11112[color=#ffffff, process="!", issapicrule,
                           role='Process']:
    [ !Semistate_111121( s.1, sk.1 ) ] --> [ State_111121( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11112[color=#ffffff, process='!', issapicrule,
+  rule (modulo AC) p_1_11112[color=#ffffff, process="!", issapicrule,
                              role='Process']:
      [ !Semistate_111121( s, sk ) ] --> [ State_111121( s, sk ) ]
   */
 
-rule (modulo E) User_0_111121[color=#ffffff, process='User()',
+rule (modulo E) User_0_111121[color=#ffffff, process="User()",
                               issapicrule, role='Process']:
    [ State_111121( s.1, sk.1 ) ]
   -->
    [ State_1111211( s.1, sk.1 ), State_1111212( s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) User_0_111121[color=#ffffff, process='User()',
+  rule (modulo AC) User_0_111121[color=#ffffff, process="User()",
                                  issapicrule, role='Process']:
      [ State_111121( s, sk ) ]
     -->
      [ State_1111211( s, sk ), State_1111212( s, sk ) ]
   */
 
-rule (modulo E) newlm_0_1111211[color=#80406c, process='new lm.1;',
+rule (modulo E) newlm_0_1111211[color=#80406c, process="new lm.1;",
                                 issapicrule, role='User']:
    [ State_1111211( s.1, sk.1 ), Fr( lm.1 ) ]
   -->
    [ State_11112111( lm.1, s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) newlm_0_1111211[color=#80406c, process='new lm.1;',
+  rule (modulo AC) newlm_0_1111211[color=#80406c, process="new lm.1;",
                                    issapicrule, role='User']:
      [ State_1111211( s, sk ), Fr( lm ) ] --> [ State_11112111( lm, s, sk ) ]
   */
 
-rule (modulo E) newrm_0_11112111[color=#80406c, process='new rm.1;',
+rule (modulo E) newrm_0_11112111[color=#80406c, process="new rm.1;",
                                  issapicrule, role='User']:
    [ State_11112111( lm.1, s.1, sk.1 ), Fr( rm.1 ) ]
   -->
    [ State_111121111( lm.1, rm.1, s.1, sk.1 ) ]
 
   /*
-  rule (modulo AC) newrm_0_11112111[color=#80406c, process='new rm.1;',
+  rule (modulo AC) newrm_0_11112111[color=#80406c, process="new rm.1;",
                                     issapicrule, role='User']:
      [ State_11112111( lm, s, sk ), Fr( rm ) ]
     -->
@@ -2433,7 +2411,7 @@ rule (modulo E) newrm_0_11112111[color=#80406c, process='new rm.1;',
   */
 
 rule (modulo E) eventExclusivelmrm_0_111121111[color=#80406c,
-                                               process='event Exclusive( lm.1, rm.1 );', issapicrule,
+                                               process="event Exclusive( lm.1, rm.1 );", issapicrule,
                                                role='User']:
    [ State_111121111( lm.1, rm.1, s.1, sk.1 ) ]
   --[ Exclusive( lm.1, rm.1 ) ]->
@@ -2441,7 +2419,7 @@ rule (modulo E) eventExclusivelmrm_0_111121111[color=#80406c,
 
   /*
   rule (modulo AC) eventExclusivelmrm_0_111121111[color=#80406c,
-                                                  process='event Exclusive( lm.1, rm.1 );', issapicrule,
+                                                  process="event Exclusive( lm.1, rm.1 );", issapicrule,
                                                   role='User']:
      [ State_111121111( lm, rm, s, sk ) ]
     --[ Exclusive( lm, rm ) ]->
@@ -2449,7 +2427,7 @@ rule (modulo E) eventExclusivelmrm_0_111121111[color=#80406c,
   */
 
 rule (modulo E) outaenclmrmpksk_0_1111211111[color=#80406c,
-                                             process='out(aenc(<lm.1, rm.1>, pk(sk.1)));', issapicrule,
+                                             process="out(aenc(<lm.1, rm.1>, pk(sk.1)));", issapicrule,
                                              role='User']:
    [ State_1111211111( lm.1, rm.1, s.1, sk.1 ) ]
   -->
@@ -2460,29 +2438,29 @@ rule (modulo E) outaenclmrmpksk_0_1111211111[color=#80406c,
 
   /*
   rule (modulo AC) outaenclmrmpksk_0_1111211111[color=#80406c,
-                                                process='out(aenc(<lm.1, rm.1>, pk(sk.1)));', issapicrule,
+                                                process="out(aenc(<lm.1, rm.1>, pk(sk.1)));", issapicrule,
                                                 role='User']:
      [ State_1111211111( lm, rm, s, sk ) ]
     -->
      [ State_11112111111( lm, rm, s, sk ), Out( aenc(<lm, rm>, pk(sk)) ) ]
   */
 
-rule (modulo E) p_0_11112111111[color=#80406c, process='0', issapicrule,
+rule (modulo E) p_0_11112111111[color=#80406c, process="0", issapicrule,
                                 role='User']:
    [ State_11112111111( lm.1, rm.1, s.1, sk.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11112111111[color=#80406c, process='0', issapicrule,
+  rule (modulo AC) p_0_11112111111[color=#80406c, process="0", issapicrule,
                                    role='User']:
      [ State_11112111111( lm, rm, s, sk ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111212[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_1111212[color=#ffffff, process="0", issapicrule,
                             role='Process']:
    [ State_1111212( s.1, sk.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1111212[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) p_0_1111212[color=#ffffff, process="0", issapicrule,
                                role='Process']:
      [ State_1111212( s, sk ) ] --> [ ]
   */
@@ -2495,22 +2473,53 @@ restriction set_in:
       (∀ #t1 yp.
         (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
 restriction set_notin:
   "∀ x #t3.
     (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
 restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  */
 
 restriction predicate_not_eq:
   "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  */
+
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
 
 restriction locking_0:
   "∀ p pp l x lp #t1 #t3.
@@ -2528,6 +2537,24 @@ restriction locking_0:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
+
 restriction locking_1:
   "∀ p pp l x lp #t1 #t3.
     ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
@@ -2544,6 +2571,24 @@ restriction locking_1:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
+
 /*
 WARNING: the following wellformedness checks failed!
 
@@ -2555,8 +2600,8 @@ Wellformedness-error in Process
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -2568,7 +2613,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy
 
   output:          examples/sapic/fast/statVerifLeftRight/stateverif_left_right.spthy.tmp
-  processing time: 5.87s
+  processing time: 10.51s
   
   WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!

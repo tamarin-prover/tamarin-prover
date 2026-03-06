@@ -7,15 +7,11 @@ begin
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
 
 section{* A few test cases for operator precedence *}
 
 predicate: True( )<=>⊤
-
-
 
 lemma elseIsResolvedInnerFirst:
   exists-trace
@@ -33,13 +29,7 @@ solve( State_112( ) ▶₀ #l )
   qed
 qed
 
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='if True( )', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="if True( )", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
@@ -49,7 +39,12 @@ restriction Restr_ifTrue_0__1:
   "∀ #NOW. (Restr_ifTrue_0__1( ) @ #NOW) ⇒ (⊤)"
   // safety formula
 
-rule (modulo E) ifTrue_0_[color=#ffffff, process='if True( )',
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_ifTrue_0__1( ) @ #NOW) ⇒ (⊤)"
+  */
+
+rule (modulo E) ifTrue_0_[color=#ffffff, process="if True( )",
                           issapicrule, role='Process']:
    [ State_( ) ] --[ Restr_ifTrue_0__1( ) ]-> [ State_1( ) ]
 
@@ -59,63 +54,68 @@ restriction Restr_ifTrue_1__1:
   "∀ #NOW. (Restr_ifTrue_1__1( ) @ #NOW) ⇒ (¬(⊤))"
   // safety formula
 
-rule (modulo E) ifTrue_1_[color=#ffffff, process='if True( )',
+  /*
+  expanded formula:
+  "∀ #NOW. (Restr_ifTrue_1__1( ) @ #NOW) ⇒ (¬(⊤))"
+  */
+
+rule (modulo E) ifTrue_1_[color=#ffffff, process="if True( )",
                           issapicrule, role='Process']:
    [ State_( ) ] --[ Restr_ifTrue_1__1( ) ]-> [ State_2( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) eventPositiveBranch_0_1[color=#ffffff,
-                                        process='event PositiveBranch( );', issapicrule, role='Process']:
+                                        process="event PositiveBranch( );", issapicrule, role='Process']:
    [ State_1( ) ] --[ PositiveBranch( ) ]-> [ State_11( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) lookupxasx_0_11[color=#ffffff,
-                                process='lookup 'x' as x.1', no_derivcheck, issapicrule, role='Process']:
+                                process="lookup 'x' as x.1", no_derivcheck, issapicrule, role='Process']:
    [ State_11( ) ] --[ IsIn( 'x', x.1 ) ]-> [ State_111( x.1 ) ]
 
   /*
   rule (modulo AC) lookupxasx_0_11[color=#ffffff,
-                                   process='lookup 'x' as x.1', no_derivcheck, issapicrule, role='Process']:
+                                   process="lookup 'x' as x.1", no_derivcheck, issapicrule, role='Process']:
      [ State_11( ) ] --[ IsIn( 'x', x ) ]-> [ State_111( x ) ]
   */
 
 rule (modulo E) lookupxasx_1_11[color=#ffffff,
-                                process='lookup 'x' as x.1', no_derivcheck, issapicrule, role='Process']:
+                                process="lookup 'x' as x.1", no_derivcheck, issapicrule, role='Process']:
    [ State_11( ) ] --[ IsNotSet( 'x' ) ]-> [ State_112( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_111[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
                         role='Process']:
    [ State_111( x.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
                            role='Process']:
      [ State_111( x ) ] --> [ ]
   */
 
 rule (modulo E) eventLookupElse_0_112[color=#ffffff,
-                                      process='event LookupElse( );', issapicrule, role='Process']:
+                                      process="event LookupElse( );", issapicrule, role='Process']:
    [ State_112( ) ] --[ LookupElse( ) ]-> [ State_1121( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) insertyy_0_1121[color=#ffffff, process='insert 'y','y';',
+rule (modulo E) insertyy_0_1121[color=#ffffff, process="insert 'y','y';",
                                 issapicrule, role='Process']:
    [ State_1121( ) ] --[ Insert( 'y', 'y' ) ]-> [ State_11211( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_11211[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_11211[color=#ffffff, process="0", issapicrule,
                           role='Process']:
    [ State_11211( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_2[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_2[color=#ffffff, process="0", issapicrule,
                       role='Process']:
    [ State_2( ) ] --> [ ]
 
@@ -129,14 +129,35 @@ restriction set_in:
       (∀ #t1 yp.
         (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
 restriction set_notin:
   "∀ x #t3.
     (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
 
 /* All wellformedness checks were successful. */
 
@@ -144,8 +165,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -157,7 +178,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/operator-precedence-3.spthy
 
   output:          examples/sapic/fast/basic/operator-precedence-3.spthy.tmp
-  processing time: 0.04s
+  processing time: 0.05s
   
   elseIsResolvedInnerFirst (exists-trace): verified (4 steps)
 

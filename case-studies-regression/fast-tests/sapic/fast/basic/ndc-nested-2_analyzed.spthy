@@ -10,19 +10,9 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
 heuristic: p
 
 section{* small example for progression function *}
-
-
-
-
-
-
-
-
 
 lemma A_possible:
   exists-trace "∃ #t. A( ) @ #t"
@@ -111,29 +101,13 @@ solve( State_( ~prog_ ) ▶₀ #t.1 )
   SOLVED // trace found
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-rule (modulo E) MessageIDRule[color=#ffffff, process='event Start( );',
+rule (modulo E) MessageIDRule[color=#ffffff, process="event Start( );",
                               issapicrule, role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process='event Start( );',
+rule (modulo E) Init[color=#ffffff, process="event Start( );",
                      issapicrule, role='Process']:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
@@ -141,7 +115,7 @@ rule (modulo E) Init[color=#ffffff, process='event Start( );',
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventStart_0_[color=#ffffff, process='event Start( );',
+rule (modulo E) eventStart_0_[color=#ffffff, process="event Start( );",
                               issapicrule, role='Process']:
    [ State_( ~prog_ ) ]
   --[ ProgressTo_1( ~prog_ ), Start( ) ]->
@@ -149,25 +123,25 @@ rule (modulo E) eventStart_0_[color=#ffffff, process='event Start( );',
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_11[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_11[color=#ffffff, process="!", issapicrule,
                        role='Process']:
    [ State_1( ~prog_ ) ] --> [ !Semistate_111( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_121[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_121[color=#ffffff, process="!", issapicrule,
                         role='Process']:
    [ State_1( ~prog_ ) ] --> [ !Semistate_1211( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_122[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_122[color=#ffffff, process="!", issapicrule,
                         role='Process']:
    [ State_1( ~prog_ ) ] --> [ !Semistate_1221( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_11[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule,
                        role='Process']:
    [ Fr( ~prog_111 ), !Semistate_111( ~prog_ ) ]
   --[ ProgressFrom_111( ~prog_111 ) ]->
@@ -175,7 +149,7 @@ rule (modulo E) p_1_11[color=#ffffff, process='!', issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_111[color=#ffffff, process='0', issapicrule,
+rule (modulo E) eventA_0_111[color=#ffffff, process="0", issapicrule,
                              role='Process']:
    [ State_111( ~prog_, ~prog_111 ) ]
   --[ ProgressTo_1111( ~prog_111 ), A( ) ]->
@@ -183,7 +157,7 @@ rule (modulo E) eventA_0_111[color=#ffffff, process='0', issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_121[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_121[color=#ffffff, process="!", issapicrule,
                         role='Process']:
    [ Fr( ~prog_1211 ), !Semistate_1211( ~prog_ ) ]
   --[ ProgressFrom_1211( ~prog_1211 ) ]->
@@ -191,7 +165,7 @@ rule (modulo E) p_1_121[color=#ffffff, process='!', issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_1211[color=#ffffff, process='0', issapicrule,
+rule (modulo E) eventB_0_1211[color=#ffffff, process="0", issapicrule,
                               role='Process']:
    [ State_1211( ~prog_, ~prog_1211 ) ]
   --[ ProgressTo_12111( ~prog_1211 ), B( ) ]->
@@ -199,7 +173,7 @@ rule (modulo E) eventB_0_1211[color=#ffffff, process='0', issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_122[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_122[color=#ffffff, process="!", issapicrule,
                         role='Process']:
    [ Fr( ~prog_1221 ), !Semistate_1221( ~prog_ ) ]
   --[ ProgressFrom_1221( ~prog_1221 ) ]->
@@ -207,7 +181,7 @@ rule (modulo E) p_1_122[color=#ffffff, process='!', issapicrule,
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventC_0_1221[color=#ffffff, process='0', issapicrule,
+rule (modulo E) eventC_0_1221[color=#ffffff, process="0", issapicrule,
                               role='Process']:
    [ State_1221( ~prog_, ~prog_1221 ) ]
   --[ ProgressTo_12211( ~prog_1221 ), C( ) ]->
@@ -219,27 +193,64 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction Progress__to_1:
   "∀ prog_ #t.
     (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
+  */
 
 restriction Progress_111_to_1111:
   "∀ prog_111 #t.
     (ProgressFrom_111( prog_111 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_1111( prog_111 ) @ #t.1)"
 
+  /*
+  expanded formula:
+  "∀ prog_111 #t.
+    (ProgressFrom_111( prog_111 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_1111( prog_111 ) @ #t.1)"
+  */
+
 restriction Progress_1211_to_12111:
   "∀ prog_1211 #t.
     (ProgressFrom_1211( prog_1211 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_12111( prog_1211 ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_1211 #t.
+    (ProgressFrom_1211( prog_1211 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_12111( prog_1211 ) @ #t.1)"
+  */
 
 restriction Progress_1221_to_12211:
   "∀ prog_1221 #t.
     (ProgressFrom_1221( prog_1221 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_12211( prog_1221 ) @ #t.1)"
 
+  /*
+  expanded formula:
+  "∀ prog_1221 #t.
+    (ProgressFrom_1221( prog_1221 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_12211( prog_1221 ) @ #t.1)"
+  */
+
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
+
+  /*
+  expanded formula:
+  "∃ #t. Init( ) @ #t"
+  */
 
 /* All wellformedness checks were successful. */
 
@@ -247,8 +258,8 @@ restriction progressInit:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -260,7 +271,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-nested-2.spthy
 
   output:          examples/sapic/fast/basic/ndc-nested-2.spthy.tmp
-  processing time: 0.05s
+  processing time: 0.09s
   
   A_possible (exists-trace): verified (7 steps)
   B_possible (exists-trace): verified (7 steps)

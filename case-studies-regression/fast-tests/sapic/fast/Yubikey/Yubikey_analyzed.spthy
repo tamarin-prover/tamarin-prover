@@ -11,24 +11,12 @@ equations:
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
 
 /* looping facts with injective instances: L_CellLocked/2, L_PureState/2
 */
 
 section{* The Yubikey-Protocol *}
-
-
-
-
-
-
-
-
-
-
 
 lemma secrecy_enc [sources, reuse]:
   all-traces "∀ k #i. (Sec( k ) @ #i) ⇒ (¬(∃ #j. !KU( k ) @ #j))"
@@ -384,6 +372,13 @@ restriction slightly_weaker_invariant:
     ((Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)) ⇒
     ((((#t1 < #t2) ∧ (∃ z. (tc1++z) = tc2)) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
 
+  /*
+  expanded formula:
+  "∀ pid k tc1 tc2 #t1 #t2.
+    ((Login( pid, k, tc1 ) @ #t1) ∧ (Login( pid, k, tc2 ) @ #t2)) ⇒
+    ((((#t1 < #t2) ∧ (∃ z. (tc1++z) = tc2)) ∨ (#t2 < #t1)) ∨ (#t1 = #t2))"
+  */
+
 lemma Login_reachable:
   exists-trace "∃ #i pid k. Login( pid, k, ('one'++'zero') ) @ #i"
 /*
@@ -629,67 +624,57 @@ solve( (#t1 = #t2)  ∥ (#t2 < #t1) )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='!', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ State_( ) ] --> [ !Semistate_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_[color=#ffffff, process="!", issapicrule,
                      role='Process']:
    [ !Semistate_1( ) ] --> [ State_1( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newSLpid_0_1[color=#ffffff, process='new SL_pid.1;',
+rule (modulo E) newSLpid_0_1[color=#ffffff, process="new SL_pid.1;",
                              issapicrule, role='Process']:
    [ State_1( ), Fr( SL_pid.1 ) ] --> [ State_11( SL_pid.1 ) ]
 
   /*
-  rule (modulo AC) newSLpid_0_1[color=#ffffff, process='new SL_pid.1;',
+  rule (modulo AC) newSLpid_0_1[color=#ffffff, process="new SL_pid.1;",
                                 issapicrule, role='Process']:
      [ State_1( ), Fr( SL_pid ) ] --> [ State_11( SL_pid ) ]
   */
 
 rule (modulo E) newStateChannelchannel_0_11[color=#ffffff,
-                                            process='new StateChannel:channel;', issapicrule, role='Process']:
+                                            process="new StateChannel:channel;", issapicrule, role='Process']:
    [ State_11( SL_pid.1 ), Fr( StateChannel ) ]
   -->
    [ State_111( StateChannel, SL_pid.1 ) ]
 
   /*
   rule (modulo AC) newStateChannelchannel_0_11[color=#ffffff,
-                                               process='new StateChannel:channel;', issapicrule,
+                                               process="new StateChannel:channel;", issapicrule,
                                                role='Process']:
      [ State_11( SL_pid ), Fr( StateChannel ) ]
     -->
      [ State_111( StateChannel, SL_pid ) ]
   */
 
-rule (modulo E) newYLpid_0_111[color=#ffffff, process='new YL_pid.1;',
+rule (modulo E) newYLpid_0_111[color=#ffffff, process="new YL_pid.1;",
                                issapicrule, role='Process']:
    [ State_111( StateChannel, SL_pid.1 ), Fr( YL_pid.1 ) ]
   -->
    [ State_1111( StateChannel, SL_pid.1, YL_pid.1 ) ]
 
   /*
-  rule (modulo AC) newYLpid_0_111[color=#ffffff, process='new YL_pid.1;',
+  rule (modulo AC) newYLpid_0_111[color=#ffffff, process="new YL_pid.1;",
                                   issapicrule, role='Process']:
      [ State_111( StateChannel, SL_pid ), Fr( YL_pid ) ]
     -->
@@ -697,7 +682,7 @@ rule (modulo E) newYLpid_0_111[color=#ffffff, process='new YL_pid.1;',
   */
 
 rule (modulo E) newStateChannelchannel_0_1111[color=#ffffff,
-                                              process='new StateChannel.1:channel;', issapicrule,
+                                              process="new StateChannel.1:channel;", issapicrule,
                                               role='Process']:
    [ State_1111( StateChannel, SL_pid.1, YL_pid.1 ), Fr( StateChannel.1 ) ]
   -->
@@ -705,14 +690,14 @@ rule (modulo E) newStateChannelchannel_0_1111[color=#ffffff,
 
   /*
   rule (modulo AC) newStateChannelchannel_0_1111[color=#ffffff,
-                                                 process='new StateChannel.1:channel;', issapicrule,
+                                                 process="new StateChannel.1:channel;", issapicrule,
                                                  role='Process']:
      [ State_1111( StateChannel, SL_pid, YL_pid ), Fr( StateChannel.1 ) ]
     -->
      [ State_11111( StateChannel, SL_pid, StateChannel.1, YL_pid ) ]
   */
 
-rule (modulo E) newLpid_0_11111[color=#ffffff, process='new L_pid.1;',
+rule (modulo E) newLpid_0_11111[color=#ffffff, process="new L_pid.1;",
                                 issapicrule, role='Process']:
    [
    State_11111( StateChannel, SL_pid.1, StateChannel.1, YL_pid.1 ),
@@ -724,7 +709,7 @@ rule (modulo E) newLpid_0_11111[color=#ffffff, process='new L_pid.1;',
    ]
 
   /*
-  rule (modulo AC) newLpid_0_11111[color=#ffffff, process='new L_pid.1;',
+  rule (modulo AC) newLpid_0_11111[color=#ffffff, process="new L_pid.1;",
                                    issapicrule, role='Process']:
      [
      State_11111( StateChannel, SL_pid, StateChannel.1, YL_pid ), Fr( L_pid )
@@ -733,7 +718,7 @@ rule (modulo E) newLpid_0_11111[color=#ffffff, process='new L_pid.1;',
      [ State_111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ) ]
   */
 
-rule (modulo E) outLpid_0_111111[color=#ffffff, process='out(L_pid.1);',
+rule (modulo E) outLpid_0_111111[color=#ffffff, process="out(L_pid.1);",
                                  issapicrule, role='Process']:
    [
    State_111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1, YL_pid.1 )
@@ -746,7 +731,7 @@ rule (modulo E) outLpid_0_111111[color=#ffffff, process='out(L_pid.1);',
    ]
 
   /*
-  rule (modulo AC) outLpid_0_111111[color=#ffffff, process='out(L_pid.1);',
+  rule (modulo AC) outLpid_0_111111[color=#ffffff, process="out(L_pid.1);",
                                     issapicrule, role='Process']:
      [ State_111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ) ]
     -->
@@ -756,7 +741,7 @@ rule (modulo E) outLpid_0_111111[color=#ffffff, process='out(L_pid.1);',
      ]
   */
 
-rule (modulo E) p_0_1111111[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_1111111[color=#ffffff, process="!", issapicrule,
                             role='Process']:
    [
    State_1111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1, YL_pid.1
@@ -770,7 +755,7 @@ rule (modulo E) p_0_1111111[color=#ffffff, process='!', issapicrule,
    ]
 
   /*
-  rule (modulo AC) p_0_1111111[color=#ffffff, process='!', issapicrule,
+  rule (modulo AC) p_0_1111111[color=#ffffff, process="!", issapicrule,
                                role='Process']:
      [ State_1111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ) ]
     -->
@@ -780,7 +765,7 @@ rule (modulo E) p_0_1111111[color=#ffffff, process='!', issapicrule,
      ]
   */
 
-rule (modulo E) p_1_1111111[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_1111111[color=#ffffff, process="!", issapicrule,
                             role='Process']:
    [
    !Semistate_11111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -794,7 +779,7 @@ rule (modulo E) p_1_1111111[color=#ffffff, process='!', issapicrule,
    ]
 
   /*
-  rule (modulo AC) p_1_1111111[color=#ffffff, process='!', issapicrule,
+  rule (modulo AC) p_1_1111111[color=#ffffff, process="!", issapicrule,
                                role='Process']:
      [
      !Semistate_11111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid
@@ -804,7 +789,7 @@ rule (modulo E) p_1_1111111[color=#ffffff, process='!', issapicrule,
      [ State_11111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ) ]
   */
 
-rule (modulo E) p_0_11111111[color=#ffffff, process='|', issapicrule,
+rule (modulo E) p_0_11111111[color=#ffffff, process="|", issapicrule,
                              role='Process']:
    [
    State_11111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1, YL_pid.1
@@ -821,7 +806,7 @@ rule (modulo E) p_0_11111111[color=#ffffff, process='|', issapicrule,
    ]
 
   /*
-  rule (modulo AC) p_0_11111111[color=#ffffff, process='|', issapicrule,
+  rule (modulo AC) p_0_11111111[color=#ffffff, process="|", issapicrule,
                                 role='Process']:
      [ State_11111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ) ]
     -->
@@ -832,7 +817,7 @@ rule (modulo E) p_0_11111111[color=#ffffff, process='|', issapicrule,
   */
 
 rule (modulo E) ServerSLpidLpid_0_111111111[color=#ffffff,
-                                            process='Server(SL_pid.1, L_pid.1)', issapicrule, role='Process']:
+                                            process="Server(SL_pid.1, L_pid.1)", issapicrule, role='Process']:
    [
    State_111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
                     YL_pid.1
@@ -850,7 +835,7 @@ rule (modulo E) ServerSLpidLpid_0_111111111[color=#ffffff,
 
   /*
   rule (modulo AC) ServerSLpidLpid_0_111111111[color=#ffffff,
-                                               process='Server(SL_pid.1, L_pid.1)', issapicrule,
+                                               process="Server(SL_pid.1, L_pid.1)", issapicrule,
                                                role='Process']:
      [ State_111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid )
      ]
@@ -862,7 +847,7 @@ rule (modulo E) ServerSLpidLpid_0_111111111[color=#ffffff,
   */
 
 rule (modulo E) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
-                                                           process='in(<=L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)>);',
+                                                           process="in(<=L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)>);",
                                                            issapicrule, role='Server']:
    [
    State_1111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -879,7 +864,7 @@ rule (modulo E) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
 
   /*
   rule (modulo AC) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
-                                                              process='in(<=L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)>);',
+                                                              process="in(<=L_pid.1, nonce.1, senc(<secretid.1, tc.1, npr.1>, k.1)>);",
                                                               issapicrule, role='Server']:
      [
      State_1111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ),
@@ -894,7 +879,7 @@ rule (modulo E) inLpidnoncesencsecretidtcnprk_0_1111111111[color=#806040,
   */
 
 rule (modulo E) lockSLpid_0_11111111111[color=#806040,
-                                        process='lock SL_pid.1;', issapicrule, role='Server']:
+                                        process="lock SL_pid.1;", issapicrule, role='Server']:
    [
    State_11111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
                       YL_pid.1, k.1, nonce.1, npr.1, secretid.1, tc.1
@@ -909,7 +894,7 @@ rule (modulo E) lockSLpid_0_11111111111[color=#806040,
 
   /*
   rule (modulo AC) lockSLpid_0_11111111111[color=#806040,
-                                           process='lock SL_pid.1;', issapicrule, role='Server']:
+                                           process="lock SL_pid.1;", issapicrule, role='Server']:
      [
      State_11111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid,
                         k, nonce, npr, secretid, tc
@@ -924,7 +909,7 @@ rule (modulo E) lockSLpid_0_11111111111[color=#806040,
   */
 
 rule (modulo E) lookupSLpidastuple_0_111111111111[color=#806040,
-                                                  process='lookup SL_pid.1 as tuple.1', no_derivcheck,
+                                                  process="lookup SL_pid.1 as tuple.1", no_derivcheck,
                                                   issapicrule, role='Server']:
    [
    State_111111111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -942,7 +927,7 @@ rule (modulo E) lookupSLpidastuple_0_111111111111[color=#806040,
 
   /*
   rule (modulo AC) lookupSLpidastuple_0_111111111111[color=#806040,
-                                                     process='lookup SL_pid.1 as tuple.1', no_derivcheck,
+                                                     process="lookup SL_pid.1 as tuple.1", no_derivcheck,
                                                      issapicrule, role='Server']:
      [
      State_111111111111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid,
@@ -960,7 +945,7 @@ rule (modulo E) lookupSLpidastuple_0_111111111111[color=#806040,
   */
 
 rule (modulo E) inotc_0_1111111111111[color=#806040,
-                                      process='in(otc.1);', issapicrule, role='Server']:
+                                      process="in(otc.1);", issapicrule, role='Server']:
    [
    State_1111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
                         StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, secretid.1, tc.1, tuple.1
@@ -977,7 +962,7 @@ rule (modulo E) inotc_0_1111111111111[color=#806040,
 
   /*
   rule (modulo AC) inotc_0_1111111111111[color=#806040,
-                                         process='in(otc.1);', issapicrule, role='Server']:
+                                         process="in(otc.1);", issapicrule, role='Server']:
      [
      State_1111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
                           YL_pid, k, nonce, npr, secretid, tc, tuple
@@ -993,7 +978,7 @@ rule (modulo E) inotc_0_1111111111111[color=#806040,
   */
 
 rule (modulo E) iftuplesecretidkotc_0_11111111111111[color=#806040,
-                                                     process='if tuple.1=<secretid.1, k.1, otc.1>',
+                                                     process="if tuple.1=<secretid.1, k.1, otc.1>",
                                                      issapicrule, role='Server']:
    [
    State_11111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1012,7 +997,7 @@ rule (modulo E) iftuplesecretidkotc_0_11111111111111[color=#806040,
   // loop breaker: [0]
   /*
   rule (modulo AC) iftuplesecretidkotc_0_11111111111111[color=#806040,
-                                                        process='if tuple.1=<secretid.1, k.1, otc.1>',
+                                                        process="if tuple.1=<secretid.1, k.1, otc.1>",
                                                         issapicrule, role='Server']:
      [
      State_11111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -1029,7 +1014,7 @@ rule (modulo E) iftuplesecretidkotc_0_11111111111111[color=#806040,
   */
 
 rule (modulo E) iftuplesecretidkotc_1_11111111111111[color=#806040,
-                                                     process='if tuple.1=<secretid.1, k.1, otc.1>',
+                                                     process="if tuple.1=<secretid.1, k.1, otc.1>",
                                                      issapicrule, role='Server']:
    [
    State_11111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1047,7 +1032,7 @@ rule (modulo E) iftuplesecretidkotc_1_11111111111111[color=#806040,
 
   /*
   rule (modulo AC) iftuplesecretidkotc_1_11111111111111[color=#806040,
-                                                        process='if tuple.1=<secretid.1, k.1, otc.1>',
+                                                        process="if tuple.1=<secretid.1, k.1, otc.1>",
                                                         issapicrule, role='Server']:
      [
      State_11111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -1067,8 +1052,15 @@ restriction Restr_ifSmallerotctc_0_111111111111111_1:
     (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW) ⇒
     (∃ z. x = (z++x.1))"
 
+  /*
+  expanded formula:
+  "∀ x #NOW x.1.
+    (Restr_ifSmallerotctc_0_111111111111111_1( x, x.1 ) @ #NOW) ⇒
+    (∃ z. x = (z++x.1))"
+  */
+
 rule (modulo E) ifSmallerotctc_0_111111111111111[color=#806040,
-                                                 process='if Smaller( otc.1, tc.1 )', issapicrule,
+                                                 process="if Smaller( otc.1, tc.1 )", issapicrule,
                                                  role='Server']:
    [
    State_111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1086,7 +1078,7 @@ rule (modulo E) ifSmallerotctc_0_111111111111111[color=#806040,
 
   /*
   rule (modulo AC) ifSmallerotctc_0_111111111111111[color=#806040,
-                                                    process='if Smaller( otc.1, tc.1 )', issapicrule,
+                                                    process="if Smaller( otc.1, tc.1 )", issapicrule,
                                                     role='Server']:
      [
      State_111111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -1107,8 +1099,15 @@ restriction Restr_ifSmallerotctc_1_111111111111111_1:
     (¬(∃ z. x = (z++x.1)))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x #NOW x.1.
+    (Restr_ifSmallerotctc_1_111111111111111_1( x, x.1 ) @ #NOW) ⇒
+    (¬(∃ z. x = (z++x.1)))"
+  */
+
 rule (modulo E) ifSmallerotctc_1_111111111111111[color=#806040,
-                                                 process='if Smaller( otc.1, tc.1 )', issapicrule,
+                                                 process="if Smaller( otc.1, tc.1 )", issapicrule,
                                                  role='Server']:
    [
    State_111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1126,7 +1125,7 @@ rule (modulo E) ifSmallerotctc_1_111111111111111[color=#806040,
 
   /*
   rule (modulo AC) ifSmallerotctc_1_111111111111111[color=#806040,
-                                                    process='if Smaller( otc.1, tc.1 )', issapicrule,
+                                                    process="if Smaller( otc.1, tc.1 )", issapicrule,
                                                     role='Server']:
      [
      State_111111111111111( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -1142,7 +1141,7 @@ rule (modulo E) ifSmallerotctc_1_111111111111111[color=#806040,
   */
 
 rule (modulo E) eventInitStuffLpidsecretidktupleotctc_0_1111111111111111[color=#806040,
-                                                                         process='event InitStuff( L_pid.1, secretid.1, k.1, tuple.1, otc.1, tc.1 );',
+                                                                         process="event InitStuff( L_pid.1, secretid.1, k.1, tuple.1, otc.1, tc.1 );",
                                                                          issapicrule, role='Server']:
    [
    State_1111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1160,7 +1159,7 @@ rule (modulo E) eventInitStuffLpidsecretidktupleotctc_0_1111111111111111[color=#
 
   /*
   rule (modulo AC) eventInitStuffLpidsecretidktupleotctc_0_1111111111111111[color=#806040,
-                                                                            process='event InitStuff( L_pid.1, secretid.1, k.1, tuple.1, otc.1, tc.1 );',
+                                                                            process="event InitStuff( L_pid.1, secretid.1, k.1, tuple.1, otc.1, tc.1 );",
                                                                             issapicrule, role='Server']:
      [
      State_1111111111111111( StateChannel, lock, L_pid, SL_pid,
@@ -1176,7 +1175,7 @@ rule (modulo E) eventInitStuffLpidsecretidktupleotctc_0_1111111111111111[color=#
   */
 
 rule (modulo E) eventLoginLpidktc_0_11111111111111111[color=#806040,
-                                                      process='event Login( L_pid.1, k.1, tc.1 );',
+                                                      process="event Login( L_pid.1, k.1, tc.1 );",
                                                       issapicrule, role='Server']:
    [
    State_11111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1194,7 +1193,7 @@ rule (modulo E) eventLoginLpidktc_0_11111111111111111[color=#806040,
 
   /*
   rule (modulo AC) eventLoginLpidktc_0_11111111111111111[color=#806040,
-                                                         process='event Login( L_pid.1, k.1, tc.1 );',
+                                                         process="event Login( L_pid.1, k.1, tc.1 );",
                                                          issapicrule, role='Server']:
      [
      State_11111111111111111( StateChannel, lock, L_pid, SL_pid,
@@ -1210,7 +1209,7 @@ rule (modulo E) eventLoginLpidktc_0_11111111111111111[color=#806040,
   */
 
 rule (modulo E) insertSLpidsecretidktc_0_111111111111111111[color=#806040,
-                                                            process='insert SL_pid.1,<secretid.1, k.1, tc.1>;',
+                                                            process="insert SL_pid.1,<secretid.1, k.1, tc.1>;",
                                                             issapicrule, role='Server']:
    [
    State_111111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1231,7 +1230,7 @@ rule (modulo E) insertSLpidsecretidktc_0_111111111111111111[color=#806040,
   // loop breaker: [1]
   /*
   rule (modulo AC) insertSLpidsecretidktc_0_111111111111111111[color=#806040,
-                                                               process='insert SL_pid.1,<secretid.1, k.1, tc.1>;',
+                                                               process="insert SL_pid.1,<secretid.1, k.1, tc.1>;",
                                                                issapicrule, role='Server']:
      [
      State_111111111111111111( StateChannel, lock, L_pid, SL_pid,
@@ -1250,7 +1249,7 @@ rule (modulo E) insertSLpidsecretidktc_0_111111111111111111[color=#806040,
   */
 
 rule (modulo E) unlockSLpid_0_1111111111111111111[color=#806040,
-                                                  process='unlock SL_pid.1;', issapicrule, role='Server']:
+                                                  process="unlock SL_pid.1;", issapicrule, role='Server']:
    [
    State_1111111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
                               StateChannel.1, YL_pid.1, k.1, nonce.1, npr.1, otc.1, secretid.1, tc.1,
@@ -1267,7 +1266,7 @@ rule (modulo E) unlockSLpid_0_1111111111111111111[color=#806040,
 
   /*
   rule (modulo AC) unlockSLpid_0_1111111111111111111[color=#806040,
-                                                     process='unlock SL_pid.1;', issapicrule, role='Server']:
+                                                     process="unlock SL_pid.1;", issapicrule, role='Server']:
      [
      State_1111111111111111111( StateChannel, lock, L_pid, SL_pid,
                                 StateChannel.1, YL_pid, k, nonce, npr, otc, secretid, tc, tuple
@@ -1281,7 +1280,7 @@ rule (modulo E) unlockSLpid_0_1111111111111111111[color=#806040,
      ]
   */
 
-rule (modulo E) p_0_11111111111111111111[color=#806040, process='0',
+rule (modulo E) p_0_11111111111111111111[color=#806040, process="0",
                                          issapicrule, role='Server']:
    [
    State_11111111111111111111( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1293,7 +1292,7 @@ rule (modulo E) p_0_11111111111111111111[color=#806040, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111111111111111111[color=#806040, process='0',
+  rule (modulo AC) p_0_11111111111111111111[color=#806040, process="0",
                                             issapicrule, role='Server']:
      [
      State_11111111111111111111( StateChannel, lock, L_pid, SL_pid,
@@ -1304,7 +1303,7 @@ rule (modulo E) p_0_11111111111111111111[color=#806040, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_1111111111111112[color=#806040, process='0',
+rule (modulo E) p_0_1111111111111112[color=#806040, process="0",
                                      issapicrule, role='Server']:
    [
    State_1111111111111112( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1316,7 +1315,7 @@ rule (modulo E) p_0_1111111111111112[color=#806040, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_1111111111111112[color=#806040, process='0',
+  rule (modulo AC) p_0_1111111111111112[color=#806040, process="0",
                                         issapicrule, role='Server']:
      [
      State_1111111111111112( StateChannel, lock, L_pid, SL_pid,
@@ -1327,7 +1326,7 @@ rule (modulo E) p_0_1111111111111112[color=#806040, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_111111111111112[color=#806040, process='0',
+rule (modulo E) p_0_111111111111112[color=#806040, process="0",
                                     issapicrule, role='Server']:
    [
    State_111111111111112( StateChannel, lock, L_pid.1, SL_pid.1,
@@ -1339,7 +1338,7 @@ rule (modulo E) p_0_111111111111112[color=#806040, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111111111112[color=#806040, process='0',
+  rule (modulo AC) p_0_111111111111112[color=#806040, process="0",
                                        issapicrule, role='Server']:
      [
      State_111111111111112( StateChannel, lock, L_pid, SL_pid, StateChannel.1,
@@ -1350,7 +1349,7 @@ rule (modulo E) p_0_111111111111112[color=#806040, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_1111111111112[color=#806040, process='0',
+rule (modulo E) p_0_1111111111112[color=#806040, process="0",
                                   issapicrule, role='Server']:
    [
    State_1111111111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1361,7 +1360,7 @@ rule (modulo E) p_0_1111111111112[color=#806040, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_1111111111112[color=#806040, process='0',
+  rule (modulo AC) p_0_1111111111112[color=#806040, process="0",
                                      issapicrule, role='Server']:
      [
      State_1111111111112( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid,
@@ -1372,7 +1371,7 @@ rule (modulo E) p_0_1111111111112[color=#806040, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_1111111112[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_1111111112[color=#ffffff, process="0", issapicrule,
                                role='Process']:
    [
    State_1111111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1383,7 +1382,7 @@ rule (modulo E) p_0_1111111112[color=#ffffff, process='0', issapicrule,
    [ ]
 
   /*
-  rule (modulo AC) p_0_1111111112[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) p_0_1111111112[color=#ffffff, process="0", issapicrule,
                                   role='Process']:
      [ State_1111111112( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid )
      ]
@@ -1391,7 +1390,7 @@ rule (modulo E) p_0_1111111112[color=#ffffff, process='0', issapicrule,
      [ ]
   */
 
-rule (modulo E) newk_0_111111112[color=#ffffff, process='new k.2;',
+rule (modulo E) newk_0_111111112[color=#ffffff, process="new k.2;",
                                  issapicrule, role='Process']:
    [
    State_111111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1407,7 +1406,7 @@ rule (modulo E) newk_0_111111112[color=#ffffff, process='new k.2;',
    ]
 
   /*
-  rule (modulo AC) newk_0_111111112[color=#ffffff, process='new k.2;',
+  rule (modulo AC) newk_0_111111112[color=#ffffff, process="new k.2;",
                                     issapicrule, role='Process']:
      [
      State_111111112( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid ),
@@ -1421,7 +1420,7 @@ rule (modulo E) newk_0_111111112[color=#ffffff, process='new k.2;',
   */
 
 rule (modulo E) eventSeck_0_1111111121[color=#ffffff,
-                                       process='event Sec( k.2 );', issapicrule, role='Process']:
+                                       process="event Sec( k.2 );", issapicrule, role='Process']:
    [
    State_1111111121( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
                      YL_pid.1, k.2
@@ -1436,7 +1435,7 @@ rule (modulo E) eventSeck_0_1111111121[color=#ffffff,
 
   /*
   rule (modulo AC) eventSeck_0_1111111121[color=#ffffff,
-                                          process='event Sec( k.2 );', issapicrule, role='Process']:
+                                          process="event Sec( k.2 );", issapicrule, role='Process']:
      [
      State_1111111121( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid, k
      )
@@ -1449,7 +1448,7 @@ rule (modulo E) eventSeck_0_1111111121[color=#ffffff,
   */
 
 rule (modulo E) newsecretid_0_11111111211[color=#ffffff,
-                                          process='new secretid.2;', issapicrule, role='Process']:
+                                          process="new secretid.2;", issapicrule, role='Process']:
    [
    State_11111111211( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
                       YL_pid.1, k.2
@@ -1465,7 +1464,7 @@ rule (modulo E) newsecretid_0_11111111211[color=#ffffff,
 
   /*
   rule (modulo AC) newsecretid_0_11111111211[color=#ffffff,
-                                             process='new secretid.2;', issapicrule, role='Process']:
+                                             process="new secretid.2;", issapicrule, role='Process']:
      [
      State_11111111211( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid, k
      ),
@@ -1480,7 +1479,7 @@ rule (modulo E) newsecretid_0_11111111211[color=#ffffff,
   */
 
 rule (modulo E) insertSLpidsecretidkzero_0_111111112111[color=#ffffff,
-                                                        process='insert SL_pid.1,<secretid.2, k.2, 'zero'>;',
+                                                        process="insert SL_pid.1,<secretid.2, k.2, 'zero'>;",
                                                         issapicrule, role='Process']:
    [
    State_111111112111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1497,7 +1496,7 @@ rule (modulo E) insertSLpidsecretidkzero_0_111111112111[color=#ffffff,
 
   /*
   rule (modulo AC) insertSLpidsecretidkzero_0_111111112111[color=#ffffff,
-                                                           process='insert SL_pid.1,<secretid.2, k.2, 'zero'>;',
+                                                           process="insert SL_pid.1,<secretid.2, k.2, 'zero'>;",
                                                            issapicrule, role='Process']:
      [
      State_111111112111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid,
@@ -1514,7 +1513,7 @@ rule (modulo E) insertSLpidsecretidkzero_0_111111112111[color=#ffffff,
   */
 
 rule (modulo E) insertYLpidonezero_0_1111111121111[color=#ffffff,
-                                                   process='insert YL_pid.1,('one'++'zero');', issapicrule,
+                                                   process="insert YL_pid.1,('one'++'zero');", issapicrule,
                                                    role='Process']:
    [
    State_1111111121111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1531,7 +1530,7 @@ rule (modulo E) insertYLpidonezero_0_1111111121111[color=#ffffff,
 
   /*
   rule (modulo AC) insertYLpidonezero_0_1111111121111[color=#ffffff,
-                                                      process='insert YL_pid.1,('one'++'zero');', issapicrule,
+                                                      process="insert YL_pid.1,('one'++'zero');", issapicrule,
                                                       role='Process']:
      [
      State_1111111121111( StateChannel, L_pid, SL_pid, StateChannel.1, YL_pid,
@@ -1548,7 +1547,7 @@ rule (modulo E) insertYLpidonezero_0_1111111121111[color=#ffffff,
   */
 
 rule (modulo E) eventYubiInitLpidsecretidk_0_11111111211111[color=#ffffff,
-                                                            process='event YubiInit( L_pid.1, secretid.2, k.2 );',
+                                                            process="event YubiInit( L_pid.1, secretid.2, k.2 );",
                                                             issapicrule, role='Process']:
    [
    State_11111111211111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1564,7 +1563,7 @@ rule (modulo E) eventYubiInitLpidsecretidk_0_11111111211111[color=#ffffff,
 
   /*
   rule (modulo AC) eventYubiInitLpidsecretidk_0_11111111211111[color=#ffffff,
-                                                               process='event YubiInit( L_pid.1, secretid.2, k.2 );',
+                                                               process="event YubiInit( L_pid.1, secretid.2, k.2 );",
                                                                issapicrule, role='Process']:
      [
      State_11111111211111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1579,7 +1578,7 @@ rule (modulo E) eventYubiInitLpidsecretidk_0_11111111211111[color=#ffffff,
      ]
   */
 
-rule (modulo E) p_0_111111112111111[color=#ffffff, process='!',
+rule (modulo E) p_0_111111112111111[color=#ffffff, process="!",
                                     issapicrule, role='Process']:
    [
    State_111111112111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1594,7 +1593,7 @@ rule (modulo E) p_0_111111112111111[color=#ffffff, process='!',
    ]
 
   /*
-  rule (modulo AC) p_0_111111112111111[color=#ffffff, process='!',
+  rule (modulo AC) p_0_111111112111111[color=#ffffff, process="!",
                                        issapicrule, role='Process']:
      [
      State_111111112111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1609,7 +1608,7 @@ rule (modulo E) p_0_111111112111111[color=#ffffff, process='!',
      ]
   */
 
-rule (modulo E) p_1_111111112111111[color=#ffffff, process='!',
+rule (modulo E) p_1_111111112111111[color=#ffffff, process="!",
                                     issapicrule, role='Process']:
    [
    !Semistate_1111111121111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1624,7 +1623,7 @@ rule (modulo E) p_1_111111112111111[color=#ffffff, process='!',
    ]
 
   /*
-  rule (modulo AC) p_1_111111112111111[color=#ffffff, process='!',
+  rule (modulo AC) p_1_111111112111111[color=#ffffff, process="!",
                                        issapicrule, role='Process']:
      [
      !Semistate_1111111121111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1640,7 +1639,7 @@ rule (modulo E) p_1_111111112111111[color=#ffffff, process='!',
   */
 
 rule (modulo E) YubikeyLpidYLpidSLpidsecretidk_0_1111111121111111[color=#ffffff,
-                                                                  process='Yubikey(L_pid.1, YL_pid.1, SL_pid.1, secretid.2, k.2)',
+                                                                  process="Yubikey(L_pid.1, YL_pid.1, SL_pid.1, secretid.2, k.2)",
                                                                   issapicrule, role='Process']:
    [
    State_1111111121111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1659,7 +1658,7 @@ rule (modulo E) YubikeyLpidYLpidSLpidsecretidk_0_1111111121111111[color=#ffffff,
 
   /*
   rule (modulo AC) YubikeyLpidYLpidSLpidsecretidk_0_1111111121111111[color=#ffffff,
-                                                                     process='Yubikey(L_pid.1, YL_pid.1, SL_pid.1, secretid.2, k.2)',
+                                                                     process="Yubikey(L_pid.1, YL_pid.1, SL_pid.1, secretid.2, k.2)",
                                                                      issapicrule, role='Process']:
      [
      State_1111111121111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1677,7 +1676,7 @@ rule (modulo E) YubikeyLpidYLpidSLpidsecretidk_0_1111111121111111[color=#ffffff,
      ]
   */
 
-rule (modulo E) p_0_11111111211111111[color=#805140, process='!',
+rule (modulo E) p_0_11111111211111111[color=#805140, process="!",
                                       issapicrule, role='Yubikey']:
    [
    State_11111111211111111( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -1692,7 +1691,7 @@ rule (modulo E) p_0_11111111211111111[color=#805140, process='!',
    ]
 
   /*
-  rule (modulo AC) p_0_11111111211111111[color=#805140, process='!',
+  rule (modulo AC) p_0_11111111211111111[color=#805140, process="!",
                                          issapicrule, role='Yubikey']:
      [
      State_11111111211111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1707,7 +1706,7 @@ rule (modulo E) p_0_11111111211111111[color=#805140, process='!',
      ]
   */
 
-rule (modulo E) p_1_11111111211111111[color=#805140, process='!',
+rule (modulo E) p_1_11111111211111111[color=#805140, process="!",
                                       issapicrule, role='Yubikey']:
    [
    !Semistate_111111112111111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1722,7 +1721,7 @@ rule (modulo E) p_1_11111111211111111[color=#805140, process='!',
    ]
 
   /*
-  rule (modulo AC) p_1_11111111211111111[color=#805140, process='!',
+  rule (modulo AC) p_1_11111111211111111[color=#805140, process="!",
                                          issapicrule, role='Yubikey']:
      [
      !Semistate_111111112111111111( StateChannel, L_pid, SL_pid,
@@ -1737,7 +1736,7 @@ rule (modulo E) p_1_11111111211111111[color=#805140, process='!',
      ]
   */
 
-rule (modulo E) p_0_111111112111111111[color=#805140, process='|',
+rule (modulo E) p_0_111111112111111111[color=#805140, process="|",
                                        issapicrule, role='Yubikey']:
    [
    State_111111112111111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1755,7 +1754,7 @@ rule (modulo E) p_0_111111112111111111[color=#805140, process='|',
    ]
 
   /*
-  rule (modulo AC) p_0_111111112111111111[color=#805140, process='|',
+  rule (modulo AC) p_0_111111112111111111[color=#805140, process="|",
                                           issapicrule, role='Yubikey']:
      [
      State_111111112111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1774,7 +1773,7 @@ rule (modulo E) p_0_111111112111111111[color=#805140, process='|',
   */
 
 rule (modulo E) lockYLpid_0_1111111121111111111[color=#805140,
-                                                process='lock YL_pid.1;', issapicrule, role='Yubikey']:
+                                                process="lock YL_pid.1;", issapicrule, role='Yubikey']:
    [
    State_1111111121111111111( StateChannel, L_pid.1, SL_pid.1,
                               StateChannel.1, YL_pid.1, k.2, secretid.2
@@ -1789,7 +1788,7 @@ rule (modulo E) lockYLpid_0_1111111121111111111[color=#805140,
 
   /*
   rule (modulo AC) lockYLpid_0_1111111121111111111[color=#805140,
-                                                   process='lock YL_pid.1;', issapicrule, role='Yubikey']:
+                                                   process="lock YL_pid.1;", issapicrule, role='Yubikey']:
      [
      State_1111111121111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
                                 YL_pid, k, secretid
@@ -1804,7 +1803,7 @@ rule (modulo E) lockYLpid_0_1111111121111111111[color=#805140,
   */
 
 rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#805140,
-                                                       process='lookup YL_pid.1 as sc.1', no_derivcheck,
+                                                       process="lookup YL_pid.1 as sc.1", no_derivcheck,
                                                        issapicrule, role='Yubikey']:
    [
    State_11111111211111111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1823,7 +1822,7 @@ rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#805140,
   // loop breaker: [1]
   /*
   rule (modulo AC) lookupYLpidassc_0_11111111211111111111[color=#805140,
-                                                          process='lookup YL_pid.1 as sc.1', no_derivcheck,
+                                                          process="lookup YL_pid.1 as sc.1", no_derivcheck,
                                                           issapicrule, role='Yubikey']:
      [
      State_11111111211111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1842,7 +1841,7 @@ rule (modulo E) lookupYLpidassc_0_11111111211111111111[color=#805140,
   */
 
 rule (modulo E) insc_0_111111112111111111111[color=#805140,
-                                             process='in(=sc.1);', issapicrule, role='Yubikey']:
+                                             process="in(=sc.1);", issapicrule, role='Yubikey']:
    [
    State_111111112111111111111( StateChannel, L_pid.1, SL_pid.1,
                                 StateChannel.1, YL_pid.1, lock.1, sc.1, k.2, secretid.2
@@ -1858,7 +1857,7 @@ rule (modulo E) insc_0_111111112111111111111[color=#805140,
 
   /*
   rule (modulo AC) insc_0_111111112111111111111[color=#805140,
-                                                process='in(=sc.1);', issapicrule, role='Yubikey']:
+                                                process="in(=sc.1);", issapicrule, role='Yubikey']:
      [
      State_111111112111111111111( StateChannel, L_pid, SL_pid, StateChannel.1,
                                   YL_pid, lock, sc, k, secretid
@@ -1874,7 +1873,7 @@ rule (modulo E) insc_0_111111112111111111111[color=#805140,
   */
 
 rule (modulo E) insertYLpidonesc_0_1111111121111111111111[color=#805140,
-                                                          process='insert YL_pid.1,('one'++sc.1);',
+                                                          process="insert YL_pid.1,('one'++sc.1);",
                                                           issapicrule, role='Yubikey']:
    [
    State_1111111121111111111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1893,7 +1892,7 @@ rule (modulo E) insertYLpidonesc_0_1111111121111111111111[color=#805140,
   // loop breaker: [1]
   /*
   rule (modulo AC) insertYLpidonesc_0_1111111121111111111111[color=#805140,
-                                                             process='insert YL_pid.1,('one'++sc.1);',
+                                                             process="insert YL_pid.1,('one'++sc.1);",
                                                              issapicrule, role='Yubikey']:
      [
      State_1111111121111111111111( StateChannel, L_pid, SL_pid,
@@ -1912,7 +1911,7 @@ rule (modulo E) insertYLpidonesc_0_1111111121111111111111[color=#805140,
   */
 
 rule (modulo E) unlockYLpid_0_11111111211111111111111[color=#805140,
-                                                      process='unlock YL_pid.1;', issapicrule,
+                                                      process="unlock YL_pid.1;", issapicrule,
                                                       role='Yubikey']:
    [
    State_11111111211111111111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1928,7 +1927,7 @@ rule (modulo E) unlockYLpid_0_11111111211111111111111[color=#805140,
 
   /*
   rule (modulo AC) unlockYLpid_0_11111111211111111111111[color=#805140,
-                                                         process='unlock YL_pid.1;', issapicrule,
+                                                         process="unlock YL_pid.1;", issapicrule,
                                                          role='Yubikey']:
      [
      State_11111111211111111111111( StateChannel, L_pid, SL_pid,
@@ -1943,7 +1942,7 @@ rule (modulo E) unlockYLpid_0_11111111211111111111111[color=#805140,
      ]
   */
 
-rule (modulo E) p_0_111111112111111111111111[color=#805140, process='0',
+rule (modulo E) p_0_111111112111111111111111[color=#805140, process="0",
                                              issapicrule, role='Yubikey']:
    [
    State_111111112111111111111111( StateChannel, L_pid.1, SL_pid.1,
@@ -1954,7 +1953,7 @@ rule (modulo E) p_0_111111112111111111111111[color=#805140, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111112111111111111111[color=#805140, process='0',
+  rule (modulo AC) p_0_111111112111111111111111[color=#805140, process="0",
                                                 issapicrule, role='Yubikey']:
      [
      State_111111112111111111111111( StateChannel, L_pid, SL_pid,
@@ -1965,7 +1964,7 @@ rule (modulo E) p_0_111111112111111111111111[color=#805140, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_111111112111111111112[color=#805140, process='0',
+rule (modulo E) p_0_111111112111111111112[color=#805140, process="0",
                                           issapicrule, role='Yubikey']:
    [
    State_111111112111111111112( StateChannel, L_pid.1, SL_pid.1,
@@ -1976,7 +1975,7 @@ rule (modulo E) p_0_111111112111111111112[color=#805140, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111112111111111112[color=#805140, process='0',
+  rule (modulo AC) p_0_111111112111111111112[color=#805140, process="0",
                                              issapicrule, role='Yubikey']:
      [
      State_111111112111111111112( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -1988,7 +1987,7 @@ rule (modulo E) p_0_111111112111111111112[color=#805140, process='0',
   */
 
 rule (modulo E) lockYLpid_0_1111111121111111112[color=#805140,
-                                                process='lock YL_pid.1;', issapicrule, role='Yubikey']:
+                                                process="lock YL_pid.1;", issapicrule, role='Yubikey']:
    [
    State_1111111121111111112( StateChannel, L_pid.1, SL_pid.1,
                               StateChannel.1, YL_pid.1, k.2, secretid.2
@@ -2003,7 +2002,7 @@ rule (modulo E) lockYLpid_0_1111111121111111112[color=#805140,
 
   /*
   rule (modulo AC) lockYLpid_0_1111111121111111112[color=#805140,
-                                                   process='lock YL_pid.1;', issapicrule, role='Yubikey']:
+                                                   process="lock YL_pid.1;", issapicrule, role='Yubikey']:
      [
      State_1111111121111111112( StateChannel, L_pid, SL_pid, StateChannel.1,
                                 YL_pid, k, secretid
@@ -2018,7 +2017,7 @@ rule (modulo E) lockYLpid_0_1111111121111111112[color=#805140,
   */
 
 rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#805140,
-                                                       process='lookup YL_pid.1 as tc.2', no_derivcheck,
+                                                       process="lookup YL_pid.1 as tc.2", no_derivcheck,
                                                        issapicrule, role='Yubikey']:
    [
    State_11111111211111111121( StateChannel, L_pid.1, SL_pid.1,
@@ -2037,7 +2036,7 @@ rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#805140,
   // loop breaker: [1]
   /*
   rule (modulo AC) lookupYLpidastc_0_11111111211111111121[color=#805140,
-                                                          process='lookup YL_pid.1 as tc.2', no_derivcheck,
+                                                          process="lookup YL_pid.1 as tc.2", no_derivcheck,
                                                           issapicrule, role='Yubikey']:
      [
      State_11111111211111111121( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -2056,7 +2055,7 @@ rule (modulo E) lookupYLpidastc_0_11111111211111111121[color=#805140,
   */
 
 rule (modulo E) insc_0_111111112111111111211[color=#805140,
-                                             process='in(sc.2);', issapicrule, role='Yubikey']:
+                                             process="in(sc.2);", issapicrule, role='Yubikey']:
    [
    State_111111112111111111211( StateChannel, L_pid.1, SL_pid.1,
                                 StateChannel.1, YL_pid.1, k.2, lock.2, secretid.2, tc.2
@@ -2072,7 +2071,7 @@ rule (modulo E) insc_0_111111112111111111211[color=#805140,
 
   /*
   rule (modulo AC) insc_0_111111112111111111211[color=#805140,
-                                                process='in(sc.2);', issapicrule, role='Yubikey']:
+                                                process="in(sc.2);", issapicrule, role='Yubikey']:
      [
      State_111111112111111111211( StateChannel, L_pid, SL_pid, StateChannel.1,
                                   YL_pid, k, lock, secretid, tc
@@ -2088,7 +2087,7 @@ rule (modulo E) insc_0_111111112111111111211[color=#805140,
   */
 
 rule (modulo E) newnonce_0_1111111121111111112111[color=#805140,
-                                                  process='new nonce.2;', issapicrule, role='Yubikey']:
+                                                  process="new nonce.2;", issapicrule, role='Yubikey']:
    [
    State_1111111121111111112111( StateChannel, L_pid.1, SL_pid.1,
                                  StateChannel.1, YL_pid.1, k.2, lock.2, sc.2, secretid.2, tc.2
@@ -2104,7 +2103,7 @@ rule (modulo E) newnonce_0_1111111121111111112111[color=#805140,
 
   /*
   rule (modulo AC) newnonce_0_1111111121111111112111[color=#805140,
-                                                     process='new nonce.2;', issapicrule, role='Yubikey']:
+                                                     process="new nonce.2;", issapicrule, role='Yubikey']:
      [
      State_1111111121111111112111( StateChannel, L_pid, SL_pid,
                                    StateChannel.1, YL_pid, k, lock, sc, secretid, tc
@@ -2120,7 +2119,7 @@ rule (modulo E) newnonce_0_1111111121111111112111[color=#805140,
   */
 
 rule (modulo E) newnpr_0_11111111211111111121111[color=#805140,
-                                                 process='new npr.2;', issapicrule, role='Yubikey']:
+                                                 process="new npr.2;", issapicrule, role='Yubikey']:
    [
    State_11111111211111111121111( StateChannel, L_pid.1, SL_pid.1,
                                   StateChannel.1, YL_pid.1, k.2, lock.2, nonce.2, sc.2, secretid.2, tc.2
@@ -2137,7 +2136,7 @@ rule (modulo E) newnpr_0_11111111211111111121111[color=#805140,
 
   /*
   rule (modulo AC) newnpr_0_11111111211111111121111[color=#805140,
-                                                    process='new npr.2;', issapicrule, role='Yubikey']:
+                                                    process="new npr.2;", issapicrule, role='Yubikey']:
      [
      State_11111111211111111121111( StateChannel, L_pid, SL_pid,
                                     StateChannel.1, YL_pid, k, lock, nonce, sc, secretid, tc
@@ -2153,7 +2152,7 @@ rule (modulo E) newnpr_0_11111111211111111121111[color=#805140,
   */
 
 rule (modulo E) eventYubiPressLpidsecretidktc_0_111111112111111111211111[color=#805140,
-                                                                         process='event YubiPress( L_pid.1, secretid.2, k.2, tc.2 );',
+                                                                         process="event YubiPress( L_pid.1, secretid.2, k.2, tc.2 );",
                                                                          issapicrule, role='Yubikey']:
    [
    State_111111112111111111211111( StateChannel, L_pid.1, SL_pid.1,
@@ -2171,7 +2170,7 @@ rule (modulo E) eventYubiPressLpidsecretidktc_0_111111112111111111211111[color=#
 
   /*
   rule (modulo AC) eventYubiPressLpidsecretidktc_0_111111112111111111211111[color=#805140,
-                                                                            process='event YubiPress( L_pid.1, secretid.2, k.2, tc.2 );',
+                                                                            process="event YubiPress( L_pid.1, secretid.2, k.2, tc.2 );",
                                                                             issapicrule, role='Yubikey']:
      [
      State_111111112111111111211111( StateChannel, L_pid, SL_pid,
@@ -2187,7 +2186,7 @@ rule (modulo E) eventYubiPressLpidsecretidktc_0_111111112111111111211111[color=#
   */
 
 rule (modulo E) outLpidnoncesencsecretidtcnprk_0_1111111121111111112111111[color=#805140,
-                                                                           process='out(<L_pid.1, nonce.2, senc(<secretid.2, tc.2, npr.2>, k.2)>);',
+                                                                           process="out(<L_pid.1, nonce.2, senc(<secretid.2, tc.2, npr.2>, k.2)>);",
                                                                            issapicrule, role='Yubikey']:
    [
    State_1111111121111111112111111( StateChannel, L_pid.1, SL_pid.1,
@@ -2206,7 +2205,7 @@ rule (modulo E) outLpidnoncesencsecretidtcnprk_0_1111111121111111112111111[color
 
   /*
   rule (modulo AC) outLpidnoncesencsecretidtcnprk_0_1111111121111111112111111[color=#805140,
-                                                                              process='out(<L_pid.1, nonce.2, senc(<secretid.2, tc.2, npr.2>, k.2)>);',
+                                                                              process="out(<L_pid.1, nonce.2, senc(<secretid.2, tc.2, npr.2>, k.2)>);",
                                                                               issapicrule, role='Yubikey']:
      [
      State_1111111121111111112111111( StateChannel, L_pid, SL_pid,
@@ -2223,7 +2222,7 @@ rule (modulo E) outLpidnoncesencsecretidtcnprk_0_1111111121111111112111111[color
   */
 
 rule (modulo E) insertYLpidonetc_0_11111111211111111121111111[color=#805140,
-                                                              process='insert YL_pid.1,('one'++tc.2);',
+                                                              process="insert YL_pid.1,('one'++tc.2);",
                                                               issapicrule, role='Yubikey']:
    [
    State_11111111211111111121111111( StateChannel, L_pid.1, SL_pid.1,
@@ -2244,7 +2243,7 @@ rule (modulo E) insertYLpidonetc_0_11111111211111111121111111[color=#805140,
   // loop breaker: [1]
   /*
   rule (modulo AC) insertYLpidonetc_0_11111111211111111121111111[color=#805140,
-                                                                 process='insert YL_pid.1,('one'++tc.2);',
+                                                                 process="insert YL_pid.1,('one'++tc.2);",
                                                                  issapicrule, role='Yubikey']:
      [
      State_11111111211111111121111111( StateChannel, L_pid, SL_pid,
@@ -2263,7 +2262,7 @@ rule (modulo E) insertYLpidonetc_0_11111111211111111121111111[color=#805140,
   */
 
 rule (modulo E) unlockYLpid_0_111111112111111111211111111[color=#805140,
-                                                          process='unlock YL_pid.1;', issapicrule,
+                                                          process="unlock YL_pid.1;", issapicrule,
                                                           role='Yubikey']:
    [
    State_111111112111111111211111111( StateChannel, L_pid.1, SL_pid.1,
@@ -2281,7 +2280,7 @@ rule (modulo E) unlockYLpid_0_111111112111111111211111111[color=#805140,
 
   /*
   rule (modulo AC) unlockYLpid_0_111111112111111111211111111[color=#805140,
-                                                             process='unlock YL_pid.1;', issapicrule,
+                                                             process="unlock YL_pid.1;", issapicrule,
                                                              role='Yubikey']:
      [
      State_111111112111111111211111111( StateChannel, L_pid, SL_pid,
@@ -2297,7 +2296,7 @@ rule (modulo E) unlockYLpid_0_111111112111111111211111111[color=#805140,
   */
 
 rule (modulo E) p_0_1111111121111111112111111111[color=#805140,
-                                                 process='0', issapicrule, role='Yubikey']:
+                                                 process="0", issapicrule, role='Yubikey']:
    [
    State_1111111121111111112111111111( StateChannel, L_pid.1, SL_pid.1,
                                        StateChannel.1, YL_pid.1, k.2, lock.2, nonce.2, npr.2, sc.2,
@@ -2309,7 +2308,7 @@ rule (modulo E) p_0_1111111121111111112111111111[color=#805140,
 
   /*
   rule (modulo AC) p_0_1111111121111111112111111111[color=#805140,
-                                                    process='0', issapicrule, role='Yubikey']:
+                                                    process="0", issapicrule, role='Yubikey']:
      [
      State_1111111121111111112111111111( StateChannel, L_pid, SL_pid,
                                          StateChannel.1, YL_pid, k, lock, nonce, npr, sc, secretid, tc
@@ -2319,7 +2318,7 @@ rule (modulo E) p_0_1111111121111111112111111111[color=#805140,
      [ ]
   */
 
-rule (modulo E) p_0_111111112111111111212[color=#805140, process='0',
+rule (modulo E) p_0_111111112111111111212[color=#805140, process="0",
                                           issapicrule, role='Yubikey']:
    [
    State_111111112111111111212( StateChannel, L_pid.1, SL_pid.1,
@@ -2330,7 +2329,7 @@ rule (modulo E) p_0_111111112111111111212[color=#805140, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_111111112111111111212[color=#805140, process='0',
+  rule (modulo AC) p_0_111111112111111111212[color=#805140, process="0",
                                              issapicrule, role='Yubikey']:
      [
      State_111111112111111111212( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -2341,7 +2340,7 @@ rule (modulo E) p_0_111111112111111111212[color=#805140, process='0',
      [ ]
   */
 
-rule (modulo E) p_0_11111111211111112[color=#ffffff, process='0',
+rule (modulo E) p_0_11111111211111112[color=#ffffff, process="0",
                                       issapicrule, role='Process']:
    [
    State_11111111211111112( StateChannel, L_pid.1, SL_pid.1, StateChannel.1,
@@ -2352,7 +2351,7 @@ rule (modulo E) p_0_11111111211111112[color=#ffffff, process='0',
    [ ]
 
   /*
-  rule (modulo AC) p_0_11111111211111112[color=#ffffff, process='0',
+  rule (modulo AC) p_0_11111111211111112[color=#ffffff, process="0",
                                          issapicrule, role='Process']:
      [
      State_11111111211111112( StateChannel, L_pid, SL_pid, StateChannel.1,
@@ -2367,13 +2366,28 @@ restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  */
+
 restriction predicate_not_eq:
   "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  */
+
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
 
 /*
 WARNING: the following wellformedness checks failed!
@@ -2395,8 +2409,8 @@ Facts occur in the left-hand-side but not in any right-hand-side
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -2408,7 +2422,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/Yubikey/Yubikey.spthy
 
   output:          examples/sapic/fast/Yubikey/Yubikey.spthy.tmp
-  processing time: 10.59s
+  processing time: 16.78s
   
   WARNING: 2 wellformedness check failed!
            The analysis results might be wrong!

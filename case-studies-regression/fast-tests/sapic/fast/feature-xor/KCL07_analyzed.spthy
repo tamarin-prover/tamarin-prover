@@ -8,19 +8,7 @@ builtins: xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
-
-
-
-
-
-
-
-
-
-
 
 lemma recentalive_tag:
   all-traces
@@ -427,96 +415,88 @@ solve( State_1111111111( ~id, ~k, ~r1, xoredhash ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process='new ~k.1;', issapicrule,
+rule (modulo E) Init[color=#ffffff, process="new ~k.1;", issapicrule,
                      role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) newk_0_[color=#ffffff, process='new ~k.1;', issapicrule,
+rule (modulo E) newk_0_[color=#ffffff, process="new ~k.1;", issapicrule,
                         role='Process']:
    [ State_( ), Fr( ~k.1 ) ] --> [ State_1( ~k.1 ) ]
 
   /*
-  rule (modulo AC) newk_0_[color=#ffffff, process='new ~k.1;', issapicrule,
+  rule (modulo AC) newk_0_[color=#ffffff, process="new ~k.1;", issapicrule,
                            role='Process']:
      [ State_( ), Fr( ~k ) ] --> [ State_1( ~k ) ]
   */
 
-rule (modulo E) newid_0_1[color=#ffffff, process='new ~id.1;',
+rule (modulo E) newid_0_1[color=#ffffff, process="new ~id.1;",
                           issapicrule, role='Process']:
    [ State_1( ~k.1 ), Fr( ~id.1 ) ] --> [ State_11( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) newid_0_1[color=#ffffff, process='new ~id.1;',
+  rule (modulo AC) newid_0_1[color=#ffffff, process="new ~id.1;",
                              issapicrule, role='Process']:
      [ State_1( ~k ), Fr( ~id ) ] --> [ State_11( ~id, ~k ) ]
   */
 
-rule (modulo E) p_0_11[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_11[color=#ffffff, process="!", issapicrule,
                        role='Process']:
    [ State_11( ~id.1, ~k.1 ) ] --> [ !Semistate_111( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_0_11[color=#ffffff, process='!', issapicrule,
+  rule (modulo AC) p_0_11[color=#ffffff, process="!", issapicrule,
                           role='Process']:
      [ State_11( ~id, ~k ) ] --> [ !Semistate_111( ~id, ~k ) ]
   */
 
-rule (modulo E) p_1_11[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_11[color=#ffffff, process="!", issapicrule,
                        role='Process']:
    [ !Semistate_111( ~id.1, ~k.1 ) ] --> [ State_111( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_1_11[color=#ffffff, process='!', issapicrule,
+  rule (modulo AC) p_1_11[color=#ffffff, process="!", issapicrule,
                           role='Process']:
      [ !Semistate_111( ~id, ~k ) ] --> [ State_111( ~id, ~k ) ]
   */
 
-rule (modulo E) p_0_111[color=#ffffff, process='|', issapicrule,
+rule (modulo E) p_0_111[color=#ffffff, process="|", issapicrule,
                         role='Process']:
    [ State_111( ~id.1, ~k.1 ) ]
   -->
    [ State_1111( ~id.1, ~k.1 ), State_1112( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_0_111[color=#ffffff, process='|', issapicrule,
+  rule (modulo AC) p_0_111[color=#ffffff, process="|", issapicrule,
                            role='Process']:
      [ State_111( ~id, ~k ) ]
     -->
      [ State_1111( ~id, ~k ), State_1112( ~id, ~k ) ]
   */
 
-rule (modulo E) Reader_0_1111[color=#ffffff, process='Reader()',
+rule (modulo E) Reader_0_1111[color=#ffffff, process="Reader()",
                               issapicrule, role='Process']:
    [ State_1111( ~id.1, ~k.1 ) ]
   -->
    [ State_11111( ~id.1, ~k.1 ), State_11112( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Reader_0_1111[color=#ffffff, process='Reader()',
+  rule (modulo AC) Reader_0_1111[color=#ffffff, process="Reader()",
                                  issapicrule, role='Process']:
      [ State_1111( ~id, ~k ) ]
     -->
      [ State_11111( ~id, ~k ), State_11112( ~id, ~k ) ]
   */
 
-rule (modulo E) newr_0_11111[color=#404480, process='new ~r1.1;',
+rule (modulo E) newr_0_11111[color=#404480, process="new ~r1.1;",
                              issapicrule, role='Reader']:
    [ State_11111( ~id.1, ~k.1 ), Fr( ~r1.1 ) ]
   -->
    [ State_111111( ~id.1, ~k.1, ~r1.1 ) ]
 
   /*
-  rule (modulo AC) newr_0_11111[color=#404480, process='new ~r1.1;',
+  rule (modulo AC) newr_0_11111[color=#404480, process="new ~r1.1;",
                                 issapicrule, role='Reader']:
      [ State_11111( ~id, ~k ), Fr( ~r1 ) ]
     -->
@@ -524,7 +504,7 @@ rule (modulo E) newr_0_11111[color=#404480, process='new ~r1.1;',
   */
 
 rule (modulo E) eventChallengerReader_0_111111[color=#404480,
-                                               process='event Challenge( ~r1.1, 'Reader' );', issapicrule,
+                                               process="event Challenge( ~r1.1, 'Reader' );", issapicrule,
                                                role='Reader']:
    [ State_111111( ~id.1, ~k.1, ~r1.1 ) ]
   --[ Challenge( ~r1.1, 'Reader' ) ]->
@@ -532,21 +512,21 @@ rule (modulo E) eventChallengerReader_0_111111[color=#404480,
 
   /*
   rule (modulo AC) eventChallengerReader_0_111111[color=#404480,
-                                                  process='event Challenge( ~r1.1, 'Reader' );', issapicrule,
+                                                  process="event Challenge( ~r1.1, 'Reader' );", issapicrule,
                                                   role='Reader']:
      [ State_111111( ~id, ~k, ~r1 ) ]
     --[ Challenge( ~r1, 'Reader' ) ]->
      [ State_1111111( ~id, ~k, ~r1 ) ]
   */
 
-rule (modulo E) outr_0_1111111[color=#404480, process='out(~r1.1);',
+rule (modulo E) outr_0_1111111[color=#404480, process="out(~r1.1);",
                                issapicrule, role='Reader']:
    [ State_1111111( ~id.1, ~k.1, ~r1.1 ) ]
   -->
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), Out( ~r1.1 ) ]
 
   /*
-  rule (modulo AC) outr_0_1111111[color=#404480, process='out(~r1.1);',
+  rule (modulo AC) outr_0_1111111[color=#404480, process="out(~r1.1);",
                                   issapicrule, role='Reader']:
      [ State_1111111( ~id, ~k, ~r1 ) ]
     -->
@@ -554,21 +534,21 @@ rule (modulo E) outr_0_1111111[color=#404480, process='out(~r1.1);',
   */
 
 rule (modulo E) inxoredhash_0_11111111[color=#404480,
-                                       process='in(xoredhash.1);', issapicrule, role='Reader']:
+                                       process="in(xoredhash.1);", issapicrule, role='Reader']:
    [ State_11111111( ~id.1, ~k.1, ~r1.1 ), In( xoredhash.1 ) ]
   -->
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
 
   /*
   rule (modulo AC) inxoredhash_0_11111111[color=#404480,
-                                          process='in(xoredhash.1);', issapicrule, role='Reader']:
+                                          process="in(xoredhash.1);", issapicrule, role='Reader']:
      [ State_11111111( ~id, ~k, ~r1 ), In( xoredhash ) ]
     -->
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
 rule (modulo E) ifxoredhashidhrk_0_111111111[color=#404480,
-                                             process='if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))', issapicrule,
+                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))", issapicrule,
                                              role='Reader']:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
@@ -576,7 +556,7 @@ rule (modulo E) ifxoredhashidhrk_0_111111111[color=#404480,
 
   /*
   rule (modulo AC) ifxoredhashidhrk_0_111111111[color=#404480,
-                                                process='if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))',
+                                                process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))",
                                                 issapicrule, role='Reader']:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
@@ -584,7 +564,7 @@ rule (modulo E) ifxoredhashidhrk_0_111111111[color=#404480,
   */
 
 rule (modulo E) ifxoredhashidhrk_1_111111111[color=#404480,
-                                             process='if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))', issapicrule,
+                                             process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))", issapicrule,
                                              role='Reader']:
    [ State_111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Pred_Not_Eq( xoredhash.1, (~id.1⊕h(<~r1.1, ~k.1>)) ) ]->
@@ -592,7 +572,7 @@ rule (modulo E) ifxoredhashidhrk_1_111111111[color=#404480,
 
   /*
   rule (modulo AC) ifxoredhashidhrk_1_111111111[color=#404480,
-                                                process='if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))',
+                                                process="if xoredhash.1=(~id.1⊕h(<~r1.1, ~k.1>))",
                                                 issapicrule, role='Reader']:
      [ State_111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Pred_Not_Eq( xoredhash, (~id⊕h(<~r1, ~k>)) ) ]->
@@ -600,7 +580,7 @@ rule (modulo E) ifxoredhashidhrk_1_111111111[color=#404480,
   */
 
 rule (modulo E) eventAlivekTag_0_1111111111[color=#404480,
-                                            process='event Alive( ~k.1, 'Tag' );', issapicrule,
+                                            process="event Alive( ~k.1, 'Tag' );", issapicrule,
                                             role='Reader']:
    [ State_1111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ]
   --[ Alive( ~k.1, 'Tag' ) ]->
@@ -608,99 +588,99 @@ rule (modulo E) eventAlivekTag_0_1111111111[color=#404480,
 
   /*
   rule (modulo AC) eventAlivekTag_0_1111111111[color=#404480,
-                                               process='event Alive( ~k.1, 'Tag' );', issapicrule,
+                                               process="event Alive( ~k.1, 'Tag' );", issapicrule,
                                                role='Reader']:
      [ State_1111111111( ~id, ~k, ~r1, xoredhash ) ]
     --[ Alive( ~k, 'Tag' ) ]->
      [ State_11111111111( ~id, ~k, ~r1, xoredhash ) ]
   */
 
-rule (modulo E) p_0_11111111111[color=#404480, process='0', issapicrule,
+rule (modulo E) p_0_11111111111[color=#404480, process="0", issapicrule,
                                 role='Reader']:
    [ State_11111111111( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11111111111[color=#404480, process='0', issapicrule,
+  rule (modulo AC) p_0_11111111111[color=#404480, process="0", issapicrule,
                                    role='Reader']:
      [ State_11111111111( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1111111112[color=#404480, process='0', issapicrule,
+rule (modulo E) p_0_1111111112[color=#404480, process="0", issapicrule,
                                role='Reader']:
    [ State_1111111112( ~id.1, ~k.1, ~r1.1, xoredhash.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1111111112[color=#404480, process='0', issapicrule,
+  rule (modulo AC) p_0_1111111112[color=#404480, process="0", issapicrule,
                                   role='Reader']:
      [ State_1111111112( ~id, ~k, ~r1, xoredhash ) ] --> [ ]
   */
 
-rule (modulo E) p_0_11112[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_11112[color=#ffffff, process="0", issapicrule,
                           role='Process']:
    [ State_11112( ~id.1, ~k.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_11112[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) p_0_11112[color=#ffffff, process="0", issapicrule,
                              role='Process']:
      [ State_11112( ~id, ~k ) ] --> [ ]
   */
 
-rule (modulo E) p_0_1112[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_0_1112[color=#ffffff, process="!", issapicrule,
                          role='Process']:
    [ State_1112( ~id.1, ~k.1 ) ] --> [ !Semistate_11121( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_0_1112[color=#ffffff, process='!', issapicrule,
+  rule (modulo AC) p_0_1112[color=#ffffff, process="!", issapicrule,
                             role='Process']:
      [ State_1112( ~id, ~k ) ] --> [ !Semistate_11121( ~id, ~k ) ]
   */
 
-rule (modulo E) p_1_1112[color=#ffffff, process='!', issapicrule,
+rule (modulo E) p_1_1112[color=#ffffff, process="!", issapicrule,
                          role='Process']:
    [ !Semistate_11121( ~id.1, ~k.1 ) ] --> [ State_11121( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) p_1_1112[color=#ffffff, process='!', issapicrule,
+  rule (modulo AC) p_1_1112[color=#ffffff, process="!", issapicrule,
                             role='Process']:
      [ !Semistate_11121( ~id, ~k ) ] --> [ State_11121( ~id, ~k ) ]
   */
 
-rule (modulo E) Tag_0_11121[color=#ffffff, process='Tag()', issapicrule,
+rule (modulo E) Tag_0_11121[color=#ffffff, process="Tag()", issapicrule,
                             role='Process']:
    [ State_11121( ~id.1, ~k.1 ) ]
   -->
    [ State_111211( ~id.1, ~k.1 ), State_111212( ~id.1, ~k.1 ) ]
 
   /*
-  rule (modulo AC) Tag_0_11121[color=#ffffff, process='Tag()', issapicrule,
+  rule (modulo AC) Tag_0_11121[color=#ffffff, process="Tag()", issapicrule,
                                role='Process']:
      [ State_11121( ~id, ~k ) ]
     -->
      [ State_111211( ~id, ~k ), State_111212( ~id, ~k ) ]
   */
 
-rule (modulo E) inr_0_111211[color=#40807c, process='in(r1.2);',
+rule (modulo E) inr_0_111211[color=#40807c, process="in(r1.2);",
                              issapicrule, role='Tag']:
    [ State_111211( ~id.1, ~k.1 ), In( r1.2 ) ]
   -->
    [ State_1112111( ~id.1, ~k.1, r1.2 ) ]
 
   /*
-  rule (modulo AC) inr_0_111211[color=#40807c, process='in(r1.2);',
+  rule (modulo AC) inr_0_111211[color=#40807c, process="in(r1.2);",
                                 issapicrule, role='Tag']:
      [ State_111211( ~id, ~k ), In( r1 ) ]
     -->
      [ State_1112111( ~id, ~k, r1 ) ]
   */
 
-rule (modulo E) newr_0_1112111[color=#40807c, process='new ~r2.1;',
+rule (modulo E) newr_0_1112111[color=#40807c, process="new ~r2.1;",
                                issapicrule, role='Tag']:
    [ State_1112111( ~id.1, ~k.1, r1.2 ), Fr( ~r2.1 ) ]
   -->
    [ State_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ]
 
   /*
-  rule (modulo AC) newr_0_1112111[color=#40807c, process='new ~r2.1;',
+  rule (modulo AC) newr_0_1112111[color=#40807c, process="new ~r2.1;",
                                   issapicrule, role='Tag']:
      [ State_1112111( ~id, ~k, r1 ), Fr( ~r2 ) ]
     -->
@@ -708,7 +688,7 @@ rule (modulo E) newr_0_1112111[color=#40807c, process='new ~r2.1;',
   */
 
 rule (modulo E) eventResponsekTag_0_11121111[color=#40807c,
-                                             process='event Response( ~k.1, 'Tag' );', issapicrule,
+                                             process="event Response( ~k.1, 'Tag' );", issapicrule,
                                              role='Tag']:
    [ State_11121111( ~id.1, ~k.1, ~r2.1, r1.2 ) ]
   --[ Response( ~k.1, 'Tag' ) ]->
@@ -716,7 +696,7 @@ rule (modulo E) eventResponsekTag_0_11121111[color=#40807c,
 
   /*
   rule (modulo AC) eventResponsekTag_0_11121111[color=#40807c,
-                                                process='event Response( ~k.1, 'Tag' );', issapicrule,
+                                                process="event Response( ~k.1, 'Tag' );", issapicrule,
                                                 role='Tag']:
      [ State_11121111( ~id, ~k, ~r2, r1 ) ]
     --[ Response( ~k, 'Tag' ) ]->
@@ -724,7 +704,7 @@ rule (modulo E) eventResponsekTag_0_11121111[color=#40807c,
   */
 
 rule (modulo E) outidrrhrk_0_111211111[color=#40807c,
-                                       process='out(<(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))>);', issapicrule,
+                                       process="out(<(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))>);", issapicrule,
                                        role='Tag']:
    [ State_111211111( ~id.1, ~k.1, ~r2.1, r1.2 ) ]
   -->
@@ -735,7 +715,7 @@ rule (modulo E) outidrrhrk_0_111211111[color=#40807c,
 
   /*
   rule (modulo AC) outidrrhrk_0_111211111[color=#40807c,
-                                          process='out(<(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))>);',
+                                          process="out(<(~id.1⊕~r2.1), (~r2.1⊕h(<r1.2, ~k.1>))>);",
                                           issapicrule, role='Tag']:
      [ State_111211111( ~id, ~k, ~r2, r1 ) ]
     -->
@@ -750,22 +730,22 @@ rule (modulo E) outidrrhrk_0_111211111[color=#40807c,
        z     = (~id.18⊕~r2.20)
   */
 
-rule (modulo E) p_0_1112111111[color=#40807c, process='0', issapicrule,
+rule (modulo E) p_0_1112111111[color=#40807c, process="0", issapicrule,
                                role='Tag']:
    [ State_1112111111( ~id.1, ~k.1, ~r2.1, r1.2 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_1112111111[color=#40807c, process='0', issapicrule,
+  rule (modulo AC) p_0_1112111111[color=#40807c, process="0", issapicrule,
                                   role='Tag']:
      [ State_1112111111( ~id, ~k, ~r2, r1 ) ] --> [ ]
   */
 
-rule (modulo E) p_0_111212[color=#ffffff, process='0', issapicrule,
+rule (modulo E) p_0_111212[color=#ffffff, process="0", issapicrule,
                            role='Process']:
    [ State_111212( ~id.1, ~k.1 ) ] --> [ ]
 
   /*
-  rule (modulo AC) p_0_111212[color=#ffffff, process='0', issapicrule,
+  rule (modulo AC) p_0_111212[color=#ffffff, process="0", issapicrule,
                               role='Process']:
      [ State_111212( ~id, ~k ) ] --> [ ]
   */
@@ -774,13 +754,28 @@ restriction predicate_eq:
   "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Eq( a, b ) @ #i) ⇒ (a = b)"
+  */
+
 restriction predicate_not_eq:
   "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i a b. (Pred_Not_Eq( a, b ) @ #i) ⇒ (¬(a = b))"
+  */
+
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
 
 /* All wellformedness checks were successful. */
 
@@ -788,8 +783,8 @@ restriction single_session:
 Generated from:
 Tamarin version 1.11.0
 Maude version 3.5.1
-Git revision: d1fe8f7c328c32aac0588ab7e5a43be267577706 (with uncommited changes), branch: fix-remove-derivation-checks-regression-tests
-Compiled at: 2026-02-16 12:29:57.582345 UTC
+Git revision: b41a00532848fa29f1a2d6a2a7a551a2b4113b86 (with uncommited changes), branch: HEAD
+Compiled at: 2026-03-06 16:12:23.101346655 UTC
 */
 
 end
@@ -801,7 +796,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-xor/KCL07.spthy
 
   output:          examples/sapic/fast/feature-xor/KCL07.spthy.tmp
-  processing time: 1.46s
+  processing time: 2.52s
   
   recentalive_tag (all-traces): verified (110 steps)
   executable (exists-trace): verified (16 steps)
