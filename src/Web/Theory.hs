@@ -1047,10 +1047,10 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
                However, your changes will be kept on this page until you leave this right panel.
                <br>&zwnj;
               <li>
-               Editing a lemma will NOT modify the file it was loaded from, but clicking on the "append lemmas to file" button adds all modified lemmas as a comment at the end of the file on disk they were loaded from.
+               Editing a lemma will NOT modify the file it was loaded from, but clicking on "Append modified lemmas to file" in the Actions menu adds all modified lemmas as a comment at the end of the file on disk they were loaded from.
                <br>&zwnj;
               <li>
-               Clicking on the "Download" button will download the modified version of the theory (including the modified lemmas), but not modify the file on disk.
+               Clicking on "Download source" in the Actions menu will download the modified version of the theory (including the modified lemmas), but not modify the file on disk.
                <br>&zwnj;
               <li>
                Modifying a reuse lemma will invalidate all subsequent proofs.
@@ -1086,7 +1086,7 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
            Clicking on the button above will delete the lemma from the loaded theory.
            <br>&zwnj;
           <li>
-           Deleting a lemma will NOT modify the file it was loaded from, but clicking on the "Download" button will download the modified version of the theory (so without the deleted lemmas).
+           Deleting a lemma will NOT modify the file it was loaded from, but clicking on "Download source" in the Actions menu will download the modified version of the theory (so without the deleted lemmas).
            <br>&zwnj;
           <li>
            Deleting a reuse lemma will invalidate all subsequent proofs.
@@ -1121,10 +1121,10 @@ htmlThyPath renderUrl renderImgUrl info path lPlaintext = case path of
              Adds the lemma in the current position in the theory, but will throw an error if a lemma with the same name exists, the parsing fails, or the lemma isn't well-formed.
              <br>&zwnj;
             <li>
-             Adding a lemma will NOT modify the loaded source file, but clicking on the "Append lemmas to file" button appends all added lemmas as a comment at the end of the current theory file.
+             Adding a lemma will NOT modify the loaded source file, but clicking on "Append modified lemmas to file" in the Actions menu appends all added lemmas as a comment at the end of the current theory file.
              <br>&zwnj;
             <li>
-             Clicking on the "Download" button will download the modified version of the theory (including the added lemmas).
+             Clicking on "Download source" in the Actions menu will download the modified version of the theory (including the added lemmas).
           <style>
               .wrap-text li {
                   white-space: normal;
@@ -1220,67 +1220,68 @@ helpHtml theoryName info renderUrl = [hamlet|
 
   <h3>Keyboard shortcuts
   <p>
-    <table>
-      <tr>
-        <td>
-          <span class="keys">j/k
-        <td>
-          Jump to the next/previous proof path within the currently
-          \ focused lemma.
-      <tr>
-        <td>
-          <span class="keys">J/K
-        <td>
-          Jump to the next/previous open constraint within the currently
-          \ focused lemma, or to the next/previous lemma if there are no
-          \ more #
-          <tt>sorry
-          \ steps in the proof of the current lemma.
-      <tr>
-        <td>
-          <span class="keys">1-9
-        <td>
-          Apply the proof method with the given number as shown in the
-          \ applicable proof method section in the main view.
-      <tr>
-        <td>
-          <span class="keys">a/A
-        <td>
-          Apply the autoprove method to the focused proof step.
-          \ <span class="keys">a</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">A</span>
-          \ searches for all solutions.
-          \ Needs to have a #
-          <tt>sorry
-          \ selected to work.
-      <tr>
-        <td>
-          <span class="keys">b/B
-        <td>
-          Apply a bounded-depth version of the autoprove method to the
-          \ focused proof step.
-          \ <span class="keys">b</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">B</span>
-          \ searches for all solutions.
-          \ Needs to have a #
-          <tt>sorry
-          \ selected to work.
-      <tr>
-        <td>
-          <span class="keys">s/S
-        <td>
-          Apply the autoprove method to all lemmas.
-          \ <span class="keys">s</span>
-          \ stops after finding a solution, and
-          \ <span class="keys">S</span>
-          \ searches for all solutions.
-      <tr>
-        <td>
-          <span class="keys">?
-        <td>
-          Display this help message.
+    <div id="shortcuts">
+      <table>
+        <tr>
+          <td>
+            <span class="keys">j/k
+          <td>
+            Jump to the next/previous proof path within the currently
+            \ focused lemma.
+        <tr>
+          <td>
+            <span class="keys">J/K
+          <td>
+            Jump to the next/previous open constraint within the currently
+            \ focused lemma, or to the next/previous lemma if there are no
+            \ more #
+            <tt>sorry
+            \ steps in the proof of the current lemma.
+        <tr>
+          <td>
+            <span class="keys">1-9
+          <td>
+            Apply the proof method with the given number as shown in the
+            \ applicable proof method section in the main view.
+        <tr>
+          <td>
+            <span class="keys">a/A
+          <td>
+            Apply the autoprove method to the focused proof step.
+            \ <span class="keys">a</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">A</span>
+            \ searches for all solutions.
+            \ Needs to have a #
+            <tt>sorry
+            \ selected to work.
+        <tr>
+          <td>
+            <span class="keys">b/B
+          <td>
+            Apply a bounded-depth version of the autoprove method to the
+            \ focused proof step.
+            \ <span class="keys">b</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">B</span>
+            \ searches for all solutions.
+            \ Needs to have a #
+            <tt>sorry
+            \ selected to work.
+        <tr>
+          <td>
+            <span class="keys">s/S
+          <td>
+            Apply the autoprove method to all lemmas.
+            \ <span class="keys">s</span>
+            \ stops after finding a solution, and
+            \ <span class="keys">S</span>
+            \ searches for all solutions.
+        <tr>
+          <td>
+            <span class="keys">?
+          <td>
+            Display this help message.
 |] renderUrl
 
 {-

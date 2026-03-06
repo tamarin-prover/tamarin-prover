@@ -51,8 +51,10 @@ module Web.Handler
   , getPrevTheoryPathDiffR
   , getSaveTheoryR
   , getDownloadTheoryR
-  , getAppendNewLemmasR
+  , postAppendNewLemmasR
   , getDownloadTheoryDiffR
+  , postReloadTheoryR
+  , postReloadTheoryDiffR
   , getUnloadTheoryR
   , getUnloadTheoryDiffR
   )
@@ -121,6 +123,7 @@ import Control.Monad.Trans.Resource (runResourceT)
 import Data.Maybe
 import Data.String (fromString)
 import Data.List (intersperse)
+import Data.Version (showVersion)
 import Data.Conduit as C (runConduit,(.|))
 import Data.Conduit.List (consume)
 import Data.Binary qualified as Bin
@@ -138,6 +141,7 @@ import System.FilePath ((</>))
 
 import Debug.Trace (trace)
 import Main.TheoryLoader
+import Paths_tamarin_prover (version)
 import Main.Console (renderDoc)
 import Text.PrettyPrint.Html
 import Text.Read (readMaybe)
@@ -145,7 +149,7 @@ import Theory.Constraint.System.Dot
 import Theory.Constraint.System.Graph.Graph
 import Theory.Constraint.System.JSON  -- for export of constraint system to JSON
 import Theory.Text.Parser (parseLemmaWithMacros)
-import Theory.Tools.Wellformedness  (prettyWfErrorReport)
+import Theory.Tools.Wellformedness  (prettyWfErrorReport, WfErrorReport)
 import Lemma
 import Prover (mkSystem)
 
@@ -310,8 +314,28 @@ replaceTheory parent origin thy rep idx = do
           newThy       = Trace (
               TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
                       (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
+      storeTheory yesod newThy idx
       pure (M.insert idx newThy theories, idx)
 
+-- | Replace a diff theory at the given index (backward compatibility wrapper).
+replaceDiffTheory :: Maybe DiffTheoryInfo  -- ^ Index of parent theory
+              -> Maybe TheoryOrigin         -- ^ Origin of this theory
+              -> ClosedDiffTheory           -- ^ The new closed diff theory
+              -> String
+              -> Int
+              -> Handler TheoryIdx
+replaceDiffTheory parent origin thy rep idx = do
+    yesod <- getYesod
+    liftIO $ modifyMVar yesod.theoryVar $ \theories -> do
+      time <- getZonedTime
+      let parentIdx    = (.index) <$> parent
+          parentOrigin = (.origin) <$> parent
+          newOrigin    = parentOrigin <|> origin <|> Just Interactive
+          newThy       = Diff (
+              TheoryInfo idx thy time parentIdx False (fromJust newOrigin)
+                      (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
+      storeTheory yesod newThy idx
+      pure (M.insert idx newThy theories, idx)
 
 -- | Store a theory, return index.
 putTheory
@@ -356,6 +380,110 @@ putDiffTheory parent origin thy rep = do
                     (maybe yesod.defaultAutoProver (.autoProver) parent) rep)
     storeTheory yesod newThy idx
     pure (M.insert idx newThy theories, idx)
+
+-- | Check if theory can be reloaded (must have Local origin).
+checkReloadOrigin :: TheoryOrigin -> Either Value FilePath
+checkReloadOrigin (Local filePath) = Right filePath
+checkReloadOrigin (Upload _) = Left $ responseToJson $ JsonAlert "Cannot reload: theory was uploaded (no file path)"
+checkReloadOrigin Interactive = Left $ responseToJson $ JsonAlert "Cannot reload: theory was created interactively (no file path)"
+
+-- | Helper to reload a theory from a local file with unified error handling.
+-- Consolidates parse/wellformedness error handling and theory type checking.
+reloadTheoryFromFile :: FilePath 
+                     -> TheoryIdx
+                     -> Bool                                        -- ^ Is diff theory?
+                     -> (ClosedTheory -> String -> Handler ())      -- ^ Replace trace theory action
+                     -> (ClosedDiffTheory -> String -> Handler ())  -- ^ Replace diff theory action
+                     -> Route WebUI                                 -- ^ Success redirect route
+                     -> Handler Value
+reloadTheoryFromFile filePath idx isDiff replaceTrace replaceDiff successRoute = do
+  result <- liftIO (readFile filePath) >>= loadAndCloseTheory `flip` filePath
+  
+  let mkAlert = pure . responseToJson . JsonAlert . T.pack
+      redirect = getUrlRender >>= \f -> pure $ responseToJson $ JsonRedirect $ f successRoute
+      typeName = if isDiff then "diff theory" else "file"
+  
+  case result of
+    Left (ParserError e) ->
+      mkAlert $ "Parse error while reloading " ++ typeName ++ ":\n\n" ++ filePath ++ "\n\n" ++ show e
+    
+    Left (WarningError report) -> mkAlert $ "Wellformedness errors while reloading " ++ typeName ++ ":\n\n"
+      ++ filePath ++ "\n\n" ++
+      show (length report) ++ " error(s) found" ++ (if isDiff then " in diff theory" else "") ++
+      ":\n\n" ++ renderHtmlDoc (htmlDoc $ prettyWfErrorReport report)
+    
+    Right (report, thy, _wfErrors) -> case (thy, isDiff) of
+        (Left _, True) -> mkAlert "Expected diff theory but file contains standard theory"
+        (Right _, False) -> mkAlert "Expected standard theory but file contains diff theory"
+        (Left closedThy, False) -> replaceTrace closedThy rep >> redirect
+        (Right closedDiffThy, True) -> replaceDiff closedDiffThy rep >> redirect
+      where
+        rep = if not (null report) then makeWfErrorsHtml report else ""
+
+-- | Reload a theory from its original file on disk.
+-- This handler implements a file reload feature that:
+--   1. Verifies the theory was loaded from a local file (not uploaded/interactive)
+--   2. Re-reads the file content from disk
+--   3. Re-parses and re-runs the complete precomputation pipeline (via loadAndCloseTheory):
+--      - Translation (for SAPIC/higher-level theories)
+--      - Wellformedness checks
+--      - closeTheoryWithMaude (which computes raw sources, refined sources, variants, etc.)
+--      - Partial evaluation if configured
+--   4. Replaces the theory at the same index (preserving URLs/navigation)
+-- This ensures external file changes are reflected with full recomputation.
+--
+-- TODO:
+--  - Track when user has modified a file in the UI and warn about unsaved changes when attempting to reload. (This can happen when a proof was generated, or when lemmas were added/edited/deleted in the GUI.)
+postReloadTheoryR :: TheoryIdx -> Handler Value
+postReloadTheoryR idx = do
+  mTheory <- getTheory idx
+  case mTheory of
+    Nothing -> pure $ responseToJson (JsonAlert "Theory not found")
+    
+    Just (Trace ti) -> 
+      either pure (\fp -> reloadTheoryFromFile fp idx False
+        (\thy rep -> void $ replaceTheory (Just ti) (Just $ Local fp) thy rep idx)
+        (\_ -> error "Unreachable: diff theory in trace mode")
+        (InteractiveOverviewR idx TheoryHelp)) $ checkReloadOrigin ti.origin
+    
+    Just (Diff dti) -> 
+      either pure (\fp -> reloadTheoryFromFile fp idx True
+        (\_ -> error "Unreachable: trace theory in diff mode")
+        (\thy rep -> void $ replaceDiffTheory (Just dti) (Just $ Local fp) thy rep idx)
+        (InteractiveOverviewDiffR idx DiffTheoryHelp)) $ checkReloadOrigin dti.origin
+
+-- | Alias for postReloadTheoryR to handle diff theory reload route.
+-- The implementation is unified in postReloadTheoryR which handles both trace and diff theories.
+postReloadTheoryDiffR :: TheoryIdx -> Handler Value
+postReloadTheoryDiffR = postReloadTheoryR
+
+-- | Delete theory.
+-- | Generate HTML for wellformedness error warnings.
+-- Returns empty string if no errors, otherwise a formatted div with error details.
+makeWfErrorsHtml :: WfErrorReport -> String
+makeWfErrorsHtml [] = ""
+makeWfErrorsHtml report =
+  "<div class=\"wf-warning\">\n" ++
+  "WARNING: the following wellformedness checks failed!<br /><br />\n" ++
+  renderHtmlDoc (htmlDoc $ prettyWfErrorReport report) ++
+  "\n</div>"
+
+-- | Load and close a theory from file content.
+-- This is the common pipeline used by both file upload and file reload.
+-- Returns the closed theory with wellformedness report and HTML errors.
+loadAndCloseTheory
+  :: String         -- ^ Theory source content
+  -> FilePath       -- ^ File path (for error reporting)
+  -> Handler (Either TheoryLoadError (WfErrorReport, Either ClosedTheory ClosedDiffTheory, String))
+loadAndCloseTheory srcContent filePath = do
+  yesod <- getYesod
+  liftIO $ runExceptT $ do
+    openThy <- yesod.loadThy srcContent filePath
+    let sig = either (._thySignature) (._diffThySignature) openThy
+    sig' <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
+    (report, closedThy) <- yesod.closeThy sig' openThy
+    let wfErrors = makeWfErrorsHtml report
+    pure (report, closedThy, wfErrors)
 
 -- | Delete theory.
 delTheory :: TheoryIdx -> Handler ()
@@ -667,33 +795,20 @@ postRootR = do
       if null content
         then setMessage "No theory file given."
       else do
-        yesod <- getYesod
-        thyWithRep <- liftIO $ runExceptT $ do
-          openThy <- yesod.loadThy
-                       (T.unpack $ T.decodeUtf8 $ BS.concat content)
-                       (T.unpack $ fileName fileinfo)
+        let srcContent = T.unpack $ T.decodeUtf8 $ BS.concat content
+            filename = T.unpack $ fileName fileinfo
+        result <- loadAndCloseTheory srcContent filename
 
-          let sig = either (._thySignature) (._diffThySignature) openThy
-          sig'   <- liftIO $ toSignatureWithMaude yesod.thyOpts.maudePath sig
-
-          -- let tactic = get thyTactic openThy
-          --tactic'   <- liftIO $ toSignatureWithMaude (get oMaudePath (thyOpts yesod)) tactic
-
-          yesod.closeThy sig' openThy
-
-        case thyWithRep of
+        case result of
           Left err -> setMessage $ "Theory loading failed:\n" <> toHtml (show err)
-          Right (report, thy) -> do
-            wfErrors <- case report of
-              [] -> pure ""
-              _ -> pure $ "<div class=\"wf-warning\">\nWARNING: the following wellformedness checks failed!<br /><br />\n" ++ (renderHtmlDoc . htmlDoc $ prettyWfErrorReport report) ++ "\n</div>"
-            void $ either (putTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo))
-                          (putDiffTheory Nothing (Just $ Upload $ T.unpack $ fileName fileinfo)) thy wfErrors
+          Right (report, thy, wfErrors) -> do
+            void $ either (putTheory Nothing (Just $ Upload filename))
+                          (putDiffTheory Nothing (Just $ Upload filename)) thy wfErrors
             setMessage $ toHtml $ "Loaded new theory!" ++ warningMsg
               where
                 warningMsg
-                  |null report = ""
-                  |otherwise = " WARNING: ignoring the following wellformedness errors: " ++
+                  | null report = ""
+                  | otherwise = " WARNING: ignoring the following wellformedness errors: " ++
                                   renderDoc (prettyWfErrorReport report)
 
   theories <- getTheories
@@ -1557,8 +1672,8 @@ getDownloadTheoryR idx _ = do
   pure (typeOctet, source)
 
 -- | prompt appending of the current theory's lemmas to their source file
-getAppendNewLemmasR :: TheoryIdx -> String -> Handler Value
-getAppendNewLemmasR idx _ = withTheory idx $ \ti -> do
+postAppendNewLemmasR :: TheoryIdx -> String -> Handler Value
+postAppendNewLemmasR idx _ = withTheory idx $ \ti -> do
     let maybePath = case ti.origin of
                         Local path -> Just path
                         _ ->  Nothing
