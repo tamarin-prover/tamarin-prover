@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #oracle_malS
 import re
 import os
@@ -9,7 +9,7 @@ debug = False
 lines = sys.stdin.readlines()
 
 lemma = sys.argv[1]
-if debug: print >> sys.stderr, "Lemma is "+lemma
+if debug: print("Lemma is "+lemma, file=sys.stderr)
 
 priorities = []
 
@@ -106,7 +106,7 @@ if lemma == "Universal_VerProofY_v8":
 plist = [ [] for i in priorities ]
 
 for line in lines:
-  if debug: print >> sys.stderr, "Line is "+line,
+  if debug: print("Line is "+line, end=' ', file=sys.stderr)
 
   num = line.split(':')[0]
 
@@ -118,5 +118,5 @@ for line in lines:
 
 for j in range(len(plist)):
   for i in plist[j]:
-    print i
-print 1
+    print(i)
+print(1)

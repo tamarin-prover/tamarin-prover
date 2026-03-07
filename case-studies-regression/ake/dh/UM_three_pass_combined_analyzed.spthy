@@ -1,4 +1,6 @@
-theory UM_three_pass_combined begin
+theory UM_three_pass_combined
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,16 +10,6 @@ equations:
     concat(first(x), second(x)) = x,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
-
-
-
-
 
 rule (modulo E) Register_key_honest:
    [ Fr( ~ea ) ]
@@ -308,27 +300,11 @@ rule (modulo E) R_Activate:
        X     = X.32
        z     = X.32^~ey.31
     
-    2. ~ey   = ~ey.31
-       X     = z.35^inv(~ey.31)
-       z     = z.35
-    
-    3. ~ey   = ~ey.333
+    2. ~ey   = ~ey.333
        X     = x.659^x.660
        z     = x.659^(~ey.333*x.660)
     
-    4. ~ey   = ~ey.334
-       X     = x.661^inv((~ey.334*x.662))
-       z     = x.661^inv(x.662)
-    
-    5. ~ey   = ~ey.334
-       X     = x.661^(x.662*inv(~ey.334))
-       z     = x.661^x.662
-    
-    6. ~ey   = ~ey.335
-       X     = x.662^(x.663*inv((~ey.335*x.664)))
-       z     = x.662^(x.663*inv(x.664))
-    
-    7. X     = DH_neutral
+    3. X     = DH_neutral
        z     = DH_neutral
   */
 
@@ -658,13 +634,29 @@ restriction sid_unique:
     ((UM1_Activate( sid ) @ #i) ∧ (UM1_Activate( sid ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j sid.
+    ((UM1_Activate( sid ) @ #i) ∧ (UM1_Activate( sid ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction keyreg_unique:
   "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction actor_ineq_peer:
   "¬(∃ #i A. Agents( A, A ) @ #i)"
   // safety formula
+
+  /*
+  expanded formula:
+  "¬(∃ #i A. Agents( A, A ) @ #i)"
+  */
 
 restriction corrupt_and_reveal_not_too_early:
   "(∀ #i #j s role_ k_.
@@ -672,6 +664,14 @@ restriction corrupt_and_reveal_not_too_early:
      (#i < #j)) ∧
    (∀ #i #j s. ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
   // safety formula
+
+  /*
+  expanded formula:
+  "(∀ #i #j s role_ k_.
+     ((BeforeComplete( s ) @ #i) ∧ (Complete( s, role_, k_ ) @ #j)) ⇒
+     (#i < #j)) ∧
+   (∀ #i #j s. ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
+  */
 
 lemma key_agreement_reachable:
   exists-trace
@@ -846,52 +846,14 @@ solve( (∃ #l matchingComm.
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule I_Complete: 
-Failed to derive Variable(s): ~eb
-
-Rule R_Activate: 
-Failed to derive Variable(s): ~ea
-
-Rule R_Complete: 
-Failed to derive Variable(s): ~ea
-
-Rule UM1_I_Complete: 
-Failed to derive Variable(s): ~eb
-
-Rule UM1_R_Complete: 
-Failed to derive Variable(s): ~ea
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -903,10 +865,7 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined.spthy.tmp
-  processing time: 12.80s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 8.55s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
   CK_secure_UM3 (all-traces): falsified - found trace (13 steps)

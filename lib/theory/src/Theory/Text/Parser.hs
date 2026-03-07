@@ -19,6 +19,8 @@ module Theory.Text.Parser (
   , theory
   , diffTheory
   , parseLemma
+  -- , parsePlainLemma
+  , parseLemmaWithMacros
   , parseRestriction
   , parseIntruderRules
   , liftedAddLemma
@@ -38,7 +40,10 @@ import           Control.Applicative        hiding (empty, many, optional)
 import qualified Control.Monad.Catch        as Catch
 import System.IO.Unsafe (unsafePerformIO)
 import           Text.Parsec                hiding ((<|>))
+import           Text.Parsec.Error          (newErrorMessage, Message(..))
+import           Text.Parsec.Pos            (initialPos)
 import           Text.PrettyPrint.Class     (render)
+import           TheoryObject               (theoryMacros)
 import           Theory
 import           Theory.Text.Parser.Token
 
@@ -51,6 +56,7 @@ import Theory.Text.Parser.Signature
 import Theory.Text.Parser.Tactics
 import Theory.Text.Parser.Restriction
 import Theory.Text.Parser.Sapic
+import Lemma (applyMacroInLemma)
 
 ------------------------------------------------------------------------------
 -- Lexing and parsing theory files and proof methods
@@ -82,6 +88,22 @@ parseOpenDiffTheoryString flags0 = parseString flags0 "<unknown source>" (diffTh
 -- | Parse a lemma for an open theory from a string.
 parseLemma :: String -> Either ParseError (SyntacticLemma ProofSkeleton)
 parseLemma = parseString [] "<unknown source>" (lemma Nothing)
+
+-- | Parse a lemma with a given signature, for Lemma editing (signature is for when Lemma uses functions defined in builtins)
+-- parsePlainLemma :: MaudeSig -> String -> Either ParseError (Lemma ProofSkeleton)
+-- parsePlainLemma msig = parseStringWState (mkStateSig msig) "<unknown source>" (lemmaWithMsig msig Nothing)
+
+-- | Parse a lemma with a given signature, on the model of plainLemma, while also expanding macros.
+parseLemmaWithMacros :: OpenTheory -> String -> Either ParseError (Lemma ProofSkeleton)
+parseLemmaWithMacros thy input = do
+     case parseStringWState (mkMacroStateSig thy) "<unknown source>" (lemma Nothing) input of
+       Left err -> Left err
+       Right synLemma -> 
+         case expandLemma thy synLemma of
+           Left err -> Left (newErrorMessage (Message $ "Error expanding lemma: " ++ show err) (initialPos "<unknown source>"))
+           Right expandedLemma -> 
+             Right $ applyMacroInLemma (theoryMacros thy) expandedLemma
+
 
 ------------------------------------------------------------------------------
 -- Parsing Theories
@@ -219,10 +241,9 @@ theory inFile = do
   where
     addItems :: Maybe FilePath -> OpenTheory -> Parser OpenTheory
     addItems inFile0 thy = asum
-      [ do
-          thyHeuristic <- heuristic False workDir
-          thy' <- liftedAddHeuristic thy $ defaultOracleNames (fromMaybe "" inFile0) thyHeuristic
-          addItems inFile0 thy'
+      [ do thyHeuristic <- heuristic False workDir
+           thy' <- liftedAddHeuristic thy $ defaultOracleNames (fromMaybe "" inFile0) thyHeuristic
+           addItems inFile0 thy'
       , do thy' <- liftedAddTactic thy =<< tactic False
            addItems inFile0 thy'
       , do thy' <- builtins thy
@@ -237,8 +258,6 @@ theory inFile = do
       , do equations
            msig <- sig <$> getState
            addItems inFile0 $ set (sigpMaudeSig . thySignature) msig thy
---      , do thy' <- foldM liftedAddProtoRule thy =<< transferProto
---           addItems flags thy'
       , do thy' <- liftedAddMacros thy =<< macros
            addItems inFile0 thy'
       , do thy' <- liftedAddRestriction thy =<< restriction msgvar nodevar
@@ -258,8 +277,6 @@ theory inFile = do
            addItems inFile0 thy'
       , do ru <- protoRule
            thy' <- liftedAddProtoRule thy ru
-           -- thy'' <- foldM liftedAddRestriction thy' $
-           --  map (Restriction "name") [get (preRestriction . rInfo) ru]
            addItems inFile0 thy'
       , do r <- intrRule
            addItems inFile0 (addIntrRuleACs [r] thy)

@@ -1,16 +1,12 @@
-theory ex1 begin
+theory ex1
+
+begin
 
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman
-functions: fst/1, g/0, mac/2, pair/2, shk/0[private,destructor], snd/1
+functions: fst/1, g/0, mac/2, pair/2, shk/0[private,constructor], snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) Step1:
    [ Fr( ~tid ), Fr( ~x ) ]
@@ -124,26 +120,14 @@ solve( Step1( tid, A, B, ~x ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -155,7 +139,7 @@ summary of summaries:
 analyzed: examples/cav13/DH_example.spthy
 
   output:          examples/cav13/DH_example.spthy.tmp
-  processing time: 0.21s
+  processing time: 0.08s
   
   Accept_Secret (all-traces): verified (9 steps)
   Accept_Secret_Counter (all-traces): falsified - found trace (7 steps)

@@ -13,14 +13,12 @@ import Control.Applicative ((<|>))
 import Control.Monad (guard, (<=<))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.IO.Class (MonadIO(liftIO))
-import Data.Bifunctor (bimap)
 import Data.List
 import Data.Maybe (isJust)
 import System.Console.CmdArgs.Explicit as CmdArgs
 import System.Exit (die)
 import System.FilePath
 import System.Timing (timedIO)
-import Extension.Data.Label
 import Data.Bitraversable (Bitraversable(bitraverse))
 
 import Text.PrettyPrint.Class qualified as Pretty
@@ -34,7 +32,6 @@ import Main.Console
 import Main.Environment
 import Main.TheoryLoader
 import Main.Utils
-import Data.Label qualified as L
 import Data.Map qualified as M
 import Theory.Constraint.System.Dot
 import Text.Dot qualified as D
@@ -105,7 +102,14 @@ run thisMode as
       res <- mapM (processThy versionData) inFiles
       let (docs, _) = unzip res
 
-      mapM_ (putStrLn . renderDoc) docs
+      if writeOutput then do
+        let maybeOutFiles = mapM mkOutPath inFiles
+        outFiles <- case maybeOutFiles of
+          Just f -> pure f
+          Nothing -> die "Please specify a valid output file/directory"
+        mapM_ (\(o, d) -> writeFileWithDirs o (renderDoc d)) (zip outFiles docs)
+      else do
+        mapM_ (putStrLn . renderDoc) docs
   | otherwise = do
       versionData <- ensureMaudeAndGetVersion as
       resTimed <- mapM (timedIO . processThy versionData) inFiles
@@ -206,13 +210,14 @@ run thisMode as
       else if isTranslateOnlyMode then do
         (report, thy') <- translateAndCheckTheory versionData thyLoadOptions sig' thy
 
-        let thy'' = bimap (modify thyItems (++ (TextItem <$> formalComments thy')))
-                          (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
-                          thy'
+        -- comment: Not sure why this was needed. It just duplicates all comments in the theory.
+        -- let thy'' = bimap (modify thyItems (++ (TextItem <$> formalComments thy')))
+        --                   (modify diffThyItems (++ (DiffTextItem <$> formalComments thy')))
+        --                   thy'
 
         (, ppWf report) <$> either (liftIO . prettyOpenTheoryByModule thyLoadOptions)
                                    (pure . prettyOpenDiffTheory)
-                                   thy''
+                                   thy'
 
       -- | Close and potentially prove theory.
       else do
@@ -224,9 +229,6 @@ run thisMode as
                  (\d -> (prettyClosedDiffTheory d, ppWf report Pretty.$--$ prettyClosedDiffSummary d))
                  thy'
       where
-        formalComments =
-          filter (/= ("", "")) . either theoryFormalComments diffTheoryFormalComments
-
         isTranslateOnlyMode = isJust thyLoadOptions.outputModule
 
         handleError e@(ParserError _) = die $ show e
@@ -273,15 +275,15 @@ run thisMode as
             systemsWithMetadata :: [(Lemma IncrementalProof, ProofPath, System)]
             systemsWithMetadata = do
               lemma <- getLemmas thy
-              let proof = L.get lProof lemma
+              let proof = lemma._lProof
               [(lemma, proofPath, system) | (proofPath, system) <- proofSystems proof]
 
             -- | Collect all solved (i.e. a trace was found) systems of the theory along with their
             -- path in the proof.
             proofSystems :: IncrementalProof -> [(ProofPath, System)]
-            proofSystems (LNode (ProofStep Solved (Just rootSystem)) _) =  [([], rootSystem)]
-            proofSystems (LNode (ProofStep _ _) children) =
-              [(l : ls, system) | (l, subProof) <- M.toList children
+            proofSystems (LNode (ProofStep (Finished Solved) (Just rootSystem)) _) =  [([], rootSystem)]
+            proofSystems (LNode (ProofStep _ _) children) =  
+              [(l : ls, system) | (l, subProof) <- M.toList children 
                                 , (ls, system) <- proofSystems subProof ]
 
             -- | Make a label for use in the trace output out of all relevant information for a constraint system.
@@ -292,22 +294,22 @@ run thisMode as
                              -> String
             traceOutputLabel graphOptions dotOptions lemma proofPath =
               "trace_"
-              ++ L.get thyName thy                         -- Name of the theory in which the constraint system appears.
+              ++ thy._thyName                              -- Name of the theory in which the constraint system appears.
               ++ "_"
               ++ traceLabelOptions graphOptions dotOptions -- Graph options are included in a short format.
               ++ "_"
-              ++ L.get lName lemma                         -- Name of the lemma in which the constraint system appears.
+              ++ lemma._lName                              -- Name of the lemma in which the constraint system appears.
               ++ intercalate "-" proofPath                 -- Path through the proof where the constraint system is located.
 
             -- | Format the graph rendering options in a concise way.
             traceLabelOptions :: GraphOptions -> DotOptions -> String
             traceLabelOptions graphOptions dotOptions =
-              let s1 = show $ L.get goSimplificationLevel graphOptions
-                  s2 = if L.get goShowAutoSource graphOptions then "AS1" else "AS0"
-                  s3 = if L.get goClustering graphOptions then "CL1" else "CL0"
-                  s4 = if L.get goAbbreviate graphOptions then "A1" else "A0"
-                  s5 = if L.get goCompress graphOptions then "C1" else "C0"
-                  s6 = case L.get doNodeStyle dotOptions of
+              let s1 = show graphOptions._goSimplificationLevel
+                  s2 = if graphOptions._goShowAutoSource then "AS1" else "AS0"
+                  s3 = if graphOptions._goClustering then "CL1" else "CL0"
+                  s4 = if graphOptions._goAbbreviate then "A1" else "A0"
+                  s5 = if graphOptions._goCompress then "C1" else "C0"
+                  s6 = case dotOptions._doNodeStyle of
                          FullBoringNodes -> "NF"
                          CompactBoringNodes -> "NB"
               in

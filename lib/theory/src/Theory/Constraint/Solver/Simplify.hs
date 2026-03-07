@@ -443,7 +443,7 @@ freshOrdering = do
   let subterms = rawSubterms ++ [ (f,f) | (_,f) <- freshVars]  -- add a fake-subterm (f,f) for each freshVar f to the graph
   let graph = M.fromList $ map (\(_,x) -> (x, [ st | st <- subterms, x `el` fst st])) subterms  -- graph that has subterms (s,t) as nodes and edges (s,t) -> (u,v) if t `el` u
   let termsContaining = [((nid,x), map snd $ S.toList $ floodFill graph S.empty (x,x)) | (nid,x) <- freshVars]  -- (freshNodeId, t) for all terms t that have to contain x. So also the ones transitively connected by ⊏ to x
-  let newLesses = [ LessAtom i j Fresh | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r, i/=j]  -- new ordering constraints that can be added (or enhanced and then added)
+  let newLesses = [ LessAtom i j Fresh | (j,r) <- nodes, i <- connectNodeToFreshes el termsContaining r, nonUnifiableNodes i j, i/=j]  -- new ordering constraints that can be added (or enhanced and then added)
   let enhancedLesses = [ LessAtom (last rs) j Fresh | (LessAtom i j _) <- newLesses, (frI, _) <- freshVars, i == frI, rs <- [route frI], length rs > 1, all (nonUnifiableNodes j) (tail rs)]  -- improved orderings according to routeOfFreshVar
   let allLesses = newLesses ++ enhancedLesses
 
@@ -481,12 +481,10 @@ freshOrdering = do
 
       connectNodeToFreshes :: (LNTerm -> LNTerm -> Bool) -> [((NodeId, LNTerm), [LNTerm])] -> RuleACInst -> [NodeId]
       connectNodeToFreshes _ [] _ = []
-      connectNodeToFreshes el (((nid,freshVar), containing):xs) r | allPremsNotF =
+      connectNodeToFreshes el (((nid,freshVar), containing):xs) r =
           case listToMaybe [nid | t <- containing, t' <- concatMap factTerms (concatMap (`get` r) [rPrems, rActs]), t `el` t'] of
             Just nid1 -> nid1 : connectNodeToFreshes el xs r
             _         ->        connectNodeToFreshes el xs r
-        where
-          allPremsNotF = freshFact freshVar `notElem` get rPrems r
       connectNodeToFreshes el (_:xs) r = connectNodeToFreshes el xs r
 
 
@@ -574,8 +572,8 @@ simpInjectiveFactEqMon = do
             StrictlyDecreasing -> simpSingle (StrictlyIncreasing, (j, s), (i, t))
             Constant -> ([GAto $ EqE (lTermToBTerm s) (lTermToBTerm t) | s/=t], [])  -- (1)
             StrictlyIncreasing ->
-                ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t, i/=j]  -- (2)
-              ++ [gnotAtom $ EqE (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j || alwaysBefore sys j i, i/=j, notIneq s t]   -- (4)
+                ([GAto $ EqE (varTerm $ Free i) (varTerm $ Free j) | s==t]  -- (2)
+              ++ [gnotAtom $ EqE (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j || alwaysBefore sys j i, notIneq s t]   -- (4)
               -- ++ [GAto $ Subterm (lTermToBTerm s) (lTermToBTerm t) | alwaysBefore sys i j, i/=j, not $ triviallySmaller s t]   -- (6)
                 , [(i, j) | triviallySmaller    s t, not $ alwaysBefore sys i j]   -- (3)
               ++ [(j, i) | triviallyNotSmaller s t, not $ alwaysBefore sys j i, ineq s t]) -- (5)
@@ -648,6 +646,7 @@ simpInjectiveFactEqMon = do
             (first1, ss) <- l1,
             (first2, tt) <- l2,
             first1 == first2,
+            i /= j,
             ((b, s),(_,t)) <- zip ss tt  -- the b and _ are automatically the same
             ]
 

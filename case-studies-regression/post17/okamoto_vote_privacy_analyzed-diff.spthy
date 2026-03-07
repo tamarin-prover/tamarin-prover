@@ -1,4 +1,6 @@
-theory Okamoto_Vote_Privacy begin
+theory Okamoto_Vote_Privacy
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -15,12 +17,6 @@ equations [convergent]:
     tdcommit(m2, f(m1, r, td, m2), td) = tdcommit(m1, r, td),
     unblind(blind(m, b), b) = m,
     unblind(sign(blind(m, b), sk), b) = sign(m, sk)
-
-
-
-
-
-
 
 rule (modulo E) Register_Voter_pk1:
    [ Fr( ~ltkV ) ]
@@ -11364,27 +11360,14 @@ next
   qed
 qed
 
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule V_2: 
-Failed to derive Variable(s): ~ltkA
-
-Rule V_3: 
-Failed to derive Variable(s): ~ltkA
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -11396,10 +11379,7 @@ summary of summaries:
 analyzed: examples/post17/okamoto_vote_privacy.spthy
 
   output:          examples/post17/okamoto_vote_privacy.spthy.tmp
-  processing time: 41.01s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 24.02s
   
   RHS :  exec (exists-trace): verified (12 steps)
   LHS :  exec (exists-trace): verified (12 steps)

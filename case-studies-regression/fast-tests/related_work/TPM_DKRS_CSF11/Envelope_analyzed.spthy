@@ -1,4 +1,6 @@
-theory TPM_Envelope begin
+theory TPM_Envelope
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -9,16 +11,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
-
-
-
-
-
-
-
-
-
-
 
 rule (modulo E) PCR_Init:
    [ Fr( ~aik ) ]
@@ -98,6 +90,11 @@ restriction PCR_Init_unique:
   "∀ #i #j. ((PCR_Init( ) @ #i) ∧ (PCR_Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((PCR_Init( ) @ #i) ∧ (PCR_Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 lemma types [sources]:
   all-traces
   "∀ m d1 d2 #i.
@@ -115,7 +112,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (!KU( m ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j. (Secret( m ) @ #j) ∧ ¬(last(#j))) )
@@ -160,7 +156,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥ (∃ #j. (PCR_Write( x ) @ #j) ∧ ¬(last(#j))) )
     case case_1
     solve( PCR_Read( x ) @ #i )
@@ -374,7 +369,7 @@ solve( Alice1( n ) ▶₀ #i )
           qed
         next
           case PCR_Unbind
-          solve( PCR_Write( h(<x.1, lock>) ) @ #j.1 )
+          solve( PCR_Write( h(<x.1, lock>) ) @ #j.2 )
             case Alice1
             solve( PCR_Write( x.1 ) @ #j.2 )
               case Alice1
@@ -6133,44 +6128,14 @@ solve( Alice1( n ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Alice2: 
-Failed to derive Variable(s): pk
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -6182,13 +6147,10 @@ summary of summaries:
 analyzed: examples/related_work/TPM_DKRS_CSF11/Envelope.spthy
 
   output:          examples/related_work/TPM_DKRS_CSF11/Envelope.spthy.tmp
-  processing time: 15.77s
+  processing time: 10.56s
   
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
-  
-  types (all-traces): verified (13 steps)
-  PCR_Write_charn (all-traces): verified (60 steps)
+  types (all-traces): verified (12 steps)
+  PCR_Write_charn (all-traces): verified (59 steps)
   Secret_and_Denied_exclusive (all-traces): verified (1799 steps)
 
 ==============================================================================

@@ -1,4 +1,6 @@
-theory Otway_Rees begin
+theory Otway_Rees
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -7,12 +9,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !LongtermKey( ~kxs, $X ) ]
@@ -600,7 +596,6 @@ guarded formula characterizing all counter-examples:
 */
 induction
   case non_empty_trace
-  simplify
   solve( (∃ A B t #i.
            (Commit_S_A( A, B, t ) @ #i)
           ∧
@@ -621,7 +616,7 @@ induction
               (∃ A2 B2 #i2. (Commit_S_B( A2, B2, t ) @ #i2) ∧ ¬(#i2 = #i)))) ∧
            (∀ #r. (Reveal( A ) @ #r) ⇒ ⊥) ∧
            (∀ #r. (Reveal( B ) @ #r) ⇒ ⊥)) )
-    case case_2
+    case case_1
     solve( (last(#i))  ∥
            (∃ #j.
              (Running_A( A, B, <m, na> ) @ #j)
@@ -639,43 +634,46 @@ induction
           case Init
           solve( !KU( senc(<'1', na, m, $X, $X.1>, ~kas) ) @ #vk.7 )
             case A_1
-            solve( !KU( senc(<'2', nb, ~m, $X, $X.1>, ~kbs) ) @ #vk.8 )
-              case B_1
+            solve( (∃ #j.
+                     (Running_A( A2, B2, <~m, ~na> ) @ #j)
+                    ∧
+                     (¬(last(#j))) ∧
+                     (#j < #i2) ∧
+                     (∀ A2.1 B2.1 #i2.1.
+                       (Commit_S_A( A2.1, B2.1, <~m, ~na> ) @ #i2.1)
+                      ⇒
+                       ((last(#i2.1)) ∨ (#i2.1 = #i2))))  ∥
+                   (∃ #r. (Reveal( A2 ) @ #r) ∧ ¬(last(#r)))  ∥
+                   (∃ #r. (Reveal( B2 ) @ #r) ∧ ¬(last(#r))) )
+              case case_1
               solve( (∃ #j.
-                       (Running_A( A2, B2, <~m, na.1> ) @ #j)
+                       (Running_B( $X, $X.1, <~m, nb.1> ) @ #j)
                       ∧
                        (¬(last(#j))) ∧
                        (#j < #i2) ∧
-                       (∀ A2.1 B2.1 #i2.1.
-                         (Commit_S_A( A2.1, B2.1, <~m, na.1> ) @ #i2.1)
+                       (∀ A2 B2 #i2.1.
+                         (Commit_S_B( A2, B2, <~m, nb.1> ) @ #i2.1)
                         ⇒
                          ((last(#i2.1)) ∨ (#i2.1 = #i2))))  ∥
-                     (∃ #r. (Reveal( A2 ) @ #r) ∧ ¬(last(#r)))  ∥
-                     (∃ #r. (Reveal( B2 ) @ #r) ∧ ¬(last(#r))) )
+                     (∃ #r. (Reveal( $X ) @ #r) ∧ ¬(last(#r)))  ∥
+                     (∃ #r. (Reveal( $X.1 ) @ #r) ∧ ¬(last(#r))) )
                 case case_1
-                solve( (∃ #j.
-                         (Running_B( $X, $X.1, <~m, ~nb> ) @ #j)
-                        ∧
-                         (¬(last(#j))) ∧
-                         (#j < #i2) ∧
-                         (∀ A2 B2 #i2.1.
-                           (Commit_S_B( A2, B2, <~m, ~nb> ) @ #i2.1)
-                          ⇒
-                           ((last(#i2.1)) ∨ (#i2.1 = #i2))))  ∥
-                       (∃ #r. (Reveal( $X ) @ #r) ∧ ¬(last(#r)))  ∥
-                       (∃ #r. (Reveal( $X.1 ) @ #r) ∧ ¬(last(#r))) )
-                  case case_1
-                  solve( !LongtermKey( ~kas.1, $X ) ▶₁ #i2 )
+                solve( !LongtermKey( ~kas.1, $X ) ▶₁ #i2 )
+                  case Init
+                  solve( !LongtermKey( ~kbs.1, $X.1 ) ▶₂ #i2 )
                     case Init
-                    solve( !LongtermKey( ~kbs.1, $X.1 ) ▶₂ #i2 )
+                    solve( !LongtermKey( ~kbs.2, $X.1 ) ▶₁ #j )
                       case Init
-                      solve( !KU( senc(<'1', ~na, ~m, $X, $X.1>, ~kas.1) ) @ #vk.17 )
-                        case A_1
-                        solve( !KU( senc(<'2', ~nb, ~m, $X, $X.1>, ~kbs.1) ) @ #vk.17 )
-                          case B_1
-                          solve( !KU( ~m ) @ #vk.6 )
-                            case A_1_case_1
-                            SOLVED // trace found
+                      solve( !KU( senc(<'2', nb, ~m, $X, $X.1>, ~kbs) ) @ #vk.14 )
+                        case B_1
+                        solve( !KU( senc(<'1', ~na, ~m, $X, $X.1>, ~kas.1) ) @ #vk.19 )
+                          case A_1
+                          solve( !KU( senc(<'2', ~nb.1, ~m, $X, $X.1>, ~kbs.1) ) @ #vk.19 )
+                            case B_1
+                            solve( !KU( ~m ) @ #vk.9 )
+                              case A_1_case_1
+                              SOLVED // trace found
+                            qed
                           qed
                         qed
                       qed
@@ -723,7 +721,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ A B t #i.
            (Commit_S_A( A, B, t ) @ #i)
           ∧
@@ -952,16 +949,6 @@ solve( !LongtermKey( ~kas, $A ) ▶₂ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
 lemma AUTO_typing [sources]:
   all-traces
   "((⊤) ∧
@@ -991,7 +978,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ x m #i.
            (AUTO_IN_TERM_3_0_1_1_1_0_0_1_0__S( m, x ) @ #i)
           ∧
@@ -3371,10 +3357,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -3386,7 +3372,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
 
   output:          examples/features/auto-sources/spore/Otway-Rees.spthy.tmp
-  processing time: 8.69s
+  processing time: 4.47s
   
   Secrecy (all-traces): verified (40 steps)
   injectiveagreement_B (all-traces): verified (50 steps)
@@ -3394,9 +3380,9 @@ analyzed: examples/features/auto-sources/spore/Otway-Rees.spthy
   injectiveagreement_A (all-traces): verified (16 steps)
   agreement_A (all-traces): verified (10 steps)
   injectiveagreement_S (all-traces): falsified - found trace (16 steps)
-  agreement_S (all-traces): verified (40 steps)
+  agreement_S (all-traces): verified (39 steps)
   executability (exists-trace): verified (15 steps)
-  AUTO_typing (all-traces): verified (475 steps)
+  AUTO_typing (all-traces): verified (474 steps)
 
 ==============================================================================
 */

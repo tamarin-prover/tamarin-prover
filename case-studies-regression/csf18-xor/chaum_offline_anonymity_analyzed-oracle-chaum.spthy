@@ -1,4 +1,6 @@
-theory Chaum_Offline_Anonymity begin
+theory Chaum_Offline_Anonymity
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -29,12 +31,6 @@ prio: {id}
 prio: {id}
   regex"!KU\(~r"
 
-
-
-
-
-
-
 rule (modulo E) Register_Corrupted_Bank_pk:
    [ Fr( ~ltkB ) ]
   --[ OnlyOnce( ) ]->
@@ -57,20 +53,7 @@ rule (modulo E) C_1:
   --[ Mint( (~C⊕~x), ~x, ~r ), Mint( ~x, ~x, ~r ) ]->
    [ Out( <blind((~C⊕~x), ~r), blind(~x, ~r)> ), !St_C_1( ~C, ~x, ~r ) ]
 
-  /*
-  rule (modulo AC) C_1:
-     [ Fr( ~x ), Fr( ~r ), !Customer( ~C ) ]
-    --[ Mint( z, ~x, ~r ), Mint( ~x, ~x, ~r ) ]->
-     [ Out( <blind(z, ~r), blind(~x, ~r)> ), !St_C_1( ~C, ~x, ~r ) ]
-    variants (modulo AC)
-    1. ~C    = ~C.5
-       ~x    = ~x.5
-       z     = (~C.5⊕~x.5)
-    
-    2. ~C    = ~x.5
-       ~x    = ~x.5
-       z     = zero
-  */
+  /* has exactly the trivial AC variant */
 
 rule (modulo E) C_2:
    [
@@ -86,6 +69,11 @@ restriction OnlyOnce:
   "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((OnlyOnce( ) @ #i) ∧ (OnlyOnce( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 lemma coins [heuristic={coins}, sources]:
   all-traces
   "∀ x y r #i. (Coin( x, y, r ) @ #i) ⇒ (∃ #j. Mint( x, y, r ) @ #j)"
@@ -98,150 +86,341 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( !St_C_1( C, ~y, ~r ) ▶₀ #i )
     case C_1_case_1
     solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i )
       case Register_Corrupted_Bank_pk
       solve( (last(#i))  ∥ (∃ #j. (Mint( x, ~y, ~r ) @ #j) ∧ ¬(last(#j))) )
         case case_1
-        solve( splitEqs(1) )
-          case split
-          solve( !KU( sign(blind(x, ~r), ~skB) ) @ #vk )
+        solve( !KU( sign(blind(x, ~r), ~skB) ) @ #vk )
+          case C_2_case_01
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.4, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case C_2_case_02
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.4, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case C_2_case_03
+          by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
+        next
+          case C_2_case_04
+          by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
+        next
+          case C_2_case_05
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.5, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.5, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case C_2_case_06
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.5, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.5, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case C_2_case_07
+          by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
+        next
+          case C_2_case_08
+          by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+        next
+          case C_2_case_09
+          by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
+        next
+          case C_2_case_10
+          by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+        next
+          case C_2_case_11
+          by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
+                          ~r.4
+                    ) @ #j )
+        next
+          case C_2_case_12
+          by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+                    ) @ #j )
+        next
+          case C_2_case_13
+          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
+                                r.4),
+                          ~y.1, ~r.5
+                    ) @ #j )
+        next
+          case C_2_case_14
+          by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
+                          ~r.5
+                    ) @ #j )
+        next
+          case C_2_case_15
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
+                                            r.3),
+                                      r.4),
+                                r.5),
+                          ~y.1, ~r.6
+                    ) @ #j )
+        next
+          case C_2_case_16
+          by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
+                                r.5),
+                          ~y.1, ~r.6
+                    ) @ #j )
+        next
+          case C_2_case_17
+          by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                            r.4),
+                                      r.5),
+                                r.6),
+                          ~y.1, ~r.7
+                    ) @ #j )
+        next
+          case C_2_case_18
+          by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
+        next
+          case C_2_case_19
+          by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+        next
+          case C_2_case_20
+          by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
+        next
+          case C_2_case_21
+          by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+        next
+          case C_2_case_22
+          by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
+                          ~r.4
+                    ) @ #j )
+        next
+          case C_2_case_23
+          by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+                    ) @ #j )
+        next
+          case C_2_case_24
+          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
+                                r.4),
+                          ~y.1, ~r.5
+                    ) @ #j )
+        next
+          case C_2_case_25
+          by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
+                          ~r.5
+                    ) @ #j )
+        next
+          case C_2_case_26
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
+                                            r.3),
+                                      r.4),
+                                r.5),
+                          ~y.1, ~r.6
+                    ) @ #j )
+        next
+          case C_2_case_27
+          by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
+                                r.5),
+                          ~y.1, ~r.6
+                    ) @ #j )
+        next
+          case C_2_case_28
+          by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                            r.4),
+                                      r.5),
+                                r.6),
+                          ~y.1, ~r.7
+                    ) @ #j )
+        next
+          case c_sign
+          solve( !KU( blind(x, ~r) ) @ #vk.1 )
+            case C_1_case_1
+            by contradiction /* from formulas */
+          next
+            case C_1_case_2
+            by contradiction /* from formulas */
+          next
             case C_2_case_01
             solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
               case C_1_case_1
-              solve( (#vr.4, 0) ~~> (#vk, 0) )
+              solve( (#vr.4, 0) ~~> (#vk.1, 0) )
                 case d_xor_case_1
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_2
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_3
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_4
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               qed
             next
               case C_1_case_2
-              by solve( (#vr.4, 0) ~~> (#vk, 0) )
+              by solve( (#vr.4, 0) ~~> (#vk.1, 0) )
             qed
           next
             case C_2_case_02
             solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
               case C_1_case_1
-              solve( (#vr.4, 0) ~~> (#vk, 0) )
+              solve( (#vr.4, 0) ~~> (#vk.1, 0) )
                 case d_xor_case_1
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_2
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_3
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_4
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               qed
             next
               case C_1_case_2
-              by solve( (#vr.4, 0) ~~> (#vk, 0) )
+              by solve( (#vr.4, 0) ~~> (#vk.1, 0) )
             qed
           next
             case C_2_case_03
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
+            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+              case C_1_case_1
+              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                case d_xor_case_1
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_3
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_4
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case C_1_case_2
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
             qed
           next
             case C_2_case_04
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
+            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+              case C_1_case_1
+              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                case d_xor_case_1
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_3
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_4
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case C_1_case_2
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
             qed
           next
             case C_2_case_05
-            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-              case C_1_case_1
-              solve( (#vr.5, 0) ~~> (#vk, 0) )
-                case d_xor_case_1
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_2
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_3
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_4
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              qed
-            next
-              case C_1_case_2
-              by solve( (#vr.5, 0) ~~> (#vk, 0) )
-            qed
-          next
-            case C_2_case_06
-            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-              case C_1_case_1
-              solve( (#vr.5, 0) ~~> (#vk, 0) )
-                case d_xor_case_1
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_2
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_3
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_4
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              qed
-            next
-              case C_1_case_2
-              by solve( (#vr.5, 0) ~~> (#vk, 0) )
-            qed
-          next
-            case C_2_case_07
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
-            qed
-          next
-            case C_2_case_08
             by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
           next
-            case C_2_case_09
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
-            qed
-          next
-            case C_2_case_10
+            case C_2_case_06
             by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
           next
-            case C_2_case_11
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
-                              ~r.4
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_12
+            case C_2_case_07
             by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
                       ) @ #j )
           next
+            case C_2_case_08
+            by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
+                            ~r.5
+                      ) @ #j )
+          next
+            case C_2_case_09
+            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
+                                  r.5),
+                            ~y.1, ~r.6
+                      ) @ #j )
+          next
+            case C_2_case_10
+            by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                              r.4),
+                                        r.5),
+                                  r.6),
+                            ~y.1, ~r.7
+                      ) @ #j )
+          next
+            case C_2_case_11
+            by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+          next
+            case C_2_case_12
+            by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          next
             case C_2_case_13
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
-                                    r.4),
-                              ~y.1, ~r.5
-                        ) @ #j )
-            qed
+            by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+                      ) @ #j )
           next
             case C_2_case_14
             by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
@@ -249,195 +428,103 @@ next
                       ) @ #j )
           next
             case C_2_case_15
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
-                                                r.3),
-                                          r.4),
-                                    r.5),
-                              ~y.1, ~r.6
-                        ) @ #j )
-            qed
+            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
+                                  r.5),
+                            ~y.1, ~r.6
+                      ) @ #j )
           next
             case C_2_case_16
-            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                  r.5),
-                            ~y.1, ~r.6
+            by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                              r.4),
+                                        r.5),
+                                  r.6),
+                            ~y.1, ~r.7
                       ) @ #j )
           next
-            case C_2_case_17
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                r.4),
-                                          r.5),
-                                    r.6),
-                              ~y.1, ~r.7
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_18
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
-            qed
-          next
-            case C_2_case_19
-            by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
-          next
-            case C_2_case_20
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
-            qed
-          next
-            case C_2_case_21
-            by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
-          next
-            case C_2_case_22
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
-                              ~r.4
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_23
-            by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                      ) @ #j )
-          next
-            case C_2_case_24
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
-                                    r.4),
-                              ~y.1, ~r.5
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_25
-            by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                            ~r.5
-                      ) @ #j )
-          next
-            case C_2_case_26
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
-                                                r.3),
-                                          r.4),
-                                    r.5),
-                              ~y.1, ~r.6
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_27
-            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                  r.5),
-                            ~y.1, ~r.6
-                      ) @ #j )
-          next
-            case C_2_case_28
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                r.4),
-                                          r.5),
-                                    r.6),
-                              ~y.1, ~r.7
-                        ) @ #j )
-            qed
-          next
-            case c_sign
-            solve( !KU( blind(x, ~r) ) @ #vk.1 )
-              case C_1_case_1
-              by contradiction /* from formulas */
-            next
-              case C_1_case_2
-              by contradiction /* from formulas */
-            next
+            case c_blind
+            solve( !KU( ~r ) @ #vk.4 )
               case C_2_case_01
               solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
                 case C_1_case_1
-                solve( (#vr.4, 0) ~~> (#vk.1, 0) )
+                solve( (#vr.4, 0) ~~> (#vk.2, 0) )
                   case d_xor_case_1
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_2
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_3
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_4
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 qed
               next
                 case C_1_case_2
-                by solve( (#vr.4, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.4, 0) ~~> (#vk.2, 0) )
               qed
             next
               case C_2_case_02
               solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
                 case C_1_case_1
-                solve( (#vr.4, 0) ~~> (#vk.1, 0) )
+                solve( (#vr.4, 0) ~~> (#vk.2, 0) )
                   case d_xor_case_1
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_2
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_3
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_4
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 qed
               next
                 case C_1_case_2
-                by solve( (#vr.4, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.4, 0) ~~> (#vk.2, 0) )
               qed
             next
               case C_2_case_03
               solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
                 case C_1_case_1
-                solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
                   case d_xor_case_1
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_2
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_3
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_4
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 qed
               next
                 case C_1_case_2
-                by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
               qed
             next
               case C_2_case_04
               solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
                 case C_1_case_1
-                solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
                   case d_xor_case_1
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_2
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_3
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_4
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 qed
               next
                 case C_1_case_2
-                by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
               qed
             next
               case C_2_case_05
@@ -462,15 +549,12 @@ next
                         ) @ #j )
             next
               case C_2_case_10
-              solve( splitEqs(3) )
-                case split
-                by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                  r.4),
-                                            r.5),
-                                      r.6),
-                                ~y.1, ~r.7
-                          ) @ #j )
-              qed
+              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                                r.4),
+                                          r.5),
+                                    r.6),
+                              ~y.1, ~r.7
+                        ) @ #j )
             next
               case C_2_case_11
               by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
@@ -494,166 +578,12 @@ next
                         ) @ #j )
             next
               case C_2_case_16
-              solve( splitEqs(3) )
-                case split
-                by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                  r.4),
-                                            r.5),
-                                      r.6),
-                                ~y.1, ~r.7
-                          ) @ #j )
-              qed
-            next
-              case c_blind
-              solve( !KU( ~r ) @ #vk.4 )
-                case C_2_case_01
-                solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                  case C_1_case_1
-                  solve( (#vr.4, 0) ~~> (#vk.2, 0) )
-                    case d_xor_case_1
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_2
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_3
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_4
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  qed
-                next
-                  case C_1_case_2
-                  by solve( (#vr.4, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_2_case_02
-                solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                  case C_1_case_1
-                  solve( (#vr.4, 0) ~~> (#vk.2, 0) )
-                    case d_xor_case_1
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_2
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_3
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_4
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  qed
-                next
-                  case C_1_case_2
-                  by solve( (#vr.4, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_2_case_03
-                solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                  case C_1_case_1
-                  solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                    case d_xor_case_1
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_2
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_3
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_4
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  qed
-                next
-                  case C_1_case_2
-                  by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_2_case_04
-                solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                  case C_1_case_1
-                  solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                    case d_xor_case_1
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_2
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_3
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_4
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  qed
-                next
-                  case C_1_case_2
-                  by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_2_case_05
-                by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
-              next
-                case C_2_case_06
-                by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
-              next
-                case C_2_case_07
-                by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                          ) @ #j )
-              next
-                case C_2_case_08
-                by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                                ~r.5
-                          ) @ #j )
-              next
-                case C_2_case_09
-                by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                      r.5),
-                                ~y.1, ~r.6
-                          ) @ #j )
-              next
-                case C_2_case_10
-                solve( splitEqs(3) )
-                  case split
-                  by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                    r.4),
-                                              r.5),
-                                        r.6),
-                                  ~y.1, ~r.7
-                            ) @ #j )
-                qed
-              next
-                case C_2_case_11
-                by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
-              next
-                case C_2_case_12
-                by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
-              next
-                case C_2_case_13
-                by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                          ) @ #j )
-              next
-                case C_2_case_14
-                by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                                ~r.5
-                          ) @ #j )
-              next
-                case C_2_case_15
-                by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                      r.5),
-                                ~y.1, ~r.6
-                          ) @ #j )
-              next
-                case C_2_case_16
-                solve( splitEqs(3) )
-                  case split
-                  by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                    r.4),
-                                              r.5),
-                                        r.6),
-                                  ~y.1, ~r.7
-                            ) @ #j )
-                qed
-              qed
+              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                                r.4),
+                                          r.5),
+                                    r.6),
+                              ~y.1, ~r.7
+                        ) @ #j )
             qed
           qed
         qed
@@ -668,143 +598,335 @@ next
       case Register_Corrupted_Bank_pk
       solve( (last(#i))  ∥ (∃ #j. (Mint( x, ~y, ~r ) @ #j) ∧ ¬(last(#j))) )
         case case_1
-        solve( splitEqs(1) )
-          case split
-          solve( !KU( sign(blind(x, ~r), ~skB) ) @ #vk )
+        solve( !KU( sign(blind(x, ~r), ~skB) ) @ #vk )
+          case C_2_case_01
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.4, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case C_2_case_02
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.4, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.6, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.4, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case C_2_case_03
+          by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
+        next
+          case C_2_case_04
+          by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
+        next
+          case C_2_case_05
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.5, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.5, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case C_2_case_06
+          solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+            case C_1_case_1
+            solve( (#vr.5, 0) ~~> (#vk, 0) )
+              case d_xor_case_1
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_2
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_3
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            next
+              case d_xor_case_4
+              by solve( (#vr.7, 0) ~~> (#vk, 0) )
+            qed
+          next
+            case C_1_case_2
+            by solve( (#vr.5, 0) ~~> (#vk, 0) )
+          qed
+        next
+          case C_2_case_07
+          by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
+        next
+          case C_2_case_08
+          by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+        next
+          case C_2_case_09
+          by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
+        next
+          case C_2_case_10
+          by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+        next
+          case C_2_case_11
+          by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
+                          ~r.4
+                    ) @ #j )
+        next
+          case C_2_case_12
+          by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+                    ) @ #j )
+        next
+          case C_2_case_13
+          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
+                                r.4),
+                          ~y.1, ~r.5
+                    ) @ #j )
+        next
+          case C_2_case_14
+          by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
+                          ~r.5
+                    ) @ #j )
+        next
+          case C_2_case_15
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
+                                            r.3),
+                                      r.4),
+                                r.5),
+                          ~y.1, ~r.6
+                    ) @ #j )
+        next
+          case C_2_case_16
+          by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
+                                r.5),
+                          ~y.1, ~r.6
+                    ) @ #j )
+        next
+          case C_2_case_17
+          by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                            r.4),
+                                      r.5),
+                                r.6),
+                          ~y.1, ~r.7
+                    ) @ #j )
+        next
+          case C_2_case_18
+          by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
+        next
+          case C_2_case_19
+          by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+        next
+          case C_2_case_20
+          by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
+        next
+          case C_2_case_21
+          by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+        next
+          case C_2_case_22
+          by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
+                          ~r.4
+                    ) @ #j )
+        next
+          case C_2_case_23
+          by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+                    ) @ #j )
+        next
+          case C_2_case_24
+          by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
+                                r.4),
+                          ~y.1, ~r.5
+                    ) @ #j )
+        next
+          case C_2_case_25
+          by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
+                          ~r.5
+                    ) @ #j )
+        next
+          case C_2_case_26
+          by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
+                                            r.3),
+                                      r.4),
+                                r.5),
+                          ~y.1, ~r.6
+                    ) @ #j )
+        next
+          case C_2_case_27
+          by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
+                                r.5),
+                          ~y.1, ~r.6
+                    ) @ #j )
+        next
+          case C_2_case_28
+          by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                            r.4),
+                                      r.5),
+                                r.6),
+                          ~y.1, ~r.7
+                    ) @ #j )
+        next
+          case c_sign
+          solve( !KU( blind(x, ~r) ) @ #vk.1 )
+            case C_1_case_1
+            by contradiction /* from formulas */
+          next
+            case C_1_case_2
+            by contradiction /* from formulas */
+          next
             case C_2_case_01
             solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
               case C_1_case_1
-              solve( (#vr.4, 0) ~~> (#vk, 0) )
+              solve( (#vr.4, 0) ~~> (#vk.1, 0) )
                 case d_xor_case_1
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_2
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_3
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_4
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               qed
             next
               case C_1_case_2
-              by solve( (#vr.4, 0) ~~> (#vk, 0) )
+              by solve( (#vr.4, 0) ~~> (#vk.1, 0) )
             qed
           next
             case C_2_case_02
             solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
               case C_1_case_1
-              solve( (#vr.4, 0) ~~> (#vk, 0) )
+              solve( (#vr.4, 0) ~~> (#vk.1, 0) )
                 case d_xor_case_1
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_2
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_3
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               next
                 case d_xor_case_4
-                by solve( (#vr.6, 0) ~~> (#vk, 0) )
+                by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
               qed
             next
               case C_1_case_2
-              by solve( (#vr.4, 0) ~~> (#vk, 0) )
+              by solve( (#vr.4, 0) ~~> (#vk.1, 0) )
             qed
           next
             case C_2_case_03
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
+            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+              case C_1_case_1
+              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                case d_xor_case_1
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_3
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_4
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case C_1_case_2
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
             qed
           next
             case C_2_case_04
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(x, ~r), ~y.1, ~r.1 ) @ #j )
+            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
+              case C_1_case_1
+              solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                case d_xor_case_1
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_2
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_3
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              next
+                case d_xor_case_4
+                by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+              qed
+            next
+              case C_1_case_2
+              by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
             qed
           next
             case C_2_case_05
-            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-              case C_1_case_1
-              solve( (#vr.5, 0) ~~> (#vk, 0) )
-                case d_xor_case_1
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_2
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_3
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_4
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              qed
-            next
-              case C_1_case_2
-              by solve( (#vr.5, 0) ~~> (#vk, 0) )
-            qed
-          next
-            case C_2_case_06
-            solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-              case C_1_case_1
-              solve( (#vr.5, 0) ~~> (#vk, 0) )
-                case d_xor_case_1
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_2
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_3
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              next
-                case d_xor_case_4
-                by solve( (#vr.7, 0) ~~> (#vk, 0) )
-              qed
-            next
-              case C_1_case_2
-              by solve( (#vr.5, 0) ~~> (#vk, 0) )
-            qed
-          next
-            case C_2_case_07
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
-            qed
-          next
-            case C_2_case_08
             by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
           next
-            case C_2_case_09
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
-            qed
-          next
-            case C_2_case_10
+            case C_2_case_06
             by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
           next
-            case C_2_case_11
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
-                              ~r.4
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_12
+            case C_2_case_07
             by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
                       ) @ #j )
           next
+            case C_2_case_08
+            by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
+                            ~r.5
+                      ) @ #j )
+          next
+            case C_2_case_09
+            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
+                                  r.5),
+                            ~y.1, ~r.6
+                      ) @ #j )
+          next
+            case C_2_case_10
+            by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                              r.4),
+                                        r.5),
+                                  r.6),
+                            ~y.1, ~r.7
+                      ) @ #j )
+          next
+            case C_2_case_11
+            by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
+          next
+            case C_2_case_12
+            by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
+          next
             case C_2_case_13
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
-                                    r.4),
-                              ~y.1, ~r.5
-                        ) @ #j )
-            qed
+            by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
+                      ) @ #j )
           next
             case C_2_case_14
             by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
@@ -812,195 +934,103 @@ next
                       ) @ #j )
           next
             case C_2_case_15
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
-                                                r.3),
-                                          r.4),
-                                    r.5),
-                              ~y.1, ~r.6
-                        ) @ #j )
-            qed
+            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
+                                  r.5),
+                            ~y.1, ~r.6
+                      ) @ #j )
           next
             case C_2_case_16
-            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                  r.5),
-                            ~y.1, ~r.6
+            by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                              r.4),
+                                        r.5),
+                                  r.6),
+                            ~y.1, ~r.7
                       ) @ #j )
           next
-            case C_2_case_17
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                r.4),
-                                          r.5),
-                                    r.6),
-                              ~y.1, ~r.7
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_18
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(x, ~r), r.1), ~y.1, ~r.2 ) @ #j )
-            qed
-          next
-            case C_2_case_19
-            by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
-          next
-            case C_2_case_20
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(x, ~r), r.1), r.2), ~y.1, ~r.3 ) @ #j )
-            qed
-          next
-            case C_2_case_21
-            by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
-          next
-            case C_2_case_22
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(x, ~r), r.1), r.2), r.3), ~y.1,
-                              ~r.4
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_23
-            by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                      ) @ #j )
-          next
-            case C_2_case_24
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(x, ~r), r.1), r.2), r.3),
-                                    r.4),
-                              ~y.1, ~r.5
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_25
-            by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                            ~r.5
-                      ) @ #j )
-          next
-            case C_2_case_26
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(blind(x, ~r), r.1), r.2),
-                                                r.3),
-                                          r.4),
-                                    r.5),
-                              ~y.1, ~r.6
-                        ) @ #j )
-            qed
-          next
-            case C_2_case_27
-            by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                  r.5),
-                            ~y.1, ~r.6
-                      ) @ #j )
-          next
-            case C_2_case_28
-            solve( splitEqs(3) )
-              case split
-              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                r.4),
-                                          r.5),
-                                    r.6),
-                              ~y.1, ~r.7
-                        ) @ #j )
-            qed
-          next
-            case c_sign
-            solve( !KU( blind(x, ~r) ) @ #vk.1 )
-              case C_1_case_1
-              by contradiction /* from formulas */
-            next
-              case C_1_case_2
-              by contradiction /* from formulas */
-            next
+            case c_blind
+            solve( !KU( ~r ) @ #vk.4 )
               case C_2_case_01
               solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
                 case C_1_case_1
-                solve( (#vr.4, 0) ~~> (#vk.1, 0) )
+                solve( (#vr.4, 0) ~~> (#vk.2, 0) )
                   case d_xor_case_1
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_2
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_3
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_4
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 qed
               next
                 case C_1_case_2
-                by solve( (#vr.4, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.4, 0) ~~> (#vk.2, 0) )
               qed
             next
               case C_2_case_02
               solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
                 case C_1_case_1
-                solve( (#vr.4, 0) ~~> (#vk.1, 0) )
+                solve( (#vr.4, 0) ~~> (#vk.2, 0) )
                   case d_xor_case_1
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_2
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_3
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_4
-                  by solve( (#vr.6, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
                 qed
               next
                 case C_1_case_2
-                by solve( (#vr.4, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.4, 0) ~~> (#vk.2, 0) )
               qed
             next
               case C_2_case_03
               solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
                 case C_1_case_1
-                solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
                   case d_xor_case_1
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_2
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_3
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_4
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 qed
               next
                 case C_1_case_2
-                by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
               qed
             next
               case C_2_case_04
               solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
                 case C_1_case_1
-                solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                solve( (#vr.5, 0) ~~> (#vk.2, 0) )
                   case d_xor_case_1
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_2
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_3
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 next
                   case d_xor_case_4
-                  by solve( (#vr.7, 0) ~~> (#vk.1, 0) )
+                  by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
                 qed
               next
                 case C_1_case_2
-                by solve( (#vr.5, 0) ~~> (#vk.1, 0) )
+                by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
               qed
             next
               case C_2_case_05
@@ -1025,15 +1055,12 @@ next
                         ) @ #j )
             next
               case C_2_case_10
-              solve( splitEqs(3) )
-                case split
-                by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                  r.4),
-                                            r.5),
-                                      r.6),
-                                ~y.1, ~r.7
-                          ) @ #j )
-              qed
+              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                                r.4),
+                                          r.5),
+                                    r.6),
+                              ~y.1, ~r.7
+                        ) @ #j )
             next
               case C_2_case_11
               by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
@@ -1057,166 +1084,12 @@ next
                         ) @ #j )
             next
               case C_2_case_16
-              solve( splitEqs(3) )
-                case split
-                by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                  r.4),
-                                            r.5),
-                                      r.6),
-                                ~y.1, ~r.7
-                          ) @ #j )
-              qed
-            next
-              case c_blind
-              solve( !KU( ~r ) @ #vk.4 )
-                case C_2_case_01
-                solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                  case C_1_case_1
-                  solve( (#vr.4, 0) ~~> (#vk.2, 0) )
-                    case d_xor_case_1
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_2
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_3
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_4
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  qed
-                next
-                  case C_1_case_2
-                  by solve( (#vr.4, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_2_case_02
-                solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                  case C_1_case_1
-                  solve( (#vr.4, 0) ~~> (#vk.2, 0) )
-                    case d_xor_case_1
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_2
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_3
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_4
-                    by solve( (#vr.6, 0) ~~> (#vk.2, 0) )
-                  qed
-                next
-                  case C_1_case_2
-                  by solve( (#vr.4, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_2_case_03
-                solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                  case C_1_case_1
-                  solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                    case d_xor_case_1
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_2
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_3
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_4
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  qed
-                next
-                  case C_1_case_2
-                  by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_2_case_04
-                solve( Mint( x.1, ~y.1, ~r.1 ) @ #j )
-                  case C_1_case_1
-                  solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                    case d_xor_case_1
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_2
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_3
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  next
-                    case d_xor_case_4
-                    by solve( (#vr.7, 0) ~~> (#vk.2, 0) )
-                  qed
-                next
-                  case C_1_case_2
-                  by solve( (#vr.5, 0) ~~> (#vk.2, 0) )
-                qed
-              next
-                case C_2_case_05
-                by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
-              next
-                case C_2_case_06
-                by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
-              next
-                case C_2_case_07
-                by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                          ) @ #j )
-              next
-                case C_2_case_08
-                by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                                ~r.5
-                          ) @ #j )
-              next
-                case C_2_case_09
-                by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                      r.5),
-                                ~y.1, ~r.6
-                          ) @ #j )
-              next
-                case C_2_case_10
-                solve( splitEqs(3) )
-                  case split
-                  by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                    r.4),
-                                              r.5),
-                                        r.6),
-                                  ~y.1, ~r.7
-                            ) @ #j )
-                qed
-              next
-                case C_2_case_11
-                by solve( Mint( blind(m, r.1), ~y.1, ~r.2 ) @ #j )
-              next
-                case C_2_case_12
-                by solve( Mint( blind(blind(m, r.1), r.2), ~y.1, ~r.3 ) @ #j )
-              next
-                case C_2_case_13
-                by solve( Mint( blind(blind(blind(m, r.1), r.2), r.3), ~y.1, ~r.4
-                          ) @ #j )
-              next
-                case C_2_case_14
-                by solve( Mint( blind(blind(blind(blind(m, r.1), r.2), r.3), r.4), ~y.1,
-                                ~r.5
-                          ) @ #j )
-              next
-                case C_2_case_15
-                by solve( Mint( blind(blind(blind(blind(blind(m, r.1), r.2), r.3), r.4),
-                                      r.5),
-                                ~y.1, ~r.6
-                          ) @ #j )
-              next
-                case C_2_case_16
-                solve( splitEqs(3) )
-                  case split
-                  by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
-                                                    r.4),
-                                              r.5),
-                                        r.6),
-                                  ~y.1, ~r.7
-                            ) @ #j )
-                qed
-              qed
+              by solve( Mint( blind(blind(blind(blind(blind(blind(m, r.1), r.2), r.3),
+                                                r.4),
+                                          r.5),
+                                    r.6),
+                              ~y.1, ~r.7
+                        ) @ #j )
             qed
           qed
         qed
@@ -1235,20 +1108,17 @@ guarded formula characterizing all satisfying traces:
 "∃ x y r #i. (Spend( x, y, r ) @ #i)"
 */
 simplify
-solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i )
-  case Register_Corrupted_Bank_pk
-  solve( !KU( sign(blind(x.1, ~r), ~skB) ) @ #vk )
-    case c_sign
-    solve( !KU( blind(x.1, ~r) ) @ #vk.1 )
-      case C_1_case_1
-      solve( splitEqs(1) )
-        case split
+solve( !St_C_1( x, ~y, ~r ) ▶₀ #i )
+  case C_1_case_1
+  solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i )
+    case Register_Corrupted_Bank_pk
+    solve( !KU( sign(blind(x, ~r), ~skB) ) @ #vk )
+      case c_sign
+      solve( !KU( blind(x, ~r) ) @ #vk.1 )
+        case C_1_case_1
         solve( !KU( ~skB ) @ #vk.2 )
           case Register_Corrupted_Bank_pk
-          solve( !St_C_1( x, ~y, ~r ) ▶₀ #i )
-            case C_1
-            SOLVED // trace found
-          qed
+          SOLVED // trace found
         qed
       qed
     qed
@@ -1274,159 +1144,33 @@ guarded formula characterizing all counter-examples:
 simplify
 solve( !KU( ~C ) @ #j )
   case C_1_case_1
-  solve( !KU( ~x ) @ #vk.1 )
-    case C_1_case_1
-    by contradiction /* cyclic */
-  next
-    case C_1_case_2
-    by solve( !KU( ~r ) @ #vk.1 )
-  next
-    case C_1_case_3
-    solve( !KU( pk(k) ) @ #vk.3 )
-      case c_pk
-      by solve( !KU( ~r ) @ #vk.2 )
-    qed
-  next
-    case C_2_case_1
-    solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.2 )
-      case c_sign
-      solve( !KU( ~skB ) @ #vk.4 )
-        case Register_Corrupted_Bank_pk
-        solve( !KU( blind(~x, ~r) ) @ #vk.4 )
-          case C_1
-          by solve( !KU( ~r ) @ #vk.4 )
-        next
-          case c_blind
-          by contradiction /* cyclic */
-        qed
-      qed
-    qed
-  next
-    case C_2_case_2
-    solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.3 )
-      case c_sign
-      solve( !KU( ~skB ) @ #vk.4 )
-        case Register_Corrupted_Bank_pk
-        solve( !KU( blind(~x, ~r) ) @ #vk.5 )
-          case C_1
-          by solve( !KU( ~r ) @ #vk.5 )
-        next
-          case c_blind
-          by contradiction /* cyclic */
-        qed
-      qed
-    qed
-  qed
+  by solve( !KU( ~r ) @ #vk )
 next
   case C_1_case_2
-  solve( !KU( ~x ) @ #vk.3 )
-    case C_1_case_1
-    by contradiction /* cyclic */
-  next
-    case C_1_case_2
-    solve( !KU( pk(k) ) @ #vk.3 )
-      case c_pk
-      by solve( !KU( ~r ) @ #vk.2 )
-    qed
-  next
-    case C_1_case_3
-    solve( !KU( pk(k) ) @ #vk.3 )
-      case c_pk
-      solve( !KU( pk(k.1) ) @ #vk.5 )
-        case c_pk
-        by solve( !KU( ~r ) @ #vk.3 )
-      qed
-    qed
-  next
-    case C_2_case_1
-    solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.4 )
-      case c_sign
-      solve( !KU( pk(k) ) @ #vk.4 )
-        case c_pk
-        solve( !KU( ~skB ) @ #vk.6 )
-          case Register_Corrupted_Bank_pk
-          solve( !KU( blind(~x, ~r) ) @ #vk.6 )
-            case C_1
-            by solve( !KU( ~r ) @ #vk.5 )
-          next
-            case c_blind
-            by contradiction /* cyclic */
-          qed
-        qed
-      qed
-    qed
-  next
-    case C_2_case_2
-    solve( !KU( sign(blind(~x, ~r), ~skB) ) @ #vk.5 )
-      case c_sign
-      solve( !KU( pk(k) ) @ #vk.5 )
-        case c_pk
-        solve( !KU( ~skB ) @ #vk.6 )
-          case Register_Corrupted_Bank_pk
-          solve( !KU( blind(~x, ~r) ) @ #vk.7 )
-            case C_1
-            by solve( !KU( ~r ) @ #vk.6 )
-          next
-            case c_blind
-            by contradiction /* cyclic */
-          qed
-        qed
-      qed
-    qed
-  qed
+  by solve( !KU( ~r ) @ #vk )
 next
   case C_2_case_1
-  solve( !KU( sign(blind((~C⊕~y), ~r), ~skB) ) @ #vk )
-    case c_sign
-    solve( !KU( ~skB ) @ #vk.3 )
-      case Register_Corrupted_Bank_pk
-      solve( !KU( blind((~C⊕~y), ~r) ) @ #vk.3 )
-        case C_1
-        solve( !KU( ~y ) @ #vk.3 )
-          case C_1_case_1
-          by solve( !KU( ~r ) @ #vk.4 )
-        next
-          case C_1_case_2
-          solve( !KU( pk(k) ) @ #vk.6 )
-            case c_pk
-            by solve( !KU( ~r ) @ #vk.5 )
-          qed
-        next
-          case C_2
-          by contradiction /* cyclic */
-        qed
-      next
-        case c_blind
-        by contradiction /* cyclic */
-      qed
-    qed
+  solve( !KU( ~y ) @ #vk.1 )
+    case C_1_case_1
+    by solve( !KU( ~r ) @ #vk.2 )
+  next
+    case C_1_case_2
+    by solve( !KU( ~r ) @ #vk.2 )
+  next
+    case C_2
+    by contradiction /* cyclic */
   qed
 next
   case C_2_case_2
-  solve( !KU( sign(blind((~C⊕~y), ~r), ~skB) ) @ #vk.1 )
-    case c_sign
-    solve( !KU( ~skB ) @ #vk.3 )
-      case Register_Corrupted_Bank_pk
-      solve( !KU( blind((~C⊕~y), ~r) ) @ #vk.4 )
-        case C_1
-        solve( !KU( ~y ) @ #vk.4 )
-          case C_1_case_1
-          by solve( !KU( ~r ) @ #vk.5 )
-        next
-          case C_1_case_2
-          solve( !KU( pk(k) ) @ #vk.7 )
-            case c_pk
-            by solve( !KU( ~r ) @ #vk.6 )
-          qed
-        next
-          case C_2
-          by contradiction /* cyclic */
-        qed
-      next
-        case c_blind
-        by contradiction /* cyclic */
-      qed
-    qed
+  solve( !KU( ~y ) @ #vk.2 )
+    case C_1_case_1
+    by solve( !KU( ~r ) @ #vk.4 )
+  next
+    case C_1_case_2
+    by solve( !KU( ~r ) @ #vk.4 )
+  next
+    case C_2
+    by contradiction /* cyclic */
   qed
 qed
 
@@ -1448,20 +1192,20 @@ guarded formula characterizing all satisfying traces:
   ¬(#i1 = #i2)"
 */
 simplify
-solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i1 )
-  case C_1
-  solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i1 )
-    case Register_Corrupted_Bank_pk
-    solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i2 )
-      case C_1
-      solve( !Bank_Pk( $B.1, pk(~skB.1) ) ▶₂ #i2 )
-        case Register_Corrupted_Bank_pk
-        solve( !KU( ~C ) @ #k )
-          case C_2_case_1
-          solve( !KU( ~y.1 ) @ #vk.3 )
-            case C_2_case_2
-            solve( splitEqs(3) )
-              case split
+solve( (#i1 < #i2)  ∥ (#i2 < #i1) )
+  case case_1
+  solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i1 )
+    case C_1
+    solve( !Bank_Pk( $B, pk(~skB) ) ▶₂ #i1 )
+      case Register_Corrupted_Bank_pk
+      solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i2 )
+        case C_1
+        solve( !Bank_Pk( $B.1, pk(~skB.1) ) ▶₂ #i2 )
+          case Register_Corrupted_Bank_pk
+          solve( !KU( ~C ) @ #k )
+            case C_2_case_1
+            solve( !KU( ~y.1 ) @ #vk.3 )
+              case C_2_case_2
               solve( !KU( sign(blind(x, ~r), ~skB) ) @ #vk.1 )
                 case c_sign
                 solve( !KU( sign(blind(x.1, ~r), ~skB) ) @ #vk.2 )
@@ -1480,10 +1224,7 @@ solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i1 )
                               case C_1
                               solve( !KU( blind(~y.1, ~r.1) ) @ #vk.7 )
                                 case C_1
-                                solve( (#i1 < #i2)  ∥ (#i2 < #i1) )
-                                  case case_1
-                                  SOLVED // trace found
-                                qed
+                                SOLVED // trace found
                               qed
                             qed
                           qed
@@ -1501,40 +1242,14 @@ solve( !St_C_1( ~C, ~y, ~r ) ▶₀ #i1 )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule C_2: 
-Failed to derive Variable(s): ~skB
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -1546,15 +1261,12 @@ summary of summaries:
 analyzed: examples/csf18-xor/chaum_offline_anonymity.spthy
 
   output:          examples/csf18-xor/chaum_offline_anonymity.spthy.tmp
-  processing time: 5.91s
+  processing time: 7.79s
   
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
-  
-  coins (all-traces): verified (322 steps)
-  exec (exists-trace): verified (8 steps)
-  anonymity (all-traces): verified (54 steps)
-  caught (exists-trace): verified (19 steps)
+  coins (all-traces): verified (283 steps)
+  exec (exists-trace): verified (7 steps)
+  anonymity (all-traces): verified (12 steps)
+  caught (exists-trace): verified (18 steps)
 
 ==============================================================================
 */

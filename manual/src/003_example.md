@@ -22,7 +22,7 @@ intercept messages on the network.
 
 The protocol's Tamarin model and its security properties are given in 
 the file [FirstExample.spthy](../code/FirstExample.spthy) (`.spthy` stands for 
-*security protocol theory*), which can be found in the folder `code` within the github repository of this tutorial (<https://github.com/tamarin-prover/manual>). The Tamarin file starts with `theory` followed by 
+*security protocol theory*), which can be found in the folder `manual/code` of the main repository (<https://github.com/tamarin-prover/tamarin-prover>). The Tamarin file starts with `theory` followed by 
 the theory's name, here `FirstExample`.  
 
 ~~~~ {.tamarin slice="code/FirstExample.spthy" lower=12 upper=13}
@@ -32,7 +32,7 @@ After the keyword `begin`, we first declare the cryptographic primitives the
 protocol uses. Afterward, we declare multiset rewriting rules that model
 the protocol, and finally we write the properties to be proven (called
 *lemmas* within the Tamarin framework), which specify the protocol's desired
-security properties.  Note that we have also inserted comments to structure the
+security properties. Note that we have also inserted comments to structure the
 theory.
 
 We next explain in detail the protocol model.
@@ -111,7 +111,7 @@ incomparable subsorts `fresh`, `pub` and `nat` of that top sort. Timepoint
 variables of sort `temporal` are unconnected.
 
 The above rule can therefore be read as follows. First, generate
-a fresh name `~ltk` (of sort fresh), which is the new private key, and
+a fresh name `~ltk` (of sort fresh), which is the new private (long-term) key, and
 non-deterministically choose a public name `A`, for the agent for whom we
 are generating the key-pair.  Afterward, generate the fact `!Ltk($A, ~ltk)`
 (the exclamation mark `!` denotes that the fact is persistent, i.e., it
@@ -264,7 +264,7 @@ If you click on the 'FirstExample' entry in the table of loaded theories, you
 should see the following:
 
 ![FirstExample Theory 
-Overview](../images/tamarin-tutorial-overview.png "FirstExample Theory 
+Overview](../images/tamarin-tutorial-overview.jpeg "FirstExample Theory 
 Overview"){width=100%}\
 
 On the left hand side, you see the theory: links to the message theory
@@ -272,18 +272,22 @@ describing the adversary, the multiset rewrite rules and restrictions describing
 your protocol, and the raw and refined sources, followed by the
 lemmas you want to prove. We will explain each of these in the following.
 
-On the right hand side, you have a quick summary of the available
-commands and keyboard shortcuts you can use to navigate inside the
-theory. In the top right corner there are some links: `Index` leads
-back to the welcome page, `Download` allows you to download the
-current theory (including partial proofs if they exist), `Actions` and
-the sub-bullet `Show source` shows the theory's source code,
-and `Options` allows you to configure the level of details in the
-graph visualization (see below for examples).
+On the right hand side, you have a quick summary of the available commands and
+keyboard shortcuts you can use to navigate inside the theory. In the top right
+corner there are some links: `Index` leads back to the welcome page. 
+`Reload file` (only for locally loaded files) re-reads the theory file from disk
+and performs all the required precomputations, which is useful when editing the
+`.spthy` file outside of the web interface. The `Actions` menu contains 
+`Show source` which displays the theory's source code in a new tab, 
+`Download source` which downloads the current theory (including partial proofs
+if they exist), and `Append modified lemmas to file` (only for locally loaded
+files) which appends any lemmas you've edited in the GUI to the end of your file
+as comments. The `Options` menu allows you to configure the level of details in
+the graph visualization (see below for examples).
 
 If you click on `Message theory` on the left, you should see the following:
 
-![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.png 
+![FirstExample Message Theory](../images/tamarin-tutorial-message-theory.jpeg
  "FirstExample Message Theory"){width=100%}\
 
 On the right side, you can now see the message theory, starting with
@@ -326,7 +330,7 @@ only used to make the tool's reasoning more efficient.
 Now click on *Multiset rewriting rules* on the left.
 
 ![FirstExample Multiset Rewriting 
-Rules](../images/tamarin-tutorial-multiset-rules.png 
+Rules](../images/tamarin-tutorial-multiset-rules.jpeg
  "FirstExample Multiset Rewriting Rules"){width=100%}\
 
 On the right side of the screen are the protocol's 
@@ -352,7 +356,7 @@ those are the ones actually used in the proof, and 'raw' is just an
 uninteresting intermediate result. -->
 
 ![FirstExample Case Distinctions 
-Rules](../images/tamarin-tutorial-case-distinctions.png 
+Rules](../images/tamarin-tutorial-case-distinctions.jpeg
  "FirstExample Case Distinctions"){width=100%}\
  
 To improve the efficiency of its internal reasoning, Tamarin precomputes case 
@@ -396,7 +400,7 @@ Now we will see how to prove lemmas in the interactive mode. For that, click on
 `sorry` (indicating that the proof has not been started) after the first 
 lemma in the left frame to obtain the following screen:
 
-![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.png 
+![FirstExample Lemma 1](../images/tamarin-tutorial-lemma-1.jpeg
  "FirstExample Lemma 1"){width=100%}\
 
 Tamarin proves lemmas using constraint solving.
@@ -414,7 +418,7 @@ generates the necessary constraints to prove the lemma using induction on the
 length of the trace. Here we use the default strategy, i.e., a simplification 
 step by clicking on `1. simplify`, to obtain the following screen:
  
-![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.png 
+![FirstExample Lemma 1 Step 1](../images/tamarin-tutorial-lemma-1-simplify.jpeg
  "FirstExample Lemma 1 Step 1"){width=100%}\
 
 Tamarin has now translated the lemma into a constraint system. Since
@@ -430,11 +434,21 @@ visualized using round boxes).  Just below the graph, the formula
 
 now states that any occurrence of `LtkReveal( S )` will lead to a contradiction.
 
-To finish the proof, we can either continue manually by selecting the constraint
-to resolve next, or by calling the `autoprove` command, which selects the next
-steps based on a heuristic. Here we have two constraints to resolve: 
-`Client_1( S, k )` and `KU( k )`, both of which are premises for the rules in 
-the unfinished current constraint system.
+We can either inspect the graph in the main window, or we can open the graph in
+another window by clicking the `Open the Graph in New Tab` link or the `Popout`
+button under certain graphs. The links under graphs in the resources tab (Raw
+Resources or Refined Resources) or of the subcases under the main proof steps
+will open the same graph in a new tab. The buttons under the main proof graph
+will open the same graph in a new window with dynamic rendering enabled; i.e.,
+when we navigate through the proof steps (either by clicking at a certain proof
+step or using the `j` or `k` keys), the graph in the new window will change
+accordingly. This is especially useful when working with large proof graphs.
+
+To finish the proof at hand, we can either continue manually by selecting the
+constraint to resolve next, or by calling the `autoprove` command, which
+selects the next steps based on a heuristic. Here we have two constraints to
+resolve: `Client_1( S, k )` and `KU( k )`, both of which are premises for the
+rules in the unfinished current constraint system.
 
 Note that the proof methods in the GUI are sorted according to the same 
 heuristic as is used by the `autoprove` command. Any proof found by always 
@@ -447,7 +461,7 @@ using the autoprover, we end with the following final state, where the construct
 graph leads to a contradiction as it contains `LtkReveal( S )`:
 
 ![FirstExample Lemma 1 
-Finished](../images/tamarin-tutorial-lemma-1-finished.png 
+Finished](../images/tamarin-tutorial-lemma-1-finished.jpeg
  "FirstExample Lemma 1 Finished"){width=100%}\
  
 The lemma is now colored in green as it was successfully proven. If we had 

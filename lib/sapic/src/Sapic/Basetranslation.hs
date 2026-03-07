@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE PatternGuards #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -31,21 +30,20 @@ module Sapic.Basetranslation (
    , TransFComb
 ) where
 
-import           Control.Exception
-import           Control.Monad.Catch
-import           Data.Set             hiding (map, (\\))
-import           Data.Maybe
-import qualified Data.List as List
-import qualified Extension.Data.Label as L
-import           Sapic.Annotation
-import           Sapic.Exceptions
-import           Sapic.Facts
-import           Sapic.ProcessUtils
-import qualified Text.RawString.QQ    as QQ
-import           Theory
-import           Theory.Sapic
-import           Theory.Sapic.Print
-import           Theory.Text.Parser
+import Control.Exception
+import Control.Monad.Catch
+import Data.Set hiding (map, (\\))
+import Data.Maybe
+import Data.List qualified as List
+import Sapic.Annotation
+import Sapic.Exceptions
+import Sapic.Facts
+import Sapic.ProcessUtils
+import Text.RawString.QQ qualified as QQ
+import Theory
+import Theory.Sapic
+import Theory.Sapic.Print
+import Theory.Text.Parser
 
 type TranslationResultNull  = [([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])]
 type TranslationResultAct  = ([([TransFact], [TransAction], [TransFact], [SyntacticLNFormula])], Set LVar)
@@ -122,11 +120,11 @@ baseTransAction
                         let ts = fAppPair (tc,varTerm x) in
                         let ack = [Ack tc xt | not asyncChannels] in
                           (mergeWithStateRule ([Message tc xt], [], ack) rules
-                            ++ (if isNothing (secretChannel an) -- only add adversary rule if channel is not guaranteed secret
+                            ++ (if isNothing an.secretChannel -- only add adversary rule if channel is not guaranteed secret
                                  then mergeWithStateRule ([In ts], channelIn ts, []) rules
                                  else []
                                ), tx')
-    | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- secretChannel an
+    | (ChOut (Just tc') t') <- ac, (Just (AnVar _)) <- an.secretChannel
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           if asyncChannels then
               ([
@@ -136,7 +134,7 @@ baseTransAction
               ([
                ([def_state], [], [Message tc t,semistate], []),
                ([semistate, Ack tc t], [], [def_state' tildex], [])], tildex)
-    | (ChOut (Just tc') t') <- ac, Nothing <- secretChannel an
+    | (ChOut (Just tc') t') <- ac, Nothing <- an.secretChannel
       , tc <- toLNTerm tc', t <- toLNTerm t' =
           if asyncChannels then
               ([
@@ -154,24 +152,24 @@ baseTransAction
           ([def_state], [], [def_state' tildex, Out t], [])], tildex)
 
       -- Pure cell translation
-    | (Insert t1' t2' ) <- ac, True <- pureState an,  (Just (AnVar v)) <- unlock an,
+    | (Insert t1' t2' ) <- ac, True <- an.pureState,  (Just (AnVar v)) <- an.unlock,
       t1 <- toLNTerm t1' , t2 <- toLNTerm t2' =
           let tx' = v `insert` tildex in
           ([
           ([def_state, CellLocked t1 (varTerm v)], [
               --UnlockUnnamed t1 v
                                                    ], [def_state' tx', PureCell t1 t2], [])], tx')
-    | (Insert t1' t2' ) <- ac, True <- pureState an,
+    | (Insert t1' t2' ) <- ac, True <- an.pureState,
       t1 <- toLNTerm t1' , t2 <- toLNTerm t2' =
           ([
           ([def_state], [
               --UnlockUnnamed t1 v
                                                    ], [def_state' tildex, PureCell t1 t2], [])], tildex)
 
-    | (Lock _) <- ac, True <- pureState an =
+    | (Lock _) <- ac, True <- an.pureState =
       ([
       ([def_state], [], [def_state' tildex], [])], tildex)
-    | (Unlock _) <- ac, True <- pureState an =
+    | (Unlock _) <- ac, True <- an.pureState =
           ([([def_state], [], [def_state' tildex], [])], tildex)
 
     -- Classical state translation
@@ -183,16 +181,16 @@ baseTransAction
       , t <- toLNTerm t' =
           ([
           ([def_state], [DeleteA t ], [def_state' tildex], [])], tildex)
-    | (Lock t') <- ac, (Just (AnVar v)) <- lock an
+    | (Lock t') <- ac, (Just (AnVar v)) <- an.lock
       , t <- toLNTerm t' =
           let tx' = v `insert` tildex in
       ([
       ([def_state, Fr v], [LockNamed t v, LockUnnamed t v ], [def_state' tx'], [])], tx')
-    | (Lock _ ) <- ac, Nothing <- lock an = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
-    | (Unlock t') <- ac, (Just (AnVar v)) <- unlock an
+    | (Lock _ ) <- ac, Nothing <- an.lock = throw (NotImplementedError "Unannotated lock" :: SapicException AnnotatedProcess)
+    | (Unlock t') <- ac, (Just (AnVar v)) <- an.unlock
       , t <- toLNTerm t' =
           ([([def_state], [UnlockNamed t v, UnlockUnnamed t v ], [def_state' tildex], [])], tildex)
-    | (Unlock _ ) <- ac, Nothing <- lock an = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
+    | (Unlock _ ) <- ac, Nothing <- an.lock = throw ( NotImplementedError "Unannotated unlock" :: SapicException AnnotatedProcess)
 
 -- CHARLIE : still add locks and unlocks in the pure state thing, but with weaker formula only used to contradict injectivity, e.g    Lock(x,s)@i & Unlock(x,s)@j ==> not(Ex k s2. Lock(x,s2)@k & i<k<j) & not(Ex k s2. UnLock(x,s2)@k & i<k<j)
     | (Event f' ) <- ac
@@ -236,7 +234,7 @@ baseTransComb c an p tildex
                     ([def_state], [], [def_state2 tildex], [Not f])]
                      , tildex, tildex )
         else
-                    throw $ WFUnbound (freevars_f `difference` tildex) 
+                    throw $ WFUnbound (freevars_f `difference` tildex)
     | CondEq t1 t2 <- c =
         let fa = toLNFact (protoFact Linear "Eq" [t1,t2]) in
         let vars_f = fromList $ getFactVariables fa in
@@ -247,11 +245,11 @@ baseTransComb c an p tildex
                 else
                     throw $ WFUnbound (vars_f `difference` tildex)
     | Let t1' t2' _ <- c,  -- match vars are ignored in the translation, as they are bound in the def_state
-      elsBranch <- elseBranch an
+      elsBranch <- an.elseBranch
       =
         let t1or = toLNTerm t1' in
         let (t1, t2, freevars) =
-              case destructorEquation an of
+              case an.destructorEquation of
                 Nothing -> (t1or, toLNTerm t2', freeset t1or)
                 Just (tl1,tl2) -> (tl1, tl2, freeset tl1 `difference` tildex)
         in
@@ -274,7 +272,7 @@ baseTransComb c an p tildex
             tildexl, tildex)
 
     -- Pure cell translation
-    | Lookup t' v' <- c,  True <- pureState an,  (Just (AnVar vs)) <- unlock an,
+    | Lookup t' v' <- c,  True <- an.pureState,  (Just (AnVar vs)) <- an.unlock,
        t <- toLNTerm t', v <- toLVar v' =
            let tx' = vs `insert ` (v `insert` tildex) in
                 (
@@ -296,7 +294,7 @@ baseTransComb c an p tildex
              , tx', tildex )
 -- Process Calls are currently made by a simple inlining of the process, where the parameters have already been substituded by the value of the caller inside the parser. Variants could be defined to optimize this behaviour.
     | ProcessCall {} <- c =
-       ([ ([def_state], [], [def_state1 tildex ], [])],
+       ([ ([def_state], [], [def_state1 tildex, def_state2 tildex ], [])], -- TODO remove second state def_state2 but make sure `gen` does not produce rule for it in this case, otherwise we get warnings.
         tildex,tildex)
 
     -- | otherwise = throw (NotImplementedError "baseTransComb":: SapicException AnnotatedProcess)
@@ -422,8 +420,8 @@ resLocking hasUnlock v =  do
               Action t (f {factTag = ProtoFact Linear (hardcode "Unlock") 3})
             | otherwise = a
         hardcode s = s ++ "_" ++ show (lvarIdx v)
-        mapFormula = L.modify rstrFormula
-        mapName = L.modify rstrName
+        mapFormula f r = r { _rstrFormula = f r._rstrFormula }
+        mapName f r = r { _rstrName = f r._rstrName }
 
 resEq :: String
 resEq = [QQ.r|restriction predicate_eq:
@@ -471,10 +469,10 @@ baseRestr anP needsInEvRes hasAccountabilityLemmaWithControl prevRestr =
         addIf phi list = if phi then list else []
         contains = processContains anP
         getLock p
-            | (ProcessAction (Lock _) an@ProcessAnnotation{pureState=False} _) <- p, (Just (AnVar v)) <- lock an = [v] -- annotation is Maybe type
+            | (ProcessAction (Lock _) an@ProcessAnnotation{pureState=False} _) <- p, (Just (AnVar v)) <- an.lock = [v] -- annotation is Maybe type
             | otherwise  = []
         getUnlock p
-            | (ProcessAction (Unlock _) an@ProcessAnnotation{pureState=False} _) <- p, (Just (AnVar v)) <- unlock an = [v] -- annotation is Maybe type
+            | (ProcessAction (Unlock _) an@ProcessAnnotation{pureState=False} _) <- p, (Just (AnVar v)) <- an.unlock = [v] -- annotation is Maybe type
             | otherwise  = []
         getLockPositions = pfoldMap getLock
         getUnlockPositions = pfoldMap getUnlock

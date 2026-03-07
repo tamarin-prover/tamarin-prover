@@ -1,13 +1,11 @@
-theory Minimal_Loop_Example begin
+theory Minimal_Loop_Example
+
+begin
 
 // Function signature and definition of the equational theory E
 
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
-
-
-
-
 
 /* looping facts with injective instances: A/1 */
 
@@ -39,7 +37,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#j))  ∥
          (∃ #i. (Start( x ) @ #i) ∧ (¬(last(#i))) ∧ (#i < #j)) )
     case case_1
@@ -83,7 +80,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( A( ~n ) ▶₀ #j )
     case Loop
     solve( A( ~n ) ▶₀ #i )
@@ -149,24 +145,17 @@ guarded formula characterizing all satisfying traces:
 */
 induction
   case empty_trace
-  simplify
   SOLVED // trace found
 qed
-
-
-
-
-
-
 
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -178,13 +167,13 @@ summary of summaries:
 analyzed: examples/loops/Minimal_Loop_Example.spthy
 
   output:          examples/loops/Minimal_Loop_Example.spthy.tmp
-  processing time: 0.08s
+  processing time: 0.03s
   
-  Start_before_Loop (all-traces): verified (8 steps)
+  Start_before_Loop (all-traces): verified (7 steps)
   Start_before_Stop (all-traces): verified (4 steps)
-  Loop_before_Stop (all-traces): verified (9 steps)
+  Loop_before_Stop (all-traces): verified (8 steps)
   Stop_unique (all-traces): verified (12 steps)
-  Satisfied_by_empty_trace_only (exists-trace): verified (3 steps)
+  Satisfied_by_empty_trace_only (exists-trace): verified (2 steps)
 
 ==============================================================================
 */

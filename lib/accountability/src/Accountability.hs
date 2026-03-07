@@ -6,52 +6,53 @@
 --
 -- Translation from OpenTheories to OpenTheories with accountability lemmas
 
-module Accountability (
-       module Accountability.Generation
-     , translate
-) where
-import Control.Monad.Catch (MonadThrow (throwM), MonadCatch, Exception)
-import Theory (OpenTheory, CaseIdentifier, theoryAccLemmas, aCaseIdentifiers, cName, aName, aCaseTests, AccLemma, caseTestToPredicate, theoryCaseTests)
-import Data.Data (Typeable)
+module Accountability
+  ( module Accountability.Generation
+  , translate
+  ) where
+
 import Control.Applicative (Alternative)
-import qualified Data.Label as L
+import Control.Monad (unless, guard, foldM)
+import Control.Monad.Catch (MonadThrow (throwM), MonadCatch, Exception)
+import Data.Data (Typeable)
 import Data.List (intercalate, (\\))
 import Data.Maybe (mapMaybe)
-import Control.Monad (unless, guard, foldM)
+
 import Accountability.Generation (generateAccountabilityLemmas)
+import Theory (OpenTheory, CaseIdentifier, CaseTest(..), theoryAccLemmas, AccLemma(..), caseTestToPredicate, theoryCaseTests)
 import Theory.Text.Parser (liftedAddLemma)
 import Theory.Text.Parser.Signature (liftedAddPredicate)
-
 
 ------------------------------------------------------------------------------
 -- Translating open theories containing accountability lemmas
 ------------------------------------------------------------------------------
 
 -- | Datatype for accountability exceptions. See the instances for explanations.
-newtype AccException = 
-    CaseTestsUndefined [(String, [CaseIdentifier])] 
-    deriving (Typeable)
+newtype AccException =
+  CaseTestsUndefined [(String, [CaseIdentifier])]
+  deriving (Typeable)
 
 instance Show AccException where
-    show (CaseTestsUndefined el) =
-        "The following case tests are undefined but are required in a lemma: \n" ++
-        intercalate "\n" (fmap (\(a, c) -> "  '" ++ intercalate "', '" c ++ "' required by lemma '" ++ a ++ "'") el)
+  show (CaseTestsUndefined el) =
+    "The following case tests are undefined but are required in a lemma: \n" ++
+    intercalate "\n" (fmap (\(a, c) -> "  '" ++ intercalate "', '" c ++ "' required by lemma '" ++ a ++ "'") el)
 instance Exception AccException
 
--- | Translates the accountability lemmas in an open theory 
+-- | Translates the accountability lemmas in an open theory
 translate :: (Monad m, MonadThrow m, MonadCatch m) => OpenTheory -> m OpenTheory
 translate thy = do
-    let undef = mapMaybe undefinedCaseTests (theoryAccLemmas thy)
-    unless (null undef) (throwM (CaseTestsUndefined undef :: AccException))
-    accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas thy)
-    thy' <- foldM liftedAddLemma thy (concat accLemmas)
-    let casePredicates = mapMaybe caseTestToPredicate (theoryCaseTests thy)
-    foldM liftedAddPredicate thy' casePredicates
+  let undef = mapMaybe undefinedCaseTests (theoryAccLemmas thy)
+  unless (null undef) (throwM (CaseTestsUndefined undef :: AccException))
+  accLemmas <- mapM generateAccountabilityLemmas (theoryAccLemmas thy)
+  thy' <- foldM liftedAddLemma thy (concat accLemmas)
+  let casePredicates = mapMaybe caseTestToPredicate (theoryCaseTests thy)
+  foldM liftedAddPredicate thy' casePredicates
 
 
 -- | Checks if the case tests requiered by an accountability lemma are present
 undefinedCaseTests :: Alternative f => AccLemma -> f (String, [CaseIdentifier])
-undefinedCaseTests accLem = (L.get aName accLem, required \\ defined) <$ guard (required /= defined)
-    where
-        required =  L.get aCaseIdentifiers accLem
-        defined = map (L.get cName) (L.get aCaseTests accLem)
+undefinedCaseTests accLem =
+  (accLem._aName, required \\ defined) <$ guard (required /= defined)
+  where
+    required = accLem._aCaseIdentifiers
+    defined = (._cName) <$> accLem._aCaseTests

@@ -58,7 +58,7 @@ llitNoPub = asum [freshTerm <$> freshName, varTerm <$> msgvar]
 lookupArity :: String -> Parser (Int, Privacy,Constructability)
 lookupArity op = do
     maudeSig <- sig <$> getState
-    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
+    case lookup (BC.pack op) (S.toList (noEqFunSyms maudeSig) ++ S.toList (macroNames maudeSig) ++ [(emapSymString, (2,Public,Constructor))]) of
         Nothing    -> fail $ "unknown operator `" ++ op ++ "'"
         Just (k,priv,cnstr) -> return (k,priv,cnstr)
 
@@ -79,7 +79,6 @@ reservedBuiltins =  map unpackChars [
 naryOpApp :: Ord l => Bool -> Parser (Term l) -> Parser (Term l)
 naryOpApp eqn plit = do
     op <- identifier
-    --traceM $ show op ++ " " ++ show eqn
     when (eqn && op `elem` reservedBuiltins)
       $ error $ "`" ++ show op ++ "` is a reserved function name for builtins."
     ar@(k,_,_) <- lookupArity op

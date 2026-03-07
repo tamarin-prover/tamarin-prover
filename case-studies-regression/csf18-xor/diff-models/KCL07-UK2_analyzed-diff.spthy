@@ -1,16 +1,12 @@
-theory KCL07_UK2 begin
+theory KCL07_UK2
+
+begin
 
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
 functions: fst/1, h/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
@@ -71,26 +67,23 @@ rule-equivalence
       case tag1
       step( solve( (#vl, 0) ~~> (#i, 1) ) )
         case d_0_fst
-        step( solve( TagRun( <~k, ~id> ) ▶₂ #vr ) )
-          case setup
-          step( solve( splitEqs(0) ) )
-            case split
-            step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
-              case Xor
-              step( solve( !KU( (~id⊕~r2) ) @ #vk ) )
-                case c_xor
-                step( solve( !KU( ~r2 ) @ #vk.2 ) )
-                  case tag1_case_2
-                  step( solve( !KU( ~id ) @ #vk.3 ) )
+        step( solve( (#vr.1, 0) ~~> (#i, 1) ) )
+          case Xor
+          step( solve( TagRun( <~k, ~id> ) ▶₂ #vr ) )
+            case setup
+            step( solve( !KU( (~id⊕~r2) ) @ #vk ) )
+              case c_xor
+              step( solve( !KU( ~r2 ) @ #vk.2 ) )
+                case tag1_case_2
+                step( solve( !KU( ~id ) @ #vk.3 ) )
+                  case transcript
+                  step( solve( !KU( h(<r1, ~k>) ) @ #vk.4 ) )
                     case transcript
-                    step( solve( !KU( h(<r1, ~k>) ) @ #vk.4 ) )
-                      case transcript
-                      step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
-                        case transcript_case_1
-                        step( solve( !KU( ~r1 ) @ #vk.5 ) )
-                          case transcript
-                          by ATTACK // trace found
-                        qed
+                    step( solve( !KU( ~r2.1 ) @ #vk.5 ) )
+                      case transcript_case_1
+                      step( solve( !KU( ~r1 ) @ #vk.5 ) )
+                        case transcript
+                        by ATTACK // trace found
                       qed
                     qed
                   qed
@@ -108,10 +101,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -123,9 +116,9 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/KCL07-UK2.spthy
 
   output:          examples/csf18-xor/diff-models/KCL07-UK2.spthy.tmp
-  processing time: 40.21s
+  processing time: 23.54s
   
-  DiffLemma:  Observational_equivalence : falsified - found trace (15 steps)
+  DiffLemma:  Observational_equivalence : falsified - found trace (14 steps)
 
 ==============================================================================
 */

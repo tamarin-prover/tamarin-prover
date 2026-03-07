@@ -1,4 +1,6 @@
-theory issue223 begin
+theory issue223
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -10,12 +12,6 @@ equations [convergent]:
     open(commit(ni, r, pk(sk)), r, sk) = ni,
     open(commit(ni1, r, pk(sk)), fake(ni1, r, sk, ni2), sk) = ni2,
     snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) Attack3:
    [ Fr( ~ni1 ), Fr( ~rnd1 ), Fr( ~ltkV1 ) ]
@@ -3239,10 +3235,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -3254,7 +3250,7 @@ summary of summaries:
 analyzed: examples/regression/diff/issue223.spthy
 
   output:          examples/regression/diff/issue223.spthy.tmp
-  processing time: 2.71s
+  processing time: 1.71s
   
   DiffLemma:  Observational_equivalence : verified (1082 steps)
 

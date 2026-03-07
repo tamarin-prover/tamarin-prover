@@ -1,4 +1,6 @@
-theory NDCTwoReplications begin
+theory NDCTwoReplications
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,19 +10,9 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
 heuristic: p
 
 section{* small example for progression function *}
-
-
-
-
-
-
-
-
 
 lemma A_possible:
   exists-trace "∃ #t. A( ) @ #t"
@@ -85,79 +77,55 @@ solve( State_21( ~prog_21 ) ▶₀ #t )
   by solve( State_11( ~prog_11 ) ▶₀ #t2 )
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule]:
+rule (modulo E) MessageIDRule[color=#ffffff, process="+", issapicrule,
+                              role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="+", issapicrule]:
+rule (modulo E) Init[color=#ffffff, process="+", issapicrule,
+                     role='Process']:
    [ ] --[ Init( ) ]-> [ State_( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule]:
+rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
    [ State_( ) ] --> [ !Semistate_11( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule]:
+rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
+   [ State_( ) ] --> [ !Semistate_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
    [ Fr( ~prog_11 ), !Semistate_11( ) ]
   --[ ProgressFrom_11( ~prog_11 ) ]->
    [ State_11( ~prog_11 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_11[color=#ffffff, process="event A( );",
-                            issapicrule]:
-   [ State_11( ~prog_11 ) ]
-  --[ ProgressTo_111( ~prog_11 ), A( ) ]->
-   [ State_111( ~prog_11 ) ]
+rule (modulo E) eventA_0_11[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_11( ~prog_11 ) ] --[ ProgressTo_111( ~prog_11 ), A( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule]:
-   [ State_111( ~prog_11 ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule]:
-   [ State_( ) ] --> [ !Semistate_21( ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_1_2[color=#ffffff, process="!", issapicrule]:
+rule (modulo E) p_1_2[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
    [ Fr( ~prog_21 ), !Semistate_21( ) ]
   --[ ProgressFrom_21( ~prog_21 ) ]->
    [ State_21( ~prog_21 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_21[color=#ffffff, process="event B( );",
-                            issapicrule]:
-   [ State_21( ~prog_21 ) ]
-  --[ ProgressTo_211( ~prog_21 ), B( ) ]->
-   [ State_211( ~prog_21 ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_211[color=#ffffff, process="0", issapicrule]:
-   [ State_211( ~prog_21 ) ] --> [ ]
+rule (modulo E) eventB_0_21[color=#ffffff, process="0", issapicrule,
+                            role='Process']:
+   [ State_21( ~prog_21 ) ] --[ ProgressTo_211( ~prog_21 ), B( ) ]-> [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -165,55 +133,51 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction Progress_11_to_111:
   "∀ prog_11 #t.
     (ProgressFrom_11( prog_11 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_11 #t.
+    (ProgressFrom_11( prog_11 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_111( prog_11 ) @ #t.1)"
+  */
 
 restriction Progress_21_to_211:
   "∀ prog_21 #t.
     (ProgressFrom_21( prog_21 ) @ #t) ⇒
     (∃ #t.1. ProgressTo_211( prog_21 ) @ #t.1)"
 
+  /*
+  expanded formula:
+  "∀ prog_21 #t.
+    (ProgressFrom_21( prog_21 ) @ #t) ⇒
+    (∃ #t.1. ProgressTo_211( prog_21 ) @ #t.1)"
+  */
+
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/*
-WARNING: the following wellformedness checks failed!
+  /*
+  expanded formula:
+  "∃ #t. Init( ) @ #t"
+  */
 
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule MessageIDRule: 
-Failed to derive Variable(s): ~mid_
-
-Rule p_1_1: 
-Failed to derive Variable(s): ~prog_11
-
-Rule eventA_0_11: 
-Failed to derive Variable(s): ~prog_11
-
-Rule p_0_111: 
-Failed to derive Variable(s): ~prog_11
-
-Rule p_1_2: 
-Failed to derive Variable(s): ~prog_21
-
-Rule eventB_0_21: 
-Failed to derive Variable(s): ~prog_21
-
-Rule p_0_211: 
-Failed to derive Variable(s): ~prog_21
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -225,10 +189,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/basic/ndc-two-replications.spthy
 
   output:          examples/sapic/fast/basic/ndc-two-replications.spthy.tmp
-  processing time: 0.13s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.03s
   
   A_possible (exists-trace): verified (4 steps)
   B_possible (exists-trace): verified (4 steps)

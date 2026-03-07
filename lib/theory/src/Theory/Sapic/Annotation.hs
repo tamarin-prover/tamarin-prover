@@ -59,16 +59,15 @@ deriving instance Data ProcessParsedAnnotation
 
 instance Monoid ProcessParsedAnnotation where
     mempty = ProcessParsedAnnotation [] Nothing emptySubst
-    mappend p1 p2 = ProcessParsedAnnotation
-        (processnames p1 `mappend` processnames p2) 
+
+instance Semigroup ProcessParsedAnnotation where
+    (<>) p1 p2 = ProcessParsedAnnotation
+        (processnames p1 ++ processnames p2)
         (case (location p1, location p2) of
-             (Nothing, l2) -> l2
+             (Nothing, Just l2) -> Just l2
              (l1, Nothing) -> l1
              (_, l2) -> l2)
         (backSubstitution p1 `compose` backSubstitution p2)
-
-instance Semigroup ProcessParsedAnnotation where
-    (<>) p1 p2 = p1 `mappend` p2
 
 -- | Any annotation that is good enough to be converted back into a Process
 --  can at least recover the names of the processes used to bind
@@ -86,7 +85,7 @@ instance GoodAnnotation ProcessParsedAnnotation
         setProcessParsedAnnotation pn _ = pn
         defaultAnnotation   = mempty
 
--- | apply @f to ProcessParsedAnnotation within @ann@
+-- | apply @f@ to ProcessParsedAnnotation within @ann@
 mapProcessParsedAnnotation :: GoodAnnotation a =>
     (ProcessParsedAnnotation -> ProcessParsedAnnotation) -> a -> a
 mapProcessParsedAnnotation f ann =
@@ -94,7 +93,7 @@ mapProcessParsedAnnotation f ann =
 
 -- | mappend (i.e., overwrite or add as needed) to processParsedAnnotation
 mappendProcessParsedAnnotation :: GoodAnnotation a => ProcessParsedAnnotation -> a -> a
-mappendProcessParsedAnnotation pn = mapProcessParsedAnnotation (`mappend` pn)
+mappendProcessParsedAnnotation pn = mapProcessParsedAnnotation (<> pn)
 
 applyProcessParsedAnnotation :: Apply s SapicTerm => s -> ProcessParsedAnnotation -> ProcessParsedAnnotation
 applyProcessParsedAnnotation subst ann =

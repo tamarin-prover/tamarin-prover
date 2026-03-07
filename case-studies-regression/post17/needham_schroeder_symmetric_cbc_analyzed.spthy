@@ -1,4 +1,6 @@
-theory nsscbc begin
+theory nsscbc
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,10 +10,6 @@ equations [convergent]:
     fst(<x.1, x.2>) = x.1,
     prefix(enc(<X, Y>, k)) = enc(X, k),
     snd(<x.1, x.2>) = x.2
-
-
-
-
 
 rule (modulo E) setup:
    [ Fr( ~k ) ] --[ KeyGen( $A ) ]-> [ !SharedKeyWithServer( $A, ~k ) ]
@@ -76,6 +74,11 @@ restriction singlesharedkeyperuser:
   "∀ A #i #j. ((KeyGen( A ) @ #i) ∧ (KeyGen( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ A #i #j. ((KeyGen( A ) @ #i) ∧ (KeyGen( A ) @ #j)) ⇒ (#i = #j)"
+  */
+
 lemma secrecy:
   all-traces
   "∀ A B k n #i.
@@ -112,28 +115,14 @@ solve( ResponderWaitConfirm( $B, $A, ~k, ~nb ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -145,7 +134,7 @@ summary of summaries:
 analyzed: examples/post17/needham_schroeder_symmetric_cbc.spthy
 
   output:          examples/post17/needham_schroeder_symmetric_cbc.spthy.tmp
-  processing time: 10.03s
+  processing time: 5.88s
   
   secrecy (all-traces): falsified - found trace (8 steps)
 

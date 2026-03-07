@@ -74,7 +74,7 @@ developed by him and Steve Kremer.
 Charlie Jacomme contributed to the newer version of SAPIC, SAPIC+ and
 implemented the translations to ProVerif, GSVerif and DeepSec.
 
-Other contributers to the code include: Katriel Cohn-Gordon, Kevin
+Other contributors to the code include: Katriel Cohn-Gordon, Kevin
 Milner, Dominik Schoop, Sam Scott, Jorden Whitefield, Ognjen Maric, and
 many others.
 

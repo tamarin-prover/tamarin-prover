@@ -66,6 +66,7 @@ module Theory.Tools.Wellformedness (
   , prettyWfErrorReport
   , underlineTopic
 
+  , formulaFacts
   , formulaTerms
   ) where
 
@@ -83,6 +84,7 @@ import           Data.Maybe
 -- import           Data.Monoid                 (mappend, mempty)
 import qualified Data.Set                    as S
 -- import           Data.Traversable            (traverse)
+import Data.Functor (($>))
 
 import           Control.Monad.Bind
 
@@ -121,7 +123,6 @@ prettyWfErrorReport =
     ppTopic errs@((topic,_):_) =
       text topic $-$
       (nest 2 . vcat . intersperse (text "") $ map snd errs)
-
 
 ------------------------------------------------------------------------------
 -- Utilities
@@ -173,7 +174,7 @@ underlineTopic topic = topic ++"\n" ++
 factInfo :: Fact t -> (FactTag, Int, Multiplicity)
 factInfo fa    = (factTag fa, factArity fa, factMultiplicity fa)
 
--- | To bind a list of premise facts with their most similar conclusion facts. The most similar fact 
+-- | To bind a list of premise facts with their most similar conclusion facts. The most similar fact
 -- | has the minimual editing distance and the value of the distance must be
 -- | between between 1 and 3. If no such fact exists, Nothing is returned.
 mostSimilarName :: [RuleAndFact]->[RuleAndFact]
@@ -195,13 +196,13 @@ mostSimilarName lhs rhs =
     isSimilar (rf, _)                      = (rf, Nothing)
 
     -- to get the fact in rhs which has the minimum editing distance
-    -- with a given fact and the distance between the two facts  
+    -- with a given fact and the distance between the two facts
     minimalEdFact :: RuleAndFact->[RuleAndFact]->(RuleAndFact, Maybe (RuleAndFact, Int))
     minimalEdFact lFact rFacts      =  (lFact, listToMaybe $ sortOn snd $ edDistances lFact rFacts)
 
-    -- Calculates the distance between a given fact and the facts of a list, 
+    -- Calculates the distance between a given fact and the facts of a list,
     -- also save each fact in the list and his editing distance to the given fact
-    -- as a tuple  
+    -- as a tuple
     edDistances :: RuleAndFact-> [RuleAndFact] -> [(RuleAndFact, Int)]
     edDistances s li = map (\x ->(,) x $ distance (snd s) x) li
       where
@@ -350,28 +351,31 @@ natWellSortedReportDiff thy = natSortErrors itemsTerms
 
 
 --- | Check that the protocol rule variants are correct.
-variantsCheck :: MaudeHandle -> [Macro] -> String -> OpenProtoRule -> WfErrorReport
-variantsCheck _   _      _    (OpenProtoRule _ [])     = []
-variantsCheck hnd macros info (OpenProtoRule ruE ruAC) =
-  if sameVariantsUpToActions ruAC recomputedVariants then
-    []
-  else
-    return $
-            ( (underlineTopic "Variants")
-            , text info $-$ (nest 2 $ (numbered' $ (map prettyProtoRuleAC ruAC)))
-              $--$ text "Recomputed variants: " $--$
-              (nest 2 $ (numbered' $ map prettyProtoRuleAC recomputedVariants))
-            )
+variantsCheck :: MaudeHandle -> [LNMacro] -> String -> OpenProtoRule -> WfErrorReport
+variantsCheck hnd macros info (OpenProtoRule ruE ruAC) = catMaybes
+  [ guard (not (null ruAC) && not (sameVariantsUpToActions ruAC recomputedVariants)) $>
+      ( underlineTopic "Variants"
+      , text info $-$ nest 2 (numbered' (map prettyProtoRuleAC ruAC))
+        $--$ text "Recomputed variants: " $--$
+        nest 2 (numbered' $ map prettyProtoRuleAC recomputedVariants)
+      )
+  , guard (null recomputedVariants) $>
+      ( underlineTopic "Rule has no variants"
+      ,       text "Rule " <> prettyRuleName ruE <> text " has no variants."
+        $--$  text "Most likely, this means that the rule's use of fresh variables is contradictory. "
+        <>    text "For exaple, a rule with the premises In(~x) and Fr(~x) has no variants because ~x cannot be sent before it is generated." )]
   where
-    recomputedVariants = map (get cprRuleAC) $ unfoldRuleVariants $
-      ClosedProtoRule ruE (variantsProtoRule hnd (applyMacroInRule macros ruE))
+    recomputedVariants =
+      map (get cprRuleAC) $
+      concatMap (unfoldRuleVariants . ClosedProtoRule ruE) $
+      maybeToList (variantsProtoRule hnd (applyMacroInRule macros ruE))
     sameVariantsUpToActions parsed computed = all (\x -> any (equalUpToAddedActions x) computed) parsed
 
 -- | Report on missing or different variants.
 ruleVariantsReport :: SignatureWithMaude -> OpenTranslatedTheory -> WfErrorReport
 ruleVariantsReport sig thy = do
     ru <- [ ru | RuleItem ru <- get thyItems thy ]
-    variantsCheck hnd (theoryMacros thy) ("rule " ++ quote (showRuleCaseName (get oprRuleE ru)) ++
+    variantsCheck hnd (theoryMacros thy) ("Rule " ++ quote (showRuleCaseName (get oprRuleE ru)) ++
                      " cannot confirm manual variants:") ru
   where
     hnd = get sigmMaudeHandle sig
@@ -381,9 +385,9 @@ ruleVariantsReportDiff :: SignatureWithMaude -> OpenDiffTheory -> WfErrorReport
 ruleVariantsReportDiff sig thy = do
     lrRu <- [ get dprLeftRight ru | DiffRuleItem ru <- get diffThyItems thy ]
     case lrRu of
-      Just (lr, rr) -> (variantsCheck hnd (diffTheoryMacros thy) ("left rule " ++ quote (showRuleCaseName (get oprRuleE lr)) ++
+      Just (lr, rr) -> (variantsCheck hnd (diffTheoryMacros thy) ("Left rule " ++ quote (showRuleCaseName (get oprRuleE lr)) ++
                      " cannot confirm manual variants:") lr) ++
-                      (variantsCheck hnd (diffTheoryMacros thy) ("right rule " ++ quote (showRuleCaseName (get oprRuleE rr)) ++
+                      (variantsCheck hnd (diffTheoryMacros thy) ("Right rule " ++ quote (showRuleCaseName (get oprRuleE rr)) ++
                       " cannot confirm manual variants:") rr)
       Nothing -> []
   where
@@ -442,9 +446,9 @@ freshNamesReport' rules = do
     ru <- rules
     case filter ((LSortFresh ==) . sortOfName) $ universeBi ru of
       []    -> []
-      names -> return $ (,) (underlineTopic "Fresh names") $ fsep $
+      names -> return $ (,) (underlineTopic "Fresh public constants") $ fsep $
           text ( "rule " ++ quote (showRuleCaseName ru) ++ ": " ++
-                 "fresh names are not allowed in rule:" )
+                 "fresh public constants are not allowed:" )
         : punctuate comma (map (nest 2 . text . show) names)
 
 -- | Report on fresh names.
@@ -463,7 +467,7 @@ publicNamesReport' rules =
       clashes -> return $ (,) (topic++notif) $ numbered' $
           map (nest 2 . fsep . punctuate comma . map ppRuleAndName. (groupOn fst)) clashes
   where
-    topic       = underlineTopic "Public names with mismatching capitalization" ++ "\n"
+    topic       = underlineTopic "Public constants with mismatching capitalization" ++ "\n"
     notif       = "Identifiers are case-sensitive, "++
                   "mismatched capitalizations are considered as different, "++
                   "i.e., 'ID' is different from 'id'. "++
@@ -494,12 +498,16 @@ unboundCheck info ru
         , text info $-$ nest 2 (prettyVarList unboundVars) )
   where
     boundVars   = S.fromList $ frees (get rPrems ru)
-    originatesFromLookup v = any (match v) $ get preAttributes $ get rInfo ru
-    match v (Process (ProcessComb (Lookup _ v') _ _ _))  = v == slvar v'
+    originatesFromLookup v = match v $ ruleProcess $ get preAttributes $ get rInfo ru
+    match v (Just (ProcessComb (Lookup _ v') _ _ _))  = v == slvar v'
     match _ _ = False
+    isNowNode v = lvarSort v == LSortNode && lvarName v == "NOW"
     unboundVars = do
         v <- frees (get rConcs ru, get rActs ru, get rInfo ru)
-        guard $ not (lvarSort v == LSortPub || v `S.member` boundVars || originatesFromLookup v)
+        guard $ not ( isNowNode v
+                    || lvarSort v == LSortPub
+                    || v `S.member` boundVars
+                    || originatesFromLookup v)
         return v
 
 -- | Report on sort clashes.
@@ -522,7 +530,7 @@ unboundReportDiff thy = do
 reservedFactNameRules' :: [ProtoRuleE] -> WfErrorReport
 reservedFactNameRules' rules = do
   ru <- rules
-  let lfact = [fa| fa <- get rPrems ru
+  let lfact = [fa | fa <- get rPrems ru
                   , factTag fa `elem` [KUFact,KDFact]
                   || isKLogFact fa]
       mfact = [fa | fa <- get rActs ru
@@ -533,7 +541,7 @@ reservedFactNameRules' rules = do
                   || isKLogFact fa]
       check _   []  = mzero
       check msg fas = return $ (,) (underlineTopic "Reserved names") $
-            text ("rule " ++ quote (showRuleCaseName ru))
+            text ("Rule " ++ quote (showRuleCaseName ru))
             <-> text ("contains facts with reserved names"++msg) $-$
             nest 2 (fsep $ punctuate comma $ map prettyLNFact fas)
 
@@ -567,12 +575,12 @@ freshFactArguments' rules = do
         text ("rule " ++ quote (showRuleCaseName ru)) <->
         text "fact:" <-> prettyLNFact fa
 
--- | Report on facts usage.
-factReports :: OpenTranslatedTheory -> WfErrorReport
-factReports thy = concat
-    [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
-    , factUsage, factLhsOccurNoRhs, inexistentActions, inexistentActionsRestrictions
-    ]
+-- | Report on facts usage. Skip checks on non-existant actions if `incompleteMSRs` is True.
+factReports :: Bool -> OpenTranslatedTheory -> WfErrorReport
+factReports incompleteMSRs thy =
+    concat  [ reservedReport, reservedFactNameRules, freshFactArguments, specialFactsUsage
+    , factUsage, factLhsOccurNoRhs]
+    ++ concat [ inexistentActions ++ inexistentActionsRestrictions | incompleteMSRs ]
   where
     ruleFacts ru =
       ( "Rule " ++ quote (showRuleCaseName ru)
@@ -625,29 +633,60 @@ factReports thy = concat
 
     -- Check for facts with equal name modulo capitalization, but different
     -- multiplicity or arity.
-    factUsage = do
-       clash <- clashesOn factIdentifier (snd . snd) theoryFacts'
-       let (_, (_, (factName, _, _))) = head clash
-           name =quote ( map toLower $ factTagName factName  )
-       return $ (,) (topic++p1++p2) $ (text ("\nFact " ++ name ++ ":\n") $-$ ). numbered' $ do
-           (origin, (ppFa, (tag, arity, multipl))) <- clash
-           return $ text (origin ++
-                          ", capitalization  " ++ show (factTagName tag) ++
-                          ", " ++ show arity ++", " ++ show multipl)
-                    $-$ nest 2 ppFa
+    factUsage :: WfErrorReport
+    factUsage = capIssues ++ arityIssues ++ multipIssues
       where
-        topic = (underlineTopic "Fact usage") ++ "\n"
-        p1    = "Possible reasons: \n"++
-                "1. Fact names are case-sensitive, different capitalizations are "++
-                  "considered as different facts, "++
-                  "i.e., Fact() is different from FAct(). "++
-                  "Check the capitalization of your fact names.\n"
-        p2    = "2. Same fact is used with different arities, "++
-                "i.e., Fact('A','B') is different from Fact('A'). "++
-                "Check the arguments of your facts.\n "
-        --showInfo (tag, k, multipl) = show $ (showFactTag tag, k, multipl)
-        theoryFacts'   = [ (ru, fa) | (ru, fas) <- theoryFacts, fa <- fas ]
+        theoryFacts' = [(ru, fa) | (ru, fas) <- theoryFacts, fa <- fas]
         factIdentifier (_, (_, (tag, _, _))) = map toLower $ factTagName tag
+        allClashes = filter (\g -> length g > 1) $ 
+                    groupOn factIdentifier $ 
+                    sortOn factIdentifier theoryFacts'
+        capIssues = 
+          if any hasCapIssue allClashes then
+            [(underlineTopic "Fact capitalization issues" ++ "\n" ++ capIssueMsg, 
+              text "\n" $-$ vcat (map formatCapIssue $ filter hasCapIssue allClashes))]
+          else []
+        arityIssues = 
+          if any hasArityIssue allClashes then
+            [(underlineTopic "Fact arity issues" ++ "\n" ++ arityIssueMsg,
+              text "\n" $-$ vcat (map formatArityIssue $ filter hasArityIssue allClashes))]
+          else []
+        multipIssues = 
+          if any hasMultipIssue allClashes then
+            [(underlineTopic "Fact multiplicity issues" ++ "\n" ++ multipIssueMsg,
+              text "\n" $-$ vcat (map formatMultipIssue $ filter hasMultipIssue allClashes))]
+          else []
+        
+        formatCapIssue clash = 
+          text ("Fact `" ++ name clash ++ "':\n") $-$
+          nest 2 (numbered' $ 
+            [ text (origin ++ ", capitalization " ++ show (factTagName tag)) $-$ nest 2 ppFa 
+            | (origin, (ppFa, (tag, _, _))) <- clash ])$-$ text ""
+        formatArityIssue clash = 
+          text ("Fact `" ++ name clash ++ "':\n") $-$
+          nest 2 (numbered' $ 
+            [ text (origin ++ ", arity " ++ show arity) $-$ nest 2 ppFa 
+            | (origin, (ppFa, (_, arity, _))) <- clash ]) $-$ text ""
+        formatMultipIssue clash = 
+          text ("Fact `" ++ name clash ++ "':\n") $-$
+          nest 2 (numbered' $ 
+            [ text (origin ++ ", multiplicity (persistence) " ++ show multip) $-$ nest 2 ppFa 
+            | (origin, (ppFa, (_, _, multip))) <- clash ])$-$ text ""
+
+        hasCapIssue clash = length (sortednub [factTagName tag | (_, (_, (tag, _, _))) <- clash]) > 1
+        hasArityIssue clash = length (sortednub [arity | (_, (_, (_, arity, _))) <- clash]) > 1
+        hasMultipIssue clash = length (sortednub [multip | (_, (_, (_, _, multip))) <- clash]) > 1
+        name clash = map toLower $ factTagName $ let (_, (_, (tag, _, _))) = head clash in tag
+        capIssueMsg = "Fact names are case-sensitive, different capitalizations are " ++
+                    "considered as different facts, " ++
+                    "i.e., Fact() is different from FAct(). \n" ++
+                    "Check the capitalization of your fact names."
+        arityIssueMsg = "Same fact is used with different arities, " ++
+                      "i.e., Fact('A','B') is different from Fact('A'). \n" ++
+                      "Check the arguments of your facts."
+        multipIssueMsg = "Same fact is used with different multiplicities, " ++
+                        "i.e., !Fact() (Persistent fact) exists along with Fact() (Linear) in your rules. \n" ++
+                        "Check the multiplicity (persistence) of your facts."
 
 
     -- Check that every fact referenced in a formula is present as an action
@@ -672,8 +711,8 @@ factReports thy = concat
             (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
-          else return $ (,) (underlineTopic "Inexistant lemma actions") $
-                 text ("lemma " ++ quote name ++ " references action ") $-$
+          else return $ (,) (underlineTopic "Inexistent lemma actions") $
+                 text ("Lemma " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " (arity "++ show ari++
                  ", "++show mul++") ")) $-$
@@ -687,8 +726,8 @@ factReports thy = concat
             (tag,ari,mul)=info
         if info `S.member` ruleActions
           then []
-          else return $ (,) (underlineTopic "Restriction actions") $
-                 text ("restriction " ++ quote name ++ " references action ") $-$
+          else return $ (,) (underlineTopic "Inexistent restriction actions") $
+                 text ("Restriction " ++ quote name ++ " references action ") $-$
                  nest 2 (text ("fact " ++ show (factTagName tag)++
                  " (arity "++ show ari++
                  ", "++show mul++") ")) $-$
@@ -758,7 +797,7 @@ factReportsDiff thy = concat
         (origin, fas) <- theoryDiffRuleFacts
         case mapMaybe reservedPrefixFactName fas of
           []   -> []
-          errs -> return $ (,) (underlineTopic "Reserved names") $ foldr1 ($--$) $
+          errs -> return $ (,) (underlineTopic "Reserved prefixes") $ foldr1 ($--$) $
               wrappedText ("The " ++ origin ++
                            " contains facts with reserved prefixes ('DiffIntr', 'DiffProto') inside names:")
             : map (nest 2) errs
@@ -887,8 +926,8 @@ lemmaAttributeReport thy = do
     lem <- theoryLemmas thy
     guard $    get lTraceQuantifier lem == ExistsTrace
             && ReuseLemma `elem` get lAttributes lem
-    return ( underlineTopic "Attributes"
-           , text "lemma" <-> (text $ quote $ get lName lem) <> colon <->
+    return ( underlineTopic "Lemma annotations"
+           , text "Lemma" <-> (text $ quote $ get lName lem) <> colon <->
              text "cannot reuse 'exists-trace' lemmas"
            )
 
@@ -899,8 +938,8 @@ lemmaAttributeReportDiff thy = do
     (s, lem) <- diffTheoryLemmas thy
     guard $    get lTraceQuantifier lem == ExistsTrace
             && ReuseLemma `elem` get lAttributes lem
-    return ( underlineTopic "Attributes"
-           , text ("lemma " ++ show s) <-> (text $ quote $ get lName lem) <> colon <->
+    return ( underlineTopic "Lemma annotations"
+           , text ("Lemma " ++ show s) <-> (text $ quote $ get lName lem) <> colon <->
              text "cannot reuse 'exists-trace' lemmas"
            )
 
@@ -927,7 +966,7 @@ checkTerms header maudeSig fm
         (punctuate comma $ map (nest 2 . text . quote . show) offenders)
       ) $--$
       wrappedText
-        "The only allowed terms are public names and bound node and message\
+        "The only allowed terms are public constants and bound node and message\
         \ variables. If you encounter free message variables, then you might\
         \ have forgotten a #-prefix. Sort prefixes can only be dropped where\
         \ this is unambiguous. Moreover, reducible function symbols are\
@@ -966,12 +1005,12 @@ formulaReports thy = do
          ]
   where
     annFormulas = do LemmaItem l <- get thyItems thy
-                     let header = "lemma " ++ quote (get lName l)
-                         fm     = get lFormula l
+                     let header = "Lemma " ++ quote (get lName l)
+                         fm     = applyMacroInFormula (theoryMacros thy) (get lFormula l)
                      return (header, fm)
               <|> do RestrictionItem rstr <- get thyItems thy
-                     let header = "restriction " ++ quote (get rstrName rstr)
-                         fm     = get rstrFormula rstr
+                     let header = "Restriction " ++ quote (get rstrName rstr)
+                         fm     = applyMacroInFormula (theoryMacros thy) (get rstrFormula rstr)
                      return (header, fm)
 
 
@@ -989,12 +1028,12 @@ formulaReportsDiff thy = do
          ]
   where
     annFormulas = do EitherLemmaItem (s, l) <- get diffThyItems thy
-                     let header = show s ++ " lemma " ++ quote (get lName l)
-                         fm     = get lFormula l
+                     let header = show s ++ " Lemma " ++ quote (get lName l)
+                         fm     = applyMacroInFormula (diffTheoryMacros thy) (get lFormula l)
                      return (header, fm)
               <|> do EitherRestrictionItem (s, rstr) <- get diffThyItems thy
-                     let header = show s ++ " restriction " ++ quote (get rstrName rstr)
-                         fm     = get rstrFormula rstr
+                     let header = show s ++ " Restriction " ++ quote (get rstrName rstr)
+                         fm     = applyMacroInFormula (diffTheoryMacros thy) (get rstrFormula rstr)
                      return (header, fm)
 
 -- | Check that all rules are multipliation restricted. Compared
@@ -1101,7 +1140,7 @@ multRestrictedReportDiff thy = multRestrictedReport' irreducible (diffThyProtoRu
 findNotProvedLemmas :: [String] -> [String] -> [String]
 findNotProvedLemmas lemmaArgsNames lemmasInTheory = foldl (\acc x -> if not (argFilter x) then  x:acc else acc ) [] lemmaArgsNames
   where
-      -- Check a lemma against a prefix* pattern or the name of a lemma 
+      -- Check a lemma against a prefix* pattern or the name of a lemma
       lemmaChecker :: String -> String -> Bool
       lemmaChecker argLem lemFromThy
         | lastMay argLem == Just '*' = init argLem `isPrefixOf` lemFromThy
@@ -1225,23 +1264,23 @@ checkWellformednessDiff thy sig = -- trace ("checkWellformednessDiff: " ++ show 
     , natWellSortedReportDiff
     ] ++ (if not (isUserMarkedConvergentDiff thy) then checkDiffEquationsSubtermConvergence thy else [])
 
--- | Returns a list of errors, if there are any.
-checkWellformedness :: OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
-checkWellformedness thy sig = concatMap ($ thy)
+-- | Returns a list of errors, if there are any. `incompleteMSR`, if true, indicates
+-- that the MSRs are incomplete (e.g., when we export to ProVerif) and that
+-- checks that rely on that should not be performed.
+checkWellformedness :: Bool -> OpenTranslatedTheory -> SignatureWithMaude -> WfErrorReport
+checkWellformedness incompleteMSRs thy sig = concatMap ($ thy) (
     [ checkIfLemmasInTheory
     , unboundReport
     , freshNamesReport
     , publicNamesReport
     , ruleSortsReport
     , ruleVariantsReport sig
-    , factReports
+    , factReports incompleteMSRs
     , formulaReports
     , lemmaAttributeReport
     , multRestrictedReport
     , natWellSortedReport
-    ] ++ additionalChecks
-  where
-    userMarked = isUserMarkedConvergent thy
-    additionalChecks = if not userMarked 
-                       then checkEquationsSubtermConvergence thy
-                       else []
+    ]
+    ++ -- additional checks
+    [checkEquationsSubtermConvergence |  not (isUserMarkedConvergent thy) ]
+    )

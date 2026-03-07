@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternGuards #-}
 -- |
 -- Copyright   : (c) 2019 Charlie Jacomme and Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
@@ -7,20 +6,21 @@
 -- Portability : GHC only
 --
 
-module Sapic.States (
-    annotatePureStates,
-    hasBoundUnboundStates
-) where
+module Sapic.States
+  ( annotatePureStates
+  , hasBoundUnboundStates
+  ) where
 
-import         Sapic.Annotation
+import Sapic.Annotation
 
-import         Theory
-import         Theory.Sapic
+import Theory
+import Theory.Sapic
 
-import qualified  Data.Set as S
-import qualified Data.Map as M
-import qualified Data.List as L
-import           Control.Monad.Fresh
+import Data.Set qualified as S
+import Data.Map qualified as M
+import Data.Maybe (fromMaybe)
+import Data.List qualified as L
+import Control.Monad.Fresh
 
 -- Returns all states identifiers that are completely bound by names, when there is no states with a free identifier
 
@@ -80,9 +80,7 @@ addStatesChannels p = evalFresh (declareStateChannel p (S.toList allBoundStates)
  where
    allBoundStates =  fst $ getAllStates p S.empty
    initState = avoidPreciseVars . map (\(SapicLVar lvar _) -> lvar) $ S.toList $ varsProc p
-   initStateChan = case M.lookup stateChannelName initState of
-                     Nothing -> 0
-                     Just i -> i
+   initStateChan = fromMaybe 0 (M.lookup stateChannelName initState)
 
 -- Descends into a process. Whenever all the names of a state term are declared, we declare a name corresponding to this state term, that will be used as the corresponding channel name.
 declareStateChannel ::  MonadFresh m => LProcess (ProcessAnnotation LVar) -> [SapicTerm] -> S.Set SapicLVar -> StateMap -> m (LProcess (ProcessAnnotation LVar))
@@ -181,7 +179,7 @@ isPureState p target loneInsert =
        -- in parallel, we sum the oneOutSide, and in all other cases, we just merge them (as the two branches can never be taken
        let (pur, lone) = isPureState pl target loneInsert in
        let (pure', lone') = isPureState pr target loneInsert in
-         ( pur && pure' && not(lone && lone'), lone || lone')
+         ( pur && pure' && not (lone && lone'), lone || lone')
      ProcessComb _ _ pl pr ->
        let (pur, lone) = isPureState pl target loneInsert in
        let (pure', lone') = isPureState pr target loneInsert in
@@ -213,7 +211,7 @@ annotateEachPureStates (ProcessComb comb an pl pr ) pureStates
               pl' = annotateEachPureStates pl pureStates
               pr' = annotateEachPureStates pr pureStates
 annotateEachPureStates (ProcessAction ac an p) pureStates
-  | New _ <- ac, Just cid <- isStateChannel an =
+  | New _ <- ac, Just cid <- an.isStateChannel =
       if fst $ isPureState p cid False then
         ProcessAction ac an{pureState=True, isStateChannel = Just cid} (annotateEachPureStates p (cid `S.insert` pureStates))
       else

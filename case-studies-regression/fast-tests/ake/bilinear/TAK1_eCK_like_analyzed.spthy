@@ -1,4 +1,6 @@
-theory TAK1 begin
+theory TAK1
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -6,15 +8,7 @@ builtins: diffie-hellman, bilinear-pairing, multiset
 functions: fst/1, h/1, kdf/1, pair/2, snd/1, tag/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
-
-
 section{* The TAK1 Protocol. *}
-
-
-
-
 
 rule (modulo E) Register_pk:
    [ Fr( ~ea ) ]
@@ -523,39 +517,14 @@ solve( ((∃ #k spartner. (Origin( spartner, XC ) @ #k)) ∧
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Reveal_sessk: 
-Failed to derive Variable(s): sessKey
-
-Rule Proto3: 
-Failed to derive Variable(s): ~eb, ~ec, XB, XC
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -567,10 +536,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/TAK1_eCK_like.spthy
 
   output:          examples/ake/bilinear/TAK1_eCK_like.spthy.tmp
-  processing time: 35.20s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 21.88s
   
   session_key_establish (exists-trace): verified (17 steps)
   Session_Key_Secrecy (all-traces): falsified - found trace (21 steps)

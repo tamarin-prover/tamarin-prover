@@ -8,7 +8,7 @@ Tree-sitter grammar
 ------------------
 
 There exists a Tree-sitter grammar for Spthy files with support for SAPiC+:
-[tree-sitter-spthy](https://github.com/tamarin-prover/tamarin-prover/tree-sitter)
+[tree-sitter-spthy](https://github.com/tamarin-prover/tamarin-prover/tree/develop/tree-sitter)
 
 The grammar allows generating parsers that can be used in third-party tools without
 dependencies to the Tamarin implementation.

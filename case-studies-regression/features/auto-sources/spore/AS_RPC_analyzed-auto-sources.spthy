@@ -1,4 +1,6 @@
-theory AndrewSecureRPC begin
+theory AndrewSecureRPC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,12 +10,6 @@ equations:
     pred(succ(x)) = x,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) Create_Key:
    [ Fr( ~sk ) ]
@@ -886,20 +882,6 @@ solve( StateB( $A, $B, ~sk, xna, ~nb ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 lemma AUTO_typing [sources]:
   all-traces
   "((⊤) ∧
@@ -929,7 +911,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ x m #i.
            (AUTO_IN_TERM_0_0_1_0_1__B_1( m, x ) @ #i)
           ∧
@@ -1542,10 +1523,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -1557,7 +1538,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
 
   output:          examples/features/auto-sources/spore/AS_RPC.spthy.tmp
-  processing time: 32.99s
+  processing time: 21.66s
   
   secrecy (all-traces): verified (187 steps)
   injectiveagreement_A (all-traces): falsified - found trace (16 steps)
@@ -1565,7 +1546,7 @@ analyzed: examples/features/auto-sources/spore/AS_RPC.spthy
   noninjectiveagreement_A (all-traces): falsified - found trace (10 steps)
   noninjectiveagreement_B (all-traces): falsified - found trace (7 steps)
   Session_key_honest_setup (exists-trace): verified (15 steps)
-  AUTO_typing (all-traces): verified (146 steps)
+  AUTO_typing (all-traces): verified (145 steps)
 
 ==============================================================================
 */

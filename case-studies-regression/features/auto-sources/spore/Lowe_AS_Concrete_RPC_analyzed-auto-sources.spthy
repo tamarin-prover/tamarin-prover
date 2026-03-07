@@ -1,4 +1,6 @@
-theory LoweBanConcreteAndrewSecureRPC begin
+theory LoweBanConcreteAndrewSecureRPC
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,12 +10,6 @@ equations:
     pred(succ(x)) = x,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) Create_Key:
    [ Fr( ~sk ) ]
@@ -5010,28 +5006,14 @@ solve( StateB( $A, $B, ~sk, na, ~kabp ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -5043,7 +5025,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy
 
   output:          examples/features/auto-sources/spore/Lowe_AS_Concrete_RPC.spthy.tmp
-  processing time: 20.55s
+  processing time: 13.89s
   
   secrecy (all-traces): verified (65 steps)
   injectiveagreement_A (all-traces): verified (348 steps)

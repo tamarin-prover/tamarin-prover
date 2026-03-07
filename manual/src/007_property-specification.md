@@ -205,6 +205,42 @@ section on Restrictions.
 ~~~~ {.tamarin include="code/auth-signing-simple.spthy"}
 ~~~~
 
+Property Development in the GUI
+-------------------------------
+
+It is often just as hard to come up with the correct properties for a model than
+it is come up with the correct model for a protocol. Sometimes, you phrased the
+property too strong and there are trivial attacks you meant to exclude.
+Sometimes, you simply make mistakes.
+
+Tamarin allows you to edit, add, and delete the lemmas of a theory in the GUI
+without requiring you to restart the server. Especially for large theories,
+editing lemmas in the GUI can save you significant amounts of time.
+
+In the left half of your screen, you will find three buttons to add, delete, or
+edit lemmas. If you click any of these buttons, you will be shown more
+documentation, but their functionality should be self-explanatory for the most
+part. In general, the following applies when editing lemmas in the GUI:
+
+- Your changes are not stored in your model file. If you want to persist your
+  changes, you must either use "Download source" from the Actions menu to
+  download the entire theory, or use "Append modified lemmas to file" from the
+  Actions menu. This option will add new or modified lemmas at the end of your
+  model file as a comment. You must then manually merge them into your model.
+- Whenever you delete or edit a lemma marked as `reuse`, all proofs after the
+  deleted or edited lemma will be invalidated. This is because Tamarin cannot be
+  certain anymore whether the proofs still hold. The proofs, though, will not be
+  discarded, and you can again verify them. Tamarin will let you know should it
+  encounter any issues.
+- You cannot add, modify, or delete sources lemmas. This is because sources
+  lemmas influence Tamarin's precomputations. You must edit sources lemmas in
+your model file and use "Reload file" from the Actions menu to reload the theory
+with the updated sources lemmas. If the theory was uploaded or modified
+interactively in the web interface, reloading is not possible, and you will have restart the server instead.
+
+Below, we highlight the four most important buttons for editing lemmas in the GUI.
+
+![Lemma Editing Buttons](../images/lemma-editing.jpeg "Lemma Editing Buttons"){width=100%}\
 
 Observational Equivalence
 -------------------------
@@ -563,7 +599,7 @@ This means a number of things:
 
 Source lemmas are necessary whenever the analysis reports `partial
 deconstructions left` in the `Raw sources`. See section on [Open
-chains](008_precomputation.html#sec:openchains) for details on this.
+chains](009_precomputation.html#sec:openchains) for details on this.
 
 All `sources` lemmas are used only for the case distinctions and do not
 benefit from other lemmas being marked as `reuse`.

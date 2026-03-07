@@ -1,665 +1,1044 @@
-theory CertificateTransparencyExt begin
+theory CertificateTransparencyExt
+
+begin
 
 // Function signature and definition of the equational theory E
 
 functions: fst/1, pair/2, pk/1, read/1, sign/2,
-           skca/1[private,destructor], snd/1, true/0, verify/3
+           skca/1[private,constructor], snd/1, true/0, verify/3
 equations:
     fst(<x.1, x.2>) = x.1,
     read(sign(sk, m)) = m,
     snd(<x.1, x.2>) = x.2,
     verify(sign(sk, m), m, pk(sk)) = true
 
-
-
 heuristic: p
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 restriction terminate:
   "∃ #t. Terminate( ) @ #t"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-rule (modulo E) inca_0_1111111[color=#408053, process="in($ca.1);",
-                               issapicrule]:
-   [ State_1111111( ), In( $ca.1 ) ]
-  -->
-   [ !Semistate_11111111111( $ca.1 ), Out( pk(skca($ca.1)) ) ]
-
   /*
-  rule (modulo AC) inca_0_1111111[color=#408053, process="in($ca.1);",
-                                  issapicrule]:
-     [ State_1111111( ), In( $ca ) ]
-    -->
-     [ !Semistate_11111111111( $ca ), Out( pk(skca($ca)) ) ]
+  expanded formula:
+  "∃ #t. Terminate( ) @ #t"
   */
 
-rule (modulo E) p_1_1111111111[color=#40806c, process="!", issapicrule]:
-   [ !Semistate_11111111111( $ca.1 ), In( <$s.1, $ca.2> ), Fr( skS.1 ) ]
+rule (modulo E) Init[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_[color=#ffffff, process="|", issapicrule,
+                     role='Process']:
+   [ State_( ) ] --> [ State_1( ), State_2( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) Proto_0_1[color=#ffffff, process="Proto()", issapicrule,
+                          role='Process']:
+   [ State_1( ) ] --> [ State_11( ), State_12( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11[color=#807740, process="!", issapicrule,
+                       role='Proto']:
+   [ State_11( ) ] --> [ !Semistate_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_11[color=#807740, process="!", issapicrule,
+                       role='Proto']:
+   [ !Semistate_111( ) ] --> [ State_111( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111[color=#807740, process="|", issapicrule,
+                        role='Proto']:
+   [ State_111( ) ] --> [ State_1111( ), State_1112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_1111[color=#807740, process="|", issapicrule,
+                         role='Proto']:
+   [ State_1111( ) ] --> [ State_11111( ), State_11112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_11111[color=#807740, process="|", issapicrule,
+                          role='Proto']:
+   [ State_11111( ) ] --> [ State_111111( ), State_111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_111111[color=#807740, process="|", issapicrule,
+                           role='Proto']:
+   [ State_111111( ) ] --> [ State_1111111( ), State_1111112( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) inca_0_1111111[color=#807740, process="in($ca.1);",
+                               issapicrule, role='Proto']:
+   [ State_1111111( ), In( $ca.1 ) ] --> [ State_11111111( $ca.1 ) ]
+
+  /*
+  rule (modulo AC) inca_0_1111111[color=#807740, process="in($ca.1);",
+                                  issapicrule, role='Proto']:
+     [ State_1111111( ), In( $ca ) ] --> [ State_11111111( $ca ) ]
+  */
+
+rule (modulo E) CA_0_11111111[color=#807740, process="CA()", issapicrule,
+                              role='Proto']:
+   [ State_11111111( $ca.1 ) ]
+  -->
+   [ State_111111111( $ca.1 ), State_111111112( $ca.1 ) ]
+
+  /*
+  rule (modulo AC) CA_0_11111111[color=#807740, process="CA()",
+                                 issapicrule, role='Proto']:
+     [ State_11111111( $ca ) ]
+    -->
+     [ State_111111111( $ca ), State_111111112( $ca ) ]
+  */
+
+rule (modulo E) outpkskcaca_0_111111111[color=#6f4080,
+                                        process="out(pk(skca($ca.1)));", issapicrule, role='Proto_CA']:
+   [ State_111111111( $ca.1 ) ]
+  -->
+   [ State_1111111111( $ca.1 ), Out( pk(skca($ca.1)) ) ]
+
+  /*
+  rule (modulo AC) outpkskcaca_0_111111111[color=#6f4080,
+                                           process="out(pk(skca($ca.1)));", issapicrule, role='Proto_CA']:
+     [ State_111111111( $ca ) ]
+    -->
+     [ State_1111111111( $ca ), Out( pk(skca($ca)) ) ]
+  */
+
+rule (modulo E) p_0_1111111111[color=#6f4080, process="!", issapicrule,
+                               role='Proto_CA']:
+   [ State_1111111111( $ca.1 ) ] --> [ !Semistate_11111111111( $ca.1 ) ]
+
+  /*
+  rule (modulo AC) p_0_1111111111[color=#6f4080, process="!", issapicrule,
+                                  role='Proto_CA']:
+     [ State_1111111111( $ca ) ] --> [ !Semistate_11111111111( $ca ) ]
+  */
+
+rule (modulo E) p_1_1111111111[color=#6f4080, process="!", issapicrule,
+                               role='Proto_CA']:
+   [ !Semistate_11111111111( $ca.1 ) ] --> [ State_11111111111( $ca.1 ) ]
+
+  /*
+  rule (modulo AC) p_1_1111111111[color=#6f4080, process="!", issapicrule,
+                                  role='Proto_CA']:
+     [ !Semistate_11111111111( $ca ) ] --> [ State_11111111111( $ca ) ]
+  */
+
+rule (modulo E) insca_0_11111111111[color=#6f4080,
+                                    process="in(<$s.1, $ca.2>);", issapicrule, role='Proto_CA']:
+   [ State_11111111111( $ca.1 ), In( <$s.1, $ca.2> ) ]
+  -->
+   [ State_111111111111( $ca.1, $s.1, $ca.2 ) ]
+
+  /*
+  rule (modulo AC) insca_0_11111111111[color=#6f4080,
+                                       process="in(<$s.1, $ca.2>);", issapicrule, role='Proto_CA']:
+     [ State_11111111111( $ca ), In( <$s, $ca.1> ) ]
+    -->
+     [ State_111111111111( $ca, $s, $ca.1 ) ]
+  */
+
+rule (modulo E) newskS_0_111111111111[color=#6f4080,
+                                      process="new skS.1;", issapicrule, role='Proto_CA']:
+   [ State_111111111111( $ca.1, $s.1, $ca.2 ), Fr( skS.1 ) ]
+  -->
+   [ State_1111111111111( $ca.1, $s.1, skS.1, $ca.2 ) ]
+
+  /*
+  rule (modulo AC) newskS_0_111111111111[color=#6f4080,
+                                         process="new skS.1;", issapicrule, role='Proto_CA']:
+     [ State_111111111111( $ca, $s, $ca.1 ), Fr( skS ) ]
+    -->
+     [ State_1111111111111( $ca, $s, skS, $ca.1 ) ]
+  */
+
+rule (modulo E) eventHonestRegisterscapkskS_0_1111111111111[color=#6f4080,
+                                                            process="event HonestRegister( $s.1, $ca.2, pk(skS.1) );",
+                                                            issapicrule, role='Proto_CA']:
+   [ State_1111111111111( $ca.1, $s.1, skS.1, $ca.2 ) ]
   --[ HonestRegister( $s.1, $ca.2, pk(skS.1) ) ]->
    [ State_11111111111111( $ca.1, $s.1, skS.1, $ca.2 ) ]
 
   /*
-  rule (modulo AC) p_1_1111111111[color=#40806c, process="!", issapicrule]:
-     [ !Semistate_11111111111( $ca ), In( <$s, $ca.1> ), Fr( skS ) ]
+  rule (modulo AC) eventHonestRegisterscapkskS_0_1111111111111[color=#6f4080,
+                                                               process="event HonestRegister( $s.1, $ca.2, pk(skS.1) );",
+                                                               issapicrule, role='Proto_CA']:
+     [ State_1111111111111( $ca, $s, skS, $ca.1 ) ]
     --[ HonestRegister( $s, $ca.1, pk(skS) ) ]->
      [ State_11111111111111( $ca, $s, skS, $ca.1 ) ]
   */
 
-rule (modulo E) insertcaproofOfIDspkskSyes_0_11111111111111[color=#40806c,
+rule (modulo E) insertcaproofOfIDspkskSyes_0_11111111111111[color=#6f4080,
                                                             process="insert <$ca.2, 'proofOfID', $s.1, pk(skS.1)>,'yes';",
-                                                            issapicrule]:
+                                                            issapicrule, role='Proto_CA']:
    [ State_11111111111111( $ca.1, $s.1, skS.1, $ca.2 ) ]
   --[ Insert( <$ca.2, 'proofOfID', $s.1, pk(skS.1)>, 'yes' ) ]->
+   [ State_111111111111111( $ca.1, $s.1, skS.1, $ca.2 ) ]
+
+  /*
+  rule (modulo AC) insertcaproofOfIDspkskSyes_0_11111111111111[color=#6f4080,
+                                                               process="insert <$ca.2, 'proofOfID', $s.1, pk(skS.1)>,'yes';",
+                                                               issapicrule, role='Proto_CA']:
+     [ State_11111111111111( $ca, $s, skS, $ca.1 ) ]
+    --[ Insert( <$ca.1, 'proofOfID', $s, pk(skS)>, 'yes' ) ]->
+     [ State_111111111111111( $ca, $s, skS, $ca.1 ) ]
+  */
+
+rule (modulo E) outpkskS_0_111111111111111[color=#6f4080,
+                                           process="out(pk(skS.1));", issapicrule, role='Proto_CA']:
+   [ State_111111111111111( $ca.1, $s.1, skS.1, $ca.2 ) ]
+  -->
    [ State_1111111111111111( $ca.1, $s.1, skS.1, $ca.2 ), Out( pk(skS.1) ) ]
 
   /*
-  rule (modulo AC) insertcaproofOfIDspkskSyes_0_11111111111111[color=#40806c,
-                                                               process="insert <$ca.2, 'proofOfID', $s.1, pk(skS.1)>,'yes';",
-                                                               issapicrule]:
-     [ State_11111111111111( $ca, $s, skS, $ca.1 ) ]
-    --[ Insert( <$ca.1, 'proofOfID', $s, pk(skS)>, 'yes' ) ]->
+  rule (modulo AC) outpkskS_0_111111111111111[color=#6f4080,
+                                              process="out(pk(skS.1));", issapicrule, role='Proto_CA']:
+     [ State_111111111111111( $ca, $s, skS, $ca.1 ) ]
+    -->
      [ State_1111111111111111( $ca, $s, skS, $ca.1 ), Out( pk(skS) ) ]
   */
 
-rule (modulo E) outsignskcacapkskSs_0_1111111111111111[color=#40806c,
+rule (modulo E) outsignskcacapkskSs_0_1111111111111111[color=#6f4080,
                                                        process="out(sign(skca($ca.2), <pk(skS.1), $s.1>));",
-                                                       issapicrule]:
+                                                       issapicrule, role='Proto_CA']:
    [ State_1111111111111111( $ca.1, $s.1, skS.1, $ca.2 ) ]
   -->
-   [ Out( sign(skca($ca.2), <pk(skS.1), $s.1>) ) ]
+   [
+   State_11111111111111111( $ca.1, $s.1, skS.1, $ca.2 ),
+   Out( sign(skca($ca.2), <pk(skS.1), $s.1>) )
+   ]
 
   /*
-  rule (modulo AC) outsignskcacapkskSs_0_1111111111111111[color=#40806c,
+  rule (modulo AC) outsignskcacapkskSs_0_1111111111111111[color=#6f4080,
                                                           process="out(sign(skca($ca.2), <pk(skS.1), $s.1>));",
-                                                          issapicrule]:
+                                                          issapicrule, role='Proto_CA']:
      [ State_1111111111111111( $ca, $s, skS, $ca.1 ) ]
     -->
-     [ Out( sign(skca($ca.1), <pk(skS), $s>) ) ]
+     [
+     State_11111111111111111( $ca, $s, skS, $ca.1 ),
+     Out( sign(skca($ca.1), <pk(skS), $s>) )
+     ]
   */
 
-rule (modulo E) inla_0_1111112[color=#408053, process="in($la.1);",
-                               issapicrule]:
-   [ State_1111112( ), In( $la.1 ), In( sign(skca($ca.3), <pk.1, $s.2>) ) ]
+rule (modulo E) p_0_11111111111111111[color=#6f4080, process="0",
+                                      issapicrule, role='Proto_CA']:
+   [ State_11111111111111111( $ca.1, $s.1, skS.1, $ca.2 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11111111111111111[color=#6f4080, process="0",
+                                         issapicrule, role='Proto_CA']:
+     [ State_11111111111111111( $ca, $s, skS, $ca.1 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_111111112[color=#807740, process="0", issapicrule,
+                              role='Proto']:
+   [ State_111111112( $ca.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111112[color=#807740, process="0", issapicrule,
+                                 role='Proto']:
+     [ State_111111112( $ca ) ] --> [ ]
+  */
+
+rule (modulo E) inla_0_1111112[color=#807740, process="in($la.1);",
+                               issapicrule, role='Proto']:
+   [ State_1111112( ), In( $la.1 ) ] --> [ State_11111121( $la.1 ) ]
+
+  /*
+  rule (modulo AC) inla_0_1111112[color=#807740, process="in($la.1);",
+                                  issapicrule, role='Proto']:
+     [ State_1111112( ), In( $la ) ] --> [ State_11111121( $la ) ]
+  */
+
+rule (modulo E) LogCert_0_11111121[color=#807740, process="LogCert()",
+                                   issapicrule, role='Proto']:
+   [ State_11111121( $la.1 ) ]
+  -->
+   [ State_111111211( $la.1 ), State_111111212( $la.1 ) ]
+
+  /*
+  rule (modulo AC) LogCert_0_11111121[color=#807740, process="LogCert()",
+                                      issapicrule, role='Proto']:
+     [ State_11111121( $la ) ]
+    -->
+     [ State_111111211( $la ), State_111111212( $la ) ]
+  */
+
+rule (modulo E) insignskcacapks_0_111111211[color=#40806b,
+                                            process="in(sign(skca($ca.3), <pk.1, $s.2>));", issapicrule,
+                                            role='Proto_LogCert']:
+   [ State_111111211( $la.1 ), In( sign(skca($ca.3), <pk.1, $s.2>) ) ]
+  -->
+   [ State_1111112111( $la.1, pk.1, $s.2, $ca.3 ) ]
+
+  /*
+  rule (modulo AC) insignskcacapks_0_111111211[color=#40806b,
+                                               process="in(sign(skca($ca.3), <pk.1, $s.2>));", issapicrule,
+                                               role='Proto_LogCert']:
+     [ State_111111211( $la ), In( sign(skca($ca), <pk, $s>) ) ]
+    -->
+     [ State_1111112111( $la, pk, $s, $ca ) ]
+  */
+
+rule (modulo E) p_0_1111112111[color=#40806b, process="!", issapicrule,
+                               role='Proto_LogCert']:
+   [ State_1111112111( $la.1, pk.1, $s.2, $ca.3 ) ]
   -->
    [ !Semistate_11111121111( $la.1, pk.1, $s.2, $ca.3 ) ]
 
   /*
-  rule (modulo AC) inla_0_1111112[color=#408053, process="in($la.1);",
-                                  issapicrule]:
-     [ State_1111112( ), In( $la ), In( sign(skca($ca), <pk, $s>) ) ]
+  rule (modulo AC) p_0_1111112111[color=#40806b, process="!", issapicrule,
+                                  role='Proto_LogCert']:
+     [ State_1111112111( $la, pk, $s, $ca ) ]
     -->
      [ !Semistate_11111121111( $la, pk, $s, $ca ) ]
   */
 
-rule (modulo E) p_1_1111112111[color=#408069, process="!", issapicrule]:
-   [ !Semistate_11111121111( $la.1, pk.1, $s.2, $ca.3 ), Fr( lock ) ]
+rule (modulo E) p_1_1111112111[color=#40806b, process="!", issapicrule,
+                               role='Proto_LogCert']:
+   [ !Semistate_11111121111( $la.1, pk.1, $s.2, $ca.3 ) ]
+  -->
+   [ State_11111121111( $la.1, pk.1, $s.2, $ca.3 ) ]
+
+  /*
+  rule (modulo AC) p_1_1111112111[color=#40806b, process="!", issapicrule,
+                                  role='Proto_LogCert']:
+     [ !Semistate_11111121111( $la, pk, $s, $ca ) ]
+    -->
+     [ State_11111121111( $la, pk, $s, $ca ) ]
+  */
+
+rule (modulo E) locklog_0_11111121111[color=#40806b,
+                                      process="lock 'log';", issapicrule, role='Proto_LogCert']:
+   [ State_11111121111( $la.1, pk.1, $s.2, $ca.3 ), Fr( lock ) ]
   --[ Lock_0( '0', lock, 'log' ), Lock( '0', lock, 'log' ) ]->
    [ State_111111211111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
 
   /*
-  rule (modulo AC) p_1_1111112111[color=#408069, process="!", issapicrule]:
-     [ !Semistate_11111121111( $la, pk, $s, $ca ), Fr( lock ) ]
+  rule (modulo AC) locklog_0_11111121111[color=#40806b,
+                                         process="lock 'log';", issapicrule, role='Proto_LogCert']:
+     [ State_11111121111( $la, pk, $s, $ca ), Fr( lock ) ]
     --[ Lock_0( '0', lock, 'log' ), Lock( '0', lock, 'log' ) ]->
      [ State_111111211111( lock, $la, pk, $s, $ca ) ]
   */
 
-rule (modulo E) insertlalogspkcyes_0_111111211111[color=#408069,
+rule (modulo E) insertlalogspkcyes_0_111111211111[color=#40806b,
                                                   process="insert <$la.1, 'log', $s.2, pk.1, 'c1'>,'yes';",
-                                                  issapicrule]:
+                                                  issapicrule, role='Proto_LogCert']:
    [ State_111111211111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
   --[ Insert( <$la.1, 'log', $s.2, pk.1, 'c1'>, 'yes' ) ]->
    [ State_1111112111111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
 
   /*
-  rule (modulo AC) insertlalogspkcyes_0_111111211111[color=#408069,
+  rule (modulo AC) insertlalogspkcyes_0_111111211111[color=#40806b,
                                                      process="insert <$la.1, 'log', $s.2, pk.1, 'c1'>,'yes';",
-                                                     issapicrule]:
+                                                     issapicrule, role='Proto_LogCert']:
      [ State_111111211111( lock, $la, pk, $s, $ca ) ]
     --[ Insert( <$la, 'log', $s, pk, 'c1'>, 'yes' ) ]->
      [ State_1111112111111( lock, $la, pk, $s, $ca ) ]
   */
 
-rule (modulo E) insertlalogspksyes_0_1111112111111[color=#408069,
+rule (modulo E) insertlalogspksyes_0_1111112111111[color=#40806b,
                                                    process="insert <$la.1, 'log', $s.2, pk.1, 's1'>,'yes';",
-                                                   issapicrule]:
+                                                   issapicrule, role='Proto_LogCert']:
    [ State_1111112111111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
   --[ Insert( <$la.1, 'log', $s.2, pk.1, 's1'>, 'yes' ) ]->
    [ State_11111121111111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
 
   /*
-  rule (modulo AC) insertlalogspksyes_0_1111112111111[color=#408069,
+  rule (modulo AC) insertlalogspksyes_0_1111112111111[color=#40806b,
                                                       process="insert <$la.1, 'log', $s.2, pk.1, 's1'>,'yes';",
-                                                      issapicrule]:
+                                                      issapicrule, role='Proto_LogCert']:
      [ State_1111112111111( lock, $la, pk, $s, $ca ) ]
     --[ Insert( <$la, 'log', $s, pk, 's1'>, 'yes' ) ]->
      [ State_11111121111111( lock, $la, pk, $s, $ca ) ]
   */
 
-rule (modulo E) insertlalogspkiyes_0_11111121111111[color=#408069,
+rule (modulo E) insertlalogspkiyes_0_11111121111111[color=#40806b,
                                                     process="insert <$la.1, 'log', $s.2, pk.1, 'i'>,'yes';",
-                                                    issapicrule]:
+                                                    issapicrule, role='Proto_LogCert']:
    [ State_11111121111111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
   --[ Insert( <$la.1, 'log', $s.2, pk.1, 'i'>, 'yes' ) ]->
    [ State_111111211111111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
 
   /*
-  rule (modulo AC) insertlalogspkiyes_0_11111121111111[color=#408069,
+  rule (modulo AC) insertlalogspkiyes_0_11111121111111[color=#40806b,
                                                        process="insert <$la.1, 'log', $s.2, pk.1, 'i'>,'yes';",
-                                                       issapicrule]:
+                                                       issapicrule, role='Proto_LogCert']:
      [ State_11111121111111( lock, $la, pk, $s, $ca ) ]
     --[ Insert( <$la, 'log', $s, pk, 'i'>, 'yes' ) ]->
      [ State_111111211111111( lock, $la, pk, $s, $ca ) ]
   */
 
-rule (modulo E) unlocklog_0_111111211111111[color=#408069,
-                                            process="unlock 'log';", issapicrule]:
+rule (modulo E) unlocklog_0_111111211111111[color=#40806b,
+                                            process="unlock 'log';", issapicrule, role='Proto_LogCert']:
    [ State_111111211111111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
   --[ Unlock_0( '0', lock, 'log' ), Unlock( '0', lock, 'log' ) ]->
-   [ ]
+   [ State_1111112111111111( lock, $la.1, pk.1, $s.2, $ca.3 ) ]
 
   /*
-  rule (modulo AC) unlocklog_0_111111211111111[color=#408069,
-                                               process="unlock 'log';", issapicrule]:
+  rule (modulo AC) unlocklog_0_111111211111111[color=#40806b,
+                                               process="unlock 'log';", issapicrule, role='Proto_LogCert']:
      [ State_111111211111111( lock, $la, pk, $s, $ca ) ]
     --[ Unlock_0( '0', lock, 'log' ), Unlock( '0', lock, 'log' ) ]->
-     [ ]
+     [ State_1111112111111111( lock, $la, pk, $s, $ca ) ]
   */
 
-rule (modulo E) locktestCA_0_1111121[color=#408069,
-                                     process="lock 'testCA';", issapicrule]:
-   [ State_1111121( ), Fr( lock.1 ), In( sign(skca($ca.4), <pk.2, $s.3>) ) ]
+rule (modulo E) p_0_1111112111111111[color=#40806b, process="0",
+                                     issapicrule, role='Proto_LogCert']:
+   [ State_1111112111111111( lock, $la.1, pk.1, $s.2, $ca.3 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111112111111111[color=#40806b, process="0",
+                                        issapicrule, role='Proto_LogCert']:
+     [ State_1111112111111111( lock, $la, pk, $s, $ca ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_111111212[color=#807740, process="0", issapicrule,
+                              role='Proto']:
+   [ State_111111212( $la.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111111212[color=#807740, process="0", issapicrule,
+                                 role='Proto']:
+     [ State_111111212( $la ) ] --> [ ]
+  */
+
+rule (modulo E) TestCA_0_111112[color=#807740, process="TestCA()",
+                                issapicrule, role='Proto']:
+   [ State_111112( ) ] --> [ State_1111121( ), State_1111122( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) locktestCA_0_1111121[color=#534080,
+                                     process="lock 'testCA';", issapicrule, role='Proto_TestCA']:
+   [ State_1111121( ), Fr( lock.1 ) ]
   --[ Lock_1( '1', lock.1, 'testCA' ), Lock( '1', lock.1, 'testCA' ) ]->
+   [ State_11111211( lock.1 ) ]
+
+  /*
+  rule (modulo AC) locktestCA_0_1111121[color=#534080,
+                                        process="lock 'testCA';", issapicrule, role='Proto_TestCA']:
+     [ State_1111121( ), Fr( lock ) ]
+    --[ Lock_1( '1', lock, 'testCA' ), Lock( '1', lock, 'testCA' ) ]->
+     [ State_11111211( lock ) ]
+  */
+
+rule (modulo E) insignskcacapks_0_11111211[color=#534080,
+                                           process="in(sign(skca($ca.4), <pk.2, $s.3>));", issapicrule,
+                                           role='Proto_TestCA']:
+   [ State_11111211( lock.1 ), In( sign(skca($ca.4), <pk.2, $s.3>) ) ]
+  -->
    [ State_111112111( lock.1, pk.2, $s.3, $ca.4 ) ]
 
   /*
-  rule (modulo AC) locktestCA_0_1111121[color=#408069,
-                                        process="lock 'testCA';", issapicrule]:
-     [ State_1111121( ), Fr( lock ), In( sign(skca($ca), <pk, $s>) ) ]
-    --[ Lock_1( '1', lock, 'testCA' ), Lock( '1', lock, 'testCA' ) ]->
+  rule (modulo AC) insignskcacapks_0_11111211[color=#534080,
+                                              process="in(sign(skca($ca.4), <pk.2, $s.3>));", issapicrule,
+                                              role='Proto_TestCA']:
+     [ State_11111211( lock ), In( sign(skca($ca), <pk, $s>) ) ]
+    -->
      [ State_111112111( lock, pk, $s, $ca ) ]
   */
 
-rule (modulo E) lookupcaproofOfIDspkasignored_0_111112111[color=#408080,
+rule (modulo E) lookupcaproofOfIDspkasignored_0_111112111[color=#534080,
                                                           process="lookup <$ca.4, 'proofOfID', $s.3, pk.2> as ignored.1",
-                                                          issapicrule]:
+                                                          no_derivcheck, issapicrule, role='Proto_TestCA']:
    [ State_111112111( lock.1, pk.2, $s.3, $ca.4 ) ]
   --[ IsIn( <$ca.4, 'proofOfID', $s.3, pk.2>, ignored.1 ) ]->
    [ State_1111121111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
 
   /*
-  rule (modulo AC) lookupcaproofOfIDspkasignored_0_111112111[color=#408080,
+  rule (modulo AC) lookupcaproofOfIDspkasignored_0_111112111[color=#534080,
                                                              process="lookup <$ca.4, 'proofOfID', $s.3, pk.2> as ignored.1",
-                                                             issapicrule]:
+                                                             no_derivcheck, issapicrule, role='Proto_TestCA']:
      [ State_111112111( lock, pk, $s, $ca ) ]
     --[ IsIn( <$ca, 'proofOfID', $s, pk>, ignored ) ]->
      [ State_1111121111( ignored, lock, pk, $s, $ca ) ]
   */
 
-rule (modulo E) eventHonestCAca_0_1111121111[color=#408080,
-                                             process="event HonestCA( $ca.4 );", issapicrule]:
-   [ State_1111121111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
-  --[ HonestCA( $ca.4 ) ]->
-   [ State_11111211111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
-
-  /*
-  rule (modulo AC) eventHonestCAca_0_1111121111[color=#408080,
-                                                process="event HonestCA( $ca.4 );", issapicrule]:
-     [ State_1111121111( ignored, lock, pk, $s, $ca ) ]
-    --[ HonestCA( $ca ) ]->
-     [ State_11111211111( ignored, lock, pk, $s, $ca ) ]
-  */
-
-rule (modulo E) eventTestCAcaspk_0_11111211111[color=#408080,
-                                               process="event TestCA( $ca.4, $s.3, pk.2 );", issapicrule]:
-   [ State_11111211111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
-  --[ TestCA( $ca.4, $s.3, pk.2 ) ]->
-   [ State_111112111111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
-
-  /*
-  rule (modulo AC) eventTestCAcaspk_0_11111211111[color=#408080,
-                                                  process="event TestCA( $ca.4, $s.3, pk.2 );", issapicrule]:
-     [ State_11111211111( ignored, lock, pk, $s, $ca ) ]
-    --[ TestCA( $ca, $s, pk ) ]->
-     [ State_111112111111( ignored, lock, pk, $s, $ca ) ]
-  */
-
-rule (modulo E) unlocktestCA_0_111112111111[color=#408080,
-                                            process="unlock 'testCA';", issapicrule]:
-   [ State_111112111111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
-  --[ Unlock_1( '1', lock.1, 'testCA' ), Unlock( '1', lock.1, 'testCA' )
-  ]->
-   [ ]
-
-  /*
-  rule (modulo AC) unlocktestCA_0_111112111111[color=#408080,
-                                               process="unlock 'testCA';", issapicrule]:
-     [ State_111112111111( ignored, lock, pk, $s, $ca ) ]
-    --[ Unlock_1( '1', lock, 'testCA' ), Unlock( '1', lock, 'testCA' ) ]->
-     [ ]
-  */
-
-rule (modulo E) lookupcaproofOfIDspkasignored_1_111112111[color=#408080,
+rule (modulo E) lookupcaproofOfIDspkasignored_1_111112111[color=#534080,
                                                           process="lookup <$ca.4, 'proofOfID', $s.3, pk.2> as ignored.1",
-                                                          issapicrule]:
+                                                          no_derivcheck, issapicrule, role='Proto_TestCA']:
    [ State_111112111( lock.1, pk.2, $s.3, $ca.4 ) ]
   --[ IsNotSet( <$ca.4, 'proofOfID', $s.3, pk.2> ) ]->
    [ State_1111121112( lock.1, pk.2, $s.3, $ca.4 ) ]
 
   /*
-  rule (modulo AC) lookupcaproofOfIDspkasignored_1_111112111[color=#408080,
+  rule (modulo AC) lookupcaproofOfIDspkasignored_1_111112111[color=#534080,
                                                              process="lookup <$ca.4, 'proofOfID', $s.3, pk.2> as ignored.1",
-                                                             issapicrule]:
+                                                             no_derivcheck, issapicrule, role='Proto_TestCA']:
      [ State_111112111( lock, pk, $s, $ca ) ]
     --[ IsNotSet( <$ca, 'proofOfID', $s, pk> ) ]->
      [ State_1111121112( lock, pk, $s, $ca ) ]
   */
 
-rule (modulo E) eventDishonestCAca_0_1111121112[color=#408080,
-                                                process="event DishonestCA( $ca.4 );", issapicrule]:
+rule (modulo E) eventHonestCAca_0_1111121111[color=#534080,
+                                             process="event HonestCA( $ca.4 );", issapicrule,
+                                             role='Proto_TestCA']:
+   [ State_1111121111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
+  --[ HonestCA( $ca.4 ) ]->
+   [ State_11111211111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
+
+  /*
+  rule (modulo AC) eventHonestCAca_0_1111121111[color=#534080,
+                                                process="event HonestCA( $ca.4 );", issapicrule,
+                                                role='Proto_TestCA']:
+     [ State_1111121111( ignored, lock, pk, $s, $ca ) ]
+    --[ HonestCA( $ca ) ]->
+     [ State_11111211111( ignored, lock, pk, $s, $ca ) ]
+  */
+
+rule (modulo E) eventTestCAcaspk_0_11111211111[color=#534080,
+                                               process="event TestCA( $ca.4, $s.3, pk.2 );", issapicrule,
+                                               role='Proto_TestCA']:
+   [ State_11111211111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
+  --[ TestCA( $ca.4, $s.3, pk.2 ) ]->
+   [ State_111112111111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
+
+  /*
+  rule (modulo AC) eventTestCAcaspk_0_11111211111[color=#534080,
+                                                  process="event TestCA( $ca.4, $s.3, pk.2 );", issapicrule,
+                                                  role='Proto_TestCA']:
+     [ State_11111211111( ignored, lock, pk, $s, $ca ) ]
+    --[ TestCA( $ca, $s, pk ) ]->
+     [ State_111112111111( ignored, lock, pk, $s, $ca ) ]
+  */
+
+rule (modulo E) unlocktestCA_0_111112111111[color=#534080,
+                                            process="unlock 'testCA';", issapicrule, role='Proto_TestCA']:
+   [ State_111112111111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
+  --[ Unlock_1( '1', lock.1, 'testCA' ), Unlock( '1', lock.1, 'testCA' )
+  ]->
+   [ State_1111121111111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ]
+
+  /*
+  rule (modulo AC) unlocktestCA_0_111112111111[color=#534080,
+                                               process="unlock 'testCA';", issapicrule, role='Proto_TestCA']:
+     [ State_111112111111( ignored, lock, pk, $s, $ca ) ]
+    --[ Unlock_1( '1', lock, 'testCA' ), Unlock( '1', lock, 'testCA' ) ]->
+     [ State_1111121111111( ignored, lock, pk, $s, $ca ) ]
+  */
+
+rule (modulo E) p_0_1111121111111[color=#534080, process="0",
+                                  issapicrule, role='Proto_TestCA']:
+   [ State_1111121111111( ignored.1, lock.1, pk.2, $s.3, $ca.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111121111111[color=#534080, process="0",
+                                     issapicrule, role='Proto_TestCA']:
+     [ State_1111121111111( ignored, lock, pk, $s, $ca ) ] --> [ ]
+  */
+
+rule (modulo E) eventDishonestCAca_0_1111121112[color=#534080,
+                                                process="event DishonestCA( $ca.4 );", issapicrule,
+                                                role='Proto_TestCA']:
    [ State_1111121112( lock.1, pk.2, $s.3, $ca.4 ) ]
   --[ DishonestCA( $ca.4 ) ]->
    [ State_11111211121( lock.1, pk.2, $s.3, $ca.4 ) ]
 
   /*
-  rule (modulo AC) eventDishonestCAca_0_1111121112[color=#408080,
-                                                   process="event DishonestCA( $ca.4 );", issapicrule]:
+  rule (modulo AC) eventDishonestCAca_0_1111121112[color=#534080,
+                                                   process="event DishonestCA( $ca.4 );", issapicrule,
+                                                   role='Proto_TestCA']:
      [ State_1111121112( lock, pk, $s, $ca ) ]
     --[ DishonestCA( $ca ) ]->
      [ State_11111211121( lock, pk, $s, $ca ) ]
   */
 
-rule (modulo E) eventTestCAcaspk_0_11111211121[color=#408080,
-                                               process="event TestCA( $ca.4, $s.3, pk.2 );", issapicrule]:
+rule (modulo E) eventTestCAcaspk_0_11111211121[color=#534080,
+                                               process="event TestCA( $ca.4, $s.3, pk.2 );", issapicrule,
+                                               role='Proto_TestCA']:
    [ State_11111211121( lock.1, pk.2, $s.3, $ca.4 ) ]
   --[ TestCA( $ca.4, $s.3, pk.2 ) ]->
    [ State_111112111211( lock.1, pk.2, $s.3, $ca.4 ) ]
 
   /*
-  rule (modulo AC) eventTestCAcaspk_0_11111211121[color=#408080,
-                                                  process="event TestCA( $ca.4, $s.3, pk.2 );", issapicrule]:
+  rule (modulo AC) eventTestCAcaspk_0_11111211121[color=#534080,
+                                                  process="event TestCA( $ca.4, $s.3, pk.2 );", issapicrule,
+                                                  role='Proto_TestCA']:
      [ State_11111211121( lock, pk, $s, $ca ) ]
     --[ TestCA( $ca, $s, pk ) ]->
      [ State_111112111211( lock, pk, $s, $ca ) ]
   */
 
-rule (modulo E) unlocktestCA_0_111112111211[color=#408080,
-                                            process="unlock 'testCA';", issapicrule]:
+rule (modulo E) unlocktestCA_0_111112111211[color=#534080,
+                                            process="unlock 'testCA';", issapicrule, role='Proto_TestCA']:
    [ State_111112111211( lock.1, pk.2, $s.3, $ca.4 ) ]
   --[ Unlock_1( '1', lock.1, 'testCA' ), Unlock( '1', lock.1, 'testCA' )
   ]->
-   [ ]
+   [ State_1111121112111( lock.1, pk.2, $s.3, $ca.4 ) ]
 
   /*
-  rule (modulo AC) unlocktestCA_0_111112111211[color=#408080,
-                                               process="unlock 'testCA';", issapicrule]:
+  rule (modulo AC) unlocktestCA_0_111112111211[color=#534080,
+                                               process="unlock 'testCA';", issapicrule, role='Proto_TestCA']:
      [ State_111112111211( lock, pk, $s, $ca ) ]
     --[ Unlock_1( '1', lock, 'testCA' ), Unlock( '1', lock, 'testCA' ) ]->
-     [ ]
+     [ State_1111121112111( lock, pk, $s, $ca ) ]
   */
 
-rule (modulo E) locklog_0_111121[color=#40805d, process="lock 'log';",
-                                 issapicrule]:
-   [ State_111121( ), Fr( lock.2 ), In( <$la.2, 'c1', 's1', $s.4, pk.3> ) ]
+rule (modulo E) p_0_1111121112111[color=#534080, process="0",
+                                  issapicrule, role='Proto_TestCA']:
+   [ State_1111121112111( lock.1, pk.2, $s.3, $ca.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111121112111[color=#534080, process="0",
+                                     issapicrule, role='Proto_TestCA']:
+     [ State_1111121112111( lock, pk, $s, $ca ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_1111122[color=#807740, process="0", issapicrule,
+                            role='Proto']:
+   [ State_1111122( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) TestLA_0_11112[color=#807740, process="TestLA()",
+                               issapicrule, role='Proto']:
+   [ State_11112( ) ] --> [ State_111121( ), State_111122( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) locklog_0_111121[color=#404e80, process="lock 'log';",
+                                 issapicrule, role='Proto_TestLA']:
+   [ State_111121( ), Fr( lock.2 ) ]
   --[ Lock_2( '2', lock.2, 'log' ), Lock( '2', lock.2, 'log' ) ]->
+   [ State_1111211( lock.2 ) ]
+
+  /*
+  rule (modulo AC) locklog_0_111121[color=#404e80, process="lock 'log';",
+                                    issapicrule, role='Proto_TestLA']:
+     [ State_111121( ), Fr( lock ) ]
+    --[ Lock_2( '2', lock, 'log' ), Lock( '2', lock, 'log' ) ]->
+     [ State_1111211( lock ) ]
+  */
+
+rule (modulo E) inlacsspk_0_1111211[color=#404e80,
+                                    process="in(<$la.2, 'c1', 's1', $s.4, pk.3>);", issapicrule,
+                                    role='Proto_TestLA']:
+   [ State_1111211( lock.2 ), In( <$la.2, 'c1', 's1', $s.4, pk.3> ) ]
+  -->
    [ State_11112111( $la.2, lock.2, pk.3, $s.4 ) ]
 
   /*
-  rule (modulo AC) locklog_0_111121[color=#40805d, process="lock 'log';",
-                                    issapicrule]:
-     [ State_111121( ), Fr( lock ), In( <$la, 'c1', 's1', $s, pk> ) ]
-    --[ Lock_2( '2', lock, 'log' ), Lock( '2', lock, 'log' ) ]->
+  rule (modulo AC) inlacsspk_0_1111211[color=#404e80,
+                                       process="in(<$la.2, 'c1', 's1', $s.4, pk.3>);", issapicrule,
+                                       role='Proto_TestLA']:
+     [ State_1111211( lock ), In( <$la, 'c1', 's1', $s, pk> ) ]
+    -->
      [ State_11112111( $la, lock, pk, $s ) ]
   */
 
-rule (modulo E) lookuplalogspkcasx_0_11112111[color=#408067,
+rule (modulo E) lookuplalogspkcasx_0_11112111[color=#404e80,
                                               process="lookup <$la.2, 'log', $s.4, pk.3, 'c1'> as x1.1",
-                                              issapicrule]:
+                                              no_derivcheck, issapicrule, role='Proto_TestLA']:
    [ State_11112111( $la.2, lock.2, pk.3, $s.4 ) ]
   --[ IsIn( <$la.2, 'log', $s.4, pk.3, 'c1'>, x1.1 ) ]->
    [ State_111121111( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
 
   /*
-  rule (modulo AC) lookuplalogspkcasx_0_11112111[color=#408067,
+  rule (modulo AC) lookuplalogspkcasx_0_11112111[color=#404e80,
                                                  process="lookup <$la.2, 'log', $s.4, pk.3, 'c1'> as x1.1",
-                                                 issapicrule]:
+                                                 no_derivcheck, issapicrule, role='Proto_TestLA']:
      [ State_11112111( $la, lock, pk, $s ) ]
     --[ IsIn( <$la, 'log', $s, pk, 'c1'>, x1 ) ]->
      [ State_111121111( x1, $la, lock, pk, $s ) ]
   */
 
-rule (modulo E) lookuplalogspksasx_0_111121111[color=#408067,
-                                               process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.1",
-                                               issapicrule]:
-   [ State_111121111( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ IsIn( <$la.2, 'log', $s.4, pk.3, 's1'>, x2.1 ) ]->
-   [ State_1111211111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
-
-  /*
-  rule (modulo AC) lookuplalogspksasx_0_111121111[color=#408067,
-                                                  process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.1",
-                                                  issapicrule]:
-     [ State_111121111( x1, $la, lock, pk, $s ) ]
-    --[ IsIn( <$la, 'log', $s, pk, 's1'>, x2 ) ]->
-     [ State_1111211111( x1, x2, $la, lock, pk, $s ) ]
-  */
-
-rule (modulo E) eventHonestLA_0_1111211111[color=#408067,
-                                           process="event HonestLA( );", issapicrule]:
-   [ State_1111211111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ HonestLA( ) ]->
-   [ State_11112111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
-
-  /*
-  rule (modulo AC) eventHonestLA_0_1111211111[color=#408067,
-                                              process="event HonestLA( );", issapicrule]:
-     [ State_1111211111( x1, x2, $la, lock, pk, $s ) ]
-    --[ HonestLA( ) ]->
-     [ State_11112111111( x1, x2, $la, lock, pk, $s ) ]
-  */
-
-rule (modulo E) eventTestLAlaspk_0_11112111111[color=#408067,
-                                               process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule]:
-   [ State_11112111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ TestLA( $la.2, $s.4, pk.3 ) ]->
-   [ State_111121111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
-
-  /*
-  rule (modulo AC) eventTestLAlaspk_0_11112111111[color=#408067,
-                                                  process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule]:
-     [ State_11112111111( x1, x2, $la, lock, pk, $s ) ]
-    --[ TestLA( $la, $s, pk ) ]->
-     [ State_111121111111( x1, x2, $la, lock, pk, $s ) ]
-  */
-
-rule (modulo E) unlocklog_0_111121111111[color=#408067,
-                                         process="unlock 'log';", issapicrule]:
-   [ State_111121111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ Unlock_2( '2', lock.2, 'log' ), Unlock( '2', lock.2, 'log' ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) unlocklog_0_111121111111[color=#408067,
-                                            process="unlock 'log';", issapicrule]:
-     [ State_111121111111( x1, x2, $la, lock, pk, $s ) ]
-    --[ Unlock_2( '2', lock, 'log' ), Unlock( '2', lock, 'log' ) ]->
-     [ ]
-  */
-
-rule (modulo E) lookuplalogspksasx_1_111121111[color=#408067,
-                                               process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.1",
-                                               issapicrule]:
-   [ State_111121111( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ IsNotSet( <$la.2, 'log', $s.4, pk.3, 's1'> ) ]->
-   [ State_1111211112( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
-
-  /*
-  rule (modulo AC) lookuplalogspksasx_1_111121111[color=#408067,
-                                                  process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.1",
-                                                  issapicrule]:
-     [ State_111121111( x1, $la, lock, pk, $s ) ]
-    --[ IsNotSet( <$la, 'log', $s, pk, 's1'> ) ]->
-     [ State_1111211112( x1, $la, lock, pk, $s ) ]
-  */
-
-rule (modulo E) eventDishonestLAla_0_1111211112[color=#408067,
-                                                process="event DishonestLA( $la.2 );", issapicrule]:
-   [ State_1111211112( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ DishonestLA( $la.2 ) ]->
-   [ State_11112111121( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
-
-  /*
-  rule (modulo AC) eventDishonestLAla_0_1111211112[color=#408067,
-                                                   process="event DishonestLA( $la.2 );", issapicrule]:
-     [ State_1111211112( x1, $la, lock, pk, $s ) ]
-    --[ DishonestLA( $la ) ]->
-     [ State_11112111121( x1, $la, lock, pk, $s ) ]
-  */
-
-rule (modulo E) eventTestLAlaspk_0_11112111121[color=#408067,
-                                               process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule]:
-   [ State_11112111121( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ TestLA( $la.2, $s.4, pk.3 ) ]->
-   [ State_111121111211( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
-
-  /*
-  rule (modulo AC) eventTestLAlaspk_0_11112111121[color=#408067,
-                                                  process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule]:
-     [ State_11112111121( x1, $la, lock, pk, $s ) ]
-    --[ TestLA( $la, $s, pk ) ]->
-     [ State_111121111211( x1, $la, lock, pk, $s ) ]
-  */
-
-rule (modulo E) unlocklog_0_111121111211[color=#408067,
-                                         process="unlock 'log';", issapicrule]:
-   [ State_111121111211( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ Unlock_2( '2', lock.2, 'log' ), Unlock( '2', lock.2, 'log' ) ]->
-   [ ]
-
-  /*
-  rule (modulo AC) unlocklog_0_111121111211[color=#408067,
-                                            process="unlock 'log';", issapicrule]:
-     [ State_111121111211( x1, $la, lock, pk, $s ) ]
-    --[ Unlock_2( '2', lock, 'log' ), Unlock( '2', lock, 'log' ) ]->
-     [ ]
-  */
-
-rule (modulo E) lookuplalogspkcasx_1_11112111[color=#408067,
+rule (modulo E) lookuplalogspkcasx_1_11112111[color=#404e80,
                                               process="lookup <$la.2, 'log', $s.4, pk.3, 'c1'> as x1.1",
-                                              issapicrule]:
+                                              no_derivcheck, issapicrule, role='Proto_TestLA']:
    [ State_11112111( $la.2, lock.2, pk.3, $s.4 ) ]
   --[ IsNotSet( <$la.2, 'log', $s.4, pk.3, 'c1'> ) ]->
    [ State_111121112( $la.2, lock.2, pk.3, $s.4 ) ]
 
   /*
-  rule (modulo AC) lookuplalogspkcasx_1_11112111[color=#408067,
+  rule (modulo AC) lookuplalogspkcasx_1_11112111[color=#404e80,
                                                  process="lookup <$la.2, 'log', $s.4, pk.3, 'c1'> as x1.1",
-                                                 issapicrule]:
+                                                 no_derivcheck, issapicrule, role='Proto_TestLA']:
      [ State_11112111( $la, lock, pk, $s ) ]
     --[ IsNotSet( <$la, 'log', $s, pk, 'c1'> ) ]->
      [ State_111121112( $la, lock, pk, $s ) ]
   */
 
-rule (modulo E) lookuplalogspksasx_0_111121112[color=#408067,
+rule (modulo E) lookuplalogspksasx_0_111121111[color=#404e80,
+                                               process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.1",
+                                               no_derivcheck, issapicrule, role='Proto_TestLA']:
+   [ State_111121111( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ IsIn( <$la.2, 'log', $s.4, pk.3, 's1'>, x2.1 ) ]->
+   [ State_1111211111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) lookuplalogspksasx_0_111121111[color=#404e80,
+                                                  process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.1",
+                                                  no_derivcheck, issapicrule, role='Proto_TestLA']:
+     [ State_111121111( x1, $la, lock, pk, $s ) ]
+    --[ IsIn( <$la, 'log', $s, pk, 's1'>, x2 ) ]->
+     [ State_1111211111( x1, x2, $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) lookuplalogspksasx_1_111121111[color=#404e80,
+                                               process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.1",
+                                               no_derivcheck, issapicrule, role='Proto_TestLA']:
+   [ State_111121111( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ IsNotSet( <$la.2, 'log', $s.4, pk.3, 's1'> ) ]->
+   [ State_1111211112( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) lookuplalogspksasx_1_111121111[color=#404e80,
+                                                  process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.1",
+                                                  no_derivcheck, issapicrule, role='Proto_TestLA']:
+     [ State_111121111( x1, $la, lock, pk, $s ) ]
+    --[ IsNotSet( <$la, 'log', $s, pk, 's1'> ) ]->
+     [ State_1111211112( x1, $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) eventHonestLA_0_1111211111[color=#404e80,
+                                           process="event HonestLA( );", issapicrule, role='Proto_TestLA']:
+   [ State_1111211111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ HonestLA( ) ]->
+   [ State_11112111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) eventHonestLA_0_1111211111[color=#404e80,
+                                              process="event HonestLA( );", issapicrule, role='Proto_TestLA']:
+     [ State_1111211111( x1, x2, $la, lock, pk, $s ) ]
+    --[ HonestLA( ) ]->
+     [ State_11112111111( x1, x2, $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) eventTestLAlaspk_0_11112111111[color=#404e80,
+                                               process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule,
+                                               role='Proto_TestLA']:
+   [ State_11112111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ TestLA( $la.2, $s.4, pk.3 ) ]->
+   [ State_111121111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) eventTestLAlaspk_0_11112111111[color=#404e80,
+                                                  process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule,
+                                                  role='Proto_TestLA']:
+     [ State_11112111111( x1, x2, $la, lock, pk, $s ) ]
+    --[ TestLA( $la, $s, pk ) ]->
+     [ State_111121111111( x1, x2, $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) unlocklog_0_111121111111[color=#404e80,
+                                         process="unlock 'log';", issapicrule, role='Proto_TestLA']:
+   [ State_111121111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ Unlock_2( '2', lock.2, 'log' ), Unlock( '2', lock.2, 'log' ) ]->
+   [ State_1111211111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) unlocklog_0_111121111111[color=#404e80,
+                                            process="unlock 'log';", issapicrule, role='Proto_TestLA']:
+     [ State_111121111111( x1, x2, $la, lock, pk, $s ) ]
+    --[ Unlock_2( '2', lock, 'log' ), Unlock( '2', lock, 'log' ) ]->
+     [ State_1111211111111( x1, x2, $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) p_0_1111211111111[color=#404e80, process="0",
+                                  issapicrule, role='Proto_TestLA']:
+   [ State_1111211111111( x1.1, x2.1, $la.2, lock.2, pk.3, $s.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111211111111[color=#404e80, process="0",
+                                     issapicrule, role='Proto_TestLA']:
+     [ State_1111211111111( x1, x2, $la, lock, pk, $s ) ] --> [ ]
+  */
+
+rule (modulo E) eventDishonestLAla_0_1111211112[color=#404e80,
+                                                process="event DishonestLA( $la.2 );", issapicrule,
+                                                role='Proto_TestLA']:
+   [ State_1111211112( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ DishonestLA( $la.2 ) ]->
+   [ State_11112111121( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) eventDishonestLAla_0_1111211112[color=#404e80,
+                                                   process="event DishonestLA( $la.2 );", issapicrule,
+                                                   role='Proto_TestLA']:
+     [ State_1111211112( x1, $la, lock, pk, $s ) ]
+    --[ DishonestLA( $la ) ]->
+     [ State_11112111121( x1, $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) eventTestLAlaspk_0_11112111121[color=#404e80,
+                                               process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule,
+                                               role='Proto_TestLA']:
+   [ State_11112111121( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ TestLA( $la.2, $s.4, pk.3 ) ]->
+   [ State_111121111211( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) eventTestLAlaspk_0_11112111121[color=#404e80,
+                                                  process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule,
+                                                  role='Proto_TestLA']:
+     [ State_11112111121( x1, $la, lock, pk, $s ) ]
+    --[ TestLA( $la, $s, pk ) ]->
+     [ State_111121111211( x1, $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) unlocklog_0_111121111211[color=#404e80,
+                                         process="unlock 'log';", issapicrule, role='Proto_TestLA']:
+   [ State_111121111211( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ Unlock_2( '2', lock.2, 'log' ), Unlock( '2', lock.2, 'log' ) ]->
+   [ State_1111211112111( x1.1, $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) unlocklog_0_111121111211[color=#404e80,
+                                            process="unlock 'log';", issapicrule, role='Proto_TestLA']:
+     [ State_111121111211( x1, $la, lock, pk, $s ) ]
+    --[ Unlock_2( '2', lock, 'log' ), Unlock( '2', lock, 'log' ) ]->
+     [ State_1111211112111( x1, $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) p_0_1111211112111[color=#404e80, process="0",
+                                  issapicrule, role='Proto_TestLA']:
+   [ State_1111211112111( x1.1, $la.2, lock.2, pk.3, $s.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111211112111[color=#404e80, process="0",
+                                     issapicrule, role='Proto_TestLA']:
+     [ State_1111211112111( x1, $la, lock, pk, $s ) ] --> [ ]
+  */
+
+rule (modulo E) lookuplalogspksasx_0_111121112[color=#404e80,
                                                process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.2",
-                                               issapicrule]:
+                                               no_derivcheck, issapicrule, role='Proto_TestLA']:
    [ State_111121112( $la.2, lock.2, pk.3, $s.4 ) ]
   --[ IsIn( <$la.2, 'log', $s.4, pk.3, 's1'>, x2.2 ) ]->
    [ State_1111211121( $la.2, lock.2, x2.2, pk.3, $s.4 ) ]
 
   /*
-  rule (modulo AC) lookuplalogspksasx_0_111121112[color=#408067,
+  rule (modulo AC) lookuplalogspksasx_0_111121112[color=#404e80,
                                                   process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.2",
-                                                  issapicrule]:
+                                                  no_derivcheck, issapicrule, role='Proto_TestLA']:
      [ State_111121112( $la, lock, pk, $s ) ]
     --[ IsIn( <$la, 'log', $s, pk, 's1'>, x2 ) ]->
      [ State_1111211121( $la, lock, x2, pk, $s ) ]
   */
 
-rule (modulo E) eventDishonestLAla_0_1111211121[color=#408067,
-                                                process="event DishonestLA( $la.2 );", issapicrule]:
+rule (modulo E) lookuplalogspksasx_1_111121112[color=#404e80,
+                                               process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.2",
+                                               no_derivcheck, issapicrule, role='Proto_TestLA']:
+   [ State_111121112( $la.2, lock.2, pk.3, $s.4 ) ]
+  --[ IsNotSet( <$la.2, 'log', $s.4, pk.3, 's1'> ) ]->
+   [ State_1111211122( $la.2, lock.2, pk.3, $s.4 ) ]
+
+  /*
+  rule (modulo AC) lookuplalogspksasx_1_111121112[color=#404e80,
+                                                  process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.2",
+                                                  no_derivcheck, issapicrule, role='Proto_TestLA']:
+     [ State_111121112( $la, lock, pk, $s ) ]
+    --[ IsNotSet( <$la, 'log', $s, pk, 's1'> ) ]->
+     [ State_1111211122( $la, lock, pk, $s ) ]
+  */
+
+rule (modulo E) eventDishonestLAla_0_1111211121[color=#404e80,
+                                                process="event DishonestLA( $la.2 );", issapicrule,
+                                                role='Proto_TestLA']:
    [ State_1111211121( $la.2, lock.2, x2.2, pk.3, $s.4 ) ]
   --[ DishonestLA( $la.2 ) ]->
    [ State_11112111211( $la.2, lock.2, x2.2, pk.3, $s.4 ) ]
 
   /*
-  rule (modulo AC) eventDishonestLAla_0_1111211121[color=#408067,
-                                                   process="event DishonestLA( $la.2 );", issapicrule]:
+  rule (modulo AC) eventDishonestLAla_0_1111211121[color=#404e80,
+                                                   process="event DishonestLA( $la.2 );", issapicrule,
+                                                   role='Proto_TestLA']:
      [ State_1111211121( $la, lock, x2, pk, $s ) ]
     --[ DishonestLA( $la ) ]->
      [ State_11112111211( $la, lock, x2, pk, $s ) ]
   */
 
-rule (modulo E) eventTestLAlaspk_0_11112111211[color=#408067,
-                                               process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule]:
+rule (modulo E) eventTestLAlaspk_0_11112111211[color=#404e80,
+                                               process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule,
+                                               role='Proto_TestLA']:
    [ State_11112111211( $la.2, lock.2, x2.2, pk.3, $s.4 ) ]
   --[ TestLA( $la.2, $s.4, pk.3 ) ]->
    [ State_111121112111( $la.2, lock.2, x2.2, pk.3, $s.4 ) ]
 
   /*
-  rule (modulo AC) eventTestLAlaspk_0_11112111211[color=#408067,
-                                                  process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule]:
+  rule (modulo AC) eventTestLAlaspk_0_11112111211[color=#404e80,
+                                                  process="event TestLA( $la.2, $s.4, pk.3 );", issapicrule,
+                                                  role='Proto_TestLA']:
      [ State_11112111211( $la, lock, x2, pk, $s ) ]
     --[ TestLA( $la, $s, pk ) ]->
      [ State_111121112111( $la, lock, x2, pk, $s ) ]
   */
 
-rule (modulo E) unlocklog_0_111121112111[color=#408067,
-                                         process="unlock 'log';", issapicrule]:
+rule (modulo E) unlocklog_0_111121112111[color=#404e80,
+                                         process="unlock 'log';", issapicrule, role='Proto_TestLA']:
    [ State_111121112111( $la.2, lock.2, x2.2, pk.3, $s.4 ) ]
   --[ Unlock_2( '2', lock.2, 'log' ), Unlock( '2', lock.2, 'log' ) ]->
-   [ ]
+   [ State_1111211121111( $la.2, lock.2, x2.2, pk.3, $s.4 ) ]
 
   /*
-  rule (modulo AC) unlocklog_0_111121112111[color=#408067,
-                                            process="unlock 'log';", issapicrule]:
+  rule (modulo AC) unlocklog_0_111121112111[color=#404e80,
+                                            process="unlock 'log';", issapicrule, role='Proto_TestLA']:
      [ State_111121112111( $la, lock, x2, pk, $s ) ]
     --[ Unlock_2( '2', lock, 'log' ), Unlock( '2', lock, 'log' ) ]->
-     [ ]
+     [ State_1111211121111( $la, lock, x2, pk, $s ) ]
   */
 
-rule (modulo E) lookuplalogspksasx_1_111121112[color=#408067,
-                                               process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.2",
-                                               issapicrule]:
-   [ State_111121112( $la.2, lock.2, pk.3, $s.4 ) ]
-  --[ IsNotSet( <$la.2, 'log', $s.4, pk.3, 's1'> ) ]->
-   [ ]
+rule (modulo E) p_0_1111211121111[color=#404e80, process="0",
+                                  issapicrule, role='Proto_TestLA']:
+   [ State_1111211121111( $la.2, lock.2, x2.2, pk.3, $s.4 ) ] --> [ ]
 
   /*
-  rule (modulo AC) lookuplalogspksasx_1_111121112[color=#408067,
-                                                  process="lookup <$la.2, 'log', $s.4, pk.3, 's1'> as x2.2",
-                                                  issapicrule]:
-     [ State_111121112( $la, lock, pk, $s ) ]
-    --[ IsNotSet( <$la, 'log', $s, pk, 's1'> ) ]->
-     [ ]
+  rule (modulo AC) p_0_1111211121111[color=#404e80, process="0",
+                                     issapicrule, role='Proto_TestLA']:
+     [ State_1111211121111( $la, lock, x2, pk, $s ) ] --> [ ]
   */
 
-rule (modulo E) p_1_11[color=#408053, process="!", issapicrule]:
-   [ !Semistate_111( ) ]
-  -->
-   [
-   State_11121( ), State_111121( ), State_1111121( ), State_1111111( ),
-   State_1111112( )
-   ]
+rule (modulo E) p_0_1111211122[color=#404e80, process="0", issapicrule,
+                               role='Proto_TestLA']:
+   [ State_1111211122( $la.2, lock.2, pk.3, $s.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_1111211122[color=#404e80, process="0", issapicrule,
+                                  role='Proto_TestLA']:
+     [ State_1111211122( $la, lock, pk, $s ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_111122[color=#807740, process="0", issapicrule,
+                           role='Proto']:
+   [ State_111122( ) ] --> [ ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) locktestCA_0_11121[color=#408068,
-                                   process="lock 'testCA';", issapicrule]:
+rule (modulo E) Terminate_0_1112[color=#807740, process="Terminate()",
+                                 issapicrule, role='Proto']:
+   [ State_1112( ) ] --> [ State_11121( ), State_11122( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) locktestCA_0_11121[color=#407f80,
+                                   process="lock 'testCA';", issapicrule, role='Proto_Terminate']:
    [ State_11121( ), Fr( lock.3 ) ]
   --[ Lock_3( '3', lock.3, 'testCA' ), Lock( '3', lock.3, 'testCA' ) ]->
    [ State_111211( lock.3 ) ]
 
   /*
-  rule (modulo AC) locktestCA_0_11121[color=#408068,
-                                      process="lock 'testCA';", issapicrule]:
+  rule (modulo AC) locktestCA_0_11121[color=#407f80,
+                                      process="lock 'testCA';", issapicrule, role='Proto_Terminate']:
      [ State_11121( ), Fr( lock ) ]
     --[ Lock_3( '3', lock, 'testCA' ), Lock( '3', lock, 'testCA' ) ]->
      [ State_111211( lock ) ]
   */
 
-rule (modulo E) locklog_0_111211[color=#40807d, process="lock 'log';",
-                                 issapicrule]:
+rule (modulo E) locklog_0_111211[color=#407f80, process="lock 'log';",
+                                 issapicrule, role='Proto_Terminate']:
    [ State_111211( lock.3 ), Fr( lock.4 ) ]
   --[ Lock_4( '4', lock.4, 'log' ), Lock( '4', lock.4, 'log' ) ]->
    [ State_1112111( lock.3, lock.4 ) ]
 
   /*
-  rule (modulo AC) locklog_0_111211[color=#40807d, process="lock 'log';",
-                                    issapicrule]:
+  rule (modulo AC) locklog_0_111211[color=#407f80, process="lock 'log';",
+                                    issapicrule, role='Proto_Terminate']:
      [ State_111211( lock ), Fr( lock.1 ) ]
     --[ Lock_4( '4', lock.1, 'log' ), Lock( '4', lock.1, 'log' ) ]->
      [ State_1112111( lock, lock.1 ) ]
   */
 
-rule (modulo E) eventTerminate_0_1112111[color=#40807d,
-                                         process="event Terminate( );", issapicrule]:
-   [ State_1112111( lock.3, lock.4 ) ] --[ Terminate( ) ]-> [ ]
+rule (modulo E) eventTerminate_0_1112111[color=#407f80,
+                                         process="event Terminate( );", issapicrule, role='Proto_Terminate']:
+   [ State_1112111( lock.3, lock.4 ) ]
+  --[ Terminate( ) ]->
+   [ State_11121111( lock.3, lock.4 ) ]
 
   /*
-  rule (modulo AC) eventTerminate_0_1112111[color=#40807d,
-                                            process="event Terminate( );", issapicrule]:
-     [ State_1112111( lock, lock.1 ) ] --[ Terminate( ) ]-> [ ]
+  rule (modulo AC) eventTerminate_0_1112111[color=#407f80,
+                                            process="event Terminate( );", issapicrule,
+                                            role='Proto_Terminate']:
+     [ State_1112111( lock, lock.1 ) ]
+    --[ Terminate( ) ]->
+     [ State_11121111( lock, lock.1 ) ]
   */
 
-rule (modulo E) Init[color=#ffffff, process="|", issapicrule]:
-   [ ] --[ Init( ) ]-> [ !Semistate_21( ), !Semistate_111( ) ]
+rule (modulo E) p_0_11121111[color=#407f80, process="0", issapicrule,
+                             role='Proto_Terminate']:
+   [ State_11121111( lock.3, lock.4 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_11121111[color=#407f80, process="0", issapicrule,
+                                role='Proto_Terminate']:
+     [ State_11121111( lock, lock.1 ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_11122[color=#807740, process="0", issapicrule,
+                          role='Proto']:
+   [ State_11122( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_12( ) ] --> [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_2[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
+   [ State_2( ) ] --> [ !Semistate_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_2[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
+   [ !Semistate_21( ) ] --> [ State_21( ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_0_21[color=#ffffff, process="|", issapicrule,
+                       role='Process']:
+   [ State_21( ) ] --> [ State_211( ), State_212( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) incCAcorruptca_0_211[color=#ffffff,
-                                     process="in('c',<'CAcorrupt', $ca.5>);", issapicrule]:
+                                     process="in('c',<'CAcorrupt', $ca.5>);", issapicrule, role='Process']:
    [ State_211( ), Message( 'c', x ) ] --> [ Let_2111( x ), Ack( 'c', x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) incCAcorruptca_2_211[color=#ffffff,
-                                     process="in('c',<'CAcorrupt', $ca.5>);", issapicrule]:
-   [ State_211( ), In( <'c', x> ) ] --> [ Let_2111( x ) ]
-
-  /* has exactly the trivial AC variant */
-
 rule (modulo E) incCAcorruptca_1_211[color=#ffffff,
-                                     process="in('c',<'CAcorrupt', $ca.5>);", issapicrule]:
+                                     process="in('c',<'CAcorrupt', $ca.5>);", issapicrule, role='Process']:
    [ Let_2111( <'CAcorrupt', $ca.5> ) ] --> [ State_2111( $ca.5 ) ]
 
   /*
   rule (modulo AC) incCAcorruptca_1_211[color=#ffffff,
-                                        process="in('c',<'CAcorrupt', $ca.5>);", issapicrule]:
+                                        process="in('c',<'CAcorrupt', $ca.5>);", issapicrule, role='Process']:
      [ Let_2111( <'CAcorrupt', $ca> ) ] --> [ State_2111( $ca ) ]
   */
 
+rule (modulo E) incCAcorruptca_2_211[color=#ffffff,
+                                     process="in('c',<'CAcorrupt', $ca.5>);", issapicrule, role='Process']:
+   [ State_211( ), In( <'c', x> ) ] --> [ Let_2111( x ) ]
+
+  /* has exactly the trivial AC variant */
+
 rule (modulo E) incCAcorruptca_3_211[color=#ffffff,
-                                     process="in('c',<'CAcorrupt', $ca.5>);", issapicrule]:
+                                     process="in('c',<'CAcorrupt', $ca.5>);", issapicrule, role='Process']:
    [ Let_2111( <'CAcorrupt', $ca.5> ) ] --> [ State_2111( $ca.5 ) ]
 
   /*
   rule (modulo AC) incCAcorruptca_3_211[color=#ffffff,
-                                        process="in('c',<'CAcorrupt', $ca.5>);", issapicrule]:
+                                        process="in('c',<'CAcorrupt', $ca.5>);", issapicrule, role='Process']:
      [ Let_2111( <'CAcorrupt', $ca> ) ] --> [ State_2111( $ca ) ]
   */
 
 rule (modulo E) eventCorruptedca_0_2111[color=#ffffff,
-                                        process="event Corrupted( $ca.5 );", issapicrule]:
+                                        process="event Corrupted( $ca.5 );", issapicrule, role='Process']:
    [ State_2111( $ca.5 ) ]
   --[ Corrupted( $ca.5 ) ]->
    [ State_21111( $ca.5 ) ]
@@ -667,190 +1046,226 @@ rule (modulo E) eventCorruptedca_0_2111[color=#ffffff,
   // loop breaker: [0]
   /*
   rule (modulo AC) eventCorruptedca_0_2111[color=#ffffff,
-                                           process="event Corrupted( $ca.5 );", issapicrule]:
+                                           process="event Corrupted( $ca.5 );", issapicrule, role='Process']:
      [ State_2111( $ca ) ] --[ Corrupted( $ca ) ]-> [ State_21111( $ca ) ]
     // loop breaker: [0]
   */
 
-rule (modulo E) outcskcaca_1_21111[color=#ffffff,
-                                   process="out('c',skca($ca.5));", issapicrule]:
-   [ State_21111( $ca.5 ) ]
-  -->
-   [ Message( 'c', skca($ca.5) ), Semistate_211111( $ca.5 ) ]
-
-  /*
-  rule (modulo AC) outcskcaca_1_21111[color=#ffffff,
-                                      process="out('c',skca($ca.5));", issapicrule]:
-     [ State_21111( $ca ) ]
-    -->
-     [ Message( 'c', skca($ca) ), Semistate_211111( $ca ) ]
-  */
-
 rule (modulo E) outcskcaca_0_21111[color=#ffffff,
-                                   process="out('c',skca($ca.5));", issapicrule]:
+                                   process="out('c',skca($ca.5));", issapicrule, role='Process']:
    [ State_21111( $ca.5 ), In( 'c' ) ]
   -->
    [ Out( skca($ca.5) ), State_211111( $ca.5 ) ]
 
   /*
   rule (modulo AC) outcskcaca_0_21111[color=#ffffff,
-                                      process="out('c',skca($ca.5));", issapicrule]:
+                                      process="out('c',skca($ca.5));", issapicrule, role='Process']:
      [ State_21111( $ca ), In( 'c' ) ]
     -->
      [ Out( skca($ca) ), State_211111( $ca ) ]
   */
 
+rule (modulo E) outcskcaca_1_21111[color=#ffffff,
+                                   process="out('c',skca($ca.5));", issapicrule, role='Process']:
+   [ State_21111( $ca.5 ) ]
+  -->
+   [ Message( 'c', skca($ca.5) ), Semistate_211111( $ca.5 ) ]
+
+  /*
+  rule (modulo AC) outcskcaca_1_21111[color=#ffffff,
+                                      process="out('c',skca($ca.5));", issapicrule, role='Process']:
+     [ State_21111( $ca ) ]
+    -->
+     [ Message( 'c', skca($ca) ), Semistate_211111( $ca ) ]
+  */
+
 rule (modulo E) outcskcaca_2_21111[color=#ffffff,
-                                   process="out('c',skca($ca.5));", issapicrule]:
+                                   process="out('c',skca($ca.5));", issapicrule, role='Process']:
    [ Semistate_211111( $ca.5 ), Ack( 'c', skca($ca.5) ) ]
   -->
    [ State_211111( $ca.5 ) ]
 
   /*
   rule (modulo AC) outcskcaca_2_21111[color=#ffffff,
-                                      process="out('c',skca($ca.5));", issapicrule]:
+                                      process="out('c',skca($ca.5));", issapicrule, role='Process']:
      [ Semistate_211111( $ca ), Ack( 'c', skca($ca) ) ]
     -->
      [ State_211111( $ca ) ]
   */
 
-rule (modulo E) p_1_2[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_21( ) ] --> [ !Semistate_2121( ), State_211( ) ]
+rule (modulo E) p_0_211111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+   [ State_211111( $ca.5 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_211111[color=#ffffff, process="0", issapicrule,
+                              role='Process']:
+     [ State_211111( $ca ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_212[color=#ffffff, process="!", issapicrule,
+                        role='Process']:
+   [ State_212( ) ] --> [ !Semistate_2121( ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_1_212[color=#ffffff, process="!", issapicrule]:
+rule (modulo E) p_1_212[color=#ffffff, process="!", issapicrule,
+                        role='Process']:
    [ !Semistate_2121( ) ] --> [ State_2121( ) ]
 
   /* has exactly the trivial AC variant */
 
 rule (modulo E) inclaLAcorruptid_0_2121[color=#ffffff,
-                                        process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule]:
+                                        process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule,
+                                        role='Process']:
    [ State_2121( ), Message( 'c', x ) ]
   -->
    [ Let_21211( x ), Ack( 'c', x ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) inclaLAcorruptid_2_2121[color=#ffffff,
-                                        process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule]:
-   [ State_2121( ), In( <'c', x> ) ] --> [ Let_21211( x ) ]
-
-  /* has exactly the trivial AC variant */
-
 rule (modulo E) inclaLAcorruptid_1_2121[color=#ffffff,
-                                        process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule]:
+                                        process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule,
+                                        role='Process']:
    [ Let_21211( <$la.3, 'LAcorrupt', $id.1> ) ]
   -->
    [ State_21211( $id.1, $la.3 ) ]
 
   /*
   rule (modulo AC) inclaLAcorruptid_1_2121[color=#ffffff,
-                                           process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule]:
+                                           process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule,
+                                           role='Process']:
      [ Let_21211( <$la, 'LAcorrupt', $id> ) ] --> [ State_21211( $id, $la ) ]
   */
 
+rule (modulo E) inclaLAcorruptid_2_2121[color=#ffffff,
+                                        process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule,
+                                        role='Process']:
+   [ State_2121( ), In( <'c', x> ) ] --> [ Let_21211( x ) ]
+
+  /* has exactly the trivial AC variant */
+
 rule (modulo E) inclaLAcorruptid_3_2121[color=#ffffff,
-                                        process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule]:
+                                        process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule,
+                                        role='Process']:
    [ Let_21211( <$la.3, 'LAcorrupt', $id.1> ) ]
   -->
    [ State_21211( $id.1, $la.3 ) ]
 
   /*
   rule (modulo AC) inclaLAcorruptid_3_2121[color=#ffffff,
-                                           process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule]:
+                                           process="in('c',<$la.3, 'LAcorrupt', $id.1>);", issapicrule,
+                                           role='Process']:
      [ Let_21211( <$la, 'LAcorrupt', $id> ) ] --> [ State_21211( $id, $la ) ]
   */
 
 rule (modulo E) eventCorruptedla_0_21211[color=#ffffff,
-                                         process="event Corrupted( $la.3 );", issapicrule]:
+                                         process="event Corrupted( $la.3 );", issapicrule, role='Process']:
    [ State_21211( $id.1, $la.3 ) ]
   --[ Corrupted( $la.3 ) ]->
-   [ !Semistate_2121111( $id.1, $la.3 ) ]
+   [ State_212111( $id.1, $la.3 ) ]
 
   /*
   rule (modulo AC) eventCorruptedla_0_21211[color=#ffffff,
-                                            process="event Corrupted( $la.3 );", issapicrule]:
+                                            process="event Corrupted( $la.3 );", issapicrule, role='Process']:
      [ State_21211( $id, $la ) ]
     --[ Corrupted( $la ) ]->
-     [ !Semistate_2121111( $id, $la ) ]
+     [ State_212111( $id, $la ) ]
   */
 
-rule (modulo E) p_1_212111[color=#ffffff, process="!", issapicrule]:
+rule (modulo E) p_0_212111[color=#ffffff, process="!", issapicrule,
+                           role='Process']:
+   [ State_212111( $id.1, $la.3 ) ]
+  -->
+   [ !Semistate_2121111( $id.1, $la.3 ) ]
+
+  /*
+  rule (modulo AC) p_0_212111[color=#ffffff, process="!", issapicrule,
+                              role='Process']:
+     [ State_212111( $id, $la ) ] --> [ !Semistate_2121111( $id, $la ) ]
+  */
+
+rule (modulo E) p_1_212111[color=#ffffff, process="!", issapicrule,
+                           role='Process']:
    [ !Semistate_2121111( $id.1, $la.3 ) ]
   -->
    [ State_2121111( $id.1, $la.3 ) ]
 
   /*
-  rule (modulo AC) p_1_212111[color=#ffffff, process="!", issapicrule]:
+  rule (modulo AC) p_1_212111[color=#ffffff, process="!", issapicrule,
+                              role='Process']:
      [ !Semistate_2121111( $id, $la ) ] --> [ State_2121111( $id, $la ) ]
   */
 
 rule (modulo E) incSpkentity_0_2121111[color=#ffffff,
-                                       process="in('c',<S.1, pk.4, entity.1>);", issapicrule]:
+                                       process="in('c',<S.1, pk.4, entity.1>);", issapicrule, role='Process']:
    [ State_2121111( $id.1, $la.3 ), Message( 'c', x.4 ) ]
   -->
    [ Let_21211111( x.4, $id.1, $la.3 ), Ack( 'c', x.4 ) ]
 
   /*
   rule (modulo AC) incSpkentity_0_2121111[color=#ffffff,
-                                          process="in('c',<S.1, pk.4, entity.1>);", issapicrule]:
+                                          process="in('c',<S.1, pk.4, entity.1>);", issapicrule,
+                                          role='Process']:
      [ State_2121111( $id, $la ), Message( 'c', x ) ]
     -->
      [ Let_21211111( x, $id, $la ), Ack( 'c', x ) ]
   */
 
-rule (modulo E) incSpkentity_2_2121111[color=#ffffff,
-                                       process="in('c',<S.1, pk.4, entity.1>);", issapicrule]:
-   [ State_2121111( $id.1, $la.3 ), In( <'c', x.4> ) ]
-  -->
-   [ Let_21211111( x.4, $id.1, $la.3 ) ]
-
-  /*
-  rule (modulo AC) incSpkentity_2_2121111[color=#ffffff,
-                                          process="in('c',<S.1, pk.4, entity.1>);", issapicrule]:
-     [ State_2121111( $id, $la ), In( <'c', x> ) ]
-    -->
-     [ Let_21211111( x, $id, $la ) ]
-  */
-
 rule (modulo E) incSpkentity_1_2121111[color=#ffffff,
-                                       process="in('c',<S.1, pk.4, entity.1>);", issapicrule]:
+                                       process="in('c',<S.1, pk.4, entity.1>);", issapicrule, role='Process']:
    [ Let_21211111( <S.1, pk.4, entity.1>, $id.1, $la.3 ) ]
   -->
    [ State_21211111( $id.1, S.1, entity.1, $la.3, pk.4 ) ]
 
   /*
   rule (modulo AC) incSpkentity_1_2121111[color=#ffffff,
-                                          process="in('c',<S.1, pk.4, entity.1>);", issapicrule]:
+                                          process="in('c',<S.1, pk.4, entity.1>);", issapicrule,
+                                          role='Process']:
      [ Let_21211111( <S, pk, entity>, $id, $la ) ]
     -->
      [ State_21211111( $id, S, entity, $la, pk ) ]
   */
 
+rule (modulo E) incSpkentity_2_2121111[color=#ffffff,
+                                       process="in('c',<S.1, pk.4, entity.1>);", issapicrule, role='Process']:
+   [ State_2121111( $id.1, $la.3 ), In( <'c', x.4> ) ]
+  -->
+   [ Let_21211111( x.4, $id.1, $la.3 ) ]
+
+  /*
+  rule (modulo AC) incSpkentity_2_2121111[color=#ffffff,
+                                          process="in('c',<S.1, pk.4, entity.1>);", issapicrule,
+                                          role='Process']:
+     [ State_2121111( $id, $la ), In( <'c', x> ) ]
+    -->
+     [ Let_21211111( x, $id, $la ) ]
+  */
+
 rule (modulo E) incSpkentity_3_2121111[color=#ffffff,
-                                       process="in('c',<S.1, pk.4, entity.1>);", issapicrule]:
+                                       process="in('c',<S.1, pk.4, entity.1>);", issapicrule, role='Process']:
    [ Let_21211111( <S.1, pk.4, entity.1>, $id.1, $la.3 ) ]
   -->
    [ State_21211111( $id.1, S.1, entity.1, $la.3, pk.4 ) ]
 
   /*
   rule (modulo AC) incSpkentity_3_2121111[color=#ffffff,
-                                          process="in('c',<S.1, pk.4, entity.1>);", issapicrule]:
+                                          process="in('c',<S.1, pk.4, entity.1>);", issapicrule,
+                                          role='Process']:
      [ Let_21211111( <S, pk, entity>, $id, $la ) ]
     -->
      [ State_21211111( $id, S, entity, $la, pk ) ]
   */
 
 rule (modulo E) locklog_0_21211111[color=#ffffff, process="lock 'log';",
-                                   issapicrule]:
+                                   issapicrule, role='Process']:
    [ State_21211111( $id.1, S.1, entity.1, $la.3, pk.4 ), Fr( lock.5 ) ]
   --[ Lock_5( '5', lock.5, 'log' ), Lock( '5', lock.5, 'log' ) ]->
    [ State_212111111( $id.1, S.1, entity.1, $la.3, pk.4, lock.5 ) ]
 
   /*
   rule (modulo AC) locklog_0_21211111[color=#ffffff, process="lock 'log';",
-                                      issapicrule]:
+                                      issapicrule, role='Process']:
      [ State_21211111( $id, S, entity, $la, pk ), Fr( lock ) ]
     --[ Lock_5( '5', lock, 'log' ), Lock( '5', lock, 'log' ) ]->
      [ State_212111111( $id, S, entity, $la, pk, lock ) ]
@@ -858,7 +1273,7 @@ rule (modulo E) locklog_0_21211111[color=#ffffff, process="lock 'log';",
 
 rule (modulo E) insertlalogSpkentityyes_0_212111111[color=#ffffff,
                                                     process="insert <$la.3, 'log', S.1, pk.4, entity.1>,'yes';",
-                                                    issapicrule]:
+                                                    issapicrule, role='Process']:
    [ State_212111111( $id.1, S.1, entity.1, $la.3, pk.4, lock.5 ) ]
   --[ Insert( <$la.3, 'log', S.1, pk.4, entity.1>, 'yes' ) ]->
    [ State_2121111111( $id.1, S.1, entity.1, $la.3, pk.4, lock.5 ) ]
@@ -866,24 +1281,36 @@ rule (modulo E) insertlalogSpkentityyes_0_212111111[color=#ffffff,
   /*
   rule (modulo AC) insertlalogSpkentityyes_0_212111111[color=#ffffff,
                                                        process="insert <$la.3, 'log', S.1, pk.4, entity.1>,'yes';",
-                                                       issapicrule]:
+                                                       issapicrule, role='Process']:
      [ State_212111111( $id, S, entity, $la, pk, lock ) ]
     --[ Insert( <$la, 'log', S, pk, entity>, 'yes' ) ]->
      [ State_2121111111( $id, S, entity, $la, pk, lock ) ]
   */
 
 rule (modulo E) unlocklog_0_2121111111[color=#ffffff,
-                                       process="unlock 'log';", issapicrule]:
+                                       process="unlock 'log';", issapicrule, role='Process']:
    [ State_2121111111( $id.1, S.1, entity.1, $la.3, pk.4, lock.5 ) ]
   --[ Unlock_5( '5', lock.5, 'log' ), Unlock( '5', lock.5, 'log' ) ]->
-   [ ]
+   [ State_21211111111( $id.1, S.1, entity.1, $la.3, pk.4, lock.5 ) ]
 
   /*
   rule (modulo AC) unlocklog_0_2121111111[color=#ffffff,
-                                          process="unlock 'log';", issapicrule]:
+                                          process="unlock 'log';", issapicrule, role='Process']:
      [ State_2121111111( $id, S, entity, $la, pk, lock ) ]
     --[ Unlock_5( '5', lock, 'log' ), Unlock( '5', lock, 'log' ) ]->
-     [ ]
+     [ State_21211111111( $id, S, entity, $la, pk, lock ) ]
+  */
+
+rule (modulo E) p_0_21211111111[color=#ffffff, process="0", issapicrule,
+                                role='Process']:
+   [ State_21211111111( $id.1, S.1, entity.1, $la.3, pk.4, lock.5 ) ]
+  -->
+   [ ]
+
+  /*
+  rule (modulo AC) p_0_21211111111[color=#ffffff, process="0", issapicrule,
+                                   role='Process']:
+     [ State_21211111111( $id, S, entity, $la, pk, lock ) ] --> [ ]
   */
 
 restriction set_in:
@@ -894,14 +1321,35 @@ restriction set_in:
       (∀ #t1 yp.
         (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
 
+  /*
+  expanded formula:
+  "∀ x y #t3.
+    (IsIn( x, y ) @ #t3) ⇒
+    (∃ #t2.
+      ((Insert( x, y ) @ #t2) ∧ (#t2 < #t3)) ∧
+      (∀ #t1 yp.
+        (Insert( x, yp ) @ #t1) ⇒ (((#t1 < #t2) ∨ (#t1 = #t2)) ∨ (#t3 < #t1))))"
+  */
+
 restriction set_notin:
   "∀ x #t3.
     (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x #t3.
+    (IsNotSet( x ) @ #t3) ⇒ (∀ #t1 y. (Insert( x, y ) @ #t1) ⇒ (#t3 < #t1))"
+  */
+
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
 
 restriction locking_0:
   "∀ p pp l x lp #t1 #t3.
@@ -919,6 +1367,24 @@ restriction locking_0:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_0( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_0( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
+
 restriction locking_1:
   "∀ p pp l x lp #t1 #t3.
     ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
@@ -934,6 +1400,24 @@ restriction locking_1:
            (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
+
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_1( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_1( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
 
 restriction locking_2:
   "∀ p pp l x lp #t1 #t3.
@@ -951,6 +1435,24 @@ restriction locking_2:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_2( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_2( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
+
 restriction locking_5:
   "∀ p pp l x lp #t1 #t3.
     ((Lock_5( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
@@ -967,17 +1469,49 @@ restriction locking_5:
       (#t3 < #t1)) ∨
      (#t1 = #t3))"
 
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_5( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((((#t1 < #t3) ∧
+       (∃ #t2.
+         (((((Unlock_5( p, l, x ) @ #t2) ∧ (#t1 < #t2)) ∧ (#t2 < #t3)) ∧
+           (∀ #t0 pp.1. (Unlock( pp.1, l, x ) @ #t0) ⇒ (#t0 = #t2))) ∧
+          (∀ pp.1 lpp #t0.
+            (Lock( pp.1, lpp, x ) @ #t0) ⇒
+            (((#t0 < #t1) ∨ (#t0 = #t1)) ∨ (#t2 < #t0)))) ∧
+         (∀ pp.1 lpp #t0.
+           (Unlock( pp.1, lpp, x ) @ #t0) ⇒
+           (((#t0 < #t1) ∨ (#t2 < #t0)) ∨ (#t2 = #t0))))) ∨
+      (#t3 < #t1)) ∨
+     (#t1 = #t3))"
+  */
+
 restriction locking_3:
   "∀ p pp l x lp #t1 #t3.
     ((Lock_3( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
     ((#t3 < #t1) ∨ (#t1 = #t3))"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_3( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  */
+
 restriction locking_4:
   "∀ p pp l x lp #t1 #t3.
     ((Lock_4( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
     ((#t3 < #t1) ∨ (#t1 = #t3))"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ p pp l x lp #t1 #t3.
+    ((Lock_4( p, l, x ) @ #t1) ∧ (Lock( pp, lp, x ) @ #t3)) ⇒
+    ((#t3 < #t1) ∨ (#t1 = #t3))"
+  */
 
 lemma accCA_tCA_suff:
   exists-trace
@@ -1006,7 +1540,7 @@ solve( State_1111121112( lock, pk, $s, $ca ) ▶₀ #i )
           case c_sign
           solve( !KU( skca($ca) ) @ #vk.1 )
             case outcskcaca_0_21111
-            solve( State_2111( $ca ) ▶₀ #vr.9 )
+            solve( State_2111( $ca ) ▶₀ #vr.19 )
               case incCAcorruptca_1_211
               SOLVED // trace found
             qed
@@ -1050,12 +1584,12 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
               case c_sign
               solve( !KU( skca($ca) ) @ #vk.1 )
                 case outcskcaca_0_21111
-                solve( State_2111( $ca ) ▶₀ #vr.9 )
+                solve( State_2111( $ca ) ▶₀ #vr.19 )
                   case incCAcorruptca_1_211
                   solve( Insert( <$ca, 'proofOfID', $s, pk>, ignored ) @ #t2.1 )
                     case insertcaproofOfIDspkskSyes_0_11111111111111
                     solve( State_11111111111111( $ca.1, $s, skS, $ca ) ▶₀ #t2.1 )
-                      case p_1_1111111111
+                      case eventHonestRegisterscapkskS_0_1111111111111
                       by contradiction /* from formulas */
                     qed
                   qed
@@ -1064,7 +1598,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                   solve( Insert( <$ca, 'proofOfID', $s, pk>, ignored ) @ #t2.1 )
                     case insertcaproofOfIDspkskSyes_0_11111111111111
                     solve( State_11111111111111( $ca.1, $s, skS, $ca ) ▶₀ #t2.1 )
-                      case p_1_1111111111
+                      case eventHonestRegisterscapkskS_0_1111111111111
                       by contradiction /* from formulas */
                     qed
                   qed
@@ -1119,19 +1653,19 @@ solve( State_1111121112( lock, pk, $s, $ca ) ▶₀ #i )
       case unlocktestCA_0_111112111211
       solve( State_111112111211( ~n, pk.1, $s.1, $ca.1 ) ▶₀ #t2 )
         case eventTestCAcaspk_0_11111211121
-        solve( !Semistate_11111111111( $ca.1 ) ▶₀ #j )
-          case inca_0_1111111
+        solve( State_1111111111111( $ca.1, $s, skS, $ca ) ▶₀ #j )
+          case newskS_0_111111111111
           solve( !KU( sign(skca($ca), <pk(~n.1), $s>) ) @ #vk )
             case c_sign
             solve( !KU( skca($ca) ) @ #vk.6 )
               case outcskcaca_0_21111
-              solve( State_2111( $ca ) ▶₀ #vr.11 )
+              solve( State_2111( $ca ) ▶₀ #vr.31 )
                 case incCAcorruptca_1_211
                 solve( !KU( pk(~n.1) ) @ #vk.8 )
                   case c_pk
                   by solve( !KU( ~n.1 ) @ #vk.12 )
                 next
-                  case insertcaproofOfIDspkskSyes_0_11111111111111
+                  case outpkskS_0_111111111111111
                   by contradiction /* cyclic */
                 next
                   case outsignskcacapkskSs_0_1111111111111111
@@ -1143,7 +1677,7 @@ solve( State_1111121112( lock, pk, $s, $ca ) ▶₀ #i )
                   case c_pk
                   by solve( !KU( ~n.1 ) @ #vk.12 )
                 next
-                  case insertcaproofOfIDspkskSyes_0_11111111111111
+                  case outpkskS_0_111111111111111
                   by contradiction /* cyclic */
                 next
                   case outsignskcacapkskSs_0_1111111111111111
@@ -1245,7 +1779,7 @@ solve( State_1111121112( lock, pk, $s, $ca ) ▶₀ #i )
           case c_sign
           solve( !KU( skca($ca) ) @ #vk.1 )
             case outcskcaca_0_21111
-            solve( State_2111( $ca ) ▶₀ #vr.9 )
+            solve( State_2111( $ca ) ▶₀ #vr.19 )
               case incCAcorruptca_1_211
               SOLVED // trace found
             qed
@@ -1515,7 +2049,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
         case unlocklog_0_111121111211
         solve( State_111121111211( x1.1, $la.1, ~n, pk.1, $s.1 ) ▶₀ #t2 )
           case eventTestLAlaspk_0_11112111121
-          solve( (#j.1 < #t2.2)  ∥ (#j.1 = #t2.2)  ∥ (#vr.5 < #j.1) )
+          solve( (#j.1 < #t2.2)  ∥ (#j.1 = #t2.2)  ∥ (#vr.10 < #j.1) )
             case case_1
             solve( (#t2.2 < #t2.1)  ∥ (#t2.2 = #t2.1) )
               case case_1
@@ -1532,22 +2066,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                       case insertlalogSpkentityyes_0_212111111
                       solve( State_212111111( $id, $s, 'c1', $la, pk, lock ) ▶₀ #j )
                         case locklog_0_21211111_case_1
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -1583,22 +2117,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_2
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -1631,22 +2165,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_3
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -1679,22 +2213,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_4
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -1729,7 +2263,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.3 )
                           case insertlalogspkiyes_0_11111121111111
                           by contradiction /* cyclic */
@@ -1745,22 +2279,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                       case insertlalogSpkentityyes_0_212111111
                       solve( State_212111111( $id, $s, 'c1', $la, pk, lock ) ▶₀ #j )
                         case locklog_0_21211111_case_1
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -1793,22 +2327,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_2
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -1844,22 +2378,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_3
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -1892,22 +2426,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_4
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -1942,7 +2476,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.3 )
                           case insertlalogspkiyes_0_11111121111111
                           by contradiction /* cyclic */
@@ -1958,22 +2492,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                       case insertlalogSpkentityyes_0_212111111
                       solve( State_212111111( $id, $s, 'c1', $la, pk, lock ) ▶₀ #j )
                         case locklog_0_21211111_case_1
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -2006,22 +2540,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_2
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -2054,22 +2588,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_3
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -2105,22 +2639,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_4
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -2155,7 +2689,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.3 )
                           case insertlalogspkiyes_0_11111121111111
                           by contradiction /* cyclic */
@@ -2171,22 +2705,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                       case insertlalogSpkentityyes_0_212111111
                       solve( State_212111111( $id, $s, 'c1', $la, pk, lock ) ▶₀ #j )
                         case locklog_0_21211111_case_1
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -2219,22 +2753,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_2
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -2267,22 +2801,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_3
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -2315,22 +2849,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_4
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -2368,7 +2902,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.3 )
                           case insertlalogspkiyes_0_11111121111111
                           by contradiction /* cyclic */
@@ -2380,7 +2914,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
               next
                 case insertlalogspkcyes_0_111111211111
                 solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #t2.1 )
-                  case p_1_1111112111
+                  case locklog_0_11111121111
                   solve( State_111111211111111( ~n.3, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.2 )
                     case insertlalogspkiyes_0_11111121111111
                     by contradiction /* cyclic */
@@ -2509,7 +3043,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
               next
                 case insertlalogspkcyes_0_111111211111
                 solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                  case p_1_1111112111
+                  case locklog_0_11111121111
                   solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.1 )
                     case insertlalogspkiyes_0_11111121111111
                     by contradiction /* cyclic */
@@ -2548,7 +3082,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2575,7 +3109,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2602,7 +3136,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2629,7 +3163,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2638,7 +3172,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
               next
                 case insertlalogspkcyes_0_111111211111
                 solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #t2.1 )
-                  case p_1_1111112111
+                  case locklog_0_11111121111
                   solve( State_111111211111111( ~n.3, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.2 )
                     case insertlalogspkiyes_0_11111121111111
                     by contradiction /* cyclic */
@@ -2667,7 +3201,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
         case unlocklog_0_111121112111
         solve( State_111121112111( $la.1, ~n, x2.1, pk.1, $s.1 ) ▶₀ #t2 )
           case eventTestLAlaspk_0_11112111211
-          solve( (#j.1 < #t2.2)  ∥ (#j.1 = #t2.2)  ∥ (#vr.4 < #j.1) )
+          solve( (#j.1 < #t2.2)  ∥ (#j.1 = #t2.2)  ∥ (#vr.9 < #j.1) )
             case case_1
             solve( (#t2.2 < #t2.1)  ∥ (#t2.2 = #t2.1) )
               case case_1
@@ -2698,7 +3232,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2725,7 +3259,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2752,7 +3286,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2779,7 +3313,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2824,7 +3358,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j.1 )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2851,7 +3385,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j.1 )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2878,7 +3412,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j.1 )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2905,7 +3439,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j.1 )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2950,7 +3484,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -2977,7 +3511,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -3004,7 +3538,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -3031,7 +3565,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -3113,7 +3647,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
             next
               case insertlalogspkcyes_0_111111211111
               solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #t2.1 )
-                case p_1_1111112111
+                case locklog_0_11111121111
                 solve( State_111111211111111( ~n.3, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.2 )
                   case insertlalogspkiyes_0_11111121111111
                   by contradiction /* cyclic */
@@ -3254,7 +3788,7 @@ solve( State_1111121112( lock, pk, $s, $ca ) ▶₀ #i )
           case c_sign
           solve( !KU( skca($ca) ) @ #vk.1 )
             case outcskcaca_0_21111
-            solve( State_2111( $ca ) ▶₀ #vr.9 )
+            solve( State_2111( $ca ) ▶₀ #vr.19 )
               case incCAcorruptca_1_211
               SOLVED // trace found
             qed
@@ -3479,12 +4013,12 @@ next
                 case c_sign
                 solve( !KU( skca($ca) ) @ #vk.1 )
                   case outcskcaca_0_21111
-                  solve( State_2111( $ca ) ▶₀ #vr.9 )
+                  solve( State_2111( $ca ) ▶₀ #vr.19 )
                     case incCAcorruptca_1_211
                     solve( Insert( <$ca, 'proofOfID', $s, pk>, ignored ) @ #t2.1 )
                       case insertcaproofOfIDspkskSyes_0_11111111111111
                       solve( State_11111111111111( $ca.1, $s, skS, $ca ) ▶₀ #t2.1 )
-                        case p_1_1111111111
+                        case eventHonestRegisterscapkskS_0_1111111111111
                         by contradiction /* from formulas */
                       qed
                     qed
@@ -3493,7 +4027,7 @@ next
                     solve( Insert( <$ca, 'proofOfID', $s, pk>, ignored ) @ #t2.1 )
                       case insertcaproofOfIDspkskSyes_0_11111111111111
                       solve( State_11111111111111( $ca.1, $s, skS, $ca ) ▶₀ #t2.1 )
-                        case p_1_1111111111
+                        case eventHonestRegisterscapkskS_0_1111111111111
                         by contradiction /* from formulas */
                       qed
                     qed
@@ -3563,19 +4097,19 @@ solve( State_1111121112( lock, pk, $s, $ca ) ▶₀ #i )
       case unlocktestCA_0_111112111211
       solve( State_111112111211( ~n, pk.1, $s.1, $ca.1 ) ▶₀ #t2 )
         case eventTestCAcaspk_0_11111211121
-        solve( !Semistate_11111111111( $ca.1 ) ▶₀ #j )
-          case inca_0_1111111
+        solve( State_1111111111111( $ca.1, $s, skS, $ca ) ▶₀ #j )
+          case newskS_0_111111111111
           solve( !KU( sign(skca($ca), <pk(~n.1), $s>) ) @ #vk )
             case c_sign
             solve( !KU( skca($ca) ) @ #vk.6 )
               case outcskcaca_0_21111
-              solve( State_2111( $ca ) ▶₀ #vr.11 )
+              solve( State_2111( $ca ) ▶₀ #vr.31 )
                 case incCAcorruptca_1_211
                 solve( !KU( pk(~n.1) ) @ #vk.8 )
                   case c_pk
                   by solve( !KU( ~n.1 ) @ #vk.12 )
                 next
-                  case insertcaproofOfIDspkskSyes_0_11111111111111
+                  case outpkskS_0_111111111111111
                   by contradiction /* cyclic */
                 next
                   case outsignskcacapkskSs_0_1111111111111111
@@ -3587,7 +4121,7 @@ solve( State_1111121112( lock, pk, $s, $ca ) ▶₀ #i )
                   case c_pk
                   by solve( !KU( ~n.1 ) @ #vk.12 )
                 next
-                  case insertcaproofOfIDspkskSyes_0_11111111111111
+                  case outpkskS_0_111111111111111
                   by contradiction /* cyclic */
                 next
                   case outsignskcacapkskSs_0_1111111111111111
@@ -3648,7 +4182,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
         case unlocklog_0_111121111211
         solve( State_111121111211( x1.1, $la.1, ~n, pk.1, $s.1 ) ▶₀ #t2 )
           case eventTestLAlaspk_0_11112111121
-          solve( (#j < #t2.2)  ∥ (#j = #t2.2)  ∥ (#vr.5 < #j) )
+          solve( (#j < #t2.2)  ∥ (#j = #t2.2)  ∥ (#vr.10 < #j) )
             case case_1
             solve( (#t2.2 < #t2.1)  ∥ (#t2.2 = #t2.1) )
               case case_1
@@ -3665,22 +4199,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                       case insertlalogSpkentityyes_0_212111111
                       solve( State_212111111( $id, $s, 'c1', $la, pk, lock ) ▶₀ #j )
                         case locklog_0_21211111_case_1
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -3716,22 +4250,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_2
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -3764,22 +4298,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_3
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -3812,22 +4346,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_4
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -3862,7 +4396,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.3 )
                           case insertlalogspkiyes_0_11111121111111
                           by contradiction /* cyclic */
@@ -3878,22 +4412,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                       case insertlalogSpkentityyes_0_212111111
                       solve( State_212111111( $id, $s, 'c1', $la, pk, lock ) ▶₀ #j )
                         case locklog_0_21211111_case_1
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -3926,22 +4460,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_2
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -3977,22 +4511,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_3
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4025,22 +4559,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_4
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4075,7 +4609,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.3 )
                           case insertlalogspkiyes_0_11111121111111
                           by contradiction /* cyclic */
@@ -4091,22 +4625,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                       case insertlalogSpkentityyes_0_212111111
                       solve( State_212111111( $id, $s, 'c1', $la, pk, lock ) ▶₀ #j )
                         case locklog_0_21211111_case_1
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4139,22 +4673,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_2
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4187,22 +4721,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_3
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4238,22 +4772,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_4
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4288,7 +4822,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.3 )
                           case insertlalogspkiyes_0_11111121111111
                           by contradiction /* cyclic */
@@ -4304,22 +4838,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                       case insertlalogSpkentityyes_0_212111111
                       solve( State_212111111( $id, $s, 'c1', $la, pk, lock ) ▶₀ #j )
                         case locklog_0_21211111_case_1
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4352,22 +4886,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_2
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4400,22 +4934,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_3
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4448,22 +4982,22 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                         qed
                       next
                         case locklog_0_21211111_case_4
-                        solve( ((#vr.9 < #vr.18) ∧
+                        solve( ((#vr.18 < #vr.31) ∧
                                 (∃ #t2.
                                   (Unlock_5( '5', ~n.4, 'log' ) @ #t2)
                                  ∧
-                                  (#vr.9 < #t2) ∧
-                                  (#t2 < #vr.18) ∧
+                                  (#vr.18 < #t2) ∧
+                                  (#t2 < #vr.31) ∧
                                   (∀ #t0 pp. (Unlock( pp, ~n.4, 'log' ) @ #t0) ⇒ #t0 = #t2) ∧
                                   (∀ pp lpp #t0.
                                     (Lock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t0 = #vr.9) ∨ (#t2 < #t0))) ∧
+                                    ((#t0 < #vr.18) ∨ (#t0 = #vr.18) ∨ (#t2 < #t0))) ∧
                                   (∀ pp lpp #t0.
                                     (Unlock( pp, lpp, 'log' ) @ #t0)
                                    ⇒
-                                    ((#t0 < #vr.9) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
-                               (#vr.18 < #vr.9)  ∥ (#vr.9 = #vr.18) )
+                                    ((#t0 < #vr.18) ∨ (#t2 < #t0) ∨ (#t2 = #t0)))))  ∥
+                               (#vr.31 < #vr.18)  ∥ (#vr.18 = #vr.31) )
                           case case_1
                           by contradiction /* cyclic */
                         next
@@ -4501,7 +5035,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.3 )
                           case insertlalogspkiyes_0_11111121111111
                           by contradiction /* cyclic */
@@ -4513,7 +5047,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
               next
                 case insertlalogspkcyes_0_111111211111
                 solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #t2.1 )
-                  case p_1_1111112111
+                  case locklog_0_11111121111
                   solve( State_111111211111111( ~n.3, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.2 )
                     case insertlalogspkiyes_0_11111121111111
                     by contradiction /* cyclic */
@@ -4642,7 +5176,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
               next
                 case insertlalogspkcyes_0_111111211111
                 solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                  case p_1_1111112111
+                  case locklog_0_11111121111
                   solve( State_111111211111111( ~n.1, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.1 )
                     case insertlalogspkiyes_0_11111121111111
                     by contradiction /* cyclic */
@@ -4681,7 +5215,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4708,7 +5242,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4735,7 +5269,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4762,7 +5296,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4771,7 +5305,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
               next
                 case insertlalogspkcyes_0_111111211111
                 solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #t2.1 )
-                  case p_1_1111112111
+                  case locklog_0_11111121111
                   solve( State_111111211111111( ~n.3, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.2 )
                     case insertlalogspkiyes_0_11111121111111
                     by contradiction /* cyclic */
@@ -4800,7 +5334,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
         case unlocklog_0_111121112111
         solve( State_111121112111( $la.1, ~n, x2.1, pk.1, $s.1 ) ▶₀ #t2 )
           case eventTestLAlaspk_0_11112111211
-          solve( (#k < #t2.2)  ∥ (#k = #t2.2)  ∥ (#vr.4 < #k) )
+          solve( (#k < #t2.2)  ∥ (#k = #t2.2)  ∥ (#vr.9 < #k) )
             case case_1
             solve( (#t2.2 < #t2.1)  ∥ (#t2.2 = #t2.1) )
               case case_1
@@ -4831,7 +5365,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4858,7 +5392,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4885,7 +5419,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4912,7 +5446,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4957,7 +5491,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -4984,7 +5518,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -5011,7 +5545,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -5038,7 +5572,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -5083,7 +5617,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -5110,7 +5644,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -5137,7 +5671,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -5164,7 +5698,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
                     next
                       case insertlalogspkcyes_0_111111211111
                       solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #j )
-                        case p_1_1111112111
+                        case locklog_0_11111121111
                         by contradiction /* cyclic */
                       qed
                     qed
@@ -5319,7 +5853,7 @@ solve( State_1112111( lock, lock.1 ) ▶₀ #t )
             next
               case insertlalogspkcyes_0_111111211111
               solve( State_111111211111( lock, $la, pk, $s, $ca ) ▶₀ #t2.1 )
-                case p_1_1111112111
+                case locklog_0_11111121111
                 solve( State_111111211111111( ~n.3, $la.1, pk.1, $s.1, $ca.1 ) ▶₀ #t2.2 )
                   case insertlalogspkiyes_0_11111121111111
                   by contradiction /* cyclic */
@@ -5424,7 +5958,7 @@ solve( State_1111121112( lock, pk, $s, $ca ) ▶₀ #i )
           case c_sign
           solve( !KU( skca($ca) ) @ #vk.1 )
             case outcskcaca_0_21111
-            solve( State_2111( $ca ) ▶₀ #vr.9 )
+            solve( State_2111( $ca ) ▶₀ #vr.19 )
               case incCAcorruptca_1_211
               SOLVED // trace found
             qed
@@ -5488,6 +6022,8 @@ WARNING: the following wellformedness checks failed!
 
 Wellformedness-error in Process
   Variable bound twice: $ca.
+  
+  There is an unlock that cannot be matched with a lock.
 
 Accountability (RP check)
   The specification contains at least one restriction.
@@ -5499,196 +6035,14 @@ Accountability (RP check)
   there exists a trace t’’ such that τ single-matches with ρ on t’’
   and the parties corrupted in t’’ are the same as the parties
   corrupted in t’ renamed from rng(ρ’) to rng(ρ).
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule inca_0_1111111: 
-Failed to derive Variable(s): $ca.1
-
-Rule p_1_1111111111: 
-Failed to derive Variable(s): $ca.1, $s.1, skS.1, $ca.2
-
-Rule insertcaproofOfIDspkskSyes_0_11111111111111: 
-Failed to derive Variable(s): $ca.1, $s.1, skS.1, $ca.2
-
-Rule outsignskcacapkskSs_0_1111111111111111: 
-Failed to derive Variable(s): $ca.1, $s.1, skS.1, $ca.2
-
-Rule inla_0_1111112: 
-Failed to derive Variable(s): $la.1, pk.1, $s.2, $ca.3
-
-Rule p_1_1111112111: 
-Failed to derive Variable(s): lock, $la.1, pk.1, $s.2, $ca.3
-
-Rule insertlalogspkcyes_0_111111211111: 
-Failed to derive Variable(s): lock, $la.1, pk.1, $s.2, $ca.3
-
-Rule insertlalogspksyes_0_1111112111111: 
-Failed to derive Variable(s): lock, $la.1, pk.1, $s.2, $ca.3
-
-Rule insertlalogspkiyes_0_11111121111111: 
-Failed to derive Variable(s): lock, $la.1, pk.1, $s.2, $ca.3
-
-Rule unlocklog_0_111111211111111: 
-Failed to derive Variable(s): lock, $la.1, pk.1, $s.2, $ca.3
-
-Rule locktestCA_0_1111121: 
-Failed to derive Variable(s): lock.1, pk.2, $s.3, $ca.4
-
-Rule lookupcaproofOfIDspkasignored_0_111112111: 
-Failed to derive Variable(s): ignored.1, lock.1, pk.2, $s.3, $ca.4
-
-Rule eventHonestCAca_0_1111121111: 
-Failed to derive Variable(s): ignored.1, lock.1, pk.2, $s.3, $ca.4
-
-Rule eventTestCAcaspk_0_11111211111: 
-Failed to derive Variable(s): ignored.1, lock.1, pk.2, $s.3, $ca.4
-
-Rule unlocktestCA_0_111112111111: 
-Failed to derive Variable(s): ignored.1, lock.1, pk.2, $s.3, $ca.4
-
-Rule lookupcaproofOfIDspkasignored_1_111112111: 
-Failed to derive Variable(s): lock.1, pk.2, $s.3, $ca.4
-
-Rule eventDishonestCAca_0_1111121112: 
-Failed to derive Variable(s): lock.1, pk.2, $s.3, $ca.4
-
-Rule eventTestCAcaspk_0_11111211121: 
-Failed to derive Variable(s): lock.1, pk.2, $s.3, $ca.4
-
-Rule unlocktestCA_0_111112111211: 
-Failed to derive Variable(s): lock.1, pk.2, $s.3, $ca.4
-
-Rule locklog_0_111121: 
-Failed to derive Variable(s): $la.2, lock.2, pk.3, $s.4
-
-Rule lookuplalogspkcasx_0_11112111: 
-Failed to derive Variable(s): x1.1, $la.2, lock.2, pk.3, $s.4
-
-Rule lookuplalogspksasx_0_111121111: 
-Failed to derive Variable(s): x1.1, x2.1, $la.2, lock.2, pk.3, $s.4
-
-Rule eventHonestLA_0_1111211111: 
-Failed to derive Variable(s): x1.1, x2.1, $la.2, lock.2, pk.3, $s.4
-
-Rule eventTestLAlaspk_0_11112111111: 
-Failed to derive Variable(s): x1.1, x2.1, $la.2, lock.2, pk.3, $s.4
-
-Rule unlocklog_0_111121111111: 
-Failed to derive Variable(s): x1.1, x2.1, $la.2, lock.2, pk.3, $s.4
-
-Rule lookuplalogspksasx_1_111121111: 
-Failed to derive Variable(s): x1.1, $la.2, lock.2, pk.3, $s.4
-
-Rule eventDishonestLAla_0_1111211112: 
-Failed to derive Variable(s): x1.1, $la.2, lock.2, pk.3, $s.4
-
-Rule eventTestLAlaspk_0_11112111121: 
-Failed to derive Variable(s): x1.1, $la.2, lock.2, pk.3, $s.4
-
-Rule unlocklog_0_111121111211: 
-Failed to derive Variable(s): x1.1, $la.2, lock.2, pk.3, $s.4
-
-Rule lookuplalogspkcasx_1_11112111: 
-Failed to derive Variable(s): $la.2, lock.2, pk.3, $s.4
-
-Rule lookuplalogspksasx_0_111121112: 
-Failed to derive Variable(s): $la.2, lock.2, x2.2, pk.3, $s.4
-
-Rule eventDishonestLAla_0_1111211121: 
-Failed to derive Variable(s): $la.2, lock.2, x2.2, pk.3, $s.4
-
-Rule eventTestLAlaspk_0_11112111211: 
-Failed to derive Variable(s): $la.2, lock.2, x2.2, pk.3, $s.4
-
-Rule unlocklog_0_111121112111: 
-Failed to derive Variable(s): $la.2, lock.2, x2.2, pk.3, $s.4
-
-Rule lookuplalogspksasx_1_111121112: 
-Failed to derive Variable(s): $la.2, lock.2, pk.3, $s.4
-
-Rule locktestCA_0_11121: 
-Failed to derive Variable(s): lock.3
-
-Rule locklog_0_111211: 
-Failed to derive Variable(s): lock.3, lock.4
-
-Rule eventTerminate_0_1112111: 
-Failed to derive Variable(s): lock.3, lock.4
-
-Rule incCAcorruptca_0_211: 
-Failed to derive Variable(s): x
-
-Rule incCAcorruptca_2_211: 
-Failed to derive Variable(s): x
-
-Rule incCAcorruptca_1_211: 
-Failed to derive Variable(s): $ca.5
-
-Rule incCAcorruptca_3_211: 
-Failed to derive Variable(s): $ca.5
-
-Rule eventCorruptedca_0_2111: 
-Failed to derive Variable(s): $ca.5
-
-Rule outcskcaca_1_21111: 
-Failed to derive Variable(s): $ca.5
-
-Rule outcskcaca_0_21111: 
-Failed to derive Variable(s): $ca.5
-
-Rule outcskcaca_2_21111: 
-Failed to derive Variable(s): $ca.5
-
-Rule inclaLAcorruptid_0_2121: 
-Failed to derive Variable(s): x
-
-Rule inclaLAcorruptid_2_2121: 
-Failed to derive Variable(s): x
-
-Rule inclaLAcorruptid_1_2121: 
-Failed to derive Variable(s): $id.1, $la.3
-
-Rule inclaLAcorruptid_3_2121: 
-Failed to derive Variable(s): $id.1, $la.3
-
-Rule eventCorruptedla_0_21211: 
-Failed to derive Variable(s): $id.1, $la.3
-
-Rule p_1_212111: 
-Failed to derive Variable(s): $id.1, $la.3
-
-Rule incSpkentity_0_2121111: 
-Failed to derive Variable(s): $id.1, $la.3, x.4
-
-Rule incSpkentity_2_2121111: 
-Failed to derive Variable(s): $id.1, $la.3, x.4
-
-Rule incSpkentity_1_2121111: 
-Failed to derive Variable(s): $id.1, S.1, entity.1, $la.3, pk.4
-
-Rule incSpkentity_3_2121111: 
-Failed to derive Variable(s): $id.1, S.1, entity.1, $la.3, pk.4
-
-Rule locklog_0_21211111: 
-Failed to derive Variable(s): $id.1, S.1, entity.1, $la.3, pk.4, lock.5
-
-Rule insertlalogSpkentityyes_0_212111111: 
-Failed to derive Variable(s): $id.1, S.1, entity.1, $la.3, pk.4, lock.5
-
-Rule unlocklog_0_2121111111: 
-Failed to derive Variable(s): $id.1, S.1, entity.1, $la.3, pk.4, lock.5
 */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -5700,7 +6054,7 @@ summary of summaries:
 analyzed: examples/accountability/csf21-acc-unbounded/previous/ct.spthy
 
   output:          examples/accountability/csf21-acc-unbounded/previous/ct.spthy.tmp
-  processing time: 23.20s
+  processing time: 19.99s
   
   WARNING: 3 wellformedness check failed!
            The analysis results might be wrong!

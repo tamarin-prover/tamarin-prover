@@ -1,0 +1,11 @@
+theory Test
+begin
+
+macros: X() = 'bot'
+
+builtins: hashing
+
+rule R[no_derivcheck]:
+  [ In(h(x)) ] --[ P(x) ]-> [ Out(x) ]
+
+end

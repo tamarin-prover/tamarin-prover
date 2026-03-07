@@ -1,0 +1,112 @@
+theory SignatureDerivationTests
+begin
+
+// Only the "invalid" rules should generate a warning. Everything else should be derived properly.
+
+builtins: signing
+
+// ====== Standard Signing Tests ======
+
+// Key Generation
+rule Generate_Signing_Keypair:
+    [ Fr(~sk) ]
+  -->
+    [ !SignKey($A, ~sk), !VerifyKey($A, pk(~sk)), Out(pk(~sk)) ]
+
+// Valid Signing Operation
+rule Sign_Message:
+    [ In(m), !SignKey(A, sk) ]
+  --[ Signed(A, m) ]->
+    [ Out(sign(m, sk)) ]
+
+/* Valid Verification - using the right connection between keys. Should generate a warning since sk is not derivable.
+Rule Invalid_Verify_Signature: 
+Failed to derive Variable(s): sk
+*/
+rule Invalid_Verify_Signature:
+    [ In(sign(m, sk)), In(m), In(pk(sk)) ]
+  --[ ValidSignature(m) ]->
+    [ Out(verify(sign(m, sk), m, pk(sk))) ]
+
+
+// Valid Verification - using the right connection between keys
+rule Verify_Signature_Well_Derived:
+    [ In(s), In(m), In(k) ]
+  --[ ValidSignature(m) ]->
+    [ Out(verify(s, m, k)) ]
+
+/* Using stored keys (note we match the actual key pattern here but it should generate a warning since skA is not derivable.)
+Rule Invalid_Verify_With_Stored_Key: 
+Failed to derive Variable(s): skA
+*/
+rule Invalid_Verify_With_Stored_Key:
+    [ In(sign(m, skA)), In(m), !VerifyKey(A, pkA) ]
+  --[ ValidSignatureAttempt(A, m) ]->
+    [ Out(verify(sign(m, skA), m, pkA)) ]
+
+rule Verify_With_Stored_Key_WD:
+    [ In(s), In(m), !VerifyKey(A, pkA) ]
+  --[ ValidSignatureAttempt(A, m) ]->
+    [ Out(verify(s, m, pkA)) ]
+
+// ====== Invalid Derivation Attempts (all should fail) ======
+
+// These rules should all trigger derivation errors - which is correct!
+
+/* Attempt to extract message from standard signature (should fail):
+Rule Invalid_Extract_From_Sign: 
+Failed to derive Variable(s): m, sk
+*/
+
+rule Invalid_Extract_From_Sign:
+    [ In(sign(m, sk)) ]
+  -->
+    [ Out(m) ]
+
+/* Attempt to extract private key from signature (should fail)
+Rule Invalid_Extract_Key_From_Sign: 
+Failed to derive Variable(s): m, sk
+*/
+rule Invalid_Extract_Key_From_Sign:
+    [ In(sign(m, sk)) ]
+  -->
+    [ Out(sk) ]
+
+/* Attempt to forge signature without key (should fail)
+Rule Invalid_Forge_Signature: 
+Failed to derive Variable(s): sk
+*/
+rule Invalid_Forge_Signature:
+    [ In(m), In(pk(sk)) ]
+  -->
+    [ Out(sign(m, sk)) ]
+
+// ====== Protocol-Style Tests ======
+
+// Agent A signs and sends a message
+rule Protocol_Sign_Send:
+    [ Fr(~m), !SignKey($A, ~skA) ]
+  --[ ProtocolSigned($A, $B, ~m) ]->
+    [ Out(<$A, ~m, sign(~m, ~skA)>) ]
+
+// Agent B verifies the signature (using message + pubkey)
+rule Protocol_Verify:
+    [ In(<A, m, sig>), !VerifyKey(A, pubkey) ]
+  --[ ProtocolVerified(A, $B, m) ]->
+    [ Out(verify(sig, m, pubkey)) ]
+
+// ====== Key Reveal for Testing Key Compromise ======
+
+// Reveal signing key (key compromise scenario)
+rule Reveal_Sign_Key:
+    [ !SignKey(A, sk) ]
+  --[ KeyReveal(A) ]->
+    [ Out(sk) ]
+
+// Sign with compromised key (should work)
+rule Sign_With_Compromised_Key:
+    [ In(sk), In(m) ]
+  --[ CompromisedSign(m) ]->
+    [ Out(sign(m, sk)) ]
+
+end

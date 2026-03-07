@@ -1,4 +1,6 @@
-theory WmFrog begin
+theory WmFrog
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -7,12 +9,6 @@ equations:
     fst(<x.1, x.2>) = x.1,
     sdec(senc(x.1, x.2), x.2) = x.1,
     snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) Init:
    [ Fr( ~kxs ) ] --[ KeyGen( $X ) ]-> [ !Ltk( ~kxs, $X ) ]
@@ -370,16 +366,6 @@ solve( !Ltk( ~kas, A ) ▶₁ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
 lemma AUTO_typing [sources]:
   all-traces
   "(⊤) ∧
@@ -400,7 +386,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (last(#i))  ∥
          (∃ #j. (!KU( x ) @ #j) ∧ (¬(last(#j))) ∧ (#j < #i))  ∥
          (∃ #j.
@@ -449,10 +434,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -464,7 +449,7 @@ summary of summaries:
 analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
 
   output:          examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy.tmp
-  processing time: 0.84s
+  processing time: 0.35s
   
   executability (exists-trace): verified (9 steps)
   Secrecy (all-traces): verified (30 steps)
@@ -472,7 +457,7 @@ analyzed: examples/features/auto-sources/spore/Wide_Mouthed_Frog.spthy
   agreement_B (all-traces): verified (9 steps)
   injectiveagreement_S (all-traces): falsified - found trace (9 steps)
   agreement_S (all-traces): verified (7 steps)
-  AUTO_typing (all-traces): verified (14 steps)
+  AUTO_typing (all-traces): verified (13 steps)
 
 ==============================================================================
 */

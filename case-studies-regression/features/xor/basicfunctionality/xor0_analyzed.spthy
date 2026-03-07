@@ -1,16 +1,12 @@
-theory xor0 begin
+theory xor0
+
+begin
 
 // Function signature and definition of the equational theory E
 
 builtins: xor
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) challenge:
    [ Fr( ~a ), Fr( ~b ) ] --[ Challenge( (~a⊕~b) ) ]-> [ Out( <~a, ~b> ) ]
@@ -61,30 +57,14 @@ solve( splitEqs(0) )
   qed
 qed
 
-
-
-
-
-
-
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule receive: 
-Failed to derive Variable(s): ~a, ~b
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -96,10 +76,7 @@ summary of summaries:
 analyzed: examples/features/xor/basicfunctionality/xor0.spthy
 
   output:          examples/features/xor/basicfunctionality/xor0.spthy.tmp
-  processing time: 0.09s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.03s
   
   crworks (exists-trace): verified (6 steps)
 

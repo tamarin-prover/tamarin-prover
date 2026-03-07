@@ -1,16 +1,12 @@
-theory Scott begin
+theory Scott
+
+begin
 
 // Function signature and definition of the equational theory E
 
 builtins: diffie-hellman, bilinear-pairing
 functions: fst/1, hp/1, kdf/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 section{* Scott: MTI-C0 like identity based key exchange protocol *}
 
@@ -141,27 +137,11 @@ rule (modulo E) Resp_1:
        X     = X.38
        z     = X.38^~ey.36
     
-    2. ~ey   = ~ey.36
-       X     = z.41^inv(~ey.36)
-       z     = z.41
-    
-    3. ~ey   = ~ey.372
+    2. ~ey   = ~ey.372
        X     = x.739^x.740
        z     = x.739^(~ey.372*x.740)
     
-    4. ~ey   = ~ey.374
-       X     = x.743^inv((~ey.374*x.744))
-       z     = x.743^inv(x.744)
-    
-    5. ~ey   = ~ey.374
-       X     = x.743^(x.744*inv(~ey.374))
-       z     = x.743^x.744
-    
-    6. ~ey   = ~ey.375
-       X     = x.744^(x.745*inv((~ey.375*x.746)))
-       z     = x.744^(x.745*inv(x.746))
-    
-    7. X     = DH_neutral
+    3. X     = DH_neutral
        z     = DH_neutral
   */
 
@@ -277,37 +257,14 @@ solve( (∃ matching #i3 #i4 sid.
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule Init_1: 
-Failed to derive Variable(s): ~s
-
-Rule Resp_1: 
-Failed to derive Variable(s): ~s
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -319,10 +276,7 @@ summary of summaries:
 analyzed: examples/ake/bilinear/Scott_EphkRev.spthy
 
   output:          examples/ake/bilinear/Scott_EphkRev.spthy.tmp
-  processing time: 8.46s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 6.57s
   
   key_agreement_reachable (exists-trace): verified (12 steps)
   key_secrecy (all-traces): falsified - found trace (8 steps)

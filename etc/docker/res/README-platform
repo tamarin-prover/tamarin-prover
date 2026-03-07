@@ -34,7 +34,7 @@ The protocol platform consists a modified version of tamarin-prover that parses 
      --diff                                                   Turn on observational equivalence mode using
                                                               diff terms
 ```
-    For more details on the command line arguments offered by tamarin-prover, including it's interactive mode, we refer to the official documentation at http://tamarin-prover.github.io/manual/
+    For more details on the command line arguments offered by tamarin-prover, including it's interactive mode, we refer to the official documentation at https://tamarin-prover.com/manual/
 
 On most examples inside the `examples/export` repository, `tamarin-prover name.spthy --prove` will verify the file, and `tamarin-prover -m=proverif name.spthy` gives an output that can be written to a file and executed using proverif or gsverif.
 

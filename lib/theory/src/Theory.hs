@@ -78,6 +78,7 @@ module Theory (
   , lFormula
   , lAttributes
   , lProof
+  , lPlaintext
   , aName
   , aAttributes
   , aCaseIdentifiers
@@ -135,6 +136,8 @@ module Theory (
   , addTactic
   , addRestriction
   , addLemma
+  , addLemmaAtIndex
+  , modifyLemma
   , addAccLemma
   , addCaseTest
   , addRestrictionDiff
@@ -148,6 +151,8 @@ module Theory (
   , filterLemma
   , removeDiffLemma
   , lookupLemma
+  , lookupLemmaIndex
+  , getLemmaPreItems
   , lookupDiffLemma
   , lookupAccLemma
   , lookupCaseTest
@@ -228,7 +233,8 @@ module Theory (
 
   , getSource
   , getDiffSource
-
+  -- ** Alice
+  , Theory
   -- ** Proving
   , ProofSkeleton
   , DiffProofSkeleton
@@ -280,7 +286,6 @@ module Theory (
 import           Prelude                             hiding (id, (.))
 
 --import           GHC.Generics                        (Generic)
-
 -- import           Data.Typeable
 --import           Data.Binary
 --import           Data.List

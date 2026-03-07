@@ -1,5 +1,4 @@
-{-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE QuasiQuotes   #-}
+{-# LANGUAGE QuasiQuotes #-}
 -- Copyright   : (c) 2019 Robert Künnemann
 -- License     : GPL v3 (see LICENSE)
 --
@@ -7,20 +6,21 @@
 -- Portability : GHC only
 --
 -- Transforms translation into translation that includes reliable channels.
-module Sapic.ReliableChannelTranslation (
-     reliableChannelTrans
-   , reliableChannelInit
-   , reliableChannelRestr
-) where
-import           Control.Monad.Catch
-import           Data.Set              hiding (map)
-import           Sapic.Basetranslation
-import           Sapic.Exceptions
-import           Sapic.Facts
-import           Sapic.ProcessUtils
-import qualified Text.RawString.QQ     as QQ
-import           Theory
-import           Theory.Sapic
+module Sapic.ReliableChannelTranslation
+  ( reliableChannelTrans
+  , reliableChannelInit
+  , reliableChannelRestr
+  ) where
+
+import Control.Monad.Catch
+import Data.Set              hiding (map)
+import Sapic.Basetranslation
+import Sapic.Exceptions
+import Sapic.Facts
+import Sapic.ProcessUtils
+import Text.RawString.QQ qualified as QQ
+import Theory
+import Theory.Sapic
 
 -- | Init-rule that allows generating MessageIDSender and MessageIDReceiver facts,
 -- | for later consumption.

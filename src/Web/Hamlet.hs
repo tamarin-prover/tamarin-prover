@@ -1,11 +1,4 @@
-{-# LANGUAGE CPP                  #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE PatternGuards        #-}
-{-# LANGUAGE QuasiQuotes          #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 {- |
 Module      :  Web.Hamlet
@@ -18,36 +11,26 @@ Stability   :  experimental
 Portability :  non-portable
 -}
 
-module Web.Hamlet (
-    rootTpl
+module Web.Hamlet
+  ( rootTpl
   , overviewTpl
---   , rootDiffTpl
   , overviewDiffTpl
   ) where
 
-import           Data.Label
-import           Text.PrettyPrint.Html
-import           Theory
-import           Web.Theory
-import           Web.Types
+import Text.PrettyPrint.Html
+import Theory
+import Web.Theory
+import Web.Types
 
-import           Yesod.Core
+import Yesod.Core
 
-import           Data.List
-import qualified Data.Map              as M
-import           Data.Ord
-import           Data.Time.Format
-import           Data.Version          (showVersion)
+import Data.List
+import Data.Map qualified as M
+import Data.Ord
+import Data.Time.Format
+import Data.Version (showVersion)
 
--- #if MIN_VERSION_time(1,5,0)
--- import           Data.Time.Format
--- #else
--- import           System.Locale
--- #endif
--- For GHC 7.10 comment line below
--- import           System.Locale
-
-import           Paths_tamarin_prover  (version)
+import Paths_tamarin_prover (version)
 
 --
 -- Templates
@@ -94,7 +77,7 @@ rootTpl theories = [whamlet|
         <input type=file name="uploadedTheory">
         <div .submit-form>
           <input type=submit value="Load new theory">
-      <p>Note: You can save a theory by downloading the source.
+      <p>Note: You can save a theory by downloading the source from the Actions menu.
   |]
 
 -- | Template for listing theories.
@@ -121,14 +104,14 @@ theoriesTpl thmap = [whamlet|
       groupBy (\x y -> comparing tiName x y == EQ) .
       sortBy (comparing snd) . M.toList
 
-    tiName x = getEitherTheoryName $ snd(x)
+    tiName x = getEitherTheoryName $ snd x
 
     ntail _ [] = []
     ntail i (_:xs)
       | length xs <= i = xs
       | otherwise      = ntail i xs
-      
-      
+
+
 -- | Template for single line in table on root page.
 theoryTpl :: (TheoryIdx, EitherTheoryInfo) -> Widget
 theoryTpl th = [whamlet|
@@ -136,11 +119,11 @@ theoryTpl th = [whamlet|
     <tr>
       $if isTheoryInfo (snd th)
         <td>
-          <a href=@{OverviewR (fst th) TheoryHelp}>
+          <a href=@{InteractiveOverviewR (fst th) TheoryHelp}>
             \#{getEitherTheoryName $ snd th}
       $else
         <td>
-          <a href=@{OverviewDiffR (fst th) DiffTheoryHelp}>
+          <a href=@{InteractiveOverviewDiffR (fst th) DiffTheoryHelp}>
             \#{getEitherTheoryName $ snd th}
       <td>#{formatTime defaultTimeLocale "%T" $ getEitherTheoryTime $ snd th}
       $if getEitherTheoryPrimary (snd th)
@@ -189,14 +172,22 @@ headerTpl info = [whamlet|
         \ <a href=@{RootR}><span class="tamarin">Tamarin</span></a>
         \ #{showVersion version}
     <div #header-links>
-      <a class=plain-link href=@{RootR}>Index</a>
-      <a class=plain-link href=@{DownloadTheoryR idx filename}>Download</a>
       <ul #navigation>
+        <li><a href=@{RootR}>Index</a>
+        $if isLocalOrigin origin
+          <li>
+            <form method=POST action=@{ReloadTheoryR idx} class="ajax-form ajax-form-full reload-confirm">
+              <button type=submit class=nav-button>Reload file
         <li><a href="#">Actions</a>
           <ul>
             <li><a target=_blank href=@{TheorySourceR idx}>Show source</a>
+            <li><a href=@{DownloadTheoryR idx filename}>Download source</a>
+            $if isLocalOrigin origin
+              <li>
+                <form method=POST action=@{AppendNewLemmasR idx filename} class=ajax-form>
+                  <button type=submit class=link-button>Append modified lemmas to file
         <li><a href="#">Options</a>
-          <ul>
+          <ul class="list-with-toggles">
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
             <li><a id=agent-toggle href="#">Clustering by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
@@ -204,8 +195,6 @@ headerTpl info = [whamlet|
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
             <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
             <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
-            
-            
   |]
   where
             -- <li><a id=debug-toggle href="#">Debug pane</a>
@@ -213,10 +202,14 @@ headerTpl info = [whamlet|
             -- <li><a class=edit-link href=@{EditTheoryR idx}>Edit theory</a>
             -- <li><a class=edit-link href=@{EditPathR idx (TheoryLemma "")}>Add lemma</a>
             --
-    idx = tiIndex info
-    filename = get thyName (tiTheory info) ++ ".spthy"
+    idx = info.index
+    filename = info.theory._thyName ++ ".spthy"
+    origin = info.origin
+    -- Check if theory origin is a local file (needed for reload functionality)
+    isLocalOrigin (Local _) = True
+    isLocalOrigin _         = False
 
-    {- use this snipped to reactivate saving local theories
+      {- use this snipped to reactivate saving local theories
     localTheory (Local _) = True
     localTheory _         = False
 
@@ -235,22 +228,25 @@ headerDiffTpl info = [whamlet|
         \ <a href=@{RootR}><span class="tamarin">Tamarin</span></a>
         \ #{showVersion version}
     <div #header-links>
-      <a class=plain-link href=@{RootR}>Index</a>
-      <a class=plain-link href=@{DownloadTheoryDiffR idx filename}>Download</a>
       <ul #navigation>
+        <li><a href=@{RootR}>Index</a>
+        $if isLocalOrigin origin
+          <li>
+            <form method=POST action=@{ReloadTheoryDiffR idx} class="ajax-form ajax-form-full reload-confirm">
+              <button type=submit class=nav-button>Reload file
         <li><a href="#">Actions</a>
           <ul>
             <li><a target=_blank href=@{TheorySourceDiffR idx}>Show source</a>
+            <li><a href=@{DownloadTheoryDiffR idx filename}>Download source</a>
         <li><a href="#">Options</a>
-          <ul>
+          <ul class="list-with-toggles">
             <li><a id=abbrv-toggle href="#">Abbreviate terms</a>
-            <li><a id=agent-toggle href="#">Clusturing by role</a>
+            <li><a id=agent-toggle href="#">Clustering by role</a>
             <li><a id=auto-toggle href="#">Show annotation auto-sources</a>
             <li><a id=lvl0-toggle href="#">Graph simplification off</a>
             <li><a id=lvl1-toggle href="#">Graph simplification L1</a>
             <li><a id=lvl2-toggle href="#">Graph simplification L2</a>
             <li><a id=lvl3-toggle href="#">Graph simplification L3</a>
-           
   |]
   where
             -- <li><a id=debug-toggle href="#">Debug pane</a>
@@ -258,10 +254,14 @@ headerDiffTpl info = [whamlet|
             -- <li><a class=edit-link href=@{EditTheoryR idx}>Edit theory</a>
             -- <li><a class=edit-link href=@{EditPathR idx (TheoryLemma "")}>Add lemma</a>
             --
-    idx = dtiIndex info
-    filename = get diffThyName (dtiTheory info) ++ ".spthy"
+    idx = info.index
+    filename = info.theory._diffThyName ++ ".spthy"
+    origin = info.origin
+    -- Check if theory origin is a local file (needed for reload functionality)
+    isLocalOrigin (Local _) = True
+    isLocalOrigin _         = False
 
-    {- use this snipped to reactivate saving local theories
+      {- use this snipped to reactivate saving local theories
     localTheory (Local _) = True
     localTheory _         = False
 
@@ -273,29 +273,30 @@ headerDiffTpl info = [whamlet|
 -- | Template for proof state (tree) frame.
 proofStateTpl :: RenderUrl -> TheoryInfo -> IO Widget
 proofStateTpl renderUrl ti = do
-    let res = renderHtmlDoc $ theoryIndex renderUrl (tiIndex ti) (tiTheory ti)
-    return [whamlet|
-              $newline never
-              #{preEscapedToMarkup res} |]
+  let res = renderHtmlDoc $ theoryIndex renderUrl ti.index ti.theory
+  pure [whamlet|
+         $newline never
+         #{preEscapedToMarkup res} |]
 
 -- | Template for proof state (tree) frame.
 proofStateDiffTpl :: RenderUrl -> DiffTheoryInfo -> IO Widget
 proofStateDiffTpl renderUrl ti = do
-    let res = renderHtmlDoc $ diffTheoryIndex renderUrl (dtiIndex ti) (dtiTheory ti)
-    return [whamlet|
-              $newline never
-              #{preEscapedToMarkup res} |]
+  let res = renderHtmlDoc $ diffTheoryIndex renderUrl ti.index ti.theory
+  pure [whamlet|
+         $newline never
+         #{preEscapedToMarkup res} |]
 
 -- | Framing/UI-layout template (based on JavaScript/JQuery)
 overviewTpl :: RenderUrl
             -> RenderUrl -- ^ URL renderer that includes GET parameters for the image.
             -> TheoryInfo -- ^ Theory information
             -> TheoryPath -- ^ Theory path to load into main
+            -> String     -- ^ The lemma plaintext for editing
             -> IO Widget
-overviewTpl renderUrl renderImgUrl info path = do
+overviewTpl renderUrl renderImgUrl info path lptxt = do
   proofState <- proofStateTpl renderUrl info
-  mainView <- pathTpl renderUrl renderImgUrl info path
-  return [whamlet|
+  mainView <- pathTpl renderUrl renderImgUrl info path lptxt
+  pure [whamlet|
     $newline never
     <div .ui-layout-north>
       ^{headerTpl info}
@@ -323,7 +324,7 @@ overviewDiffTpl :: RenderUrl
 overviewDiffTpl renderUrl info path = do
   proofState <- proofStateDiffTpl renderUrl info
   mainView <- pathDiffTpl renderUrl info path
-  return [whamlet|
+  pure [whamlet|
     $newline never
     <div .ui-layout-north>
       ^{headerDiffTpl info}
@@ -343,17 +344,18 @@ overviewDiffTpl renderUrl info path = do
           \^{mainView}
   |]
 
-  
+
 -- | Theory path, displayed when loading main screen for first time.
 pathTpl :: RenderUrl
         -> RenderUrl      -- ^ URL renderer that includes GET parameters for the image.
         -> TheoryInfo     -- ^ The theory
         -> TheoryPath     -- ^ Path to display on load
+        -> String         -- ^ plaintext of lemma for editing
         -> IO Widget
-pathTpl renderUrl renderImgUrl info path =
-    return $ [whamlet|
-                $newline never
-                #{htmlThyPath renderUrl renderImgUrl info path} |]
+pathTpl renderUrl renderImgUrl info path lptxt =
+  pure [whamlet|
+         $newline never
+         #{htmlThyPath renderUrl renderImgUrl info path lptxt} |]
 
 -- | Theory path, displayed when loading main screen for first time.
 pathDiffTpl :: RenderUrl
@@ -361,9 +363,9 @@ pathDiffTpl :: RenderUrl
             -> DiffTheoryPath   -- ^ Path to display on load
             -> IO Widget
 pathDiffTpl renderUrl info path =
-    return $ [whamlet|
-                $newline never
-                #{htmlDiffThyPath renderUrl info path} |]
+  pure [whamlet|
+         $newline never
+         #{htmlDiffThyPath renderUrl info path} |]
 
 -- | Template for introduction.
 introTpl :: Widget
@@ -379,12 +381,12 @@ introTpl = [whamlet|
       <p>
         Core team:
         \ <a href="https://www.inf.ethz.ch/personal/basin/">David Basin</a>,
-        \ <a href="https://www.cs.ox.ac.uk/people/cas.cremers/">Cas Cremers</a>,
+        \ <a href="https://cispa.saarland/group/cremers/">Cas Cremers</a>,
         \ <a href="https://www.jannikdreier.net">Jannik Dreier</a>,
         \ <a href="mailto:iridcode@gmail.com">Simon Meier</a>,
         \ <a href="https://people.inf.ethz.ch/rsasse/">Ralf Sasse</a>,
         \ <a href="https://beschmi.net">Benedikt Schmidt</a><br>
-        Tamarin is a collaborative effort: see the <a href="http://tamarin-prover.github.io/manual/index.html">manual</a> for a more extensive overview of its development and additional contributors.
+        Tamarin is a collaborative effort: see the <a href="https://tamarin-prover.com/manual/index.html">manual</a> for a more extensive overview of its development and additional contributors.
       <p>
         This program comes with ABSOLUTELY NO WARRANTY. It is free software, and
         \ you are welcome to redistribute it according to its
@@ -392,7 +394,7 @@ introTpl = [whamlet|
       <p>
         More information about Tamarin and technical papers describing the underlying
         \ theory can be found on the
-        \ <a href="https://tamarin-prover.github.io"><span class="tamarin">Tamarin</span>
+        \ <a href="https://tamarin-prover.com"><span class="tamarin">Tamarin</span>
         \ webpage</a>.
   |]
 

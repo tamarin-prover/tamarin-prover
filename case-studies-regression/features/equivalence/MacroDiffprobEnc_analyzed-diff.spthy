@@ -1,4 +1,6 @@
-theory MacroDiffprobEnc begin
+theory MacroDiffprobEnc
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,12 +10,7 @@ equations:
     pdec(penc(m, pk(k), r), k) = m,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-macros:
-    pubkey( x ) = pk(x)
+macros: pubkey( x ) =  pk(x)
 
 rule (modulo E) enc:
    [ !Key( k ), Fr( ~r1 ), Fr( ~r2 ), In( x ) ]
@@ -238,10 +235,10 @@ qed
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -253,7 +250,7 @@ summary of summaries:
 analyzed: examples/features/equivalence/MacroDiffprobEnc.spthy
 
   output:          examples/features/equivalence/MacroDiffprobEnc.spthy.tmp
-  processing time: 0.22s
+  processing time: 0.09s
   
   DiffLemma:  Observational_equivalence : verified (75 steps)
 

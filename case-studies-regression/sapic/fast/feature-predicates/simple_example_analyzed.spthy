@@ -1,17 +1,15 @@
-theory SimpleIf begin
+theory SimpleIf
+
+begin
 
 // Function signature and definition of the equational theory E
 
 functions: fst/1, pair/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
 
-
-
 heuristic: p
 
 predicate: Equal( h1, h2 )<=>h1 = h2
-
-
 
 lemma bogus_exists:
   exists-trace "∃ #i. Bogus( ) @ #i"
@@ -20,53 +18,116 @@ guarded formula characterizing all satisfying traces:
 "∃ #i. (Bogus( ) @ #i)"
 */
 simplify
-solve( State_1( h ) ▶₀ #i )
-  case Init
+solve( State_11( h ) ▶₀ #i )
+  case ifEqualhh_0_1
   SOLVED // trace found
 qed
 
+rule (modulo E) Init[color=#ffffff, process="new h.1;", issapicrule,
+                     role='Process']:
+   [ ] --[ Init( ) ]-> [ State_( ) ]
 
+  /* has exactly the trivial AC variant */
 
-
-
-
-
-rule (modulo E) Init[color=#ffffff, process="new h.1;", issapicrule]:
-   [ Fr( h.1 ) ] --[ Init( ) ]-> [ State_1( h.1 ) ]
+rule (modulo E) newh_0_[color=#ffffff, process="new h.1;", issapicrule,
+                        role='Process']:
+   [ State_( ), Fr( h.1 ) ] --> [ State_1( h.1 ) ]
 
   /*
-  rule (modulo AC) Init[color=#ffffff, process="new h.1;", issapicrule]:
-     [ Fr( h ) ] --[ Init( ) ]-> [ State_1( h ) ]
+  rule (modulo AC) newh_0_[color=#ffffff, process="new h.1;", issapicrule,
+                           role='Process']:
+     [ State_( ), Fr( h ) ] --> [ State_1( h ) ]
   */
 
 restriction Restr_ifEqualhh_0_1_1:
   "∀ x #NOW x.1. (Restr_ifEqualhh_0_1_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_0_1_1( x, x.1 ) @ #NOW) ⇒ (x = x.1)"
+  */
+
 rule (modulo E) ifEqualhh_0_1[color=#ffffff,
-                              process="if Equal( h.1, h.1 )", issapicrule]:
+                              process="if Equal( h.1, h.1 )", issapicrule, role='Process']:
    [ State_1( h.1 ) ]
-  --[ Bogus( ), Restr_ifEqualhh_0_1_1( h.1, h.1 ) ]->
-   [ ]
+  --[ Restr_ifEqualhh_0_1_1( h.1, h.1 ) ]->
+   [ State_11( h.1 ) ]
 
   /*
   rule (modulo AC) ifEqualhh_0_1[color=#ffffff,
-                                 process="if Equal( h.1, h.1 )", issapicrule]:
-     [ State_1( h ) ] --[ Bogus( ), Restr_ifEqualhh_0_1_1( h, h ) ]-> [ ]
+                                 process="if Equal( h.1, h.1 )", issapicrule, role='Process']:
+     [ State_1( h ) ] --[ Restr_ifEqualhh_0_1_1( h, h ) ]-> [ State_11( h ) ]
+  */
+
+restriction Restr_ifEqualhh_1_1_1:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_1_1_1( x, x.1 ) @ #NOW) ⇒ (¬(x = x.1))"
+  // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #NOW x.1. (Restr_ifEqualhh_1_1_1( x, x.1 ) @ #NOW) ⇒ (¬(x = x.1))"
+  */
+
+rule (modulo E) ifEqualhh_1_1[color=#ffffff,
+                              process="if Equal( h.1, h.1 )", issapicrule, role='Process']:
+   [ State_1( h.1 ) ]
+  --[ Restr_ifEqualhh_1_1_1( h.1, h.1 ) ]->
+   [ State_12( h.1 ) ]
+
+  /*
+  rule (modulo AC) ifEqualhh_1_1[color=#ffffff,
+                                 process="if Equal( h.1, h.1 )", issapicrule, role='Process']:
+     [ State_1( h ) ] --[ Restr_ifEqualhh_1_1_1( h, h ) ]-> [ State_12( h ) ]
+  */
+
+rule (modulo E) eventBogus_0_11[color=#ffffff, process="event Bogus( );",
+                                issapicrule, role='Process']:
+   [ State_11( h.1 ) ] --[ Bogus( ) ]-> [ State_111( h.1 ) ]
+
+  /*
+  rule (modulo AC) eventBogus_0_11[color=#ffffff,
+                                   process="event Bogus( );", issapicrule, role='Process']:
+     [ State_11( h ) ] --[ Bogus( ) ]-> [ State_111( h ) ]
+  */
+
+rule (modulo E) p_0_111[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ State_111( h.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_111[color=#ffffff, process="0", issapicrule,
+                           role='Process']:
+     [ State_111( h ) ] --> [ ]
+  */
+
+rule (modulo E) p_0_12[color=#ffffff, process="0", issapicrule,
+                       role='Process']:
+   [ State_12( h.1 ) ] --> [ ]
+
+  /*
+  rule (modulo AC) p_0_12[color=#ffffff, process="0", issapicrule,
+                          role='Process']:
+     [ State_12( h ) ] --> [ ]
   */
 
 restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -78,7 +139,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-predicates/simple_example.spthy
 
   output:          examples/sapic/fast/feature-predicates/simple_example.spthy.tmp
-  processing time: 0.06s
+  processing time: 0.02s
   
   bogus_exists (exists-trace): verified (3 steps)
 

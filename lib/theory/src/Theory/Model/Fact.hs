@@ -298,7 +298,7 @@ annotateFact :: S.Set FactAnnotation -> Fact t -> Fact t
 annotateFact ann' (Fact tag ann ts) = Fact tag (S.union ann' ann) ts
 
 -- | Apply macros in fact
-applyMacroInFact :: [Macro] -> LNFact -> LNFact
+applyMacroInFact :: [LNMacro] -> LNFact -> LNFact
 applyMacroInFact mcs (Fact tag annot terms) = let mTerms = map (applyMacros mcs) terms in
                                               Fact tag annot mTerms
 
@@ -540,7 +540,7 @@ prettyFact ppTerm (Fact tag an ts)
   | otherwise                     = ppFact (showFactTag tag) ts <> ppAnn an
   where
     ppFact n t = nestShort' (n ++ "(") ")" . fsep . punctuate comma $ map ppTerm t
-    ppAnn ann = if S.null ann then text "" else
+    ppAnn ann = if S.null ann then emptyDoc else
         brackets . fsep . punctuate comma $ map (text . showFactAnnotation) $ S.toList ann
 
 -- | Pretty print a 'NFact'.

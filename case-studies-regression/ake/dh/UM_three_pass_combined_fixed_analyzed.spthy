@@ -1,4 +1,6 @@
-theory UM_three_pass_combined begin
+theory UM_three_pass_combined
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,16 +10,6 @@ equations:
     concat(first(x), second(x)) = x,
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
-
-
-
-
 
 rule (modulo E) Register_key_honest:
    [ Fr( ~ea ) ]
@@ -308,27 +300,11 @@ rule (modulo E) R_Activate:
        X     = X.32
        z     = X.32^~ey.31
     
-    2. ~ey   = ~ey.31
-       X     = z.35^inv(~ey.31)
-       z     = z.35
-    
-    3. ~ey   = ~ey.333
+    2. ~ey   = ~ey.333
        X     = x.659^x.660
        z     = x.659^(~ey.333*x.660)
     
-    4. ~ey   = ~ey.334
-       X     = x.661^inv((~ey.334*x.662))
-       z     = x.661^inv(x.662)
-    
-    5. ~ey   = ~ey.334
-       X     = x.661^(x.662*inv(~ey.334))
-       z     = x.661^x.662
-    
-    6. ~ey   = ~ey.335
-       X     = x.662^(x.663*inv((~ey.335*x.664)))
-       z     = x.662^(x.663*inv(x.664))
-    
-    7. X     = DH_neutral
+    3. X     = DH_neutral
        z     = DH_neutral
   */
 
@@ -662,13 +638,29 @@ restriction sid_unique:
     ((UM1_Activate( sid ) @ #i) ∧ (UM1_Activate( sid ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j sid.
+    ((UM1_Activate( sid ) @ #i) ∧ (UM1_Activate( sid ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction keyreg_unique:
   "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j A. ((KeyReg( A ) @ #i) ∧ (KeyReg( A ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction actor_ineq_peer:
   "¬(∃ #i A. Agents( A, A ) @ #i)"
   // safety formula
+
+  /*
+  expanded formula:
+  "¬(∃ #i A. Agents( A, A ) @ #i)"
+  */
 
 restriction corrupt_and_reveal_not_too_early:
   "(∀ #i #j s role_ k_.
@@ -676,6 +668,14 @@ restriction corrupt_and_reveal_not_too_early:
      (#i < #j)) ∧
    (∀ #i #j s. ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
   // safety formula
+
+  /*
+  expanded formula:
+  "(∀ #i #j s role_ k_.
+     ((BeforeComplete( s ) @ #i) ∧ (Complete( s, role_, k_ ) @ #j)) ⇒
+     (#i < #j)) ∧
+   (∀ #i #j s. ((BeforeExpire( s ) @ #i) ∧ (Expire( s ) @ #j)) ⇒ (#i < #j))"
+  */
 
 lemma key_agreement_reachable:
   exists-trace
@@ -3275,144 +3275,22 @@ next
         case Register_key_honest
         solve( !Pk( $A, 'g'^~x ) ▶₃ #i )
           case Register_key_honest
-          solve( !KU( MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                          <'R', $B, $A, 'g'^~ey, X>)
-                 ) @ #vk.1 )
-            case I_Complete_case_1
-            by contradiction /* from formulas */
-          next
-            case I_Complete_case_2
-            solve( (∀ rest.
-                     ((rest++'g'^~ex) =
-                      (<'1', 'g'^~ex>++
-                       <'2', 'g'^~ey, 
-                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
+          solve( splitEqs(1) )
+            case split_case_1
+            solve( !KU( MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'
                                     >)),
-                            <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                       >++
-                       <'3', 
-                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                    >)),
-                            <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                       >
-                      ))
-                    ⇒
-                     ⊥)  ∥
-                   (∃ #v. (SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v))  ∥
-                   ((∀ #k. (SessionKeyReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k) ⇒ ⊥) ∧
-                    (∀ #k.
-                      (Corrupt( $A ) @ #k)
-                     ⇒
-                      ∃ #l. (Expire( <'UM3', $A, $B, 'g'^~ex> ) @ #l) ∧ #l < #k) ∧
-                    (∀ #k.
-                      (SessionStateReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k)
-                     ⇒
-                      (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-              case case_1
-              solve( (∃ #v.
-                       (SidUpdated( <'UM3', $A, $B, 
-                                     (<'1', 'g'^~ex>++
-                                      <'2', 'g'^~ey, 
-                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                    'UM3'>)),
-                                           <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                      >++
-                                      <'3', 
-                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                    'UM3'>)),
-                                           <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                      >
-                                     )
-                                    >
-                        ) @ #v))  ∥
-                     ((∀ #k.
-                        (SessionKeyReveal( <'UM3', $A, $B, 
-                                            (<'1', 'g'^~ex>++
-                                             <'2', 'g'^~ey, 
-                                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                           'g'^~ey, 'UM3'>)),
-                                                  <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                             >++
-                                             <'3', 
-                                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                           'g'^~ey, 'UM3'>)),
-                                                  <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                             >
-                                            )
-                                           >
-                         ) @ #k)
-                       ⇒
-                        ⊥) ∧
-                      (∀ #k.
-                        (Corrupt( $A ) @ #k)
-                       ⇒
-                        ∃ #l.
-                         (Expire( <'UM3', $A, $B, 
-                                   (<'1', 'g'^~ex>++
-                                    <'2', 'g'^~ey, 
-                                     MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                                 >)),
-                                         <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                    >++
-                                    <'3', 
-                                     MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                                 >)),
-                                         <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                    >
-                                   )
-                                  >
-                          ) @ #l)
-                        ∧
-                         #l < #k) ∧
-                      (∀ #k.
-                        (SessionStateReveal( <'UM3', $A, $B, 
-                                              (<'1', 'g'^~ex>++
-                                               <'2', 'g'^~ey, 
-                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                             'g'^~ey, 'UM3'>)),
-                                                    <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                               >++
-                                               <'3', 
-                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                             'g'^~ey, 'UM3'>)),
-                                                    <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                               >
-                                              )
-                                             >
-                         ) @ #k)
-                       ⇒
-                        (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                case case_1
-                by solve( SidUpdated( <'UM3', $A, $B, 
-                                       (<'1', 'g'^~ex>++
-                                        <'2', 'g'^~ey, 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                        >++
-                                        <'3', 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                        >
-                                       )
-                                      >
-                          ) @ #v )
-              next
-                case case_2
-                solve( !KU( second(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                      'g'^~ey, 'UM3'>))
-                       ) @ #vk.1 )
+                            <'R', $B, $A, 'g'^~ey, X>)
+                   ) @ #vk.1 )
+              case c_MAC
+              solve( !KU( first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>))
+                     ) @ #vk.4 )
+                case c_first
+                solve( !KU( second(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>))
+                       ) @ #vk.2 )
                   case Corrupt_SessionKey_case_1
                   by contradiction /* cyclic */
                 next
                   case Corrupt_SessionKey_case_2
-                  by contradiction /* cyclic */
-                next
-                  case Corrupt_SessionKey_case_3
-                  by contradiction /* cyclic */
-                next
-                  case Corrupt_SessionKey_case_4
                   by contradiction /* cyclic */
                 next
                   case Reveal_SessionKey_case_1
@@ -3421,290 +3299,289 @@ next
                   case Reveal_SessionKey_case_2
                   by contradiction /* from formulas */
                 next
-                  case Reveal_SessionKey_case_3
-                  by contradiction /* from formulas */
-                next
-                  case Reveal_SessionKey_case_4
-                  by contradiction /* from formulas */
-                next
                   case c_second
-                  solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                 'UM3'>)
-                         ) @ #vk.6 )
+                  solve( !KU( h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)
+                         ) @ #vk.12 )
                     case c_h
-                    solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
-                      case I_Activate
-                      by solve( !KU( ~ey ) @ #vk.18 )
+                    solve( !KU( 'g'^(~eb*~x) ) @ #vk.20 )
+                      case Register_key_honest_case_1
+                      solve( !KU( ~eb ) @ #vk.22 )
+                        case Corrupt_Ltk
+                        solve( Expire( <'UM3', $B, $A, 
+                                        (<'1', X>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                              <'I', $A, $B, X, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, X>)
+                                         >
+                                        )
+                                       >
+                               ) @ #l )
+                          case I_Expire
+                          by solve( I_Comp( <'UM3', $B, $A, 
+                                             (<'1', X>++
+                                              <'2', 'g'^~ey, 
+                                               MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                   <'I', $A, $B, X, 'g'^~ey>)
+                                              >++
+                                              <'3', 
+                                               MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                   <'R', $B, $A, 'g'^~ey, X>)
+                                              >
+                                             )
+                                            >
+                                    ) ▶₀ #l )
+                        next
+                          case R_Expire
+                          solve( R_Comp( <'UM3', $B, $A, 
+                                          (<'1', X>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                <'I', $A, $B, X, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, X>)
+                                           >
+                                          )
+                                         >
+                                 ) ▶₀ #l )
+                            case R_Complete_case_1
+                            by contradiction /* cyclic */
+                          next
+                            case R_Complete_case_2
+                            by contradiction /* cyclic */
+                          qed
+                        qed
+                      qed
                     next
-                      case R_Activate
-                      by solve( !KU( ~ex ) @ #vk.18 )
+                      case Register_key_honest_case_2
+                      solve( !KU( ~x ) @ #vk.22 )
+                        case Corrupt_Ltk
+                        solve( Expire( <'UM3', $B, $A, 
+                                        (<'1', X>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                              <'I', $A, $B, X, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, X>)
+                                         >
+                                        )
+                                       >
+                               ) @ #l )
+                          case I_Expire
+                          by solve( I_Comp( <'UM3', $B, $A, 
+                                             (<'1', X>++
+                                              <'2', 'g'^~ey, 
+                                               MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                   <'I', $A, $B, X, 'g'^~ey>)
+                                              >++
+                                              <'3', 
+                                               MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                   <'R', $B, $A, 'g'^~ey, X>)
+                                              >
+                                             )
+                                            >
+                                    ) ▶₀ #l )
+                        next
+                          case R_Expire
+                          solve( R_Comp( <'UM3', $B, $A, 
+                                          (<'1', X>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                <'I', $A, $B, X, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, X>)
+                                           >
+                                          )
+                                         >
+                                 ) ▶₀ #l )
+                            case R_Complete_case_1
+                            by contradiction /* cyclic */
+                          next
+                            case R_Complete_case_2
+                            by contradiction /* cyclic */
+                          qed
+                        qed
+                      qed
                     next
                       case c_exp
-                      by solve( !KU( ~ex ) @ #vk.20 )
-                    qed
-                  qed
-                qed
-              qed
-            next
-              case case_2
-              solve( (∃ #v.
-                       (SidUpdated( <'UM3', $A, $B, 
-                                     (<'1', 'g'^~ex>++
-                                      <'2', 'g'^~ey, 
-                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                    'UM3'>)),
-                                           <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                      >++
-                                      <'3', 
-                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                    'UM3'>)),
-                                           <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                      >
-                                     )
-                                    >
-                        ) @ #v))  ∥
-                     ((∀ #k.
-                        (SessionKeyReveal( <'UM3', $A, $B, 
-                                            (<'1', 'g'^~ex>++
-                                             <'2', 'g'^~ey, 
-                                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                           'g'^~ey, 'UM3'>)),
-                                                  <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                             >++
-                                             <'3', 
-                                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                           'g'^~ey, 'UM3'>)),
-                                                  <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                             >
-                                            )
+                      solve( !KU( ~eb ) @ #vk.24 )
+                        case Corrupt_Ltk
+                        solve( Expire( <'UM3', $B, $A, 
+                                        (<'1', X>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                              <'I', $A, $B, X, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, X>)
+                                         >
+                                        )
+                                       >
+                               ) @ #l )
+                          case I_Expire
+                          by solve( I_Comp( <'UM3', $B, $A, 
+                                             (<'1', X>++
+                                              <'2', 'g'^~ey, 
+                                               MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                   <'I', $A, $B, X, 'g'^~ey>)
+                                              >++
+                                              <'3', 
+                                               MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                   <'R', $B, $A, 'g'^~ey, X>)
+                                              >
+                                             )
+                                            >
+                                    ) ▶₀ #l )
+                        next
+                          case R_Expire
+                          solve( R_Comp( <'UM3', $B, $A, 
+                                          (<'1', X>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                <'I', $A, $B, X, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<X^~ey, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, X>)
                                            >
-                         ) @ #k)
-                       ⇒
-                        ⊥) ∧
-                      (∀ #k.
-                        (Corrupt( $A ) @ #k)
-                       ⇒
-                        ∃ #l.
-                         (Expire( <'UM3', $A, $B, 
-                                   (<'1', 'g'^~ex>++
-                                    <'2', 'g'^~ey, 
-                                     MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                                 >)),
-                                         <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                    >++
-                                    <'3', 
-                                     MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                                 >)),
-                                         <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                    >
-                                   )
-                                  >
-                          ) @ #l)
-                        ∧
-                         #l < #k) ∧
-                      (∀ #k.
-                        (SessionStateReveal( <'UM3', $A, $B, 
-                                              (<'1', 'g'^~ex>++
-                                               <'2', 'g'^~ey, 
-                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                             'g'^~ey, 'UM3'>)),
-                                                    <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                               >++
-                                               <'3', 
-                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                             'g'^~ey, 'UM3'>)),
-                                                    <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                               >
-                                              )
-                                             >
-                         ) @ #k)
-                       ⇒
-                        (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                case case_1
-                by solve( SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v )
-              next
-                case case_2
-                by solve( SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v )
-              qed
-            next
-              case case_3
-              solve( (∃ #v.
-                       (SidUpdated( <'UM3', $A, $B, 
-                                     (<'1', 'g'^~ex>++
-                                      <'2', 'g'^~ey, 
-                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                    'UM3'>)),
-                                           <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                      >++
-                                      <'3', 
-                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                    'UM3'>)),
-                                           <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                      >
-                                     )
-                                    >
-                        ) @ #v))  ∥
-                     ((∀ #k.
-                        (SessionKeyReveal( <'UM3', $A, $B, 
-                                            (<'1', 'g'^~ex>++
-                                             <'2', 'g'^~ey, 
-                                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                           'g'^~ey, 'UM3'>)),
-                                                  <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                             >++
-                                             <'3', 
-                                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                           'g'^~ey, 'UM3'>)),
-                                                  <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                             >
-                                            )
-                                           >
-                         ) @ #k)
-                       ⇒
-                        ⊥) ∧
-                      (∀ #k.
-                        (Corrupt( $A ) @ #k)
-                       ⇒
-                        ∃ #l.
-                         (Expire( <'UM3', $A, $B, 
-                                   (<'1', 'g'^~ex>++
-                                    <'2', 'g'^~ey, 
-                                     MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                                 >)),
-                                         <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                    >++
-                                    <'3', 
-                                     MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                                 >)),
-                                         <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                    >
-                                   )
-                                  >
-                          ) @ #l)
-                        ∧
-                         #l < #k) ∧
-                      (∀ #k.
-                        (SessionStateReveal( <'UM3', $A, $B, 
-                                              (<'1', 'g'^~ex>++
-                                               <'2', 'g'^~ey, 
-                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                             'g'^~ey, 'UM3'>)),
-                                                    <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                               >++
-                                               <'3', 
-                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                             'g'^~ey, 'UM3'>)),
-                                                    <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                               >
-                                              )
-                                             >
-                         ) @ #k)
-                       ⇒
-                        (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                case case_1
-                by solve( SidUpdated( <'UM3', $A, $B, 
-                                       (<'1', 'g'^~ex>++
-                                        <'2', 'g'^~ey, 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                        >++
-                                        <'3', 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                        >
-                                       )
-                                      >
-                          ) @ #v )
-              next
-                case case_2
-                solve( !KU( second(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                      'g'^~ey, 'UM3'>))
-                       ) @ #vk.1 )
-                  case Corrupt_SessionKey_case_1
-                  by contradiction /* cyclic */
-                next
-                  case Corrupt_SessionKey_case_2
-                  by contradiction /* cyclic */
-                next
-                  case Corrupt_SessionKey_case_3
-                  by contradiction /* cyclic */
-                next
-                  case Corrupt_SessionKey_case_4
-                  by contradiction /* cyclic */
-                next
-                  case Reveal_SessionKey_case_1
-                  by contradiction /* from formulas */
-                next
-                  case Reveal_SessionKey_case_2
-                  by contradiction /* from formulas */
-                next
-                  case Reveal_SessionKey_case_3
-                  by contradiction /* from formulas */
-                next
-                  case Reveal_SessionKey_case_4
-                  by contradiction /* from formulas */
-                next
-                  case c_second
-                  solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                 'UM3'>)
-                         ) @ #vk.6 )
-                    case c_h
-                    solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
-                      case I_Activate
-                      by solve( !KU( ~ey ) @ #vk.18 )
-                    next
-                      case R_Activate
-                      by solve( !KU( ~ex ) @ #vk.18 )
-                    next
-                      case c_exp
-                      by solve( !KU( ~ex ) @ #vk.20 )
+                                          )
+                                         >
+                                 ) ▶₀ #l )
+                            case R_Complete_case_1
+                            by contradiction /* cyclic */
+                          next
+                            case R_Complete_case_2
+                            by contradiction /* cyclic */
+                          qed
+                        qed
+                      qed
                     qed
                   qed
                 qed
               qed
             qed
           next
-            case c_MAC
-            solve( !KU( first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>))
-                   ) @ #vk.4 )
-              case c_first
-              solve( !KU( second(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>))
-                     ) @ #vk.2 )
-                case Corrupt_SessionKey_case_1
-                by contradiction /* cyclic */
-              next
-                case Corrupt_SessionKey_case_2
-                solve( (∀ rest.
-                         ((rest++'g'^~ex) =
-                          (<'1', 'g'^~ex>++
-                           <'2', 'g'^~ey, 
-                            MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                        >)),
-                                <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                           >++
-                           <'3', 
-                            MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                        >)),
-                                <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                           >
-                          ))
-                        ⇒
-                         ⊥)  ∥
-                       (∃ #v. (SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v))  ∥
-                       ((∀ #k. (SessionKeyReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k) ⇒ ⊥) ∧
+            case split_case_2
+            solve( !KU( MAC(first(h(<x^(~ey*x.1), 'g'^(~eb*~x.2), $A, $B, x^x.1, 
+                                     'g'^~ey, 'UM3'>)),
+                            <'R', $B, $A, 'g'^~ey, x^x.1>)
+                   ) @ #vk.1 )
+              case I_Complete_case_1
+              by contradiction /* from formulas */
+            next
+              case I_Complete_case_2
+              solve( (∀ rest.
+                       ((rest++'g'^~ex) =
+                        (<'1', 'g'^~ex>++
+                         <'2', 'g'^~ey, 
+                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
+                                      >)),
+                              <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                         >++
+                         <'3', 
+                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
+                                      >)),
+                              <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                         >
+                        ))
+                      ⇒
+                       ⊥)  ∥
+                     (∃ #v. (SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v))  ∥
+                     ((∀ #k. (SessionKeyReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k) ⇒ ⊥) ∧
+                      (∀ #k.
+                        (Corrupt( $A ) @ #k)
+                       ⇒
+                        ∃ #l. (Expire( <'UM3', $A, $B, 'g'^~ex> ) @ #l) ∧ #l < #k) ∧
+                      (∀ #k.
+                        (SessionStateReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k)
+                       ⇒
+                        (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                case case_1
+                solve( (∃ #v.
+                         (SidUpdated( <'UM3', $A, $B, 
+                                       (<'1', 'g'^~ex>++
+                                        <'2', 'g'^~ey, 
+                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                      'UM3'>)),
+                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                        >++
+                                        <'3', 
+                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                      'UM3'>)),
+                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                        >
+                                       )
+                                      >
+                          ) @ #v))  ∥
+                       ((∀ #k.
+                          (SessionKeyReveal( <'UM3', $A, $B, 
+                                              (<'1', 'g'^~ex>++
+                                               <'2', 'g'^~ey, 
+                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                             'g'^~ey, 'UM3'>)),
+                                                    <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                               >++
+                                               <'3', 
+                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                             'g'^~ey, 'UM3'>)),
+                                                    <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                               >
+                                              )
+                                             >
+                           ) @ #k)
+                         ⇒
+                          ⊥) ∧
                         (∀ #k.
                           (Corrupt( $A ) @ #k)
                          ⇒
-                          ∃ #l. (Expire( <'UM3', $A, $B, 'g'^~ex> ) @ #l) ∧ #l < #k) ∧
+                          ∃ #l.
+                           (Expire( <'UM3', $A, $B, 
+                                     (<'1', 'g'^~ex>++
+                                      <'2', 'g'^~ey, 
+                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                    'UM3'>)),
+                                           <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                      >++
+                                      <'3', 
+                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                    'UM3'>)),
+                                           <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                      >
+                                     )
+                                    >
+                            ) @ #l)
+                          ∧
+                           #l < #k) ∧
                         (∀ #k.
-                          (SessionStateReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k)
+                          (SessionStateReveal( <'UM3', $A, $B, 
+                                                (<'1', 'g'^~ex>++
+                                                 <'2', 'g'^~ey, 
+                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                               'g'^~ey, 'UM3'>)),
+                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                 >++
+                                                 <'3', 
+                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                               'g'^~ey, 'UM3'>)),
+                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                 >
+                                                )
+                                               >
+                           ) @ #k)
                          ⇒
                           (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                   case case_1
-                  solve( (∃ #v.
-                           (SidUpdated( <'UM3', $A, $B, 
+                  by solve( SidUpdated( <'UM3', $A, $B, 
                                          (<'1', 'g'^~ex>++
                                           <'2', 'g'^~ey, 
                                            MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
@@ -3718,182 +3595,58 @@ next
                                           >
                                          )
                                         >
-                            ) @ #v))  ∥
-                         ((∀ #k.
-                            (SessionKeyReveal( <'UM3', $A, $B, 
-                                                (<'1', 'g'^~ex>++
-                                                 <'2', 'g'^~ey, 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                 >++
-                                                 <'3', 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                 >
-                                                )
-                                               >
-                             ) @ #k)
-                           ⇒
-                            ⊥) ∧
-                          (∀ #k.
-                            (Corrupt( $A ) @ #k)
-                           ⇒
-                            ∃ #l.
-                             (Expire( <'UM3', $A, $B, 
-                                       (<'1', 'g'^~ex>++
-                                        <'2', 'g'^~ey, 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                        >++
-                                        <'3', 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                        >
-                                       )
-                                      >
-                              ) @ #l)
-                            ∧
-                             #l < #k) ∧
-                          (∀ #k.
-                            (SessionStateReveal( <'UM3', $A, $B, 
-                                                  (<'1', 'g'^~ex>++
-                                                   <'2', 'g'^~ey, 
-                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
-                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
-                                                        <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                   >++
-                                                   <'3', 
-                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
-                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
-                                                        <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                   >
-                                                  )
-                                                 >
-                             ) @ #k)
-                           ⇒
-                            (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                    case case_1
-                    solve( Expire( <'UM3', $B, $A, 
-                                    (<'1', 'g'^~ex>++
-                                     <'2', 'g'^~ey, 
-                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                   'UM3'>)),
-                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                     >++
-                                     <'3', 
-                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                   'UM3'>)),
-                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                     >
-                                    )
-                                   >
-                           ) @ #l )
-                      case I_Expire
-                      solve( I_Comp( <'UM3', $B, $A, 
-                                      (<'1', 'g'^~ex>++
-                                       <'2', 'g'^~ey, 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                       >++
-                                       <'3', 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                       >
-                                      )
-                                     >
-                             ) ▶₀ #l )
-                        case I_Complete
-                        by contradiction /* cyclic */
-                      qed
-                    next
-                      case R_Expire
-                      solve( R_Comp( <'UM3', $B, $A, 
-                                      (<'1', 'g'^~ex>++
-                                       <'2', 'g'^~ey, 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                       >++
-                                       <'3', 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                       >
-                                      )
-                                     >
-                             ) ▶₀ #l )
-                        case R_Complete_case_1
-                        by solve( SidUpdated( <'UM3', $A, $B, 
-                                               (<'1', 'g'^~ex>++
-                                                <'2', 'g'^~ey, 
-                                                 MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                              'g'^~ey, 'UM3'>)),
-                                                     <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                >++
-                                                <'3', 
-                                                 MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                              'g'^~ey, 'UM3'>)),
-                                                     <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                >
-                                               )
-                                              >
-                                  ) @ #v )
-                      next
-                        case R_Complete_case_2
-                        by contradiction /* cyclic */
-                      qed
-                    qed
-                  next
-                    case case_2
-                    by contradiction /* cyclic */
-                  qed
+                            ) @ #v )
                 next
                   case case_2
-                  solve( (∃ #v.
-                           (SidUpdated( <'UM3', $A, $B, 
-                                         (<'1', 'g'^~ex>++
-                                          <'2', 'g'^~ey, 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                          >++
-                                          <'3', 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                          >
-                                         )
-                                        >
-                            ) @ #v))  ∥
-                         ((∀ #k.
-                            (SessionKeyReveal( <'UM3', $A, $B, 
-                                                (<'1', 'g'^~ex>++
-                                                 <'2', 'g'^~ey, 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                 >++
-                                                 <'3', 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                 >
-                                                )
-                                               >
-                             ) @ #k)
-                           ⇒
-                            ⊥) ∧
-                          (∀ #k.
-                            (Corrupt( $A ) @ #k)
-                           ⇒
-                            ∃ #l.
-                             (Expire( <'UM3', $A, $B, 
+                  solve( !KU( second(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                        'g'^~ey, 'UM3'>))
+                         ) @ #vk.1 )
+                    case Corrupt_SessionKey_case_1
+                    by contradiction /* cyclic */
+                  next
+                    case Corrupt_SessionKey_case_2
+                    by contradiction /* cyclic */
+                  next
+                    case Corrupt_SessionKey_case_3
+                    by contradiction /* cyclic */
+                  next
+                    case Corrupt_SessionKey_case_4
+                    by contradiction /* cyclic */
+                  next
+                    case Reveal_SessionKey_case_1
+                    by contradiction /* from formulas */
+                  next
+                    case Reveal_SessionKey_case_2
+                    by contradiction /* from formulas */
+                  next
+                    case Reveal_SessionKey_case_3
+                    by contradiction /* from formulas */
+                  next
+                    case Reveal_SessionKey_case_4
+                    by contradiction /* from formulas */
+                  next
+                    case c_second
+                    solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                   'UM3'>)
+                           ) @ #vk.6 )
+                      case c_h
+                      solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
+                        case I_Activate
+                        by solve( !KU( ~ey ) @ #vk.18 )
+                      next
+                        case R_Activate
+                        by solve( !KU( ~ex ) @ #vk.18 )
+                      next
+                        case c_exp
+                        by solve( !KU( ~ex ) @ #vk.20 )
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case case_2
+                solve( (∃ #v.
+                         (SidUpdated( <'UM3', $A, $B, 
                                        (<'1', 'g'^~ex>++
                                         <'2', 'g'^~ey, 
                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
@@ -3907,11 +3660,267 @@ next
                                         >
                                        )
                                       >
-                              ) @ #l)
-                            ∧
-                             #l < #k) ∧
+                          ) @ #v))  ∥
+                       ((∀ #k.
+                          (SessionKeyReveal( <'UM3', $A, $B, 
+                                              (<'1', 'g'^~ex>++
+                                               <'2', 'g'^~ey, 
+                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                             'g'^~ey, 'UM3'>)),
+                                                    <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                               >++
+                                               <'3', 
+                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                             'g'^~ey, 'UM3'>)),
+                                                    <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                               >
+                                              )
+                                             >
+                           ) @ #k)
+                         ⇒
+                          ⊥) ∧
+                        (∀ #k.
+                          (Corrupt( $A ) @ #k)
+                         ⇒
+                          ∃ #l.
+                           (Expire( <'UM3', $A, $B, 
+                                     (<'1', 'g'^~ex>++
+                                      <'2', 'g'^~ey, 
+                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                    'UM3'>)),
+                                           <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                      >++
+                                      <'3', 
+                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                    'UM3'>)),
+                                           <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                      >
+                                     )
+                                    >
+                            ) @ #l)
+                          ∧
+                           #l < #k) ∧
+                        (∀ #k.
+                          (SessionStateReveal( <'UM3', $A, $B, 
+                                                (<'1', 'g'^~ex>++
+                                                 <'2', 'g'^~ey, 
+                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                               'g'^~ey, 'UM3'>)),
+                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                 >++
+                                                 <'3', 
+                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                               'g'^~ey, 'UM3'>)),
+                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                 >
+                                                )
+                                               >
+                           ) @ #k)
+                         ⇒
+                          (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                  case case_1
+                  by solve( SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v )
+                next
+                  case case_2
+                  by solve( SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v )
+                qed
+              next
+                case case_3
+                solve( (∃ #v.
+                         (SidUpdated( <'UM3', $A, $B, 
+                                       (<'1', 'g'^~ex>++
+                                        <'2', 'g'^~ey, 
+                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                      'UM3'>)),
+                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                        >++
+                                        <'3', 
+                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                      'UM3'>)),
+                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                        >
+                                       )
+                                      >
+                          ) @ #v))  ∥
+                       ((∀ #k.
+                          (SessionKeyReveal( <'UM3', $A, $B, 
+                                              (<'1', 'g'^~ex>++
+                                               <'2', 'g'^~ey, 
+                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                             'g'^~ey, 'UM3'>)),
+                                                    <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                               >++
+                                               <'3', 
+                                                MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                             'g'^~ey, 'UM3'>)),
+                                                    <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                               >
+                                              )
+                                             >
+                           ) @ #k)
+                         ⇒
+                          ⊥) ∧
+                        (∀ #k.
+                          (Corrupt( $A ) @ #k)
+                         ⇒
+                          ∃ #l.
+                           (Expire( <'UM3', $A, $B, 
+                                     (<'1', 'g'^~ex>++
+                                      <'2', 'g'^~ey, 
+                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                    'UM3'>)),
+                                           <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                      >++
+                                      <'3', 
+                                       MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                    'UM3'>)),
+                                           <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                      >
+                                     )
+                                    >
+                            ) @ #l)
+                          ∧
+                           #l < #k) ∧
+                        (∀ #k.
+                          (SessionStateReveal( <'UM3', $A, $B, 
+                                                (<'1', 'g'^~ex>++
+                                                 <'2', 'g'^~ey, 
+                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                               'g'^~ey, 'UM3'>)),
+                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                 >++
+                                                 <'3', 
+                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                               'g'^~ey, 'UM3'>)),
+                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                 >
+                                                )
+                                               >
+                           ) @ #k)
+                         ⇒
+                          (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                  case case_1
+                  by solve( SidUpdated( <'UM3', $A, $B, 
+                                         (<'1', 'g'^~ex>++
+                                          <'2', 'g'^~ey, 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                          >++
+                                          <'3', 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                          >
+                                         )
+                                        >
+                            ) @ #v )
+                next
+                  case case_2
+                  solve( !KU( second(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                        'g'^~ey, 'UM3'>))
+                         ) @ #vk.1 )
+                    case Corrupt_SessionKey_case_1
+                    by contradiction /* cyclic */
+                  next
+                    case Corrupt_SessionKey_case_2
+                    by contradiction /* cyclic */
+                  next
+                    case Corrupt_SessionKey_case_3
+                    by contradiction /* cyclic */
+                  next
+                    case Corrupt_SessionKey_case_4
+                    by contradiction /* cyclic */
+                  next
+                    case Reveal_SessionKey_case_1
+                    by contradiction /* from formulas */
+                  next
+                    case Reveal_SessionKey_case_2
+                    by contradiction /* from formulas */
+                  next
+                    case Reveal_SessionKey_case_3
+                    by contradiction /* from formulas */
+                  next
+                    case Reveal_SessionKey_case_4
+                    by contradiction /* from formulas */
+                  next
+                    case c_second
+                    solve( !KU( h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                   'UM3'>)
+                           ) @ #vk.6 )
+                      case c_h
+                      solve( !KU( 'g'^(~ex*~ey) ) @ #vk.10 )
+                        case I_Activate
+                        by solve( !KU( ~ey ) @ #vk.18 )
+                      next
+                        case R_Activate
+                        by solve( !KU( ~ex ) @ #vk.18 )
+                      next
+                        case c_exp
+                        by solve( !KU( ~ex ) @ #vk.20 )
+                      qed
+                    qed
+                  qed
+                qed
+              qed
+            next
+              case c_MAC
+              solve( !KU( first(h(<x^(~ey*x.1), 'g'^(~eb*~x.2), $A, $B, x^x.1, 
+                                   'g'^~ey, 'UM3'>))
+                     ) @ #vk.4 )
+                case c_first
+                solve( !KU( second(h(<x^(~ey*x.1), 'g'^(~eb*~x.2), $A, $B, x^x.1, 
+                                      'g'^~ey, 'UM3'>))
+                       ) @ #vk.2 )
+                  case Corrupt_SessionKey_case_1
+                  by contradiction /* cyclic */
+                next
+                  case Corrupt_SessionKey_case_2
+                  solve( (∀ rest.
+                           ((rest++'g'^~ex) =
+                            (<'1', 'g'^~ex>++
+                             <'2', 'g'^~ey, 
+                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
+                                          >)),
+                                  <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                             >++
+                             <'3', 
+                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
+                                          >)),
+                                  <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                             >
+                            ))
+                          ⇒
+                           ⊥)  ∥
+                         (∃ #v. (SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v))  ∥
+                         ((∀ #k. (SessionKeyReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k) ⇒ ⊥) ∧
                           (∀ #k.
-                            (SessionStateReveal( <'UM3', $A, $B, 
+                            (Corrupt( $A ) @ #k)
+                           ⇒
+                            ∃ #l. (Expire( <'UM3', $A, $B, 'g'^~ex> ) @ #l) ∧ #l < #k) ∧
+                          (∀ #k.
+                            (SessionStateReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k)
+                           ⇒
+                            (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                    case case_1
+                    solve( (∃ #v.
+                             (SidUpdated( <'UM3', $A, $B, 
+                                           (<'1', 'g'^~ex>++
+                                            <'2', 'g'^~ey, 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                            >++
+                                            <'3', 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                            >
+                                           )
+                                          >
+                              ) @ #v))  ∥
+                           ((∀ #k.
+                              (SessionKeyReveal( <'UM3', $A, $B, 
                                                   (<'1', 'g'^~ex>++
                                                    <'2', 'g'^~ey, 
                                                     MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
@@ -3925,27 +3934,50 @@ next
                                                    >
                                                   )
                                                  >
-                             ) @ #k)
-                           ⇒
-                            (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                    case case_1
-                    solve( Expire( <'UM3', $B, $A, 
-                                    (<'1', 'g'^~ex>++
-                                     <'2', 'g'^~ey, 
-                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                   'UM3'>)),
-                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                     >++
-                                     <'3', 
-                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                   'UM3'>)),
-                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                     >
-                                    )
-                                   >
-                           ) @ #l )
-                      case I_Expire
-                      solve( I_Comp( <'UM3', $B, $A, 
+                               ) @ #k)
+                             ⇒
+                              ⊥) ∧
+                            (∀ #k.
+                              (Corrupt( $A ) @ #k)
+                             ⇒
+                              ∃ #l.
+                               (Expire( <'UM3', $A, $B, 
+                                         (<'1', 'g'^~ex>++
+                                          <'2', 'g'^~ey, 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                          >++
+                                          <'3', 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                          >
+                                         )
+                                        >
+                                ) @ #l)
+                              ∧
+                               #l < #k) ∧
+                            (∀ #k.
+                              (SessionStateReveal( <'UM3', $A, $B, 
+                                                    (<'1', 'g'^~ex>++
+                                                     <'2', 'g'^~ey, 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                     >++
+                                                     <'3', 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                     >
+                                                    )
+                                                   >
+                               ) @ #k)
+                             ⇒
+                              (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                      case case_1
+                      solve( Expire( <'UM3', $B, $A, 
                                       (<'1', 'g'^~ex>++
                                        <'2', 'g'^~ey, 
                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
@@ -3959,97 +3991,88 @@ next
                                        >
                                       )
                                      >
-                             ) ▶₀ #l )
-                        case I_Complete
-                        by contradiction /* cyclic */
+                             ) @ #l )
+                        case I_Expire
+                        solve( I_Comp( <'UM3', $B, $A, 
+                                        (<'1', 'g'^~ex>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                         >
+                                        )
+                                       >
+                               ) ▶₀ #l )
+                          case I_Complete
+                          by contradiction /* cyclic */
+                        qed
+                      next
+                        case R_Expire
+                        solve( R_Comp( <'UM3', $B, $A, 
+                                        (<'1', 'g'^~ex>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                         >
+                                        )
+                                       >
+                               ) ▶₀ #l )
+                          case R_Complete_case_1
+                          by solve( SidUpdated( <'UM3', $A, $B, 
+                                                 (<'1', 'g'^~ex>++
+                                                  <'2', 'g'^~ey, 
+                                                   MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                                'g'^~ey, 'UM3'>)),
+                                                       <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                  >++
+                                                  <'3', 
+                                                   MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                                'g'^~ey, 'UM3'>)),
+                                                       <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                  >
+                                                 )
+                                                >
+                                    ) @ #v )
+                        next
+                          case R_Complete_case_2
+                          by contradiction /* cyclic */
+                        qed
                       qed
                     next
-                      case R_Expire
-                      solve( R_Comp( <'UM3', $B, $A, 
-                                      (<'1', 'g'^~ex>++
-                                       <'2', 'g'^~ey, 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                       >++
-                                       <'3', 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                       >
-                                      )
-                                     >
-                             ) ▶₀ #l )
-                        case R_Complete_case_1
-                        by solve( SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v )
-                      next
-                        case R_Complete_case_2
-                        by contradiction /* cyclic */
-                      qed
+                      case case_2
+                      by contradiction /* cyclic */
                     qed
                   next
                     case case_2
-                    by contradiction /* cyclic */
-                  qed
-                next
-                  case case_3
-                  solve( (∃ #v.
-                           (SidUpdated( <'UM3', $A, $B, 
-                                         (<'1', 'g'^~ex>++
-                                          <'2', 'g'^~ey, 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                          >++
-                                          <'3', 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                    solve( (∃ #v.
+                             (SidUpdated( <'UM3', $A, $B, 
+                                           (<'1', 'g'^~ex>++
+                                            <'2', 'g'^~ey, 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                            >++
+                                            <'3', 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                            >
+                                           )
                                           >
-                                         )
-                                        >
-                            ) @ #v))  ∥
-                         ((∀ #k.
-                            (SessionKeyReveal( <'UM3', $A, $B, 
-                                                (<'1', 'g'^~ex>++
-                                                 <'2', 'g'^~ey, 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                 >++
-                                                 <'3', 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                 >
-                                                )
-                                               >
-                             ) @ #k)
-                           ⇒
-                            ⊥) ∧
-                          (∀ #k.
-                            (Corrupt( $A ) @ #k)
-                           ⇒
-                            ∃ #l.
-                             (Expire( <'UM3', $A, $B, 
-                                       (<'1', 'g'^~ex>++
-                                        <'2', 'g'^~ey, 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                        >++
-                                        <'3', 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                        >
-                                       )
-                                      >
-                              ) @ #l)
-                            ∧
-                             #l < #k) ∧
-                          (∀ #k.
-                            (SessionStateReveal( <'UM3', $A, $B, 
+                              ) @ #v))  ∥
+                           ((∀ #k.
+                              (SessionKeyReveal( <'UM3', $A, $B, 
                                                   (<'1', 'g'^~ex>++
                                                    <'2', 'g'^~ey, 
                                                     MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
@@ -4063,565 +4086,1009 @@ next
                                                    >
                                                   )
                                                  >
-                             ) @ #k)
+                               ) @ #k)
+                             ⇒
+                              ⊥) ∧
+                            (∀ #k.
+                              (Corrupt( $A ) @ #k)
+                             ⇒
+                              ∃ #l.
+                               (Expire( <'UM3', $A, $B, 
+                                         (<'1', 'g'^~ex>++
+                                          <'2', 'g'^~ey, 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                          >++
+                                          <'3', 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                          >
+                                         )
+                                        >
+                                ) @ #l)
+                              ∧
+                               #l < #k) ∧
+                            (∀ #k.
+                              (SessionStateReveal( <'UM3', $A, $B, 
+                                                    (<'1', 'g'^~ex>++
+                                                     <'2', 'g'^~ey, 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                     >++
+                                                     <'3', 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                     >
+                                                    )
+                                                   >
+                               ) @ #k)
+                             ⇒
+                              (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                      case case_1
+                      solve( Expire( <'UM3', $B, $A, 
+                                      (<'1', 'g'^~ex>++
+                                       <'2', 'g'^~ey, 
+                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                     'UM3'>)),
+                                            <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                       >++
+                                       <'3', 
+                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                     'UM3'>)),
+                                            <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                       >
+                                      )
+                                     >
+                             ) @ #l )
+                        case I_Expire
+                        solve( I_Comp( <'UM3', $B, $A, 
+                                        (<'1', 'g'^~ex>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                         >
+                                        )
+                                       >
+                               ) ▶₀ #l )
+                          case I_Complete
+                          by contradiction /* cyclic */
+                        qed
+                      next
+                        case R_Expire
+                        solve( R_Comp( <'UM3', $B, $A, 
+                                        (<'1', 'g'^~ex>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                         >
+                                        )
+                                       >
+                               ) ▶₀ #l )
+                          case R_Complete_case_1
+                          by solve( SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v )
+                        next
+                          case R_Complete_case_2
+                          by contradiction /* cyclic */
+                        qed
+                      qed
+                    next
+                      case case_2
+                      by contradiction /* cyclic */
+                    qed
+                  next
+                    case case_3
+                    solve( (∃ #v.
+                             (SidUpdated( <'UM3', $A, $B, 
+                                           (<'1', 'g'^~ex>++
+                                            <'2', 'g'^~ey, 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                            >++
+                                            <'3', 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                            >
+                                           )
+                                          >
+                              ) @ #v))  ∥
+                           ((∀ #k.
+                              (SessionKeyReveal( <'UM3', $A, $B, 
+                                                  (<'1', 'g'^~ex>++
+                                                   <'2', 'g'^~ey, 
+                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                        <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                   >++
+                                                   <'3', 
+                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                        <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                   >
+                                                  )
+                                                 >
+                               ) @ #k)
+                             ⇒
+                              ⊥) ∧
+                            (∀ #k.
+                              (Corrupt( $A ) @ #k)
+                             ⇒
+                              ∃ #l.
+                               (Expire( <'UM3', $A, $B, 
+                                         (<'1', 'g'^~ex>++
+                                          <'2', 'g'^~ey, 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                          >++
+                                          <'3', 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                          >
+                                         )
+                                        >
+                                ) @ #l)
+                              ∧
+                               #l < #k) ∧
+                            (∀ #k.
+                              (SessionStateReveal( <'UM3', $A, $B, 
+                                                    (<'1', 'g'^~ex>++
+                                                     <'2', 'g'^~ey, 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                     >++
+                                                     <'3', 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                     >
+                                                    )
+                                                   >
+                               ) @ #k)
+                             ⇒
+                              (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                      case case_1
+                      solve( Expire( <'UM3', $B, $A, 
+                                      (<'1', 'g'^~ex>++
+                                       <'2', 'g'^~ey, 
+                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                     'UM3'>)),
+                                            <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                       >++
+                                       <'3', 
+                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                     'UM3'>)),
+                                            <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                       >
+                                      )
+                                     >
+                             ) @ #l )
+                        case I_Expire
+                        solve( I_Comp( <'UM3', $B, $A, 
+                                        (<'1', 'g'^~ex>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                         >
+                                        )
+                                       >
+                               ) ▶₀ #l )
+                          case I_Complete
+                          by contradiction /* cyclic */
+                        qed
+                      next
+                        case R_Expire
+                        solve( R_Comp( <'UM3', $B, $A, 
+                                        (<'1', 'g'^~ex>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                         >
+                                        )
+                                       >
+                               ) ▶₀ #l )
+                          case R_Complete_case_1
+                          solve( Expire( <'UM3', $A, $B, 'g'^~ex> ) @ #l.1 )
+                            case I_Expire
+                            by solve( I_Comp( <'UM3', $A, $B, 'g'^~ex> ) ▶₀ #l.1 )
+                          next
+                            case R_Expire
+                            by solve( R_Comp( <'UM3', $A, $B, 'g'^~ex> ) ▶₀ #l.1 )
+                          qed
+                        next
+                          case R_Complete_case_2
+                          by contradiction /* cyclic */
+                        qed
+                      qed
+                    next
+                      case case_2
+                      by contradiction /* cyclic */
+                    qed
+                  qed
+                next
+                  case Corrupt_SessionKey_case_3
+                  by contradiction /* cyclic */
+                next
+                  case Corrupt_SessionKey_case_4
+                  by contradiction /* cyclic */
+                next
+                  case Reveal_SessionKey_case_1
+                  by contradiction /* from formulas */
+                next
+                  case Reveal_SessionKey_case_2
+                  solve( (∀ rest.
+                           ((rest++'g'^~ex) =
+                            (<'1', 'g'^~ex>++
+                             <'2', 'g'^~ey, 
+                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
+                                          >)),
+                                  <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                             >++
+                             <'3', 
+                              MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
+                                          >)),
+                                  <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                             >
+                            ))
+                          ⇒
+                           ⊥)  ∥
+                         (∃ #v. (SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v))  ∥
+                         ((∀ #k. (SessionKeyReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k) ⇒ ⊥) ∧
+                          (∀ #k.
+                            (Corrupt( $A ) @ #k)
+                           ⇒
+                            ∃ #l. (Expire( <'UM3', $A, $B, 'g'^~ex> ) @ #l) ∧ #l < #k) ∧
+                          (∀ #k.
+                            (SessionStateReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k)
                            ⇒
                             (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
                     case case_1
-                    solve( Expire( <'UM3', $B, $A, 
-                                    (<'1', 'g'^~ex>++
-                                     <'2', 'g'^~ey, 
-                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                   'UM3'>)),
-                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                     >++
-                                     <'3', 
-                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                   'UM3'>)),
-                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                     >
-                                    )
-                                   >
-                           ) @ #l )
-                      case I_Expire
-                      solve( I_Comp( <'UM3', $B, $A, 
-                                      (<'1', 'g'^~ex>++
-                                       <'2', 'g'^~ey, 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                       >++
-                                       <'3', 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                       >
-                                      )
-                                     >
-                             ) ▶₀ #l )
-                        case I_Complete
-                        by contradiction /* cyclic */
+                    solve( (∃ #v.
+                             (SidUpdated( <'UM3', $A, $B, 
+                                           (<'1', 'g'^~ex>++
+                                            <'2', 'g'^~ey, 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                            >++
+                                            <'3', 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                            >
+                                           )
+                                          >
+                              ) @ #v))  ∥
+                           ((∀ #k.
+                              (SessionKeyReveal( <'UM3', $A, $B, 
+                                                  (<'1', 'g'^~ex>++
+                                                   <'2', 'g'^~ey, 
+                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                        <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                   >++
+                                                   <'3', 
+                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                        <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                   >
+                                                  )
+                                                 >
+                               ) @ #k)
+                             ⇒
+                              ⊥) ∧
+                            (∀ #k.
+                              (Corrupt( $A ) @ #k)
+                             ⇒
+                              ∃ #l.
+                               (Expire( <'UM3', $A, $B, 
+                                         (<'1', 'g'^~ex>++
+                                          <'2', 'g'^~ey, 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                          >++
+                                          <'3', 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                          >
+                                         )
+                                        >
+                                ) @ #l)
+                              ∧
+                               #l < #k) ∧
+                            (∀ #k.
+                              (SessionStateReveal( <'UM3', $A, $B, 
+                                                    (<'1', 'g'^~ex>++
+                                                     <'2', 'g'^~ey, 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                     >++
+                                                     <'3', 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                     >
+                                                    )
+                                                   >
+                               ) @ #k)
+                             ⇒
+                              (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                      case case_1
+                      by solve( SidUpdated( <'UM3', $A, $B, 
+                                             (<'1', 'g'^~ex>++
+                                              <'2', 'g'^~ey, 
+                                               MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                              >++
+                                              <'3', 
+                                               MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                              >
+                                             )
+                                            >
+                                ) @ #v )
+                    next
+                      case case_2
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case case_2
+                    solve( (∃ #v.
+                             (SidUpdated( <'UM3', $A, $B, 
+                                           (<'1', 'g'^~ex>++
+                                            <'2', 'g'^~ey, 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                            >++
+                                            <'3', 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                            >
+                                           )
+                                          >
+                              ) @ #v))  ∥
+                           ((∀ #k.
+                              (SessionKeyReveal( <'UM3', $A, $B, 
+                                                  (<'1', 'g'^~ex>++
+                                                   <'2', 'g'^~ey, 
+                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                        <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                   >++
+                                                   <'3', 
+                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                        <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                   >
+                                                  )
+                                                 >
+                               ) @ #k)
+                             ⇒
+                              ⊥) ∧
+                            (∀ #k.
+                              (Corrupt( $A ) @ #k)
+                             ⇒
+                              ∃ #l.
+                               (Expire( <'UM3', $A, $B, 
+                                         (<'1', 'g'^~ex>++
+                                          <'2', 'g'^~ey, 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                          >++
+                                          <'3', 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                          >
+                                         )
+                                        >
+                                ) @ #l)
+                              ∧
+                               #l < #k) ∧
+                            (∀ #k.
+                              (SessionStateReveal( <'UM3', $A, $B, 
+                                                    (<'1', 'g'^~ex>++
+                                                     <'2', 'g'^~ey, 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                     >++
+                                                     <'3', 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                     >
+                                                    )
+                                                   >
+                               ) @ #k)
+                             ⇒
+                              (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                      case case_1
+                      by solve( SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v )
+                    next
+                      case case_2
+                      by contradiction /* from formulas */
+                    qed
+                  next
+                    case case_3
+                    solve( (∃ #v.
+                             (SidUpdated( <'UM3', $A, $B, 
+                                           (<'1', 'g'^~ex>++
+                                            <'2', 'g'^~ey, 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                            >++
+                                            <'3', 
+                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                          'g'^~ey, 'UM3'>)),
+                                                 <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                            >
+                                           )
+                                          >
+                              ) @ #v))  ∥
+                           ((∀ #k.
+                              (SessionKeyReveal( <'UM3', $A, $B, 
+                                                  (<'1', 'g'^~ex>++
+                                                   <'2', 'g'^~ey, 
+                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                        <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                   >++
+                                                   <'3', 
+                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                        <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                   >
+                                                  )
+                                                 >
+                               ) @ #k)
+                             ⇒
+                              ⊥) ∧
+                            (∀ #k.
+                              (Corrupt( $A ) @ #k)
+                             ⇒
+                              ∃ #l.
+                               (Expire( <'UM3', $A, $B, 
+                                         (<'1', 'g'^~ex>++
+                                          <'2', 'g'^~ey, 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                          >++
+                                          <'3', 
+                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                        'g'^~ey, 'UM3'>)),
+                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                          >
+                                         )
+                                        >
+                                ) @ #l)
+                              ∧
+                               #l < #k) ∧
+                            (∀ #k.
+                              (SessionStateReveal( <'UM3', $A, $B, 
+                                                    (<'1', 'g'^~ex>++
+                                                     <'2', 'g'^~ey, 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                                     >++
+                                                     <'3', 
+                                                      MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
+                                                                   'g'^~ex, 'g'^~ey, 'UM3'>)),
+                                                          <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                                     >
+                                                    )
+                                                   >
+                               ) @ #k)
+                             ⇒
+                              (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
+                      case case_1
+                      by solve( SidUpdated( <'UM3', $A, $B, 
+                                             (<'1', 'g'^~ex>++
+                                              <'2', 'g'^~ey, 
+                                               MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
+                                              >++
+                                              <'3', 
+                                               MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                              >
+                                             )
+                                            >
+                                ) @ #v )
+                    next
+                      case case_2
+                      by contradiction /* from formulas */
+                    qed
+                  qed
+                next
+                  case Reveal_SessionKey_case_3
+                  by contradiction /* from formulas */
+                next
+                  case Reveal_SessionKey_case_4
+                  by contradiction /* from formulas */
+                next
+                  case c_second
+                  solve( !KU( h(<x^(~ey*x.1), 'g'^(~eb*~x.2), $A, $B, x^x.1, 'g'^~ey, 'UM3'
+                                >)
+                         ) @ #vk.12 )
+                    case c_h
+                    solve( !KU( x^(~ey*x.1) ) @ #vk.18 )
+                      case I_Activate_case_1
+                      by solve( !KU( ~ey ) @ #vk.22 )
+                    next
+                      case I_Activate_case_2
+                      by solve( !KU( ~ey ) @ #vk.23 )
+                    next
+                      case R_Activate_case_1
+                      by solve( !KU( ~ey ) @ #vk.23 )
+                    next
+                      case R_Activate_case_2
+                      by solve( !KU( ~ey ) @ #vk.24 )
+                    next
+                      case R_Activate_case_3
+                      solve( !KU( 'g'^(~eb*~x.1) ) @ #vk.20 )
+                        case Register_key_honest_case_1
+                        solve( !KU( ~eb ) @ #vk.23 )
+                          case Corrupt_Ltk
+                          solve( Expire( <'UM3', $B, $A, 
+                                          (<'1', 'g'^x>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 'g'^~ey, 
+                                                         'UM3'>)),
+                                                <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 'g'^~ey, 
+                                                         'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                           >
+                                          )
+                                         >
+                                 ) @ #l )
+                            case I_Expire
+                            solve( I_Comp( <'UM3', $B, $A, 
+                                            (<'1', 'g'^x>++
+                                             <'2', 'g'^~ey, 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                             >++
+                                             <'3', 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                             >
+                                            )
+                                           >
+                                   ) ▶₀ #l )
+                              case I_Complete
+                              by contradiction /* from formulas */
+                            qed
+                          next
+                            case R_Expire
+                            solve( R_Comp( <'UM3', $B, $A, 
+                                            (<'1', 'g'^x>++
+                                             <'2', 'g'^~ey, 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                             >++
+                                             <'3', 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                             >
+                                            )
+                                           >
+                                   ) ▶₀ #l )
+                              case R_Complete_case_1
+                              by contradiction /* cyclic */
+                            next
+                              case R_Complete_case_2
+                              by contradiction /* cyclic */
+                            qed
+                          qed
+                        qed
+                      next
+                        case Register_key_honest_case_2
+                        solve( !KU( ~x.1 ) @ #vk.23 )
+                          case Corrupt_Ltk
+                          solve( Expire( <'UM3', $B, $A, 
+                                          (<'1', 'g'^x>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 'g'^~ey, 
+                                                         'UM3'>)),
+                                                <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 'g'^~ey, 
+                                                         'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                           >
+                                          )
+                                         >
+                                 ) @ #l )
+                            case I_Expire
+                            solve( I_Comp( <'UM3', $B, $A, 
+                                            (<'1', 'g'^x>++
+                                             <'2', 'g'^~ey, 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                             >++
+                                             <'3', 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                             >
+                                            )
+                                           >
+                                   ) ▶₀ #l )
+                              case I_Complete
+                              by contradiction /* from formulas */
+                            qed
+                          next
+                            case R_Expire
+                            solve( R_Comp( <'UM3', $B, $A, 
+                                            (<'1', 'g'^x>++
+                                             <'2', 'g'^~ey, 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                             >++
+                                             <'3', 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                             >
+                                            )
+                                           >
+                                   ) ▶₀ #l )
+                              case R_Complete_case_1
+                              by contradiction /* cyclic */
+                            next
+                              case R_Complete_case_2
+                              by contradiction /* cyclic */
+                            qed
+                          qed
+                        qed
+                      next
+                        case c_exp
+                        solve( !KU( ~eb ) @ #vk.25 )
+                          case Corrupt_Ltk
+                          solve( Expire( <'UM3', $B, $A, 
+                                          (<'1', 'g'^x>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 'g'^~ey, 
+                                                         'UM3'>)),
+                                                <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 'g'^~ey, 
+                                                         'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                           >
+                                          )
+                                         >
+                                 ) @ #l )
+                            case I_Expire
+                            solve( I_Comp( <'UM3', $B, $A, 
+                                            (<'1', 'g'^x>++
+                                             <'2', 'g'^~ey, 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                             >++
+                                             <'3', 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                             >
+                                            )
+                                           >
+                                   ) ▶₀ #l )
+                              case I_Complete
+                              by contradiction /* from formulas */
+                            qed
+                          next
+                            case R_Expire
+                            solve( R_Comp( <'UM3', $B, $A, 
+                                            (<'1', 'g'^x>++
+                                             <'2', 'g'^~ey, 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'I', $A, $B, 'g'^x, 'g'^~ey>)
+                                             >++
+                                             <'3', 
+                                              MAC(first(h(<'g'^(~ey*x), 'g'^(~eb*~x.1), $A, $B, 'g'^x, 
+                                                           'g'^~ey, 'UM3'>)),
+                                                  <'R', $B, $A, 'g'^~ey, 'g'^x>)
+                                             >
+                                            )
+                                           >
+                                   ) ▶₀ #l )
+                              case R_Complete_case_1
+                              by contradiction /* cyclic */
+                            next
+                              case R_Complete_case_2
+                              by contradiction /* cyclic */
+                            qed
+                          qed
+                        qed
                       qed
                     next
-                      case R_Expire
-                      solve( R_Comp( <'UM3', $B, $A, 
-                                      (<'1', 'g'^~ex>++
-                                       <'2', 'g'^~ey, 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                       >++
-                                       <'3', 
-                                        MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                     'UM3'>)),
-                                            <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                      case Register_key_honest_case_1
+                      by solve( !KU( ~ey ) @ #vk.22 )
+                    next
+                      case Register_key_honest_case_2
+                      by solve( !KU( ~ey ) @ #vk.23 )
+                    next
+                      case UM1_I_Complete_case_1
+                      by solve( !KU( ~ey ) @ #vk.22 )
+                    next
+                      case UM1_I_Complete_case_2
+                      by solve( !KU( ~ey ) @ #vk.23 )
+                    next
+                      case c_exp
+                      by solve( !KU( ~ey ) @ #vk.24 )
+                    qed
+                  qed
+                qed
+              qed
+            qed
+          next
+            case split_case_3
+            solve( !KU( MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                     'g'^~ey, 'UM3'>)),
+                            <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                   ) @ #vk.1 )
+              case c_MAC
+              solve( !KU( first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                   'g'^~ey, 'UM3'>))
+                     ) @ #vk.4 )
+                case c_first
+                solve( !KU( second(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                      'g'^~ey, 'UM3'>))
+                       ) @ #vk.2 )
+                  case Corrupt_SessionKey_case_1
+                  by contradiction /* cyclic */
+                next
+                  case Corrupt_SessionKey_case_2
+                  by contradiction /* cyclic */
+                next
+                  case Reveal_SessionKey_case_1
+                  by contradiction /* from formulas */
+                next
+                  case Reveal_SessionKey_case_2
+                  by contradiction /* from formulas */
+                next
+                  case c_second
+                  solve( !KU( h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 'g'^~ey, 
+                                 'UM3'>)
+                         ) @ #vk.12 )
+                    case c_h
+                    solve( !KU( 'g'^(~eb*~x) ) @ #vk.19 )
+                      case Register_key_honest_case_1
+                      solve( !KU( ~eb ) @ #vk.21 )
+                        case Corrupt_Ltk
+                        solve( Expire( <'UM3', $B, $A, 
+                                        (<'1', DH_neutral>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                         >
+                                        )
                                        >
-                                      )
-                                     >
-                             ) ▶₀ #l )
-                        case R_Complete_case_1
-                        solve( Expire( <'UM3', $A, $B, 'g'^~ex> ) @ #l.1 )
+                               ) @ #l )
                           case I_Expire
-                          by solve( I_Comp( <'UM3', $A, $B, 'g'^~ex> ) ▶₀ #l.1 )
+                          by solve( I_Comp( <'UM3', $B, $A, 
+                                             (<'1', DH_neutral>++
+                                              <'2', 'g'^~ey, 
+                                               MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                              >++
+                                              <'3', 
+                                               MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                              >
+                                             )
+                                            >
+                                    ) ▶₀ #l )
                         next
                           case R_Expire
-                          by solve( R_Comp( <'UM3', $A, $B, 'g'^~ex> ) ▶₀ #l.1 )
+                          solve( R_Comp( <'UM3', $B, $A, 
+                                          (<'1', DH_neutral>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                         'g'^~ey, 'UM3'>)),
+                                                <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                         'g'^~ey, 'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                           >
+                                          )
+                                         >
+                                 ) ▶₀ #l )
+                            case R_Complete_case_1
+                            by contradiction /* cyclic */
+                          next
+                            case R_Complete_case_2
+                            by contradiction /* cyclic */
+                          qed
                         qed
-                      next
-                        case R_Complete_case_2
-                        by contradiction /* cyclic */
                       qed
-                    qed
-                  next
-                    case case_2
-                    by contradiction /* cyclic */
-                  qed
-                qed
-              next
-                case Corrupt_SessionKey_case_3
-                by contradiction /* cyclic */
-              next
-                case Corrupt_SessionKey_case_4
-                by contradiction /* cyclic */
-              next
-                case Reveal_SessionKey_case_1
-                by contradiction /* from formulas */
-              next
-                case Reveal_SessionKey_case_2
-                solve( (∀ rest.
-                         ((rest++'g'^~ex) =
-                          (<'1', 'g'^~ex>++
-                           <'2', 'g'^~ey, 
-                            MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                        >)),
-                                <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                           >++
-                           <'3', 
-                            MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 'UM3'
-                                        >)),
-                                <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                           >
-                          ))
-                        ⇒
-                         ⊥)  ∥
-                       (∃ #v. (SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v))  ∥
-                       ((∀ #k. (SessionKeyReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k) ⇒ ⊥) ∧
-                        (∀ #k.
-                          (Corrupt( $A ) @ #k)
-                         ⇒
-                          ∃ #l. (Expire( <'UM3', $A, $B, 'g'^~ex> ) @ #l) ∧ #l < #k) ∧
-                        (∀ #k.
-                          (SessionStateReveal( <'UM3', $A, $B, 'g'^~ex> ) @ #k)
-                         ⇒
-                          (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                  case case_1
-                  solve( (∃ #v.
-                           (SidUpdated( <'UM3', $A, $B, 
-                                         (<'1', 'g'^~ex>++
-                                          <'2', 'g'^~ey, 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                          >++
-                                          <'3', 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                          >
-                                         )
-                                        >
-                            ) @ #v))  ∥
-                         ((∀ #k.
-                            (SessionKeyReveal( <'UM3', $A, $B, 
-                                                (<'1', 'g'^~ex>++
-                                                 <'2', 'g'^~ey, 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                 >++
-                                                 <'3', 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                 >
-                                                )
-                                               >
-                             ) @ #k)
-                           ⇒
-                            ⊥) ∧
-                          (∀ #k.
-                            (Corrupt( $A ) @ #k)
-                           ⇒
-                            ∃ #l.
-                             (Expire( <'UM3', $A, $B, 
-                                       (<'1', 'g'^~ex>++
-                                        <'2', 'g'^~ey, 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                        >++
-                                        <'3', 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                        >
-                                       )
-                                      >
-                              ) @ #l)
-                            ∧
-                             #l < #k) ∧
-                          (∀ #k.
-                            (SessionStateReveal( <'UM3', $A, $B, 
-                                                  (<'1', 'g'^~ex>++
-                                                   <'2', 'g'^~ey, 
-                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
-                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
-                                                        <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                   >++
-                                                   <'3', 
-                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
-                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
-                                                        <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                   >
-                                                  )
-                                                 >
-                             ) @ #k)
-                           ⇒
-                            (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                    case case_1
-                    by solve( SidUpdated( <'UM3', $A, $B, 
-                                           (<'1', 'g'^~ex>++
-                                            <'2', 'g'^~ey, 
-                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                          'g'^~ey, 'UM3'>)),
-                                                 <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                            >++
-                                            <'3', 
-                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                          'g'^~ey, 'UM3'>)),
-                                                 <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                    next
+                      case Register_key_honest_case_2
+                      solve( !KU( ~x ) @ #vk.21 )
+                        case Corrupt_Ltk
+                        solve( Expire( <'UM3', $B, $A, 
+                                        (<'1', DH_neutral>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                         >
+                                        )
+                                       >
+                               ) @ #l )
+                          case I_Expire
+                          by solve( I_Comp( <'UM3', $B, $A, 
+                                             (<'1', DH_neutral>++
+                                              <'2', 'g'^~ey, 
+                                               MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                              >++
+                                              <'3', 
+                                               MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                              >
+                                             )
                                             >
-                                           )
-                                          >
-                              ) @ #v )
-                  next
-                    case case_2
-                    by contradiction /* from formulas */
-                  qed
-                next
-                  case case_2
-                  solve( (∃ #v.
-                           (SidUpdated( <'UM3', $A, $B, 
-                                         (<'1', 'g'^~ex>++
-                                          <'2', 'g'^~ey, 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                          >++
-                                          <'3', 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                          >
-                                         )
-                                        >
-                            ) @ #v))  ∥
-                         ((∀ #k.
-                            (SessionKeyReveal( <'UM3', $A, $B, 
-                                                (<'1', 'g'^~ex>++
-                                                 <'2', 'g'^~ey, 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                 >++
-                                                 <'3', 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                 >
-                                                )
-                                               >
-                             ) @ #k)
-                           ⇒
-                            ⊥) ∧
-                          (∀ #k.
-                            (Corrupt( $A ) @ #k)
-                           ⇒
-                            ∃ #l.
-                             (Expire( <'UM3', $A, $B, 
-                                       (<'1', 'g'^~ex>++
-                                        <'2', 'g'^~ey, 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                        >++
-                                        <'3', 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                        >
-                                       )
-                                      >
-                              ) @ #l)
-                            ∧
-                             #l < #k) ∧
-                          (∀ #k.
-                            (SessionStateReveal( <'UM3', $A, $B, 
-                                                  (<'1', 'g'^~ex>++
-                                                   <'2', 'g'^~ey, 
-                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
-                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
-                                                        <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                   >++
-                                                   <'3', 
-                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
-                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
-                                                        <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                   >
-                                                  )
-                                                 >
-                             ) @ #k)
-                           ⇒
-                            (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                    case case_1
-                    by solve( SidUpdated( <'UM3', $A, $B, 'g'^~ex> ) @ #v )
-                  next
-                    case case_2
-                    by contradiction /* from formulas */
-                  qed
-                next
-                  case case_3
-                  solve( (∃ #v.
-                           (SidUpdated( <'UM3', $A, $B, 
-                                         (<'1', 'g'^~ex>++
-                                          <'2', 'g'^~ey, 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                          >++
-                                          <'3', 
-                                           MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                        'g'^~ey, 'UM3'>)),
-                                               <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                          >
-                                         )
-                                        >
-                            ) @ #v))  ∥
-                         ((∀ #k.
-                            (SessionKeyReveal( <'UM3', $A, $B, 
-                                                (<'1', 'g'^~ex>++
-                                                 <'2', 'g'^~ey, 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                 >++
-                                                 <'3', 
-                                                  MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                               'g'^~ey, 'UM3'>)),
-                                                      <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                 >
-                                                )
-                                               >
-                             ) @ #k)
-                           ⇒
-                            ⊥) ∧
-                          (∀ #k.
-                            (Corrupt( $A ) @ #k)
-                           ⇒
-                            ∃ #l.
-                             (Expire( <'UM3', $A, $B, 
-                                       (<'1', 'g'^~ex>++
-                                        <'2', 'g'^~ey, 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                        >++
-                                        <'3', 
-                                         MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 'g'^~ey, 
-                                                      'UM3'>)),
-                                             <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                        >
-                                       )
-                                      >
-                              ) @ #l)
-                            ∧
-                             #l < #k) ∧
-                          (∀ #k.
-                            (SessionStateReveal( <'UM3', $A, $B, 
-                                                  (<'1', 'g'^~ex>++
-                                                   <'2', 'g'^~ey, 
-                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
-                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
-                                                        <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                                   >++
-                                                   <'3', 
-                                                    MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 
-                                                                 'g'^~ex, 'g'^~ey, 'UM3'>)),
-                                                        <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
-                                                   >
-                                                  )
-                                                 >
-                             ) @ #k)
-                           ⇒
-                            (∀ #l. (Corrupt( $B ) @ #l) ⇒ ⊥) ∧ (∀ #l. (Corrupt( $A ) @ #l) ⇒ ⊥))) )
-                    case case_1
-                    by solve( SidUpdated( <'UM3', $A, $B, 
-                                           (<'1', 'g'^~ex>++
-                                            <'2', 'g'^~ey, 
-                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                          'g'^~ey, 'UM3'>)),
-                                                 <'I', $A, $B, 'g'^~ex, 'g'^~ey>)
-                                            >++
-                                            <'3', 
-                                             MAC(first(h(<'g'^(~ex*~ey), 'g'^(~eb*~x), $A, $B, 'g'^~ex, 
-                                                          'g'^~ey, 'UM3'>)),
-                                                 <'R', $B, $A, 'g'^~ey, 'g'^~ex>)
+                                    ) ▶₀ #l )
+                        next
+                          case R_Expire
+                          solve( R_Comp( <'UM3', $B, $A, 
+                                          (<'1', DH_neutral>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                         'g'^~ey, 'UM3'>)),
+                                                <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                         'g'^~ey, 'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                           >
+                                          )
+                                         >
+                                 ) ▶₀ #l )
+                            case R_Complete_case_1
+                            by contradiction /* cyclic */
+                          next
+                            case R_Complete_case_2
+                            by contradiction /* cyclic */
+                          qed
+                        qed
+                      qed
+                    next
+                      case c_exp
+                      solve( !KU( ~eb ) @ #vk.23 )
+                        case Corrupt_Ltk
+                        solve( Expire( <'UM3', $B, $A, 
+                                        (<'1', DH_neutral>++
+                                         <'2', 'g'^~ey, 
+                                          MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                         >++
+                                         <'3', 
+                                          MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 'g'^~ey, 
+                                                       'UM3'>)),
+                                              <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                         >
+                                        )
+                                       >
+                               ) @ #l )
+                          case I_Expire
+                          by solve( I_Comp( <'UM3', $B, $A, 
+                                             (<'1', DH_neutral>++
+                                              <'2', 'g'^~ey, 
+                                               MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                              >++
+                                              <'3', 
+                                               MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                            'g'^~ey, 'UM3'>)),
+                                                   <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                              >
+                                             )
                                             >
-                                           )
-                                          >
-                              ) @ #v )
-                  next
-                    case case_2
-                    by contradiction /* from formulas */
-                  qed
-                qed
-              next
-                case Reveal_SessionKey_case_3
-                by contradiction /* from formulas */
-              next
-                case Reveal_SessionKey_case_4
-                by contradiction /* from formulas */
-              next
-                case c_second
-                solve( !KU( h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>) ) @ #vk.12 )
-                  case c_h
-                  solve( !KU( 'g'^(~eb*~x) ) @ #vk.20 )
-                    case Register_key_honest_case_1
-                    solve( !KU( ~eb ) @ #vk.22 )
-                      case Corrupt_Ltk
-                      solve( Expire( <'UM3', $B, $A, 
-                                      (<'1', X>++
-                                       <'2', 'g'^~ey, 
-                                        MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                            <'I', $A, $B, X, 'g'^~ey>)
-                                       >++
-                                       <'3', 
-                                        MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                            <'R', $B, $A, 'g'^~ey, X>)
-                                       >
-                                      )
-                                     >
-                             ) @ #l )
-                        case I_Expire
-                        solve( I_Comp( <'UM3', $B, $A, 
-                                        (<'1', X>++
-                                         <'2', 'g'^~ey, 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'I', $A, $B, X, 'g'^~ey>)
-                                         >++
-                                         <'3', 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'R', $B, $A, 'g'^~ey, X>)
-                                         >
-                                        )
-                                       >
-                               ) ▶₀ #l )
-                          case I_Complete
-                          by contradiction /* from formulas */
-                        qed
-                      next
-                        case R_Expire
-                        solve( R_Comp( <'UM3', $B, $A, 
-                                        (<'1', X>++
-                                         <'2', 'g'^~ey, 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'I', $A, $B, X, 'g'^~ey>)
-                                         >++
-                                         <'3', 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'R', $B, $A, 'g'^~ey, X>)
-                                         >
-                                        )
-                                       >
-                               ) ▶₀ #l )
-                          case R_Complete_case_1
-                          by contradiction /* cyclic */
+                                    ) ▶₀ #l )
                         next
-                          case R_Complete_case_2
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    qed
-                  next
-                    case Register_key_honest_case_2
-                    solve( !KU( ~x ) @ #vk.22 )
-                      case Corrupt_Ltk
-                      solve( Expire( <'UM3', $B, $A, 
-                                      (<'1', X>++
-                                       <'2', 'g'^~ey, 
-                                        MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                            <'I', $A, $B, X, 'g'^~ey>)
-                                       >++
-                                       <'3', 
-                                        MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                            <'R', $B, $A, 'g'^~ey, X>)
-                                       >
-                                      )
-                                     >
-                             ) @ #l )
-                        case I_Expire
-                        solve( I_Comp( <'UM3', $B, $A, 
-                                        (<'1', X>++
-                                         <'2', 'g'^~ey, 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'I', $A, $B, X, 'g'^~ey>)
-                                         >++
-                                         <'3', 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'R', $B, $A, 'g'^~ey, X>)
+                          case R_Expire
+                          solve( R_Comp( <'UM3', $B, $A, 
+                                          (<'1', DH_neutral>++
+                                           <'2', 'g'^~ey, 
+                                            MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                         'g'^~ey, 'UM3'>)),
+                                                <'I', $A, $B, DH_neutral, 'g'^~ey>)
+                                           >++
+                                           <'3', 
+                                            MAC(first(h(<DH_neutral, 'g'^(~eb*~x), $A, $B, DH_neutral, 
+                                                         'g'^~ey, 'UM3'>)),
+                                                <'R', $B, $A, 'g'^~ey, DH_neutral>)
+                                           >
+                                          )
                                          >
-                                        )
-                                       >
-                               ) ▶₀ #l )
-                          case I_Complete
-                          by contradiction /* from formulas */
-                        qed
-                      next
-                        case R_Expire
-                        solve( R_Comp( <'UM3', $B, $A, 
-                                        (<'1', X>++
-                                         <'2', 'g'^~ey, 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'I', $A, $B, X, 'g'^~ey>)
-                                         >++
-                                         <'3', 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'R', $B, $A, 'g'^~ey, X>)
-                                         >
-                                        )
-                                       >
-                               ) ▶₀ #l )
-                          case R_Complete_case_1
-                          by contradiction /* cyclic */
-                        next
-                          case R_Complete_case_2
-                          by contradiction /* cyclic */
-                        qed
-                      qed
-                    qed
-                  next
-                    case c_exp
-                    solve( !KU( ~eb ) @ #vk.24 )
-                      case Corrupt_Ltk
-                      solve( Expire( <'UM3', $B, $A, 
-                                      (<'1', X>++
-                                       <'2', 'g'^~ey, 
-                                        MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                            <'I', $A, $B, X, 'g'^~ey>)
-                                       >++
-                                       <'3', 
-                                        MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                            <'R', $B, $A, 'g'^~ey, X>)
-                                       >
-                                      )
-                                     >
-                             ) @ #l )
-                        case I_Expire
-                        solve( I_Comp( <'UM3', $B, $A, 
-                                        (<'1', X>++
-                                         <'2', 'g'^~ey, 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'I', $A, $B, X, 'g'^~ey>)
-                                         >++
-                                         <'3', 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'R', $B, $A, 'g'^~ey, X>)
-                                         >
-                                        )
-                                       >
-                               ) ▶₀ #l )
-                          case I_Complete
-                          by contradiction /* from formulas */
-                        qed
-                      next
-                        case R_Expire
-                        solve( R_Comp( <'UM3', $B, $A, 
-                                        (<'1', X>++
-                                         <'2', 'g'^~ey, 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'I', $A, $B, X, 'g'^~ey>)
-                                         >++
-                                         <'3', 
-                                          MAC(first(h(<z, 'g'^(~eb*~x), $A, $B, X, 'g'^~ey, 'UM3'>)),
-                                              <'R', $B, $A, 'g'^~ey, X>)
-                                         >
-                                        )
-                                       >
-                               ) ▶₀ #l )
-                          case R_Complete_case_1
-                          by contradiction /* cyclic */
-                        next
-                          case R_Complete_case_2
-                          by contradiction /* cyclic */
+                                 ) ▶₀ #l )
+                            case R_Complete_case_1
+                            by contradiction /* cyclic */
+                          next
+                            case R_Complete_case_2
+                            by contradiction /* cyclic */
+                          qed
                         qed
                       qed
                     qed
@@ -5139,52 +5606,14 @@ next
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-WARNING: the following wellformedness checks failed!
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule I_Complete: 
-Failed to derive Variable(s): ~eb
-
-Rule R_Activate: 
-Failed to derive Variable(s): ~ea
-
-Rule R_Complete: 
-Failed to derive Variable(s): ~ea
-
-Rule UM1_I_Complete: 
-Failed to derive Variable(s): ~eb
-
-Rule UM1_R_Complete: 
-Failed to derive Variable(s): ~ea
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -5196,13 +5625,10 @@ summary of summaries:
 analyzed: examples/ake/dh/UM_three_pass_combined_fixed.spthy
 
   output:          examples/ake/dh/UM_three_pass_combined_fixed.spthy.tmp
-  processing time: 18.33s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 13.82s
   
   key_agreement_reachable (exists-trace): verified (14 steps)
-  CK_secure_UM3 (all-traces): verified (417 steps)
+  CK_secure_UM3 (all-traces): verified (482 steps)
   CK_secure (all-traces): verified (142 steps)
 
 ==============================================================================

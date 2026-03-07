@@ -1,4 +1,6 @@
-theory mini7 begin
+theory mini7
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,19 +10,9 @@ equations:
     snd(<x.1, x.2>) = x.2,
     verify(sign(x.1, x.2), x.1, pk(x.2)) = true
 
-
-
 heuristic: p
 
 section{* small example for progression function *}
-
-
-
-
-
-
-
-
 
 lemma A_possible:
   exists-trace "∃ #t. A( ) @ #t"
@@ -51,14 +43,14 @@ solve( State_11( ~prog_, ~prog_11 ) ▶₀ #t )
   case p_1_1
   solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
-    solve( State_( ~prog_ ) ▶₀ #t.3 )
+    solve( State_( ~prog_ ) ▶₀ #t.2 )
       case Init
       solve( (∃ #t. (ProgressTo_1111( ~prog_11 ) @ #t))  ∥
              (∃ #t. (ProgressTo_11211( ~prog_11 ) @ #t)) )
         case case_1
-        solve( State_11( ~prog_.1, ~prog_11 ) ▶₀ #t.3 )
+        solve( State_11( ~prog_.1, ~prog_11 ) ▶₀ #t.2 )
           case p_1_1
-          solve( State_( ~prog_ ) ▶₀ #t.3 )
+          solve( State_( ~prog_ ) ▶₀ #t.2 )
             case Init
             SOLVED // trace found
           qed
@@ -75,8 +67,8 @@ guarded formula characterizing all satisfying traces:
 "∃ #t. (C( ) @ #t)"
 */
 simplify
-solve( State_1121( ~prog_, ~prog_11 ) ▶₀ #t )
-  case p_1_112
+solve( !Semistate_1121( ~prog_, ~prog_11 ) ▶₀ #t )
+  case p_0_112
   solve( State_( ~prog_ ) ▶₀ #t.2 )
     case Init
     solve( State_( ~prog_ ) ▶₀ #t.3 )
@@ -84,8 +76,8 @@ solve( State_1121( ~prog_, ~prog_11 ) ▶₀ #t )
       solve( (∃ #t. (ProgressTo_1111( ~prog_11 ) @ #t))  ∥
              (∃ #t. (ProgressTo_11211( ~prog_11 ) @ #t)) )
         case case_2
-        solve( State_1121( ~prog_.1, ~prog_11 ) ▶₀ #t.3 )
-          case p_1_112
+        solve( !Semistate_1121( ~prog_.1, ~prog_11 ) ▶₀ #t.3 )
+          case p_0_112
           solve( State_( ~prog_ ) ▶₀ #t.4 )
             case Init
             SOLVED // trace found
@@ -139,92 +131,57 @@ guarded formula characterizing all counter-examples:
 simplify
 by contradiction /* from formulas */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 rule (modulo E) MessageIDRule[color=#ffffff, process="event A( );",
-                              issapicrule]:
+                              issapicrule, role='Process']:
    [ Fr( ~mid_ ) ] --> [ MID_Receiver( ~mid_ ), MID_Sender( ~mid_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) Init[color=#ffffff, process="event A( );", issapicrule]:
+rule (modulo E) Init[color=#ffffff, process="event A( );", issapicrule,
+                     role='Process']:
    [ Fr( ~prog_ ) ]
   --[ ProgressFrom_( ~prog_ ), Init( ) ]->
    [ State_( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventA_0_[color=#ffffff, process="event A( );",
-                          issapicrule]:
+rule (modulo E) eventA_0_[color=#ffffff, process="!", issapicrule,
+                          role='Process']:
    [ State_( ~prog_ ) ]
   --[ ProgressTo_1( ~prog_ ), A( ) ]->
-   [ State_1( ~prog_ ) ]
+   [ !Semistate_11( ~prog_ ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) p_0_1[color=#ffffff, process="!", issapicrule]:
-   [ State_1( ~prog_ ) ] --> [ !Semistate_11( ~prog_ ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule]:
+rule (modulo E) p_1_1[color=#ffffff, process="!", issapicrule,
+                      role='Process']:
    [ Fr( ~prog_11 ), !Semistate_11( ~prog_ ) ]
   --[ ProgressFrom_11( ~prog_11 ) ]->
    [ State_11( ~prog_, ~prog_11 ) ]
 
   /* has exactly the trivial AC variant */
 
-rule (modulo E) eventB_0_111[color=#ffffff, process="event B( );",
-                             issapicrule]:
+rule (modulo E) p_0_112[color=#ffffff, process="!", issapicrule,
+                        role='Process']:
+   [ State_11( ~prog_, ~prog_11 ) ]
+  -->
+   [ !Semistate_1121( ~prog_, ~prog_11 ) ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) p_1_112[color=#ffffff, process="0", issapicrule,
+                        role='Process']:
+   [ !Semistate_1121( ~prog_, ~prog_11 ) ]
+  --[ ProgressTo_11211( ~prog_11 ), C( ) ]->
+   [ ]
+
+  /* has exactly the trivial AC variant */
+
+rule (modulo E) eventB_0_111[color=#ffffff, process="0", issapicrule,
+                             role='Process']:
    [ State_11( ~prog_, ~prog_11 ) ]
   --[ ProgressTo_1111( ~prog_11 ), B( ) ]->
-   [ State_1111( ~prog_, ~prog_11 ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_1111[color=#ffffff, process="0", issapicrule]:
-   [ State_1111( ~prog_, ~prog_11 ) ] --> [ ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_112[color=#ffffff, process="!", issapicrule]:
-   [ State_11( ~prog_, ~prog_11 ) ]
-  -->
-   [ !Semistate_1121( ~prog_, ~prog_11 ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_1_112[color=#ffffff, process="!", issapicrule]:
-   [ !Semistate_1121( ~prog_, ~prog_11 ) ]
-  -->
-   [ State_1121( ~prog_, ~prog_11 ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) eventC_0_1121[color=#ffffff, process="event C( );",
-                              issapicrule]:
-   [ State_1121( ~prog_, ~prog_11 ) ]
-  --[ ProgressTo_11211( ~prog_11 ), C( ) ]->
-   [ State_11211( ~prog_, ~prog_11 ) ]
-
-  /* has exactly the trivial AC variant */
-
-rule (modulo E) p_0_11211[color=#ffffff, process="0", issapicrule]:
-   [ State_11211( ~prog_, ~prog_11 ) ] --> [ ]
+   [ ]
 
   /* has exactly the trivial AC variant */
 
@@ -232,9 +189,20 @@ restriction single_session:
   "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ #i #j. ((Init( ) @ #i) ∧ (Init( ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction Progress__to_1:
   "∀ prog_ #t.
     (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
+
+  /*
+  expanded formula:
+  "∀ prog_ #t.
+    (ProgressFrom_( prog_ ) @ #t) ⇒ (∃ #t.1. ProgressTo_1( prog_ ) @ #t.1)"
+  */
 
 restriction Progress_11_to_1111_or_11211:
   "∀ prog_11 #t.
@@ -242,57 +210,30 @@ restriction Progress_11_to_1111_or_11211:
     ((∃ #t.1. ProgressTo_1111( prog_11 ) @ #t.1) ∨
      (∃ #t.1. ProgressTo_11211( prog_11 ) @ #t.1))"
 
+  /*
+  expanded formula:
+  "∀ prog_11 #t.
+    (ProgressFrom_11( prog_11 ) @ #t) ⇒
+    ((∃ #t.1. ProgressTo_1111( prog_11 ) @ #t.1) ∨
+     (∃ #t.1. ProgressTo_11211( prog_11 ) @ #t.1))"
+  */
+
 restriction progressInit:
   "∃ #t. Init( ) @ #t"
 
-/*
-WARNING: the following wellformedness checks failed!
+  /*
+  expanded formula:
+  "∃ #t. Init( ) @ #t"
+  */
 
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule MessageIDRule: 
-Failed to derive Variable(s): ~mid_
-
-Rule Init: 
-Failed to derive Variable(s): ~prog_
-
-Rule eventA_0_: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_0_1: 
-Failed to derive Variable(s): ~prog_
-
-Rule p_1_1: 
-Failed to derive Variable(s): ~prog_, ~prog_11
-
-Rule eventB_0_111: 
-Failed to derive Variable(s): ~prog_, ~prog_11
-
-Rule p_0_1111: 
-Failed to derive Variable(s): ~prog_, ~prog_11
-
-Rule p_0_112: 
-Failed to derive Variable(s): ~prog_, ~prog_11
-
-Rule p_1_112: 
-Failed to derive Variable(s): ~prog_, ~prog_11
-
-Rule eventC_0_1121: 
-Failed to derive Variable(s): ~prog_, ~prog_11
-
-Rule p_0_11211: 
-Failed to derive Variable(s): ~prog_, ~prog_11
-*/
+/* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -304,10 +245,7 @@ summary of summaries:
 analyzed: examples/sapic/fast/feature-progress/mini7.spthy
 
   output:          examples/sapic/fast/feature-progress/mini7.spthy.tmp
-  processing time: 0.22s
-  
-  WARNING: 1 wellformedness check failed!
-           The analysis results might be wrong!
+  processing time: 0.05s
   
   A_possible (exists-trace): verified (5 steps)
   B_possible (exists-trace): verified (8 steps)

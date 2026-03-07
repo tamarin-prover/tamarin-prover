@@ -1,4 +1,6 @@
-theory PKCS11_aead begin
+theory PKCS11_aead
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -20,47 +22,62 @@ prio: {id}
   regex"DCtrIs\(d,C"""""
 prio: {id}
   regex"DCtr""""mimou"
-
-
 tactic: IV_Uniqueness
 presort: s
 prio: {id}
   regex"=""""" | regex"<""""" | regex"last\("""""
 prio: {id}
   regex"IV\("""""
-
-
 tactic: Key_IntegrityAndConfidentiality
 presort: s
 prio: {id}
   regex"CreateKey\(ek,"""""
 
-
-
-
-
 /* looping facts with injective instances: DCtr/2 */
-
-
 
 restriction UniqueInteger:
   "∀ n #i #j. ((IsInteger( n ) @ #i) ∧ (IsInteger( n ) @ #j)) ⇒ (#i = #j)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ n #i #j. ((IsInteger( n ) @ #i) ∧ (IsInteger( n ) @ #j)) ⇒ (#i = #j)"
+  */
+
 restriction Lesser:
   "∀ x y #i. (LessThan( x, y ) @ #i) ⇒ (∃ z. (x++z) = y)"
+
+  /*
+  expanded formula:
+  "∀ x y #i. (LessThan( x, y ) @ #i) ⇒ (∃ z. (x++z) = y)"
+  */
 
 restriction TrueIsTrue:
   "∀ x #i. (IsTrue( x ) @ #i) ⇒ (x = true)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x #i. (IsTrue( x ) @ #i) ⇒ (x = true)"
+  */
+
 restriction Equality:
   "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
   // safety formula
 
+  /*
+  expanded formula:
+  "∀ x y #i. (Eq( x, y ) @ #i) ⇒ (x = y)"
+  */
+
 restriction Inequality:
   "∀ x #i. (Neq( x, x ) @ #i) ⇒ (⊥)"
   // safety formula
+
+  /*
+  expanded formula:
+  "∀ x #i. (Neq( x, x ) @ #i) ⇒ (⊥)"
+  */
 
 rule (modulo E) One[color=#aaaaee]:
    [ ] --[ IsInteger( '1' ) ]-> [ !Integer( '1' ) ]
@@ -292,7 +309,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ m #decrypt.
            (Decrypt( m ) @ #decrypt)
           ∧
@@ -6029,7 +6045,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∀ d c C #before #later.
            (DCtrIs( d, c ) @ #before) ∧ (DCtrIs( d, C ) @ #later)
           ⇒
@@ -8825,7 +8840,6 @@ induction
   by contradiction /* from formulas */
 next
   case non_empty_trace
-  simplify
   solve( (∃ k l h #keyCreate #keyKU.
            (CreateKey( k, h, l ) @ #keyCreate) ∧ (!KU( k ) @ #keyKU))  ∥
          (∃ d k l h #keyImport.
@@ -10608,34 +10622,14 @@ next
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -10647,13 +10641,13 @@ summary of summaries:
 analyzed: examples/csf19-wrapping/gcm.spthy
 
   output:          examples/csf19-wrapping/gcm.spthy.tmp
-  processing time: 65.51s
+  processing time: 42.50s
   
-  origin (all-traces): verified (1597 steps)
-  Counter_Monotonicity (all-traces): verified (876 steps)
+  origin (all-traces): verified (1596 steps)
+  Counter_Monotonicity (all-traces): verified (875 steps)
   IV_Uniqueness (all-traces): verified (12 steps)
   Key_UsageImpliesInitialization (all-traces): verified (78 steps)
-  Key_IntegrityAndConfidentiality (all-traces): verified (412 steps)
+  Key_IntegrityAndConfidentiality (all-traces): verified (411 steps)
   Key_UniqueLevelandHandle (all-traces): verified (170 steps)
 
 ==============================================================================

@@ -57,6 +57,7 @@ module Theory.Model.Formula (
   , mapAtoms
   , foldFormula
   , traverseFormulaAtom
+  , applyMacroInFormula
 
   -- ** Normal forms / simplification
   , simplifyFormula
@@ -92,6 +93,7 @@ import           Text.PrettyPrint.Highlight
 import           Theory.Text.Pretty
 
 import           Term.LTerm
+import           Term.Macro
 import           Term.Substitution
 
 ------------------------------------------------------------------------------
@@ -304,6 +306,12 @@ openFormulaPrefix f0 = case openFormula f0 of
         _ -> return (reverse xs, q, f)
 
 
+
+-- | Apply macros to a formula
+applyMacroInFormula :: [LNMacro] -> LNFormula -> LNFormula
+applyMacroInFormula [] fm = fm
+applyMacroInFormula macros fm = mapAtoms (const (fmap (applyMacros (lnMacrosToBNMacros macros)))) fm
+
 -- Instances
 ------------
 
@@ -508,3 +516,4 @@ prettyLNFormula fm =
 prettySyntacticLNFormula :: HighlightDocument d => SyntacticLNFormula -> d
 prettySyntacticLNFormula fm =
     Precise.evalFresh (prettyLFormula prettySyntacticNAtom fm) (avoidPrecise fm)
+

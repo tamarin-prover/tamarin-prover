@@ -1,4 +1,6 @@
-theory MacroExemple begin
+theory MacroExemple
+
+begin
 
 // Function signature and definition of the equational theory E
 
@@ -8,18 +10,9 @@ equations:
     fst(<x.1, x.2>) = x.1,
     snd(<x.1, x.2>) = x.2
 
-
-
-
-
-
-
-
-
-macros:
-    encrypt( x, y ) = aenc(x,y)
-    decrypt( x, y ) = adec(x,y)
-    hashdec( x, y ) = h(decrypt(x,y))
+macros: encrypt( x, y ) =  aenc(x, y),
+        decrypt( x, y ) =  adec(x, y),
+        hashdec( x, y ) =  h(decrypt(x, y))
 
 rule (modulo E) Register_pk:
    [ Fr( ~ltk ) ] --> [ !Ltk( $A, ~ltk ), !Pk( $A, pk(~ltk) ) ]
@@ -223,28 +216,14 @@ solve( Client_1( S, k ) ▶₀ #i )
   qed
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* All wellformedness checks were successful. */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -256,7 +235,7 @@ summary of summaries:
 analyzed: examples/features//macros/MacroExample.spthy
 
   output:          examples/features//macros/MacroExample.spthy.tmp
-  processing time: 0.20s
+  processing time: 0.09s
   
   Client_session_key_secrecy (all-traces): verified (5 steps)
   Client_auth (all-traces): verified (11 steps)

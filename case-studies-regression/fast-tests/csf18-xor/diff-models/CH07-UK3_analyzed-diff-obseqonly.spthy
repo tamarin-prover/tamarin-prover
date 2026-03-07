@@ -1,16 +1,12 @@
-theory CH07_UK3 begin
+theory CH07_UK3
+
+begin
 
 // Function signature and definition of the equational theory E
 
 builtins: multiset, xor
 functions: fst/1, h/1, lh/1, pair/2, rh/1, rot/2, snd/1
 equations: fst(<x.1, x.2>) = x.1, snd(<x.1, x.2>) = x.2
-
-
-
-
-
-
 
 rule (modulo E) Setup:
    [ Fr( ~k1 ), Fr( ~id1 ), Fr( ~k2 ), Fr( ~id2 ) ]
@@ -218,7 +214,7 @@ rule-equivalence
                       step( solve( Reader( (z.1++<~k.1, ~id>++<~k.2, ~id.1>) ) ▶₀ #vr.10 ) )
                         case Setup
                         step( solve( splitEqs(0) ) )
-                          case split_case_3
+                          case split_case_1
                           step( solve( splitEqs(1) ) )
                             case split_case_1
                             step( solve( !KU( ~r2 ) @ #vk.4 ) )
@@ -262,22 +258,14 @@ Check presence of the --prove/--lemma arguments in theory
 =========================================================
 
   --> 'Observational_equivalence' from arguments do(es) not correspond to a specified lemma in the theory 
-
-Message Derivation Checks
-=========================
-
-  The variables of the following rule(s) are not derivable from their premises, you may be performing unintended pattern matching.
-
-Rule reader2: 
-Failed to derive Variable(s): hash
 */
 
 /*
 Generated from:
-Tamarin version 1.9.0
-Maude version 3.4
-Git revision: f187584ba8325431d43d5e0a58baa381ac2c3f47, branch: develop
-Compiled at: 2024-10-29 14:19:56.449404967 UTC
+Tamarin version 1.12.0
+Maude version 3.5.1
+Git revision: f1832c9bc70a2a165991a0802520f2e07c023227 (with uncommited changes), branch: prepare-release
+Compiled at: 2026-03-06 22:21:49.602637 UTC
 */
 
 end
@@ -289,9 +277,9 @@ summary of summaries:
 analyzed: examples/csf18-xor/diff-models/CH07-UK3.spthy
 
   output:          examples/csf18-xor/diff-models/CH07-UK3.spthy.tmp
-  processing time: 110.32s
+  processing time: 39.27s
   
-  WARNING: 2 wellformedness check failed!
+  WARNING: 1 wellformedness check failed!
            The analysis results might be wrong!
   
   RHS :  recentalive_tag (all-traces): analysis incomplete (1 steps)
