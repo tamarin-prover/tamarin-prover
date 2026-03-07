@@ -53,7 +53,7 @@ clean:	tamarin-clean
 # It is by no means official in any form and should be IGNORED :-)
 # ###########################################################################
 
-VERSION=1.12.0
+VERSION=1.13.0
 
 ###############################################################################
 ## Case Studies
